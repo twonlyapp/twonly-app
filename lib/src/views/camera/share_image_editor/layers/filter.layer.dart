@@ -33,7 +33,7 @@ class FilterSkeleton extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(child: Container()),
-          if (child != null) child!,
+          ?child,
         ],
       ),
     );
@@ -89,10 +89,11 @@ class _FilterLayerState extends State<FilterLayer> {
   }
 
   Future<void> initAsync() async {
-    final stickers = (await getStickerIndex())
-        .where((x) => x.imageSrc.contains('/imagefilter/'))
-        .toList()
-      ..sortBy((x) => x.imageSrc);
+    final stickers =
+        (await getStickerIndex())
+            .where((x) => x.imageSrc.contains('/imagefilter/'))
+            .toList()
+          ..sortBy((x) => x.imageSrc);
 
     for (final sticker in stickers) {
       pages.insert(pages.length - 1, ImageFilter(imagePath: sticker.imageSrc));

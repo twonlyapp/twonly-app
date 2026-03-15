@@ -27,8 +27,6 @@ class BeardFilterPainter extends FaceFilterPainter {
 
   static String getAssetPath(FaceFilterType beardType) {
     switch (beardType) {
-      case FaceFilterType.beardUpperLip:
-        return 'assets/filters/beard_upper_lip.webp';
       case FaceFilterType.beardUpperLipGreen:
         return 'assets/filters/beard_upper_lip_green.webp';
       case FaceFilterType.dogBrown:

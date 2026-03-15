@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -188,7 +187,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_showDatabaseMigration) {
       child = const Center(child: Text('Please reinstall twonly.'));
     } else if (_isUserCreated) {
-      if (gUser.twonlySafeBackup == null && !_skipBackup && kReleaseMode) {
+      if (gUser.twonlySafeBackup == null && !_skipBackup) {
         child = SetupBackupView(
           callBack: () {
             _skipBackup = true;

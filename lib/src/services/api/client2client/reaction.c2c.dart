@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleReaction(
@@ -16,6 +17,8 @@ Future<void> handleReaction(
     reaction.emoji,
     reaction.remove,
   );
+
+  await handleMediaRelatedResponseFromReceiver(reaction.targetMessageId);
 
   if (!reaction.remove) {
     await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());

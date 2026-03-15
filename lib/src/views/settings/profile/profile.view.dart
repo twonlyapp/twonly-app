@@ -7,8 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
+import 'package:twonly/src/services/backup/common.backup.dart';
+import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -120,6 +120,17 @@ class _ProfileViewState extends State<ProfileView> {
           ),
           const SizedBox(height: 20),
           const Divider(),
+          BetterListTile(
+            leading: const Padding(
+              padding: EdgeInsets.only(right: 5, left: 1),
+              child: FaIcon(
+                FontAwesomeIcons.qrcode,
+                size: 20,
+              ),
+            ),
+            onTap: () => context.push(Routes.settingsPublicProfile),
+            text: context.lang.profileYourQrCode,
+          ),
           BetterListTile(
             leading: const Padding(
               padding: EdgeInsets.only(right: 5, left: 1),

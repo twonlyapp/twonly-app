@@ -113,6 +113,7 @@ class EmojiAnimation extends StatelessWidget {
     '💯': '100.lottie',
     '🎉': 'party-popper.lottie',
     '🎊': 'confetti-ball.lottie',
+    '🎂': 'birthday-cake.json',
     '🧡': 'orange-heart.lottie',
     '💛': 'yellow-heart.lottie',
     '💚': 'green-heart.lottie',

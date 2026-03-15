@@ -26,6 +26,7 @@ import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -62,6 +63,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
       ..response = response;
 
     await apiService.sendResponse(ClientToServer()..v0 = v0);
+    globalGotMessageFromServer = true;
   });
 }
 
@@ -94,6 +96,11 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
       var retry = false;
       if (message.hasPlaintextContent()) {
         if (message.plaintextContent.hasDecryptionErrorMessage()) {
+          if (message.plaintextContent.decryptionErrorMessage.type ==
+              PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN) {
+            // Get a new prekey from the server, and establish a new signal session.
+            await handleSessionResync(fromUserId);
+          }
           Log.info(
             'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
           );
@@ -251,11 +258,6 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     return (null, null);
   }
 
-  if (content.hasFlameSync()) {
-    await handleFlameSync(fromUserId, content.flameSync);
-    return (null, null);
-  }
-
   if (content.hasPushKeys()) {
     await handlePushKey(fromUserId, content.pushKeys);
     return (null, null);
@@ -338,6 +340,11 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       Log.error('User $fromUserId tried to access group ${content.groupId}.');
       return (null, null);
     }
+  }
+
+  if (content.hasFlameSync()) {
+    await handleFlameSync(content.groupId, content.flameSync);
+    return (null, null);
   }
 
   if (content.hasGroupUpdate()) {

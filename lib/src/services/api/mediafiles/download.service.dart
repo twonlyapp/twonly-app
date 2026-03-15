@@ -19,8 +19,8 @@ import 'package:twonly/src/utils/misc.dart';
 
 Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
   // This is called when WebSocket is newly connected, so allow all downloads to be restarted.
-  final mediaFiles =
-      await twonlyDB.mediaFilesDao.getAllMediaFilesPendingDownload();
+  final mediaFiles = await twonlyDB.mediaFilesDao
+      .getAllMediaFilesPendingDownload();
 
   for (final mediaFile in mediaFiles) {
     if (await canMediaFileBeDownloaded(mediaFile)) {
@@ -30,8 +30,9 @@ Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
 }
 
 Future<bool> canMediaFileBeDownloaded(MediaFile mediaFile) async {
-  final messages =
-      await twonlyDB.messagesDao.getMessagesByMediaId(mediaFile.mediaId);
+  final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+    mediaFile.mediaId,
+  );
 
   // Verify that the sender of the original image / message does still exists.
   // If not delete the message as it can not be downloaded from the server anymore.
@@ -56,8 +57,9 @@ Future<bool> canMediaFileBeDownloaded(MediaFile mediaFile) async {
     return false;
   }
 
-  final contact =
-      await twonlyDB.contactsDao.getContactById(messages.first.senderId!);
+  final contact = await twonlyDB.contactsDao.getContactById(
+    messages.first.senderId!,
+  );
 
   if (contact == null || contact.accountDeleted) {
     Log.info(
@@ -98,23 +100,27 @@ Future<bool> isAllowedToDownload(MediaType type) async {
 
   if (connectivityResult.contains(ConnectivityResult.mobile)) {
     if (type == MediaType.video) {
-      if (options[ConnectivityResult.mobile.name]!
-          .contains(DownloadMediaTypes.video.name)) {
+      if (options[ConnectivityResult.mobile.name]!.contains(
+        DownloadMediaTypes.video.name,
+      )) {
         return true;
       }
-    } else if (options[ConnectivityResult.mobile.name]!
-        .contains(DownloadMediaTypes.image.name)) {
+    } else if (options[ConnectivityResult.mobile.name]!.contains(
+      DownloadMediaTypes.image.name,
+    )) {
       return true;
     }
   }
   if (connectivityResult.contains(ConnectivityResult.wifi)) {
     if (type == MediaType.video) {
-      if (options[ConnectivityResult.wifi.name]!
-          .contains(DownloadMediaTypes.video.name)) {
+      if (options[ConnectivityResult.wifi.name]!.contains(
+        DownloadMediaTypes.video.name,
+      )) {
         return true;
       }
-    } else if (options[ConnectivityResult.wifi.name]!
-        .contains(DownloadMediaTypes.image.name)) {
+    } else if (options[ConnectivityResult.wifi.name]!.contains(
+      DownloadMediaTypes.image.name,
+    )) {
       return true;
     }
   }
@@ -230,8 +236,9 @@ Future<void> downloadFileFast(
   String apiUrl,
   File filePath,
 ) async {
-  final response =
-      await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 10));
+  final response = await http
+      .get(Uri.parse(apiUrl))
+      .timeout(const Duration(seconds: 30));
 
   if (response.statusCode == 200) {
     await filePath.writeAsBytes(response.bodyBytes);
@@ -308,8 +315,10 @@ Future<void> handleEncryptedFile(String mediaId) async {
       mac: Mac(mediaService.mediaFile.encryptionMac!),
     );
 
-    final plaintextBytes =
-        await chacha20.decrypt(secretBox, secretKey: secretKeyData);
+    final plaintextBytes = await chacha20.decrypt(
+      secretBox,
+      secretKey: secretKeyData,
+    );
 
     final rawMediaBytes = Uint8List.fromList(plaintextBytes);
 
@@ -337,8 +346,8 @@ Future<void> handleEncryptedFile(String mediaId) async {
 }
 
 Future<void> makeMigrationToVersion91() async {
-  final messages =
-      await twonlyDB.mediaFilesDao.getAllMediaFilesReuploadRequested();
+  final messages = await twonlyDB.mediaFilesDao
+      .getAllMediaFilesReuploadRequested();
   for (final message in messages) {
     await requestMediaReupload(message.mediaId);
   }

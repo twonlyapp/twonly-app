@@ -22,5 +22,7 @@ class GroupsDaoManager {
       $$GroupMembersTableTableManager(_db.attachedDatabase, _db.groupMembers);
   $$GroupHistoriesTableTableManager get groupHistories =>
       $$GroupHistoriesTableTableManager(
-          _db.attachedDatabase, _db.groupHistories);
+        _db.attachedDatabase,
+        _db.groupHistories,
+      );
 }

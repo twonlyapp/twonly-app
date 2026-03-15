@@ -64,7 +64,7 @@ import 'app_localizations_sv.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
     Locale('en'),
-    Locale('sv')
+    Locale('sv'),
   ];
 
   /// No description provided for @registerTitle.
@@ -685,7 +685,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacy.
   ///
   /// In en, this message translates to:
-  /// **'Privacy'**
+  /// **'Privacy & Security'**
   String get settingsPrivacy;
 
   /// No description provided for @settingsPrivacyBlockUsers.
@@ -2104,6 +2104,12 @@ abstract class AppLocalizations {
   /// **'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.'**
   String get uploadLimitReached;
 
+  /// No description provided for @fileLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum file size\nexceeded'**
+  String get fileLimitReached;
+
   /// No description provided for @retransmissionRequested.
   ///
   /// In en, this message translates to:
@@ -3033,6 +3039,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown contact whose identity has not yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @chatEntryFlameRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} flames restored'**
+  String chatEntryFlameRestored(Object count);
+
+  /// No description provided for @requestedUserToastText.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} was successfully requested.'**
+  String requestedUserToastText(Object username);
+
+  /// No description provided for @profileYourQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your QR code'**
+  String get profileYourQrCode;
 }
 
 class _AppLocalizationsDelegate
@@ -3064,8 +3088,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

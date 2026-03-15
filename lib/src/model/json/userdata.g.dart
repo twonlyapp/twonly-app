@@ -6,12 +6,13 @@ part of 'userdata.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
-      userId: (json['userId'] as num).toInt(),
-      username: json['username'] as String,
-      displayName: json['displayName'] as String,
-      subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
-    )
+UserData _$UserDataFromJson(Map<String, dynamic> json) =>
+    UserData(
+        userId: (json['userId'] as num).toInt(),
+        username: json['username'] as String,
+        displayName: json['displayName'] as String,
+        subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
+      )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
       ..appVersion = (json['appVersion'] as num?)?.toInt() ?? 0
@@ -25,7 +26,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
       ..themeMode =
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
-              ThemeMode.system
+          ThemeMode.system
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
@@ -38,9 +39,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           .toList()
       ..autoDownloadOptions =
           (json['autoDownloadOptions'] as Map<String, dynamic>?)?.map(
-        (k, e) =>
-            MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
-      )
+            (k, e) => MapEntry(
+              k,
+              (e as List<dynamic>).map((e) => e as String).toList(),
+            ),
+          )
       ..storeMediaFilesInGallery =
           json['storeMediaFilesInGallery'] as bool? ?? false
       ..autoStoreAllSendUnlimitedMediaFiles =
@@ -53,8 +56,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
-              ? null
-              : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+          ? null
+          : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..currentPreKeyIndexStart =
@@ -75,7 +78,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..twonlySafeBackup = json['twonlySafeBackup'] == null
           ? null
           : TwonlySafeBackup.fromJson(
-              json['twonlySafeBackup'] as Map<String, dynamic>)
+              json['twonlySafeBackup'] as Map<String, dynamic>,
+            )
       ..askedForUserStudyPermission =
           json['askedForUserStudyPermission'] as bool? ?? false
       ..userStudyParticipantsToken =
@@ -85,52 +89,51 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           : DateTime.parse(json['lastUserStudyDataUpload'] as String);
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
-      'userId': instance.userId,
-      'username': instance.username,
-      'displayName': instance.displayName,
-      'avatarSvg': instance.avatarSvg,
-      'avatarJson': instance.avatarJson,
-      'appVersion': instance.appVersion,
-      'avatarCounter': instance.avatarCounter,
-      'isDeveloper': instance.isDeveloper,
-      'deviceId': instance.deviceId,
-      'subscriptionPlan': instance.subscriptionPlan,
-      'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
-      'lastImageSend': instance.lastImageSend?.toIso8601String(),
-      'todaysImageCounter': instance.todaysImageCounter,
-      'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
-      'defaultShowTime': instance.defaultShowTime,
-      'requestedAudioPermission': instance.requestedAudioPermission,
-      'showFeedbackShortcut': instance.showFeedbackShortcut,
-      'showShowImagePreviewWhenSending':
-          instance.showShowImagePreviewWhenSending,
-      'startWithCameraOpen': instance.startWithCameraOpen,
-      'preSelectedEmojies': instance.preSelectedEmojies,
-      'autoDownloadOptions': instance.autoDownloadOptions,
-      'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
-      'autoStoreAllSendUnlimitedMediaFiles':
-          instance.autoStoreAllSendUnlimitedMediaFiles,
-      'lastPlanBallance': instance.lastPlanBallance,
-      'additionalUserInvites': instance.additionalUserInvites,
-      'tutorialDisplayed': instance.tutorialDisplayed,
-      'myBestFriendGroupId': instance.myBestFriendGroupId,
-      'signalLastSignedPreKeyUpdated':
-          instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
-      'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
-      'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
-      'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
-      'lastChangeLogHash': instance.lastChangeLogHash,
-      'hideChangeLog': instance.hideChangeLog,
-      'updateFCMToken': instance.updateFCMToken,
-      'nextTimeToShowBackupNotice':
-          instance.nextTimeToShowBackupNotice?.toIso8601String(),
-      'backupServer': instance.backupServer,
-      'twonlySafeBackup': instance.twonlySafeBackup,
-      'askedForUserStudyPermission': instance.askedForUserStudyPermission,
-      'userStudyParticipantsToken': instance.userStudyParticipantsToken,
-      'lastUserStudyDataUpload':
-          instance.lastUserStudyDataUpload?.toIso8601String(),
-    };
+  'userId': instance.userId,
+  'username': instance.username,
+  'displayName': instance.displayName,
+  'avatarSvg': instance.avatarSvg,
+  'avatarJson': instance.avatarJson,
+  'appVersion': instance.appVersion,
+  'avatarCounter': instance.avatarCounter,
+  'isDeveloper': instance.isDeveloper,
+  'deviceId': instance.deviceId,
+  'subscriptionPlan': instance.subscriptionPlan,
+  'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
+  'lastImageSend': instance.lastImageSend?.toIso8601String(),
+  'todaysImageCounter': instance.todaysImageCounter,
+  'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+  'defaultShowTime': instance.defaultShowTime,
+  'requestedAudioPermission': instance.requestedAudioPermission,
+  'showFeedbackShortcut': instance.showFeedbackShortcut,
+  'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
+  'startWithCameraOpen': instance.startWithCameraOpen,
+  'preSelectedEmojies': instance.preSelectedEmojies,
+  'autoDownloadOptions': instance.autoDownloadOptions,
+  'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
+  'autoStoreAllSendUnlimitedMediaFiles':
+      instance.autoStoreAllSendUnlimitedMediaFiles,
+  'lastPlanBallance': instance.lastPlanBallance,
+  'additionalUserInvites': instance.additionalUserInvites,
+  'tutorialDisplayed': instance.tutorialDisplayed,
+  'myBestFriendGroupId': instance.myBestFriendGroupId,
+  'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
+      ?.toIso8601String(),
+  'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
+  'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
+  'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
+  'lastChangeLogHash': instance.lastChangeLogHash,
+  'hideChangeLog': instance.hideChangeLog,
+  'updateFCMToken': instance.updateFCMToken,
+  'nextTimeToShowBackupNotice': instance.nextTimeToShowBackupNotice
+      ?.toIso8601String(),
+  'backupServer': instance.backupServer,
+  'twonlySafeBackup': instance.twonlySafeBackup,
+  'askedForUserStudyPermission': instance.askedForUserStudyPermission,
+  'userStudyParticipantsToken': instance.userStudyParticipantsToken,
+  'lastUserStudyDataUpload': instance.lastUserStudyDataUpload
+      ?.toIso8601String(),
+};
 
 const _$ThemeModeEnumMap = {
   ThemeMode.system: 'system',
@@ -140,16 +143,18 @@ const _$ThemeModeEnumMap = {
 
 TwonlySafeBackup _$TwonlySafeBackupFromJson(Map<String, dynamic> json) =>
     TwonlySafeBackup(
-      backupId: (json['backupId'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
-          .toList(),
-      encryptionKey: (json['encryptionKey'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
-          .toList(),
-    )
+        backupId: (json['backupId'] as List<dynamic>)
+            .map((e) => (e as num).toInt())
+            .toList(),
+        encryptionKey: (json['encryptionKey'] as List<dynamic>)
+            .map((e) => (e as num).toInt())
+            .toList(),
+      )
       ..lastBackupSize = (json['lastBackupSize'] as num).toInt()
-      ..backupUploadState =
-          $enumDecode(_$LastBackupUploadStateEnumMap, json['backupUploadState'])
+      ..backupUploadState = $enumDecode(
+        _$LastBackupUploadStateEnumMap,
+        json['backupUploadState'],
+      )
       ..lastBackupDone = json['lastBackupDone'] == null
           ? null
           : DateTime.parse(json['lastBackupDone'] as String);
@@ -172,10 +177,10 @@ const _$LastBackupUploadStateEnumMap = {
 };
 
 BackupServer _$BackupServerFromJson(Map<String, dynamic> json) => BackupServer(
-      serverUrl: json['serverUrl'] as String,
-      retentionDays: (json['retentionDays'] as num).toInt(),
-      maxBackupBytes: (json['maxBackupBytes'] as num).toInt(),
-    );
+  serverUrl: json['serverUrl'] as String,
+  retentionDays: (json['retentionDays'] as num).toInt(),
+  maxBackupBytes: (json['maxBackupBytes'] as num).toInt(),
+);
 
 Map<String, dynamic> _$BackupServerToJson(BackupServer instance) =>
     <String, dynamic>{

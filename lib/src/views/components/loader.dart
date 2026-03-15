@@ -74,7 +74,7 @@ class _ThreeRotatingDotsState extends State<ThreeRotatingDots>
       height: size,
       child: AnimatedBuilder(
         animation: _animationController,
-        builder: (_, __) => Transform.translate(
+        builder: (_, _) => Transform.translate(
           offset: Offset(0, size / 12),
           child: Stack(
             alignment: Alignment.center,
@@ -110,7 +110,6 @@ class _ThreeRotatingDotsState extends State<ThreeRotatingDots>
               ),
 
               /// Next 3 dots
-
               _BuildDot.second(
                 controller: _animationController,
                 beginAngle: 0,
@@ -217,9 +216,9 @@ class DrawDot extends StatelessWidget {
     required double dotSize,
     required this.color,
     super.key,
-  })  : width = dotSize,
-        height = dotSize,
-        circular = true;
+  }) : width = dotSize,
+       height = dotSize,
+       circular = true;
 
   const DrawDot.elliptical({
     required this.width,

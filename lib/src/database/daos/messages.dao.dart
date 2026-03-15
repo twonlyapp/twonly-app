@@ -44,20 +44,23 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Stream<List<Message>> watchMediaNotOpened(String groupId) {
-    final query = select(messages).join([
-      leftOuterJoin(mediaFiles, mediaFiles.mediaId.equalsExp(messages.mediaId)),
-    ])
-      ..where(
-        mediaFiles.downloadState
-                .equals(DownloadState.reuploadRequested.name)
-                .not() &
-            mediaFiles.type.equals(MediaType.audio.name).not() &
-            messages.openedAt.isNull() &
-            messages.groupId.equals(groupId) &
-            messages.mediaId.isNotNull() &
-            messages.senderId.isNotNull() &
-            messages.type.equals(MessageType.media.name),
-      );
+    final query =
+        select(messages).join([
+          leftOuterJoin(
+            mediaFiles,
+            mediaFiles.mediaId.equalsExp(messages.mediaId),
+          ),
+        ])..where(
+          mediaFiles.downloadState
+                  .equals(DownloadState.reuploadRequested.name)
+                  .not() &
+              mediaFiles.type.equals(MediaType.audio.name).not() &
+              messages.openedAt.isNull() &
+              messages.groupId.equals(groupId) &
+              messages.mediaId.isNotNull() &
+              messages.senderId.isNotNull() &
+              messages.type.equals(MessageType.media.name),
+        );
     return query.map((row) => row.readTable(messages)).watch();
   }
 
@@ -70,8 +73,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Stream<List<Message>> watchByGroupId(String groupId) {
-    return ((select(messages)
-          ..where(
+    return ((select(messages)..where(
             (t) =>
                 t.groupId.equals(groupId) &
                 (t.isDeletedFromSender.equals(true) |
@@ -92,21 +94,22 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         contacts,
         contacts.userId.equalsExp(groupMembers.contactId),
       ),
-    ])
-      ..where(groupMembers.groupId.equals(groupId)));
+    ])..where(groupMembers.groupId.equals(groupId)));
     return query
         .map((row) => (row.readTable(groupMembers), row.readTable(contacts)))
         .watch();
   }
 
   Stream<List<MessageAction>> watchMessageActionChanges(String messageId) {
-    return (select(messageActions)..where((t) => t.messageId.equals(messageId)))
-        .watch();
+    return (select(
+      messageActions,
+    )..where((t) => t.messageId.equals(messageId))).watch();
   }
 
   Stream<Message?> watchMessageById(String messageId) {
-    return (select(messages)..where((t) => t.messageId.equals(messageId)))
-        .watchSingleOrNull();
+    return (select(
+      messages,
+    )..where((t) => t.messageId.equals(messageId))).watchSingleOrNull();
   }
 
   Future<void> purgeMessageTable() async {
@@ -114,35 +117,33 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
     for (final group in allGroups) {
       final deletionTime = clock.now().subtract(
-            Duration(
-              milliseconds: group.deleteMessagesAfterMilliseconds,
-            ),
-          );
-      await (delete(messages)
-            ..where(
-              (m) =>
-                  m.groupId.equals(group.groupId) &
-                  (m.mediaStored.equals(true) &
-                          m.isDeletedFromSender.equals(true) |
-                      m.mediaStored.equals(false)) &
-                  (m.openedAt.isSmallerThanValue(deletionTime) |
-                      (m.isDeletedFromSender.equals(true) &
-                          m.createdAt.isSmallerThanValue(deletionTime))),
-            ))
+        Duration(
+          milliseconds: group.deleteMessagesAfterMilliseconds,
+        ),
+      );
+      await (delete(messages)..where(
+            (m) =>
+                m.groupId.equals(group.groupId) &
+                (m.mediaStored.equals(true) &
+                        m.isDeletedFromSender.equals(true) |
+                    m.mediaStored.equals(false)) &
+                (m.openedAt.isSmallerThanValue(deletionTime) |
+                    (m.isDeletedFromSender.equals(true) &
+                        m.createdAt.isSmallerThanValue(deletionTime))),
+          ))
           .go();
     }
   }
 
   Future<void> openedAllTextMessages(String groupId) {
     final updates = MessagesCompanion(openedAt: Value(clock.now()));
-    return (update(messages)
-          ..where(
-            (t) =>
-                t.groupId.equals(groupId) &
-                t.senderId.isNotNull() &
-                t.openedAt.isNull() &
-                t.type.equals(MessageType.text.name),
-          ))
+    return (update(messages)..where(
+          (t) =>
+              t.groupId.equals(groupId) &
+              t.senderId.isNotNull() &
+              t.openedAt.isNull() &
+              t.type.equals(MessageType.text.name),
+        ))
         .write(updates);
   }
 
@@ -158,29 +159,29 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
     if (msg.mediaId != null && contactId != null) {
       // contactId -> When a image is send to multiple and one message is delete the image should be still available...
-      await (delete(mediaFiles)..where((t) => t.mediaId.equals(msg.mediaId!)))
-          .go();
+      await (delete(
+        mediaFiles,
+      )..where((t) => t.mediaId.equals(msg.mediaId!))).go();
 
       final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
       if (mediaService != null) {
         mediaService.fullMediaRemoval();
       }
     }
-    await (delete(messageHistories)
-          ..where((t) => t.messageId.equals(messageId)))
-        .go();
+    await (delete(
+      messageHistories,
+    )..where((t) => t.messageId.equals(messageId))).go();
 
-    await (update(messages)
-          ..where(
-            (t) => t.messageId.equals(messageId),
-          ))
+    await (update(messages)..where(
+          (t) => t.messageId.equals(messageId),
+        ))
         .write(
-      const MessagesCompanion(
-        isDeletedFromSender: Value(true),
-        content: Value(null),
-        mediaId: Value(null),
-      ),
-    );
+          const MessagesCompanion(
+            isDeletedFromSender: Value(true),
+            content: Value(null),
+            mediaId: Value(null),
+          ),
+        );
   }
 
   Future<void> handleTextEdit(
@@ -200,16 +201,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         createdAt: Value(timestamp),
       ),
     );
-    await (update(messages)
-          ..where(
-            (t) => t.messageId.equals(messageId),
-          ))
+    await (update(messages)..where(
+          (t) => t.messageId.equals(messageId),
+        ))
         .write(
-      MessagesCompanion(
-        content: Value(text),
-        modifiedAt: Value(timestamp),
-      ),
-    );
+          MessagesCompanion(
+            content: Value(text),
+            modifiedAt: Value(timestamp),
+          ),
+        );
   }
 
   Future<void> handleMessagesOpened(
@@ -232,8 +232,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       }
 
       for (final messageId in messageIds) {
-        final isOpenedByAll =
-            await haveAllMembers(messageId, MessageActionType.openedAt);
+        final isOpenedByAll = await haveAllMembers(
+          messageId,
+          MessageActionType.openedAt,
+        );
         final now = clock.now();
 
         batch.update(
@@ -271,17 +273,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     MessageActionType action,
   ) async {
-    final message =
-        await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+    final message = await twonlyDB.messagesDao
+        .getMessageById(messageId)
+        .getSingleOrNull();
     if (message == null) return true;
-    final members =
-        await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
+    final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+      message.groupId,
+    );
 
-    final actions = await (select(messageActions)
-          ..where(
-            (t) => t.type.equals(action.name) & t.messageId.equals(messageId),
-          ))
-        .get();
+    final actions =
+        await (select(messageActions)..where(
+              (t) => t.type.equals(action.name) & t.messageId.equals(messageId),
+            ))
+            .get();
 
     return members.length == actions.length;
   }
@@ -290,16 +294,18 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     MessagesCompanion updatedValues,
   ) async {
-    await (update(messages)..where((c) => c.messageId.equals(messageId)))
-        .write(updatedValues);
+    await (update(
+      messages,
+    )..where((c) => c.messageId.equals(messageId))).write(updatedValues);
   }
 
   Future<void> updateMessagesByMediaId(
     String mediaId,
     MessagesCompanion updatedValues,
   ) {
-    return (update(messages)..where((c) => c.mediaId.equals(mediaId)))
-        .write(updatedValues);
+    return (update(
+      messages,
+    )..where((c) => c.mediaId.equals(mediaId))).write(updatedValues);
   }
 
   Future<Message?> insertMessage(MessagesCompanion message) async {
@@ -333,8 +339,9 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
-      return await (select(messages)..where((t) => t.rowId.equals(rowId)))
-          .getSingle();
+      return await (select(
+        messages,
+      )..where((t) => t.rowId.equals(rowId))).getSingle();
     } catch (e) {
       Log.error('Could not insert message: $e');
       return null;
@@ -342,11 +349,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Future<MessageAction?> getLastMessageAction(String messageId) async {
-    return (((select(messageActions)
-          ..where(
-            (t) => t.messageId.equals(messageId),
-          ))
-          ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
+    return (((select(messageActions)..where(
+              (t) => t.messageId.equals(messageId),
+            ))
+            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
           ..limit(1))
         .getSingleOrNull();
   }
@@ -373,8 +379,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         contacts,
         contacts.userId.equalsExp(messageActions.contactId),
       ),
-    ])
-      ..where(messageActions.messageId.equals(messageId)));
+    ])..where(messageActions.messageId.equals(messageId)));
     return query
         .map((row) => (row.readTable(messageActions), row.readTable(contacts)))
         .watch();

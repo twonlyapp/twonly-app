@@ -110,7 +110,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return query.map((row) => row.read(count)).watchSingle();
   }
 
-  Stream<int?> watchContactsRequested() {
+  Stream<int?> watchContactsRequestedCount() {
     final count = contacts.requested.count(distinct: true);
     final query = selectOnly(contacts)
       ..where(

@@ -25,8 +25,11 @@ jobs:
       - name: Cloning sub-repos
         run: git submodule update --init --recursive
 
-      - name: Check flutter code
-        run: | 
-          flutter pub get
-          flutter analyze
-          flutter test
+      - name: flutter pub get
+        run:  flutter pub get
+
+      - name: flutter analyze
+        run:  flutter analyze
+
+      - name: flutter test
+        run:  flutter test

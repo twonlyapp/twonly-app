@@ -93,7 +93,9 @@ class GroupMemberContextMenu extends StatelessWidget {
     await twonlyDB.contactsDao.updateContact(
       member.contactId,
       const ContactsCompanion(
-        requested: Value(true),
+        accepted: Value(false),
+        requested: Value(false),
+        deletedByUser: Value(false),
       ),
     );
     await sendCipherText(

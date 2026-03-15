@@ -10,13 +10,12 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
-import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
+import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -42,15 +41,16 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   Log.info('Starting new twonly Backup!');
 
-  final baseDir = (await getApplicationSupportDirectory()).path;
+  final baseDir = globalApplicationSupportDirectory;
 
   final backupDir = Directory(join(baseDir, 'backup_twonly_safe/'));
   await backupDir.create(recursive: true);
 
   final backupDatabaseFile = File(join(backupDir.path, 'twonly.backup.sqlite'));
 
-  final backupDatabaseFileCleaned =
-      File(join(backupDir.path, 'twonly.backup.cleaned.sqlite'));
+  final backupDatabaseFileCleaned = File(
+    join(backupDir.path, 'twonly.backup.cleaned.sqlite'),
+  );
 
   // copy database
   final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
@@ -70,8 +70,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   await backupDB.deleteDataForTwonlySafe();
 
-  await backupDB
-      .customStatement('VACUUM INTO ?', [backupDatabaseFileCleaned.path]);
+  await backupDB.customStatement('VACUUM INTO ?', [
+    backupDatabaseFileCleaned.path,
+  ]);
 
   await backupDB.printTableSizes();
 
@@ -80,10 +81,11 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   // ignore: inference_failure_on_collection_literal
   final secureStorageBackup = {};
   const storage = FlutterSecureStorage();
-  secureStorageBackup[SecureStorageKeys.signalIdentity] =
-      await storage.read(key: SecureStorageKeys.signalIdentity);
-  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] =
-      await storage.read(key: SecureStorageKeys.signalSignedPreKey);
+  secureStorageBackup[SecureStorageKeys.signalIdentity] = await storage.read(
+    key: SecureStorageKeys.signalIdentity,
+  );
+  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] = await storage
+      .read(key: SecureStorageKeys.signalSignedPreKey);
 
   final userBackup = await getUser();
   if (userBackup == null) return;
@@ -117,13 +119,15 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
   if (gUser.twonlySafeBackup!.lastBackupDone == null ||
-      gUser.twonlySafeBackup!.lastBackupDone!
-          .isAfter(clock.now().subtract(const Duration(days: 90)))) {
+      gUser.twonlySafeBackup!.lastBackupDone!.isAfter(
+        clock.now().subtract(const Duration(days: 90)),
+      )) {
     force = true;
   }
 
-  final lastHash =
-      await storage.read(key: SecureStorageKeys.twonlySafeLastBackupHash);
+  final lastHash = await storage.read(
+    key: SecureStorageKeys.twonlySafeLastBackupHash,
+  );
 
   if (lastHash != null && !force) {
     if (backupHash == lastHash) {
@@ -155,8 +159,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   Log.info('Backup files created.');
 
-  final encryptedBackupBytesFile =
-      File(join(backupDir.path, 'twonly_safe.backup'));
+  final encryptedBackupBytesFile = File(
+    join(backupDir.path, 'twonly_safe.backup'),
+  );
 
   await encryptedBackupBytesFile.writeAsBytes(encryptedBackupBytes);
 

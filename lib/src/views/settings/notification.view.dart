@@ -7,7 +7,7 @@ import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
-import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

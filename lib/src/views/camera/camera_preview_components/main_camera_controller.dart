@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -25,19 +26,13 @@ import 'package:twonly/src/views/camera/camera_preview_components/painters/face_
 import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
 class ScannedVerifiedContact {
-  ScannedVerifiedContact({
-    required this.contact,
-    required this.verificationOk,
-  });
+  ScannedVerifiedContact({required this.contact, required this.verificationOk});
   Contact contact;
   bool verificationOk;
 }
 
 class ScannedNewProfile {
-  ScannedNewProfile({
-    required this.profile,
-    this.isLoading = false,
-  });
+  ScannedNewProfile({required this.profile, this.isLoading = false});
   PublicProfile profile;
   bool isLoading;
 }
@@ -53,14 +48,15 @@ class MainCameraController {
   String? scannedUrl;
   GlobalKey zoomButtonKey = GlobalKey();
   GlobalKey cameraPreviewKey = GlobalKey();
-  bool isSelectingFaceFilters = false;
 
+  bool isSelectingFaceFilters = false;
   bool isSharePreviewIsShown = false;
   bool isVideoRecording = false;
+  DateTime? timeSharedLinkWasSetWithQr;
 
   Uri? sharedLinkForPreview;
 
-  void setSharedLinkForPreview(Uri url) {
+  void setSharedLinkForPreview(Uri? url) {
     sharedLinkForPreview = url;
     setState();
   }
@@ -92,9 +88,8 @@ class MainCameraController {
     scannedUrl = null;
     try {
       await cameraController?.stopImageStream();
-    } catch (e) {
-      Log.warn(e);
-    }
+      // ignore: empty_catches
+    } catch (e) {}
     final cameraControllerTemp = cameraController;
     cameraController = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
@@ -159,8 +154,9 @@ class MainCameraController {
       }
     }
 
-    await cameraController
-        ?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+    await cameraController?.lockCaptureOrientation(
+      DeviceOrientation.portraitUp,
+    );
     await cameraController?.setFlashMode(
       selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
     );
@@ -169,7 +165,8 @@ class MainCameraController {
     selectedCameraDetails.minAvailableZoom =
         await cameraController?.getMinZoomLevel() ?? 1;
     selectedCameraDetails
-      ..isZoomAble = selectedCameraDetails.maxAvailableZoom !=
+      ..isZoomAble =
+          selectedCameraDetails.maxAvailableZoom !=
           selectedCameraDetails.minAvailableZoom
       ..cameraLoaded = true
       ..cameraId = cameraId;
@@ -325,11 +322,23 @@ class MainCameraController {
       );
       customPaint = CustomPaint(painter: painter);
 
+      if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
+        if (timeSharedLinkWasSetWithQr!.isAfter(
+          DateTime.now().subtract(const Duration(seconds: 2)),
+        )) {
+          setSharedLinkForPreview(null);
+        }
+      }
+
       for (final barcode in barcodes) {
         if (barcode.displayValue != null) {
           if (barcode.displayValue!.startsWith('http://') ||
               barcode.displayValue!.startsWith('https://')) {
             scannedUrl = barcode.displayValue;
+            if (sharedLinkForPreview == null) {
+              timeSharedLinkWasSetWithQr = clock.now();
+              setSharedLinkForPreview(Uri.parse(scannedUrl!));
+            }
           }
         }
         if (barcode.rawBytes == null) continue;
@@ -338,16 +347,19 @@ class MainCameraController {
 
         if (profile == null) continue;
 
-        final contact =
-            await twonlyDB.contactsDao.getContactById(profile.userId.toInt());
+        final contact = await twonlyDB.contactsDao.getContactById(
+          profile.userId.toInt(),
+        );
 
         if (contact != null && contact.accepted) {
           if (contactsVerified[contact.userId] == null) {
-            final storedPublicKey =
-                await getPublicKeyFromContact(contact.userId);
+            final storedPublicKey = await getPublicKeyFromContact(
+              contact.userId,
+            );
             if (storedPublicKey != null) {
-              final verificationOk =
-                  profile.publicIdentityKey.equals(storedPublicKey.toList());
+              final verificationOk = profile.publicIdentityKey.equals(
+                storedPublicKey.toList(),
+              );
               contactsVerified[contact.userId] = ScannedVerifiedContact(
                 contact: contact,
                 verificationOk: verificationOk,
@@ -365,8 +377,8 @@ class MainCameraController {
                     content: Text(
                       globalRootScaffoldMessengerKey.currentContext?.lang
                               .verifiedPublicKey(
-                            getContactDisplayName(contact),
-                          ) ??
+                                getContactDisplayName(contact),
+                              ) ??
                           '',
                     ),
                     duration: const Duration(seconds: 6),
@@ -408,7 +420,6 @@ class MainCameraController {
               inputImage.metadata!.rotation,
               cameraController!.description.lensDirection,
             );
-          case FaceFilterType.beardUpperLip:
           case FaceFilterType.beardUpperLipGreen:
             painter = BeardFilterPainter(
               _currentFilterType,

@@ -30,8 +30,12 @@ class ReceiptsDaoManager {
       $$ReceiptsTableTableManager(_db.attachedDatabase, _db.receipts);
   $$MessageActionsTableTableManager get messageActions =>
       $$MessageActionsTableTableManager(
-          _db.attachedDatabase, _db.messageActions);
+        _db.attachedDatabase,
+        _db.messageActions,
+      );
   $$ReceivedReceiptsTableTableManager get receivedReceipts =>
       $$ReceivedReceiptsTableTableManager(
-          _db.attachedDatabase, _db.receivedReceipts);
+        _db.attachedDatabase,
+        _db.receivedReceipts,
+      );
 }

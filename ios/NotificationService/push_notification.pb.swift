@@ -141,20 +141,20 @@ struct PushNotification: Sendable {
   var kind: PushKind = .reaction
 
   var messageID: String {
-    get {return _messageID ?? String()}
+    get {_messageID ?? String()}
     set {_messageID = newValue}
   }
   /// Returns true if `messageID` has been explicitly set.
-  var hasMessageID: Bool {return self._messageID != nil}
+  var hasMessageID: Bool {self._messageID != nil}
   /// Clears the value of `messageID`. Subsequent reads from it will return its default value.
   mutating func clearMessageID() {self._messageID = nil}
 
   var additionalContent: String {
-    get {return _additionalContent ?? String()}
+    get {_additionalContent ?? String()}
     set {_additionalContent = newValue}
   }
   /// Returns true if `additionalContent` has been explicitly set.
-  var hasAdditionalContent: Bool {return self._additionalContent != nil}
+  var hasAdditionalContent: Bool {self._additionalContent != nil}
   /// Clears the value of `additionalContent`. Subsequent reads from it will return its default value.
   mutating func clearAdditionalContent() {self._additionalContent = nil}
 
@@ -190,11 +190,11 @@ struct PushUser: Sendable {
   var blocked: Bool = false
 
   var lastMessageID: String {
-    get {return _lastMessageID ?? String()}
+    get {_lastMessageID ?? String()}
     set {_lastMessageID = newValue}
   }
   /// Returns true if `lastMessageID` has been explicitly set.
-  var hasLastMessageID: Bool {return self._lastMessageID != nil}
+  var hasLastMessageID: Bool {self._lastMessageID != nil}
   /// Clears the value of `lastMessageID`. Subsequent reads from it will return its default value.
   mutating func clearLastMessageID() {self._lastMessageID = nil}
 

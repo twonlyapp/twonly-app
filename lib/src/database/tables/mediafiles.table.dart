@@ -20,6 +20,9 @@ enum UploadState {
   uploaded,
 
   uploadLimitReached,
+
+  // File is to big to be uploaded
+  fileLimitReached,
   // readyToUpload,
   // uploadTaskStarted,
   // receiverNotified,
@@ -47,6 +50,8 @@ class MediaFiles extends Table {
 
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
   BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
+
+  IntColumn get preProgressingProcess => integer().nullable()();
 
   TextColumn get reuploadRequestedBy =>
       text().map(IntListTypeConverter()).nullable()();

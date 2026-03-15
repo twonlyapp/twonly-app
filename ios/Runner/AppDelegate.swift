@@ -4,6 +4,7 @@ import Foundation
 import UIKit
 import UserNotifications
 import flutter_sharing_intent
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -12,6 +13,22 @@ import flutter_sharing_intent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
+    
+    if let registrar = self.registrar(forPlugin: "VideoCompressionChannel") {
+      VideoCompressionChannel.register(with: registrar.messenger())
+    }
+
+    WorkmanagerDebug.setCurrent(LoggingDebugHandler())
+
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: "eu.twonly.periodic_task",
+      frequency: NSNumber(value: 20 * 60)
+    )
+
+    WorkmanagerPlugin.registerBGProcessingTask(
+      withIdentifier: "eu.twonly.processing_task"
+    )
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

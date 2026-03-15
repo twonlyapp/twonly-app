@@ -1,12 +1,27 @@
 # Changelog
 
+## 0.0.99
+
+- New: Groups can now collect flames as well
+- New: Background execution to pre-load messages 
+- New: Adds a link if the image contains a QR code
+- Improve: Video compression with progress updates
+- Improve: Show message "Flames restored"
+- Improve: Show toast message if user was added via QR 
+- Fix: Media file appears as a white square and is not listed.
+- Fix: Issue with media files required to be reuploaded
+- Fix: Problem during contact requests
+- Fix: Problem with deleting a contact
+- Fix: Problem with restoring from backup
+- Fix: Issue with the log file
+
 ## 0.0.96
 
-Feature: Show link in chat if the saved media file contains one
-Improve: Verification badge for groups 
-Improve: Huge reduction in app size
-Fix: Crash on older devices when compressing a video
-Fix: Problem with decrypting messages fixed
+- Feature: Show link in chat if the saved media file contains one
+- Improve: Verification badge for groups 
+- Improve: Huge reduction in app size
+- Fix: Crash on older devices when compressing a video
+- Fix: Problem with decrypting messages fixed
 
 ## 0.0.93
 

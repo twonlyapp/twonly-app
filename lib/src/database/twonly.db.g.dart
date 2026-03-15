@@ -11,197 +11,291 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _usernameMeta =
-      const VerificationMeta('username');
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
   @override
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
-      'username', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _displayNameMeta =
-      const VerificationMeta('displayName');
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
   @override
   late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
-      'display_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _nickNameMeta =
-      const VerificationMeta('nickName');
+    'display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nickNameMeta = const VerificationMeta(
+    'nickName',
+  );
   @override
   late final GeneratedColumn<String> nickName = GeneratedColumn<String>(
-      'nick_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'nick_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _avatarSvgCompressedMeta =
       const VerificationMeta('avatarSvgCompressed');
   @override
   late final GeneratedColumn<Uint8List> avatarSvgCompressed =
-      GeneratedColumn<Uint8List>('avatar_svg_compressed', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
+      GeneratedColumn<Uint8List>(
+        'avatar_svg_compressed',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _senderProfileCounterMeta =
       const VerificationMeta('senderProfileCounter');
   @override
   late final GeneratedColumn<int> senderProfileCounter = GeneratedColumn<int>(
-      'sender_profile_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _acceptedMeta =
-      const VerificationMeta('accepted');
+    'sender_profile_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _acceptedMeta = const VerificationMeta(
+    'accepted',
+  );
   @override
   late final GeneratedColumn<bool> accepted = GeneratedColumn<bool>(
-      'accepted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("accepted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _deletedByUserMeta =
-      const VerificationMeta('deletedByUser');
+    'accepted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("accepted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedByUserMeta = const VerificationMeta(
+    'deletedByUser',
+  );
   @override
   late final GeneratedColumn<bool> deletedByUser = GeneratedColumn<bool>(
-      'deleted_by_user', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("deleted_by_user" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _requestedMeta =
-      const VerificationMeta('requested');
+    'deleted_by_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted_by_user" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _requestedMeta = const VerificationMeta(
+    'requested',
+  );
   @override
   late final GeneratedColumn<bool> requested = GeneratedColumn<bool>(
-      'requested', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("requested" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _blockedMeta =
-      const VerificationMeta('blocked');
+    'requested',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("requested" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _blockedMeta = const VerificationMeta(
+    'blocked',
+  );
   @override
   late final GeneratedColumn<bool> blocked = GeneratedColumn<bool>(
-      'blocked', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("blocked" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _verifiedMeta =
-      const VerificationMeta('verified');
+    'blocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("blocked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _verifiedMeta = const VerificationMeta(
+    'verified',
+  );
   @override
   late final GeneratedColumn<bool> verified = GeneratedColumn<bool>(
-      'verified', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("verified" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _accountDeletedMeta =
-      const VerificationMeta('accountDeleted');
+    'verified',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("verified" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _accountDeletedMeta = const VerificationMeta(
+    'accountDeleted',
+  );
   @override
   late final GeneratedColumn<bool> accountDeleted = GeneratedColumn<bool>(
-      'account_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("account_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'account_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("account_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        userId,
-        username,
-        displayName,
-        nickName,
-        avatarSvgCompressed,
-        senderProfileCounter,
-        accepted,
-        deletedByUser,
-        requested,
-        blocked,
-        verified,
-        accountDeleted,
-        createdAt
-      ];
+    userId,
+    username,
+    displayName,
+    nickName,
+    avatarSvgCompressed,
+    senderProfileCounter,
+    accepted,
+    deletedByUser,
+    requested,
+    blocked,
+    verified,
+    accountDeleted,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'contacts';
   @override
-  VerificationContext validateIntegrity(Insertable<Contact> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Contact> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
     }
     if (data.containsKey('username')) {
-      context.handle(_usernameMeta,
-          username.isAcceptableOrUnknown(data['username']!, _usernameMeta));
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
     } else if (isInserting) {
       context.missing(_usernameMeta);
     }
     if (data.containsKey('display_name')) {
       context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
           _displayNameMeta,
-          displayName.isAcceptableOrUnknown(
-              data['display_name']!, _displayNameMeta));
+        ),
+      );
     }
     if (data.containsKey('nick_name')) {
-      context.handle(_nickNameMeta,
-          nickName.isAcceptableOrUnknown(data['nick_name']!, _nickNameMeta));
+      context.handle(
+        _nickNameMeta,
+        nickName.isAcceptableOrUnknown(data['nick_name']!, _nickNameMeta),
+      );
     }
     if (data.containsKey('avatar_svg_compressed')) {
       context.handle(
+        _avatarSvgCompressedMeta,
+        avatarSvgCompressed.isAcceptableOrUnknown(
+          data['avatar_svg_compressed']!,
           _avatarSvgCompressedMeta,
-          avatarSvgCompressed.isAcceptableOrUnknown(
-              data['avatar_svg_compressed']!, _avatarSvgCompressedMeta));
+        ),
+      );
     }
     if (data.containsKey('sender_profile_counter')) {
       context.handle(
+        _senderProfileCounterMeta,
+        senderProfileCounter.isAcceptableOrUnknown(
+          data['sender_profile_counter']!,
           _senderProfileCounterMeta,
-          senderProfileCounter.isAcceptableOrUnknown(
-              data['sender_profile_counter']!, _senderProfileCounterMeta));
+        ),
+      );
     }
     if (data.containsKey('accepted')) {
-      context.handle(_acceptedMeta,
-          accepted.isAcceptableOrUnknown(data['accepted']!, _acceptedMeta));
+      context.handle(
+        _acceptedMeta,
+        accepted.isAcceptableOrUnknown(data['accepted']!, _acceptedMeta),
+      );
     }
     if (data.containsKey('deleted_by_user')) {
       context.handle(
+        _deletedByUserMeta,
+        deletedByUser.isAcceptableOrUnknown(
+          data['deleted_by_user']!,
           _deletedByUserMeta,
-          deletedByUser.isAcceptableOrUnknown(
-              data['deleted_by_user']!, _deletedByUserMeta));
+        ),
+      );
     }
     if (data.containsKey('requested')) {
-      context.handle(_requestedMeta,
-          requested.isAcceptableOrUnknown(data['requested']!, _requestedMeta));
+      context.handle(
+        _requestedMeta,
+        requested.isAcceptableOrUnknown(data['requested']!, _requestedMeta),
+      );
     }
     if (data.containsKey('blocked')) {
-      context.handle(_blockedMeta,
-          blocked.isAcceptableOrUnknown(data['blocked']!, _blockedMeta));
+      context.handle(
+        _blockedMeta,
+        blocked.isAcceptableOrUnknown(data['blocked']!, _blockedMeta),
+      );
     }
     if (data.containsKey('verified')) {
-      context.handle(_verifiedMeta,
-          verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta));
+      context.handle(
+        _verifiedMeta,
+        verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta),
+      );
     }
     if (data.containsKey('account_deleted')) {
       context.handle(
+        _accountDeletedMeta,
+        accountDeleted.isAcceptableOrUnknown(
+          data['account_deleted']!,
           _accountDeletedMeta,
-          accountDeleted.isAcceptableOrUnknown(
-              data['account_deleted']!, _accountDeletedMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -212,32 +306,58 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   Contact map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Contact(
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
-      username: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}username'])!,
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
-      nickName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      ),
+      nickName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nick_name'],
+      ),
       avatarSvgCompressed: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}avatar_svg_compressed']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}avatar_svg_compressed'],
+      ),
       senderProfileCounter: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}sender_profile_counter'])!,
-      accepted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}accepted'])!,
-      deletedByUser: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}deleted_by_user'])!,
-      requested: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}requested'])!,
-      blocked: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
-      verified: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
-      accountDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}account_deleted'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_profile_counter'],
+      )!,
+      accepted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}accepted'],
+      )!,
+      deletedByUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted_by_user'],
+      )!,
+      requested: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requested'],
+      )!,
+      blocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}blocked'],
+      )!,
+      verified: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}verified'],
+      )!,
+      accountDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}account_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -261,20 +381,21 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool accountDeleted;
   final DateTime createdAt;
-  const Contact(
-      {required this.userId,
-      required this.username,
-      this.displayName,
-      this.nickName,
-      this.avatarSvgCompressed,
-      required this.senderProfileCounter,
-      required this.accepted,
-      required this.deletedByUser,
-      required this.requested,
-      required this.blocked,
-      required this.verified,
-      required this.accountDeleted,
-      required this.createdAt});
+  const Contact({
+    required this.userId,
+    required this.username,
+    this.displayName,
+    this.nickName,
+    this.avatarSvgCompressed,
+    required this.senderProfileCounter,
+    required this.accepted,
+    required this.deletedByUser,
+    required this.requested,
+    required this.blocked,
+    required this.verified,
+    required this.accountDeleted,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -324,18 +445,22 @@ class Contact extends DataClass implements Insertable<Contact> {
     );
   }
 
-  factory Contact.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Contact.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Contact(
       userId: serializer.fromJson<int>(json['userId']),
       username: serializer.fromJson<String>(json['username']),
       displayName: serializer.fromJson<String?>(json['displayName']),
       nickName: serializer.fromJson<String?>(json['nickName']),
-      avatarSvgCompressed:
-          serializer.fromJson<Uint8List?>(json['avatarSvgCompressed']),
-      senderProfileCounter:
-          serializer.fromJson<int>(json['senderProfileCounter']),
+      avatarSvgCompressed: serializer.fromJson<Uint8List?>(
+        json['avatarSvgCompressed'],
+      ),
+      senderProfileCounter: serializer.fromJson<int>(
+        json['senderProfileCounter'],
+      ),
       accepted: serializer.fromJson<bool>(json['accepted']),
       deletedByUser: serializer.fromJson<bool>(json['deletedByUser']),
       requested: serializer.fromJson<bool>(json['requested']),
@@ -365,43 +490,44 @@ class Contact extends DataClass implements Insertable<Contact> {
     };
   }
 
-  Contact copyWith(
-          {int? userId,
-          String? username,
-          Value<String?> displayName = const Value.absent(),
-          Value<String?> nickName = const Value.absent(),
-          Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
-          int? senderProfileCounter,
-          bool? accepted,
-          bool? deletedByUser,
-          bool? requested,
-          bool? blocked,
-          bool? verified,
-          bool? accountDeleted,
-          DateTime? createdAt}) =>
-      Contact(
-        userId: userId ?? this.userId,
-        username: username ?? this.username,
-        displayName: displayName.present ? displayName.value : this.displayName,
-        nickName: nickName.present ? nickName.value : this.nickName,
-        avatarSvgCompressed: avatarSvgCompressed.present
-            ? avatarSvgCompressed.value
-            : this.avatarSvgCompressed,
-        senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
-        accepted: accepted ?? this.accepted,
-        deletedByUser: deletedByUser ?? this.deletedByUser,
-        requested: requested ?? this.requested,
-        blocked: blocked ?? this.blocked,
-        verified: verified ?? this.verified,
-        accountDeleted: accountDeleted ?? this.accountDeleted,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  Contact copyWith({
+    int? userId,
+    String? username,
+    Value<String?> displayName = const Value.absent(),
+    Value<String?> nickName = const Value.absent(),
+    Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+    int? senderProfileCounter,
+    bool? accepted,
+    bool? deletedByUser,
+    bool? requested,
+    bool? blocked,
+    bool? verified,
+    bool? accountDeleted,
+    DateTime? createdAt,
+  }) => Contact(
+    userId: userId ?? this.userId,
+    username: username ?? this.username,
+    displayName: displayName.present ? displayName.value : this.displayName,
+    nickName: nickName.present ? nickName.value : this.nickName,
+    avatarSvgCompressed: avatarSvgCompressed.present
+        ? avatarSvgCompressed.value
+        : this.avatarSvgCompressed,
+    senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
+    accepted: accepted ?? this.accepted,
+    deletedByUser: deletedByUser ?? this.deletedByUser,
+    requested: requested ?? this.requested,
+    blocked: blocked ?? this.blocked,
+    verified: verified ?? this.verified,
+    accountDeleted: accountDeleted ?? this.accountDeleted,
+    createdAt: createdAt ?? this.createdAt,
+  );
   Contact copyWithCompanion(ContactsCompanion data) {
     return Contact(
       userId: data.userId.present ? data.userId.value : this.userId,
       username: data.username.present ? data.username.value : this.username,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
       nickName: data.nickName.present ? data.nickName.value : this.nickName,
       avatarSvgCompressed: data.avatarSvgCompressed.present
           ? data.avatarSvgCompressed.value
@@ -445,19 +571,20 @@ class Contact extends DataClass implements Insertable<Contact> {
 
   @override
   int get hashCode => Object.hash(
-      userId,
-      username,
-      displayName,
-      nickName,
-      $driftBlobEquality.hash(avatarSvgCompressed),
-      senderProfileCounter,
-      accepted,
-      deletedByUser,
-      requested,
-      blocked,
-      verified,
-      accountDeleted,
-      createdAt);
+    userId,
+    username,
+    displayName,
+    nickName,
+    $driftBlobEquality.hash(avatarSvgCompressed),
+    senderProfileCounter,
+    accepted,
+    deletedByUser,
+    requested,
+    blocked,
+    verified,
+    accountDeleted,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -467,7 +594,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.displayName == this.displayName &&
           other.nickName == this.nickName &&
           $driftBlobEquality.equals(
-              other.avatarSvgCompressed, this.avatarSvgCompressed) &&
+            other.avatarSvgCompressed,
+            this.avatarSvgCompressed,
+          ) &&
           other.senderProfileCounter == this.senderProfileCounter &&
           other.accepted == this.accepted &&
           other.deletedByUser == this.deletedByUser &&
@@ -556,20 +685,21 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     });
   }
 
-  ContactsCompanion copyWith(
-      {Value<int>? userId,
-      Value<String>? username,
-      Value<String?>? displayName,
-      Value<String?>? nickName,
-      Value<Uint8List?>? avatarSvgCompressed,
-      Value<int>? senderProfileCounter,
-      Value<bool>? accepted,
-      Value<bool>? deletedByUser,
-      Value<bool>? requested,
-      Value<bool>? blocked,
-      Value<bool>? verified,
-      Value<bool>? accountDeleted,
-      Value<DateTime>? createdAt}) {
+  ContactsCompanion copyWith({
+    Value<int>? userId,
+    Value<String>? username,
+    Value<String?>? displayName,
+    Value<String?>? nickName,
+    Value<Uint8List?>? avatarSvgCompressed,
+    Value<int>? senderProfileCounter,
+    Value<bool>? accepted,
+    Value<bool>? deletedByUser,
+    Value<bool>? requested,
+    Value<bool>? blocked,
+    Value<bool>? verified,
+    Value<bool>? accountDeleted,
+    Value<DateTime>? createdAt,
+  }) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
       username: username ?? this.username,
@@ -603,8 +733,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       map['nick_name'] = Variable<String>(nickName.value);
     }
     if (avatarSvgCompressed.present) {
-      map['avatar_svg_compressed'] =
-          Variable<Uint8List>(avatarSvgCompressed.value);
+      map['avatar_svg_compressed'] = Variable<Uint8List>(
+        avatarSvgCompressed.value,
+      );
     }
     if (senderProfileCounter.present) {
       map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
@@ -659,382 +790,571 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $GroupsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _groupIdMeta =
-      const VerificationMeta('groupId');
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _isGroupAdminMeta =
-      const VerificationMeta('isGroupAdmin');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isGroupAdminMeta = const VerificationMeta(
+    'isGroupAdmin',
+  );
   @override
   late final GeneratedColumn<bool> isGroupAdmin = GeneratedColumn<bool>(
-      'is_group_admin', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_group_admin" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isDirectChatMeta =
-      const VerificationMeta('isDirectChat');
+    'is_group_admin',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_group_admin" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDirectChatMeta = const VerificationMeta(
+    'isDirectChat',
+  );
   @override
   late final GeneratedColumn<bool> isDirectChat = GeneratedColumn<bool>(
-      'is_direct_chat', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_direct_chat" IN (0, 1))'),
-      defaultValue: const Constant(false));
+    'is_direct_chat',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_direct_chat" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
   @override
   late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
-      'pinned', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _archivedMeta =
-      const VerificationMeta('archived');
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pinned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _archivedMeta = const VerificationMeta(
+    'archived',
+  );
   @override
   late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
-      'archived', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _joinedGroupMeta =
-      const VerificationMeta('joinedGroup');
+    'archived',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("archived" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _joinedGroupMeta = const VerificationMeta(
+    'joinedGroup',
+  );
   @override
   late final GeneratedColumn<bool> joinedGroup = GeneratedColumn<bool>(
-      'joined_group', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("joined_group" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _leftGroupMeta =
-      const VerificationMeta('leftGroup');
+    'joined_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("joined_group" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _leftGroupMeta = const VerificationMeta(
+    'leftGroup',
+  );
   @override
   late final GeneratedColumn<bool> leftGroup = GeneratedColumn<bool>(
-      'left_group', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("left_group" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _deletedContentMeta =
-      const VerificationMeta('deletedContent');
+    'left_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("left_group" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedContentMeta = const VerificationMeta(
+    'deletedContent',
+  );
   @override
   late final GeneratedColumn<bool> deletedContent = GeneratedColumn<bool>(
-      'deleted_content', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("deleted_content" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _stateVersionIdMeta =
-      const VerificationMeta('stateVersionId');
+    'deleted_content',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted_content" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _stateVersionIdMeta = const VerificationMeta(
+    'stateVersionId',
+  );
   @override
   late final GeneratedColumn<int> stateVersionId = GeneratedColumn<int>(
-      'state_version_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'state_version_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _stateEncryptionKeyMeta =
       const VerificationMeta('stateEncryptionKey');
   @override
   late final GeneratedColumn<Uint8List> stateEncryptionKey =
-      GeneratedColumn<Uint8List>('state_encryption_key', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _myGroupPrivateKeyMeta =
-      const VerificationMeta('myGroupPrivateKey');
+      GeneratedColumn<Uint8List>(
+        'state_encryption_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _myGroupPrivateKeyMeta = const VerificationMeta(
+    'myGroupPrivateKey',
+  );
   @override
   late final GeneratedColumn<Uint8List> myGroupPrivateKey =
-      GeneratedColumn<Uint8List>('my_group_private_key', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _groupNameMeta =
-      const VerificationMeta('groupName');
+      GeneratedColumn<Uint8List>(
+        'my_group_private_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _groupNameMeta = const VerificationMeta(
+    'groupName',
+  );
   @override
   late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
-      'group_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _draftMessageMeta =
-      const VerificationMeta('draftMessage');
+    'group_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _draftMessageMeta = const VerificationMeta(
+    'draftMessage',
+  );
   @override
   late final GeneratedColumn<String> draftMessage = GeneratedColumn<String>(
-      'draft_message', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _totalMediaCounterMeta =
-      const VerificationMeta('totalMediaCounter');
+    'draft_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _totalMediaCounterMeta = const VerificationMeta(
+    'totalMediaCounter',
+  );
   @override
   late final GeneratedColumn<int> totalMediaCounter = GeneratedColumn<int>(
-      'total_media_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _alsoBestFriendMeta =
-      const VerificationMeta('alsoBestFriend');
+    'total_media_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _alsoBestFriendMeta = const VerificationMeta(
+    'alsoBestFriend',
+  );
   @override
   late final GeneratedColumn<bool> alsoBestFriend = GeneratedColumn<bool>(
-      'also_best_friend', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("also_best_friend" IN (0, 1))'),
-      defaultValue: const Constant(false));
+    'also_best_friend',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("also_best_friend" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _deleteMessagesAfterMillisecondsMeta =
       const VerificationMeta('deleteMessagesAfterMilliseconds');
   @override
   late final GeneratedColumn<int> deleteMessagesAfterMilliseconds =
       GeneratedColumn<int>(
-          'delete_messages_after_milliseconds', aliasedName, false,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(defaultDeleteMessagesAfterMilliseconds));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+        'delete_messages_after_milliseconds',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(defaultDeleteMessagesAfterMilliseconds),
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _lastMessageSendMeta =
-      const VerificationMeta('lastMessageSend');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _lastMessageSendMeta = const VerificationMeta(
+    'lastMessageSend',
+  );
   @override
   late final GeneratedColumn<DateTime> lastMessageSend =
-      GeneratedColumn<DateTime>('last_message_send', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+      GeneratedColumn<DateTime>(
+        'last_message_send',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _lastMessageReceivedMeta =
       const VerificationMeta('lastMessageReceived');
   @override
   late final GeneratedColumn<DateTime> lastMessageReceived =
-      GeneratedColumn<DateTime>('last_message_received', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+      GeneratedColumn<DateTime>(
+        'last_message_received',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _lastFlameCounterChangeMeta =
       const VerificationMeta('lastFlameCounterChange');
   @override
   late final GeneratedColumn<DateTime> lastFlameCounterChange =
-      GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastFlameSyncMeta =
-      const VerificationMeta('lastFlameSync');
+      GeneratedColumn<DateTime>(
+        'last_flame_counter_change',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastFlameSyncMeta = const VerificationMeta(
+    'lastFlameSync',
+  );
   @override
   late final GeneratedColumn<DateTime> lastFlameSync =
-      GeneratedColumn<DateTime>('last_flame_sync', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _flameCounterMeta =
-      const VerificationMeta('flameCounter');
+      GeneratedColumn<DateTime>(
+        'last_flame_sync',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _flameCounterMeta = const VerificationMeta(
+    'flameCounter',
+  );
   @override
   late final GeneratedColumn<int> flameCounter = GeneratedColumn<int>(
-      'flame_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _maxFlameCounterMeta =
-      const VerificationMeta('maxFlameCounter');
+    'flame_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _maxFlameCounterMeta = const VerificationMeta(
+    'maxFlameCounter',
+  );
   @override
   late final GeneratedColumn<int> maxFlameCounter = GeneratedColumn<int>(
-      'max_flame_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'max_flame_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _maxFlameCounterFromMeta =
       const VerificationMeta('maxFlameCounterFrom');
   @override
   late final GeneratedColumn<DateTime> maxFlameCounterFrom =
-      GeneratedColumn<DateTime>('max_flame_counter_from', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+      GeneratedColumn<DateTime>(
+        'max_flame_counter_from',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _lastMessageExchangeMeta =
       const VerificationMeta('lastMessageExchange');
   @override
   late final GeneratedColumn<DateTime> lastMessageExchange =
-      GeneratedColumn<DateTime>('last_message_exchange', aliasedName, false,
-          type: DriftSqlType.dateTime,
-          requiredDuringInsert: false,
-          defaultValue: currentDateAndTime);
+      GeneratedColumn<DateTime>(
+        'last_message_exchange',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      );
   @override
   List<GeneratedColumn> get $columns => [
-        groupId,
-        isGroupAdmin,
-        isDirectChat,
-        pinned,
-        archived,
-        joinedGroup,
-        leftGroup,
-        deletedContent,
-        stateVersionId,
-        stateEncryptionKey,
-        myGroupPrivateKey,
-        groupName,
-        draftMessage,
-        totalMediaCounter,
-        alsoBestFriend,
-        deleteMessagesAfterMilliseconds,
-        createdAt,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter,
-        maxFlameCounter,
-        maxFlameCounterFrom,
-        lastMessageExchange
-      ];
+    groupId,
+    isGroupAdmin,
+    isDirectChat,
+    pinned,
+    archived,
+    joinedGroup,
+    leftGroup,
+    deletedContent,
+    stateVersionId,
+    stateEncryptionKey,
+    myGroupPrivateKey,
+    groupName,
+    draftMessage,
+    totalMediaCounter,
+    alsoBestFriend,
+    deleteMessagesAfterMilliseconds,
+    createdAt,
+    lastMessageSend,
+    lastMessageReceived,
+    lastFlameCounterChange,
+    lastFlameSync,
+    flameCounter,
+    maxFlameCounter,
+    maxFlameCounterFrom,
+    lastMessageExchange,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'groups';
   @override
-  VerificationContext validateIntegrity(Insertable<Group> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Group> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('group_id')) {
-      context.handle(_groupIdMeta,
-          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_groupIdMeta);
     }
     if (data.containsKey('is_group_admin')) {
       context.handle(
+        _isGroupAdminMeta,
+        isGroupAdmin.isAcceptableOrUnknown(
+          data['is_group_admin']!,
           _isGroupAdminMeta,
-          isGroupAdmin.isAcceptableOrUnknown(
-              data['is_group_admin']!, _isGroupAdminMeta));
+        ),
+      );
     }
     if (data.containsKey('is_direct_chat')) {
       context.handle(
+        _isDirectChatMeta,
+        isDirectChat.isAcceptableOrUnknown(
+          data['is_direct_chat']!,
           _isDirectChatMeta,
-          isDirectChat.isAcceptableOrUnknown(
-              data['is_direct_chat']!, _isDirectChatMeta));
+        ),
+      );
     }
     if (data.containsKey('pinned')) {
-      context.handle(_pinnedMeta,
-          pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
+      context.handle(
+        _pinnedMeta,
+        pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta),
+      );
     }
     if (data.containsKey('archived')) {
-      context.handle(_archivedMeta,
-          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+      context.handle(
+        _archivedMeta,
+        archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta),
+      );
     }
     if (data.containsKey('joined_group')) {
       context.handle(
+        _joinedGroupMeta,
+        joinedGroup.isAcceptableOrUnknown(
+          data['joined_group']!,
           _joinedGroupMeta,
-          joinedGroup.isAcceptableOrUnknown(
-              data['joined_group']!, _joinedGroupMeta));
+        ),
+      );
     }
     if (data.containsKey('left_group')) {
-      context.handle(_leftGroupMeta,
-          leftGroup.isAcceptableOrUnknown(data['left_group']!, _leftGroupMeta));
+      context.handle(
+        _leftGroupMeta,
+        leftGroup.isAcceptableOrUnknown(data['left_group']!, _leftGroupMeta),
+      );
     }
     if (data.containsKey('deleted_content')) {
       context.handle(
+        _deletedContentMeta,
+        deletedContent.isAcceptableOrUnknown(
+          data['deleted_content']!,
           _deletedContentMeta,
-          deletedContent.isAcceptableOrUnknown(
-              data['deleted_content']!, _deletedContentMeta));
+        ),
+      );
     }
     if (data.containsKey('state_version_id')) {
       context.handle(
+        _stateVersionIdMeta,
+        stateVersionId.isAcceptableOrUnknown(
+          data['state_version_id']!,
           _stateVersionIdMeta,
-          stateVersionId.isAcceptableOrUnknown(
-              data['state_version_id']!, _stateVersionIdMeta));
+        ),
+      );
     }
     if (data.containsKey('state_encryption_key')) {
       context.handle(
+        _stateEncryptionKeyMeta,
+        stateEncryptionKey.isAcceptableOrUnknown(
+          data['state_encryption_key']!,
           _stateEncryptionKeyMeta,
-          stateEncryptionKey.isAcceptableOrUnknown(
-              data['state_encryption_key']!, _stateEncryptionKeyMeta));
+        ),
+      );
     }
     if (data.containsKey('my_group_private_key')) {
       context.handle(
+        _myGroupPrivateKeyMeta,
+        myGroupPrivateKey.isAcceptableOrUnknown(
+          data['my_group_private_key']!,
           _myGroupPrivateKeyMeta,
-          myGroupPrivateKey.isAcceptableOrUnknown(
-              data['my_group_private_key']!, _myGroupPrivateKeyMeta));
+        ),
+      );
     }
     if (data.containsKey('group_name')) {
-      context.handle(_groupNameMeta,
-          groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta));
+      context.handle(
+        _groupNameMeta,
+        groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta),
+      );
     } else if (isInserting) {
       context.missing(_groupNameMeta);
     }
     if (data.containsKey('draft_message')) {
       context.handle(
+        _draftMessageMeta,
+        draftMessage.isAcceptableOrUnknown(
+          data['draft_message']!,
           _draftMessageMeta,
-          draftMessage.isAcceptableOrUnknown(
-              data['draft_message']!, _draftMessageMeta));
+        ),
+      );
     }
     if (data.containsKey('total_media_counter')) {
       context.handle(
+        _totalMediaCounterMeta,
+        totalMediaCounter.isAcceptableOrUnknown(
+          data['total_media_counter']!,
           _totalMediaCounterMeta,
-          totalMediaCounter.isAcceptableOrUnknown(
-              data['total_media_counter']!, _totalMediaCounterMeta));
+        ),
+      );
     }
     if (data.containsKey('also_best_friend')) {
       context.handle(
+        _alsoBestFriendMeta,
+        alsoBestFriend.isAcceptableOrUnknown(
+          data['also_best_friend']!,
           _alsoBestFriendMeta,
-          alsoBestFriend.isAcceptableOrUnknown(
-              data['also_best_friend']!, _alsoBestFriendMeta));
+        ),
+      );
     }
     if (data.containsKey('delete_messages_after_milliseconds')) {
       context.handle(
+        _deleteMessagesAfterMillisecondsMeta,
+        deleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
+          data['delete_messages_after_milliseconds']!,
           _deleteMessagesAfterMillisecondsMeta,
-          deleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
-              data['delete_messages_after_milliseconds']!,
-              _deleteMessagesAfterMillisecondsMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('last_message_send')) {
       context.handle(
+        _lastMessageSendMeta,
+        lastMessageSend.isAcceptableOrUnknown(
+          data['last_message_send']!,
           _lastMessageSendMeta,
-          lastMessageSend.isAcceptableOrUnknown(
-              data['last_message_send']!, _lastMessageSendMeta));
+        ),
+      );
     }
     if (data.containsKey('last_message_received')) {
       context.handle(
+        _lastMessageReceivedMeta,
+        lastMessageReceived.isAcceptableOrUnknown(
+          data['last_message_received']!,
           _lastMessageReceivedMeta,
-          lastMessageReceived.isAcceptableOrUnknown(
-              data['last_message_received']!, _lastMessageReceivedMeta));
+        ),
+      );
     }
     if (data.containsKey('last_flame_counter_change')) {
       context.handle(
+        _lastFlameCounterChangeMeta,
+        lastFlameCounterChange.isAcceptableOrUnknown(
+          data['last_flame_counter_change']!,
           _lastFlameCounterChangeMeta,
-          lastFlameCounterChange.isAcceptableOrUnknown(
-              data['last_flame_counter_change']!, _lastFlameCounterChangeMeta));
+        ),
+      );
     }
     if (data.containsKey('last_flame_sync')) {
       context.handle(
+        _lastFlameSyncMeta,
+        lastFlameSync.isAcceptableOrUnknown(
+          data['last_flame_sync']!,
           _lastFlameSyncMeta,
-          lastFlameSync.isAcceptableOrUnknown(
-              data['last_flame_sync']!, _lastFlameSyncMeta));
+        ),
+      );
     }
     if (data.containsKey('flame_counter')) {
       context.handle(
+        _flameCounterMeta,
+        flameCounter.isAcceptableOrUnknown(
+          data['flame_counter']!,
           _flameCounterMeta,
-          flameCounter.isAcceptableOrUnknown(
-              data['flame_counter']!, _flameCounterMeta));
+        ),
+      );
     }
     if (data.containsKey('max_flame_counter')) {
       context.handle(
+        _maxFlameCounterMeta,
+        maxFlameCounter.isAcceptableOrUnknown(
+          data['max_flame_counter']!,
           _maxFlameCounterMeta,
-          maxFlameCounter.isAcceptableOrUnknown(
-              data['max_flame_counter']!, _maxFlameCounterMeta));
+        ),
+      );
     }
     if (data.containsKey('max_flame_counter_from')) {
       context.handle(
+        _maxFlameCounterFromMeta,
+        maxFlameCounterFrom.isAcceptableOrUnknown(
+          data['max_flame_counter_from']!,
           _maxFlameCounterFromMeta,
-          maxFlameCounterFrom.isAcceptableOrUnknown(
-              data['max_flame_counter_from']!, _maxFlameCounterFromMeta));
+        ),
+      );
     }
     if (data.containsKey('last_message_exchange')) {
       context.handle(
+        _lastMessageExchangeMeta,
+        lastMessageExchange.isAcceptableOrUnknown(
+          data['last_message_exchange']!,
           _lastMessageExchangeMeta,
-          lastMessageExchange.isAcceptableOrUnknown(
-              data['last_message_exchange']!, _lastMessageExchangeMeta));
+        ),
+      );
     }
     return context;
   }
@@ -1045,61 +1365,106 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   Group map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Group(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      isGroupAdmin: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_group_admin'])!,
-      isDirectChat: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_direct_chat'])!,
-      pinned: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
-      archived: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
-      joinedGroup: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}joined_group'])!,
-      leftGroup: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}left_group'])!,
-      deletedContent: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}deleted_content'])!,
-      stateVersionId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}state_version_id'])!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      isGroupAdmin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_group_admin'],
+      )!,
+      isDirectChat: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_direct_chat'],
+      )!,
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pinned'],
+      )!,
+      archived: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}archived'],
+      )!,
+      joinedGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}joined_group'],
+      )!,
+      leftGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}left_group'],
+      )!,
+      deletedContent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted_content'],
+      )!,
+      stateVersionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}state_version_id'],
+      )!,
       stateEncryptionKey: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}state_encryption_key']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}state_encryption_key'],
+      ),
       myGroupPrivateKey: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}my_group_private_key']),
-      groupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
-      draftMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}draft_message']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}my_group_private_key'],
+      ),
+      groupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_name'],
+      )!,
+      draftMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}draft_message'],
+      ),
       totalMediaCounter: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}total_media_counter'])!,
-      alsoBestFriend: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}also_best_friend'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}total_media_counter'],
+      )!,
+      alsoBestFriend: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}also_best_friend'],
+      )!,
       deleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}delete_messages_after_milliseconds'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}delete_messages_after_milliseconds'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
       lastMessageSend: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_message_send']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_message_send'],
+      ),
       lastMessageReceived: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}last_message_received']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_message_received'],
+      ),
       lastFlameCounterChange: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}last_flame_counter_change']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_flame_counter_change'],
+      ),
       lastFlameSync: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_flame_sync']),
-      flameCounter: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}flame_counter'])!,
-      maxFlameCounter: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}max_flame_counter'])!,
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_flame_sync'],
+      ),
+      flameCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}flame_counter'],
+      )!,
+      maxFlameCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_flame_counter'],
+      )!,
       maxFlameCounterFrom: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}max_flame_counter_from']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}max_flame_counter_from'],
+      ),
       lastMessageExchange: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}last_message_exchange'])!,
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_message_exchange'],
+      )!,
     );
   }
 
@@ -1135,32 +1500,33 @@ class Group extends DataClass implements Insertable<Group> {
   final int maxFlameCounter;
   final DateTime? maxFlameCounterFrom;
   final DateTime lastMessageExchange;
-  const Group(
-      {required this.groupId,
-      required this.isGroupAdmin,
-      required this.isDirectChat,
-      required this.pinned,
-      required this.archived,
-      required this.joinedGroup,
-      required this.leftGroup,
-      required this.deletedContent,
-      required this.stateVersionId,
-      this.stateEncryptionKey,
-      this.myGroupPrivateKey,
-      required this.groupName,
-      this.draftMessage,
-      required this.totalMediaCounter,
-      required this.alsoBestFriend,
-      required this.deleteMessagesAfterMilliseconds,
-      required this.createdAt,
-      this.lastMessageSend,
-      this.lastMessageReceived,
-      this.lastFlameCounterChange,
-      this.lastFlameSync,
-      required this.flameCounter,
-      required this.maxFlameCounter,
-      this.maxFlameCounterFrom,
-      required this.lastMessageExchange});
+  const Group({
+    required this.groupId,
+    required this.isGroupAdmin,
+    required this.isDirectChat,
+    required this.pinned,
+    required this.archived,
+    required this.joinedGroup,
+    required this.leftGroup,
+    required this.deletedContent,
+    required this.stateVersionId,
+    this.stateEncryptionKey,
+    this.myGroupPrivateKey,
+    required this.groupName,
+    this.draftMessage,
+    required this.totalMediaCounter,
+    required this.alsoBestFriend,
+    required this.deleteMessagesAfterMilliseconds,
+    required this.createdAt,
+    this.lastMessageSend,
+    this.lastMessageReceived,
+    this.lastFlameCounterChange,
+    this.lastFlameSync,
+    required this.flameCounter,
+    required this.maxFlameCounter,
+    this.maxFlameCounterFrom,
+    required this.lastMessageExchange,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1185,8 +1551,9 @@ class Group extends DataClass implements Insertable<Group> {
     }
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
     map['also_best_friend'] = Variable<bool>(alsoBestFriend);
-    map['delete_messages_after_milliseconds'] =
-        Variable<int>(deleteMessagesAfterMilliseconds);
+    map['delete_messages_after_milliseconds'] = Variable<int>(
+      deleteMessagesAfterMilliseconds,
+    );
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || lastMessageSend != null) {
       map['last_message_send'] = Variable<DateTime>(lastMessageSend);
@@ -1195,8 +1562,9 @@ class Group extends DataClass implements Insertable<Group> {
       map['last_message_received'] = Variable<DateTime>(lastMessageReceived);
     }
     if (!nullToAbsent || lastFlameCounterChange != null) {
-      map['last_flame_counter_change'] =
-          Variable<DateTime>(lastFlameCounterChange);
+      map['last_flame_counter_change'] = Variable<DateTime>(
+        lastFlameCounterChange,
+      );
     }
     if (!nullToAbsent || lastFlameSync != null) {
       map['last_flame_sync'] = Variable<DateTime>(lastFlameSync);
@@ -1256,8 +1624,10 @@ class Group extends DataClass implements Insertable<Group> {
     );
   }
 
-  factory Group.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Group.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Group(
       groupId: serializer.fromJson<String>(json['groupId']),
@@ -1269,29 +1639,36 @@ class Group extends DataClass implements Insertable<Group> {
       leftGroup: serializer.fromJson<bool>(json['leftGroup']),
       deletedContent: serializer.fromJson<bool>(json['deletedContent']),
       stateVersionId: serializer.fromJson<int>(json['stateVersionId']),
-      stateEncryptionKey:
-          serializer.fromJson<Uint8List?>(json['stateEncryptionKey']),
-      myGroupPrivateKey:
-          serializer.fromJson<Uint8List?>(json['myGroupPrivateKey']),
+      stateEncryptionKey: serializer.fromJson<Uint8List?>(
+        json['stateEncryptionKey'],
+      ),
+      myGroupPrivateKey: serializer.fromJson<Uint8List?>(
+        json['myGroupPrivateKey'],
+      ),
       groupName: serializer.fromJson<String>(json['groupName']),
       draftMessage: serializer.fromJson<String?>(json['draftMessage']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
       alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
-      deleteMessagesAfterMilliseconds:
-          serializer.fromJson<int>(json['deleteMessagesAfterMilliseconds']),
+      deleteMessagesAfterMilliseconds: serializer.fromJson<int>(
+        json['deleteMessagesAfterMilliseconds'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastMessageSend: serializer.fromJson<DateTime?>(json['lastMessageSend']),
-      lastMessageReceived:
-          serializer.fromJson<DateTime?>(json['lastMessageReceived']),
-      lastFlameCounterChange:
-          serializer.fromJson<DateTime?>(json['lastFlameCounterChange']),
+      lastMessageReceived: serializer.fromJson<DateTime?>(
+        json['lastMessageReceived'],
+      ),
+      lastFlameCounterChange: serializer.fromJson<DateTime?>(
+        json['lastFlameCounterChange'],
+      ),
       lastFlameSync: serializer.fromJson<DateTime?>(json['lastFlameSync']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
       maxFlameCounter: serializer.fromJson<int>(json['maxFlameCounter']),
-      maxFlameCounterFrom:
-          serializer.fromJson<DateTime?>(json['maxFlameCounterFrom']),
-      lastMessageExchange:
-          serializer.fromJson<DateTime>(json['lastMessageExchange']),
+      maxFlameCounterFrom: serializer.fromJson<DateTime?>(
+        json['maxFlameCounterFrom'],
+      ),
+      lastMessageExchange: serializer.fromJson<DateTime>(
+        json['lastMessageExchange'],
+      ),
     );
   }
   @override
@@ -1313,13 +1690,15 @@ class Group extends DataClass implements Insertable<Group> {
       'draftMessage': serializer.toJson<String?>(draftMessage),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
-      'deleteMessagesAfterMilliseconds':
-          serializer.toJson<int>(deleteMessagesAfterMilliseconds),
+      'deleteMessagesAfterMilliseconds': serializer.toJson<int>(
+        deleteMessagesAfterMilliseconds,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastMessageSend': serializer.toJson<DateTime?>(lastMessageSend),
       'lastMessageReceived': serializer.toJson<DateTime?>(lastMessageReceived),
-      'lastFlameCounterChange':
-          serializer.toJson<DateTime?>(lastFlameCounterChange),
+      'lastFlameCounterChange': serializer.toJson<DateTime?>(
+        lastFlameCounterChange,
+      ),
       'lastFlameSync': serializer.toJson<DateTime?>(lastFlameSync),
       'flameCounter': serializer.toJson<int>(flameCounter),
       'maxFlameCounter': serializer.toJson<int>(maxFlameCounter),
@@ -1328,74 +1707,74 @@ class Group extends DataClass implements Insertable<Group> {
     };
   }
 
-  Group copyWith(
-          {String? groupId,
-          bool? isGroupAdmin,
-          bool? isDirectChat,
-          bool? pinned,
-          bool? archived,
-          bool? joinedGroup,
-          bool? leftGroup,
-          bool? deletedContent,
-          int? stateVersionId,
-          Value<Uint8List?> stateEncryptionKey = const Value.absent(),
-          Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
-          String? groupName,
-          Value<String?> draftMessage = const Value.absent(),
-          int? totalMediaCounter,
-          bool? alsoBestFriend,
-          int? deleteMessagesAfterMilliseconds,
-          DateTime? createdAt,
-          Value<DateTime?> lastMessageSend = const Value.absent(),
-          Value<DateTime?> lastMessageReceived = const Value.absent(),
-          Value<DateTime?> lastFlameCounterChange = const Value.absent(),
-          Value<DateTime?> lastFlameSync = const Value.absent(),
-          int? flameCounter,
-          int? maxFlameCounter,
-          Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
-          DateTime? lastMessageExchange}) =>
-      Group(
-        groupId: groupId ?? this.groupId,
-        isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
-        isDirectChat: isDirectChat ?? this.isDirectChat,
-        pinned: pinned ?? this.pinned,
-        archived: archived ?? this.archived,
-        joinedGroup: joinedGroup ?? this.joinedGroup,
-        leftGroup: leftGroup ?? this.leftGroup,
-        deletedContent: deletedContent ?? this.deletedContent,
-        stateVersionId: stateVersionId ?? this.stateVersionId,
-        stateEncryptionKey: stateEncryptionKey.present
-            ? stateEncryptionKey.value
-            : this.stateEncryptionKey,
-        myGroupPrivateKey: myGroupPrivateKey.present
-            ? myGroupPrivateKey.value
-            : this.myGroupPrivateKey,
-        groupName: groupName ?? this.groupName,
-        draftMessage:
-            draftMessage.present ? draftMessage.value : this.draftMessage,
-        totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
-        alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-        deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
-            this.deleteMessagesAfterMilliseconds,
-        createdAt: createdAt ?? this.createdAt,
-        lastMessageSend: lastMessageSend.present
-            ? lastMessageSend.value
-            : this.lastMessageSend,
-        lastMessageReceived: lastMessageReceived.present
-            ? lastMessageReceived.value
-            : this.lastMessageReceived,
-        lastFlameCounterChange: lastFlameCounterChange.present
-            ? lastFlameCounterChange.value
-            : this.lastFlameCounterChange,
-        lastFlameSync:
-            lastFlameSync.present ? lastFlameSync.value : this.lastFlameSync,
-        flameCounter: flameCounter ?? this.flameCounter,
-        maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
-        maxFlameCounterFrom: maxFlameCounterFrom.present
-            ? maxFlameCounterFrom.value
-            : this.maxFlameCounterFrom,
-        lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
-      );
+  Group copyWith({
+    String? groupId,
+    bool? isGroupAdmin,
+    bool? isDirectChat,
+    bool? pinned,
+    bool? archived,
+    bool? joinedGroup,
+    bool? leftGroup,
+    bool? deletedContent,
+    int? stateVersionId,
+    Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+    Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
+    String? groupName,
+    Value<String?> draftMessage = const Value.absent(),
+    int? totalMediaCounter,
+    bool? alsoBestFriend,
+    int? deleteMessagesAfterMilliseconds,
+    DateTime? createdAt,
+    Value<DateTime?> lastMessageSend = const Value.absent(),
+    Value<DateTime?> lastMessageReceived = const Value.absent(),
+    Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+    Value<DateTime?> lastFlameSync = const Value.absent(),
+    int? flameCounter,
+    int? maxFlameCounter,
+    Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
+    DateTime? lastMessageExchange,
+  }) => Group(
+    groupId: groupId ?? this.groupId,
+    isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
+    isDirectChat: isDirectChat ?? this.isDirectChat,
+    pinned: pinned ?? this.pinned,
+    archived: archived ?? this.archived,
+    joinedGroup: joinedGroup ?? this.joinedGroup,
+    leftGroup: leftGroup ?? this.leftGroup,
+    deletedContent: deletedContent ?? this.deletedContent,
+    stateVersionId: stateVersionId ?? this.stateVersionId,
+    stateEncryptionKey: stateEncryptionKey.present
+        ? stateEncryptionKey.value
+        : this.stateEncryptionKey,
+    myGroupPrivateKey: myGroupPrivateKey.present
+        ? myGroupPrivateKey.value
+        : this.myGroupPrivateKey,
+    groupName: groupName ?? this.groupName,
+    draftMessage: draftMessage.present ? draftMessage.value : this.draftMessage,
+    totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
+    alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
+    deleteMessagesAfterMilliseconds:
+        deleteMessagesAfterMilliseconds ?? this.deleteMessagesAfterMilliseconds,
+    createdAt: createdAt ?? this.createdAt,
+    lastMessageSend: lastMessageSend.present
+        ? lastMessageSend.value
+        : this.lastMessageSend,
+    lastMessageReceived: lastMessageReceived.present
+        ? lastMessageReceived.value
+        : this.lastMessageReceived,
+    lastFlameCounterChange: lastFlameCounterChange.present
+        ? lastFlameCounterChange.value
+        : this.lastFlameCounterChange,
+    lastFlameSync: lastFlameSync.present
+        ? lastFlameSync.value
+        : this.lastFlameSync,
+    flameCounter: flameCounter ?? this.flameCounter,
+    maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
+    maxFlameCounterFrom: maxFlameCounterFrom.present
+        ? maxFlameCounterFrom.value
+        : this.maxFlameCounterFrom,
+    lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
+  );
   Group copyWithCompanion(GroupsCompanion data) {
     return Group(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
@@ -1407,8 +1786,9 @@ class Group extends DataClass implements Insertable<Group> {
           : this.isDirectChat,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
       archived: data.archived.present ? data.archived.value : this.archived,
-      joinedGroup:
-          data.joinedGroup.present ? data.joinedGroup.value : this.joinedGroup,
+      joinedGroup: data.joinedGroup.present
+          ? data.joinedGroup.value
+          : this.joinedGroup,
       leftGroup: data.leftGroup.present ? data.leftGroup.value : this.leftGroup,
       deletedContent: data.deletedContent.present
           ? data.deletedContent.value
@@ -1434,8 +1814,8 @@ class Group extends DataClass implements Insertable<Group> {
           : this.alsoBestFriend,
       deleteMessagesAfterMilliseconds:
           data.deleteMessagesAfterMilliseconds.present
-              ? data.deleteMessagesAfterMilliseconds.value
-              : this.deleteMessagesAfterMilliseconds,
+          ? data.deleteMessagesAfterMilliseconds.value
+          : this.deleteMessagesAfterMilliseconds,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastMessageSend: data.lastMessageSend.present
           ? data.lastMessageSend.value
@@ -1483,7 +1863,8 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
-              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
+            'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
@@ -1499,32 +1880,32 @@ class Group extends DataClass implements Insertable<Group> {
 
   @override
   int get hashCode => Object.hashAll([
-        groupId,
-        isGroupAdmin,
-        isDirectChat,
-        pinned,
-        archived,
-        joinedGroup,
-        leftGroup,
-        deletedContent,
-        stateVersionId,
-        $driftBlobEquality.hash(stateEncryptionKey),
-        $driftBlobEquality.hash(myGroupPrivateKey),
-        groupName,
-        draftMessage,
-        totalMediaCounter,
-        alsoBestFriend,
-        deleteMessagesAfterMilliseconds,
-        createdAt,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter,
-        maxFlameCounter,
-        maxFlameCounterFrom,
-        lastMessageExchange
-      ]);
+    groupId,
+    isGroupAdmin,
+    isDirectChat,
+    pinned,
+    archived,
+    joinedGroup,
+    leftGroup,
+    deletedContent,
+    stateVersionId,
+    $driftBlobEquality.hash(stateEncryptionKey),
+    $driftBlobEquality.hash(myGroupPrivateKey),
+    groupName,
+    draftMessage,
+    totalMediaCounter,
+    alsoBestFriend,
+    deleteMessagesAfterMilliseconds,
+    createdAt,
+    lastMessageSend,
+    lastMessageReceived,
+    lastFlameCounterChange,
+    lastFlameSync,
+    flameCounter,
+    maxFlameCounter,
+    maxFlameCounterFrom,
+    lastMessageExchange,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1539,9 +1920,13 @@ class Group extends DataClass implements Insertable<Group> {
           other.deletedContent == this.deletedContent &&
           other.stateVersionId == this.stateVersionId &&
           $driftBlobEquality.equals(
-              other.stateEncryptionKey, this.stateEncryptionKey) &&
+            other.stateEncryptionKey,
+            this.stateEncryptionKey,
+          ) &&
           $driftBlobEquality.equals(
-              other.myGroupPrivateKey, this.myGroupPrivateKey) &&
+            other.myGroupPrivateKey,
+            this.myGroupPrivateKey,
+          ) &&
           other.groupName == this.groupName &&
           other.draftMessage == this.draftMessage &&
           other.totalMediaCounter == this.totalMediaCounter &&
@@ -1641,8 +2026,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.maxFlameCounterFrom = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        groupName = Value(groupName);
+  }) : groupId = Value(groupId),
+       groupName = Value(groupName);
   static Insertable<Group> custom({
     Expression<String>? groupId,
     Expression<bool>? isGroupAdmin,
@@ -1707,33 +2092,34 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     });
   }
 
-  GroupsCompanion copyWith(
-      {Value<String>? groupId,
-      Value<bool>? isGroupAdmin,
-      Value<bool>? isDirectChat,
-      Value<bool>? pinned,
-      Value<bool>? archived,
-      Value<bool>? joinedGroup,
-      Value<bool>? leftGroup,
-      Value<bool>? deletedContent,
-      Value<int>? stateVersionId,
-      Value<Uint8List?>? stateEncryptionKey,
-      Value<Uint8List?>? myGroupPrivateKey,
-      Value<String>? groupName,
-      Value<String?>? draftMessage,
-      Value<int>? totalMediaCounter,
-      Value<bool>? alsoBestFriend,
-      Value<int>? deleteMessagesAfterMilliseconds,
-      Value<DateTime>? createdAt,
-      Value<DateTime?>? lastMessageSend,
-      Value<DateTime?>? lastMessageReceived,
-      Value<DateTime?>? lastFlameCounterChange,
-      Value<DateTime?>? lastFlameSync,
-      Value<int>? flameCounter,
-      Value<int>? maxFlameCounter,
-      Value<DateTime?>? maxFlameCounterFrom,
-      Value<DateTime>? lastMessageExchange,
-      Value<int>? rowid}) {
+  GroupsCompanion copyWith({
+    Value<String>? groupId,
+    Value<bool>? isGroupAdmin,
+    Value<bool>? isDirectChat,
+    Value<bool>? pinned,
+    Value<bool>? archived,
+    Value<bool>? joinedGroup,
+    Value<bool>? leftGroup,
+    Value<bool>? deletedContent,
+    Value<int>? stateVersionId,
+    Value<Uint8List?>? stateEncryptionKey,
+    Value<Uint8List?>? myGroupPrivateKey,
+    Value<String>? groupName,
+    Value<String?>? draftMessage,
+    Value<int>? totalMediaCounter,
+    Value<bool>? alsoBestFriend,
+    Value<int>? deleteMessagesAfterMilliseconds,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? lastMessageSend,
+    Value<DateTime?>? lastMessageReceived,
+    Value<DateTime?>? lastFlameCounterChange,
+    Value<DateTime?>? lastFlameSync,
+    Value<int>? flameCounter,
+    Value<int>? maxFlameCounter,
+    Value<DateTime?>? maxFlameCounterFrom,
+    Value<DateTime>? lastMessageExchange,
+    Value<int>? rowid,
+  }) {
     return GroupsCompanion(
       groupId: groupId ?? this.groupId,
       isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
@@ -1750,7 +2136,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       draftMessage: draftMessage ?? this.draftMessage,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-      deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
+      deleteMessagesAfterMilliseconds:
+          deleteMessagesAfterMilliseconds ??
           this.deleteMessagesAfterMilliseconds,
       createdAt: createdAt ?? this.createdAt,
       lastMessageSend: lastMessageSend ?? this.lastMessageSend,
@@ -1797,12 +2184,14 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       map['state_version_id'] = Variable<int>(stateVersionId.value);
     }
     if (stateEncryptionKey.present) {
-      map['state_encryption_key'] =
-          Variable<Uint8List>(stateEncryptionKey.value);
+      map['state_encryption_key'] = Variable<Uint8List>(
+        stateEncryptionKey.value,
+      );
     }
     if (myGroupPrivateKey.present) {
-      map['my_group_private_key'] =
-          Variable<Uint8List>(myGroupPrivateKey.value);
+      map['my_group_private_key'] = Variable<Uint8List>(
+        myGroupPrivateKey.value,
+      );
     }
     if (groupName.present) {
       map['group_name'] = Variable<String>(groupName.value);
@@ -1817,8 +2206,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       map['also_best_friend'] = Variable<bool>(alsoBestFriend.value);
     }
     if (deleteMessagesAfterMilliseconds.present) {
-      map['delete_messages_after_milliseconds'] =
-          Variable<int>(deleteMessagesAfterMilliseconds.value);
+      map['delete_messages_after_milliseconds'] = Variable<int>(
+        deleteMessagesAfterMilliseconds.value,
+      );
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1827,12 +2217,14 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       map['last_message_send'] = Variable<DateTime>(lastMessageSend.value);
     }
     if (lastMessageReceived.present) {
-      map['last_message_received'] =
-          Variable<DateTime>(lastMessageReceived.value);
+      map['last_message_received'] = Variable<DateTime>(
+        lastMessageReceived.value,
+      );
     }
     if (lastFlameCounterChange.present) {
-      map['last_flame_counter_change'] =
-          Variable<DateTime>(lastFlameCounterChange.value);
+      map['last_flame_counter_change'] = Variable<DateTime>(
+        lastFlameCounterChange.value,
+      );
     }
     if (lastFlameSync.present) {
       map['last_flame_sync'] = Variable<DateTime>(lastFlameSync.value);
@@ -1844,12 +2236,14 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       map['max_flame_counter'] = Variable<int>(maxFlameCounter.value);
     }
     if (maxFlameCounterFrom.present) {
-      map['max_flame_counter_from'] =
-          Variable<DateTime>(maxFlameCounterFrom.value);
+      map['max_flame_counter_from'] = Variable<DateTime>(
+        maxFlameCounterFrom.value,
+      );
     }
     if (lastMessageExchange.present) {
-      map['last_message_exchange'] =
-          Variable<DateTime>(lastMessageExchange.value);
+      map['last_message_exchange'] = Variable<DateTime>(
+        lastMessageExchange.value,
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1876,7 +2270,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
-              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
+            'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
@@ -1898,215 +2293,344 @@ class $MediaFilesTable extends MediaFiles
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $MediaFilesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _mediaIdMeta =
-      const VerificationMeta('mediaId');
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
   @override
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
-      'media_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<MediaType, String> type =
-      GeneratedColumn<String>('type', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<MediaType>($MediaFilesTable.$convertertype);
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<MediaType>($MediaFilesTable.$convertertype);
   @override
   late final GeneratedColumnWithTypeConverter<UploadState?, String>
-      uploadState = GeneratedColumn<String>('upload_state', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<UploadState?>($MediaFilesTable.$converteruploadStaten);
+  uploadState = GeneratedColumn<String>(
+    'upload_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<UploadState?>($MediaFilesTable.$converteruploadStaten);
   @override
   late final GeneratedColumnWithTypeConverter<DownloadState?, String>
-      downloadState = GeneratedColumn<String>(
-              'download_state', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<DownloadState?>(
-              $MediaFilesTable.$converterdownloadStaten);
+  downloadState = GeneratedColumn<String>(
+    'download_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<DownloadState?>($MediaFilesTable.$converterdownloadStaten);
   static const VerificationMeta _requiresAuthenticationMeta =
       const VerificationMeta('requiresAuthentication');
   @override
   late final GeneratedColumn<bool> requiresAuthentication =
-      GeneratedColumn<bool>('requires_authentication', aliasedName, false,
-          type: DriftSqlType.bool,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'CHECK ("requires_authentication" IN (0, 1))'),
-          defaultValue: const Constant(false));
+      GeneratedColumn<bool>(
+        'requires_authentication',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("requires_authentication" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _storedMeta = const VerificationMeta('stored');
   @override
   late final GeneratedColumn<bool> stored = GeneratedColumn<bool>(
-      'stored', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("stored" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isDraftMediaMeta =
-      const VerificationMeta('isDraftMedia');
+    'stored',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("stored" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDraftMediaMeta = const VerificationMeta(
+    'isDraftMedia',
+  );
   @override
   late final GeneratedColumn<bool> isDraftMedia = GeneratedColumn<bool>(
-      'is_draft_media', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_draft_media" IN (0, 1))'),
-      defaultValue: const Constant(false));
+    'is_draft_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_draft_media" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _preProgressingProcessMeta =
+      const VerificationMeta('preProgressingProcess');
+  @override
+  late final GeneratedColumn<int> preProgressingProcess = GeneratedColumn<int>(
+    'pre_progressing_process',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<List<int>?, String>
-      reuploadRequestedBy = GeneratedColumn<String>(
-              'reupload_requested_by', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<List<int>?>(
-              $MediaFilesTable.$converterreuploadRequestedByn);
+  reuploadRequestedBy = GeneratedColumn<String>(
+    'reupload_requested_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<List<int>?>($MediaFilesTable.$converterreuploadRequestedByn);
   static const VerificationMeta _displayLimitInMillisecondsMeta =
       const VerificationMeta('displayLimitInMilliseconds');
   @override
   late final GeneratedColumn<int> displayLimitInMilliseconds =
-      GeneratedColumn<int>('display_limit_in_milliseconds', aliasedName, true,
-          type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _removeAudioMeta =
-      const VerificationMeta('removeAudio');
+      GeneratedColumn<int>(
+        'display_limit_in_milliseconds',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _removeAudioMeta = const VerificationMeta(
+    'removeAudio',
+  );
   @override
   late final GeneratedColumn<bool> removeAudio = GeneratedColumn<bool>(
-      'remove_audio', aliasedName, true,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("remove_audio" IN (0, 1))'));
-  static const VerificationMeta _downloadTokenMeta =
-      const VerificationMeta('downloadToken');
+    'remove_audio',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remove_audio" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _downloadTokenMeta = const VerificationMeta(
+    'downloadToken',
+  );
   @override
   late final GeneratedColumn<Uint8List> downloadToken =
-      GeneratedColumn<Uint8List>('download_token', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _encryptionKeyMeta =
-      const VerificationMeta('encryptionKey');
+      GeneratedColumn<Uint8List>(
+        'download_token',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _encryptionKeyMeta = const VerificationMeta(
+    'encryptionKey',
+  );
   @override
   late final GeneratedColumn<Uint8List> encryptionKey =
-      GeneratedColumn<Uint8List>('encryption_key', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _encryptionMacMeta =
-      const VerificationMeta('encryptionMac');
+      GeneratedColumn<Uint8List>(
+        'encryption_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _encryptionMacMeta = const VerificationMeta(
+    'encryptionMac',
+  );
   @override
   late final GeneratedColumn<Uint8List> encryptionMac =
-      GeneratedColumn<Uint8List>('encryption_mac', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _encryptionNonceMeta =
-      const VerificationMeta('encryptionNonce');
+      GeneratedColumn<Uint8List>(
+        'encryption_mac',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _encryptionNonceMeta = const VerificationMeta(
+    'encryptionNonce',
+  );
   @override
   late final GeneratedColumn<Uint8List> encryptionNonce =
-      GeneratedColumn<Uint8List>('encryption_nonce', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _storedFileHashMeta =
-      const VerificationMeta('storedFileHash');
+      GeneratedColumn<Uint8List>(
+        'encryption_nonce',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _storedFileHashMeta = const VerificationMeta(
+    'storedFileHash',
+  );
   @override
   late final GeneratedColumn<Uint8List> storedFileHash =
-      GeneratedColumn<Uint8List>('stored_file_hash', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+      GeneratedColumn<Uint8List>(
+        'stored_file_hash',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        mediaId,
-        type,
-        uploadState,
-        downloadState,
-        requiresAuthentication,
-        stored,
-        isDraftMedia,
-        reuploadRequestedBy,
-        displayLimitInMilliseconds,
-        removeAudio,
-        downloadToken,
-        encryptionKey,
-        encryptionMac,
-        encryptionNonce,
-        storedFileHash,
-        createdAt
-      ];
+    mediaId,
+    type,
+    uploadState,
+    downloadState,
+    requiresAuthentication,
+    stored,
+    isDraftMedia,
+    preProgressingProcess,
+    reuploadRequestedBy,
+    displayLimitInMilliseconds,
+    removeAudio,
+    downloadToken,
+    encryptionKey,
+    encryptionMac,
+    encryptionNonce,
+    storedFileHash,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'media_files';
   @override
-  VerificationContext validateIntegrity(Insertable<MediaFile> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<MediaFile> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('media_id')) {
-      context.handle(_mediaIdMeta,
-          mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_mediaIdMeta);
     }
     if (data.containsKey('requires_authentication')) {
       context.handle(
+        _requiresAuthenticationMeta,
+        requiresAuthentication.isAcceptableOrUnknown(
+          data['requires_authentication']!,
           _requiresAuthenticationMeta,
-          requiresAuthentication.isAcceptableOrUnknown(
-              data['requires_authentication']!, _requiresAuthenticationMeta));
+        ),
+      );
     }
     if (data.containsKey('stored')) {
-      context.handle(_storedMeta,
-          stored.isAcceptableOrUnknown(data['stored']!, _storedMeta));
+      context.handle(
+        _storedMeta,
+        stored.isAcceptableOrUnknown(data['stored']!, _storedMeta),
+      );
     }
     if (data.containsKey('is_draft_media')) {
       context.handle(
+        _isDraftMediaMeta,
+        isDraftMedia.isAcceptableOrUnknown(
+          data['is_draft_media']!,
           _isDraftMediaMeta,
-          isDraftMedia.isAcceptableOrUnknown(
-              data['is_draft_media']!, _isDraftMediaMeta));
+        ),
+      );
+    }
+    if (data.containsKey('pre_progressing_process')) {
+      context.handle(
+        _preProgressingProcessMeta,
+        preProgressingProcess.isAcceptableOrUnknown(
+          data['pre_progressing_process']!,
+          _preProgressingProcessMeta,
+        ),
+      );
     }
     if (data.containsKey('display_limit_in_milliseconds')) {
       context.handle(
+        _displayLimitInMillisecondsMeta,
+        displayLimitInMilliseconds.isAcceptableOrUnknown(
+          data['display_limit_in_milliseconds']!,
           _displayLimitInMillisecondsMeta,
-          displayLimitInMilliseconds.isAcceptableOrUnknown(
-              data['display_limit_in_milliseconds']!,
-              _displayLimitInMillisecondsMeta));
+        ),
+      );
     }
     if (data.containsKey('remove_audio')) {
       context.handle(
+        _removeAudioMeta,
+        removeAudio.isAcceptableOrUnknown(
+          data['remove_audio']!,
           _removeAudioMeta,
-          removeAudio.isAcceptableOrUnknown(
-              data['remove_audio']!, _removeAudioMeta));
+        ),
+      );
     }
     if (data.containsKey('download_token')) {
       context.handle(
+        _downloadTokenMeta,
+        downloadToken.isAcceptableOrUnknown(
+          data['download_token']!,
           _downloadTokenMeta,
-          downloadToken.isAcceptableOrUnknown(
-              data['download_token']!, _downloadTokenMeta));
+        ),
+      );
     }
     if (data.containsKey('encryption_key')) {
       context.handle(
+        _encryptionKeyMeta,
+        encryptionKey.isAcceptableOrUnknown(
+          data['encryption_key']!,
           _encryptionKeyMeta,
-          encryptionKey.isAcceptableOrUnknown(
-              data['encryption_key']!, _encryptionKeyMeta));
+        ),
+      );
     }
     if (data.containsKey('encryption_mac')) {
       context.handle(
+        _encryptionMacMeta,
+        encryptionMac.isAcceptableOrUnknown(
+          data['encryption_mac']!,
           _encryptionMacMeta,
-          encryptionMac.isAcceptableOrUnknown(
-              data['encryption_mac']!, _encryptionMacMeta));
+        ),
+      );
     }
     if (data.containsKey('encryption_nonce')) {
       context.handle(
+        _encryptionNonceMeta,
+        encryptionNonce.isAcceptableOrUnknown(
+          data['encryption_nonce']!,
           _encryptionNonceMeta,
-          encryptionNonce.isAcceptableOrUnknown(
-              data['encryption_nonce']!, _encryptionNonceMeta));
+        ),
+      );
     }
     if (data.containsKey('stored_file_hash')) {
       context.handle(
+        _storedFileHashMeta,
+        storedFileHash.isAcceptableOrUnknown(
+          data['stored_file_hash']!,
           _storedFileHashMeta,
-          storedFileHash.isAcceptableOrUnknown(
-              data['stored_file_hash']!, _storedFileHashMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -2117,43 +2641,83 @@ class $MediaFilesTable extends MediaFiles
   MediaFile map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MediaFile(
-      mediaId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}media_id'])!,
-      type: $MediaFilesTable.$convertertype.fromSql(attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      )!,
+      type: $MediaFilesTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
       uploadState: $MediaFilesTable.$converteruploadStaten.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.string, data['${effectivePrefix}upload_state'])),
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}upload_state'],
+        ),
+      ),
       downloadState: $MediaFilesTable.$converterdownloadStaten.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.string, data['${effectivePrefix}download_state'])),
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}download_state'],
+        ),
+      ),
       requiresAuthentication: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool,
-          data['${effectivePrefix}requires_authentication'])!,
-      stored: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}stored'])!,
-      isDraftMedia: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_draft_media'])!,
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_authentication'],
+      )!,
+      stored: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}stored'],
+      )!,
+      isDraftMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_draft_media'],
+      )!,
+      preProgressingProcess: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pre_progressing_process'],
+      ),
       reuploadRequestedBy: $MediaFilesTable.$converterreuploadRequestedByn
-          .fromSql(attachedDatabase.typeMapping.read(DriftSqlType.string,
-              data['${effectivePrefix}reupload_requested_by'])),
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.string,
+              data['${effectivePrefix}reupload_requested_by'],
+            ),
+          ),
       displayLimitInMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}display_limit_in_milliseconds']),
-      removeAudio: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}remove_audio']),
-      downloadToken: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
-      encryptionKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_key']),
-      encryptionMac: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_mac']),
-      encryptionNonce: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_nonce']),
-      storedFileHash: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}stored_file_hash']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}display_limit_in_milliseconds'],
+      ),
+      removeAudio: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remove_audio'],
+      ),
+      downloadToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}download_token'],
+      ),
+      encryptionKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_key'],
+      ),
+      encryptionMac: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_mac'],
+      ),
+      encryptionNonce: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_nonce'],
+      ),
+      storedFileHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}stored_file_hash'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -2167,14 +2731,15 @@ class $MediaFilesTable extends MediaFiles
   static JsonTypeConverter2<UploadState, String, String> $converteruploadState =
       const EnumNameConverter<UploadState>(UploadState.values);
   static JsonTypeConverter2<UploadState?, String?, String?>
-      $converteruploadStaten =
-      JsonTypeConverter2.asNullable($converteruploadState);
+  $converteruploadStaten = JsonTypeConverter2.asNullable($converteruploadState);
   static JsonTypeConverter2<DownloadState, String, String>
-      $converterdownloadState =
-      const EnumNameConverter<DownloadState>(DownloadState.values);
+  $converterdownloadState = const EnumNameConverter<DownloadState>(
+    DownloadState.values,
+  );
   static JsonTypeConverter2<DownloadState?, String?, String?>
-      $converterdownloadStaten =
-      JsonTypeConverter2.asNullable($converterdownloadState);
+  $converterdownloadStaten = JsonTypeConverter2.asNullable(
+    $converterdownloadState,
+  );
   static TypeConverter<List<int>, String> $converterreuploadRequestedBy =
       IntListTypeConverter();
   static TypeConverter<List<int>?, String?> $converterreuploadRequestedByn =
@@ -2189,6 +2754,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool stored;
   final bool isDraftMedia;
+  final int? preProgressingProcess;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
   final bool? removeAudio;
@@ -2198,50 +2764,61 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? encryptionNonce;
   final Uint8List? storedFileHash;
   final DateTime createdAt;
-  const MediaFile(
-      {required this.mediaId,
-      required this.type,
-      this.uploadState,
-      this.downloadState,
-      required this.requiresAuthentication,
-      required this.stored,
-      required this.isDraftMedia,
-      this.reuploadRequestedBy,
-      this.displayLimitInMilliseconds,
-      this.removeAudio,
-      this.downloadToken,
-      this.encryptionKey,
-      this.encryptionMac,
-      this.encryptionNonce,
-      this.storedFileHash,
-      required this.createdAt});
+  const MediaFile({
+    required this.mediaId,
+    required this.type,
+    this.uploadState,
+    this.downloadState,
+    required this.requiresAuthentication,
+    required this.stored,
+    required this.isDraftMedia,
+    this.preProgressingProcess,
+    this.reuploadRequestedBy,
+    this.displayLimitInMilliseconds,
+    this.removeAudio,
+    this.downloadToken,
+    this.encryptionKey,
+    this.encryptionMac,
+    this.encryptionNonce,
+    this.storedFileHash,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['media_id'] = Variable<String>(mediaId);
     {
-      map['type'] =
-          Variable<String>($MediaFilesTable.$convertertype.toSql(type));
+      map['type'] = Variable<String>(
+        $MediaFilesTable.$convertertype.toSql(type),
+      );
     }
     if (!nullToAbsent || uploadState != null) {
       map['upload_state'] = Variable<String>(
-          $MediaFilesTable.$converteruploadStaten.toSql(uploadState));
+        $MediaFilesTable.$converteruploadStaten.toSql(uploadState),
+      );
     }
     if (!nullToAbsent || downloadState != null) {
       map['download_state'] = Variable<String>(
-          $MediaFilesTable.$converterdownloadStaten.toSql(downloadState));
+        $MediaFilesTable.$converterdownloadStaten.toSql(downloadState),
+      );
     }
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
+    if (!nullToAbsent || preProgressingProcess != null) {
+      map['pre_progressing_process'] = Variable<int>(preProgressingProcess);
+    }
     if (!nullToAbsent || reuploadRequestedBy != null) {
-      map['reupload_requested_by'] = Variable<String>($MediaFilesTable
-          .$converterreuploadRequestedByn
-          .toSql(reuploadRequestedBy));
+      map['reupload_requested_by'] = Variable<String>(
+        $MediaFilesTable.$converterreuploadRequestedByn.toSql(
+          reuploadRequestedBy,
+        ),
+      );
     }
     if (!nullToAbsent || displayLimitInMilliseconds != null) {
-      map['display_limit_in_milliseconds'] =
-          Variable<int>(displayLimitInMilliseconds);
+      map['display_limit_in_milliseconds'] = Variable<int>(
+        displayLimitInMilliseconds,
+      );
     }
     if (!nullToAbsent || removeAudio != null) {
       map['remove_audio'] = Variable<bool>(removeAudio);
@@ -2278,13 +2855,16 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
+      preProgressingProcess: preProgressingProcess == null && nullToAbsent
+          ? const Value.absent()
+          : Value(preProgressingProcess),
       reuploadRequestedBy: reuploadRequestedBy == null && nullToAbsent
           ? const Value.absent()
           : Value(reuploadRequestedBy),
       displayLimitInMilliseconds:
           displayLimitInMilliseconds == null && nullToAbsent
-              ? const Value.absent()
-              : Value(displayLimitInMilliseconds),
+          ? const Value.absent()
+          : Value(displayLimitInMilliseconds),
       removeAudio: removeAudio == null && nullToAbsent
           ? const Value.absent()
           : Value(removeAudio),
@@ -2307,25 +2887,36 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     );
   }
 
-  factory MediaFile.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MediaFile.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MediaFile(
       mediaId: serializer.fromJson<String>(json['mediaId']),
-      type: $MediaFilesTable.$convertertype
-          .fromJson(serializer.fromJson<String>(json['type'])),
-      uploadState: $MediaFilesTable.$converteruploadStaten
-          .fromJson(serializer.fromJson<String?>(json['uploadState'])),
-      downloadState: $MediaFilesTable.$converterdownloadStaten
-          .fromJson(serializer.fromJson<String?>(json['downloadState'])),
-      requiresAuthentication:
-          serializer.fromJson<bool>(json['requiresAuthentication']),
+      type: $MediaFilesTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
+      uploadState: $MediaFilesTable.$converteruploadStaten.fromJson(
+        serializer.fromJson<String?>(json['uploadState']),
+      ),
+      downloadState: $MediaFilesTable.$converterdownloadStaten.fromJson(
+        serializer.fromJson<String?>(json['downloadState']),
+      ),
+      requiresAuthentication: serializer.fromJson<bool>(
+        json['requiresAuthentication'],
+      ),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
-      reuploadRequestedBy:
-          serializer.fromJson<List<int>?>(json['reuploadRequestedBy']),
-      displayLimitInMilliseconds:
-          serializer.fromJson<int?>(json['displayLimitInMilliseconds']),
+      preProgressingProcess: serializer.fromJson<int?>(
+        json['preProgressingProcess'],
+      ),
+      reuploadRequestedBy: serializer.fromJson<List<int>?>(
+        json['reuploadRequestedBy'],
+      ),
+      displayLimitInMilliseconds: serializer.fromJson<int?>(
+        json['displayLimitInMilliseconds'],
+      ),
       removeAudio: serializer.fromJson<bool?>(json['removeAudio']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       encryptionKey: serializer.fromJson<Uint8List?>(json['encryptionKey']),
@@ -2340,18 +2931,23 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'mediaId': serializer.toJson<String>(mediaId),
-      'type': serializer
-          .toJson<String>($MediaFilesTable.$convertertype.toJson(type)),
+      'type': serializer.toJson<String>(
+        $MediaFilesTable.$convertertype.toJson(type),
+      ),
       'uploadState': serializer.toJson<String?>(
-          $MediaFilesTable.$converteruploadStaten.toJson(uploadState)),
+        $MediaFilesTable.$converteruploadStaten.toJson(uploadState),
+      ),
       'downloadState': serializer.toJson<String?>(
-          $MediaFilesTable.$converterdownloadStaten.toJson(downloadState)),
+        $MediaFilesTable.$converterdownloadStaten.toJson(downloadState),
+      ),
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
+      'preProgressingProcess': serializer.toJson<int?>(preProgressingProcess),
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
-      'displayLimitInMilliseconds':
-          serializer.toJson<int?>(displayLimitInMilliseconds),
+      'displayLimitInMilliseconds': serializer.toJson<int?>(
+        displayLimitInMilliseconds,
+      ),
       'removeAudio': serializer.toJson<bool?>(removeAudio),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'encryptionKey': serializer.toJson<Uint8List?>(encryptionKey),
@@ -2362,59 +2958,69 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     };
   }
 
-  MediaFile copyWith(
-          {String? mediaId,
-          MediaType? type,
-          Value<UploadState?> uploadState = const Value.absent(),
-          Value<DownloadState?> downloadState = const Value.absent(),
-          bool? requiresAuthentication,
-          bool? stored,
-          bool? isDraftMedia,
-          Value<List<int>?> reuploadRequestedBy = const Value.absent(),
-          Value<int?> displayLimitInMilliseconds = const Value.absent(),
-          Value<bool?> removeAudio = const Value.absent(),
-          Value<Uint8List?> downloadToken = const Value.absent(),
-          Value<Uint8List?> encryptionKey = const Value.absent(),
-          Value<Uint8List?> encryptionMac = const Value.absent(),
-          Value<Uint8List?> encryptionNonce = const Value.absent(),
-          Value<Uint8List?> storedFileHash = const Value.absent(),
-          DateTime? createdAt}) =>
-      MediaFile(
-        mediaId: mediaId ?? this.mediaId,
-        type: type ?? this.type,
-        uploadState: uploadState.present ? uploadState.value : this.uploadState,
-        downloadState:
-            downloadState.present ? downloadState.value : this.downloadState,
-        requiresAuthentication:
-            requiresAuthentication ?? this.requiresAuthentication,
-        stored: stored ?? this.stored,
-        isDraftMedia: isDraftMedia ?? this.isDraftMedia,
-        reuploadRequestedBy: reuploadRequestedBy.present
-            ? reuploadRequestedBy.value
-            : this.reuploadRequestedBy,
-        displayLimitInMilliseconds: displayLimitInMilliseconds.present
-            ? displayLimitInMilliseconds.value
-            : this.displayLimitInMilliseconds,
-        removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
-        downloadToken:
-            downloadToken.present ? downloadToken.value : this.downloadToken,
-        encryptionKey:
-            encryptionKey.present ? encryptionKey.value : this.encryptionKey,
-        encryptionMac:
-            encryptionMac.present ? encryptionMac.value : this.encryptionMac,
-        encryptionNonce: encryptionNonce.present
-            ? encryptionNonce.value
-            : this.encryptionNonce,
-        storedFileHash:
-            storedFileHash.present ? storedFileHash.value : this.storedFileHash,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  MediaFile copyWith({
+    String? mediaId,
+    MediaType? type,
+    Value<UploadState?> uploadState = const Value.absent(),
+    Value<DownloadState?> downloadState = const Value.absent(),
+    bool? requiresAuthentication,
+    bool? stored,
+    bool? isDraftMedia,
+    Value<int?> preProgressingProcess = const Value.absent(),
+    Value<List<int>?> reuploadRequestedBy = const Value.absent(),
+    Value<int?> displayLimitInMilliseconds = const Value.absent(),
+    Value<bool?> removeAudio = const Value.absent(),
+    Value<Uint8List?> downloadToken = const Value.absent(),
+    Value<Uint8List?> encryptionKey = const Value.absent(),
+    Value<Uint8List?> encryptionMac = const Value.absent(),
+    Value<Uint8List?> encryptionNonce = const Value.absent(),
+    Value<Uint8List?> storedFileHash = const Value.absent(),
+    DateTime? createdAt,
+  }) => MediaFile(
+    mediaId: mediaId ?? this.mediaId,
+    type: type ?? this.type,
+    uploadState: uploadState.present ? uploadState.value : this.uploadState,
+    downloadState: downloadState.present
+        ? downloadState.value
+        : this.downloadState,
+    requiresAuthentication:
+        requiresAuthentication ?? this.requiresAuthentication,
+    stored: stored ?? this.stored,
+    isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+    preProgressingProcess: preProgressingProcess.present
+        ? preProgressingProcess.value
+        : this.preProgressingProcess,
+    reuploadRequestedBy: reuploadRequestedBy.present
+        ? reuploadRequestedBy.value
+        : this.reuploadRequestedBy,
+    displayLimitInMilliseconds: displayLimitInMilliseconds.present
+        ? displayLimitInMilliseconds.value
+        : this.displayLimitInMilliseconds,
+    removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
+    downloadToken: downloadToken.present
+        ? downloadToken.value
+        : this.downloadToken,
+    encryptionKey: encryptionKey.present
+        ? encryptionKey.value
+        : this.encryptionKey,
+    encryptionMac: encryptionMac.present
+        ? encryptionMac.value
+        : this.encryptionMac,
+    encryptionNonce: encryptionNonce.present
+        ? encryptionNonce.value
+        : this.encryptionNonce,
+    storedFileHash: storedFileHash.present
+        ? storedFileHash.value
+        : this.storedFileHash,
+    createdAt: createdAt ?? this.createdAt,
+  );
   MediaFile copyWithCompanion(MediaFilesCompanion data) {
     return MediaFile(
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
       type: data.type.present ? data.type.value : this.type,
-      uploadState:
-          data.uploadState.present ? data.uploadState.value : this.uploadState,
+      uploadState: data.uploadState.present
+          ? data.uploadState.value
+          : this.uploadState,
       downloadState: data.downloadState.present
           ? data.downloadState.value
           : this.downloadState,
@@ -2425,14 +3031,18 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
           : this.isDraftMedia,
+      preProgressingProcess: data.preProgressingProcess.present
+          ? data.preProgressingProcess.value
+          : this.preProgressingProcess,
       reuploadRequestedBy: data.reuploadRequestedBy.present
           ? data.reuploadRequestedBy.value
           : this.reuploadRequestedBy,
       displayLimitInMilliseconds: data.displayLimitInMilliseconds.present
           ? data.displayLimitInMilliseconds.value
           : this.displayLimitInMilliseconds,
-      removeAudio:
-          data.removeAudio.present ? data.removeAudio.value : this.removeAudio,
+      removeAudio: data.removeAudio.present
+          ? data.removeAudio.value
+          : this.removeAudio,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -2462,6 +3072,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
@@ -2477,22 +3088,24 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
 
   @override
   int get hashCode => Object.hash(
-      mediaId,
-      type,
-      uploadState,
-      downloadState,
-      requiresAuthentication,
-      stored,
-      isDraftMedia,
-      reuploadRequestedBy,
-      displayLimitInMilliseconds,
-      removeAudio,
-      $driftBlobEquality.hash(downloadToken),
-      $driftBlobEquality.hash(encryptionKey),
-      $driftBlobEquality.hash(encryptionMac),
-      $driftBlobEquality.hash(encryptionNonce),
-      $driftBlobEquality.hash(storedFileHash),
-      createdAt);
+    mediaId,
+    type,
+    uploadState,
+    downloadState,
+    requiresAuthentication,
+    stored,
+    isDraftMedia,
+    preProgressingProcess,
+    reuploadRequestedBy,
+    displayLimitInMilliseconds,
+    removeAudio,
+    $driftBlobEquality.hash(downloadToken),
+    $driftBlobEquality.hash(encryptionKey),
+    $driftBlobEquality.hash(encryptionMac),
+    $driftBlobEquality.hash(encryptionNonce),
+    $driftBlobEquality.hash(storedFileHash),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2504,6 +3117,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
+          other.preProgressingProcess == this.preProgressingProcess &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
           other.removeAudio == this.removeAudio &&
@@ -2511,9 +3125,13 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           $driftBlobEquality.equals(other.encryptionKey, this.encryptionKey) &&
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
           $driftBlobEquality.equals(
-              other.encryptionNonce, this.encryptionNonce) &&
+            other.encryptionNonce,
+            this.encryptionNonce,
+          ) &&
           $driftBlobEquality.equals(
-              other.storedFileHash, this.storedFileHash) &&
+            other.storedFileHash,
+            this.storedFileHash,
+          ) &&
           other.createdAt == this.createdAt);
 }
 
@@ -2525,6 +3143,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
+  final Value<int?> preProgressingProcess;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
   final Value<bool?> removeAudio;
@@ -2543,6 +3162,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
@@ -2562,6 +3182,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
@@ -2572,8 +3193,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : mediaId = Value(mediaId),
-        type = Value(type);
+  }) : mediaId = Value(mediaId),
+       type = Value(type);
   static Insertable<MediaFile> custom({
     Expression<String>? mediaId,
     Expression<String>? type,
@@ -2582,6 +3203,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
+    Expression<int>? preProgressingProcess,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
     Expression<bool>? removeAudio,
@@ -2602,6 +3224,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
+      if (preProgressingProcess != null)
+        'pre_progressing_process': preProgressingProcess,
       if (reuploadRequestedBy != null)
         'reupload_requested_by': reuploadRequestedBy,
       if (displayLimitInMilliseconds != null)
@@ -2617,24 +3241,26 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     });
   }
 
-  MediaFilesCompanion copyWith(
-      {Value<String>? mediaId,
-      Value<MediaType>? type,
-      Value<UploadState?>? uploadState,
-      Value<DownloadState?>? downloadState,
-      Value<bool>? requiresAuthentication,
-      Value<bool>? stored,
-      Value<bool>? isDraftMedia,
-      Value<List<int>?>? reuploadRequestedBy,
-      Value<int?>? displayLimitInMilliseconds,
-      Value<bool?>? removeAudio,
-      Value<Uint8List?>? downloadToken,
-      Value<Uint8List?>? encryptionKey,
-      Value<Uint8List?>? encryptionMac,
-      Value<Uint8List?>? encryptionNonce,
-      Value<Uint8List?>? storedFileHash,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  MediaFilesCompanion copyWith({
+    Value<String>? mediaId,
+    Value<MediaType>? type,
+    Value<UploadState?>? uploadState,
+    Value<DownloadState?>? downloadState,
+    Value<bool>? requiresAuthentication,
+    Value<bool>? stored,
+    Value<bool>? isDraftMedia,
+    Value<int?>? preProgressingProcess,
+    Value<List<int>?>? reuploadRequestedBy,
+    Value<int?>? displayLimitInMilliseconds,
+    Value<bool?>? removeAudio,
+    Value<Uint8List?>? downloadToken,
+    Value<Uint8List?>? encryptionKey,
+    Value<Uint8List?>? encryptionMac,
+    Value<Uint8List?>? encryptionNonce,
+    Value<Uint8List?>? storedFileHash,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return MediaFilesCompanion(
       mediaId: mediaId ?? this.mediaId,
       type: type ?? this.type,
@@ -2644,6 +3270,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+      preProgressingProcess:
+          preProgressingProcess ?? this.preProgressingProcess,
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
@@ -2665,20 +3293,24 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       map['media_id'] = Variable<String>(mediaId.value);
     }
     if (type.present) {
-      map['type'] =
-          Variable<String>($MediaFilesTable.$convertertype.toSql(type.value));
+      map['type'] = Variable<String>(
+        $MediaFilesTable.$convertertype.toSql(type.value),
+      );
     }
     if (uploadState.present) {
       map['upload_state'] = Variable<String>(
-          $MediaFilesTable.$converteruploadStaten.toSql(uploadState.value));
+        $MediaFilesTable.$converteruploadStaten.toSql(uploadState.value),
+      );
     }
     if (downloadState.present) {
       map['download_state'] = Variable<String>(
-          $MediaFilesTable.$converterdownloadStaten.toSql(downloadState.value));
+        $MediaFilesTable.$converterdownloadStaten.toSql(downloadState.value),
+      );
     }
     if (requiresAuthentication.present) {
-      map['requires_authentication'] =
-          Variable<bool>(requiresAuthentication.value);
+      map['requires_authentication'] = Variable<bool>(
+        requiresAuthentication.value,
+      );
     }
     if (stored.present) {
       map['stored'] = Variable<bool>(stored.value);
@@ -2686,14 +3318,22 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (isDraftMedia.present) {
       map['is_draft_media'] = Variable<bool>(isDraftMedia.value);
     }
+    if (preProgressingProcess.present) {
+      map['pre_progressing_process'] = Variable<int>(
+        preProgressingProcess.value,
+      );
+    }
     if (reuploadRequestedBy.present) {
-      map['reupload_requested_by'] = Variable<String>($MediaFilesTable
-          .$converterreuploadRequestedByn
-          .toSql(reuploadRequestedBy.value));
+      map['reupload_requested_by'] = Variable<String>(
+        $MediaFilesTable.$converterreuploadRequestedByn.toSql(
+          reuploadRequestedBy.value,
+        ),
+      );
     }
     if (displayLimitInMilliseconds.present) {
-      map['display_limit_in_milliseconds'] =
-          Variable<int>(displayLimitInMilliseconds.value);
+      map['display_limit_in_milliseconds'] = Variable<int>(
+        displayLimitInMilliseconds.value,
+      );
     }
     if (removeAudio.present) {
       map['remove_audio'] = Variable<bool>(removeAudio.value);
@@ -2732,6 +3372,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
@@ -2752,264 +3393,394 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $MessagesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _groupIdMeta =
-      const VerificationMeta('groupId');
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _senderIdMeta =
-      const VerificationMeta('senderId');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta(
+    'senderId',
+  );
   @override
   late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
-      'sender_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id)',
+    ),
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _mediaIdMeta =
-      const VerificationMeta('mediaId');
+    'content',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
   @override
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
-      'media_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES media_files (media_id) ON DELETE SET NULL'));
+    'media_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES media_files (media_id) ON DELETE SET NULL',
+    ),
+  );
   static const VerificationMeta _additionalMessageDataMeta =
       const VerificationMeta('additionalMessageData');
   @override
   late final GeneratedColumn<Uint8List> additionalMessageData =
-      GeneratedColumn<Uint8List>('additional_message_data', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _mediaStoredMeta =
-      const VerificationMeta('mediaStored');
+      GeneratedColumn<Uint8List>(
+        'additional_message_data',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _mediaStoredMeta = const VerificationMeta(
+    'mediaStored',
+  );
   @override
   late final GeneratedColumn<bool> mediaStored = GeneratedColumn<bool>(
-      'media_stored', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("media_stored" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _mediaReopenedMeta =
-      const VerificationMeta('mediaReopened');
+    'media_stored',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("media_stored" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _mediaReopenedMeta = const VerificationMeta(
+    'mediaReopened',
+  );
   @override
   late final GeneratedColumn<bool> mediaReopened = GeneratedColumn<bool>(
-      'media_reopened', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("media_reopened" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _downloadTokenMeta =
-      const VerificationMeta('downloadToken');
+    'media_reopened',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("media_reopened" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _downloadTokenMeta = const VerificationMeta(
+    'downloadToken',
+  );
   @override
   late final GeneratedColumn<Uint8List> downloadToken =
-      GeneratedColumn<Uint8List>('download_token', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _quotesMessageIdMeta =
-      const VerificationMeta('quotesMessageId');
+      GeneratedColumn<Uint8List>(
+        'download_token',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _quotesMessageIdMeta = const VerificationMeta(
+    'quotesMessageId',
+  );
   @override
   late final GeneratedColumn<String> quotesMessageId = GeneratedColumn<String>(
-      'quotes_message_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'quotes_message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isDeletedFromSenderMeta =
       const VerificationMeta('isDeletedFromSender');
   @override
   late final GeneratedColumn<bool> isDeletedFromSender = GeneratedColumn<bool>(
-      'is_deleted_from_sender', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_deleted_from_sender" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _openedAtMeta =
-      const VerificationMeta('openedAt');
+    'is_deleted_from_sender',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted_from_sender" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _openedAtMeta = const VerificationMeta(
+    'openedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
-      'opened_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _openedByAllMeta =
-      const VerificationMeta('openedByAll');
+    'opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openedByAllMeta = const VerificationMeta(
+    'openedByAll',
+  );
   @override
   late final GeneratedColumn<DateTime> openedByAll = GeneratedColumn<DateTime>(
-      'opened_by_all', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'opened_by_all',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _modifiedAtMeta =
-      const VerificationMeta('modifiedAt');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _modifiedAtMeta = const VerificationMeta(
+    'modifiedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> modifiedAt = GeneratedColumn<DateTime>(
-      'modified_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _ackByUserMeta =
-      const VerificationMeta('ackByUser');
+    'modified_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ackByUserMeta = const VerificationMeta(
+    'ackByUser',
+  );
   @override
   late final GeneratedColumn<DateTime> ackByUser = GeneratedColumn<DateTime>(
-      'ack_by_user', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _ackByServerMeta =
-      const VerificationMeta('ackByServer');
+    'ack_by_user',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ackByServerMeta = const VerificationMeta(
+    'ackByServer',
+  );
   @override
   late final GeneratedColumn<DateTime> ackByServer = GeneratedColumn<DateTime>(
-      'ack_by_server', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'ack_by_server',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        groupId,
-        messageId,
-        senderId,
-        type,
-        content,
-        mediaId,
-        additionalMessageData,
-        mediaStored,
-        mediaReopened,
-        downloadToken,
-        quotesMessageId,
-        isDeletedFromSender,
-        openedAt,
-        openedByAll,
-        createdAt,
-        modifiedAt,
-        ackByUser,
-        ackByServer
-      ];
+    groupId,
+    messageId,
+    senderId,
+    type,
+    content,
+    mediaId,
+    additionalMessageData,
+    mediaStored,
+    mediaReopened,
+    downloadToken,
+    quotesMessageId,
+    isDeletedFromSender,
+    openedAt,
+    openedByAll,
+    createdAt,
+    modifiedAt,
+    ackByUser,
+    ackByServer,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'messages';
   @override
-  VerificationContext validateIntegrity(Insertable<Message> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Message> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('group_id')) {
-      context.handle(_groupIdMeta,
-          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_groupIdMeta);
     }
     if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('sender_id')) {
-      context.handle(_senderIdMeta,
-          senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta));
+      context.handle(
+        _senderIdMeta,
+        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
+      );
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     }
     if (data.containsKey('media_id')) {
-      context.handle(_mediaIdMeta,
-          mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
     }
     if (data.containsKey('additional_message_data')) {
       context.handle(
+        _additionalMessageDataMeta,
+        additionalMessageData.isAcceptableOrUnknown(
+          data['additional_message_data']!,
           _additionalMessageDataMeta,
-          additionalMessageData.isAcceptableOrUnknown(
-              data['additional_message_data']!, _additionalMessageDataMeta));
+        ),
+      );
     }
     if (data.containsKey('media_stored')) {
       context.handle(
+        _mediaStoredMeta,
+        mediaStored.isAcceptableOrUnknown(
+          data['media_stored']!,
           _mediaStoredMeta,
-          mediaStored.isAcceptableOrUnknown(
-              data['media_stored']!, _mediaStoredMeta));
+        ),
+      );
     }
     if (data.containsKey('media_reopened')) {
       context.handle(
+        _mediaReopenedMeta,
+        mediaReopened.isAcceptableOrUnknown(
+          data['media_reopened']!,
           _mediaReopenedMeta,
-          mediaReopened.isAcceptableOrUnknown(
-              data['media_reopened']!, _mediaReopenedMeta));
+        ),
+      );
     }
     if (data.containsKey('download_token')) {
       context.handle(
+        _downloadTokenMeta,
+        downloadToken.isAcceptableOrUnknown(
+          data['download_token']!,
           _downloadTokenMeta,
-          downloadToken.isAcceptableOrUnknown(
-              data['download_token']!, _downloadTokenMeta));
+        ),
+      );
     }
     if (data.containsKey('quotes_message_id')) {
       context.handle(
+        _quotesMessageIdMeta,
+        quotesMessageId.isAcceptableOrUnknown(
+          data['quotes_message_id']!,
           _quotesMessageIdMeta,
-          quotesMessageId.isAcceptableOrUnknown(
-              data['quotes_message_id']!, _quotesMessageIdMeta));
+        ),
+      );
     }
     if (data.containsKey('is_deleted_from_sender')) {
       context.handle(
+        _isDeletedFromSenderMeta,
+        isDeletedFromSender.isAcceptableOrUnknown(
+          data['is_deleted_from_sender']!,
           _isDeletedFromSenderMeta,
-          isDeletedFromSender.isAcceptableOrUnknown(
-              data['is_deleted_from_sender']!, _isDeletedFromSenderMeta));
+        ),
+      );
     }
     if (data.containsKey('opened_at')) {
-      context.handle(_openedAtMeta,
-          openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta));
+      context.handle(
+        _openedAtMeta,
+        openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
+      );
     }
     if (data.containsKey('opened_by_all')) {
       context.handle(
+        _openedByAllMeta,
+        openedByAll.isAcceptableOrUnknown(
+          data['opened_by_all']!,
           _openedByAllMeta,
-          openedByAll.isAcceptableOrUnknown(
-              data['opened_by_all']!, _openedByAllMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('modified_at')) {
       context.handle(
-          _modifiedAtMeta,
-          modifiedAt.isAcceptableOrUnknown(
-              data['modified_at']!, _modifiedAtMeta));
+        _modifiedAtMeta,
+        modifiedAt.isAcceptableOrUnknown(data['modified_at']!, _modifiedAtMeta),
+      );
     }
     if (data.containsKey('ack_by_user')) {
       context.handle(
-          _ackByUserMeta,
-          ackByUser.isAcceptableOrUnknown(
-              data['ack_by_user']!, _ackByUserMeta));
+        _ackByUserMeta,
+        ackByUser.isAcceptableOrUnknown(data['ack_by_user']!, _ackByUserMeta),
+      );
     }
     if (data.containsKey('ack_by_server')) {
       context.handle(
+        _ackByServerMeta,
+        ackByServer.isAcceptableOrUnknown(
+          data['ack_by_server']!,
           _ackByServerMeta,
-          ackByServer.isAcceptableOrUnknown(
-              data['ack_by_server']!, _ackByServerMeta));
+        ),
+      );
     }
     return context;
   }
@@ -3020,42 +3791,78 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   Message map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Message(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      senderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content']),
-      mediaId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      ),
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      ),
       additionalMessageData: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}additional_message_data']),
-      mediaStored: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}media_stored'])!,
-      mediaReopened: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}media_reopened'])!,
-      downloadToken: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}additional_message_data'],
+      ),
+      mediaStored: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}media_stored'],
+      )!,
+      mediaReopened: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}media_reopened'],
+      )!,
+      downloadToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}download_token'],
+      ),
       quotesMessageId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}quotes_message_id']),
+        DriftSqlType.string,
+        data['${effectivePrefix}quotes_message_id'],
+      ),
       isDeletedFromSender: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}is_deleted_from_sender'])!,
-      openedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_at']),
-      openedByAll: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_by_all']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      modifiedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}modified_at']),
-      ackByUser: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}ack_by_user']),
-      ackByServer: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server']),
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted_from_sender'],
+      )!,
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}opened_at'],
+      ),
+      openedByAll: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}opened_by_all'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      modifiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}modified_at'],
+      ),
+      ackByUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ack_by_user'],
+      ),
+      ackByServer: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ack_by_server'],
+      ),
     );
   }
 
@@ -3084,25 +3891,26 @@ class Message extends DataClass implements Insertable<Message> {
   final DateTime? modifiedAt;
   final DateTime? ackByUser;
   final DateTime? ackByServer;
-  const Message(
-      {required this.groupId,
-      required this.messageId,
-      this.senderId,
-      required this.type,
-      this.content,
-      this.mediaId,
-      this.additionalMessageData,
-      required this.mediaStored,
-      required this.mediaReopened,
-      this.downloadToken,
-      this.quotesMessageId,
-      required this.isDeletedFromSender,
-      this.openedAt,
-      this.openedByAll,
-      required this.createdAt,
-      this.modifiedAt,
-      this.ackByUser,
-      this.ackByServer});
+  const Message({
+    required this.groupId,
+    required this.messageId,
+    this.senderId,
+    required this.type,
+    this.content,
+    this.mediaId,
+    this.additionalMessageData,
+    required this.mediaStored,
+    required this.mediaReopened,
+    this.downloadToken,
+    this.quotesMessageId,
+    required this.isDeletedFromSender,
+    this.openedAt,
+    this.openedByAll,
+    required this.createdAt,
+    this.modifiedAt,
+    this.ackByUser,
+    this.ackByServer,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3119,8 +3927,9 @@ class Message extends DataClass implements Insertable<Message> {
       map['media_id'] = Variable<String>(mediaId);
     }
     if (!nullToAbsent || additionalMessageData != null) {
-      map['additional_message_data'] =
-          Variable<Uint8List>(additionalMessageData);
+      map['additional_message_data'] = Variable<Uint8List>(
+        additionalMessageData,
+      );
     }
     map['media_stored'] = Variable<bool>(mediaStored);
     map['media_reopened'] = Variable<bool>(mediaReopened);
@@ -3195,8 +4004,10 @@ class Message extends DataClass implements Insertable<Message> {
     );
   }
 
-  factory Message.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Message.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Message(
       groupId: serializer.fromJson<String>(json['groupId']),
@@ -3205,14 +4016,16 @@ class Message extends DataClass implements Insertable<Message> {
       type: serializer.fromJson<String>(json['type']),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
-      additionalMessageData:
-          serializer.fromJson<Uint8List?>(json['additionalMessageData']),
+      additionalMessageData: serializer.fromJson<Uint8List?>(
+        json['additionalMessageData'],
+      ),
       mediaStored: serializer.fromJson<bool>(json['mediaStored']),
       mediaReopened: serializer.fromJson<bool>(json['mediaReopened']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
-      isDeletedFromSender:
-          serializer.fromJson<bool>(json['isDeletedFromSender']),
+      isDeletedFromSender: serializer.fromJson<bool>(
+        json['isDeletedFromSender'],
+      ),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       openedByAll: serializer.fromJson<DateTime?>(json['openedByAll']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -3231,8 +4044,9 @@ class Message extends DataClass implements Insertable<Message> {
       'type': serializer.toJson<String>(type),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
-      'additionalMessageData':
-          serializer.toJson<Uint8List?>(additionalMessageData),
+      'additionalMessageData': serializer.toJson<Uint8List?>(
+        additionalMessageData,
+      ),
       'mediaStored': serializer.toJson<bool>(mediaStored),
       'mediaReopened': serializer.toJson<bool>(mediaReopened),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
@@ -3247,50 +4061,51 @@ class Message extends DataClass implements Insertable<Message> {
     };
   }
 
-  Message copyWith(
-          {String? groupId,
-          String? messageId,
-          Value<int?> senderId = const Value.absent(),
-          String? type,
-          Value<String?> content = const Value.absent(),
-          Value<String?> mediaId = const Value.absent(),
-          Value<Uint8List?> additionalMessageData = const Value.absent(),
-          bool? mediaStored,
-          bool? mediaReopened,
-          Value<Uint8List?> downloadToken = const Value.absent(),
-          Value<String?> quotesMessageId = const Value.absent(),
-          bool? isDeletedFromSender,
-          Value<DateTime?> openedAt = const Value.absent(),
-          Value<DateTime?> openedByAll = const Value.absent(),
-          DateTime? createdAt,
-          Value<DateTime?> modifiedAt = const Value.absent(),
-          Value<DateTime?> ackByUser = const Value.absent(),
-          Value<DateTime?> ackByServer = const Value.absent()}) =>
-      Message(
-        groupId: groupId ?? this.groupId,
-        messageId: messageId ?? this.messageId,
-        senderId: senderId.present ? senderId.value : this.senderId,
-        type: type ?? this.type,
-        content: content.present ? content.value : this.content,
-        mediaId: mediaId.present ? mediaId.value : this.mediaId,
-        additionalMessageData: additionalMessageData.present
-            ? additionalMessageData.value
-            : this.additionalMessageData,
-        mediaStored: mediaStored ?? this.mediaStored,
-        mediaReopened: mediaReopened ?? this.mediaReopened,
-        downloadToken:
-            downloadToken.present ? downloadToken.value : this.downloadToken,
-        quotesMessageId: quotesMessageId.present
-            ? quotesMessageId.value
-            : this.quotesMessageId,
-        isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
-        openedAt: openedAt.present ? openedAt.value : this.openedAt,
-        openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
-        createdAt: createdAt ?? this.createdAt,
-        modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
-        ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
-        ackByServer: ackByServer.present ? ackByServer.value : this.ackByServer,
-      );
+  Message copyWith({
+    String? groupId,
+    String? messageId,
+    Value<int?> senderId = const Value.absent(),
+    String? type,
+    Value<String?> content = const Value.absent(),
+    Value<String?> mediaId = const Value.absent(),
+    Value<Uint8List?> additionalMessageData = const Value.absent(),
+    bool? mediaStored,
+    bool? mediaReopened,
+    Value<Uint8List?> downloadToken = const Value.absent(),
+    Value<String?> quotesMessageId = const Value.absent(),
+    bool? isDeletedFromSender,
+    Value<DateTime?> openedAt = const Value.absent(),
+    Value<DateTime?> openedByAll = const Value.absent(),
+    DateTime? createdAt,
+    Value<DateTime?> modifiedAt = const Value.absent(),
+    Value<DateTime?> ackByUser = const Value.absent(),
+    Value<DateTime?> ackByServer = const Value.absent(),
+  }) => Message(
+    groupId: groupId ?? this.groupId,
+    messageId: messageId ?? this.messageId,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    type: type ?? this.type,
+    content: content.present ? content.value : this.content,
+    mediaId: mediaId.present ? mediaId.value : this.mediaId,
+    additionalMessageData: additionalMessageData.present
+        ? additionalMessageData.value
+        : this.additionalMessageData,
+    mediaStored: mediaStored ?? this.mediaStored,
+    mediaReopened: mediaReopened ?? this.mediaReopened,
+    downloadToken: downloadToken.present
+        ? downloadToken.value
+        : this.downloadToken,
+    quotesMessageId: quotesMessageId.present
+        ? quotesMessageId.value
+        : this.quotesMessageId,
+    isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+    openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
+    createdAt: createdAt ?? this.createdAt,
+    modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
+    ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
+    ackByServer: ackByServer.present ? ackByServer.value : this.ackByServer,
+  );
   Message copyWithCompanion(MessagesCompanion data) {
     return Message(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
@@ -3302,8 +4117,9 @@ class Message extends DataClass implements Insertable<Message> {
       additionalMessageData: data.additionalMessageData.present
           ? data.additionalMessageData.value
           : this.additionalMessageData,
-      mediaStored:
-          data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
+      mediaStored: data.mediaStored.present
+          ? data.mediaStored.value
+          : this.mediaStored,
       mediaReopened: data.mediaReopened.present
           ? data.mediaReopened.value
           : this.mediaReopened,
@@ -3317,14 +4133,17 @@ class Message extends DataClass implements Insertable<Message> {
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
-      openedByAll:
-          data.openedByAll.present ? data.openedByAll.value : this.openedByAll,
+      openedByAll: data.openedByAll.present
+          ? data.openedByAll.value
+          : this.openedByAll,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      modifiedAt:
-          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
+      modifiedAt: data.modifiedAt.present
+          ? data.modifiedAt.value
+          : this.modifiedAt,
       ackByUser: data.ackByUser.present ? data.ackByUser.value : this.ackByUser,
-      ackByServer:
-          data.ackByServer.present ? data.ackByServer.value : this.ackByServer,
+      ackByServer: data.ackByServer.present
+          ? data.ackByServer.value
+          : this.ackByServer,
     );
   }
 
@@ -3355,24 +4174,25 @@ class Message extends DataClass implements Insertable<Message> {
 
   @override
   int get hashCode => Object.hash(
-      groupId,
-      messageId,
-      senderId,
-      type,
-      content,
-      mediaId,
-      $driftBlobEquality.hash(additionalMessageData),
-      mediaStored,
-      mediaReopened,
-      $driftBlobEquality.hash(downloadToken),
-      quotesMessageId,
-      isDeletedFromSender,
-      openedAt,
-      openedByAll,
-      createdAt,
-      modifiedAt,
-      ackByUser,
-      ackByServer);
+    groupId,
+    messageId,
+    senderId,
+    type,
+    content,
+    mediaId,
+    $driftBlobEquality.hash(additionalMessageData),
+    mediaStored,
+    mediaReopened,
+    $driftBlobEquality.hash(downloadToken),
+    quotesMessageId,
+    isDeletedFromSender,
+    openedAt,
+    openedByAll,
+    createdAt,
+    modifiedAt,
+    ackByUser,
+    ackByServer,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3384,7 +4204,9 @@ class Message extends DataClass implements Insertable<Message> {
           other.content == this.content &&
           other.mediaId == this.mediaId &&
           $driftBlobEquality.equals(
-              other.additionalMessageData, this.additionalMessageData) &&
+            other.additionalMessageData,
+            this.additionalMessageData,
+          ) &&
           other.mediaStored == this.mediaStored &&
           other.mediaReopened == this.mediaReopened &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
@@ -3459,9 +4281,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.ackByUser = const Value.absent(),
     this.ackByServer = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        messageId = Value(messageId),
-        type = Value(type);
+  }) : groupId = Value(groupId),
+       messageId = Value(messageId),
+       type = Value(type);
   static Insertable<Message> custom({
     Expression<String>? groupId,
     Expression<String>? messageId,
@@ -3508,26 +4330,27 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     });
   }
 
-  MessagesCompanion copyWith(
-      {Value<String>? groupId,
-      Value<String>? messageId,
-      Value<int?>? senderId,
-      Value<String>? type,
-      Value<String?>? content,
-      Value<String?>? mediaId,
-      Value<Uint8List?>? additionalMessageData,
-      Value<bool>? mediaStored,
-      Value<bool>? mediaReopened,
-      Value<Uint8List?>? downloadToken,
-      Value<String?>? quotesMessageId,
-      Value<bool>? isDeletedFromSender,
-      Value<DateTime?>? openedAt,
-      Value<DateTime?>? openedByAll,
-      Value<DateTime>? createdAt,
-      Value<DateTime?>? modifiedAt,
-      Value<DateTime?>? ackByUser,
-      Value<DateTime?>? ackByServer,
-      Value<int>? rowid}) {
+  MessagesCompanion copyWith({
+    Value<String>? groupId,
+    Value<String>? messageId,
+    Value<int?>? senderId,
+    Value<String>? type,
+    Value<String?>? content,
+    Value<String?>? mediaId,
+    Value<Uint8List?>? additionalMessageData,
+    Value<bool>? mediaStored,
+    Value<bool>? mediaReopened,
+    Value<Uint8List?>? downloadToken,
+    Value<String?>? quotesMessageId,
+    Value<bool>? isDeletedFromSender,
+    Value<DateTime?>? openedAt,
+    Value<DateTime?>? openedByAll,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? modifiedAt,
+    Value<DateTime?>? ackByUser,
+    Value<DateTime?>? ackByServer,
+    Value<int>? rowid,
+  }) {
     return MessagesCompanion(
       groupId: groupId ?? this.groupId,
       messageId: messageId ?? this.messageId,
@@ -3574,8 +4397,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       map['media_id'] = Variable<String>(mediaId.value);
     }
     if (additionalMessageData.present) {
-      map['additional_message_data'] =
-          Variable<Uint8List>(additionalMessageData.value);
+      map['additional_message_data'] = Variable<Uint8List>(
+        additionalMessageData.value,
+      );
     }
     if (mediaStored.present) {
       map['media_stored'] = Variable<bool>(mediaStored.value);
@@ -3652,77 +4476,115 @@ class $MessageHistoriesTable extends MessageHistories
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id) ON DELETE CASCADE'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'content',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, messageId, contactId, content, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    messageId,
+    contactId,
+    content,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'message_histories';
   @override
-  VerificationContext validateIntegrity(Insertable<MessageHistory> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<MessageHistory> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
     }
     if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -3733,16 +4595,26 @@ class $MessageHistoriesTable extends MessageHistories
   MessageHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageHistory(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -3758,12 +4630,13 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   final int? contactId;
   final String? content;
   final DateTime createdAt;
-  const MessageHistory(
-      {required this.id,
-      required this.messageId,
-      this.contactId,
-      this.content,
-      required this.createdAt});
+  const MessageHistory({
+    required this.id,
+    required this.messageId,
+    this.contactId,
+    this.content,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3793,8 +4666,10 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     );
   }
 
-  factory MessageHistory.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MessageHistory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageHistory(
       id: serializer.fromJson<int>(json['id']),
@@ -3816,19 +4691,19 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     };
   }
 
-  MessageHistory copyWith(
-          {int? id,
-          String? messageId,
-          Value<int?> contactId = const Value.absent(),
-          Value<String?> content = const Value.absent(),
-          DateTime? createdAt}) =>
-      MessageHistory(
-        id: id ?? this.id,
-        messageId: messageId ?? this.messageId,
-        contactId: contactId.present ? contactId.value : this.contactId,
-        content: content.present ? content.value : this.content,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  MessageHistory copyWith({
+    int? id,
+    String? messageId,
+    Value<int?> contactId = const Value.absent(),
+    Value<String?> content = const Value.absent(),
+    DateTime? createdAt,
+  }) => MessageHistory(
+    id: id ?? this.id,
+    messageId: messageId ?? this.messageId,
+    contactId: contactId.present ? contactId.value : this.contactId,
+    content: content.present ? content.value : this.content,
+    createdAt: createdAt ?? this.createdAt,
+  );
   MessageHistory copyWithCompanion(MessageHistoriesCompanion data) {
     return MessageHistory(
       id: data.id.present ? data.id.value : this.id,
@@ -3900,12 +4775,13 @@ class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
     });
   }
 
-  MessageHistoriesCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? messageId,
-      Value<int?>? contactId,
-      Value<String?>? content,
-      Value<DateTime>? createdAt}) {
+  MessageHistoriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? messageId,
+    Value<int?>? contactId,
+    Value<String?>? content,
+    Value<DateTime>? createdAt,
+  }) {
     return MessageHistoriesCompanion(
       id: id ?? this.id,
       messageId: messageId ?? this.messageId,
@@ -3955,37 +4831,55 @@ class $ReactionsTable extends Reactions
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ReactionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id) ON DELETE CASCADE'));
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
   static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
   @override
   late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
-      'emoji', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _senderIdMeta =
-      const VerificationMeta('senderId');
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta(
+    'senderId',
+  );
   @override
   late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
-      'sender_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [messageId, emoji, senderId, createdAt];
   @override
@@ -3994,29 +4888,39 @@ class $ReactionsTable extends Reactions
   String get actualTableName => $name;
   static const String $name = 'reactions';
   @override
-  VerificationContext validateIntegrity(Insertable<Reaction> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Reaction> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('emoji')) {
       context.handle(
-          _emojiMeta, emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta));
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
     } else if (isInserting) {
       context.missing(_emojiMeta);
     }
     if (data.containsKey('sender_id')) {
-      context.handle(_senderIdMeta,
-          senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta));
+      context.handle(
+        _senderIdMeta,
+        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -4027,14 +4931,22 @@ class $ReactionsTable extends Reactions
   Reaction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Reaction(
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      emoji: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}emoji'])!,
-      senderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4049,11 +4961,12 @@ class Reaction extends DataClass implements Insertable<Reaction> {
   final String emoji;
   final int? senderId;
   final DateTime createdAt;
-  const Reaction(
-      {required this.messageId,
-      required this.emoji,
-      this.senderId,
-      required this.createdAt});
+  const Reaction({
+    required this.messageId,
+    required this.emoji,
+    this.senderId,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4077,8 +4990,10 @@ class Reaction extends DataClass implements Insertable<Reaction> {
     );
   }
 
-  factory Reaction.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Reaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Reaction(
       messageId: serializer.fromJson<String>(json['messageId']),
@@ -4098,17 +5013,17 @@ class Reaction extends DataClass implements Insertable<Reaction> {
     };
   }
 
-  Reaction copyWith(
-          {String? messageId,
-          String? emoji,
-          Value<int?> senderId = const Value.absent(),
-          DateTime? createdAt}) =>
-      Reaction(
-        messageId: messageId ?? this.messageId,
-        emoji: emoji ?? this.emoji,
-        senderId: senderId.present ? senderId.value : this.senderId,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  Reaction copyWith({
+    String? messageId,
+    String? emoji,
+    Value<int?> senderId = const Value.absent(),
+    DateTime? createdAt,
+  }) => Reaction(
+    messageId: messageId ?? this.messageId,
+    emoji: emoji ?? this.emoji,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    createdAt: createdAt ?? this.createdAt,
+  );
   Reaction copyWithCompanion(ReactionsCompanion data) {
     return Reaction(
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
@@ -4160,8 +5075,8 @@ class ReactionsCompanion extends UpdateCompanion<Reaction> {
     this.senderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : messageId = Value(messageId),
-        emoji = Value(emoji);
+  }) : messageId = Value(messageId),
+       emoji = Value(emoji);
   static Insertable<Reaction> custom({
     Expression<String>? messageId,
     Expression<String>? emoji,
@@ -4178,12 +5093,13 @@ class ReactionsCompanion extends UpdateCompanion<Reaction> {
     });
   }
 
-  ReactionsCompanion copyWith(
-      {Value<String>? messageId,
-      Value<String>? emoji,
-      Value<int?>? senderId,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  ReactionsCompanion copyWith({
+    Value<String>? messageId,
+    Value<String>? emoji,
+    Value<int?>? senderId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReactionsCompanion(
       messageId: messageId ?? this.messageId,
       emoji: emoji ?? this.emoji,
@@ -4233,90 +5149,138 @@ class $GroupMembersTable extends GroupMembers
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $GroupMembersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _groupIdMeta =
-      const VerificationMeta('groupId');
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id)',
+    ),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<MemberState?, String>
-      memberState = GeneratedColumn<String>('member_state', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<MemberState?>(
-              $GroupMembersTable.$convertermemberStaten);
-  static const VerificationMeta _groupPublicKeyMeta =
-      const VerificationMeta('groupPublicKey');
+  memberState = GeneratedColumn<String>(
+    'member_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<MemberState?>($GroupMembersTable.$convertermemberStaten);
+  static const VerificationMeta _groupPublicKeyMeta = const VerificationMeta(
+    'groupPublicKey',
+  );
   @override
   late final GeneratedColumn<Uint8List> groupPublicKey =
-      GeneratedColumn<Uint8List>('group_public_key', aliasedName, true,
-          type: DriftSqlType.blob, requiredDuringInsert: false);
-  static const VerificationMeta _lastMessageMeta =
-      const VerificationMeta('lastMessage');
+      GeneratedColumn<Uint8List>(
+        'group_public_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastMessageMeta = const VerificationMeta(
+    'lastMessage',
+  );
   @override
   late final GeneratedColumn<DateTime> lastMessage = GeneratedColumn<DateTime>(
-      'last_message', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'last_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [groupId, contactId, memberState, groupPublicKey, lastMessage, createdAt];
+  List<GeneratedColumn> get $columns => [
+    groupId,
+    contactId,
+    memberState,
+    groupPublicKey,
+    lastMessage,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'group_members';
   @override
-  VerificationContext validateIntegrity(Insertable<GroupMember> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<GroupMember> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('group_id')) {
-      context.handle(_groupIdMeta,
-          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_groupIdMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
     if (data.containsKey('group_public_key')) {
       context.handle(
+        _groupPublicKeyMeta,
+        groupPublicKey.isAcceptableOrUnknown(
+          data['group_public_key']!,
           _groupPublicKeyMeta,
-          groupPublicKey.isAcceptableOrUnknown(
-              data['group_public_key']!, _groupPublicKeyMeta));
+        ),
+      );
     }
     if (data.containsKey('last_message')) {
       context.handle(
+        _lastMessageMeta,
+        lastMessage.isAcceptableOrUnknown(
+          data['last_message']!,
           _lastMessageMeta,
-          lastMessage.isAcceptableOrUnknown(
-              data['last_message']!, _lastMessageMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -4327,19 +5291,32 @@ class $GroupMembersTable extends GroupMembers
   GroupMember map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GroupMember(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
       memberState: $GroupMembersTable.$convertermemberStaten.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.string, data['${effectivePrefix}member_state'])),
-      groupPublicKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}group_public_key']),
-      lastMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_message']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}member_state'],
+        ),
+      ),
+      groupPublicKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}group_public_key'],
+      ),
+      lastMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_message'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4351,8 +5328,7 @@ class $GroupMembersTable extends GroupMembers
   static JsonTypeConverter2<MemberState, String, String> $convertermemberState =
       const EnumNameConverter<MemberState>(MemberState.values);
   static JsonTypeConverter2<MemberState?, String?, String?>
-      $convertermemberStaten =
-      JsonTypeConverter2.asNullable($convertermemberState);
+  $convertermemberStaten = JsonTypeConverter2.asNullable($convertermemberState);
 }
 
 class GroupMember extends DataClass implements Insertable<GroupMember> {
@@ -4362,13 +5338,14 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
   final Uint8List? groupPublicKey;
   final DateTime? lastMessage;
   final DateTime createdAt;
-  const GroupMember(
-      {required this.groupId,
-      required this.contactId,
-      this.memberState,
-      this.groupPublicKey,
-      this.lastMessage,
-      required this.createdAt});
+  const GroupMember({
+    required this.groupId,
+    required this.contactId,
+    this.memberState,
+    this.groupPublicKey,
+    this.lastMessage,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4376,7 +5353,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     map['contact_id'] = Variable<int>(contactId);
     if (!nullToAbsent || memberState != null) {
       map['member_state'] = Variable<String>(
-          $GroupMembersTable.$convertermemberStaten.toSql(memberState));
+        $GroupMembersTable.$convertermemberStaten.toSql(memberState),
+      );
     }
     if (!nullToAbsent || groupPublicKey != null) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey);
@@ -4405,14 +5383,17 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     );
   }
 
-  factory GroupMember.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory GroupMember.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GroupMember(
       groupId: serializer.fromJson<String>(json['groupId']),
       contactId: serializer.fromJson<int>(json['contactId']),
-      memberState: $GroupMembersTable.$convertermemberStaten
-          .fromJson(serializer.fromJson<String?>(json['memberState'])),
+      memberState: $GroupMembersTable.$convertermemberStaten.fromJson(
+        serializer.fromJson<String?>(json['memberState']),
+      ),
       groupPublicKey: serializer.fromJson<Uint8List?>(json['groupPublicKey']),
       lastMessage: serializer.fromJson<DateTime?>(json['lastMessage']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -4425,40 +5406,44 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       'groupId': serializer.toJson<String>(groupId),
       'contactId': serializer.toJson<int>(contactId),
       'memberState': serializer.toJson<String?>(
-          $GroupMembersTable.$convertermemberStaten.toJson(memberState)),
+        $GroupMembersTable.$convertermemberStaten.toJson(memberState),
+      ),
       'groupPublicKey': serializer.toJson<Uint8List?>(groupPublicKey),
       'lastMessage': serializer.toJson<DateTime?>(lastMessage),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  GroupMember copyWith(
-          {String? groupId,
-          int? contactId,
-          Value<MemberState?> memberState = const Value.absent(),
-          Value<Uint8List?> groupPublicKey = const Value.absent(),
-          Value<DateTime?> lastMessage = const Value.absent(),
-          DateTime? createdAt}) =>
-      GroupMember(
-        groupId: groupId ?? this.groupId,
-        contactId: contactId ?? this.contactId,
-        memberState: memberState.present ? memberState.value : this.memberState,
-        groupPublicKey:
-            groupPublicKey.present ? groupPublicKey.value : this.groupPublicKey,
-        lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  GroupMember copyWith({
+    String? groupId,
+    int? contactId,
+    Value<MemberState?> memberState = const Value.absent(),
+    Value<Uint8List?> groupPublicKey = const Value.absent(),
+    Value<DateTime?> lastMessage = const Value.absent(),
+    DateTime? createdAt,
+  }) => GroupMember(
+    groupId: groupId ?? this.groupId,
+    contactId: contactId ?? this.contactId,
+    memberState: memberState.present ? memberState.value : this.memberState,
+    groupPublicKey: groupPublicKey.present
+        ? groupPublicKey.value
+        : this.groupPublicKey,
+    lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
+    createdAt: createdAt ?? this.createdAt,
+  );
   GroupMember copyWithCompanion(GroupMembersCompanion data) {
     return GroupMember(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      memberState:
-          data.memberState.present ? data.memberState.value : this.memberState,
+      memberState: data.memberState.present
+          ? data.memberState.value
+          : this.memberState,
       groupPublicKey: data.groupPublicKey.present
           ? data.groupPublicKey.value
           : this.groupPublicKey,
-      lastMessage:
-          data.lastMessage.present ? data.lastMessage.value : this.lastMessage,
+      lastMessage: data.lastMessage.present
+          ? data.lastMessage.value
+          : this.lastMessage,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -4477,8 +5462,14 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
   }
 
   @override
-  int get hashCode => Object.hash(groupId, contactId, memberState,
-      $driftBlobEquality.hash(groupPublicKey), lastMessage, createdAt);
+  int get hashCode => Object.hash(
+    groupId,
+    contactId,
+    memberState,
+    $driftBlobEquality.hash(groupPublicKey),
+    lastMessage,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4487,7 +5478,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           other.contactId == this.contactId &&
           other.memberState == this.memberState &&
           $driftBlobEquality.equals(
-              other.groupPublicKey, this.groupPublicKey) &&
+            other.groupPublicKey,
+            this.groupPublicKey,
+          ) &&
           other.lastMessage == this.lastMessage &&
           other.createdAt == this.createdAt);
 }
@@ -4517,8 +5510,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        contactId = Value(contactId);
+  }) : groupId = Value(groupId),
+       contactId = Value(contactId);
   static Insertable<GroupMember> custom({
     Expression<String>? groupId,
     Expression<int>? contactId,
@@ -4539,14 +5532,15 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     });
   }
 
-  GroupMembersCompanion copyWith(
-      {Value<String>? groupId,
-      Value<int>? contactId,
-      Value<MemberState?>? memberState,
-      Value<Uint8List?>? groupPublicKey,
-      Value<DateTime?>? lastMessage,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  GroupMembersCompanion copyWith({
+    Value<String>? groupId,
+    Value<int>? contactId,
+    Value<MemberState?>? memberState,
+    Value<Uint8List?>? groupPublicKey,
+    Value<DateTime?>? lastMessage,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return GroupMembersCompanion(
       groupId: groupId ?? this.groupId,
       contactId: contactId ?? this.contactId,
@@ -4569,7 +5563,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     }
     if (memberState.present) {
       map['member_state'] = Variable<String>(
-          $GroupMembersTable.$convertermemberStaten.toSql(memberState.value));
+        $GroupMembersTable.$convertermemberStaten.toSql(memberState.value),
+      );
     }
     if (groupPublicKey.present) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey.value);
@@ -4606,172 +5601,274 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ReceiptsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _receiptIdMeta =
-      const VerificationMeta('receiptId');
+  static const VerificationMeta _receiptIdMeta = const VerificationMeta(
+    'receiptId',
+  );
   @override
   late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
-      'receipt_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+    'receipt_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id) ON DELETE CASCADE'));
-  static const VerificationMeta _messageMeta =
-      const VerificationMeta('message');
+    'message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
   @override
   late final GeneratedColumn<Uint8List> message = GeneratedColumn<Uint8List>(
-      'message', aliasedName, false,
-      type: DriftSqlType.blob, requiredDuringInsert: true);
+    'message',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _contactWillSendsReceiptMeta =
       const VerificationMeta('contactWillSendsReceipt');
   @override
   late final GeneratedColumn<bool> contactWillSendsReceipt =
-      GeneratedColumn<bool>('contact_will_sends_receipt', aliasedName, false,
-          type: DriftSqlType.bool,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'CHECK ("contact_will_sends_receipt" IN (0, 1))'),
-          defaultValue: const Constant(true));
-  static const VerificationMeta _markForRetryMeta =
-      const VerificationMeta('markForRetry');
+      GeneratedColumn<bool>(
+        'contact_will_sends_receipt',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("contact_will_sends_receipt" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _willBeRetriedByMediaUploadMeta =
+      const VerificationMeta('willBeRetriedByMediaUpload');
+  @override
+  late final GeneratedColumn<bool> willBeRetriedByMediaUpload =
+      GeneratedColumn<bool>(
+        'will_be_retried_by_media_upload',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("will_be_retried_by_media_upload" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _markForRetryMeta = const VerificationMeta(
+    'markForRetry',
+  );
   @override
   late final GeneratedColumn<DateTime> markForRetry = GeneratedColumn<DateTime>(
-      'mark_for_retry', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'mark_for_retry',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _markForRetryAfterAcceptedMeta =
       const VerificationMeta('markForRetryAfterAccepted');
   @override
   late final GeneratedColumn<DateTime> markForRetryAfterAccepted =
       GeneratedColumn<DateTime>(
-          'mark_for_retry_after_accepted', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _ackByServerAtMeta =
-      const VerificationMeta('ackByServerAt');
+        'mark_for_retry_after_accepted',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _ackByServerAtMeta = const VerificationMeta(
+    'ackByServerAt',
+  );
   @override
   late final GeneratedColumn<DateTime> ackByServerAt =
-      GeneratedColumn<DateTime>('ack_by_server_at', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _retryCountMeta =
-      const VerificationMeta('retryCount');
+      GeneratedColumn<DateTime>(
+        'ack_by_server_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
   @override
   late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
-      'retry_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _lastRetryMeta =
-      const VerificationMeta('lastRetry');
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastRetryMeta = const VerificationMeta(
+    'lastRetry',
+  );
   @override
   late final GeneratedColumn<DateTime> lastRetry = GeneratedColumn<DateTime>(
-      'last_retry', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'last_retry',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        receiptId,
-        contactId,
-        messageId,
-        message,
-        contactWillSendsReceipt,
-        markForRetry,
-        markForRetryAfterAccepted,
-        ackByServerAt,
-        retryCount,
-        lastRetry,
-        createdAt
-      ];
+    receiptId,
+    contactId,
+    messageId,
+    message,
+    contactWillSendsReceipt,
+    willBeRetriedByMediaUpload,
+    markForRetry,
+    markForRetryAfterAccepted,
+    ackByServerAt,
+    retryCount,
+    lastRetry,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'receipts';
   @override
-  VerificationContext validateIntegrity(Insertable<Receipt> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Receipt> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('receipt_id')) {
-      context.handle(_receiptIdMeta,
-          receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta));
+      context.handle(
+        _receiptIdMeta,
+        receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_receiptIdMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
     if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
     }
     if (data.containsKey('message')) {
-      context.handle(_messageMeta,
-          message.isAcceptableOrUnknown(data['message']!, _messageMeta));
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
     } else if (isInserting) {
       context.missing(_messageMeta);
     }
     if (data.containsKey('contact_will_sends_receipt')) {
       context.handle(
+        _contactWillSendsReceiptMeta,
+        contactWillSendsReceipt.isAcceptableOrUnknown(
+          data['contact_will_sends_receipt']!,
           _contactWillSendsReceiptMeta,
-          contactWillSendsReceipt.isAcceptableOrUnknown(
-              data['contact_will_sends_receipt']!,
-              _contactWillSendsReceiptMeta));
+        ),
+      );
+    }
+    if (data.containsKey('will_be_retried_by_media_upload')) {
+      context.handle(
+        _willBeRetriedByMediaUploadMeta,
+        willBeRetriedByMediaUpload.isAcceptableOrUnknown(
+          data['will_be_retried_by_media_upload']!,
+          _willBeRetriedByMediaUploadMeta,
+        ),
+      );
     }
     if (data.containsKey('mark_for_retry')) {
       context.handle(
+        _markForRetryMeta,
+        markForRetry.isAcceptableOrUnknown(
+          data['mark_for_retry']!,
           _markForRetryMeta,
-          markForRetry.isAcceptableOrUnknown(
-              data['mark_for_retry']!, _markForRetryMeta));
+        ),
+      );
     }
     if (data.containsKey('mark_for_retry_after_accepted')) {
       context.handle(
+        _markForRetryAfterAcceptedMeta,
+        markForRetryAfterAccepted.isAcceptableOrUnknown(
+          data['mark_for_retry_after_accepted']!,
           _markForRetryAfterAcceptedMeta,
-          markForRetryAfterAccepted.isAcceptableOrUnknown(
-              data['mark_for_retry_after_accepted']!,
-              _markForRetryAfterAcceptedMeta));
+        ),
+      );
     }
     if (data.containsKey('ack_by_server_at')) {
       context.handle(
+        _ackByServerAtMeta,
+        ackByServerAt.isAcceptableOrUnknown(
+          data['ack_by_server_at']!,
           _ackByServerAtMeta,
-          ackByServerAt.isAcceptableOrUnknown(
-              data['ack_by_server_at']!, _ackByServerAtMeta));
+        ),
+      );
     }
     if (data.containsKey('retry_count')) {
       context.handle(
-          _retryCountMeta,
-          retryCount.isAcceptableOrUnknown(
-              data['retry_count']!, _retryCountMeta));
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
     }
     if (data.containsKey('last_retry')) {
-      context.handle(_lastRetryMeta,
-          lastRetry.isAcceptableOrUnknown(data['last_retry']!, _lastRetryMeta));
+      context.handle(
+        _lastRetryMeta,
+        lastRetry.isAcceptableOrUnknown(data['last_retry']!, _lastRetryMeta),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -4782,30 +5879,54 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
   Receipt map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Receipt(
-      receiptId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}receipt_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id']),
-      message: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}message'])!,
+      receiptId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      ),
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}message'],
+      )!,
       contactWillSendsReceipt: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool,
-          data['${effectivePrefix}contact_will_sends_receipt'])!,
+        DriftSqlType.bool,
+        data['${effectivePrefix}contact_will_sends_receipt'],
+      )!,
+      willBeRetriedByMediaUpload: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}will_be_retried_by_media_upload'],
+      )!,
       markForRetry: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}mark_for_retry']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}mark_for_retry'],
+      ),
       markForRetryAfterAccepted: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}mark_for_retry_after_accepted']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}mark_for_retry_after_accepted'],
+      ),
       ackByServerAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server_at']),
-      retryCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
-      lastRetry: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_retry']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ack_by_server_at'],
+      ),
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+      lastRetry: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_retry'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4823,24 +5944,27 @@ class Receipt extends DataClass implements Insertable<Receipt> {
   /// This is the protobuf 'Message'
   final Uint8List message;
   final bool contactWillSendsReceipt;
+  final bool willBeRetriedByMediaUpload;
   final DateTime? markForRetry;
   final DateTime? markForRetryAfterAccepted;
   final DateTime? ackByServerAt;
   final int retryCount;
   final DateTime? lastRetry;
   final DateTime createdAt;
-  const Receipt(
-      {required this.receiptId,
-      required this.contactId,
-      this.messageId,
-      required this.message,
-      required this.contactWillSendsReceipt,
-      this.markForRetry,
-      this.markForRetryAfterAccepted,
-      this.ackByServerAt,
-      required this.retryCount,
-      this.lastRetry,
-      required this.createdAt});
+  const Receipt({
+    required this.receiptId,
+    required this.contactId,
+    this.messageId,
+    required this.message,
+    required this.contactWillSendsReceipt,
+    required this.willBeRetriedByMediaUpload,
+    this.markForRetry,
+    this.markForRetryAfterAccepted,
+    this.ackByServerAt,
+    required this.retryCount,
+    this.lastRetry,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4851,12 +5975,16 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     }
     map['message'] = Variable<Uint8List>(message);
     map['contact_will_sends_receipt'] = Variable<bool>(contactWillSendsReceipt);
+    map['will_be_retried_by_media_upload'] = Variable<bool>(
+      willBeRetriedByMediaUpload,
+    );
     if (!nullToAbsent || markForRetry != null) {
       map['mark_for_retry'] = Variable<DateTime>(markForRetry);
     }
     if (!nullToAbsent || markForRetryAfterAccepted != null) {
-      map['mark_for_retry_after_accepted'] =
-          Variable<DateTime>(markForRetryAfterAccepted);
+      map['mark_for_retry_after_accepted'] = Variable<DateTime>(
+        markForRetryAfterAccepted,
+      );
     }
     if (!nullToAbsent || ackByServerAt != null) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt);
@@ -4878,13 +6006,14 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           : Value(messageId),
       message: Value(message),
       contactWillSendsReceipt: Value(contactWillSendsReceipt),
+      willBeRetriedByMediaUpload: Value(willBeRetriedByMediaUpload),
       markForRetry: markForRetry == null && nullToAbsent
           ? const Value.absent()
           : Value(markForRetry),
       markForRetryAfterAccepted:
           markForRetryAfterAccepted == null && nullToAbsent
-              ? const Value.absent()
-              : Value(markForRetryAfterAccepted),
+          ? const Value.absent()
+          : Value(markForRetryAfterAccepted),
       ackByServerAt: ackByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(ackByServerAt),
@@ -4896,19 +6025,26 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     );
   }
 
-  factory Receipt.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Receipt.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Receipt(
       receiptId: serializer.fromJson<String>(json['receiptId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       messageId: serializer.fromJson<String?>(json['messageId']),
       message: serializer.fromJson<Uint8List>(json['message']),
-      contactWillSendsReceipt:
-          serializer.fromJson<bool>(json['contactWillSendsReceipt']),
+      contactWillSendsReceipt: serializer.fromJson<bool>(
+        json['contactWillSendsReceipt'],
+      ),
+      willBeRetriedByMediaUpload: serializer.fromJson<bool>(
+        json['willBeRetriedByMediaUpload'],
+      ),
       markForRetry: serializer.fromJson<DateTime?>(json['markForRetry']),
-      markForRetryAfterAccepted:
-          serializer.fromJson<DateTime?>(json['markForRetryAfterAccepted']),
+      markForRetryAfterAccepted: serializer.fromJson<DateTime?>(
+        json['markForRetryAfterAccepted'],
+      ),
       ackByServerAt: serializer.fromJson<DateTime?>(json['ackByServerAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetry: serializer.fromJson<DateTime?>(json['lastRetry']),
@@ -4923,11 +6059,16 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       'contactId': serializer.toJson<int>(contactId),
       'messageId': serializer.toJson<String?>(messageId),
       'message': serializer.toJson<Uint8List>(message),
-      'contactWillSendsReceipt':
-          serializer.toJson<bool>(contactWillSendsReceipt),
+      'contactWillSendsReceipt': serializer.toJson<bool>(
+        contactWillSendsReceipt,
+      ),
+      'willBeRetriedByMediaUpload': serializer.toJson<bool>(
+        willBeRetriedByMediaUpload,
+      ),
       'markForRetry': serializer.toJson<DateTime?>(markForRetry),
-      'markForRetryAfterAccepted':
-          serializer.toJson<DateTime?>(markForRetryAfterAccepted),
+      'markForRetryAfterAccepted': serializer.toJson<DateTime?>(
+        markForRetryAfterAccepted,
+      ),
       'ackByServerAt': serializer.toJson<DateTime?>(ackByServerAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetry': serializer.toJson<DateTime?>(lastRetry),
@@ -4935,36 +6076,39 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     };
   }
 
-  Receipt copyWith(
-          {String? receiptId,
-          int? contactId,
-          Value<String?> messageId = const Value.absent(),
-          Uint8List? message,
-          bool? contactWillSendsReceipt,
-          Value<DateTime?> markForRetry = const Value.absent(),
-          Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
-          Value<DateTime?> ackByServerAt = const Value.absent(),
-          int? retryCount,
-          Value<DateTime?> lastRetry = const Value.absent(),
-          DateTime? createdAt}) =>
-      Receipt(
-        receiptId: receiptId ?? this.receiptId,
-        contactId: contactId ?? this.contactId,
-        messageId: messageId.present ? messageId.value : this.messageId,
-        message: message ?? this.message,
-        contactWillSendsReceipt:
-            contactWillSendsReceipt ?? this.contactWillSendsReceipt,
-        markForRetry:
-            markForRetry.present ? markForRetry.value : this.markForRetry,
-        markForRetryAfterAccepted: markForRetryAfterAccepted.present
-            ? markForRetryAfterAccepted.value
-            : this.markForRetryAfterAccepted,
-        ackByServerAt:
-            ackByServerAt.present ? ackByServerAt.value : this.ackByServerAt,
-        retryCount: retryCount ?? this.retryCount,
-        lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  Receipt copyWith({
+    String? receiptId,
+    int? contactId,
+    Value<String?> messageId = const Value.absent(),
+    Uint8List? message,
+    bool? contactWillSendsReceipt,
+    bool? willBeRetriedByMediaUpload,
+    Value<DateTime?> markForRetry = const Value.absent(),
+    Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
+    Value<DateTime?> ackByServerAt = const Value.absent(),
+    int? retryCount,
+    Value<DateTime?> lastRetry = const Value.absent(),
+    DateTime? createdAt,
+  }) => Receipt(
+    receiptId: receiptId ?? this.receiptId,
+    contactId: contactId ?? this.contactId,
+    messageId: messageId.present ? messageId.value : this.messageId,
+    message: message ?? this.message,
+    contactWillSendsReceipt:
+        contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+    willBeRetriedByMediaUpload:
+        willBeRetriedByMediaUpload ?? this.willBeRetriedByMediaUpload,
+    markForRetry: markForRetry.present ? markForRetry.value : this.markForRetry,
+    markForRetryAfterAccepted: markForRetryAfterAccepted.present
+        ? markForRetryAfterAccepted.value
+        : this.markForRetryAfterAccepted,
+    ackByServerAt: ackByServerAt.present
+        ? ackByServerAt.value
+        : this.ackByServerAt,
+    retryCount: retryCount ?? this.retryCount,
+    lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
+    createdAt: createdAt ?? this.createdAt,
+  );
   Receipt copyWithCompanion(ReceiptsCompanion data) {
     return Receipt(
       receiptId: data.receiptId.present ? data.receiptId.value : this.receiptId,
@@ -4974,6 +6118,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       contactWillSendsReceipt: data.contactWillSendsReceipt.present
           ? data.contactWillSendsReceipt.value
           : this.contactWillSendsReceipt,
+      willBeRetriedByMediaUpload: data.willBeRetriedByMediaUpload.present
+          ? data.willBeRetriedByMediaUpload.value
+          : this.willBeRetriedByMediaUpload,
       markForRetry: data.markForRetry.present
           ? data.markForRetry.value
           : this.markForRetry,
@@ -4983,8 +6130,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       ackByServerAt: data.ackByServerAt.present
           ? data.ackByServerAt.value
           : this.ackByServerAt,
-      retryCount:
-          data.retryCount.present ? data.retryCount.value : this.retryCount,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
       lastRetry: data.lastRetry.present ? data.lastRetry.value : this.lastRetry,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -4998,6 +6146,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('willBeRetriedByMediaUpload: $willBeRetriedByMediaUpload, ')
           ..write('markForRetry: $markForRetry, ')
           ..write('markForRetryAfterAccepted: $markForRetryAfterAccepted, ')
           ..write('ackByServerAt: $ackByServerAt, ')
@@ -5010,17 +6159,19 @@ class Receipt extends DataClass implements Insertable<Receipt> {
 
   @override
   int get hashCode => Object.hash(
-      receiptId,
-      contactId,
-      messageId,
-      $driftBlobEquality.hash(message),
-      contactWillSendsReceipt,
-      markForRetry,
-      markForRetryAfterAccepted,
-      ackByServerAt,
-      retryCount,
-      lastRetry,
-      createdAt);
+    receiptId,
+    contactId,
+    messageId,
+    $driftBlobEquality.hash(message),
+    contactWillSendsReceipt,
+    willBeRetriedByMediaUpload,
+    markForRetry,
+    markForRetryAfterAccepted,
+    ackByServerAt,
+    retryCount,
+    lastRetry,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5030,6 +6181,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           other.messageId == this.messageId &&
           $driftBlobEquality.equals(other.message, this.message) &&
           other.contactWillSendsReceipt == this.contactWillSendsReceipt &&
+          other.willBeRetriedByMediaUpload == this.willBeRetriedByMediaUpload &&
           other.markForRetry == this.markForRetry &&
           other.markForRetryAfterAccepted == this.markForRetryAfterAccepted &&
           other.ackByServerAt == this.ackByServerAt &&
@@ -5044,6 +6196,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
   final Value<String?> messageId;
   final Value<Uint8List> message;
   final Value<bool> contactWillSendsReceipt;
+  final Value<bool> willBeRetriedByMediaUpload;
   final Value<DateTime?> markForRetry;
   final Value<DateTime?> markForRetryAfterAccepted;
   final Value<DateTime?> ackByServerAt;
@@ -5057,6 +6210,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     this.message = const Value.absent(),
     this.contactWillSendsReceipt = const Value.absent(),
+    this.willBeRetriedByMediaUpload = const Value.absent(),
     this.markForRetry = const Value.absent(),
     this.markForRetryAfterAccepted = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
@@ -5071,6 +6225,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     required Uint8List message,
     this.contactWillSendsReceipt = const Value.absent(),
+    this.willBeRetriedByMediaUpload = const Value.absent(),
     this.markForRetry = const Value.absent(),
     this.markForRetryAfterAccepted = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
@@ -5078,15 +6233,16 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.lastRetry = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : receiptId = Value(receiptId),
-        contactId = Value(contactId),
-        message = Value(message);
+  }) : receiptId = Value(receiptId),
+       contactId = Value(contactId),
+       message = Value(message);
   static Insertable<Receipt> custom({
     Expression<String>? receiptId,
     Expression<int>? contactId,
     Expression<String>? messageId,
     Expression<Uint8List>? message,
     Expression<bool>? contactWillSendsReceipt,
+    Expression<bool>? willBeRetriedByMediaUpload,
     Expression<DateTime>? markForRetry,
     Expression<DateTime>? markForRetryAfterAccepted,
     Expression<DateTime>? ackByServerAt,
@@ -5102,6 +6258,8 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       if (message != null) 'message': message,
       if (contactWillSendsReceipt != null)
         'contact_will_sends_receipt': contactWillSendsReceipt,
+      if (willBeRetriedByMediaUpload != null)
+        'will_be_retried_by_media_upload': willBeRetriedByMediaUpload,
       if (markForRetry != null) 'mark_for_retry': markForRetry,
       if (markForRetryAfterAccepted != null)
         'mark_for_retry_after_accepted': markForRetryAfterAccepted,
@@ -5113,19 +6271,21 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     });
   }
 
-  ReceiptsCompanion copyWith(
-      {Value<String>? receiptId,
-      Value<int>? contactId,
-      Value<String?>? messageId,
-      Value<Uint8List>? message,
-      Value<bool>? contactWillSendsReceipt,
-      Value<DateTime?>? markForRetry,
-      Value<DateTime?>? markForRetryAfterAccepted,
-      Value<DateTime?>? ackByServerAt,
-      Value<int>? retryCount,
-      Value<DateTime?>? lastRetry,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  ReceiptsCompanion copyWith({
+    Value<String>? receiptId,
+    Value<int>? contactId,
+    Value<String?>? messageId,
+    Value<Uint8List>? message,
+    Value<bool>? contactWillSendsReceipt,
+    Value<bool>? willBeRetriedByMediaUpload,
+    Value<DateTime?>? markForRetry,
+    Value<DateTime?>? markForRetryAfterAccepted,
+    Value<DateTime?>? ackByServerAt,
+    Value<int>? retryCount,
+    Value<DateTime?>? lastRetry,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReceiptsCompanion(
       receiptId: receiptId ?? this.receiptId,
       contactId: contactId ?? this.contactId,
@@ -5133,6 +6293,8 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       message: message ?? this.message,
       contactWillSendsReceipt:
           contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+      willBeRetriedByMediaUpload:
+          willBeRetriedByMediaUpload ?? this.willBeRetriedByMediaUpload,
       markForRetry: markForRetry ?? this.markForRetry,
       markForRetryAfterAccepted:
           markForRetryAfterAccepted ?? this.markForRetryAfterAccepted,
@@ -5160,15 +6322,22 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       map['message'] = Variable<Uint8List>(message.value);
     }
     if (contactWillSendsReceipt.present) {
-      map['contact_will_sends_receipt'] =
-          Variable<bool>(contactWillSendsReceipt.value);
+      map['contact_will_sends_receipt'] = Variable<bool>(
+        contactWillSendsReceipt.value,
+      );
+    }
+    if (willBeRetriedByMediaUpload.present) {
+      map['will_be_retried_by_media_upload'] = Variable<bool>(
+        willBeRetriedByMediaUpload.value,
+      );
     }
     if (markForRetry.present) {
       map['mark_for_retry'] = Variable<DateTime>(markForRetry.value);
     }
     if (markForRetryAfterAccepted.present) {
-      map['mark_for_retry_after_accepted'] =
-          Variable<DateTime>(markForRetryAfterAccepted.value);
+      map['mark_for_retry_after_accepted'] = Variable<DateTime>(
+        markForRetryAfterAccepted.value,
+      );
     }
     if (ackByServerAt.present) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt.value);
@@ -5196,6 +6365,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('willBeRetriedByMediaUpload: $willBeRetriedByMediaUpload, ')
           ..write('markForRetry: $markForRetry, ')
           ..write('markForRetryAfterAccepted: $markForRetryAfterAccepted, ')
           ..write('ackByServerAt: $ackByServerAt, ')
@@ -5214,20 +6384,29 @@ class $ReceivedReceiptsTable extends ReceivedReceipts
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ReceivedReceiptsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _receiptIdMeta =
-      const VerificationMeta('receiptId');
+  static const VerificationMeta _receiptIdMeta = const VerificationMeta(
+    'receiptId',
+  );
   @override
   late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
-      'receipt_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'receipt_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [receiptId, createdAt];
   @override
@@ -5236,19 +6415,25 @@ class $ReceivedReceiptsTable extends ReceivedReceipts
   String get actualTableName => $name;
   static const String $name = 'received_receipts';
   @override
-  VerificationContext validateIntegrity(Insertable<ReceivedReceipt> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<ReceivedReceipt> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('receipt_id')) {
-      context.handle(_receiptIdMeta,
-          receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta));
+      context.handle(
+        _receiptIdMeta,
+        receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_receiptIdMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -5259,10 +6444,14 @@ class $ReceivedReceiptsTable extends ReceivedReceipts
   ReceivedReceipt map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReceivedReceipt(
-      receiptId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}receipt_id'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      receiptId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -5291,8 +6480,10 @@ class ReceivedReceipt extends DataClass implements Insertable<ReceivedReceipt> {
     );
   }
 
-  factory ReceivedReceipt.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ReceivedReceipt.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReceivedReceipt(
       receiptId: serializer.fromJson<String>(json['receiptId']),
@@ -5365,10 +6556,11 @@ class ReceivedReceiptsCompanion extends UpdateCompanion<ReceivedReceipt> {
     });
   }
 
-  ReceivedReceiptsCompanion copyWith(
-      {Value<String>? receiptId,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  ReceivedReceiptsCompanion copyWith({
+    Value<String>? receiptId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReceivedReceiptsCompanion(
       receiptId: receiptId ?? this.receiptId,
       createdAt: createdAt ?? this.createdAt,
@@ -5408,34 +6600,57 @@ class $SignalIdentityKeyStoresTable extends SignalIdentityKeyStores
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SignalIdentityKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _deviceIdMeta =
-      const VerificationMeta('deviceId');
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
   @override
   late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-      'device_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _identityKeyMeta =
-      const VerificationMeta('identityKey');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityKeyMeta = const VerificationMeta(
+    'identityKey',
+  );
   @override
   late final GeneratedColumn<Uint8List> identityKey =
-      GeneratedColumn<Uint8List>('identity_key', aliasedName, false,
-          type: DriftSqlType.blob, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+      GeneratedColumn<Uint8List>(
+        'identity_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [deviceId, name, identityKey, createdAt];
+  List<GeneratedColumn> get $columns => [
+    deviceId,
+    name,
+    identityKey,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5443,33 +6658,43 @@ class $SignalIdentityKeyStoresTable extends SignalIdentityKeyStores
   static const String $name = 'signal_identity_key_stores';
   @override
   VerificationContext validateIntegrity(
-      Insertable<SignalIdentityKeyStore> instance,
-      {bool isInserting = false}) {
+    Insertable<SignalIdentityKeyStore> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('device_id')) {
-      context.handle(_deviceIdMeta,
-          deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('identity_key')) {
       context.handle(
+        _identityKeyMeta,
+        identityKey.isAcceptableOrUnknown(
+          data['identity_key']!,
           _identityKeyMeta,
-          identityKey.isAcceptableOrUnknown(
-              data['identity_key']!, _identityKeyMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_identityKeyMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -5480,14 +6705,22 @@ class $SignalIdentityKeyStoresTable extends SignalIdentityKeyStores
   SignalIdentityKeyStore map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalIdentityKeyStore(
-      deviceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}device_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      identityKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}identity_key'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      identityKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}identity_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -5503,11 +6736,12 @@ class SignalIdentityKeyStore extends DataClass
   final String name;
   final Uint8List identityKey;
   final DateTime createdAt;
-  const SignalIdentityKeyStore(
-      {required this.deviceId,
-      required this.name,
-      required this.identityKey,
-      required this.createdAt});
+  const SignalIdentityKeyStore({
+    required this.deviceId,
+    required this.name,
+    required this.identityKey,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5527,8 +6761,10 @@ class SignalIdentityKeyStore extends DataClass
     );
   }
 
-  factory SignalIdentityKeyStore.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalIdentityKeyStore.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalIdentityKeyStore(
       deviceId: serializer.fromJson<int>(json['deviceId']),
@@ -5548,24 +6784,26 @@ class SignalIdentityKeyStore extends DataClass
     };
   }
 
-  SignalIdentityKeyStore copyWith(
-          {int? deviceId,
-          String? name,
-          Uint8List? identityKey,
-          DateTime? createdAt}) =>
-      SignalIdentityKeyStore(
-        deviceId: deviceId ?? this.deviceId,
-        name: name ?? this.name,
-        identityKey: identityKey ?? this.identityKey,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalIdentityKeyStore copyWith({
+    int? deviceId,
+    String? name,
+    Uint8List? identityKey,
+    DateTime? createdAt,
+  }) => SignalIdentityKeyStore(
+    deviceId: deviceId ?? this.deviceId,
+    name: name ?? this.name,
+    identityKey: identityKey ?? this.identityKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalIdentityKeyStore copyWithCompanion(
-      SignalIdentityKeyStoresCompanion data) {
+    SignalIdentityKeyStoresCompanion data,
+  ) {
     return SignalIdentityKeyStore(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       name: data.name.present ? data.name.value : this.name,
-      identityKey:
-          data.identityKey.present ? data.identityKey.value : this.identityKey,
+      identityKey: data.identityKey.present
+          ? data.identityKey.value
+          : this.identityKey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -5583,7 +6821,11 @@ class SignalIdentityKeyStore extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      deviceId, name, $driftBlobEquality.hash(identityKey), createdAt);
+    deviceId,
+    name,
+    $driftBlobEquality.hash(identityKey),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5614,9 +6856,9 @@ class SignalIdentityKeyStoresCompanion
     required Uint8List identityKey,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : deviceId = Value(deviceId),
-        name = Value(name),
-        identityKey = Value(identityKey);
+  }) : deviceId = Value(deviceId),
+       name = Value(name),
+       identityKey = Value(identityKey);
   static Insertable<SignalIdentityKeyStore> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
@@ -5633,12 +6875,13 @@ class SignalIdentityKeyStoresCompanion
     });
   }
 
-  SignalIdentityKeyStoresCompanion copyWith(
-      {Value<int>? deviceId,
-      Value<String>? name,
-      Value<Uint8List>? identityKey,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  SignalIdentityKeyStoresCompanion copyWith({
+    Value<int>? deviceId,
+    Value<String>? name,
+    Value<Uint8List>? identityKey,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return SignalIdentityKeyStoresCompanion(
       deviceId: deviceId ?? this.deviceId,
       name: name ?? this.name,
@@ -5688,25 +6931,38 @@ class $SignalPreKeyStoresTable extends SignalPreKeyStores
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SignalPreKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _preKeyIdMeta =
-      const VerificationMeta('preKeyId');
+  static const VerificationMeta _preKeyIdMeta = const VerificationMeta(
+    'preKeyId',
+  );
   @override
   late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
-      'pre_key_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'pre_key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _preKeyMeta = const VerificationMeta('preKey');
   @override
   late final GeneratedColumn<Uint8List> preKey = GeneratedColumn<Uint8List>(
-      'pre_key', aliasedName, false,
-      type: DriftSqlType.blob, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'pre_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [preKeyId, preKey, createdAt];
   @override
@@ -5715,23 +6971,31 @@ class $SignalPreKeyStoresTable extends SignalPreKeyStores
   String get actualTableName => $name;
   static const String $name = 'signal_pre_key_stores';
   @override
-  VerificationContext validateIntegrity(Insertable<SignalPreKeyStore> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<SignalPreKeyStore> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('pre_key_id')) {
-      context.handle(_preKeyIdMeta,
-          preKeyId.isAcceptableOrUnknown(data['pre_key_id']!, _preKeyIdMeta));
+      context.handle(
+        _preKeyIdMeta,
+        preKeyId.isAcceptableOrUnknown(data['pre_key_id']!, _preKeyIdMeta),
+      );
     }
     if (data.containsKey('pre_key')) {
-      context.handle(_preKeyMeta,
-          preKey.isAcceptableOrUnknown(data['pre_key']!, _preKeyMeta));
+      context.handle(
+        _preKeyMeta,
+        preKey.isAcceptableOrUnknown(data['pre_key']!, _preKeyMeta),
+      );
     } else if (isInserting) {
       context.missing(_preKeyMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -5742,12 +7006,18 @@ class $SignalPreKeyStoresTable extends SignalPreKeyStores
   SignalPreKeyStore map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalPreKeyStore(
-      preKeyId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}pre_key_id'])!,
-      preKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}pre_key'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      preKeyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pre_key_id'],
+      )!,
+      preKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}pre_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -5762,8 +7032,11 @@ class SignalPreKeyStore extends DataClass
   final int preKeyId;
   final Uint8List preKey;
   final DateTime createdAt;
-  const SignalPreKeyStore(
-      {required this.preKeyId, required this.preKey, required this.createdAt});
+  const SignalPreKeyStore({
+    required this.preKeyId,
+    required this.preKey,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5781,8 +7054,10 @@ class SignalPreKeyStore extends DataClass
     );
   }
 
-  factory SignalPreKeyStore.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalPreKeyStore.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalPreKeyStore(
       preKeyId: serializer.fromJson<int>(json['preKeyId']),
@@ -5800,13 +7075,15 @@ class SignalPreKeyStore extends DataClass
     };
   }
 
-  SignalPreKeyStore copyWith(
-          {int? preKeyId, Uint8List? preKey, DateTime? createdAt}) =>
-      SignalPreKeyStore(
-        preKeyId: preKeyId ?? this.preKeyId,
-        preKey: preKey ?? this.preKey,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalPreKeyStore copyWith({
+    int? preKeyId,
+    Uint8List? preKey,
+    DateTime? createdAt,
+  }) => SignalPreKeyStore(
+    preKeyId: preKeyId ?? this.preKeyId,
+    preKey: preKey ?? this.preKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalPreKeyStore copyWithCompanion(SignalPreKeyStoresCompanion data) {
     return SignalPreKeyStore(
       preKeyId: data.preKeyId.present ? data.preKeyId.value : this.preKeyId,
@@ -5863,10 +7140,11 @@ class SignalPreKeyStoresCompanion extends UpdateCompanion<SignalPreKeyStore> {
     });
   }
 
-  SignalPreKeyStoresCompanion copyWith(
-      {Value<int>? preKeyId,
-      Value<Uint8List>? preKey,
-      Value<DateTime>? createdAt}) {
+  SignalPreKeyStoresCompanion copyWith({
+    Value<int>? preKeyId,
+    Value<Uint8List>? preKey,
+    Value<DateTime>? createdAt,
+  }) {
     return SignalPreKeyStoresCompanion(
       preKeyId: preKeyId ?? this.preKeyId,
       preKey: preKey ?? this.preKey,
@@ -5906,18 +7184,28 @@ class $SignalSenderKeyStoresTable extends SignalSenderKeyStores
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SignalSenderKeyStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _senderKeyNameMeta =
-      const VerificationMeta('senderKeyName');
+  static const VerificationMeta _senderKeyNameMeta = const VerificationMeta(
+    'senderKeyName',
+  );
   @override
   late final GeneratedColumn<String> senderKeyName = GeneratedColumn<String>(
-      'sender_key_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _senderKeyMeta =
-      const VerificationMeta('senderKey');
+    'sender_key_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderKeyMeta = const VerificationMeta(
+    'senderKey',
+  );
   @override
   late final GeneratedColumn<Uint8List> senderKey = GeneratedColumn<Uint8List>(
-      'sender_key', aliasedName, false,
-      type: DriftSqlType.blob, requiredDuringInsert: true);
+    'sender_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [senderKeyName, senderKey];
   @override
@@ -5927,21 +7215,27 @@ class $SignalSenderKeyStoresTable extends SignalSenderKeyStores
   static const String $name = 'signal_sender_key_stores';
   @override
   VerificationContext validateIntegrity(
-      Insertable<SignalSenderKeyStore> instance,
-      {bool isInserting = false}) {
+    Insertable<SignalSenderKeyStore> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('sender_key_name')) {
       context.handle(
+        _senderKeyNameMeta,
+        senderKeyName.isAcceptableOrUnknown(
+          data['sender_key_name']!,
           _senderKeyNameMeta,
-          senderKeyName.isAcceptableOrUnknown(
-              data['sender_key_name']!, _senderKeyNameMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_senderKeyNameMeta);
     }
     if (data.containsKey('sender_key')) {
-      context.handle(_senderKeyMeta,
-          senderKey.isAcceptableOrUnknown(data['sender_key']!, _senderKeyMeta));
+      context.handle(
+        _senderKeyMeta,
+        senderKey.isAcceptableOrUnknown(data['sender_key']!, _senderKeyMeta),
+      );
     } else if (isInserting) {
       context.missing(_senderKeyMeta);
     }
@@ -5955,9 +7249,13 @@ class $SignalSenderKeyStoresTable extends SignalSenderKeyStores
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalSenderKeyStore(
       senderKeyName: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}sender_key_name'])!,
-      senderKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}sender_key'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}sender_key_name'],
+      )!,
+      senderKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}sender_key'],
+      )!,
     );
   }
 
@@ -5971,8 +7269,10 @@ class SignalSenderKeyStore extends DataClass
     implements Insertable<SignalSenderKeyStore> {
   final String senderKeyName;
   final Uint8List senderKey;
-  const SignalSenderKeyStore(
-      {required this.senderKeyName, required this.senderKey});
+  const SignalSenderKeyStore({
+    required this.senderKeyName,
+    required this.senderKey,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5988,8 +7288,10 @@ class SignalSenderKeyStore extends DataClass
     );
   }
 
-  factory SignalSenderKeyStore.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalSenderKeyStore.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalSenderKeyStore(
       senderKeyName: serializer.fromJson<String>(json['senderKeyName']),
@@ -6005,12 +7307,13 @@ class SignalSenderKeyStore extends DataClass
     };
   }
 
-  SignalSenderKeyStore copyWith(
-          {String? senderKeyName, Uint8List? senderKey}) =>
-      SignalSenderKeyStore(
-        senderKeyName: senderKeyName ?? this.senderKeyName,
-        senderKey: senderKey ?? this.senderKey,
-      );
+  SignalSenderKeyStore copyWith({
+    String? senderKeyName,
+    Uint8List? senderKey,
+  }) => SignalSenderKeyStore(
+    senderKeyName: senderKeyName ?? this.senderKeyName,
+    senderKey: senderKey ?? this.senderKey,
+  );
   SignalSenderKeyStore copyWithCompanion(SignalSenderKeyStoresCompanion data) {
     return SignalSenderKeyStore(
       senderKeyName: data.senderKeyName.present
@@ -6054,8 +7357,8 @@ class SignalSenderKeyStoresCompanion
     required String senderKeyName,
     required Uint8List senderKey,
     this.rowid = const Value.absent(),
-  })  : senderKeyName = Value(senderKeyName),
-        senderKey = Value(senderKey);
+  }) : senderKeyName = Value(senderKeyName),
+       senderKey = Value(senderKey);
   static Insertable<SignalSenderKeyStore> custom({
     Expression<String>? senderKeyName,
     Expression<Uint8List>? senderKey,
@@ -6068,10 +7371,11 @@ class SignalSenderKeyStoresCompanion
     });
   }
 
-  SignalSenderKeyStoresCompanion copyWith(
-      {Value<String>? senderKeyName,
-      Value<Uint8List>? senderKey,
-      Value<int>? rowid}) {
+  SignalSenderKeyStoresCompanion copyWith({
+    Value<String>? senderKeyName,
+    Value<Uint8List>? senderKey,
+    Value<int>? rowid,
+  }) {
     return SignalSenderKeyStoresCompanion(
       senderKeyName: senderKeyName ?? this.senderKeyName,
       senderKey: senderKey ?? this.senderKey,
@@ -6111,67 +7415,101 @@ class $SignalSessionStoresTable extends SignalSessionStores
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SignalSessionStoresTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _deviceIdMeta =
-      const VerificationMeta('deviceId');
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
   @override
   late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-      'device_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _sessionRecordMeta =
-      const VerificationMeta('sessionRecord');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionRecordMeta = const VerificationMeta(
+    'sessionRecord',
+  );
   @override
   late final GeneratedColumn<Uint8List> sessionRecord =
-      GeneratedColumn<Uint8List>('session_record', aliasedName, false,
-          type: DriftSqlType.blob, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+      GeneratedColumn<Uint8List>(
+        'session_record',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [deviceId, name, sessionRecord, createdAt];
+  List<GeneratedColumn> get $columns => [
+    deviceId,
+    name,
+    sessionRecord,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'signal_session_stores';
   @override
-  VerificationContext validateIntegrity(Insertable<SignalSessionStore> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<SignalSessionStore> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('device_id')) {
-      context.handle(_deviceIdMeta,
-          deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('session_record')) {
       context.handle(
+        _sessionRecordMeta,
+        sessionRecord.isAcceptableOrUnknown(
+          data['session_record']!,
           _sessionRecordMeta,
-          sessionRecord.isAcceptableOrUnknown(
-              data['session_record']!, _sessionRecordMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_sessionRecordMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -6182,14 +7520,22 @@ class $SignalSessionStoresTable extends SignalSessionStores
   SignalSessionStore map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalSessionStore(
-      deviceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}device_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      sessionRecord: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}session_record'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sessionRecord: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}session_record'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -6205,11 +7551,12 @@ class SignalSessionStore extends DataClass
   final String name;
   final Uint8List sessionRecord;
   final DateTime createdAt;
-  const SignalSessionStore(
-      {required this.deviceId,
-      required this.name,
-      required this.sessionRecord,
-      required this.createdAt});
+  const SignalSessionStore({
+    required this.deviceId,
+    required this.name,
+    required this.sessionRecord,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6229,8 +7576,10 @@ class SignalSessionStore extends DataClass
     );
   }
 
-  factory SignalSessionStore.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalSessionStore.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalSessionStore(
       deviceId: serializer.fromJson<int>(json['deviceId']),
@@ -6250,17 +7599,17 @@ class SignalSessionStore extends DataClass
     };
   }
 
-  SignalSessionStore copyWith(
-          {int? deviceId,
-          String? name,
-          Uint8List? sessionRecord,
-          DateTime? createdAt}) =>
-      SignalSessionStore(
-        deviceId: deviceId ?? this.deviceId,
-        name: name ?? this.name,
-        sessionRecord: sessionRecord ?? this.sessionRecord,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalSessionStore copyWith({
+    int? deviceId,
+    String? name,
+    Uint8List? sessionRecord,
+    DateTime? createdAt,
+  }) => SignalSessionStore(
+    deviceId: deviceId ?? this.deviceId,
+    name: name ?? this.name,
+    sessionRecord: sessionRecord ?? this.sessionRecord,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalSessionStore copyWithCompanion(SignalSessionStoresCompanion data) {
     return SignalSessionStore(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
@@ -6285,7 +7634,11 @@ class SignalSessionStore extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      deviceId, name, $driftBlobEquality.hash(sessionRecord), createdAt);
+    deviceId,
+    name,
+    $driftBlobEquality.hash(sessionRecord),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6315,9 +7668,9 @@ class SignalSessionStoresCompanion extends UpdateCompanion<SignalSessionStore> {
     required Uint8List sessionRecord,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : deviceId = Value(deviceId),
-        name = Value(name),
-        sessionRecord = Value(sessionRecord);
+  }) : deviceId = Value(deviceId),
+       name = Value(name),
+       sessionRecord = Value(sessionRecord);
   static Insertable<SignalSessionStore> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
@@ -6334,12 +7687,13 @@ class SignalSessionStoresCompanion extends UpdateCompanion<SignalSessionStore> {
     });
   }
 
-  SignalSessionStoresCompanion copyWith(
-      {Value<int>? deviceId,
-      Value<String>? name,
-      Value<Uint8List>? sessionRecord,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+  SignalSessionStoresCompanion copyWith({
+    Value<int>? deviceId,
+    Value<String>? name,
+    Value<Uint8List>? sessionRecord,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
     return SignalSessionStoresCompanion(
       deviceId: deviceId ?? this.deviceId,
       name: name ?? this.name,
@@ -6389,38 +7743,55 @@ class $MessageActionsTable extends MessageActions
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $MessageActionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
+  static const VerificationMeta _messageIdMeta = const VerificationMeta(
+    'messageId',
+  );
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id) ON DELETE CASCADE'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES messages (message_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<MessageActionType, String> type =
-      GeneratedColumn<String>('type', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<MessageActionType>(
-              $MessageActionsTable.$convertertype);
-  static const VerificationMeta _actionAtMeta =
-      const VerificationMeta('actionAt');
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<MessageActionType>($MessageActionsTable.$convertertype);
+  static const VerificationMeta _actionAtMeta = const VerificationMeta(
+    'actionAt',
+  );
   @override
   late final GeneratedColumn<DateTime> actionAt = GeneratedColumn<DateTime>(
-      'action_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'action_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [messageId, contactId, type, actionAt];
   @override
@@ -6429,25 +7800,33 @@ class $MessageActionsTable extends MessageActions
   String get actualTableName => $name;
   static const String $name = 'message_actions';
   @override
-  VerificationContext validateIntegrity(Insertable<MessageAction> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<MessageAction> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+      context.handle(
+        _messageIdMeta,
+        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
     if (data.containsKey('action_at')) {
-      context.handle(_actionAtMeta,
-          actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta));
+      context.handle(
+        _actionAtMeta,
+        actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta),
+      );
     }
     return context;
   }
@@ -6458,15 +7837,24 @@ class $MessageActionsTable extends MessageActions
   MessageAction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageAction(
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
-      type: $MessageActionsTable.$convertertype.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
-      actionAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}action_at'])!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      type: $MessageActionsTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      actionAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}action_at'],
+      )!,
     );
   }
 
@@ -6484,19 +7872,21 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
   final int contactId;
   final MessageActionType type;
   final DateTime actionAt;
-  const MessageAction(
-      {required this.messageId,
-      required this.contactId,
-      required this.type,
-      required this.actionAt});
+  const MessageAction({
+    required this.messageId,
+    required this.contactId,
+    required this.type,
+    required this.actionAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['message_id'] = Variable<String>(messageId);
     map['contact_id'] = Variable<int>(contactId);
     {
-      map['type'] =
-          Variable<String>($MessageActionsTable.$convertertype.toSql(type));
+      map['type'] = Variable<String>(
+        $MessageActionsTable.$convertertype.toSql(type),
+      );
     }
     map['action_at'] = Variable<DateTime>(actionAt);
     return map;
@@ -6511,14 +7901,17 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
     );
   }
 
-  factory MessageAction.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MessageAction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageAction(
       messageId: serializer.fromJson<String>(json['messageId']),
       contactId: serializer.fromJson<int>(json['contactId']),
-      type: $MessageActionsTable.$convertertype
-          .fromJson(serializer.fromJson<String>(json['type'])),
+      type: $MessageActionsTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
       actionAt: serializer.fromJson<DateTime>(json['actionAt']),
     );
   }
@@ -6528,23 +7921,24 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
     return <String, dynamic>{
       'messageId': serializer.toJson<String>(messageId),
       'contactId': serializer.toJson<int>(contactId),
-      'type': serializer
-          .toJson<String>($MessageActionsTable.$convertertype.toJson(type)),
+      'type': serializer.toJson<String>(
+        $MessageActionsTable.$convertertype.toJson(type),
+      ),
       'actionAt': serializer.toJson<DateTime>(actionAt),
     };
   }
 
-  MessageAction copyWith(
-          {String? messageId,
-          int? contactId,
-          MessageActionType? type,
-          DateTime? actionAt}) =>
-      MessageAction(
-        messageId: messageId ?? this.messageId,
-        contactId: contactId ?? this.contactId,
-        type: type ?? this.type,
-        actionAt: actionAt ?? this.actionAt,
-      );
+  MessageAction copyWith({
+    String? messageId,
+    int? contactId,
+    MessageActionType? type,
+    DateTime? actionAt,
+  }) => MessageAction(
+    messageId: messageId ?? this.messageId,
+    contactId: contactId ?? this.contactId,
+    type: type ?? this.type,
+    actionAt: actionAt ?? this.actionAt,
+  );
   MessageAction copyWithCompanion(MessageActionsCompanion data) {
     return MessageAction(
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
@@ -6596,9 +7990,9 @@ class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
     required MessageActionType type,
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : messageId = Value(messageId),
-        contactId = Value(contactId),
-        type = Value(type);
+  }) : messageId = Value(messageId),
+       contactId = Value(contactId),
+       type = Value(type);
   static Insertable<MessageAction> custom({
     Expression<String>? messageId,
     Expression<int>? contactId,
@@ -6615,12 +8009,13 @@ class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
     });
   }
 
-  MessageActionsCompanion copyWith(
-      {Value<String>? messageId,
-      Value<int>? contactId,
-      Value<MessageActionType>? type,
-      Value<DateTime>? actionAt,
-      Value<int>? rowid}) {
+  MessageActionsCompanion copyWith({
+    Value<String>? messageId,
+    Value<int>? contactId,
+    Value<MessageActionType>? type,
+    Value<DateTime>? actionAt,
+    Value<int>? rowid,
+  }) {
     return MessageActionsCompanion(
       messageId: messageId ?? this.messageId,
       contactId: contactId ?? this.contactId,
@@ -6641,7 +8036,8 @@ class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
     }
     if (type.present) {
       map['type'] = Variable<String>(
-          $MessageActionsTable.$convertertype.toSql(type.value));
+        $MessageActionsTable.$convertertype.toSql(type.value),
+      );
     }
     if (actionAt.present) {
       map['action_at'] = Variable<DateTime>(actionAt.value);
@@ -6671,136 +8067,200 @@ class $GroupHistoriesTable extends GroupHistories
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $GroupHistoriesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _groupHistoryIdMeta =
-      const VerificationMeta('groupHistoryId');
+  static const VerificationMeta _groupHistoryIdMeta = const VerificationMeta(
+    'groupHistoryId',
+  );
   @override
   late final GeneratedColumn<String> groupHistoryId = GeneratedColumn<String>(
-      'group_history_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _groupIdMeta =
-      const VerificationMeta('groupId');
+    'group_history_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
-  static const VerificationMeta _affectedContactIdMeta =
-      const VerificationMeta('affectedContactId');
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id)',
+    ),
+  );
+  static const VerificationMeta _affectedContactIdMeta = const VerificationMeta(
+    'affectedContactId',
+  );
   @override
   late final GeneratedColumn<int> affectedContactId = GeneratedColumn<int>(
-      'affected_contact_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _oldGroupNameMeta =
-      const VerificationMeta('oldGroupName');
+    'affected_contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _oldGroupNameMeta = const VerificationMeta(
+    'oldGroupName',
+  );
   @override
   late final GeneratedColumn<String> oldGroupName = GeneratedColumn<String>(
-      'old_group_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _newGroupNameMeta =
-      const VerificationMeta('newGroupName');
+    'old_group_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _newGroupNameMeta = const VerificationMeta(
+    'newGroupName',
+  );
   @override
   late final GeneratedColumn<String> newGroupName = GeneratedColumn<String>(
-      'new_group_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'new_group_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _newDeleteMessagesAfterMillisecondsMeta =
       const VerificationMeta('newDeleteMessagesAfterMilliseconds');
   @override
   late final GeneratedColumn<int> newDeleteMessagesAfterMilliseconds =
       GeneratedColumn<int>(
-          'new_delete_messages_after_milliseconds', aliasedName, true,
-          type: DriftSqlType.int, requiredDuringInsert: false);
+        'new_delete_messages_after_milliseconds',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
   @override
   late final GeneratedColumnWithTypeConverter<GroupActionType, String> type =
-      GeneratedColumn<String>('type', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<GroupActionType>($GroupHistoriesTable.$convertertype);
-  static const VerificationMeta _actionAtMeta =
-      const VerificationMeta('actionAt');
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<GroupActionType>($GroupHistoriesTable.$convertertype);
+  static const VerificationMeta _actionAtMeta = const VerificationMeta(
+    'actionAt',
+  );
   @override
   late final GeneratedColumn<DateTime> actionAt = GeneratedColumn<DateTime>(
-      'action_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'action_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        groupHistoryId,
-        groupId,
-        contactId,
-        affectedContactId,
-        oldGroupName,
-        newGroupName,
-        newDeleteMessagesAfterMilliseconds,
-        type,
-        actionAt
-      ];
+    groupHistoryId,
+    groupId,
+    contactId,
+    affectedContactId,
+    oldGroupName,
+    newGroupName,
+    newDeleteMessagesAfterMilliseconds,
+    type,
+    actionAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'group_histories';
   @override
-  VerificationContext validateIntegrity(Insertable<GroupHistory> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<GroupHistory> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('group_history_id')) {
       context.handle(
+        _groupHistoryIdMeta,
+        groupHistoryId.isAcceptableOrUnknown(
+          data['group_history_id']!,
           _groupHistoryIdMeta,
-          groupHistoryId.isAcceptableOrUnknown(
-              data['group_history_id']!, _groupHistoryIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_groupHistoryIdMeta);
     }
     if (data.containsKey('group_id')) {
-      context.handle(_groupIdMeta,
-          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_groupIdMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
     }
     if (data.containsKey('affected_contact_id')) {
       context.handle(
+        _affectedContactIdMeta,
+        affectedContactId.isAcceptableOrUnknown(
+          data['affected_contact_id']!,
           _affectedContactIdMeta,
-          affectedContactId.isAcceptableOrUnknown(
-              data['affected_contact_id']!, _affectedContactIdMeta));
+        ),
+      );
     }
     if (data.containsKey('old_group_name')) {
       context.handle(
+        _oldGroupNameMeta,
+        oldGroupName.isAcceptableOrUnknown(
+          data['old_group_name']!,
           _oldGroupNameMeta,
-          oldGroupName.isAcceptableOrUnknown(
-              data['old_group_name']!, _oldGroupNameMeta));
+        ),
+      );
     }
     if (data.containsKey('new_group_name')) {
       context.handle(
+        _newGroupNameMeta,
+        newGroupName.isAcceptableOrUnknown(
+          data['new_group_name']!,
           _newGroupNameMeta,
-          newGroupName.isAcceptableOrUnknown(
-              data['new_group_name']!, _newGroupNameMeta));
+        ),
+      );
     }
     if (data.containsKey('new_delete_messages_after_milliseconds')) {
       context.handle(
+        _newDeleteMessagesAfterMillisecondsMeta,
+        newDeleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
+          data['new_delete_messages_after_milliseconds']!,
           _newDeleteMessagesAfterMillisecondsMeta,
-          newDeleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
-              data['new_delete_messages_after_milliseconds']!,
-              _newDeleteMessagesAfterMillisecondsMeta));
+        ),
+      );
     }
     if (data.containsKey('action_at')) {
-      context.handle(_actionAtMeta,
-          actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta));
+      context.handle(
+        _actionAtMeta,
+        actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta),
+      );
     }
     return context;
   }
@@ -6812,25 +8272,43 @@ class $GroupHistoriesTable extends GroupHistories
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GroupHistory(
       groupHistoryId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}group_history_id'])!,
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
+        DriftSqlType.string,
+        data['${effectivePrefix}group_history_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
       affectedContactId: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}affected_contact_id']),
-      oldGroupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}old_group_name']),
-      newGroupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}new_group_name']),
+        DriftSqlType.int,
+        data['${effectivePrefix}affected_contact_id'],
+      ),
+      oldGroupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}old_group_name'],
+      ),
+      newGroupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}new_group_name'],
+      ),
       newDeleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}new_delete_messages_after_milliseconds']),
-      type: $GroupHistoriesTable.$convertertype.fromSql(attachedDatabase
-          .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
-      actionAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}action_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}new_delete_messages_after_milliseconds'],
+      ),
+      type: $GroupHistoriesTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      actionAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}action_at'],
+      )!,
     );
   }
 
@@ -6853,16 +8331,17 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   final int? newDeleteMessagesAfterMilliseconds;
   final GroupActionType type;
   final DateTime actionAt;
-  const GroupHistory(
-      {required this.groupHistoryId,
-      required this.groupId,
-      this.contactId,
-      this.affectedContactId,
-      this.oldGroupName,
-      this.newGroupName,
-      this.newDeleteMessagesAfterMilliseconds,
-      required this.type,
-      required this.actionAt});
+  const GroupHistory({
+    required this.groupHistoryId,
+    required this.groupId,
+    this.contactId,
+    this.affectedContactId,
+    this.oldGroupName,
+    this.newGroupName,
+    this.newDeleteMessagesAfterMilliseconds,
+    required this.type,
+    required this.actionAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6881,12 +8360,14 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       map['new_group_name'] = Variable<String>(newGroupName);
     }
     if (!nullToAbsent || newDeleteMessagesAfterMilliseconds != null) {
-      map['new_delete_messages_after_milliseconds'] =
-          Variable<int>(newDeleteMessagesAfterMilliseconds);
+      map['new_delete_messages_after_milliseconds'] = Variable<int>(
+        newDeleteMessagesAfterMilliseconds,
+      );
     }
     {
-      map['type'] =
-          Variable<String>($GroupHistoriesTable.$convertertype.toSql(type));
+      map['type'] = Variable<String>(
+        $GroupHistoriesTable.$convertertype.toSql(type),
+      );
     }
     map['action_at'] = Variable<DateTime>(actionAt);
     return map;
@@ -6910,15 +8391,17 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           : Value(newGroupName),
       newDeleteMessagesAfterMilliseconds:
           newDeleteMessagesAfterMilliseconds == null && nullToAbsent
-              ? const Value.absent()
-              : Value(newDeleteMessagesAfterMilliseconds),
+          ? const Value.absent()
+          : Value(newDeleteMessagesAfterMilliseconds),
       type: Value(type),
       actionAt: Value(actionAt),
     );
   }
 
-  factory GroupHistory.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory GroupHistory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GroupHistory(
       groupHistoryId: serializer.fromJson<String>(json['groupHistoryId']),
@@ -6927,10 +8410,12 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       affectedContactId: serializer.fromJson<int?>(json['affectedContactId']),
       oldGroupName: serializer.fromJson<String?>(json['oldGroupName']),
       newGroupName: serializer.fromJson<String?>(json['newGroupName']),
-      newDeleteMessagesAfterMilliseconds:
-          serializer.fromJson<int?>(json['newDeleteMessagesAfterMilliseconds']),
-      type: $GroupHistoriesTable.$convertertype
-          .fromJson(serializer.fromJson<String>(json['type'])),
+      newDeleteMessagesAfterMilliseconds: serializer.fromJson<int?>(
+        json['newDeleteMessagesAfterMilliseconds'],
+      ),
+      type: $GroupHistoriesTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
       actionAt: serializer.fromJson<DateTime>(json['actionAt']),
     );
   }
@@ -6944,42 +8429,42 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       'affectedContactId': serializer.toJson<int?>(affectedContactId),
       'oldGroupName': serializer.toJson<String?>(oldGroupName),
       'newGroupName': serializer.toJson<String?>(newGroupName),
-      'newDeleteMessagesAfterMilliseconds':
-          serializer.toJson<int?>(newDeleteMessagesAfterMilliseconds),
-      'type': serializer
-          .toJson<String>($GroupHistoriesTable.$convertertype.toJson(type)),
+      'newDeleteMessagesAfterMilliseconds': serializer.toJson<int?>(
+        newDeleteMessagesAfterMilliseconds,
+      ),
+      'type': serializer.toJson<String>(
+        $GroupHistoriesTable.$convertertype.toJson(type),
+      ),
       'actionAt': serializer.toJson<DateTime>(actionAt),
     };
   }
 
-  GroupHistory copyWith(
-          {String? groupHistoryId,
-          String? groupId,
-          Value<int?> contactId = const Value.absent(),
-          Value<int?> affectedContactId = const Value.absent(),
-          Value<String?> oldGroupName = const Value.absent(),
-          Value<String?> newGroupName = const Value.absent(),
-          Value<int?> newDeleteMessagesAfterMilliseconds = const Value.absent(),
-          GroupActionType? type,
-          DateTime? actionAt}) =>
-      GroupHistory(
-        groupHistoryId: groupHistoryId ?? this.groupHistoryId,
-        groupId: groupId ?? this.groupId,
-        contactId: contactId.present ? contactId.value : this.contactId,
-        affectedContactId: affectedContactId.present
-            ? affectedContactId.value
-            : this.affectedContactId,
-        oldGroupName:
-            oldGroupName.present ? oldGroupName.value : this.oldGroupName,
-        newGroupName:
-            newGroupName.present ? newGroupName.value : this.newGroupName,
-        newDeleteMessagesAfterMilliseconds:
-            newDeleteMessagesAfterMilliseconds.present
-                ? newDeleteMessagesAfterMilliseconds.value
-                : this.newDeleteMessagesAfterMilliseconds,
-        type: type ?? this.type,
-        actionAt: actionAt ?? this.actionAt,
-      );
+  GroupHistory copyWith({
+    String? groupHistoryId,
+    String? groupId,
+    Value<int?> contactId = const Value.absent(),
+    Value<int?> affectedContactId = const Value.absent(),
+    Value<String?> oldGroupName = const Value.absent(),
+    Value<String?> newGroupName = const Value.absent(),
+    Value<int?> newDeleteMessagesAfterMilliseconds = const Value.absent(),
+    GroupActionType? type,
+    DateTime? actionAt,
+  }) => GroupHistory(
+    groupHistoryId: groupHistoryId ?? this.groupHistoryId,
+    groupId: groupId ?? this.groupId,
+    contactId: contactId.present ? contactId.value : this.contactId,
+    affectedContactId: affectedContactId.present
+        ? affectedContactId.value
+        : this.affectedContactId,
+    oldGroupName: oldGroupName.present ? oldGroupName.value : this.oldGroupName,
+    newGroupName: newGroupName.present ? newGroupName.value : this.newGroupName,
+    newDeleteMessagesAfterMilliseconds:
+        newDeleteMessagesAfterMilliseconds.present
+        ? newDeleteMessagesAfterMilliseconds.value
+        : this.newDeleteMessagesAfterMilliseconds,
+    type: type ?? this.type,
+    actionAt: actionAt ?? this.actionAt,
+  );
   GroupHistory copyWithCompanion(GroupHistoriesCompanion data) {
     return GroupHistory(
       groupHistoryId: data.groupHistoryId.present
@@ -6998,8 +8483,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           : this.newGroupName,
       newDeleteMessagesAfterMilliseconds:
           data.newDeleteMessagesAfterMilliseconds.present
-              ? data.newDeleteMessagesAfterMilliseconds.value
-              : this.newDeleteMessagesAfterMilliseconds,
+          ? data.newDeleteMessagesAfterMilliseconds.value
+          : this.newDeleteMessagesAfterMilliseconds,
       type: data.type.present ? data.type.value : this.type,
       actionAt: data.actionAt.present ? data.actionAt.value : this.actionAt,
     );
@@ -7015,7 +8500,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
           ..write(
-              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
+            'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ',
+          )
           ..write('type: $type, ')
           ..write('actionAt: $actionAt')
           ..write(')'))
@@ -7024,15 +8510,16 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
 
   @override
   int get hashCode => Object.hash(
-      groupHistoryId,
-      groupId,
-      contactId,
-      affectedContactId,
-      oldGroupName,
-      newGroupName,
-      newDeleteMessagesAfterMilliseconds,
-      type,
-      actionAt);
+    groupHistoryId,
+    groupId,
+    contactId,
+    affectedContactId,
+    oldGroupName,
+    newGroupName,
+    newDeleteMessagesAfterMilliseconds,
+    type,
+    actionAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7083,9 +8570,9 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     required GroupActionType type,
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupHistoryId = Value(groupHistoryId),
-        groupId = Value(groupId),
-        type = Value(type);
+  }) : groupHistoryId = Value(groupHistoryId),
+       groupId = Value(groupId),
+       type = Value(type);
   static Insertable<GroupHistory> custom({
     Expression<String>? groupHistoryId,
     Expression<String>? groupId,
@@ -7114,17 +8601,18 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     });
   }
 
-  GroupHistoriesCompanion copyWith(
-      {Value<String>? groupHistoryId,
-      Value<String>? groupId,
-      Value<int?>? contactId,
-      Value<int?>? affectedContactId,
-      Value<String?>? oldGroupName,
-      Value<String?>? newGroupName,
-      Value<int?>? newDeleteMessagesAfterMilliseconds,
-      Value<GroupActionType>? type,
-      Value<DateTime>? actionAt,
-      Value<int>? rowid}) {
+  GroupHistoriesCompanion copyWith({
+    Value<String>? groupHistoryId,
+    Value<String>? groupId,
+    Value<int?>? contactId,
+    Value<int?>? affectedContactId,
+    Value<String?>? oldGroupName,
+    Value<String?>? newGroupName,
+    Value<int?>? newDeleteMessagesAfterMilliseconds,
+    Value<GroupActionType>? type,
+    Value<DateTime>? actionAt,
+    Value<int>? rowid,
+  }) {
     return GroupHistoriesCompanion(
       groupHistoryId: groupHistoryId ?? this.groupHistoryId,
       groupId: groupId ?? this.groupId,
@@ -7132,7 +8620,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
       affectedContactId: affectedContactId ?? this.affectedContactId,
       oldGroupName: oldGroupName ?? this.oldGroupName,
       newGroupName: newGroupName ?? this.newGroupName,
-      newDeleteMessagesAfterMilliseconds: newDeleteMessagesAfterMilliseconds ??
+      newDeleteMessagesAfterMilliseconds:
+          newDeleteMessagesAfterMilliseconds ??
           this.newDeleteMessagesAfterMilliseconds,
       type: type ?? this.type,
       actionAt: actionAt ?? this.actionAt,
@@ -7162,12 +8651,14 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
       map['new_group_name'] = Variable<String>(newGroupName.value);
     }
     if (newDeleteMessagesAfterMilliseconds.present) {
-      map['new_delete_messages_after_milliseconds'] =
-          Variable<int>(newDeleteMessagesAfterMilliseconds.value);
+      map['new_delete_messages_after_milliseconds'] = Variable<int>(
+        newDeleteMessagesAfterMilliseconds.value,
+      );
     }
     if (type.present) {
       map['type'] = Variable<String>(
-          $GroupHistoriesTable.$convertertype.toSql(type.value));
+        $GroupHistoriesTable.$convertertype.toSql(type.value),
+      );
     }
     if (actionAt.present) {
       map['action_at'] = Variable<DateTime>(actionAt.value);
@@ -7188,7 +8679,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
           ..write(
-              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
+            'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ',
+          )
           ..write('type: $type, ')
           ..write('actionAt: $actionAt, ')
           ..write('rowid: $rowid')
@@ -7204,13 +8696,15 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $GroupsTable groups = $GroupsTable(this);
   late final $MediaFilesTable mediaFiles = $MediaFilesTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
-  late final $MessageHistoriesTable messageHistories =
-      $MessageHistoriesTable(this);
+  late final $MessageHistoriesTable messageHistories = $MessageHistoriesTable(
+    this,
+  );
   late final $ReactionsTable reactions = $ReactionsTable(this);
   late final $GroupMembersTable groupMembers = $GroupMembersTable(this);
   late final $ReceiptsTable receipts = $ReceiptsTable(this);
-  late final $ReceivedReceiptsTable receivedReceipts =
-      $ReceivedReceiptsTable(this);
+  late final $ReceivedReceiptsTable receivedReceipts = $ReceivedReceiptsTable(
+    this,
+  );
   late final $SignalIdentityKeyStoresTable signalIdentityKeyStores =
       $SignalIdentityKeyStoresTable(this);
   late final $SignalPreKeyStoresTable signalPreKeyStores =
@@ -7232,256 +8726,287 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-        contacts,
-        groups,
-        mediaFiles,
-        messages,
-        messageHistories,
-        reactions,
-        groupMembers,
-        receipts,
-        receivedReceipts,
-        signalIdentityKeyStores,
-        signalPreKeyStores,
-        signalSenderKeyStores,
-        signalSessionStores,
-        messageActions,
-        groupHistories
-      ];
+    contacts,
+    groups,
+    mediaFiles,
+    messages,
+    messageHistories,
+    reactions,
+    groupMembers,
+    receipts,
+    receivedReceipts,
+    signalIdentityKeyStores,
+    signalPreKeyStores,
+    signalSenderKeyStores,
+    signalSessionStores,
+    messageActions,
+    groupHistories,
+  ];
   @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
-        [
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('messages', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('media_files',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('messages', kind: UpdateKind.update),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_histories', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_histories', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('reactions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('reactions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('group_members', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('receipts', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('receipts', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_actions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_actions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('group_histories', kind: UpdateKind.delete),
-            ],
-          ),
-        ],
-      );
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('messages', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'media_files',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('messages', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_histories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_histories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('reactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('reactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('group_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('receipts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('receipts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_actions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_actions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('group_histories', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
-typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
-  Value<int> userId,
-  required String username,
-  Value<String?> displayName,
-  Value<String?> nickName,
-  Value<Uint8List?> avatarSvgCompressed,
-  Value<int> senderProfileCounter,
-  Value<bool> accepted,
-  Value<bool> deletedByUser,
-  Value<bool> requested,
-  Value<bool> blocked,
-  Value<bool> verified,
-  Value<bool> accountDeleted,
-  Value<DateTime> createdAt,
-});
-typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
-  Value<int> userId,
-  Value<String> username,
-  Value<String?> displayName,
-  Value<String?> nickName,
-  Value<Uint8List?> avatarSvgCompressed,
-  Value<int> senderProfileCounter,
-  Value<bool> accepted,
-  Value<bool> deletedByUser,
-  Value<bool> requested,
-  Value<bool> blocked,
-  Value<bool> verified,
-  Value<bool> accountDeleted,
-  Value<DateTime> createdAt,
-});
+typedef $$ContactsTableCreateCompanionBuilder =
+    ContactsCompanion Function({
+      Value<int> userId,
+      required String username,
+      Value<String?> displayName,
+      Value<String?> nickName,
+      Value<Uint8List?> avatarSvgCompressed,
+      Value<int> senderProfileCounter,
+      Value<bool> accepted,
+      Value<bool> deletedByUser,
+      Value<bool> requested,
+      Value<bool> blocked,
+      Value<bool> verified,
+      Value<bool> accountDeleted,
+      Value<DateTime> createdAt,
+    });
+typedef $$ContactsTableUpdateCompanionBuilder =
+    ContactsCompanion Function({
+      Value<int> userId,
+      Value<String> username,
+      Value<String?> displayName,
+      Value<String?> nickName,
+      Value<Uint8List?> avatarSvgCompressed,
+      Value<int> senderProfileCounter,
+      Value<bool> accepted,
+      Value<bool> deletedByUser,
+      Value<bool> requested,
+      Value<bool> blocked,
+      Value<bool> verified,
+      Value<bool> accountDeleted,
+      Value<DateTime> createdAt,
+    });
 
 final class $$ContactsTableReferences
     extends BaseReferences<_$TwonlyDB, $ContactsTable, Contact> {
   $$ContactsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MessagesTable, List<Message>> _messagesRefsTable(
-          _$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(db.messages,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.userId, db.messages.senderId));
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.messages,
+    aliasName: $_aliasNameGenerator(db.contacts.userId, db.messages.senderId),
+  );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
-    final manager = $$MessagesTableTableManager($_db, $_db.messages).filter(
-        (f) => f.senderId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.senderId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
     final cache = $_typedResult.readTableOrNull(_messagesRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
-      _messageHistoriesRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.messageHistories,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.userId, db.messageHistories.contactId));
+  _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.messageHistories,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.messageHistories.contactId,
+    ),
+  );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
     final manager =
         $$MessageHistoriesTableTableManager($_db, $_db.messageHistories).filter(
-            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
 
-    final cache =
-        $_typedResult.readTableOrNull(_messageHistoriesRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(
+      _messageHistoriesRefsTable($_db),
+    );
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
-      _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-          db.reactions,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.userId, db.reactions.senderId));
+  _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.reactions,
+    aliasName: $_aliasNameGenerator(db.contacts.userId, db.reactions.senderId),
+  );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
-    final manager = $$ReactionsTableTableManager($_db, $_db.reactions).filter(
-        (f) => f.senderId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+    final manager = $$ReactionsTableTableManager(
+      $_db,
+      $_db.reactions,
+    ).filter((f) => f.senderId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
     final cache = $_typedResult.readTableOrNull(_reactionsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
-      _groupMembersRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.groupMembers,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.userId, db.groupMembers.contactId));
+  _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.groupMembers,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.groupMembers.contactId,
+    ),
+  );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
     final manager = $$GroupMembersTableTableManager($_db, $_db.groupMembers)
         .filter(
-            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_groupMembersRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$ReceiptsTable, List<Receipt>> _receiptsRefsTable(
-          _$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(db.receipts,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.userId, db.receipts.contactId));
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.receipts,
+    aliasName: $_aliasNameGenerator(db.contacts.userId, db.receipts.contactId),
+  );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
     final manager = $$ReceiptsTableTableManager($_db, $_db.receipts).filter(
-        (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+      (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+    );
 
     final cache = $_typedResult.readTableOrNull(_receiptsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
-      _messageActionsRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.messageActions,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.userId, db.messageActions.contactId));
+  _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.messageActions,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.messageActions.contactId,
+    ),
+  );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
     final manager = $$MessageActionsTableTableManager($_db, $_db.messageActions)
         .filter(
-            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_messageActionsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
-      _groupHistoriesRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.groupHistories,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.userId, db.groupHistories.contactId));
+  _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.groupHistories,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.groupHistories.contactId,
+    ),
+  );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
     final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
         .filter(
-            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 }
 
@@ -7495,191 +9020,242 @@ class $$ContactsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnFilters(column));
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnFilters(column));
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnFilters(column));
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get nickName => $composableBuilder(
-      column: $table.nickName, builder: (column) => ColumnFilters(column));
+    column: $table.nickName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get avatarSvgCompressed => $composableBuilder(
-      column: $table.avatarSvgCompressed,
-      builder: (column) => ColumnFilters(column));
+    column: $table.avatarSvgCompressed,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get senderProfileCounter => $composableBuilder(
-      column: $table.senderProfileCounter,
-      builder: (column) => ColumnFilters(column));
+    column: $table.senderProfileCounter,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get accepted => $composableBuilder(
-      column: $table.accepted, builder: (column) => ColumnFilters(column));
+    column: $table.accepted,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get deletedByUser => $composableBuilder(
-      column: $table.deletedByUser, builder: (column) => ColumnFilters(column));
+    column: $table.deletedByUser,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get requested => $composableBuilder(
-      column: $table.requested, builder: (column) => ColumnFilters(column));
+    column: $table.requested,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get blocked => $composableBuilder(
-      column: $table.blocked, builder: (column) => ColumnFilters(column));
+    column: $table.blocked,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get verified => $composableBuilder(
-      column: $table.verified, builder: (column) => ColumnFilters(column));
+    column: $table.verified,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get accountDeleted => $composableBuilder(
-      column: $table.accountDeleted,
-      builder: (column) => ColumnFilters(column));
+    column: $table.accountDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   Expression<bool> messagesRefs(
-      Expression<bool> Function($$MessagesTableFilterComposer f) f) {
+    Expression<bool> Function($$MessagesTableFilterComposer f) f,
+  ) {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.senderId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.senderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> messageHistoriesRefs(
-      Expression<bool> Function($$MessageHistoriesTableFilterComposer f) f) {
+    Expression<bool> Function($$MessageHistoriesTableFilterComposer f) f,
+  ) {
     final $$MessageHistoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messageHistories,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageHistoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.messageHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messageHistories,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.messageHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> reactionsRefs(
-      Expression<bool> Function($$ReactionsTableFilterComposer f) f) {
+    Expression<bool> Function($$ReactionsTableFilterComposer f) f,
+  ) {
     final $$ReactionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.reactions,
-        getReferencedColumn: (t) => t.senderId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReactionsTableFilterComposer(
-              $db: $db,
-              $table: $db.reactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.reactions,
+      getReferencedColumn: (t) => t.senderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.reactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> groupMembersRefs(
-      Expression<bool> Function($$GroupMembersTableFilterComposer f) f) {
+    Expression<bool> Function($$GroupMembersTableFilterComposer f) f,
+  ) {
     final $$GroupMembersTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupMembers,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupMembersTableFilterComposer(
-              $db: $db,
-              $table: $db.groupMembers,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.groupMembers,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.groupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> receiptsRefs(
-      Expression<bool> Function($$ReceiptsTableFilterComposer f) f) {
+    Expression<bool> Function($$ReceiptsTableFilterComposer f) f,
+  ) {
     final $$ReceiptsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.receipts,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReceiptsTableFilterComposer(
-              $db: $db,
-              $table: $db.receipts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.receipts,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptsTableFilterComposer(
+            $db: $db,
+            $table: $db.receipts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> messageActionsRefs(
-      Expression<bool> Function($$MessageActionsTableFilterComposer f) f) {
+    Expression<bool> Function($$MessageActionsTableFilterComposer f) f,
+  ) {
     final $$MessageActionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messageActions,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageActionsTableFilterComposer(
-              $db: $db,
-              $table: $db.messageActions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messageActions,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageActionsTableFilterComposer(
+            $db: $db,
+            $table: $db.messageActions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> groupHistoriesRefs(
-      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
+    Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f,
+  ) {
     final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.groupHistories,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.groupHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -7694,47 +9270,69 @@ class $$ContactsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnOrderings(column));
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnOrderings(column));
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnOrderings(column));
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get nickName => $composableBuilder(
-      column: $table.nickName, builder: (column) => ColumnOrderings(column));
+    column: $table.nickName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get avatarSvgCompressed => $composableBuilder(
-      column: $table.avatarSvgCompressed,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.avatarSvgCompressed,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get senderProfileCounter => $composableBuilder(
-      column: $table.senderProfileCounter,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.senderProfileCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get accepted => $composableBuilder(
-      column: $table.accepted, builder: (column) => ColumnOrderings(column));
+    column: $table.accepted,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get deletedByUser => $composableBuilder(
-      column: $table.deletedByUser,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.deletedByUser,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get requested => $composableBuilder(
-      column: $table.requested, builder: (column) => ColumnOrderings(column));
+    column: $table.requested,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get blocked => $composableBuilder(
-      column: $table.blocked, builder: (column) => ColumnOrderings(column));
+    column: $table.blocked,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get verified => $composableBuilder(
-      column: $table.verified, builder: (column) => ColumnOrderings(column));
+    column: $table.verified,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get accountDeleted => $composableBuilder(
-      column: $table.accountDeleted,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.accountDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ContactsTableAnnotationComposer
@@ -7753,22 +9351,30 @@ class $$ContactsTableAnnotationComposer
       $composableBuilder(column: $table.username, builder: (column) => column);
 
   GeneratedColumn<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => column);
+    column: $table.displayName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get nickName =>
       $composableBuilder(column: $table.nickName, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get avatarSvgCompressed => $composableBuilder(
-      column: $table.avatarSvgCompressed, builder: (column) => column);
+    column: $table.avatarSvgCompressed,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get senderProfileCounter => $composableBuilder(
-      column: $table.senderProfileCounter, builder: (column) => column);
+    column: $table.senderProfileCounter,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get accepted =>
       $composableBuilder(column: $table.accepted, builder: (column) => column);
 
   GeneratedColumn<bool> get deletedByUser => $composableBuilder(
-      column: $table.deletedByUser, builder: (column) => column);
+    column: $table.deletedByUser,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get requested =>
       $composableBuilder(column: $table.requested, builder: (column) => column);
@@ -7780,180 +9386,215 @@ class $$ContactsTableAnnotationComposer
       $composableBuilder(column: $table.verified, builder: (column) => column);
 
   GeneratedColumn<bool> get accountDeleted => $composableBuilder(
-      column: $table.accountDeleted, builder: (column) => column);
+    column: $table.accountDeleted,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   Expression<T> messagesRefs<T extends Object>(
-      Expression<T> Function($$MessagesTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessagesTableAnnotationComposer a) f,
+  ) {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.senderId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.senderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> messageHistoriesRefs<T extends Object>(
-      Expression<T> Function($$MessageHistoriesTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessageHistoriesTableAnnotationComposer a) f,
+  ) {
     final $$MessageHistoriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messageHistories,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageHistoriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messageHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messageHistories,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageHistoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messageHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> reactionsRefs<T extends Object>(
-      Expression<T> Function($$ReactionsTableAnnotationComposer a) f) {
+    Expression<T> Function($$ReactionsTableAnnotationComposer a) f,
+  ) {
     final $$ReactionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.reactions,
-        getReferencedColumn: (t) => t.senderId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReactionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.reactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.reactions,
+      getReferencedColumn: (t) => t.senderId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> groupMembersRefs<T extends Object>(
-      Expression<T> Function($$GroupMembersTableAnnotationComposer a) f) {
+    Expression<T> Function($$GroupMembersTableAnnotationComposer a) f,
+  ) {
     final $$GroupMembersTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupMembers,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupMembersTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groupMembers,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.groupMembers,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> receiptsRefs<T extends Object>(
-      Expression<T> Function($$ReceiptsTableAnnotationComposer a) f) {
+    Expression<T> Function($$ReceiptsTableAnnotationComposer a) f,
+  ) {
     final $$ReceiptsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.receipts,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReceiptsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.receipts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.receipts,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receipts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> messageActionsRefs<T extends Object>(
-      Expression<T> Function($$MessageActionsTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessageActionsTableAnnotationComposer a) f,
+  ) {
     final $$MessageActionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.messageActions,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageActionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messageActions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.messageActions,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageActionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messageActions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> groupHistoriesRefs<T extends Object>(
-      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
+    Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f,
+  ) {
     final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.contactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.groupHistories,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupHistoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groupHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$ContactsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $ContactsTable,
-    Contact,
-    $$ContactsTableFilterComposer,
-    $$ContactsTableOrderingComposer,
-    $$ContactsTableAnnotationComposer,
-    $$ContactsTableCreateCompanionBuilder,
-    $$ContactsTableUpdateCompanionBuilder,
-    (Contact, $$ContactsTableReferences),
-    Contact,
-    PrefetchHooks Function(
-        {bool messagesRefs,
-        bool messageHistoriesRefs,
-        bool reactionsRefs,
-        bool groupMembersRefs,
-        bool receiptsRefs,
-        bool messageActionsRefs,
-        bool groupHistoriesRefs})> {
+class $$ContactsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ContactsTable,
+          Contact,
+          $$ContactsTableFilterComposer,
+          $$ContactsTableOrderingComposer,
+          $$ContactsTableAnnotationComposer,
+          $$ContactsTableCreateCompanionBuilder,
+          $$ContactsTableUpdateCompanionBuilder,
+          (Contact, $$ContactsTableReferences),
+          Contact,
+          PrefetchHooks Function({
+            bool messagesRefs,
+            bool messageHistoriesRefs,
+            bool reactionsRefs,
+            bool groupMembersRefs,
+            bool receiptsRefs,
+            bool messageActionsRefs,
+            bool groupHistoriesRefs,
+          })
+        > {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -7962,313 +9603,393 @@ class $$ContactsTableTableManager extends RootTableManager<
               $$ContactsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ContactsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> userId = const Value.absent(),
-            Value<String> username = const Value.absent(),
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> nickName = const Value.absent(),
-            Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
-            Value<int> senderProfileCounter = const Value.absent(),
-            Value<bool> accepted = const Value.absent(),
-            Value<bool> deletedByUser = const Value.absent(),
-            Value<bool> requested = const Value.absent(),
-            Value<bool> blocked = const Value.absent(),
-            Value<bool> verified = const Value.absent(),
-            Value<bool> accountDeleted = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              ContactsCompanion(
-            userId: userId,
-            username: username,
-            displayName: displayName,
-            nickName: nickName,
-            avatarSvgCompressed: avatarSvgCompressed,
-            senderProfileCounter: senderProfileCounter,
-            accepted: accepted,
-            deletedByUser: deletedByUser,
-            requested: requested,
-            blocked: blocked,
-            verified: verified,
-            accountDeleted: accountDeleted,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> userId = const Value.absent(),
-            required String username,
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> nickName = const Value.absent(),
-            Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
-            Value<int> senderProfileCounter = const Value.absent(),
-            Value<bool> accepted = const Value.absent(),
-            Value<bool> deletedByUser = const Value.absent(),
-            Value<bool> requested = const Value.absent(),
-            Value<bool> blocked = const Value.absent(),
-            Value<bool> verified = const Value.absent(),
-            Value<bool> accountDeleted = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              ContactsCompanion.insert(
-            userId: userId,
-            username: username,
-            displayName: displayName,
-            nickName: nickName,
-            avatarSvgCompressed: avatarSvgCompressed,
-            senderProfileCounter: senderProfileCounter,
-            accepted: accepted,
-            deletedByUser: deletedByUser,
-            requested: requested,
-            blocked: blocked,
-            verified: verified,
-            accountDeleted: accountDeleted,
-            createdAt: createdAt,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> userId = const Value.absent(),
+                Value<String> username = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> nickName = const Value.absent(),
+                Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<int> senderProfileCounter = const Value.absent(),
+                Value<bool> accepted = const Value.absent(),
+                Value<bool> deletedByUser = const Value.absent(),
+                Value<bool> requested = const Value.absent(),
+                Value<bool> blocked = const Value.absent(),
+                Value<bool> verified = const Value.absent(),
+                Value<bool> accountDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactsCompanion(
+                userId: userId,
+                username: username,
+                displayName: displayName,
+                nickName: nickName,
+                avatarSvgCompressed: avatarSvgCompressed,
+                senderProfileCounter: senderProfileCounter,
+                accepted: accepted,
+                deletedByUser: deletedByUser,
+                requested: requested,
+                blocked: blocked,
+                verified: verified,
+                accountDeleted: accountDeleted,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> userId = const Value.absent(),
+                required String username,
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> nickName = const Value.absent(),
+                Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
+                Value<int> senderProfileCounter = const Value.absent(),
+                Value<bool> accepted = const Value.absent(),
+                Value<bool> deletedByUser = const Value.absent(),
+                Value<bool> requested = const Value.absent(),
+                Value<bool> blocked = const Value.absent(),
+                Value<bool> verified = const Value.absent(),
+                Value<bool> accountDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactsCompanion.insert(
+                userId: userId,
+                username: username,
+                displayName: displayName,
+                nickName: nickName,
+                avatarSvgCompressed: avatarSvgCompressed,
+                senderProfileCounter: senderProfileCounter,
+                accepted: accepted,
+                deletedByUser: deletedByUser,
+                requested: requested,
+                blocked: blocked,
+                verified: verified,
+                accountDeleted: accountDeleted,
+                createdAt: createdAt,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$ContactsTableReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ContactsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: (
-              {messagesRefs = false,
-              messageHistoriesRefs = false,
-              reactionsRefs = false,
-              groupMembersRefs = false,
-              receiptsRefs = false,
-              messageActionsRefs = false,
-              groupHistoriesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (messagesRefs) db.messages,
-                if (messageHistoriesRefs) db.messageHistories,
-                if (reactionsRefs) db.reactions,
-                if (groupMembersRefs) db.groupMembers,
-                if (receiptsRefs) db.receipts,
-                if (messageActionsRefs) db.messageActions,
-                if (groupHistoriesRefs) db.groupHistories
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (messagesRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable, Message>(
-                        currentTable: table,
-                        referencedTable:
-                            $$ContactsTableReferences._messagesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .messagesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.senderId == item.userId),
-                        typedResults: items),
-                  if (messageHistoriesRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            MessageHistory>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._messageHistoriesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .messageHistoriesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.userId),
-                        typedResults: items),
-                  if (reactionsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            Reaction>(
-                        currentTable: table,
-                        referencedTable:
-                            $$ContactsTableReferences._reactionsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .reactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.senderId == item.userId),
-                        typedResults: items),
-                  if (groupMembersRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            GroupMember>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._groupMembersRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .groupMembersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.userId),
-                        typedResults: items),
-                  if (receiptsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable, Receipt>(
-                        currentTable: table,
-                        referencedTable:
-                            $$ContactsTableReferences._receiptsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .receiptsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.userId),
-                        typedResults: items),
-                  if (messageActionsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            MessageAction>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._messageActionsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .messageActionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.userId),
-                        typedResults: items),
-                  if (groupHistoriesRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            GroupHistory>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._groupHistoriesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .groupHistoriesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.userId),
-                        typedResults: items)
-                ];
+          prefetchHooksCallback:
+              ({
+                messagesRefs = false,
+                messageHistoriesRefs = false,
+                reactionsRefs = false,
+                groupMembersRefs = false,
+                receiptsRefs = false,
+                messageActionsRefs = false,
+                groupHistoriesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (messagesRefs) db.messages,
+                    if (messageHistoriesRefs) db.messageHistories,
+                    if (reactionsRefs) db.reactions,
+                    if (groupMembersRefs) db.groupMembers,
+                    if (receiptsRefs) db.receipts,
+                    if (messageActionsRefs) db.messageActions,
+                    if (groupHistoriesRefs) db.groupHistories,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (messagesRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          Message
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._messagesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messagesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.senderId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (messageHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          MessageHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._messageHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messageHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (reactionsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          Reaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._reactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).reactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.senderId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groupMembersRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          GroupMember
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._groupMembersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groupMembersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (receiptsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          Receipt
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._receiptsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (messageActionsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          MessageAction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._messageActionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messageActionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groupHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          GroupHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._groupHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groupHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
-        ));
+        ),
+      );
 }
 
-typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $ContactsTable,
-    Contact,
-    $$ContactsTableFilterComposer,
-    $$ContactsTableOrderingComposer,
-    $$ContactsTableAnnotationComposer,
-    $$ContactsTableCreateCompanionBuilder,
-    $$ContactsTableUpdateCompanionBuilder,
-    (Contact, $$ContactsTableReferences),
-    Contact,
-    PrefetchHooks Function(
-        {bool messagesRefs,
+typedef $$ContactsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ContactsTable,
+      Contact,
+      $$ContactsTableFilterComposer,
+      $$ContactsTableOrderingComposer,
+      $$ContactsTableAnnotationComposer,
+      $$ContactsTableCreateCompanionBuilder,
+      $$ContactsTableUpdateCompanionBuilder,
+      (Contact, $$ContactsTableReferences),
+      Contact,
+      PrefetchHooks Function({
+        bool messagesRefs,
         bool messageHistoriesRefs,
         bool reactionsRefs,
         bool groupMembersRefs,
         bool receiptsRefs,
         bool messageActionsRefs,
-        bool groupHistoriesRefs})>;
-typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
-  required String groupId,
-  Value<bool> isGroupAdmin,
-  Value<bool> isDirectChat,
-  Value<bool> pinned,
-  Value<bool> archived,
-  Value<bool> joinedGroup,
-  Value<bool> leftGroup,
-  Value<bool> deletedContent,
-  Value<int> stateVersionId,
-  Value<Uint8List?> stateEncryptionKey,
-  Value<Uint8List?> myGroupPrivateKey,
-  required String groupName,
-  Value<String?> draftMessage,
-  Value<int> totalMediaCounter,
-  Value<bool> alsoBestFriend,
-  Value<int> deleteMessagesAfterMilliseconds,
-  Value<DateTime> createdAt,
-  Value<DateTime?> lastMessageSend,
-  Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastFlameCounterChange,
-  Value<DateTime?> lastFlameSync,
-  Value<int> flameCounter,
-  Value<int> maxFlameCounter,
-  Value<DateTime?> maxFlameCounterFrom,
-  Value<DateTime> lastMessageExchange,
-  Value<int> rowid,
-});
-typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
-  Value<String> groupId,
-  Value<bool> isGroupAdmin,
-  Value<bool> isDirectChat,
-  Value<bool> pinned,
-  Value<bool> archived,
-  Value<bool> joinedGroup,
-  Value<bool> leftGroup,
-  Value<bool> deletedContent,
-  Value<int> stateVersionId,
-  Value<Uint8List?> stateEncryptionKey,
-  Value<Uint8List?> myGroupPrivateKey,
-  Value<String> groupName,
-  Value<String?> draftMessage,
-  Value<int> totalMediaCounter,
-  Value<bool> alsoBestFriend,
-  Value<int> deleteMessagesAfterMilliseconds,
-  Value<DateTime> createdAt,
-  Value<DateTime?> lastMessageSend,
-  Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastFlameCounterChange,
-  Value<DateTime?> lastFlameSync,
-  Value<int> flameCounter,
-  Value<int> maxFlameCounter,
-  Value<DateTime?> maxFlameCounterFrom,
-  Value<DateTime> lastMessageExchange,
-  Value<int> rowid,
-});
+        bool groupHistoriesRefs,
+      })
+    >;
+typedef $$GroupsTableCreateCompanionBuilder =
+    GroupsCompanion Function({
+      required String groupId,
+      Value<bool> isGroupAdmin,
+      Value<bool> isDirectChat,
+      Value<bool> pinned,
+      Value<bool> archived,
+      Value<bool> joinedGroup,
+      Value<bool> leftGroup,
+      Value<bool> deletedContent,
+      Value<int> stateVersionId,
+      Value<Uint8List?> stateEncryptionKey,
+      Value<Uint8List?> myGroupPrivateKey,
+      required String groupName,
+      Value<String?> draftMessage,
+      Value<int> totalMediaCounter,
+      Value<bool> alsoBestFriend,
+      Value<int> deleteMessagesAfterMilliseconds,
+      Value<DateTime> createdAt,
+      Value<DateTime?> lastMessageSend,
+      Value<DateTime?> lastMessageReceived,
+      Value<DateTime?> lastFlameCounterChange,
+      Value<DateTime?> lastFlameSync,
+      Value<int> flameCounter,
+      Value<int> maxFlameCounter,
+      Value<DateTime?> maxFlameCounterFrom,
+      Value<DateTime> lastMessageExchange,
+      Value<int> rowid,
+    });
+typedef $$GroupsTableUpdateCompanionBuilder =
+    GroupsCompanion Function({
+      Value<String> groupId,
+      Value<bool> isGroupAdmin,
+      Value<bool> isDirectChat,
+      Value<bool> pinned,
+      Value<bool> archived,
+      Value<bool> joinedGroup,
+      Value<bool> leftGroup,
+      Value<bool> deletedContent,
+      Value<int> stateVersionId,
+      Value<Uint8List?> stateEncryptionKey,
+      Value<Uint8List?> myGroupPrivateKey,
+      Value<String> groupName,
+      Value<String?> draftMessage,
+      Value<int> totalMediaCounter,
+      Value<bool> alsoBestFriend,
+      Value<int> deleteMessagesAfterMilliseconds,
+      Value<DateTime> createdAt,
+      Value<DateTime?> lastMessageSend,
+      Value<DateTime?> lastMessageReceived,
+      Value<DateTime?> lastFlameCounterChange,
+      Value<DateTime?> lastFlameSync,
+      Value<int> flameCounter,
+      Value<int> maxFlameCounter,
+      Value<DateTime?> maxFlameCounterFrom,
+      Value<DateTime> lastMessageExchange,
+      Value<int> rowid,
+    });
 
 final class $$GroupsTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupsTable, Group> {
   $$GroupsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MessagesTable, List<Message>> _messagesRefsTable(
-          _$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(db.messages,
-          aliasName:
-              $_aliasNameGenerator(db.groups.groupId, db.messages.groupId));
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.messages,
+    aliasName: $_aliasNameGenerator(db.groups.groupId, db.messages.groupId),
+  );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
     final manager = $$MessagesTableTableManager($_db, $_db.messages).filter(
-        (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!));
+      (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+    );
 
     final cache = $_typedResult.readTableOrNull(_messagesRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
-      _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-          db.groupMembers,
-          aliasName:
-              $_aliasNameGenerator(db.groups.groupId, db.groupMembers.groupId));
+  _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.groupMembers,
+    aliasName: $_aliasNameGenerator(db.groups.groupId, db.groupMembers.groupId),
+  );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
     final manager = $$GroupMembersTableTableManager($_db, $_db.groupMembers)
-        .filter((f) =>
-            f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!));
+        .filter(
+          (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_groupMembersRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
-      _groupHistoriesRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.groupHistories,
-              aliasName: $_aliasNameGenerator(
-                  db.groups.groupId, db.groupHistories.groupId));
+  _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.groupHistories,
+    aliasName: $_aliasNameGenerator(
+      db.groups.groupId,
+      db.groupHistories.groupId,
+    ),
+  );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
     final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
-        .filter((f) =>
-            f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!));
+        .filter(
+          (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+        );
 
     final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 }
 
@@ -8281,153 +10002,202 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get groupId => $composableBuilder(
-      column: $table.groupId, builder: (column) => ColumnFilters(column));
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isGroupAdmin => $composableBuilder(
-      column: $table.isGroupAdmin, builder: (column) => ColumnFilters(column));
+    column: $table.isGroupAdmin,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isDirectChat => $composableBuilder(
-      column: $table.isDirectChat, builder: (column) => ColumnFilters(column));
+    column: $table.isDirectChat,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get pinned => $composableBuilder(
-      column: $table.pinned, builder: (column) => ColumnFilters(column));
+    column: $table.pinned,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get archived => $composableBuilder(
-      column: $table.archived, builder: (column) => ColumnFilters(column));
+    column: $table.archived,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get joinedGroup => $composableBuilder(
-      column: $table.joinedGroup, builder: (column) => ColumnFilters(column));
+    column: $table.joinedGroup,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get leftGroup => $composableBuilder(
-      column: $table.leftGroup, builder: (column) => ColumnFilters(column));
+    column: $table.leftGroup,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get deletedContent => $composableBuilder(
-      column: $table.deletedContent,
-      builder: (column) => ColumnFilters(column));
+    column: $table.deletedContent,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get stateVersionId => $composableBuilder(
-      column: $table.stateVersionId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.stateVersionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get stateEncryptionKey => $composableBuilder(
-      column: $table.stateEncryptionKey,
-      builder: (column) => ColumnFilters(column));
+    column: $table.stateEncryptionKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get myGroupPrivateKey => $composableBuilder(
-      column: $table.myGroupPrivateKey,
-      builder: (column) => ColumnFilters(column));
+    column: $table.myGroupPrivateKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get groupName => $composableBuilder(
-      column: $table.groupName, builder: (column) => ColumnFilters(column));
+    column: $table.groupName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get draftMessage => $composableBuilder(
-      column: $table.draftMessage, builder: (column) => ColumnFilters(column));
+    column: $table.draftMessage,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter,
-      builder: (column) => ColumnFilters(column));
+    column: $table.totalMediaCounter,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend,
-      builder: (column) => ColumnFilters(column));
+    column: $table.alsoBestFriend,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get deleteMessagesAfterMilliseconds => $composableBuilder(
-      column: $table.deleteMessagesAfterMilliseconds,
-      builder: (column) => ColumnFilters(column));
+    column: $table.deleteMessagesAfterMilliseconds,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastMessageSend,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastMessageReceived,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastFlameCounterChange,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync, builder: (column) => ColumnFilters(column));
+    column: $table.lastFlameSync,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter, builder: (column) => ColumnFilters(column));
+    column: $table.flameCounter,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get maxFlameCounter => $composableBuilder(
-      column: $table.maxFlameCounter,
-      builder: (column) => ColumnFilters(column));
+    column: $table.maxFlameCounter,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get maxFlameCounterFrom => $composableBuilder(
-      column: $table.maxFlameCounterFrom,
-      builder: (column) => ColumnFilters(column));
+    column: $table.maxFlameCounterFrom,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastMessageExchange,
+    builder: (column) => ColumnFilters(column),
+  );
 
   Expression<bool> messagesRefs(
-      Expression<bool> Function($$MessagesTableFilterComposer f) f) {
+    Expression<bool> Function($$MessagesTableFilterComposer f) f,
+  ) {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> groupMembersRefs(
-      Expression<bool> Function($$GroupMembersTableFilterComposer f) f) {
+    Expression<bool> Function($$GroupMembersTableFilterComposer f) f,
+  ) {
     final $$GroupMembersTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groupMembers,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupMembersTableFilterComposer(
-              $db: $db,
-              $table: $db.groupMembers,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groupMembers,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.groupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> groupHistoriesRefs(
-      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
+    Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f,
+  ) {
     final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groupHistories,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.groupHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -8441,98 +10211,130 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get groupId => $composableBuilder(
-      column: $table.groupId, builder: (column) => ColumnOrderings(column));
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isGroupAdmin => $composableBuilder(
-      column: $table.isGroupAdmin,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isGroupAdmin,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isDirectChat => $composableBuilder(
-      column: $table.isDirectChat,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isDirectChat,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get pinned => $composableBuilder(
-      column: $table.pinned, builder: (column) => ColumnOrderings(column));
+    column: $table.pinned,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get archived => $composableBuilder(
-      column: $table.archived, builder: (column) => ColumnOrderings(column));
+    column: $table.archived,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get joinedGroup => $composableBuilder(
-      column: $table.joinedGroup, builder: (column) => ColumnOrderings(column));
+    column: $table.joinedGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get leftGroup => $composableBuilder(
-      column: $table.leftGroup, builder: (column) => ColumnOrderings(column));
+    column: $table.leftGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get deletedContent => $composableBuilder(
-      column: $table.deletedContent,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.deletedContent,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get stateVersionId => $composableBuilder(
-      column: $table.stateVersionId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.stateVersionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get stateEncryptionKey => $composableBuilder(
-      column: $table.stateEncryptionKey,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.stateEncryptionKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get myGroupPrivateKey => $composableBuilder(
-      column: $table.myGroupPrivateKey,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.myGroupPrivateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get groupName => $composableBuilder(
-      column: $table.groupName, builder: (column) => ColumnOrderings(column));
+    column: $table.groupName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get draftMessage => $composableBuilder(
-      column: $table.draftMessage,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.draftMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.totalMediaCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.alsoBestFriend,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get deleteMessagesAfterMilliseconds =>
       $composableBuilder(
-          column: $table.deleteMessagesAfterMilliseconds,
-          builder: (column) => ColumnOrderings(column));
+        column: $table.deleteMessagesAfterMilliseconds,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastMessageSend,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastMessageReceived,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastFlameCounterChange,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastFlameSync,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.flameCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get maxFlameCounter => $composableBuilder(
-      column: $table.maxFlameCounter,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.maxFlameCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get maxFlameCounterFrom => $composableBuilder(
-      column: $table.maxFlameCounterFrom,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.maxFlameCounterFrom,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastMessageExchange,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GroupsTableAnnotationComposer
@@ -8548,10 +10350,14 @@ class $$GroupsTableAnnotationComposer
       $composableBuilder(column: $table.groupId, builder: (column) => column);
 
   GeneratedColumn<bool> get isGroupAdmin => $composableBuilder(
-      column: $table.isGroupAdmin, builder: (column) => column);
+    column: $table.isGroupAdmin,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isDirectChat => $composableBuilder(
-      column: $table.isDirectChat, builder: (column) => column);
+    column: $table.isDirectChat,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get pinned =>
       $composableBuilder(column: $table.pinned, builder: (column) => column);
@@ -8560,146 +10366,198 @@ class $$GroupsTableAnnotationComposer
       $composableBuilder(column: $table.archived, builder: (column) => column);
 
   GeneratedColumn<bool> get joinedGroup => $composableBuilder(
-      column: $table.joinedGroup, builder: (column) => column);
+    column: $table.joinedGroup,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get leftGroup =>
       $composableBuilder(column: $table.leftGroup, builder: (column) => column);
 
   GeneratedColumn<bool> get deletedContent => $composableBuilder(
-      column: $table.deletedContent, builder: (column) => column);
+    column: $table.deletedContent,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get stateVersionId => $composableBuilder(
-      column: $table.stateVersionId, builder: (column) => column);
+    column: $table.stateVersionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get stateEncryptionKey => $composableBuilder(
-      column: $table.stateEncryptionKey, builder: (column) => column);
+    column: $table.stateEncryptionKey,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get myGroupPrivateKey => $composableBuilder(
-      column: $table.myGroupPrivateKey, builder: (column) => column);
+    column: $table.myGroupPrivateKey,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get groupName =>
       $composableBuilder(column: $table.groupName, builder: (column) => column);
 
   GeneratedColumn<String> get draftMessage => $composableBuilder(
-      column: $table.draftMessage, builder: (column) => column);
+    column: $table.draftMessage,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter, builder: (column) => column);
+    column: $table.totalMediaCounter,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend, builder: (column) => column);
+    column: $table.alsoBestFriend,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get deleteMessagesAfterMilliseconds =>
       $composableBuilder(
-          column: $table.deleteMessagesAfterMilliseconds,
-          builder: (column) => column);
+        column: $table.deleteMessagesAfterMilliseconds,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend, builder: (column) => column);
+    column: $table.lastMessageSend,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived, builder: (column) => column);
+    column: $table.lastMessageReceived,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange, builder: (column) => column);
+    column: $table.lastFlameCounterChange,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync, builder: (column) => column);
+    column: $table.lastFlameSync,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter, builder: (column) => column);
+    column: $table.flameCounter,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get maxFlameCounter => $composableBuilder(
-      column: $table.maxFlameCounter, builder: (column) => column);
+    column: $table.maxFlameCounter,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get maxFlameCounterFrom => $composableBuilder(
-      column: $table.maxFlameCounterFrom, builder: (column) => column);
+    column: $table.maxFlameCounterFrom,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange, builder: (column) => column);
+    column: $table.lastMessageExchange,
+    builder: (column) => column,
+  );
 
   Expression<T> messagesRefs<T extends Object>(
-      Expression<T> Function($$MessagesTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessagesTableAnnotationComposer a) f,
+  ) {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> groupMembersRefs<T extends Object>(
-      Expression<T> Function($$GroupMembersTableAnnotationComposer a) f) {
+    Expression<T> Function($$GroupMembersTableAnnotationComposer a) f,
+  ) {
     final $$GroupMembersTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groupMembers,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupMembersTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groupMembers,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groupMembers,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groupMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> groupHistoriesRefs<T extends Object>(
-      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
+    Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f,
+  ) {
     final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groupHistories,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupHistoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groupHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$GroupsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $GroupsTable,
-    Group,
-    $$GroupsTableFilterComposer,
-    $$GroupsTableOrderingComposer,
-    $$GroupsTableAnnotationComposer,
-    $$GroupsTableCreateCompanionBuilder,
-    $$GroupsTableUpdateCompanionBuilder,
-    (Group, $$GroupsTableReferences),
-    Group,
-    PrefetchHooks Function(
-        {bool messagesRefs, bool groupMembersRefs, bool groupHistoriesRefs})> {
+class $$GroupsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $GroupsTable,
+          Group,
+          $$GroupsTableFilterComposer,
+          $$GroupsTableOrderingComposer,
+          $$GroupsTableAnnotationComposer,
+          $$GroupsTableCreateCompanionBuilder,
+          $$GroupsTableUpdateCompanionBuilder,
+          (Group, $$GroupsTableReferences),
+          Group,
+          PrefetchHooks Function({
+            bool messagesRefs,
+            bool groupMembersRefs,
+            bool groupHistoriesRefs,
+          })
+        > {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -8708,248 +10566,292 @@ class $$GroupsTableTableManager extends RootTableManager<
               $$GroupsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$GroupsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> groupId = const Value.absent(),
-            Value<bool> isGroupAdmin = const Value.absent(),
-            Value<bool> isDirectChat = const Value.absent(),
-            Value<bool> pinned = const Value.absent(),
-            Value<bool> archived = const Value.absent(),
-            Value<bool> joinedGroup = const Value.absent(),
-            Value<bool> leftGroup = const Value.absent(),
-            Value<bool> deletedContent = const Value.absent(),
-            Value<int> stateVersionId = const Value.absent(),
-            Value<Uint8List?> stateEncryptionKey = const Value.absent(),
-            Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
-            Value<String> groupName = const Value.absent(),
-            Value<String?> draftMessage = const Value.absent(),
-            Value<int> totalMediaCounter = const Value.absent(),
-            Value<bool> alsoBestFriend = const Value.absent(),
-            Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> lastMessageSend = const Value.absent(),
-            Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
-            Value<DateTime?> lastFlameSync = const Value.absent(),
-            Value<int> flameCounter = const Value.absent(),
-            Value<int> maxFlameCounter = const Value.absent(),
-            Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
-            Value<DateTime> lastMessageExchange = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupsCompanion(
-            groupId: groupId,
-            isGroupAdmin: isGroupAdmin,
-            isDirectChat: isDirectChat,
-            pinned: pinned,
-            archived: archived,
-            joinedGroup: joinedGroup,
-            leftGroup: leftGroup,
-            deletedContent: deletedContent,
-            stateVersionId: stateVersionId,
-            stateEncryptionKey: stateEncryptionKey,
-            myGroupPrivateKey: myGroupPrivateKey,
-            groupName: groupName,
-            draftMessage: draftMessage,
-            totalMediaCounter: totalMediaCounter,
-            alsoBestFriend: alsoBestFriend,
-            deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,
-            createdAt: createdAt,
-            lastMessageSend: lastMessageSend,
-            lastMessageReceived: lastMessageReceived,
-            lastFlameCounterChange: lastFlameCounterChange,
-            lastFlameSync: lastFlameSync,
-            flameCounter: flameCounter,
-            maxFlameCounter: maxFlameCounter,
-            maxFlameCounterFrom: maxFlameCounterFrom,
-            lastMessageExchange: lastMessageExchange,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String groupId,
-            Value<bool> isGroupAdmin = const Value.absent(),
-            Value<bool> isDirectChat = const Value.absent(),
-            Value<bool> pinned = const Value.absent(),
-            Value<bool> archived = const Value.absent(),
-            Value<bool> joinedGroup = const Value.absent(),
-            Value<bool> leftGroup = const Value.absent(),
-            Value<bool> deletedContent = const Value.absent(),
-            Value<int> stateVersionId = const Value.absent(),
-            Value<Uint8List?> stateEncryptionKey = const Value.absent(),
-            Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
-            required String groupName,
-            Value<String?> draftMessage = const Value.absent(),
-            Value<int> totalMediaCounter = const Value.absent(),
-            Value<bool> alsoBestFriend = const Value.absent(),
-            Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> lastMessageSend = const Value.absent(),
-            Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
-            Value<DateTime?> lastFlameSync = const Value.absent(),
-            Value<int> flameCounter = const Value.absent(),
-            Value<int> maxFlameCounter = const Value.absent(),
-            Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
-            Value<DateTime> lastMessageExchange = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupsCompanion.insert(
-            groupId: groupId,
-            isGroupAdmin: isGroupAdmin,
-            isDirectChat: isDirectChat,
-            pinned: pinned,
-            archived: archived,
-            joinedGroup: joinedGroup,
-            leftGroup: leftGroup,
-            deletedContent: deletedContent,
-            stateVersionId: stateVersionId,
-            stateEncryptionKey: stateEncryptionKey,
-            myGroupPrivateKey: myGroupPrivateKey,
-            groupName: groupName,
-            draftMessage: draftMessage,
-            totalMediaCounter: totalMediaCounter,
-            alsoBestFriend: alsoBestFriend,
-            deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,
-            createdAt: createdAt,
-            lastMessageSend: lastMessageSend,
-            lastMessageReceived: lastMessageReceived,
-            lastFlameCounterChange: lastFlameCounterChange,
-            lastFlameSync: lastFlameSync,
-            flameCounter: flameCounter,
-            maxFlameCounter: maxFlameCounter,
-            maxFlameCounterFrom: maxFlameCounterFrom,
-            lastMessageExchange: lastMessageExchange,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> groupId = const Value.absent(),
+                Value<bool> isGroupAdmin = const Value.absent(),
+                Value<bool> isDirectChat = const Value.absent(),
+                Value<bool> pinned = const Value.absent(),
+                Value<bool> archived = const Value.absent(),
+                Value<bool> joinedGroup = const Value.absent(),
+                Value<bool> leftGroup = const Value.absent(),
+                Value<bool> deletedContent = const Value.absent(),
+                Value<int> stateVersionId = const Value.absent(),
+                Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+                Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
+                Value<String> groupName = const Value.absent(),
+                Value<String?> draftMessage = const Value.absent(),
+                Value<int> totalMediaCounter = const Value.absent(),
+                Value<bool> alsoBestFriend = const Value.absent(),
+                Value<int> deleteMessagesAfterMilliseconds =
+                    const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> lastMessageSend = const Value.absent(),
+                Value<DateTime?> lastMessageReceived = const Value.absent(),
+                Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+                Value<DateTime?> lastFlameSync = const Value.absent(),
+                Value<int> flameCounter = const Value.absent(),
+                Value<int> maxFlameCounter = const Value.absent(),
+                Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
+                Value<DateTime> lastMessageExchange = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupsCompanion(
+                groupId: groupId,
+                isGroupAdmin: isGroupAdmin,
+                isDirectChat: isDirectChat,
+                pinned: pinned,
+                archived: archived,
+                joinedGroup: joinedGroup,
+                leftGroup: leftGroup,
+                deletedContent: deletedContent,
+                stateVersionId: stateVersionId,
+                stateEncryptionKey: stateEncryptionKey,
+                myGroupPrivateKey: myGroupPrivateKey,
+                groupName: groupName,
+                draftMessage: draftMessage,
+                totalMediaCounter: totalMediaCounter,
+                alsoBestFriend: alsoBestFriend,
+                deleteMessagesAfterMilliseconds:
+                    deleteMessagesAfterMilliseconds,
+                createdAt: createdAt,
+                lastMessageSend: lastMessageSend,
+                lastMessageReceived: lastMessageReceived,
+                lastFlameCounterChange: lastFlameCounterChange,
+                lastFlameSync: lastFlameSync,
+                flameCounter: flameCounter,
+                maxFlameCounter: maxFlameCounter,
+                maxFlameCounterFrom: maxFlameCounterFrom,
+                lastMessageExchange: lastMessageExchange,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String groupId,
+                Value<bool> isGroupAdmin = const Value.absent(),
+                Value<bool> isDirectChat = const Value.absent(),
+                Value<bool> pinned = const Value.absent(),
+                Value<bool> archived = const Value.absent(),
+                Value<bool> joinedGroup = const Value.absent(),
+                Value<bool> leftGroup = const Value.absent(),
+                Value<bool> deletedContent = const Value.absent(),
+                Value<int> stateVersionId = const Value.absent(),
+                Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+                Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
+                required String groupName,
+                Value<String?> draftMessage = const Value.absent(),
+                Value<int> totalMediaCounter = const Value.absent(),
+                Value<bool> alsoBestFriend = const Value.absent(),
+                Value<int> deleteMessagesAfterMilliseconds =
+                    const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> lastMessageSend = const Value.absent(),
+                Value<DateTime?> lastMessageReceived = const Value.absent(),
+                Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+                Value<DateTime?> lastFlameSync = const Value.absent(),
+                Value<int> flameCounter = const Value.absent(),
+                Value<int> maxFlameCounter = const Value.absent(),
+                Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
+                Value<DateTime> lastMessageExchange = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupsCompanion.insert(
+                groupId: groupId,
+                isGroupAdmin: isGroupAdmin,
+                isDirectChat: isDirectChat,
+                pinned: pinned,
+                archived: archived,
+                joinedGroup: joinedGroup,
+                leftGroup: leftGroup,
+                deletedContent: deletedContent,
+                stateVersionId: stateVersionId,
+                stateEncryptionKey: stateEncryptionKey,
+                myGroupPrivateKey: myGroupPrivateKey,
+                groupName: groupName,
+                draftMessage: draftMessage,
+                totalMediaCounter: totalMediaCounter,
+                alsoBestFriend: alsoBestFriend,
+                deleteMessagesAfterMilliseconds:
+                    deleteMessagesAfterMilliseconds,
+                createdAt: createdAt,
+                lastMessageSend: lastMessageSend,
+                lastMessageReceived: lastMessageReceived,
+                lastFlameCounterChange: lastFlameCounterChange,
+                lastFlameSync: lastFlameSync,
+                flameCounter: flameCounter,
+                maxFlameCounter: maxFlameCounter,
+                maxFlameCounterFrom: maxFlameCounterFrom,
+                lastMessageExchange: lastMessageExchange,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$GroupsTableReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$GroupsTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: (
-              {messagesRefs = false,
-              groupMembersRefs = false,
-              groupHistoriesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (messagesRefs) db.messages,
-                if (groupMembersRefs) db.groupMembers,
-                if (groupHistoriesRefs) db.groupHistories
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (messagesRefs)
-                    await $_getPrefetchedData<Group, $GroupsTable, Message>(
-                        currentTable: table,
-                        referencedTable:
-                            $$GroupsTableReferences._messagesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$GroupsTableReferences(db, table, p0).messagesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.groupId == item.groupId),
-                        typedResults: items),
-                  if (groupMembersRefs)
-                    await $_getPrefetchedData<Group, $GroupsTable, GroupMember>(
-                        currentTable: table,
-                        referencedTable:
-                            $$GroupsTableReferences._groupMembersRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$GroupsTableReferences(db, table, p0)
-                                .groupMembersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.groupId == item.groupId),
-                        typedResults: items),
-                  if (groupHistoriesRefs)
-                    await $_getPrefetchedData<Group, $GroupsTable,
-                            GroupHistory>(
-                        currentTable: table,
-                        referencedTable: $$GroupsTableReferences
-                            ._groupHistoriesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$GroupsTableReferences(db, table, p0)
-                                .groupHistoriesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.groupId == item.groupId),
-                        typedResults: items)
-                ];
+          prefetchHooksCallback:
+              ({
+                messagesRefs = false,
+                groupMembersRefs = false,
+                groupHistoriesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (messagesRefs) db.messages,
+                    if (groupMembersRefs) db.groupMembers,
+                    if (groupHistoriesRefs) db.groupHistories,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (messagesRefs)
+                        await $_getPrefetchedData<Group, $GroupsTable, Message>(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._messagesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messagesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groupMembersRefs)
+                        await $_getPrefetchedData<
+                          Group,
+                          $GroupsTable,
+                          GroupMember
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._groupMembersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groupMembersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groupHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Group,
+                          $GroupsTable,
+                          GroupHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._groupHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groupHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
-        ));
+        ),
+      );
 }
 
-typedef $$GroupsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $GroupsTable,
-    Group,
-    $$GroupsTableFilterComposer,
-    $$GroupsTableOrderingComposer,
-    $$GroupsTableAnnotationComposer,
-    $$GroupsTableCreateCompanionBuilder,
-    $$GroupsTableUpdateCompanionBuilder,
-    (Group, $$GroupsTableReferences),
-    Group,
-    PrefetchHooks Function(
-        {bool messagesRefs, bool groupMembersRefs, bool groupHistoriesRefs})>;
-typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
-  required String mediaId,
-  required MediaType type,
-  Value<UploadState?> uploadState,
-  Value<DownloadState?> downloadState,
-  Value<bool> requiresAuthentication,
-  Value<bool> stored,
-  Value<bool> isDraftMedia,
-  Value<List<int>?> reuploadRequestedBy,
-  Value<int?> displayLimitInMilliseconds,
-  Value<bool?> removeAudio,
-  Value<Uint8List?> downloadToken,
-  Value<Uint8List?> encryptionKey,
-  Value<Uint8List?> encryptionMac,
-  Value<Uint8List?> encryptionNonce,
-  Value<Uint8List?> storedFileHash,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
-  Value<String> mediaId,
-  Value<MediaType> type,
-  Value<UploadState?> uploadState,
-  Value<DownloadState?> downloadState,
-  Value<bool> requiresAuthentication,
-  Value<bool> stored,
-  Value<bool> isDraftMedia,
-  Value<List<int>?> reuploadRequestedBy,
-  Value<int?> displayLimitInMilliseconds,
-  Value<bool?> removeAudio,
-  Value<Uint8List?> downloadToken,
-  Value<Uint8List?> encryptionKey,
-  Value<Uint8List?> encryptionMac,
-  Value<Uint8List?> encryptionNonce,
-  Value<Uint8List?> storedFileHash,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+typedef $$GroupsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $GroupsTable,
+      Group,
+      $$GroupsTableFilterComposer,
+      $$GroupsTableOrderingComposer,
+      $$GroupsTableAnnotationComposer,
+      $$GroupsTableCreateCompanionBuilder,
+      $$GroupsTableUpdateCompanionBuilder,
+      (Group, $$GroupsTableReferences),
+      Group,
+      PrefetchHooks Function({
+        bool messagesRefs,
+        bool groupMembersRefs,
+        bool groupHistoriesRefs,
+      })
+    >;
+typedef $$MediaFilesTableCreateCompanionBuilder =
+    MediaFilesCompanion Function({
+      required String mediaId,
+      required MediaType type,
+      Value<UploadState?> uploadState,
+      Value<DownloadState?> downloadState,
+      Value<bool> requiresAuthentication,
+      Value<bool> stored,
+      Value<bool> isDraftMedia,
+      Value<int?> preProgressingProcess,
+      Value<List<int>?> reuploadRequestedBy,
+      Value<int?> displayLimitInMilliseconds,
+      Value<bool?> removeAudio,
+      Value<Uint8List?> downloadToken,
+      Value<Uint8List?> encryptionKey,
+      Value<Uint8List?> encryptionMac,
+      Value<Uint8List?> encryptionNonce,
+      Value<Uint8List?> storedFileHash,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$MediaFilesTableUpdateCompanionBuilder =
+    MediaFilesCompanion Function({
+      Value<String> mediaId,
+      Value<MediaType> type,
+      Value<UploadState?> uploadState,
+      Value<DownloadState?> downloadState,
+      Value<bool> requiresAuthentication,
+      Value<bool> stored,
+      Value<bool> isDraftMedia,
+      Value<int?> preProgressingProcess,
+      Value<List<int>?> reuploadRequestedBy,
+      Value<int?> displayLimitInMilliseconds,
+      Value<bool?> removeAudio,
+      Value<Uint8List?> downloadToken,
+      Value<Uint8List?> encryptionKey,
+      Value<Uint8List?> encryptionMac,
+      Value<Uint8List?> encryptionNonce,
+      Value<Uint8List?> storedFileHash,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 final class $$MediaFilesTableReferences
     extends BaseReferences<_$TwonlyDB, $MediaFilesTable, MediaFile> {
   $$MediaFilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MessagesTable, List<Message>> _messagesRefsTable(
-          _$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(db.messages,
-          aliasName:
-              $_aliasNameGenerator(db.mediaFiles.mediaId, db.messages.mediaId));
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.messages,
+    aliasName: $_aliasNameGenerator(db.mediaFiles.mediaId, db.messages.mediaId),
+  );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
     final manager = $$MessagesTableTableManager($_db, $_db.messages).filter(
-        (f) => f.mediaId.mediaId.sqlEquals($_itemColumn<String>('media_id')!));
+      (f) => f.mediaId.mediaId.sqlEquals($_itemColumn<String>('media_id')!),
+    );
 
     final cache = $_typedResult.readTableOrNull(_messagesRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 }
 
@@ -8963,83 +10865,116 @@ class $$MediaFilesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get mediaId => $composableBuilder(
-      column: $table.mediaId, builder: (column) => ColumnFilters(column));
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnWithTypeConverterFilters<MediaType, MediaType, String> get type =>
       $composableBuilder(
-          column: $table.type,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+        column: $table.type,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnWithTypeConverterFilters<UploadState?, UploadState, String>
-      get uploadState => $composableBuilder(
-          column: $table.uploadState,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get uploadState => $composableBuilder(
+    column: $table.uploadState,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnWithTypeConverterFilters<DownloadState?, DownloadState, String>
-      get downloadState => $composableBuilder(
-          column: $table.downloadState,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get downloadState => $composableBuilder(
+    column: $table.downloadState,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnFilters<bool> get requiresAuthentication => $composableBuilder(
-      column: $table.requiresAuthentication,
-      builder: (column) => ColumnFilters(column));
+    column: $table.requiresAuthentication,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get stored => $composableBuilder(
-      column: $table.stored, builder: (column) => ColumnFilters(column));
+    column: $table.stored,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isDraftMedia => $composableBuilder(
-      column: $table.isDraftMedia, builder: (column) => ColumnFilters(column));
+    column: $table.isDraftMedia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get preProgressingProcess => $composableBuilder(
+    column: $table.preProgressingProcess,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnWithTypeConverterFilters<List<int>?, List<int>, String>
-      get reuploadRequestedBy => $composableBuilder(
-          column: $table.reuploadRequestedBy,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get reuploadRequestedBy => $composableBuilder(
+    column: $table.reuploadRequestedBy,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnFilters<int> get displayLimitInMilliseconds => $composableBuilder(
-      column: $table.displayLimitInMilliseconds,
-      builder: (column) => ColumnFilters(column));
+    column: $table.displayLimitInMilliseconds,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get removeAudio => $composableBuilder(
-      column: $table.removeAudio, builder: (column) => ColumnFilters(column));
+    column: $table.removeAudio,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken, builder: (column) => ColumnFilters(column));
+    column: $table.downloadToken,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get encryptionKey => $composableBuilder(
-      column: $table.encryptionKey, builder: (column) => ColumnFilters(column));
+    column: $table.encryptionKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get encryptionMac => $composableBuilder(
-      column: $table.encryptionMac, builder: (column) => ColumnFilters(column));
+    column: $table.encryptionMac,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get encryptionNonce => $composableBuilder(
-      column: $table.encryptionNonce,
-      builder: (column) => ColumnFilters(column));
+    column: $table.encryptionNonce,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get storedFileHash => $composableBuilder(
-      column: $table.storedFileHash,
-      builder: (column) => ColumnFilters(column));
+    column: $table.storedFileHash,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   Expression<bool> messagesRefs(
-      Expression<bool> Function($$MessagesTableFilterComposer f) f) {
+    Expression<bool> Function($$MessagesTableFilterComposer f) f,
+  ) {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.mediaId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.mediaId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.mediaId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.mediaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -9054,62 +10989,89 @@ class $$MediaFilesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get mediaId => $composableBuilder(
-      column: $table.mediaId, builder: (column) => ColumnOrderings(column));
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get uploadState => $composableBuilder(
-      column: $table.uploadState, builder: (column) => ColumnOrderings(column));
+    column: $table.uploadState,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get downloadState => $composableBuilder(
-      column: $table.downloadState,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.downloadState,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get requiresAuthentication => $composableBuilder(
-      column: $table.requiresAuthentication,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.requiresAuthentication,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get stored => $composableBuilder(
-      column: $table.stored, builder: (column) => ColumnOrderings(column));
+    column: $table.stored,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isDraftMedia => $composableBuilder(
-      column: $table.isDraftMedia,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isDraftMedia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get preProgressingProcess => $composableBuilder(
+    column: $table.preProgressingProcess,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get reuploadRequestedBy => $composableBuilder(
-      column: $table.reuploadRequestedBy,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.reuploadRequestedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get displayLimitInMilliseconds => $composableBuilder(
-      column: $table.displayLimitInMilliseconds,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.displayLimitInMilliseconds,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get removeAudio => $composableBuilder(
-      column: $table.removeAudio, builder: (column) => ColumnOrderings(column));
+    column: $table.removeAudio,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.downloadToken,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get encryptionKey => $composableBuilder(
-      column: $table.encryptionKey,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.encryptionKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get encryptionMac => $composableBuilder(
-      column: $table.encryptionMac,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.encryptionMac,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get encryptionNonce => $composableBuilder(
-      column: $table.encryptionNonce,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.encryptionNonce,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get storedFileHash => $composableBuilder(
-      column: $table.storedFileHash,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.storedFileHash,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MediaFilesTableAnnotationComposer
@@ -9129,85 +11091,122 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<UploadState?, String> get uploadState =>
       $composableBuilder(
-          column: $table.uploadState, builder: (column) => column);
+        column: $table.uploadState,
+        builder: (column) => column,
+      );
 
   GeneratedColumnWithTypeConverter<DownloadState?, String> get downloadState =>
       $composableBuilder(
-          column: $table.downloadState, builder: (column) => column);
+        column: $table.downloadState,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<bool> get requiresAuthentication => $composableBuilder(
-      column: $table.requiresAuthentication, builder: (column) => column);
+    column: $table.requiresAuthentication,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get stored =>
       $composableBuilder(column: $table.stored, builder: (column) => column);
 
   GeneratedColumn<bool> get isDraftMedia => $composableBuilder(
-      column: $table.isDraftMedia, builder: (column) => column);
+    column: $table.isDraftMedia,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get preProgressingProcess => $composableBuilder(
+    column: $table.preProgressingProcess,
+    builder: (column) => column,
+  );
 
   GeneratedColumnWithTypeConverter<List<int>?, String>
-      get reuploadRequestedBy => $composableBuilder(
-          column: $table.reuploadRequestedBy, builder: (column) => column);
+  get reuploadRequestedBy => $composableBuilder(
+    column: $table.reuploadRequestedBy,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get displayLimitInMilliseconds => $composableBuilder(
-      column: $table.displayLimitInMilliseconds, builder: (column) => column);
+    column: $table.displayLimitInMilliseconds,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get removeAudio => $composableBuilder(
-      column: $table.removeAudio, builder: (column) => column);
+    column: $table.removeAudio,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken, builder: (column) => column);
+    column: $table.downloadToken,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get encryptionKey => $composableBuilder(
-      column: $table.encryptionKey, builder: (column) => column);
+    column: $table.encryptionKey,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get encryptionMac => $composableBuilder(
-      column: $table.encryptionMac, builder: (column) => column);
+    column: $table.encryptionMac,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get encryptionNonce => $composableBuilder(
-      column: $table.encryptionNonce, builder: (column) => column);
+    column: $table.encryptionNonce,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get storedFileHash => $composableBuilder(
-      column: $table.storedFileHash, builder: (column) => column);
+    column: $table.storedFileHash,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   Expression<T> messagesRefs<T extends Object>(
-      Expression<T> Function($$MessagesTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessagesTableAnnotationComposer a) f,
+  ) {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.mediaId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.mediaId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.mediaId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.mediaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$MediaFilesTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $MediaFilesTable,
-    MediaFile,
-    $$MediaFilesTableFilterComposer,
-    $$MediaFilesTableOrderingComposer,
-    $$MediaFilesTableAnnotationComposer,
-    $$MediaFilesTableCreateCompanionBuilder,
-    $$MediaFilesTableUpdateCompanionBuilder,
-    (MediaFile, $$MediaFilesTableReferences),
-    MediaFile,
-    PrefetchHooks Function({bool messagesRefs})> {
+class $$MediaFilesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $MediaFilesTable,
+          MediaFile,
+          $$MediaFilesTableFilterComposer,
+          $$MediaFilesTableOrderingComposer,
+          $$MediaFilesTableAnnotationComposer,
+          $$MediaFilesTableCreateCompanionBuilder,
+          $$MediaFilesTableUpdateCompanionBuilder,
+          (MediaFile, $$MediaFilesTableReferences),
+          MediaFile,
+          PrefetchHooks Function({bool messagesRefs})
+        > {
   $$MediaFilesTableTableManager(_$TwonlyDB db, $MediaFilesTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -9216,87 +11215,93 @@ class $$MediaFilesTableTableManager extends RootTableManager<
               $$MediaFilesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$MediaFilesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> mediaId = const Value.absent(),
-            Value<MediaType> type = const Value.absent(),
-            Value<UploadState?> uploadState = const Value.absent(),
-            Value<DownloadState?> downloadState = const Value.absent(),
-            Value<bool> requiresAuthentication = const Value.absent(),
-            Value<bool> stored = const Value.absent(),
-            Value<bool> isDraftMedia = const Value.absent(),
-            Value<List<int>?> reuploadRequestedBy = const Value.absent(),
-            Value<int?> displayLimitInMilliseconds = const Value.absent(),
-            Value<bool?> removeAudio = const Value.absent(),
-            Value<Uint8List?> downloadToken = const Value.absent(),
-            Value<Uint8List?> encryptionKey = const Value.absent(),
-            Value<Uint8List?> encryptionMac = const Value.absent(),
-            Value<Uint8List?> encryptionNonce = const Value.absent(),
-            Value<Uint8List?> storedFileHash = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MediaFilesCompanion(
-            mediaId: mediaId,
-            type: type,
-            uploadState: uploadState,
-            downloadState: downloadState,
-            requiresAuthentication: requiresAuthentication,
-            stored: stored,
-            isDraftMedia: isDraftMedia,
-            reuploadRequestedBy: reuploadRequestedBy,
-            displayLimitInMilliseconds: displayLimitInMilliseconds,
-            removeAudio: removeAudio,
-            downloadToken: downloadToken,
-            encryptionKey: encryptionKey,
-            encryptionMac: encryptionMac,
-            encryptionNonce: encryptionNonce,
-            storedFileHash: storedFileHash,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String mediaId,
-            required MediaType type,
-            Value<UploadState?> uploadState = const Value.absent(),
-            Value<DownloadState?> downloadState = const Value.absent(),
-            Value<bool> requiresAuthentication = const Value.absent(),
-            Value<bool> stored = const Value.absent(),
-            Value<bool> isDraftMedia = const Value.absent(),
-            Value<List<int>?> reuploadRequestedBy = const Value.absent(),
-            Value<int?> displayLimitInMilliseconds = const Value.absent(),
-            Value<bool?> removeAudio = const Value.absent(),
-            Value<Uint8List?> downloadToken = const Value.absent(),
-            Value<Uint8List?> encryptionKey = const Value.absent(),
-            Value<Uint8List?> encryptionMac = const Value.absent(),
-            Value<Uint8List?> encryptionNonce = const Value.absent(),
-            Value<Uint8List?> storedFileHash = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MediaFilesCompanion.insert(
-            mediaId: mediaId,
-            type: type,
-            uploadState: uploadState,
-            downloadState: downloadState,
-            requiresAuthentication: requiresAuthentication,
-            stored: stored,
-            isDraftMedia: isDraftMedia,
-            reuploadRequestedBy: reuploadRequestedBy,
-            displayLimitInMilliseconds: displayLimitInMilliseconds,
-            removeAudio: removeAudio,
-            downloadToken: downloadToken,
-            encryptionKey: encryptionKey,
-            encryptionMac: encryptionMac,
-            encryptionNonce: encryptionNonce,
-            storedFileHash: storedFileHash,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> mediaId = const Value.absent(),
+                Value<MediaType> type = const Value.absent(),
+                Value<UploadState?> uploadState = const Value.absent(),
+                Value<DownloadState?> downloadState = const Value.absent(),
+                Value<bool> requiresAuthentication = const Value.absent(),
+                Value<bool> stored = const Value.absent(),
+                Value<bool> isDraftMedia = const Value.absent(),
+                Value<int?> preProgressingProcess = const Value.absent(),
+                Value<List<int>?> reuploadRequestedBy = const Value.absent(),
+                Value<int?> displayLimitInMilliseconds = const Value.absent(),
+                Value<bool?> removeAudio = const Value.absent(),
+                Value<Uint8List?> downloadToken = const Value.absent(),
+                Value<Uint8List?> encryptionKey = const Value.absent(),
+                Value<Uint8List?> encryptionMac = const Value.absent(),
+                Value<Uint8List?> encryptionNonce = const Value.absent(),
+                Value<Uint8List?> storedFileHash = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MediaFilesCompanion(
+                mediaId: mediaId,
+                type: type,
+                uploadState: uploadState,
+                downloadState: downloadState,
+                requiresAuthentication: requiresAuthentication,
+                stored: stored,
+                isDraftMedia: isDraftMedia,
+                preProgressingProcess: preProgressingProcess,
+                reuploadRequestedBy: reuploadRequestedBy,
+                displayLimitInMilliseconds: displayLimitInMilliseconds,
+                removeAudio: removeAudio,
+                downloadToken: downloadToken,
+                encryptionKey: encryptionKey,
+                encryptionMac: encryptionMac,
+                encryptionNonce: encryptionNonce,
+                storedFileHash: storedFileHash,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String mediaId,
+                required MediaType type,
+                Value<UploadState?> uploadState = const Value.absent(),
+                Value<DownloadState?> downloadState = const Value.absent(),
+                Value<bool> requiresAuthentication = const Value.absent(),
+                Value<bool> stored = const Value.absent(),
+                Value<bool> isDraftMedia = const Value.absent(),
+                Value<int?> preProgressingProcess = const Value.absent(),
+                Value<List<int>?> reuploadRequestedBy = const Value.absent(),
+                Value<int?> displayLimitInMilliseconds = const Value.absent(),
+                Value<bool?> removeAudio = const Value.absent(),
+                Value<Uint8List?> downloadToken = const Value.absent(),
+                Value<Uint8List?> encryptionKey = const Value.absent(),
+                Value<Uint8List?> encryptionMac = const Value.absent(),
+                Value<Uint8List?> encryptionNonce = const Value.absent(),
+                Value<Uint8List?> storedFileHash = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MediaFilesCompanion.insert(
+                mediaId: mediaId,
+                type: type,
+                uploadState: uploadState,
+                downloadState: downloadState,
+                requiresAuthentication: requiresAuthentication,
+                stored: stored,
+                isDraftMedia: isDraftMedia,
+                preProgressingProcess: preProgressingProcess,
+                reuploadRequestedBy: reuploadRequestedBy,
+                displayLimitInMilliseconds: displayLimitInMilliseconds,
+                removeAudio: removeAudio,
+                downloadToken: downloadToken,
+                encryptionKey: encryptionKey,
+                encryptionMac: encryptionMac,
+                encryptionNonce: encryptionNonce,
+                storedFileHash: storedFileHash,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$MediaFilesTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MediaFilesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({messagesRefs = false}) {
             return PrefetchHooks(
@@ -9306,192 +11311,242 @@ class $$MediaFilesTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (messagesRefs)
-                    await $_getPrefetchedData<MediaFile, $MediaFilesTable,
-                            Message>(
-                        currentTable: table,
-                        referencedTable:
-                            $$MediaFilesTableReferences._messagesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$MediaFilesTableReferences(db, table, p0)
-                                .messagesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.mediaId == item.mediaId),
-                        typedResults: items)
+                    await $_getPrefetchedData<
+                      MediaFile,
+                      $MediaFilesTable,
+                      Message
+                    >(
+                      currentTable: table,
+                      referencedTable: $$MediaFilesTableReferences
+                          ._messagesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$MediaFilesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).messagesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.mediaId == item.mediaId,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$MediaFilesTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $MediaFilesTable,
-    MediaFile,
-    $$MediaFilesTableFilterComposer,
-    $$MediaFilesTableOrderingComposer,
-    $$MediaFilesTableAnnotationComposer,
-    $$MediaFilesTableCreateCompanionBuilder,
-    $$MediaFilesTableUpdateCompanionBuilder,
-    (MediaFile, $$MediaFilesTableReferences),
-    MediaFile,
-    PrefetchHooks Function({bool messagesRefs})>;
-typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
-  required String groupId,
-  required String messageId,
-  Value<int?> senderId,
-  required String type,
-  Value<String?> content,
-  Value<String?> mediaId,
-  Value<Uint8List?> additionalMessageData,
-  Value<bool> mediaStored,
-  Value<bool> mediaReopened,
-  Value<Uint8List?> downloadToken,
-  Value<String?> quotesMessageId,
-  Value<bool> isDeletedFromSender,
-  Value<DateTime?> openedAt,
-  Value<DateTime?> openedByAll,
-  Value<DateTime> createdAt,
-  Value<DateTime?> modifiedAt,
-  Value<DateTime?> ackByUser,
-  Value<DateTime?> ackByServer,
-  Value<int> rowid,
-});
-typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
-  Value<String> groupId,
-  Value<String> messageId,
-  Value<int?> senderId,
-  Value<String> type,
-  Value<String?> content,
-  Value<String?> mediaId,
-  Value<Uint8List?> additionalMessageData,
-  Value<bool> mediaStored,
-  Value<bool> mediaReopened,
-  Value<Uint8List?> downloadToken,
-  Value<String?> quotesMessageId,
-  Value<bool> isDeletedFromSender,
-  Value<DateTime?> openedAt,
-  Value<DateTime?> openedByAll,
-  Value<DateTime> createdAt,
-  Value<DateTime?> modifiedAt,
-  Value<DateTime?> ackByUser,
-  Value<DateTime?> ackByServer,
-  Value<int> rowid,
-});
+typedef $$MediaFilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $MediaFilesTable,
+      MediaFile,
+      $$MediaFilesTableFilterComposer,
+      $$MediaFilesTableOrderingComposer,
+      $$MediaFilesTableAnnotationComposer,
+      $$MediaFilesTableCreateCompanionBuilder,
+      $$MediaFilesTableUpdateCompanionBuilder,
+      (MediaFile, $$MediaFilesTableReferences),
+      MediaFile,
+      PrefetchHooks Function({bool messagesRefs})
+    >;
+typedef $$MessagesTableCreateCompanionBuilder =
+    MessagesCompanion Function({
+      required String groupId,
+      required String messageId,
+      Value<int?> senderId,
+      required String type,
+      Value<String?> content,
+      Value<String?> mediaId,
+      Value<Uint8List?> additionalMessageData,
+      Value<bool> mediaStored,
+      Value<bool> mediaReopened,
+      Value<Uint8List?> downloadToken,
+      Value<String?> quotesMessageId,
+      Value<bool> isDeletedFromSender,
+      Value<DateTime?> openedAt,
+      Value<DateTime?> openedByAll,
+      Value<DateTime> createdAt,
+      Value<DateTime?> modifiedAt,
+      Value<DateTime?> ackByUser,
+      Value<DateTime?> ackByServer,
+      Value<int> rowid,
+    });
+typedef $$MessagesTableUpdateCompanionBuilder =
+    MessagesCompanion Function({
+      Value<String> groupId,
+      Value<String> messageId,
+      Value<int?> senderId,
+      Value<String> type,
+      Value<String?> content,
+      Value<String?> mediaId,
+      Value<Uint8List?> additionalMessageData,
+      Value<bool> mediaStored,
+      Value<bool> mediaReopened,
+      Value<Uint8List?> downloadToken,
+      Value<String?> quotesMessageId,
+      Value<bool> isDeletedFromSender,
+      Value<DateTime?> openedAt,
+      Value<DateTime?> openedByAll,
+      Value<DateTime> createdAt,
+      Value<DateTime?> modifiedAt,
+      Value<DateTime?> ackByUser,
+      Value<DateTime?> ackByServer,
+      Value<int> rowid,
+    });
 
 final class $$MessagesTableReferences
     extends BaseReferences<_$TwonlyDB, $MessagesTable, Message> {
   $$MessagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-      $_aliasNameGenerator(db.messages.groupId, db.groups.groupId));
+    $_aliasNameGenerator(db.messages.groupId, db.groups.groupId),
+  );
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
 
-    final manager = $$GroupsTableTableManager($_db, $_db.groups)
-        .filter((f) => f.groupId.sqlEquals($_column));
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.messages.senderId, db.contacts.userId));
+        $_aliasNameGenerator(db.messages.senderId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
     if ($_column == null) return null;
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_senderIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $MediaFilesTable _mediaIdTable(_$TwonlyDB db) =>
       db.mediaFiles.createAlias(
-          $_aliasNameGenerator(db.messages.mediaId, db.mediaFiles.mediaId));
+        $_aliasNameGenerator(db.messages.mediaId, db.mediaFiles.mediaId),
+      );
 
   $$MediaFilesTableProcessedTableManager? get mediaId {
     final $_column = $_itemColumn<String>('media_id');
     if ($_column == null) return null;
-    final manager = $$MediaFilesTableTableManager($_db, $_db.mediaFiles)
-        .filter((f) => f.mediaId.sqlEquals($_column));
+    final manager = $$MediaFilesTableTableManager(
+      $_db,
+      $_db.mediaFiles,
+    ).filter((f) => f.mediaId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_mediaIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
-      _messageHistoriesRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.messageHistories,
-              aliasName: $_aliasNameGenerator(
-                  db.messages.messageId, db.messageHistories.messageId));
+  _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.messageHistories,
+    aliasName: $_aliasNameGenerator(
+      db.messages.messageId,
+      db.messageHistories.messageId,
+    ),
+  );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
     final manager =
         $$MessageHistoriesTableTableManager($_db, $_db.messageHistories).filter(
-            (f) => f.messageId.messageId
-                .sqlEquals($_itemColumn<String>('message_id')!));
+          (f) => f.messageId.messageId.sqlEquals(
+            $_itemColumn<String>('message_id')!,
+          ),
+        );
 
-    final cache =
-        $_typedResult.readTableOrNull(_messageHistoriesRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(
+      _messageHistoriesRefsTable($_db),
+    );
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
-      _reactionsRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.reactions,
-              aliasName: $_aliasNameGenerator(
-                  db.messages.messageId, db.reactions.messageId));
+  _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.reactions,
+    aliasName: $_aliasNameGenerator(
+      db.messages.messageId,
+      db.reactions.messageId,
+    ),
+  );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
     final manager = $$ReactionsTableTableManager($_db, $_db.reactions).filter(
-        (f) => f.messageId.messageId
-            .sqlEquals($_itemColumn<String>('message_id')!));
+      (f) =>
+          f.messageId.messageId.sqlEquals($_itemColumn<String>('message_id')!),
+    );
 
     final cache = $_typedResult.readTableOrNull(_reactionsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$ReceiptsTable, List<Receipt>> _receiptsRefsTable(
-          _$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(db.receipts,
-          aliasName: $_aliasNameGenerator(
-              db.messages.messageId, db.receipts.messageId));
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.receipts,
+    aliasName: $_aliasNameGenerator(
+      db.messages.messageId,
+      db.receipts.messageId,
+    ),
+  );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
     final manager = $$ReceiptsTableTableManager($_db, $_db.receipts).filter(
-        (f) => f.messageId.messageId
-            .sqlEquals($_itemColumn<String>('message_id')!));
+      (f) =>
+          f.messageId.messageId.sqlEquals($_itemColumn<String>('message_id')!),
+    );
 
     final cache = $_typedResult.readTableOrNull(_receiptsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
-      _messageActionsRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.messageActions,
-              aliasName: $_aliasNameGenerator(
-                  db.messages.messageId, db.messageActions.messageId));
+  _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.messageActions,
+    aliasName: $_aliasNameGenerator(
+      db.messages.messageId,
+      db.messageActions.messageId,
+    ),
+  );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
     final manager = $$MessageActionsTableTableManager($_db, $_db.messageActions)
-        .filter((f) => f.messageId.messageId
-            .sqlEquals($_itemColumn<String>('message_id')!));
+        .filter(
+          (f) => f.messageId.messageId.sqlEquals(
+            $_itemColumn<String>('message_id')!,
+          ),
+        );
 
     final cache = $_typedResult.readTableOrNull(_messageActionsRefsTable($_db));
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
+      manager.$state.copyWith(prefetchedData: cache),
+    );
   }
 }
 
@@ -9505,194 +11560,246 @@ class $$MessagesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get messageId => $composableBuilder(
-      column: $table.messageId, builder: (column) => ColumnFilters(column));
+    column: $table.messageId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get additionalMessageData => $composableBuilder(
-      column: $table.additionalMessageData,
-      builder: (column) => ColumnFilters(column));
+    column: $table.additionalMessageData,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get mediaStored => $composableBuilder(
-      column: $table.mediaStored, builder: (column) => ColumnFilters(column));
+    column: $table.mediaStored,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get mediaReopened => $composableBuilder(
-      column: $table.mediaReopened, builder: (column) => ColumnFilters(column));
+    column: $table.mediaReopened,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken, builder: (column) => ColumnFilters(column));
+    column: $table.downloadToken,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get quotesMessageId => $composableBuilder(
-      column: $table.quotesMessageId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.quotesMessageId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isDeletedFromSender => $composableBuilder(
-      column: $table.isDeletedFromSender,
-      builder: (column) => ColumnFilters(column));
+    column: $table.isDeletedFromSender,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get openedAt => $composableBuilder(
-      column: $table.openedAt, builder: (column) => ColumnFilters(column));
+    column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get openedByAll => $composableBuilder(
-      column: $table.openedByAll, builder: (column) => ColumnFilters(column));
+    column: $table.openedByAll,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => ColumnFilters(column));
+    column: $table.modifiedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get ackByUser => $composableBuilder(
-      column: $table.ackByUser, builder: (column) => ColumnFilters(column));
+    column: $table.ackByUser,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => ColumnFilters(column));
+    column: $table.ackByServer,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableFilterComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get senderId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MediaFilesTableFilterComposer get mediaId {
     final $$MediaFilesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.mediaId,
-        referencedTable: $db.mediaFiles,
-        getReferencedColumn: (t) => t.mediaId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MediaFilesTableFilterComposer(
-              $db: $db,
-              $table: $db.mediaFiles,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.mediaId,
+      referencedTable: $db.mediaFiles,
+      getReferencedColumn: (t) => t.mediaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MediaFilesTableFilterComposer(
+            $db: $db,
+            $table: $db.mediaFiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   Expression<bool> messageHistoriesRefs(
-      Expression<bool> Function($$MessageHistoriesTableFilterComposer f) f) {
+    Expression<bool> Function($$MessageHistoriesTableFilterComposer f) f,
+  ) {
     final $$MessageHistoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messageHistories,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageHistoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.messageHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messageHistories,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.messageHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> reactionsRefs(
-      Expression<bool> Function($$ReactionsTableFilterComposer f) f) {
+    Expression<bool> Function($$ReactionsTableFilterComposer f) f,
+  ) {
     final $$ReactionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.reactions,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReactionsTableFilterComposer(
-              $db: $db,
-              $table: $db.reactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.reactions,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.reactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> receiptsRefs(
-      Expression<bool> Function($$ReceiptsTableFilterComposer f) f) {
+    Expression<bool> Function($$ReceiptsTableFilterComposer f) f,
+  ) {
     final $$ReceiptsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.receipts,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReceiptsTableFilterComposer(
-              $db: $db,
-              $table: $db.receipts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.receipts,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptsTableFilterComposer(
+            $db: $db,
+            $table: $db.receipts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> messageActionsRefs(
-      Expression<bool> Function($$MessageActionsTableFilterComposer f) f) {
+    Expression<bool> Function($$MessageActionsTableFilterComposer f) f,
+  ) {
     final $$MessageActionsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messageActions,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageActionsTableFilterComposer(
-              $db: $db,
-              $table: $db.messageActions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messageActions,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageActionsTableFilterComposer(
+            $db: $db,
+            $table: $db.messageActions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -9707,112 +11814,146 @@ class $$MessagesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get messageId => $composableBuilder(
-      column: $table.messageId, builder: (column) => ColumnOrderings(column));
+    column: $table.messageId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get additionalMessageData => $composableBuilder(
-      column: $table.additionalMessageData,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.additionalMessageData,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get mediaStored => $composableBuilder(
-      column: $table.mediaStored, builder: (column) => ColumnOrderings(column));
+    column: $table.mediaStored,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get mediaReopened => $composableBuilder(
-      column: $table.mediaReopened,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.mediaReopened,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.downloadToken,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get quotesMessageId => $composableBuilder(
-      column: $table.quotesMessageId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.quotesMessageId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isDeletedFromSender => $composableBuilder(
-      column: $table.isDeletedFromSender,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isDeletedFromSender,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get openedAt => $composableBuilder(
-      column: $table.openedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.openedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get openedByAll => $composableBuilder(
-      column: $table.openedByAll, builder: (column) => ColumnOrderings(column));
+    column: $table.openedByAll,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.modifiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get ackByUser => $composableBuilder(
-      column: $table.ackByUser, builder: (column) => ColumnOrderings(column));
+    column: $table.ackByUser,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => ColumnOrderings(column));
+    column: $table.ackByServer,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableOrderingComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get senderId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MediaFilesTableOrderingComposer get mediaId {
     final $$MediaFilesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.mediaId,
-        referencedTable: $db.mediaFiles,
-        getReferencedColumn: (t) => t.mediaId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MediaFilesTableOrderingComposer(
-              $db: $db,
-              $table: $db.mediaFiles,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.mediaId,
+      referencedTable: $db.mediaFiles,
+      getReferencedColumn: (t) => t.mediaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MediaFilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.mediaFiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -9836,207 +11977,255 @@ class $$MessagesTableAnnotationComposer
       $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get additionalMessageData => $composableBuilder(
-      column: $table.additionalMessageData, builder: (column) => column);
+    column: $table.additionalMessageData,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get mediaStored => $composableBuilder(
-      column: $table.mediaStored, builder: (column) => column);
+    column: $table.mediaStored,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get mediaReopened => $composableBuilder(
-      column: $table.mediaReopened, builder: (column) => column);
+    column: $table.mediaReopened,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
-      column: $table.downloadToken, builder: (column) => column);
+    column: $table.downloadToken,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get quotesMessageId => $composableBuilder(
-      column: $table.quotesMessageId, builder: (column) => column);
+    column: $table.quotesMessageId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isDeletedFromSender => $composableBuilder(
-      column: $table.isDeletedFromSender, builder: (column) => column);
+    column: $table.isDeletedFromSender,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get openedAt =>
       $composableBuilder(column: $table.openedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get openedByAll => $composableBuilder(
-      column: $table.openedByAll, builder: (column) => column);
+    column: $table.openedByAll,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => column);
+    column: $table.modifiedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get ackByUser =>
       $composableBuilder(column: $table.ackByUser, builder: (column) => column);
 
   GeneratedColumn<DateTime> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => column);
+    column: $table.ackByServer,
+    builder: (column) => column,
+  );
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get senderId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MediaFilesTableAnnotationComposer get mediaId {
     final $$MediaFilesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.mediaId,
-        referencedTable: $db.mediaFiles,
-        getReferencedColumn: (t) => t.mediaId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MediaFilesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.mediaFiles,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.mediaId,
+      referencedTable: $db.mediaFiles,
+      getReferencedColumn: (t) => t.mediaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MediaFilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.mediaFiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   Expression<T> messageHistoriesRefs<T extends Object>(
-      Expression<T> Function($$MessageHistoriesTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessageHistoriesTableAnnotationComposer a) f,
+  ) {
     final $$MessageHistoriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messageHistories,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageHistoriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messageHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messageHistories,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageHistoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messageHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> reactionsRefs<T extends Object>(
-      Expression<T> Function($$ReactionsTableAnnotationComposer a) f) {
+    Expression<T> Function($$ReactionsTableAnnotationComposer a) f,
+  ) {
     final $$ReactionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.reactions,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReactionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.reactions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.reactions,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> receiptsRefs<T extends Object>(
-      Expression<T> Function($$ReceiptsTableAnnotationComposer a) f) {
+    Expression<T> Function($$ReceiptsTableAnnotationComposer a) f,
+  ) {
     final $$ReceiptsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.receipts,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ReceiptsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.receipts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.receipts,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receipts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> messageActionsRefs<T extends Object>(
-      Expression<T> Function($$MessageActionsTableAnnotationComposer a) f) {
+    Expression<T> Function($$MessageActionsTableAnnotationComposer a) f,
+  ) {
     final $$MessageActionsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messageActions,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessageActionsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messageActions,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messageActions,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessageActionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messageActions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$MessagesTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $MessagesTable,
-    Message,
-    $$MessagesTableFilterComposer,
-    $$MessagesTableOrderingComposer,
-    $$MessagesTableAnnotationComposer,
-    $$MessagesTableCreateCompanionBuilder,
-    $$MessagesTableUpdateCompanionBuilder,
-    (Message, $$MessagesTableReferences),
-    Message,
-    PrefetchHooks Function(
-        {bool groupId,
-        bool senderId,
-        bool mediaId,
-        bool messageHistoriesRefs,
-        bool reactionsRefs,
-        bool receiptsRefs,
-        bool messageActionsRefs})> {
+class $$MessagesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $MessagesTable,
+          Message,
+          $$MessagesTableFilterComposer,
+          $$MessagesTableOrderingComposer,
+          $$MessagesTableAnnotationComposer,
+          $$MessagesTableCreateCompanionBuilder,
+          $$MessagesTableUpdateCompanionBuilder,
+          (Message, $$MessagesTableReferences),
+          Message,
+          PrefetchHooks Function({
+            bool groupId,
+            bool senderId,
+            bool mediaId,
+            bool messageHistoriesRefs,
+            bool reactionsRefs,
+            bool receiptsRefs,
+            bool messageActionsRefs,
+          })
+        > {
   $$MessagesTableTableManager(_$TwonlyDB db, $MessagesTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -10045,285 +12234,354 @@ class $$MessagesTableTableManager extends RootTableManager<
               $$MessagesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$MessagesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> groupId = const Value.absent(),
-            Value<String> messageId = const Value.absent(),
-            Value<int?> senderId = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<String?> content = const Value.absent(),
-            Value<String?> mediaId = const Value.absent(),
-            Value<Uint8List?> additionalMessageData = const Value.absent(),
-            Value<bool> mediaStored = const Value.absent(),
-            Value<bool> mediaReopened = const Value.absent(),
-            Value<Uint8List?> downloadToken = const Value.absent(),
-            Value<String?> quotesMessageId = const Value.absent(),
-            Value<bool> isDeletedFromSender = const Value.absent(),
-            Value<DateTime?> openedAt = const Value.absent(),
-            Value<DateTime?> openedByAll = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> modifiedAt = const Value.absent(),
-            Value<DateTime?> ackByUser = const Value.absent(),
-            Value<DateTime?> ackByServer = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MessagesCompanion(
-            groupId: groupId,
-            messageId: messageId,
-            senderId: senderId,
-            type: type,
-            content: content,
-            mediaId: mediaId,
-            additionalMessageData: additionalMessageData,
-            mediaStored: mediaStored,
-            mediaReopened: mediaReopened,
-            downloadToken: downloadToken,
-            quotesMessageId: quotesMessageId,
-            isDeletedFromSender: isDeletedFromSender,
-            openedAt: openedAt,
-            openedByAll: openedByAll,
-            createdAt: createdAt,
-            modifiedAt: modifiedAt,
-            ackByUser: ackByUser,
-            ackByServer: ackByServer,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String groupId,
-            required String messageId,
-            Value<int?> senderId = const Value.absent(),
-            required String type,
-            Value<String?> content = const Value.absent(),
-            Value<String?> mediaId = const Value.absent(),
-            Value<Uint8List?> additionalMessageData = const Value.absent(),
-            Value<bool> mediaStored = const Value.absent(),
-            Value<bool> mediaReopened = const Value.absent(),
-            Value<Uint8List?> downloadToken = const Value.absent(),
-            Value<String?> quotesMessageId = const Value.absent(),
-            Value<bool> isDeletedFromSender = const Value.absent(),
-            Value<DateTime?> openedAt = const Value.absent(),
-            Value<DateTime?> openedByAll = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> modifiedAt = const Value.absent(),
-            Value<DateTime?> ackByUser = const Value.absent(),
-            Value<DateTime?> ackByServer = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MessagesCompanion.insert(
-            groupId: groupId,
-            messageId: messageId,
-            senderId: senderId,
-            type: type,
-            content: content,
-            mediaId: mediaId,
-            additionalMessageData: additionalMessageData,
-            mediaStored: mediaStored,
-            mediaReopened: mediaReopened,
-            downloadToken: downloadToken,
-            quotesMessageId: quotesMessageId,
-            isDeletedFromSender: isDeletedFromSender,
-            openedAt: openedAt,
-            openedByAll: openedByAll,
-            createdAt: createdAt,
-            modifiedAt: modifiedAt,
-            ackByUser: ackByUser,
-            ackByServer: ackByServer,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> groupId = const Value.absent(),
+                Value<String> messageId = const Value.absent(),
+                Value<int?> senderId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<String?> mediaId = const Value.absent(),
+                Value<Uint8List?> additionalMessageData = const Value.absent(),
+                Value<bool> mediaStored = const Value.absent(),
+                Value<bool> mediaReopened = const Value.absent(),
+                Value<Uint8List?> downloadToken = const Value.absent(),
+                Value<String?> quotesMessageId = const Value.absent(),
+                Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<DateTime?> openedAt = const Value.absent(),
+                Value<DateTime?> openedByAll = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> modifiedAt = const Value.absent(),
+                Value<DateTime?> ackByUser = const Value.absent(),
+                Value<DateTime?> ackByServer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessagesCompanion(
+                groupId: groupId,
+                messageId: messageId,
+                senderId: senderId,
+                type: type,
+                content: content,
+                mediaId: mediaId,
+                additionalMessageData: additionalMessageData,
+                mediaStored: mediaStored,
+                mediaReopened: mediaReopened,
+                downloadToken: downloadToken,
+                quotesMessageId: quotesMessageId,
+                isDeletedFromSender: isDeletedFromSender,
+                openedAt: openedAt,
+                openedByAll: openedByAll,
+                createdAt: createdAt,
+                modifiedAt: modifiedAt,
+                ackByUser: ackByUser,
+                ackByServer: ackByServer,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String groupId,
+                required String messageId,
+                Value<int?> senderId = const Value.absent(),
+                required String type,
+                Value<String?> content = const Value.absent(),
+                Value<String?> mediaId = const Value.absent(),
+                Value<Uint8List?> additionalMessageData = const Value.absent(),
+                Value<bool> mediaStored = const Value.absent(),
+                Value<bool> mediaReopened = const Value.absent(),
+                Value<Uint8List?> downloadToken = const Value.absent(),
+                Value<String?> quotesMessageId = const Value.absent(),
+                Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<DateTime?> openedAt = const Value.absent(),
+                Value<DateTime?> openedByAll = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> modifiedAt = const Value.absent(),
+                Value<DateTime?> ackByUser = const Value.absent(),
+                Value<DateTime?> ackByServer = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessagesCompanion.insert(
+                groupId: groupId,
+                messageId: messageId,
+                senderId: senderId,
+                type: type,
+                content: content,
+                mediaId: mediaId,
+                additionalMessageData: additionalMessageData,
+                mediaStored: mediaStored,
+                mediaReopened: mediaReopened,
+                downloadToken: downloadToken,
+                quotesMessageId: quotesMessageId,
+                isDeletedFromSender: isDeletedFromSender,
+                openedAt: openedAt,
+                openedByAll: openedByAll,
+                createdAt: createdAt,
+                modifiedAt: modifiedAt,
+                ackByUser: ackByUser,
+                ackByServer: ackByServer,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$MessagesTableReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MessagesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: (
-              {groupId = false,
-              senderId = false,
-              mediaId = false,
-              messageHistoriesRefs = false,
-              reactionsRefs = false,
-              receiptsRefs = false,
-              messageActionsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (messageHistoriesRefs) db.messageHistories,
-                if (reactionsRefs) db.reactions,
-                if (receiptsRefs) db.receipts,
-                if (messageActionsRefs) db.messageActions
-              ],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (groupId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.groupId,
-                    referencedTable:
-                        $$MessagesTableReferences._groupIdTable(db),
-                    referencedColumn:
-                        $$MessagesTableReferences._groupIdTable(db).groupId,
-                  ) as T;
-                }
-                if (senderId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.senderId,
-                    referencedTable:
-                        $$MessagesTableReferences._senderIdTable(db),
-                    referencedColumn:
-                        $$MessagesTableReferences._senderIdTable(db).userId,
-                  ) as T;
-                }
-                if (mediaId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.mediaId,
-                    referencedTable:
-                        $$MessagesTableReferences._mediaIdTable(db),
-                    referencedColumn:
-                        $$MessagesTableReferences._mediaIdTable(db).mediaId,
-                  ) as T;
-                }
+          prefetchHooksCallback:
+              ({
+                groupId = false,
+                senderId = false,
+                mediaId = false,
+                messageHistoriesRefs = false,
+                reactionsRefs = false,
+                receiptsRefs = false,
+                messageActionsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (messageHistoriesRefs) db.messageHistories,
+                    if (reactionsRefs) db.reactions,
+                    if (receiptsRefs) db.receipts,
+                    if (messageActionsRefs) db.messageActions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (groupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.groupId,
+                                    referencedTable: $$MessagesTableReferences
+                                        ._groupIdTable(db),
+                                    referencedColumn: $$MessagesTableReferences
+                                        ._groupIdTable(db)
+                                        .groupId,
+                                  )
+                                  as T;
+                        }
+                        if (senderId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.senderId,
+                                    referencedTable: $$MessagesTableReferences
+                                        ._senderIdTable(db),
+                                    referencedColumn: $$MessagesTableReferences
+                                        ._senderIdTable(db)
+                                        .userId,
+                                  )
+                                  as T;
+                        }
+                        if (mediaId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.mediaId,
+                                    referencedTable: $$MessagesTableReferences
+                                        ._mediaIdTable(db),
+                                    referencedColumn: $$MessagesTableReferences
+                                        ._mediaIdTable(db)
+                                        .mediaId,
+                                  )
+                                  as T;
+                        }
 
-                return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (messageHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          MessageHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._messageHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messageHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.messageId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (reactionsRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          Reaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._reactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).reactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.messageId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (receiptsRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          Receipt
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._receiptsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.messageId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (messageActionsRefs)
+                        await $_getPrefetchedData<
+                          Message,
+                          $MessagesTable,
+                          MessageAction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MessagesTableReferences
+                              ._messageActionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MessagesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).messageActionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.messageId == item.messageId,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (messageHistoriesRefs)
-                    await $_getPrefetchedData<Message, $MessagesTable,
-                            MessageHistory>(
-                        currentTable: table,
-                        referencedTable: $$MessagesTableReferences
-                            ._messageHistoriesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$MessagesTableReferences(db, table, p0)
-                                .messageHistoriesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.messageId == item.messageId),
-                        typedResults: items),
-                  if (reactionsRefs)
-                    await $_getPrefetchedData<Message, $MessagesTable,
-                            Reaction>(
-                        currentTable: table,
-                        referencedTable:
-                            $$MessagesTableReferences._reactionsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$MessagesTableReferences(db, table, p0)
-                                .reactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.messageId == item.messageId),
-                        typedResults: items),
-                  if (receiptsRefs)
-                    await $_getPrefetchedData<Message, $MessagesTable, Receipt>(
-                        currentTable: table,
-                        referencedTable:
-                            $$MessagesTableReferences._receiptsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$MessagesTableReferences(db, table, p0)
-                                .receiptsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.messageId == item.messageId),
-                        typedResults: items),
-                  if (messageActionsRefs)
-                    await $_getPrefetchedData<Message, $MessagesTable,
-                            MessageAction>(
-                        currentTable: table,
-                        referencedTable: $$MessagesTableReferences
-                            ._messageActionsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$MessagesTableReferences(db, table, p0)
-                                .messageActionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.messageId == item.messageId),
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
+        ),
+      );
 }
 
-typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $MessagesTable,
-    Message,
-    $$MessagesTableFilterComposer,
-    $$MessagesTableOrderingComposer,
-    $$MessagesTableAnnotationComposer,
-    $$MessagesTableCreateCompanionBuilder,
-    $$MessagesTableUpdateCompanionBuilder,
-    (Message, $$MessagesTableReferences),
-    Message,
-    PrefetchHooks Function(
-        {bool groupId,
+typedef $$MessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $MessagesTable,
+      Message,
+      $$MessagesTableFilterComposer,
+      $$MessagesTableOrderingComposer,
+      $$MessagesTableAnnotationComposer,
+      $$MessagesTableCreateCompanionBuilder,
+      $$MessagesTableUpdateCompanionBuilder,
+      (Message, $$MessagesTableReferences),
+      Message,
+      PrefetchHooks Function({
+        bool groupId,
         bool senderId,
         bool mediaId,
         bool messageHistoriesRefs,
         bool reactionsRefs,
         bool receiptsRefs,
-        bool messageActionsRefs})>;
-typedef $$MessageHistoriesTableCreateCompanionBuilder
-    = MessageHistoriesCompanion Function({
-  Value<int> id,
-  required String messageId,
-  Value<int?> contactId,
-  Value<String?> content,
-  Value<DateTime> createdAt,
-});
-typedef $$MessageHistoriesTableUpdateCompanionBuilder
-    = MessageHistoriesCompanion Function({
-  Value<int> id,
-  Value<String> messageId,
-  Value<int?> contactId,
-  Value<String?> content,
-  Value<DateTime> createdAt,
-});
+        bool messageActionsRefs,
+      })
+    >;
+typedef $$MessageHistoriesTableCreateCompanionBuilder =
+    MessageHistoriesCompanion Function({
+      Value<int> id,
+      required String messageId,
+      Value<int?> contactId,
+      Value<String?> content,
+      Value<DateTime> createdAt,
+    });
+typedef $$MessageHistoriesTableUpdateCompanionBuilder =
+    MessageHistoriesCompanion Function({
+      Value<int> id,
+      Value<String> messageId,
+      Value<int?> contactId,
+      Value<String?> content,
+      Value<DateTime> createdAt,
+    });
 
 final class $$MessageHistoriesTableReferences
     extends BaseReferences<_$TwonlyDB, $MessageHistoriesTable, MessageHistory> {
   $$MessageHistoriesTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias($_aliasNameGenerator(
-          db.messageHistories.messageId, db.messages.messageId));
+      db.messages.createAlias(
+        $_aliasNameGenerator(
+          db.messageHistories.messageId,
+          db.messages.messageId,
+        ),
+      );
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
 
-    final manager = $$MessagesTableTableManager($_db, $_db.messages)
-        .filter((f) => f.messageId.sqlEquals($_column));
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias($_aliasNameGenerator(
-          db.messageHistories.contactId, db.contacts.userId));
+      db.contacts.createAlias(
+        $_aliasNameGenerator(db.messageHistories.contactId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
     if ($_column == null) return null;
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -10337,51 +12595,63 @@ class $$MessageHistoriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$MessagesTableFilterComposer get messageId {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -10396,51 +12666,63 @@ class $$MessageHistoriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$MessagesTableOrderingComposer get messageId {
     final $$MessagesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableOrderingComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -10465,60 +12747,71 @@ class $$MessageHistoriesTableAnnotationComposer
 
   $$MessagesTableAnnotationComposer get messageId {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$MessageHistoriesTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $MessageHistoriesTable,
-    MessageHistory,
-    $$MessageHistoriesTableFilterComposer,
-    $$MessageHistoriesTableOrderingComposer,
-    $$MessageHistoriesTableAnnotationComposer,
-    $$MessageHistoriesTableCreateCompanionBuilder,
-    $$MessageHistoriesTableUpdateCompanionBuilder,
-    (MessageHistory, $$MessageHistoriesTableReferences),
-    MessageHistory,
-    PrefetchHooks Function({bool messageId, bool contactId})> {
+class $$MessageHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $MessageHistoriesTable,
+          MessageHistory,
+          $$MessageHistoriesTableFilterComposer,
+          $$MessageHistoriesTableOrderingComposer,
+          $$MessageHistoriesTableAnnotationComposer,
+          $$MessageHistoriesTableCreateCompanionBuilder,
+          $$MessageHistoriesTableUpdateCompanionBuilder,
+          (MessageHistory, $$MessageHistoriesTableReferences),
+          MessageHistory,
+          PrefetchHooks Function({bool messageId, bool contactId})
+        > {
   $$MessageHistoriesTableTableManager(
-      _$TwonlyDB db, $MessageHistoriesTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $MessageHistoriesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -10527,46 +12820,49 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
               $$MessageHistoriesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$MessageHistoriesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> messageId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
-            Value<String?> content = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              MessageHistoriesCompanion(
-            id: id,
-            messageId: messageId,
-            contactId: contactId,
-            content: content,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String messageId,
-            Value<int?> contactId = const Value.absent(),
-            Value<String?> content = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              MessageHistoriesCompanion.insert(
-            id: id,
-            messageId: messageId,
-            contactId: contactId,
-            content: content,
-            createdAt: createdAt,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> messageId = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => MessageHistoriesCompanion(
+                id: id,
+                messageId: messageId,
+                contactId: contactId,
+                content: content,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String messageId,
+                Value<int?> contactId = const Value.absent(),
+                Value<String?> content = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => MessageHistoriesCompanion.insert(
+                id: id,
+                messageId: messageId,
+                contactId: contactId,
+                content: content,
+                createdAt: createdAt,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$MessageHistoriesTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MessageHistoriesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({messageId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -10577,66 +12873,81 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (messageId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.messageId,
-                    referencedTable:
-                        $$MessageHistoriesTableReferences._messageIdTable(db),
-                    referencedColumn: $$MessageHistoriesTableReferences
-                        ._messageIdTable(db)
-                        .messageId,
-                  ) as T;
-                }
-                if (contactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$MessageHistoriesTableReferences._contactIdTable(db),
-                    referencedColumn: $$MessageHistoriesTableReferences
-                        ._contactIdTable(db)
-                        .userId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (messageId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.messageId,
+                                referencedTable:
+                                    $$MessageHistoriesTableReferences
+                                        ._messageIdTable(db),
+                                referencedColumn:
+                                    $$MessageHistoriesTableReferences
+                                        ._messageIdTable(db)
+                                        .messageId,
+                              )
+                              as T;
+                    }
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable:
+                                    $$MessageHistoriesTableReferences
+                                        ._contactIdTable(db),
+                                referencedColumn:
+                                    $$MessageHistoriesTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$MessageHistoriesTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $MessageHistoriesTable,
-    MessageHistory,
-    $$MessageHistoriesTableFilterComposer,
-    $$MessageHistoriesTableOrderingComposer,
-    $$MessageHistoriesTableAnnotationComposer,
-    $$MessageHistoriesTableCreateCompanionBuilder,
-    $$MessageHistoriesTableUpdateCompanionBuilder,
-    (MessageHistory, $$MessageHistoriesTableReferences),
-    MessageHistory,
-    PrefetchHooks Function({bool messageId, bool contactId})>;
-typedef $$ReactionsTableCreateCompanionBuilder = ReactionsCompanion Function({
-  required String messageId,
-  required String emoji,
-  Value<int?> senderId,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$ReactionsTableUpdateCompanionBuilder = ReactionsCompanion Function({
-  Value<String> messageId,
-  Value<String> emoji,
-  Value<int?> senderId,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+typedef $$MessageHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $MessageHistoriesTable,
+      MessageHistory,
+      $$MessageHistoriesTableFilterComposer,
+      $$MessageHistoriesTableOrderingComposer,
+      $$MessageHistoriesTableAnnotationComposer,
+      $$MessageHistoriesTableCreateCompanionBuilder,
+      $$MessageHistoriesTableUpdateCompanionBuilder,
+      (MessageHistory, $$MessageHistoriesTableReferences),
+      MessageHistory,
+      PrefetchHooks Function({bool messageId, bool contactId})
+    >;
+typedef $$ReactionsTableCreateCompanionBuilder =
+    ReactionsCompanion Function({
+      required String messageId,
+      required String emoji,
+      Value<int?> senderId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$ReactionsTableUpdateCompanionBuilder =
+    ReactionsCompanion Function({
+      Value<String> messageId,
+      Value<String> emoji,
+      Value<int?> senderId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 final class $$ReactionsTableReferences
     extends BaseReferences<_$TwonlyDB, $ReactionsTable, Reaction> {
@@ -10644,32 +12955,40 @@ final class $$ReactionsTableReferences
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
       db.messages.createAlias(
-          $_aliasNameGenerator(db.reactions.messageId, db.messages.messageId));
+        $_aliasNameGenerator(db.reactions.messageId, db.messages.messageId),
+      );
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
 
-    final manager = $$MessagesTableTableManager($_db, $_db.messages)
-        .filter((f) => f.messageId.sqlEquals($_column));
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.reactions.senderId, db.contacts.userId));
+        $_aliasNameGenerator(db.reactions.senderId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
     if ($_column == null) return null;
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_senderIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -10683,48 +13002,58 @@ class $$ReactionsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get emoji => $composableBuilder(
-      column: $table.emoji, builder: (column) => ColumnFilters(column));
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$MessagesTableFilterComposer get messageId {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get senderId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -10739,48 +13068,58 @@ class $$ReactionsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get emoji => $composableBuilder(
-      column: $table.emoji, builder: (column) => ColumnOrderings(column));
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$MessagesTableOrderingComposer get messageId {
     final $$MessagesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableOrderingComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get senderId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -10802,59 +13141,69 @@ class $$ReactionsTableAnnotationComposer
 
   $$MessagesTableAnnotationComposer get messageId {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get senderId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.senderId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.senderId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$ReactionsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $ReactionsTable,
-    Reaction,
-    $$ReactionsTableFilterComposer,
-    $$ReactionsTableOrderingComposer,
-    $$ReactionsTableAnnotationComposer,
-    $$ReactionsTableCreateCompanionBuilder,
-    $$ReactionsTableUpdateCompanionBuilder,
-    (Reaction, $$ReactionsTableReferences),
-    Reaction,
-    PrefetchHooks Function({bool messageId, bool senderId})> {
+class $$ReactionsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ReactionsTable,
+          Reaction,
+          $$ReactionsTableFilterComposer,
+          $$ReactionsTableOrderingComposer,
+          $$ReactionsTableAnnotationComposer,
+          $$ReactionsTableCreateCompanionBuilder,
+          $$ReactionsTableUpdateCompanionBuilder,
+          (Reaction, $$ReactionsTableReferences),
+          Reaction,
+          PrefetchHooks Function({bool messageId, bool senderId})
+        > {
   $$ReactionsTableTableManager(_$TwonlyDB db, $ReactionsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -10863,46 +13212,49 @@ class $$ReactionsTableTableManager extends RootTableManager<
               $$ReactionsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ReactionsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> messageId = const Value.absent(),
-            Value<String> emoji = const Value.absent(),
-            Value<int?> senderId = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReactionsCompanion(
-            messageId: messageId,
-            emoji: emoji,
-            senderId: senderId,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String messageId,
-            required String emoji,
-            Value<int?> senderId = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReactionsCompanion.insert(
-            messageId: messageId,
-            emoji: emoji,
-            senderId: senderId,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> messageId = const Value.absent(),
+                Value<String> emoji = const Value.absent(),
+                Value<int?> senderId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReactionsCompanion(
+                messageId: messageId,
+                emoji: emoji,
+                senderId: senderId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String messageId,
+                required String emoji,
+                Value<int?> senderId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReactionsCompanion.insert(
+                messageId: messageId,
+                emoji: emoji,
+                senderId: senderId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$ReactionsTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ReactionsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({messageId = false, senderId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -10913,103 +13265,121 @@ class $$ReactionsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (messageId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.messageId,
-                    referencedTable:
-                        $$ReactionsTableReferences._messageIdTable(db),
-                    referencedColumn: $$ReactionsTableReferences
-                        ._messageIdTable(db)
-                        .messageId,
-                  ) as T;
-                }
-                if (senderId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.senderId,
-                    referencedTable:
-                        $$ReactionsTableReferences._senderIdTable(db),
-                    referencedColumn:
-                        $$ReactionsTableReferences._senderIdTable(db).userId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (messageId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.messageId,
+                                referencedTable: $$ReactionsTableReferences
+                                    ._messageIdTable(db),
+                                referencedColumn: $$ReactionsTableReferences
+                                    ._messageIdTable(db)
+                                    .messageId,
+                              )
+                              as T;
+                    }
+                    if (senderId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.senderId,
+                                referencedTable: $$ReactionsTableReferences
+                                    ._senderIdTable(db),
+                                referencedColumn: $$ReactionsTableReferences
+                                    ._senderIdTable(db)
+                                    .userId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$ReactionsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $ReactionsTable,
-    Reaction,
-    $$ReactionsTableFilterComposer,
-    $$ReactionsTableOrderingComposer,
-    $$ReactionsTableAnnotationComposer,
-    $$ReactionsTableCreateCompanionBuilder,
-    $$ReactionsTableUpdateCompanionBuilder,
-    (Reaction, $$ReactionsTableReferences),
-    Reaction,
-    PrefetchHooks Function({bool messageId, bool senderId})>;
-typedef $$GroupMembersTableCreateCompanionBuilder = GroupMembersCompanion
-    Function({
-  required String groupId,
-  required int contactId,
-  Value<MemberState?> memberState,
-  Value<Uint8List?> groupPublicKey,
-  Value<DateTime?> lastMessage,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$GroupMembersTableUpdateCompanionBuilder = GroupMembersCompanion
-    Function({
-  Value<String> groupId,
-  Value<int> contactId,
-  Value<MemberState?> memberState,
-  Value<Uint8List?> groupPublicKey,
-  Value<DateTime?> lastMessage,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+typedef $$ReactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ReactionsTable,
+      Reaction,
+      $$ReactionsTableFilterComposer,
+      $$ReactionsTableOrderingComposer,
+      $$ReactionsTableAnnotationComposer,
+      $$ReactionsTableCreateCompanionBuilder,
+      $$ReactionsTableUpdateCompanionBuilder,
+      (Reaction, $$ReactionsTableReferences),
+      Reaction,
+      PrefetchHooks Function({bool messageId, bool senderId})
+    >;
+typedef $$GroupMembersTableCreateCompanionBuilder =
+    GroupMembersCompanion Function({
+      required String groupId,
+      required int contactId,
+      Value<MemberState?> memberState,
+      Value<Uint8List?> groupPublicKey,
+      Value<DateTime?> lastMessage,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$GroupMembersTableUpdateCompanionBuilder =
+    GroupMembersCompanion Function({
+      Value<String> groupId,
+      Value<int> contactId,
+      Value<MemberState?> memberState,
+      Value<Uint8List?> groupPublicKey,
+      Value<DateTime?> lastMessage,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 final class $$GroupMembersTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupMembersTable, GroupMember> {
   $$GroupMembersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-      $_aliasNameGenerator(db.groupMembers.groupId, db.groups.groupId));
+    $_aliasNameGenerator(db.groupMembers.groupId, db.groups.groupId),
+  );
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
 
-    final manager = $$GroupsTableTableManager($_db, $_db.groups)
-        .filter((f) => f.groupId.sqlEquals($_column));
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.groupMembers.contactId, db.contacts.userId));
+        $_aliasNameGenerator(db.groupMembers.contactId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
 
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -11023,57 +13393,69 @@ class $$GroupMembersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnWithTypeConverterFilters<MemberState?, MemberState, String>
-      get memberState => $composableBuilder(
-          column: $table.memberState,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get memberState => $composableBuilder(
+    column: $table.memberState,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnFilters<Uint8List> get groupPublicKey => $composableBuilder(
-      column: $table.groupPublicKey,
-      builder: (column) => ColumnFilters(column));
+    column: $table.groupPublicKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnFilters(column));
+    column: $table.lastMessage,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableFilterComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -11088,55 +13470,68 @@ class $$GroupMembersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get memberState => $composableBuilder(
-      column: $table.memberState, builder: (column) => ColumnOrderings(column));
+    column: $table.memberState,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get groupPublicKey => $composableBuilder(
-      column: $table.groupPublicKey,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.groupPublicKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnOrderings(column));
+    column: $table.lastMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableOrderingComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -11152,72 +13547,88 @@ class $$GroupMembersTableAnnotationComposer
   });
   GeneratedColumnWithTypeConverter<MemberState?, String> get memberState =>
       $composableBuilder(
-          column: $table.memberState, builder: (column) => column);
+        column: $table.memberState,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<Uint8List> get groupPublicKey => $composableBuilder(
-      column: $table.groupPublicKey, builder: (column) => column);
+    column: $table.groupPublicKey,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => column);
+    column: $table.lastMessage,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$GroupMembersTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $GroupMembersTable,
-    GroupMember,
-    $$GroupMembersTableFilterComposer,
-    $$GroupMembersTableOrderingComposer,
-    $$GroupMembersTableAnnotationComposer,
-    $$GroupMembersTableCreateCompanionBuilder,
-    $$GroupMembersTableUpdateCompanionBuilder,
-    (GroupMember, $$GroupMembersTableReferences),
-    GroupMember,
-    PrefetchHooks Function({bool groupId, bool contactId})> {
+class $$GroupMembersTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $GroupMembersTable,
+          GroupMember,
+          $$GroupMembersTableFilterComposer,
+          $$GroupMembersTableOrderingComposer,
+          $$GroupMembersTableAnnotationComposer,
+          $$GroupMembersTableCreateCompanionBuilder,
+          $$GroupMembersTableUpdateCompanionBuilder,
+          (GroupMember, $$GroupMembersTableReferences),
+          GroupMember,
+          PrefetchHooks Function({bool groupId, bool contactId})
+        > {
   $$GroupMembersTableTableManager(_$TwonlyDB db, $GroupMembersTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -11226,54 +13637,57 @@ class $$GroupMembersTableTableManager extends RootTableManager<
               $$GroupMembersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$GroupMembersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> groupId = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
-            Value<MemberState?> memberState = const Value.absent(),
-            Value<Uint8List?> groupPublicKey = const Value.absent(),
-            Value<DateTime?> lastMessage = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupMembersCompanion(
-            groupId: groupId,
-            contactId: contactId,
-            memberState: memberState,
-            groupPublicKey: groupPublicKey,
-            lastMessage: lastMessage,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String groupId,
-            required int contactId,
-            Value<MemberState?> memberState = const Value.absent(),
-            Value<Uint8List?> groupPublicKey = const Value.absent(),
-            Value<DateTime?> lastMessage = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupMembersCompanion.insert(
-            groupId: groupId,
-            contactId: contactId,
-            memberState: memberState,
-            groupPublicKey: groupPublicKey,
-            lastMessage: lastMessage,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> groupId = const Value.absent(),
+                Value<int> contactId = const Value.absent(),
+                Value<MemberState?> memberState = const Value.absent(),
+                Value<Uint8List?> groupPublicKey = const Value.absent(),
+                Value<DateTime?> lastMessage = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupMembersCompanion(
+                groupId: groupId,
+                contactId: contactId,
+                memberState: memberState,
+                groupPublicKey: groupPublicKey,
+                lastMessage: lastMessage,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String groupId,
+                required int contactId,
+                Value<MemberState?> memberState = const Value.absent(),
+                Value<Uint8List?> groupPublicKey = const Value.absent(),
+                Value<DateTime?> lastMessage = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupMembersCompanion.insert(
+                groupId: groupId,
+                contactId: contactId,
+                memberState: memberState,
+                groupPublicKey: groupPublicKey,
+                lastMessage: lastMessage,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$GroupMembersTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroupMembersTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({groupId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -11284,79 +13698,93 @@ class $$GroupMembersTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (groupId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.groupId,
-                    referencedTable:
-                        $$GroupMembersTableReferences._groupIdTable(db),
-                    referencedColumn:
-                        $$GroupMembersTableReferences._groupIdTable(db).groupId,
-                  ) as T;
-                }
-                if (contactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$GroupMembersTableReferences._contactIdTable(db),
-                    referencedColumn: $$GroupMembersTableReferences
-                        ._contactIdTable(db)
-                        .userId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable: $$GroupMembersTableReferences
+                                    ._groupIdTable(db),
+                                referencedColumn: $$GroupMembersTableReferences
+                                    ._groupIdTable(db)
+                                    .groupId,
+                              )
+                              as T;
+                    }
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$GroupMembersTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn: $$GroupMembersTableReferences
+                                    ._contactIdTable(db)
+                                    .userId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$GroupMembersTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $GroupMembersTable,
-    GroupMember,
-    $$GroupMembersTableFilterComposer,
-    $$GroupMembersTableOrderingComposer,
-    $$GroupMembersTableAnnotationComposer,
-    $$GroupMembersTableCreateCompanionBuilder,
-    $$GroupMembersTableUpdateCompanionBuilder,
-    (GroupMember, $$GroupMembersTableReferences),
-    GroupMember,
-    PrefetchHooks Function({bool groupId, bool contactId})>;
-typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
-  required String receiptId,
-  required int contactId,
-  Value<String?> messageId,
-  required Uint8List message,
-  Value<bool> contactWillSendsReceipt,
-  Value<DateTime?> markForRetry,
-  Value<DateTime?> markForRetryAfterAccepted,
-  Value<DateTime?> ackByServerAt,
-  Value<int> retryCount,
-  Value<DateTime?> lastRetry,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$ReceiptsTableUpdateCompanionBuilder = ReceiptsCompanion Function({
-  Value<String> receiptId,
-  Value<int> contactId,
-  Value<String?> messageId,
-  Value<Uint8List> message,
-  Value<bool> contactWillSendsReceipt,
-  Value<DateTime?> markForRetry,
-  Value<DateTime?> markForRetryAfterAccepted,
-  Value<DateTime?> ackByServerAt,
-  Value<int> retryCount,
-  Value<DateTime?> lastRetry,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+typedef $$GroupMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $GroupMembersTable,
+      GroupMember,
+      $$GroupMembersTableFilterComposer,
+      $$GroupMembersTableOrderingComposer,
+      $$GroupMembersTableAnnotationComposer,
+      $$GroupMembersTableCreateCompanionBuilder,
+      $$GroupMembersTableUpdateCompanionBuilder,
+      (GroupMember, $$GroupMembersTableReferences),
+      GroupMember,
+      PrefetchHooks Function({bool groupId, bool contactId})
+    >;
+typedef $$ReceiptsTableCreateCompanionBuilder =
+    ReceiptsCompanion Function({
+      required String receiptId,
+      required int contactId,
+      Value<String?> messageId,
+      required Uint8List message,
+      Value<bool> contactWillSendsReceipt,
+      Value<bool> willBeRetriedByMediaUpload,
+      Value<DateTime?> markForRetry,
+      Value<DateTime?> markForRetryAfterAccepted,
+      Value<DateTime?> ackByServerAt,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetry,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$ReceiptsTableUpdateCompanionBuilder =
+    ReceiptsCompanion Function({
+      Value<String> receiptId,
+      Value<int> contactId,
+      Value<String?> messageId,
+      Value<Uint8List> message,
+      Value<bool> contactWillSendsReceipt,
+      Value<bool> willBeRetriedByMediaUpload,
+      Value<DateTime?> markForRetry,
+      Value<DateTime?> markForRetryAfterAccepted,
+      Value<DateTime?> ackByServerAt,
+      Value<int> retryCount,
+      Value<DateTime?> lastRetry,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 final class $$ReceiptsTableReferences
     extends BaseReferences<_$TwonlyDB, $ReceiptsTable, Receipt> {
@@ -11364,32 +13792,40 @@ final class $$ReceiptsTableReferences
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.receipts.contactId, db.contacts.userId));
+        $_aliasNameGenerator(db.receipts.contactId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
 
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
       db.messages.createAlias(
-          $_aliasNameGenerator(db.receipts.messageId, db.messages.messageId));
+        $_aliasNameGenerator(db.receipts.messageId, db.messages.messageId),
+      );
 
   $$MessagesTableProcessedTableManager? get messageId {
     final $_column = $_itemColumn<String>('message_id');
     if ($_column == null) return null;
-    final manager = $$MessagesTableTableManager($_db, $_db.messages)
-        .filter((f) => f.messageId.sqlEquals($_column));
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -11403,71 +13839,98 @@ class $$ReceiptsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get receiptId => $composableBuilder(
-      column: $table.receiptId, builder: (column) => ColumnFilters(column));
+    column: $table.receiptId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get message => $composableBuilder(
-      column: $table.message, builder: (column) => ColumnFilters(column));
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get contactWillSendsReceipt => $composableBuilder(
-      column: $table.contactWillSendsReceipt,
-      builder: (column) => ColumnFilters(column));
+    column: $table.contactWillSendsReceipt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get willBeRetriedByMediaUpload => $composableBuilder(
+    column: $table.willBeRetriedByMediaUpload,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get markForRetry => $composableBuilder(
-      column: $table.markForRetry, builder: (column) => ColumnFilters(column));
+    column: $table.markForRetry,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get markForRetryAfterAccepted => $composableBuilder(
-      column: $table.markForRetryAfterAccepted,
-      builder: (column) => ColumnFilters(column));
+    column: $table.markForRetryAfterAccepted,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get ackByServerAt => $composableBuilder(
-      column: $table.ackByServerAt, builder: (column) => ColumnFilters(column));
+    column: $table.ackByServerAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => ColumnFilters(column));
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastRetry => $composableBuilder(
-      column: $table.lastRetry, builder: (column) => ColumnFilters(column));
+    column: $table.lastRetry,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MessagesTableFilterComposer get messageId {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -11482,73 +13945,98 @@ class $$ReceiptsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get receiptId => $composableBuilder(
-      column: $table.receiptId, builder: (column) => ColumnOrderings(column));
+    column: $table.receiptId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get message => $composableBuilder(
-      column: $table.message, builder: (column) => ColumnOrderings(column));
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get contactWillSendsReceipt => $composableBuilder(
-      column: $table.contactWillSendsReceipt,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.contactWillSendsReceipt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get willBeRetriedByMediaUpload => $composableBuilder(
+    column: $table.willBeRetriedByMediaUpload,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get markForRetry => $composableBuilder(
-      column: $table.markForRetry,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.markForRetry,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get markForRetryAfterAccepted => $composableBuilder(
-      column: $table.markForRetryAfterAccepted,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.markForRetryAfterAccepted,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get ackByServerAt => $composableBuilder(
-      column: $table.ackByServerAt,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.ackByServerAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => ColumnOrderings(column));
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastRetry => $composableBuilder(
-      column: $table.lastRetry, builder: (column) => ColumnOrderings(column));
+    column: $table.lastRetry,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MessagesTableOrderingComposer get messageId {
     final $$MessagesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableOrderingComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -11569,19 +14057,34 @@ class $$ReceiptsTableAnnotationComposer
       $composableBuilder(column: $table.message, builder: (column) => column);
 
   GeneratedColumn<bool> get contactWillSendsReceipt => $composableBuilder(
-      column: $table.contactWillSendsReceipt, builder: (column) => column);
+    column: $table.contactWillSendsReceipt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get willBeRetriedByMediaUpload => $composableBuilder(
+    column: $table.willBeRetriedByMediaUpload,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get markForRetry => $composableBuilder(
-      column: $table.markForRetry, builder: (column) => column);
+    column: $table.markForRetry,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get markForRetryAfterAccepted => $composableBuilder(
-      column: $table.markForRetryAfterAccepted, builder: (column) => column);
+    column: $table.markForRetryAfterAccepted,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get ackByServerAt => $composableBuilder(
-      column: $table.ackByServerAt, builder: (column) => column);
+    column: $table.ackByServerAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => column);
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastRetry =>
       $composableBuilder(column: $table.lastRetry, builder: (column) => column);
@@ -11591,59 +14094,69 @@ class $$ReceiptsTableAnnotationComposer
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$MessagesTableAnnotationComposer get messageId {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$ReceiptsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $ReceiptsTable,
-    Receipt,
-    $$ReceiptsTableFilterComposer,
-    $$ReceiptsTableOrderingComposer,
-    $$ReceiptsTableAnnotationComposer,
-    $$ReceiptsTableCreateCompanionBuilder,
-    $$ReceiptsTableUpdateCompanionBuilder,
-    (Receipt, $$ReceiptsTableReferences),
-    Receipt,
-    PrefetchHooks Function({bool contactId, bool messageId})> {
+class $$ReceiptsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ReceiptsTable,
+          Receipt,
+          $$ReceiptsTableFilterComposer,
+          $$ReceiptsTableOrderingComposer,
+          $$ReceiptsTableAnnotationComposer,
+          $$ReceiptsTableCreateCompanionBuilder,
+          $$ReceiptsTableUpdateCompanionBuilder,
+          (Receipt, $$ReceiptsTableReferences),
+          Receipt,
+          PrefetchHooks Function({bool contactId, bool messageId})
+        > {
   $$ReceiptsTableTableManager(_$TwonlyDB db, $ReceiptsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -11652,72 +14165,83 @@ class $$ReceiptsTableTableManager extends RootTableManager<
               $$ReceiptsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ReceiptsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> receiptId = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
-            Value<String?> messageId = const Value.absent(),
-            Value<Uint8List> message = const Value.absent(),
-            Value<bool> contactWillSendsReceipt = const Value.absent(),
-            Value<DateTime?> markForRetry = const Value.absent(),
-            Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
-            Value<DateTime?> ackByServerAt = const Value.absent(),
-            Value<int> retryCount = const Value.absent(),
-            Value<DateTime?> lastRetry = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReceiptsCompanion(
-            receiptId: receiptId,
-            contactId: contactId,
-            messageId: messageId,
-            message: message,
-            contactWillSendsReceipt: contactWillSendsReceipt,
-            markForRetry: markForRetry,
-            markForRetryAfterAccepted: markForRetryAfterAccepted,
-            ackByServerAt: ackByServerAt,
-            retryCount: retryCount,
-            lastRetry: lastRetry,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String receiptId,
-            required int contactId,
-            Value<String?> messageId = const Value.absent(),
-            required Uint8List message,
-            Value<bool> contactWillSendsReceipt = const Value.absent(),
-            Value<DateTime?> markForRetry = const Value.absent(),
-            Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
-            Value<DateTime?> ackByServerAt = const Value.absent(),
-            Value<int> retryCount = const Value.absent(),
-            Value<DateTime?> lastRetry = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReceiptsCompanion.insert(
-            receiptId: receiptId,
-            contactId: contactId,
-            messageId: messageId,
-            message: message,
-            contactWillSendsReceipt: contactWillSendsReceipt,
-            markForRetry: markForRetry,
-            markForRetryAfterAccepted: markForRetryAfterAccepted,
-            ackByServerAt: ackByServerAt,
-            retryCount: retryCount,
-            lastRetry: lastRetry,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> receiptId = const Value.absent(),
+                Value<int> contactId = const Value.absent(),
+                Value<String?> messageId = const Value.absent(),
+                Value<Uint8List> message = const Value.absent(),
+                Value<bool> contactWillSendsReceipt = const Value.absent(),
+                Value<bool> willBeRetriedByMediaUpload = const Value.absent(),
+                Value<DateTime?> markForRetry = const Value.absent(),
+                Value<DateTime?> markForRetryAfterAccepted =
+                    const Value.absent(),
+                Value<DateTime?> ackByServerAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetry = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptsCompanion(
+                receiptId: receiptId,
+                contactId: contactId,
+                messageId: messageId,
+                message: message,
+                contactWillSendsReceipt: contactWillSendsReceipt,
+                willBeRetriedByMediaUpload: willBeRetriedByMediaUpload,
+                markForRetry: markForRetry,
+                markForRetryAfterAccepted: markForRetryAfterAccepted,
+                ackByServerAt: ackByServerAt,
+                retryCount: retryCount,
+                lastRetry: lastRetry,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String receiptId,
+                required int contactId,
+                Value<String?> messageId = const Value.absent(),
+                required Uint8List message,
+                Value<bool> contactWillSendsReceipt = const Value.absent(),
+                Value<bool> willBeRetriedByMediaUpload = const Value.absent(),
+                Value<DateTime?> markForRetry = const Value.absent(),
+                Value<DateTime?> markForRetryAfterAccepted =
+                    const Value.absent(),
+                Value<DateTime?> ackByServerAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> lastRetry = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptsCompanion.insert(
+                receiptId: receiptId,
+                contactId: contactId,
+                messageId: messageId,
+                message: message,
+                contactWillSendsReceipt: contactWillSendsReceipt,
+                willBeRetriedByMediaUpload: willBeRetriedByMediaUpload,
+                markForRetry: markForRetry,
+                markForRetryAfterAccepted: markForRetryAfterAccepted,
+                ackByServerAt: ackByServerAt,
+                retryCount: retryCount,
+                lastRetry: lastRetry,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$ReceiptsTableReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ReceiptsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({contactId = false, messageId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -11728,62 +14252,73 @@ class $$ReceiptsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (contactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$ReceiptsTableReferences._contactIdTable(db),
-                    referencedColumn:
-                        $$ReceiptsTableReferences._contactIdTable(db).userId,
-                  ) as T;
-                }
-                if (messageId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.messageId,
-                    referencedTable:
-                        $$ReceiptsTableReferences._messageIdTable(db),
-                    referencedColumn:
-                        $$ReceiptsTableReferences._messageIdTable(db).messageId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$ReceiptsTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn: $$ReceiptsTableReferences
+                                    ._contactIdTable(db)
+                                    .userId,
+                              )
+                              as T;
+                    }
+                    if (messageId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.messageId,
+                                referencedTable: $$ReceiptsTableReferences
+                                    ._messageIdTable(db),
+                                referencedColumn: $$ReceiptsTableReferences
+                                    ._messageIdTable(db)
+                                    .messageId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$ReceiptsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $ReceiptsTable,
-    Receipt,
-    $$ReceiptsTableFilterComposer,
-    $$ReceiptsTableOrderingComposer,
-    $$ReceiptsTableAnnotationComposer,
-    $$ReceiptsTableCreateCompanionBuilder,
-    $$ReceiptsTableUpdateCompanionBuilder,
-    (Receipt, $$ReceiptsTableReferences),
-    Receipt,
-    PrefetchHooks Function({bool contactId, bool messageId})>;
-typedef $$ReceivedReceiptsTableCreateCompanionBuilder
-    = ReceivedReceiptsCompanion Function({
-  required String receiptId,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$ReceivedReceiptsTableUpdateCompanionBuilder
-    = ReceivedReceiptsCompanion Function({
-  Value<String> receiptId,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+typedef $$ReceiptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ReceiptsTable,
+      Receipt,
+      $$ReceiptsTableFilterComposer,
+      $$ReceiptsTableOrderingComposer,
+      $$ReceiptsTableAnnotationComposer,
+      $$ReceiptsTableCreateCompanionBuilder,
+      $$ReceiptsTableUpdateCompanionBuilder,
+      (Receipt, $$ReceiptsTableReferences),
+      Receipt,
+      PrefetchHooks Function({bool contactId, bool messageId})
+    >;
+typedef $$ReceivedReceiptsTableCreateCompanionBuilder =
+    ReceivedReceiptsCompanion Function({
+      required String receiptId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$ReceivedReceiptsTableUpdateCompanionBuilder =
+    ReceivedReceiptsCompanion Function({
+      Value<String> receiptId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 class $$ReceivedReceiptsTableFilterComposer
     extends Composer<_$TwonlyDB, $ReceivedReceiptsTable> {
@@ -11795,10 +14330,14 @@ class $$ReceivedReceiptsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get receiptId => $composableBuilder(
-      column: $table.receiptId, builder: (column) => ColumnFilters(column));
+    column: $table.receiptId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ReceivedReceiptsTableOrderingComposer
@@ -11811,10 +14350,14 @@ class $$ReceivedReceiptsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get receiptId => $composableBuilder(
-      column: $table.receiptId, builder: (column) => ColumnOrderings(column));
+    column: $table.receiptId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReceivedReceiptsTableAnnotationComposer
@@ -11833,24 +14376,29 @@ class $$ReceivedReceiptsTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$ReceivedReceiptsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $ReceivedReceiptsTable,
-    ReceivedReceipt,
-    $$ReceivedReceiptsTableFilterComposer,
-    $$ReceivedReceiptsTableOrderingComposer,
-    $$ReceivedReceiptsTableAnnotationComposer,
-    $$ReceivedReceiptsTableCreateCompanionBuilder,
-    $$ReceivedReceiptsTableUpdateCompanionBuilder,
-    (
-      ReceivedReceipt,
-      BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>
-    ),
-    ReceivedReceipt,
-    PrefetchHooks Function()> {
+class $$ReceivedReceiptsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ReceivedReceiptsTable,
+          ReceivedReceipt,
+          $$ReceivedReceiptsTableFilterComposer,
+          $$ReceivedReceiptsTableOrderingComposer,
+          $$ReceivedReceiptsTableAnnotationComposer,
+          $$ReceivedReceiptsTableCreateCompanionBuilder,
+          $$ReceivedReceiptsTableUpdateCompanionBuilder,
+          (
+            ReceivedReceipt,
+            BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>,
+          ),
+          ReceivedReceipt,
+          PrefetchHooks Function()
+        > {
   $$ReceivedReceiptsTableTableManager(
-      _$TwonlyDB db, $ReceivedReceiptsTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $ReceivedReceiptsTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -11859,64 +14407,67 @@ class $$ReceivedReceiptsTableTableManager extends RootTableManager<
               $$ReceivedReceiptsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ReceivedReceiptsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> receiptId = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReceivedReceiptsCompanion(
-            receiptId: receiptId,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String receiptId,
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ReceivedReceiptsCompanion.insert(
-            receiptId: receiptId,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> receiptId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceivedReceiptsCompanion(
+                receiptId: receiptId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String receiptId,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceivedReceiptsCompanion.insert(
+                receiptId: receiptId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$ReceivedReceiptsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $ReceivedReceiptsTable,
-    ReceivedReceipt,
-    $$ReceivedReceiptsTableFilterComposer,
-    $$ReceivedReceiptsTableOrderingComposer,
-    $$ReceivedReceiptsTableAnnotationComposer,
-    $$ReceivedReceiptsTableCreateCompanionBuilder,
-    $$ReceivedReceiptsTableUpdateCompanionBuilder,
-    (
+typedef $$ReceivedReceiptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ReceivedReceiptsTable,
       ReceivedReceipt,
-      BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>
-    ),
-    ReceivedReceipt,
-    PrefetchHooks Function()>;
-typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder
-    = SignalIdentityKeyStoresCompanion Function({
-  required int deviceId,
-  required String name,
-  required Uint8List identityKey,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$SignalIdentityKeyStoresTableUpdateCompanionBuilder
-    = SignalIdentityKeyStoresCompanion Function({
-  Value<int> deviceId,
-  Value<String> name,
-  Value<Uint8List> identityKey,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+      $$ReceivedReceiptsTableFilterComposer,
+      $$ReceivedReceiptsTableOrderingComposer,
+      $$ReceivedReceiptsTableAnnotationComposer,
+      $$ReceivedReceiptsTableCreateCompanionBuilder,
+      $$ReceivedReceiptsTableUpdateCompanionBuilder,
+      (
+        ReceivedReceipt,
+        BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>,
+      ),
+      ReceivedReceipt,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder =
+    SignalIdentityKeyStoresCompanion Function({
+      required int deviceId,
+      required String name,
+      required Uint8List identityKey,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$SignalIdentityKeyStoresTableUpdateCompanionBuilder =
+    SignalIdentityKeyStoresCompanion Function({
+      Value<int> deviceId,
+      Value<String> name,
+      Value<Uint8List> identityKey,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 class $$SignalIdentityKeyStoresTableFilterComposer
     extends Composer<_$TwonlyDB, $SignalIdentityKeyStoresTable> {
@@ -11928,16 +14479,24 @@ class $$SignalIdentityKeyStoresTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnFilters(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get identityKey => $composableBuilder(
-      column: $table.identityKey, builder: (column) => ColumnFilters(column));
+    column: $table.identityKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SignalIdentityKeyStoresTableOrderingComposer
@@ -11950,16 +14509,24 @@ class $$SignalIdentityKeyStoresTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnOrderings(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get identityKey => $composableBuilder(
-      column: $table.identityKey, builder: (column) => ColumnOrderings(column));
+    column: $table.identityKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SignalIdentityKeyStoresTableAnnotationComposer
@@ -11978,106 +14545,127 @@ class $$SignalIdentityKeyStoresTableAnnotationComposer
       $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get identityKey => $composableBuilder(
-      column: $table.identityKey, builder: (column) => column);
+    column: $table.identityKey,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$SignalIdentityKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $SignalIdentityKeyStoresTable,
-    SignalIdentityKeyStore,
-    $$SignalIdentityKeyStoresTableFilterComposer,
-    $$SignalIdentityKeyStoresTableOrderingComposer,
-    $$SignalIdentityKeyStoresTableAnnotationComposer,
-    $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
-    $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
-    (
-      SignalIdentityKeyStore,
-      BaseReferences<_$TwonlyDB, $SignalIdentityKeyStoresTable,
-          SignalIdentityKeyStore>
-    ),
-    SignalIdentityKeyStore,
-    PrefetchHooks Function()> {
+class $$SignalIdentityKeyStoresTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $SignalIdentityKeyStoresTable,
+          SignalIdentityKeyStore,
+          $$SignalIdentityKeyStoresTableFilterComposer,
+          $$SignalIdentityKeyStoresTableOrderingComposer,
+          $$SignalIdentityKeyStoresTableAnnotationComposer,
+          $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
+          $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
+          (
+            SignalIdentityKeyStore,
+            BaseReferences<
+              _$TwonlyDB,
+              $SignalIdentityKeyStoresTable,
+              SignalIdentityKeyStore
+            >,
+          ),
+          SignalIdentityKeyStore,
+          PrefetchHooks Function()
+        > {
   $$SignalIdentityKeyStoresTableTableManager(
-      _$TwonlyDB db, $SignalIdentityKeyStoresTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $SignalIdentityKeyStoresTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$SignalIdentityKeyStoresTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$SignalIdentityKeyStoresTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$SignalIdentityKeyStoresTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> deviceId = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<Uint8List> identityKey = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalIdentityKeyStoresCompanion(
-            deviceId: deviceId,
-            name: name,
-            identityKey: identityKey,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required int deviceId,
-            required String name,
-            required Uint8List identityKey,
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalIdentityKeyStoresCompanion.insert(
-            deviceId: deviceId,
-            name: name,
-            identityKey: identityKey,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> deviceId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<Uint8List> identityKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalIdentityKeyStoresCompanion(
+                deviceId: deviceId,
+                name: name,
+                identityKey: identityKey,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int deviceId,
+                required String name,
+                required Uint8List identityKey,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalIdentityKeyStoresCompanion.insert(
+                deviceId: deviceId,
+                name: name,
+                identityKey: identityKey,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SignalIdentityKeyStoresTableProcessedTableManager
-    = ProcessedTableManager<
-        _$TwonlyDB,
-        $SignalIdentityKeyStoresTable,
+typedef $$SignalIdentityKeyStoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $SignalIdentityKeyStoresTable,
+      SignalIdentityKeyStore,
+      $$SignalIdentityKeyStoresTableFilterComposer,
+      $$SignalIdentityKeyStoresTableOrderingComposer,
+      $$SignalIdentityKeyStoresTableAnnotationComposer,
+      $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
+      $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
+      (
         SignalIdentityKeyStore,
-        $$SignalIdentityKeyStoresTableFilterComposer,
-        $$SignalIdentityKeyStoresTableOrderingComposer,
-        $$SignalIdentityKeyStoresTableAnnotationComposer,
-        $$SignalIdentityKeyStoresTableCreateCompanionBuilder,
-        $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
-        (
-          SignalIdentityKeyStore,
-          BaseReferences<_$TwonlyDB, $SignalIdentityKeyStoresTable,
-              SignalIdentityKeyStore>
-        ),
-        SignalIdentityKeyStore,
-        PrefetchHooks Function()>;
-typedef $$SignalPreKeyStoresTableCreateCompanionBuilder
-    = SignalPreKeyStoresCompanion Function({
-  Value<int> preKeyId,
-  required Uint8List preKey,
-  Value<DateTime> createdAt,
-});
-typedef $$SignalPreKeyStoresTableUpdateCompanionBuilder
-    = SignalPreKeyStoresCompanion Function({
-  Value<int> preKeyId,
-  Value<Uint8List> preKey,
-  Value<DateTime> createdAt,
-});
+        BaseReferences<
+          _$TwonlyDB,
+          $SignalIdentityKeyStoresTable,
+          SignalIdentityKeyStore
+        >,
+      ),
+      SignalIdentityKeyStore,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalPreKeyStoresTableCreateCompanionBuilder =
+    SignalPreKeyStoresCompanion Function({
+      Value<int> preKeyId,
+      required Uint8List preKey,
+      Value<DateTime> createdAt,
+    });
+typedef $$SignalPreKeyStoresTableUpdateCompanionBuilder =
+    SignalPreKeyStoresCompanion Function({
+      Value<int> preKeyId,
+      Value<Uint8List> preKey,
+      Value<DateTime> createdAt,
+    });
 
 class $$SignalPreKeyStoresTableFilterComposer
     extends Composer<_$TwonlyDB, $SignalPreKeyStoresTable> {
@@ -12089,13 +14677,19 @@ class $$SignalPreKeyStoresTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get preKeyId => $composableBuilder(
-      column: $table.preKeyId, builder: (column) => ColumnFilters(column));
+    column: $table.preKeyId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get preKey => $composableBuilder(
-      column: $table.preKey, builder: (column) => ColumnFilters(column));
+    column: $table.preKey,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SignalPreKeyStoresTableOrderingComposer
@@ -12108,13 +14702,19 @@ class $$SignalPreKeyStoresTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get preKeyId => $composableBuilder(
-      column: $table.preKeyId, builder: (column) => ColumnOrderings(column));
+    column: $table.preKeyId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get preKey => $composableBuilder(
-      column: $table.preKey, builder: (column) => ColumnOrderings(column));
+    column: $table.preKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SignalPreKeyStoresTableAnnotationComposer
@@ -12136,24 +14736,33 @@ class $$SignalPreKeyStoresTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$SignalPreKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $SignalPreKeyStoresTable,
-    SignalPreKeyStore,
-    $$SignalPreKeyStoresTableFilterComposer,
-    $$SignalPreKeyStoresTableOrderingComposer,
-    $$SignalPreKeyStoresTableAnnotationComposer,
-    $$SignalPreKeyStoresTableCreateCompanionBuilder,
-    $$SignalPreKeyStoresTableUpdateCompanionBuilder,
-    (
-      SignalPreKeyStore,
-      BaseReferences<_$TwonlyDB, $SignalPreKeyStoresTable, SignalPreKeyStore>
-    ),
-    SignalPreKeyStore,
-    PrefetchHooks Function()> {
+class $$SignalPreKeyStoresTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $SignalPreKeyStoresTable,
+          SignalPreKeyStore,
+          $$SignalPreKeyStoresTableFilterComposer,
+          $$SignalPreKeyStoresTableOrderingComposer,
+          $$SignalPreKeyStoresTableAnnotationComposer,
+          $$SignalPreKeyStoresTableCreateCompanionBuilder,
+          $$SignalPreKeyStoresTableUpdateCompanionBuilder,
+          (
+            SignalPreKeyStore,
+            BaseReferences<
+              _$TwonlyDB,
+              $SignalPreKeyStoresTable,
+              SignalPreKeyStore
+            >,
+          ),
+          SignalPreKeyStore,
+          PrefetchHooks Function()
+        > {
   $$SignalPreKeyStoresTableTableManager(
-      _$TwonlyDB db, $SignalPreKeyStoresTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $SignalPreKeyStoresTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -12162,61 +14771,66 @@ class $$SignalPreKeyStoresTableTableManager extends RootTableManager<
               $$SignalPreKeyStoresTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SignalPreKeyStoresTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> preKeyId = const Value.absent(),
-            Value<Uint8List> preKey = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              SignalPreKeyStoresCompanion(
-            preKeyId: preKeyId,
-            preKey: preKey,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> preKeyId = const Value.absent(),
-            required Uint8List preKey,
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              SignalPreKeyStoresCompanion.insert(
-            preKeyId: preKeyId,
-            preKey: preKey,
-            createdAt: createdAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> preKeyId = const Value.absent(),
+                Value<Uint8List> preKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SignalPreKeyStoresCompanion(
+                preKeyId: preKeyId,
+                preKey: preKey,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> preKeyId = const Value.absent(),
+                required Uint8List preKey,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SignalPreKeyStoresCompanion.insert(
+                preKeyId: preKeyId,
+                preKey: preKey,
+                createdAt: createdAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SignalPreKeyStoresTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $SignalPreKeyStoresTable,
-    SignalPreKeyStore,
-    $$SignalPreKeyStoresTableFilterComposer,
-    $$SignalPreKeyStoresTableOrderingComposer,
-    $$SignalPreKeyStoresTableAnnotationComposer,
-    $$SignalPreKeyStoresTableCreateCompanionBuilder,
-    $$SignalPreKeyStoresTableUpdateCompanionBuilder,
-    (
+typedef $$SignalPreKeyStoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $SignalPreKeyStoresTable,
       SignalPreKeyStore,
-      BaseReferences<_$TwonlyDB, $SignalPreKeyStoresTable, SignalPreKeyStore>
-    ),
-    SignalPreKeyStore,
-    PrefetchHooks Function()>;
-typedef $$SignalSenderKeyStoresTableCreateCompanionBuilder
-    = SignalSenderKeyStoresCompanion Function({
-  required String senderKeyName,
-  required Uint8List senderKey,
-  Value<int> rowid,
-});
-typedef $$SignalSenderKeyStoresTableUpdateCompanionBuilder
-    = SignalSenderKeyStoresCompanion Function({
-  Value<String> senderKeyName,
-  Value<Uint8List> senderKey,
-  Value<int> rowid,
-});
+      $$SignalPreKeyStoresTableFilterComposer,
+      $$SignalPreKeyStoresTableOrderingComposer,
+      $$SignalPreKeyStoresTableAnnotationComposer,
+      $$SignalPreKeyStoresTableCreateCompanionBuilder,
+      $$SignalPreKeyStoresTableUpdateCompanionBuilder,
+      (
+        SignalPreKeyStore,
+        BaseReferences<_$TwonlyDB, $SignalPreKeyStoresTable, SignalPreKeyStore>,
+      ),
+      SignalPreKeyStore,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalSenderKeyStoresTableCreateCompanionBuilder =
+    SignalSenderKeyStoresCompanion Function({
+      required String senderKeyName,
+      required Uint8List senderKey,
+      Value<int> rowid,
+    });
+typedef $$SignalSenderKeyStoresTableUpdateCompanionBuilder =
+    SignalSenderKeyStoresCompanion Function({
+      Value<String> senderKeyName,
+      Value<Uint8List> senderKey,
+      Value<int> rowid,
+    });
 
 class $$SignalSenderKeyStoresTableFilterComposer
     extends Composer<_$TwonlyDB, $SignalSenderKeyStoresTable> {
@@ -12228,10 +14842,14 @@ class $$SignalSenderKeyStoresTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get senderKeyName => $composableBuilder(
-      column: $table.senderKeyName, builder: (column) => ColumnFilters(column));
+    column: $table.senderKeyName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get senderKey => $composableBuilder(
-      column: $table.senderKey, builder: (column) => ColumnFilters(column));
+    column: $table.senderKey,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SignalSenderKeyStoresTableOrderingComposer
@@ -12244,11 +14862,14 @@ class $$SignalSenderKeyStoresTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get senderKeyName => $composableBuilder(
-      column: $table.senderKeyName,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.senderKeyName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get senderKey => $composableBuilder(
-      column: $table.senderKey, builder: (column) => ColumnOrderings(column));
+    column: $table.senderKey,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SignalSenderKeyStoresTableAnnotationComposer
@@ -12261,102 +14882,123 @@ class $$SignalSenderKeyStoresTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get senderKeyName => $composableBuilder(
-      column: $table.senderKeyName, builder: (column) => column);
+    column: $table.senderKeyName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get senderKey =>
       $composableBuilder(column: $table.senderKey, builder: (column) => column);
 }
 
-class $$SignalSenderKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $SignalSenderKeyStoresTable,
-    SignalSenderKeyStore,
-    $$SignalSenderKeyStoresTableFilterComposer,
-    $$SignalSenderKeyStoresTableOrderingComposer,
-    $$SignalSenderKeyStoresTableAnnotationComposer,
-    $$SignalSenderKeyStoresTableCreateCompanionBuilder,
-    $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
-    (
-      SignalSenderKeyStore,
-      BaseReferences<_$TwonlyDB, $SignalSenderKeyStoresTable,
-          SignalSenderKeyStore>
-    ),
-    SignalSenderKeyStore,
-    PrefetchHooks Function()> {
+class $$SignalSenderKeyStoresTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $SignalSenderKeyStoresTable,
+          SignalSenderKeyStore,
+          $$SignalSenderKeyStoresTableFilterComposer,
+          $$SignalSenderKeyStoresTableOrderingComposer,
+          $$SignalSenderKeyStoresTableAnnotationComposer,
+          $$SignalSenderKeyStoresTableCreateCompanionBuilder,
+          $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
+          (
+            SignalSenderKeyStore,
+            BaseReferences<
+              _$TwonlyDB,
+              $SignalSenderKeyStoresTable,
+              SignalSenderKeyStore
+            >,
+          ),
+          SignalSenderKeyStore,
+          PrefetchHooks Function()
+        > {
   $$SignalSenderKeyStoresTableTableManager(
-      _$TwonlyDB db, $SignalSenderKeyStoresTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $SignalSenderKeyStoresTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$SignalSenderKeyStoresTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$SignalSenderKeyStoresTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$SignalSenderKeyStoresTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> senderKeyName = const Value.absent(),
-            Value<Uint8List> senderKey = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalSenderKeyStoresCompanion(
-            senderKeyName: senderKeyName,
-            senderKey: senderKey,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String senderKeyName,
-            required Uint8List senderKey,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalSenderKeyStoresCompanion.insert(
-            senderKeyName: senderKeyName,
-            senderKey: senderKey,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> senderKeyName = const Value.absent(),
+                Value<Uint8List> senderKey = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSenderKeyStoresCompanion(
+                senderKeyName: senderKeyName,
+                senderKey: senderKey,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String senderKeyName,
+                required Uint8List senderKey,
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSenderKeyStoresCompanion.insert(
+                senderKeyName: senderKeyName,
+                senderKey: senderKey,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SignalSenderKeyStoresTableProcessedTableManager
-    = ProcessedTableManager<
-        _$TwonlyDB,
-        $SignalSenderKeyStoresTable,
+typedef $$SignalSenderKeyStoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $SignalSenderKeyStoresTable,
+      SignalSenderKeyStore,
+      $$SignalSenderKeyStoresTableFilterComposer,
+      $$SignalSenderKeyStoresTableOrderingComposer,
+      $$SignalSenderKeyStoresTableAnnotationComposer,
+      $$SignalSenderKeyStoresTableCreateCompanionBuilder,
+      $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
+      (
         SignalSenderKeyStore,
-        $$SignalSenderKeyStoresTableFilterComposer,
-        $$SignalSenderKeyStoresTableOrderingComposer,
-        $$SignalSenderKeyStoresTableAnnotationComposer,
-        $$SignalSenderKeyStoresTableCreateCompanionBuilder,
-        $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
-        (
-          SignalSenderKeyStore,
-          BaseReferences<_$TwonlyDB, $SignalSenderKeyStoresTable,
-              SignalSenderKeyStore>
-        ),
-        SignalSenderKeyStore,
-        PrefetchHooks Function()>;
-typedef $$SignalSessionStoresTableCreateCompanionBuilder
-    = SignalSessionStoresCompanion Function({
-  required int deviceId,
-  required String name,
-  required Uint8List sessionRecord,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
-typedef $$SignalSessionStoresTableUpdateCompanionBuilder
-    = SignalSessionStoresCompanion Function({
-  Value<int> deviceId,
-  Value<String> name,
-  Value<Uint8List> sessionRecord,
-  Value<DateTime> createdAt,
-  Value<int> rowid,
-});
+        BaseReferences<
+          _$TwonlyDB,
+          $SignalSenderKeyStoresTable,
+          SignalSenderKeyStore
+        >,
+      ),
+      SignalSenderKeyStore,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalSessionStoresTableCreateCompanionBuilder =
+    SignalSessionStoresCompanion Function({
+      required int deviceId,
+      required String name,
+      required Uint8List sessionRecord,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$SignalSessionStoresTableUpdateCompanionBuilder =
+    SignalSessionStoresCompanion Function({
+      Value<int> deviceId,
+      Value<String> name,
+      Value<Uint8List> sessionRecord,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
 
 class $$SignalSessionStoresTableFilterComposer
     extends Composer<_$TwonlyDB, $SignalSessionStoresTable> {
@@ -12368,16 +15010,24 @@ class $$SignalSessionStoresTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnFilters(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get sessionRecord => $composableBuilder(
-      column: $table.sessionRecord, builder: (column) => ColumnFilters(column));
+    column: $table.sessionRecord,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SignalSessionStoresTableOrderingComposer
@@ -12390,17 +15040,24 @@ class $$SignalSessionStoresTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnOrderings(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get sessionRecord => $composableBuilder(
-      column: $table.sessionRecord,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.sessionRecord,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SignalSessionStoresTableAnnotationComposer
@@ -12419,140 +15076,176 @@ class $$SignalSessionStoresTableAnnotationComposer
       $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get sessionRecord => $composableBuilder(
-      column: $table.sessionRecord, builder: (column) => column);
+    column: $table.sessionRecord,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$SignalSessionStoresTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $SignalSessionStoresTable,
-    SignalSessionStore,
-    $$SignalSessionStoresTableFilterComposer,
-    $$SignalSessionStoresTableOrderingComposer,
-    $$SignalSessionStoresTableAnnotationComposer,
-    $$SignalSessionStoresTableCreateCompanionBuilder,
-    $$SignalSessionStoresTableUpdateCompanionBuilder,
-    (
-      SignalSessionStore,
-      BaseReferences<_$TwonlyDB, $SignalSessionStoresTable, SignalSessionStore>
-    ),
-    SignalSessionStore,
-    PrefetchHooks Function()> {
+class $$SignalSessionStoresTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $SignalSessionStoresTable,
+          SignalSessionStore,
+          $$SignalSessionStoresTableFilterComposer,
+          $$SignalSessionStoresTableOrderingComposer,
+          $$SignalSessionStoresTableAnnotationComposer,
+          $$SignalSessionStoresTableCreateCompanionBuilder,
+          $$SignalSessionStoresTableUpdateCompanionBuilder,
+          (
+            SignalSessionStore,
+            BaseReferences<
+              _$TwonlyDB,
+              $SignalSessionStoresTable,
+              SignalSessionStore
+            >,
+          ),
+          SignalSessionStore,
+          PrefetchHooks Function()
+        > {
   $$SignalSessionStoresTableTableManager(
-      _$TwonlyDB db, $SignalSessionStoresTable table)
-      : super(TableManagerState(
+    _$TwonlyDB db,
+    $SignalSessionStoresTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$SignalSessionStoresTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$SignalSessionStoresTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$SignalSessionStoresTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> deviceId = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<Uint8List> sessionRecord = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalSessionStoresCompanion(
-            deviceId: deviceId,
-            name: name,
-            sessionRecord: sessionRecord,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required int deviceId,
-            required String name,
-            required Uint8List sessionRecord,
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SignalSessionStoresCompanion.insert(
-            deviceId: deviceId,
-            name: name,
-            sessionRecord: sessionRecord,
-            createdAt: createdAt,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> deviceId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<Uint8List> sessionRecord = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSessionStoresCompanion(
+                deviceId: deviceId,
+                name: name,
+                sessionRecord: sessionRecord,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int deviceId,
+                required String name,
+                required Uint8List sessionRecord,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSessionStoresCompanion.insert(
+                deviceId: deviceId,
+                name: name,
+                sessionRecord: sessionRecord,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SignalSessionStoresTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $SignalSessionStoresTable,
-    SignalSessionStore,
-    $$SignalSessionStoresTableFilterComposer,
-    $$SignalSessionStoresTableOrderingComposer,
-    $$SignalSessionStoresTableAnnotationComposer,
-    $$SignalSessionStoresTableCreateCompanionBuilder,
-    $$SignalSessionStoresTableUpdateCompanionBuilder,
-    (
+typedef $$SignalSessionStoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $SignalSessionStoresTable,
       SignalSessionStore,
-      BaseReferences<_$TwonlyDB, $SignalSessionStoresTable, SignalSessionStore>
-    ),
-    SignalSessionStore,
-    PrefetchHooks Function()>;
-typedef $$MessageActionsTableCreateCompanionBuilder = MessageActionsCompanion
-    Function({
-  required String messageId,
-  required int contactId,
-  required MessageActionType type,
-  Value<DateTime> actionAt,
-  Value<int> rowid,
-});
-typedef $$MessageActionsTableUpdateCompanionBuilder = MessageActionsCompanion
-    Function({
-  Value<String> messageId,
-  Value<int> contactId,
-  Value<MessageActionType> type,
-  Value<DateTime> actionAt,
-  Value<int> rowid,
-});
+      $$SignalSessionStoresTableFilterComposer,
+      $$SignalSessionStoresTableOrderingComposer,
+      $$SignalSessionStoresTableAnnotationComposer,
+      $$SignalSessionStoresTableCreateCompanionBuilder,
+      $$SignalSessionStoresTableUpdateCompanionBuilder,
+      (
+        SignalSessionStore,
+        BaseReferences<
+          _$TwonlyDB,
+          $SignalSessionStoresTable,
+          SignalSessionStore
+        >,
+      ),
+      SignalSessionStore,
+      PrefetchHooks Function()
+    >;
+typedef $$MessageActionsTableCreateCompanionBuilder =
+    MessageActionsCompanion Function({
+      required String messageId,
+      required int contactId,
+      required MessageActionType type,
+      Value<DateTime> actionAt,
+      Value<int> rowid,
+    });
+typedef $$MessageActionsTableUpdateCompanionBuilder =
+    MessageActionsCompanion Function({
+      Value<String> messageId,
+      Value<int> contactId,
+      Value<MessageActionType> type,
+      Value<DateTime> actionAt,
+      Value<int> rowid,
+    });
 
 final class $$MessageActionsTableReferences
     extends BaseReferences<_$TwonlyDB, $MessageActionsTable, MessageAction> {
   $$MessageActionsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias($_aliasNameGenerator(
-          db.messageActions.messageId, db.messages.messageId));
+      db.messages.createAlias(
+        $_aliasNameGenerator(
+          db.messageActions.messageId,
+          db.messages.messageId,
+        ),
+      );
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
 
-    final manager = $$MessagesTableTableManager($_db, $_db.messages)
-        .filter((f) => f.messageId.sqlEquals($_column));
+    final manager = $$MessagesTableTableManager(
+      $_db,
+      $_db.messages,
+    ).filter((f) => f.messageId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias($_aliasNameGenerator(
-          db.messageActions.contactId, db.contacts.userId));
+      db.contacts.createAlias(
+        $_aliasNameGenerator(db.messageActions.contactId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
 
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -12566,50 +15259,59 @@ class $$MessageActionsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnWithTypeConverterFilters<MessageActionType, MessageActionType, String>
-      get type => $composableBuilder(
-          column: $table.type,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnFilters<DateTime> get actionAt => $composableBuilder(
-      column: $table.actionAt, builder: (column) => ColumnFilters(column));
+    column: $table.actionAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$MessagesTableFilterComposer get messageId {
     final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableFilterComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -12624,48 +15326,58 @@ class $$MessageActionsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get actionAt => $composableBuilder(
-      column: $table.actionAt, builder: (column) => ColumnOrderings(column));
+    column: $table.actionAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$MessagesTableOrderingComposer get messageId {
     final $$MessagesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableOrderingComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableOrderingComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -12687,59 +15399,69 @@ class $$MessageActionsTableAnnotationComposer
 
   $$MessagesTableAnnotationComposer get messageId {
     final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.messageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.messageId,
+      referencedTable: $db.messages,
+      getReferencedColumn: (t) => t.messageId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MessagesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.messages,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$MessageActionsTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $MessageActionsTable,
-    MessageAction,
-    $$MessageActionsTableFilterComposer,
-    $$MessageActionsTableOrderingComposer,
-    $$MessageActionsTableAnnotationComposer,
-    $$MessageActionsTableCreateCompanionBuilder,
-    $$MessageActionsTableUpdateCompanionBuilder,
-    (MessageAction, $$MessageActionsTableReferences),
-    MessageAction,
-    PrefetchHooks Function({bool messageId, bool contactId})> {
+class $$MessageActionsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $MessageActionsTable,
+          MessageAction,
+          $$MessageActionsTableFilterComposer,
+          $$MessageActionsTableOrderingComposer,
+          $$MessageActionsTableAnnotationComposer,
+          $$MessageActionsTableCreateCompanionBuilder,
+          $$MessageActionsTableUpdateCompanionBuilder,
+          (MessageAction, $$MessageActionsTableReferences),
+          MessageAction,
+          PrefetchHooks Function({bool messageId, bool contactId})
+        > {
   $$MessageActionsTableTableManager(_$TwonlyDB db, $MessageActionsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -12748,46 +15470,49 @@ class $$MessageActionsTableTableManager extends RootTableManager<
               $$MessageActionsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$MessageActionsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> messageId = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
-            Value<MessageActionType> type = const Value.absent(),
-            Value<DateTime> actionAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MessageActionsCompanion(
-            messageId: messageId,
-            contactId: contactId,
-            type: type,
-            actionAt: actionAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String messageId,
-            required int contactId,
-            required MessageActionType type,
-            Value<DateTime> actionAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MessageActionsCompanion.insert(
-            messageId: messageId,
-            contactId: contactId,
-            type: type,
-            actionAt: actionAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> messageId = const Value.absent(),
+                Value<int> contactId = const Value.absent(),
+                Value<MessageActionType> type = const Value.absent(),
+                Value<DateTime> actionAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessageActionsCompanion(
+                messageId: messageId,
+                contactId: contactId,
+                type: type,
+                actionAt: actionAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String messageId,
+                required int contactId,
+                required MessageActionType type,
+                Value<DateTime> actionAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessageActionsCompanion.insert(
+                messageId: messageId,
+                contactId: contactId,
+                type: type,
+                actionAt: actionAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$MessageActionsTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$MessageActionsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({messageId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -12798,111 +15523,133 @@ class $$MessageActionsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (messageId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.messageId,
-                    referencedTable:
-                        $$MessageActionsTableReferences._messageIdTable(db),
-                    referencedColumn: $$MessageActionsTableReferences
-                        ._messageIdTable(db)
-                        .messageId,
-                  ) as T;
-                }
-                if (contactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$MessageActionsTableReferences._contactIdTable(db),
-                    referencedColumn: $$MessageActionsTableReferences
-                        ._contactIdTable(db)
-                        .userId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (messageId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.messageId,
+                                referencedTable: $$MessageActionsTableReferences
+                                    ._messageIdTable(db),
+                                referencedColumn:
+                                    $$MessageActionsTableReferences
+                                        ._messageIdTable(db)
+                                        .messageId,
+                              )
+                              as T;
+                    }
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$MessageActionsTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn:
+                                    $$MessageActionsTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$MessageActionsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $MessageActionsTable,
-    MessageAction,
-    $$MessageActionsTableFilterComposer,
-    $$MessageActionsTableOrderingComposer,
-    $$MessageActionsTableAnnotationComposer,
-    $$MessageActionsTableCreateCompanionBuilder,
-    $$MessageActionsTableUpdateCompanionBuilder,
-    (MessageAction, $$MessageActionsTableReferences),
-    MessageAction,
-    PrefetchHooks Function({bool messageId, bool contactId})>;
-typedef $$GroupHistoriesTableCreateCompanionBuilder = GroupHistoriesCompanion
-    Function({
-  required String groupHistoryId,
-  required String groupId,
-  Value<int?> contactId,
-  Value<int?> affectedContactId,
-  Value<String?> oldGroupName,
-  Value<String?> newGroupName,
-  Value<int?> newDeleteMessagesAfterMilliseconds,
-  required GroupActionType type,
-  Value<DateTime> actionAt,
-  Value<int> rowid,
-});
-typedef $$GroupHistoriesTableUpdateCompanionBuilder = GroupHistoriesCompanion
-    Function({
-  Value<String> groupHistoryId,
-  Value<String> groupId,
-  Value<int?> contactId,
-  Value<int?> affectedContactId,
-  Value<String?> oldGroupName,
-  Value<String?> newGroupName,
-  Value<int?> newDeleteMessagesAfterMilliseconds,
-  Value<GroupActionType> type,
-  Value<DateTime> actionAt,
-  Value<int> rowid,
-});
+typedef $$MessageActionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $MessageActionsTable,
+      MessageAction,
+      $$MessageActionsTableFilterComposer,
+      $$MessageActionsTableOrderingComposer,
+      $$MessageActionsTableAnnotationComposer,
+      $$MessageActionsTableCreateCompanionBuilder,
+      $$MessageActionsTableUpdateCompanionBuilder,
+      (MessageAction, $$MessageActionsTableReferences),
+      MessageAction,
+      PrefetchHooks Function({bool messageId, bool contactId})
+    >;
+typedef $$GroupHistoriesTableCreateCompanionBuilder =
+    GroupHistoriesCompanion Function({
+      required String groupHistoryId,
+      required String groupId,
+      Value<int?> contactId,
+      Value<int?> affectedContactId,
+      Value<String?> oldGroupName,
+      Value<String?> newGroupName,
+      Value<int?> newDeleteMessagesAfterMilliseconds,
+      required GroupActionType type,
+      Value<DateTime> actionAt,
+      Value<int> rowid,
+    });
+typedef $$GroupHistoriesTableUpdateCompanionBuilder =
+    GroupHistoriesCompanion Function({
+      Value<String> groupHistoryId,
+      Value<String> groupId,
+      Value<int?> contactId,
+      Value<int?> affectedContactId,
+      Value<String?> oldGroupName,
+      Value<String?> newGroupName,
+      Value<int?> newDeleteMessagesAfterMilliseconds,
+      Value<GroupActionType> type,
+      Value<DateTime> actionAt,
+      Value<int> rowid,
+    });
 
 final class $$GroupHistoriesTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupHistoriesTable, GroupHistory> {
   $$GroupHistoriesTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
 
   static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-      $_aliasNameGenerator(db.groupHistories.groupId, db.groups.groupId));
+    $_aliasNameGenerator(db.groupHistories.groupId, db.groups.groupId),
+  );
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
 
-    final manager = $$GroupsTableTableManager($_db, $_db.groups)
-        .filter((f) => f.groupId.sqlEquals($_column));
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias($_aliasNameGenerator(
-          db.groupHistories.contactId, db.contacts.userId));
+      db.contacts.createAlias(
+        $_aliasNameGenerator(db.groupHistories.contactId, db.contacts.userId),
+      );
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
     if ($_column == null) return null;
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
   }
 }
 
@@ -12916,69 +15663,85 @@ class $$GroupHistoriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get groupHistoryId => $composableBuilder(
-      column: $table.groupHistoryId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.groupHistoryId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get affectedContactId => $composableBuilder(
-      column: $table.affectedContactId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.affectedContactId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get oldGroupName => $composableBuilder(
-      column: $table.oldGroupName, builder: (column) => ColumnFilters(column));
+    column: $table.oldGroupName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get newGroupName => $composableBuilder(
-      column: $table.newGroupName, builder: (column) => ColumnFilters(column));
+    column: $table.newGroupName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get newDeleteMessagesAfterMilliseconds =>
       $composableBuilder(
-          column: $table.newDeleteMessagesAfterMilliseconds,
-          builder: (column) => ColumnFilters(column));
+        column: $table.newDeleteMessagesAfterMilliseconds,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnWithTypeConverterFilters<GroupActionType, GroupActionType, String>
-      get type => $composableBuilder(
-          column: $table.type,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 
   ColumnFilters<DateTime> get actionAt => $composableBuilder(
-      column: $table.actionAt, builder: (column) => ColumnFilters(column));
+    column: $table.actionAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableFilterComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -12993,69 +15756,84 @@ class $$GroupHistoriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get groupHistoryId => $composableBuilder(
-      column: $table.groupHistoryId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.groupHistoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get affectedContactId => $composableBuilder(
-      column: $table.affectedContactId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.affectedContactId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get oldGroupName => $composableBuilder(
-      column: $table.oldGroupName,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.oldGroupName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get newGroupName => $composableBuilder(
-      column: $table.newGroupName,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.newGroupName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get newDeleteMessagesAfterMilliseconds =>
       $composableBuilder(
-          column: $table.newDeleteMessagesAfterMilliseconds,
-          builder: (column) => ColumnOrderings(column));
+        column: $table.newDeleteMessagesAfterMilliseconds,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get actionAt => $composableBuilder(
-      column: $table.actionAt, builder: (column) => ColumnOrderings(column));
+    column: $table.actionAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableOrderingComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -13070,21 +15848,30 @@ class $$GroupHistoriesTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get groupHistoryId => $composableBuilder(
-      column: $table.groupHistoryId, builder: (column) => column);
+    column: $table.groupHistoryId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get affectedContactId => $composableBuilder(
-      column: $table.affectedContactId, builder: (column) => column);
+    column: $table.affectedContactId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get oldGroupName => $composableBuilder(
-      column: $table.oldGroupName, builder: (column) => column);
+    column: $table.oldGroupName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get newGroupName => $composableBuilder(
-      column: $table.newGroupName, builder: (column) => column);
+    column: $table.newGroupName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get newDeleteMessagesAfterMilliseconds =>
       $composableBuilder(
-          column: $table.newDeleteMessagesAfterMilliseconds,
-          builder: (column) => column);
+        column: $table.newDeleteMessagesAfterMilliseconds,
+        builder: (column) => column,
+      );
 
   GeneratedColumnWithTypeConverter<GroupActionType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -13094,59 +15881,69 @@ class $$GroupHistoriesTableAnnotationComposer
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.groupId,
-        referencedTable: $db.groups,
-        getReferencedColumn: (t) => t.groupId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groups,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$GroupHistoriesTableTableManager extends RootTableManager<
-    _$TwonlyDB,
-    $GroupHistoriesTable,
-    GroupHistory,
-    $$GroupHistoriesTableFilterComposer,
-    $$GroupHistoriesTableOrderingComposer,
-    $$GroupHistoriesTableAnnotationComposer,
-    $$GroupHistoriesTableCreateCompanionBuilder,
-    $$GroupHistoriesTableUpdateCompanionBuilder,
-    (GroupHistory, $$GroupHistoriesTableReferences),
-    GroupHistory,
-    PrefetchHooks Function({bool groupId, bool contactId})> {
+class $$GroupHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $GroupHistoriesTable,
+          GroupHistory,
+          $$GroupHistoriesTableFilterComposer,
+          $$GroupHistoriesTableOrderingComposer,
+          $$GroupHistoriesTableAnnotationComposer,
+          $$GroupHistoriesTableCreateCompanionBuilder,
+          $$GroupHistoriesTableUpdateCompanionBuilder,
+          (GroupHistory, $$GroupHistoriesTableReferences),
+          GroupHistory,
+          PrefetchHooks Function({bool groupId, bool contactId})
+        > {
   $$GroupHistoriesTableTableManager(_$TwonlyDB db, $GroupHistoriesTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -13155,70 +15952,73 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
               $$GroupHistoriesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$GroupHistoriesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> groupHistoryId = const Value.absent(),
-            Value<String> groupId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
-            Value<int?> affectedContactId = const Value.absent(),
-            Value<String?> oldGroupName = const Value.absent(),
-            Value<String?> newGroupName = const Value.absent(),
-            Value<int?> newDeleteMessagesAfterMilliseconds =
-                const Value.absent(),
-            Value<GroupActionType> type = const Value.absent(),
-            Value<DateTime> actionAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupHistoriesCompanion(
-            groupHistoryId: groupHistoryId,
-            groupId: groupId,
-            contactId: contactId,
-            affectedContactId: affectedContactId,
-            oldGroupName: oldGroupName,
-            newGroupName: newGroupName,
-            newDeleteMessagesAfterMilliseconds:
-                newDeleteMessagesAfterMilliseconds,
-            type: type,
-            actionAt: actionAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String groupHistoryId,
-            required String groupId,
-            Value<int?> contactId = const Value.absent(),
-            Value<int?> affectedContactId = const Value.absent(),
-            Value<String?> oldGroupName = const Value.absent(),
-            Value<String?> newGroupName = const Value.absent(),
-            Value<int?> newDeleteMessagesAfterMilliseconds =
-                const Value.absent(),
-            required GroupActionType type,
-            Value<DateTime> actionAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              GroupHistoriesCompanion.insert(
-            groupHistoryId: groupHistoryId,
-            groupId: groupId,
-            contactId: contactId,
-            affectedContactId: affectedContactId,
-            oldGroupName: oldGroupName,
-            newGroupName: newGroupName,
-            newDeleteMessagesAfterMilliseconds:
-                newDeleteMessagesAfterMilliseconds,
-            type: type,
-            actionAt: actionAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> groupHistoryId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
+                Value<int?> affectedContactId = const Value.absent(),
+                Value<String?> oldGroupName = const Value.absent(),
+                Value<String?> newGroupName = const Value.absent(),
+                Value<int?> newDeleteMessagesAfterMilliseconds =
+                    const Value.absent(),
+                Value<GroupActionType> type = const Value.absent(),
+                Value<DateTime> actionAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupHistoriesCompanion(
+                groupHistoryId: groupHistoryId,
+                groupId: groupId,
+                contactId: contactId,
+                affectedContactId: affectedContactId,
+                oldGroupName: oldGroupName,
+                newGroupName: newGroupName,
+                newDeleteMessagesAfterMilliseconds:
+                    newDeleteMessagesAfterMilliseconds,
+                type: type,
+                actionAt: actionAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String groupHistoryId,
+                required String groupId,
+                Value<int?> contactId = const Value.absent(),
+                Value<int?> affectedContactId = const Value.absent(),
+                Value<String?> oldGroupName = const Value.absent(),
+                Value<String?> newGroupName = const Value.absent(),
+                Value<int?> newDeleteMessagesAfterMilliseconds =
+                    const Value.absent(),
+                required GroupActionType type,
+                Value<DateTime> actionAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupHistoriesCompanion.insert(
+                groupHistoryId: groupHistoryId,
+                groupId: groupId,
+                contactId: contactId,
+                affectedContactId: affectedContactId,
+                oldGroupName: oldGroupName,
+                newGroupName: newGroupName,
+                newDeleteMessagesAfterMilliseconds:
+                    newDeleteMessagesAfterMilliseconds,
+                type: type,
+                actionAt: actionAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable(table),
-                    $$GroupHistoriesTableReferences(db, table, e)
-                  ))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroupHistoriesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: ({groupId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
+              addJoins:
+                  <
+                    T extends TableManagerState<
                       dynamic,
                       dynamic,
                       dynamic,
@@ -13229,52 +16029,63 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic,
-                      dynamic>>(state) {
-                if (groupId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.groupId,
-                    referencedTable:
-                        $$GroupHistoriesTableReferences._groupIdTable(db),
-                    referencedColumn: $$GroupHistoriesTableReferences
-                        ._groupIdTable(db)
-                        .groupId,
-                  ) as T;
-                }
-                if (contactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$GroupHistoriesTableReferences._contactIdTable(db),
-                    referencedColumn: $$GroupHistoriesTableReferences
-                        ._contactIdTable(db)
-                        .userId,
-                  ) as T;
-                }
+                      dynamic
+                    >
+                  >(state) {
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable: $$GroupHistoriesTableReferences
+                                    ._groupIdTable(db),
+                                referencedColumn:
+                                    $$GroupHistoriesTableReferences
+                                        ._groupIdTable(db)
+                                        .groupId,
+                              )
+                              as T;
+                    }
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$GroupHistoriesTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn:
+                                    $$GroupHistoriesTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
 
-                return state;
-              },
+                    return state;
+                  },
               getPrefetchedDataCallback: (items) async {
                 return [];
               },
             );
           },
-        ));
+        ),
+      );
 }
 
-typedef $$GroupHistoriesTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDB,
-    $GroupHistoriesTable,
-    GroupHistory,
-    $$GroupHistoriesTableFilterComposer,
-    $$GroupHistoriesTableOrderingComposer,
-    $$GroupHistoriesTableAnnotationComposer,
-    $$GroupHistoriesTableCreateCompanionBuilder,
-    $$GroupHistoriesTableUpdateCompanionBuilder,
-    (GroupHistory, $$GroupHistoriesTableReferences),
-    GroupHistory,
-    PrefetchHooks Function({bool groupId, bool contactId})>;
+typedef $$GroupHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $GroupHistoriesTable,
+      GroupHistory,
+      $$GroupHistoriesTableFilterComposer,
+      $$GroupHistoriesTableOrderingComposer,
+      $$GroupHistoriesTableAnnotationComposer,
+      $$GroupHistoriesTableCreateCompanionBuilder,
+      $$GroupHistoriesTableUpdateCompanionBuilder,
+      (GroupHistory, $$GroupHistoriesTableReferences),
+      GroupHistory,
+      PrefetchHooks Function({bool groupId, bool contactId})
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -13299,7 +16110,9 @@ class $TwonlyDBManager {
       $$ReceivedReceiptsTableTableManager(_db, _db.receivedReceipts);
   $$SignalIdentityKeyStoresTableTableManager get signalIdentityKeyStores =>
       $$SignalIdentityKeyStoresTableTableManager(
-          _db, _db.signalIdentityKeyStores);
+        _db,
+        _db.signalIdentityKeyStores,
+      );
   $$SignalPreKeyStoresTableTableManager get signalPreKeyStores =>
       $$SignalPreKeyStoresTableTableManager(_db, _db.signalPreKeyStores);
   $$SignalSenderKeyStoresTableTableManager get signalSenderKeyStores =>

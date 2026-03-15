@@ -29,356 +29,292 @@ final class Schema2 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape1 groups = Shape1(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape2 mediaFiles = Shape2(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape3 messages = Shape3(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape7 receipts = Shape7(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_96,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_96,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape0 extends i0.VersionedTable {
@@ -413,64 +349,124 @@ class Shape0 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_0(String aliasedName) =>
-    i1.GeneratedColumn<int>('user_id', aliasedName, false,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'user_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<String> _column_1(String aliasedName) =>
-    i1.GeneratedColumn<String>('username', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'username',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_2(String aliasedName) =>
-    i1.GeneratedColumn<String>('display_name', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'display_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_3(String aliasedName) =>
-    i1.GeneratedColumn<String>('nick_name', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'nick_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_4(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('avatar_svg_compressed', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'avatar_svg_compressed',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<int> _column_5(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_profile_counter', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'sender_profile_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_6(String aliasedName) =>
-    i1.GeneratedColumn<bool>('accepted', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("accepted" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'accepted',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("accepted" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_7(String aliasedName) =>
-    i1.GeneratedColumn<bool>('deleted_by_user', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("deleted_by_user" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'deleted_by_user',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("deleted_by_user" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_8(String aliasedName) =>
-    i1.GeneratedColumn<bool>('requested', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("requested" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'requested',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("requested" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_9(String aliasedName) =>
-    i1.GeneratedColumn<bool>('blocked', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("blocked" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'blocked',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("blocked" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_10(String aliasedName) =>
-    i1.GeneratedColumn<bool>('verified', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("verified" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'verified',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("verified" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_11(String aliasedName) =>
-    i1.GeneratedColumn<bool>('account_deleted', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("account_deleted" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'account_deleted',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("account_deleted" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<DateTime> _column_12(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('created_at', aliasedName, false,
-        type: i1.DriftSqlType.dateTime,
-        defaultValue: const CustomExpression(
-            'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    i1.GeneratedColumn<DateTime>(
+      'created_at',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.dateTime,
+      defaultValue: const CustomExpression(
+        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+      ),
+    );
 
 class Shape1 extends i0.VersionedTable {
   Shape1({required super.source, required super.alias}) : super.aliased();
@@ -529,102 +525,206 @@ class Shape1 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_13(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_id', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'group_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<bool> _column_14(String aliasedName) =>
-    i1.GeneratedColumn<bool>('is_group_admin', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("is_group_admin" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'is_group_admin',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("is_group_admin" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_15(String aliasedName) =>
-    i1.GeneratedColumn<bool>('is_direct_chat', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("is_direct_chat" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'is_direct_chat',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("is_direct_chat" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_16(String aliasedName) =>
-    i1.GeneratedColumn<bool>('pinned', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints:
-            i1.GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'pinned',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("pinned" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_17(String aliasedName) =>
-    i1.GeneratedColumn<bool>('archived', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("archived" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'archived',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("archived" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_18(String aliasedName) =>
-    i1.GeneratedColumn<bool>('joined_group', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("joined_group" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'joined_group',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("joined_group" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_19(String aliasedName) =>
-    i1.GeneratedColumn<bool>('left_group', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("left_group" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'left_group',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("left_group" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_20(String aliasedName) =>
-    i1.GeneratedColumn<bool>('deleted_content', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("deleted_content" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'deleted_content',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("deleted_content" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_21(String aliasedName) =>
-    i1.GeneratedColumn<int>('state_version_id', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'state_version_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_22(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('state_encryption_key', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'state_encryption_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_23(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('my_group_private_key', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'my_group_private_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<String> _column_24(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_name', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'group_name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_25(String aliasedName) =>
-    i1.GeneratedColumn<int>('total_media_counter', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'total_media_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_26(String aliasedName) =>
-    i1.GeneratedColumn<bool>('also_best_friend', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("also_best_friend" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'also_best_friend',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("also_best_friend" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_27(String aliasedName) =>
     i1.GeneratedColumn<int>(
-        'delete_messages_after_milliseconds', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        defaultValue: const CustomExpression('86400000'));
+      'delete_messages_after_milliseconds',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('86400000'),
+    );
 i1.GeneratedColumn<DateTime> _column_28(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_message_send', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_message_send',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_29(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_message_received', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_message_received',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_30(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_flame_counter_change',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_31(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_flame_sync', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_flame_sync',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<int> _column_32(String aliasedName) =>
-    i1.GeneratedColumn<int>('flame_counter', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'flame_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_33(String aliasedName) =>
-    i1.GeneratedColumn<int>('max_flame_counter', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'max_flame_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<DateTime> _column_34(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('max_flame_counter_from', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'max_flame_counter_from',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_35(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_message_exchange', aliasedName, false,
-        type: i1.DriftSqlType.dateTime,
-        defaultValue: const CustomExpression(
-            'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    i1.GeneratedColumn<DateTime>(
+      'last_message_exchange',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.dateTime,
+      defaultValue: const CustomExpression(
+        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+      ),
+    );
 
 class Shape2 extends i0.VersionedTable {
   Shape2({required super.source, required super.alias}) : super.aliased();
@@ -662,58 +762,118 @@ class Shape2 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_36(String aliasedName) =>
-    i1.GeneratedColumn<String>('media_id', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'media_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_37(String aliasedName) =>
-    i1.GeneratedColumn<String>('type', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'type',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_38(String aliasedName) =>
-    i1.GeneratedColumn<String>('upload_state', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'upload_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_39(String aliasedName) =>
-    i1.GeneratedColumn<String>('download_state', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'download_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<bool> _column_40(String aliasedName) =>
-    i1.GeneratedColumn<bool>('requires_authentication', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("requires_authentication" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'requires_authentication',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("requires_authentication" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_41(String aliasedName) =>
-    i1.GeneratedColumn<bool>('stored', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints:
-            i1.GeneratedColumn.constraintIsAlways('CHECK ("stored" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'stored',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("stored" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_42(String aliasedName) =>
-    i1.GeneratedColumn<bool>('is_draft_media', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("is_draft_media" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'is_draft_media',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("is_draft_media" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<String> _column_43(String aliasedName) =>
-    i1.GeneratedColumn<String>('reupload_requested_by', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'reupload_requested_by',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_44(String aliasedName) =>
-    i1.GeneratedColumn<int>('display_limit_in_milliseconds', aliasedName, true,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'display_limit_in_milliseconds',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<bool> _column_45(String aliasedName) =>
-    i1.GeneratedColumn<bool>('remove_audio', aliasedName, true,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("remove_audio" IN (0, 1))'));
+    i1.GeneratedColumn<bool>(
+      'remove_audio',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("remove_audio" IN (0, 1))',
+      ),
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_46(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('download_token', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'download_token',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_47(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_key', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_48(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_mac', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_mac',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_49(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_nonce', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_nonce',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape3 extends i0.VersionedTable {
   Shape3({required super.source, required super.alias}) : super.aliased();
@@ -754,62 +914,124 @@ class Shape3 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_50(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_id', aliasedName, false,
-        type: i1.DriftSqlType.string,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
+    i1.GeneratedColumn<String>(
+      'group_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+      ),
+    );
 i1.GeneratedColumn<String> _column_51(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_52(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id)'));
+    i1.GeneratedColumn<int>(
+      'sender_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id)',
+      ),
+    );
 i1.GeneratedColumn<String> _column_53(String aliasedName) =>
-    i1.GeneratedColumn<String>('content', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'content',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_54(String aliasedName) =>
-    i1.GeneratedColumn<String>('media_id', aliasedName, true,
-        type: i1.DriftSqlType.string,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES media_files (media_id) ON DELETE SET NULL'));
+    i1.GeneratedColumn<String>(
+      'media_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES media_files (media_id) ON DELETE SET NULL',
+      ),
+    );
 i1.GeneratedColumn<bool> _column_55(String aliasedName) =>
-    i1.GeneratedColumn<bool>('media_stored', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("media_stored" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'media_stored',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("media_stored" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<bool> _column_56(String aliasedName) =>
-    i1.GeneratedColumn<bool>('media_reopened', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("media_reopened" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'media_reopened',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("media_reopened" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<String> _column_57(String aliasedName) =>
-    i1.GeneratedColumn<String>('quotes_message_id', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'quotes_message_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<bool> _column_58(String aliasedName) =>
-    i1.GeneratedColumn<bool>('is_deleted_from_sender', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("is_deleted_from_sender" IN (0, 1))'),
-        defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<bool>(
+      'is_deleted_from_sender',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("is_deleted_from_sender" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<DateTime> _column_59(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('opened_at', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'opened_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_60(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('opened_by_all', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'opened_by_all',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_61(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('modified_at', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'modified_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_62(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('ack_by_user', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'ack_by_user',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<DateTime> _column_63(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('ack_by_server', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'ack_by_server',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 
 class Shape4 extends i0.VersionedTable {
   Shape4({required super.source, required super.alias}) : super.aliased();
@@ -826,19 +1048,33 @@ class Shape4 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_64(String aliasedName) =>
-    i1.GeneratedColumn<int>('id', aliasedName, false,
-        hasAutoIncrement: true,
-        type: i1.DriftSqlType.int,
-        defaultConstraints:
-            i1.GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+    i1.GeneratedColumn<int>(
+      'id',
+      aliasedName,
+      false,
+      hasAutoIncrement: true,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'PRIMARY KEY AUTOINCREMENT',
+      ),
+    );
 i1.GeneratedColumn<String> _column_65(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, false,
-        type: i1.DriftSqlType.string,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES messages (message_id) ON DELETE CASCADE'));
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES messages (message_id) ON DELETE CASCADE',
+      ),
+    );
 i1.GeneratedColumn<int> _column_66(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+    );
 
 class Shape5 extends i0.VersionedTable {
   Shape5({required super.source, required super.alias}) : super.aliased();
@@ -853,13 +1089,22 @@ class Shape5 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_67(String aliasedName) =>
-    i1.GeneratedColumn<String>('emoji', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'emoji',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_68(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+    i1.GeneratedColumn<int>(
+      'sender_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id) ON DELETE CASCADE',
+      ),
+    );
 
 class Shape6 extends i0.VersionedTable {
   Shape6({required super.source, required super.alias}) : super.aliased();
@@ -878,19 +1123,36 @@ class Shape6 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_69(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id)'));
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id)',
+      ),
+    );
 i1.GeneratedColumn<String> _column_70(String aliasedName) =>
-    i1.GeneratedColumn<String>('member_state', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'member_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_71(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('group_public_key', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'group_public_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<DateTime> _column_72(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_message', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_message',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 
 class Shape7 extends i0.VersionedTable {
   Shape7({required super.source, required super.alias}) : super.aliased();
@@ -915,36 +1177,72 @@ class Shape7 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_73(String aliasedName) =>
-    i1.GeneratedColumn<String>('receipt_id', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'receipt_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_74(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id) ON DELETE CASCADE',
+      ),
+    );
 i1.GeneratedColumn<String> _column_75(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, true,
-        type: i1.DriftSqlType.string,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES messages (message_id) ON DELETE CASCADE'));
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES messages (message_id) ON DELETE CASCADE',
+      ),
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_76(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('message', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'message',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<bool> _column_77(String aliasedName) =>
-    i1.GeneratedColumn<bool>('contact_will_sends_receipt', aliasedName, false,
-        type: i1.DriftSqlType.bool,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'CHECK ("contact_will_sends_receipt" IN (0, 1))'),
-        defaultValue: const CustomExpression('1'));
+    i1.GeneratedColumn<bool>(
+      'contact_will_sends_receipt',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("contact_will_sends_receipt" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('1'),
+    );
 i1.GeneratedColumn<DateTime> _column_78(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('ack_by_server_at', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'ack_by_server_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 i1.GeneratedColumn<int> _column_79(String aliasedName) =>
-    i1.GeneratedColumn<int>('retry_count', aliasedName, false,
-        type: i1.DriftSqlType.int, defaultValue: const CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'retry_count',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
 i1.GeneratedColumn<DateTime> _column_80(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('last_retry', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'last_retry',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 
 class Shape8 extends i0.VersionedTable {
   Shape8({required super.source, required super.alias}) : super.aliased();
@@ -967,14 +1265,26 @@ class Shape9 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_81(String aliasedName) =>
-    i1.GeneratedColumn<int>('device_id', aliasedName, false,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'device_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<String> _column_82(String aliasedName) =>
-    i1.GeneratedColumn<String>('name', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_83(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('identity_key', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'identity_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape10 extends i0.VersionedTable {
   Shape10({required super.source, required super.alias}) : super.aliased();
@@ -987,11 +1297,19 @@ class Shape10 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_84(String aliasedName) =>
-    i1.GeneratedColumn<int>('pre_key_id', aliasedName, false,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'pre_key_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_85(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('pre_key', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'pre_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape11 extends i0.VersionedTable {
   Shape11({required super.source, required super.alias}) : super.aliased();
@@ -1002,11 +1320,19 @@ class Shape11 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_86(String aliasedName) =>
-    i1.GeneratedColumn<String>('sender_key_name', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'sender_key_name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_87(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('sender_key', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'sender_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape12 extends i0.VersionedTable {
   Shape12({required super.source, required super.alias}) : super.aliased();
@@ -1021,8 +1347,12 @@ class Shape12 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<i2.Uint8List> _column_88(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('session_record', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'session_record',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape13 extends i0.VersionedTable {
   Shape13({required super.source, required super.alias}) : super.aliased();
@@ -1052,15 +1382,26 @@ class Shape14 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_89(String aliasedName) =>
-    i1.GeneratedColumn<int>('signed_pre_key_id', aliasedName, false,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'signed_pre_key_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_90(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('signed_pre_key', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'signed_pre_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_91(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
-        'signed_pre_key_signature', aliasedName, false,
-        type: i1.DriftSqlType.blob);
+      'signed_pre_key_signature',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape15 extends i0.VersionedTable {
   Shape15({required super.source, required super.alias}) : super.aliased();
@@ -1075,13 +1416,22 @@ class Shape15 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_92(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, false,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+    );
 i1.GeneratedColumn<DateTime> _column_93(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('action_at', aliasedName, false,
-        type: i1.DriftSqlType.dateTime,
-        defaultValue: const CustomExpression(
-            'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    i1.GeneratedColumn<DateTime>(
+      'action_at',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.dateTime,
+      defaultValue: const CustomExpression(
+        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+      ),
+    );
 
 class Shape16 extends i0.VersionedTable {
   Shape16({required super.source, required super.alias}) : super.aliased();
@@ -1107,28 +1457,53 @@ class Shape16 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_94(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_history_id', aliasedName, false,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'group_history_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_95(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id)'));
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id)',
+      ),
+    );
 i1.GeneratedColumn<int> _column_96(String aliasedName) =>
-    i1.GeneratedColumn<int>('affected_contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
-            'REFERENCES contacts (user_id)'));
+    i1.GeneratedColumn<int>(
+      'affected_contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES contacts (user_id)',
+      ),
+    );
 i1.GeneratedColumn<String> _column_97(String aliasedName) =>
-    i1.GeneratedColumn<String>('old_group_name', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'old_group_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<String> _column_98(String aliasedName) =>
-    i1.GeneratedColumn<String>('new_group_name', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'new_group_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i1.GeneratedColumn<int> _column_99(String aliasedName) =>
     i1.GeneratedColumn<int>(
-        'new_delete_messages_after_milliseconds', aliasedName, true,
-        type: i1.DriftSqlType.int);
+      'new_delete_messages_after_milliseconds',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+    );
 
 final class Schema3 extends i0.VersionedSchema {
   Schema3({required super.database}) : super(version: 3);
@@ -1153,357 +1528,293 @@ final class Schema3 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape17 groups = Shape17(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_100,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_100,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape2 mediaFiles = Shape2(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape3 messages = Shape3(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape7 receipts = Shape7(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_96,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_96,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape17 extends i0.VersionedTable {
@@ -1565,8 +1876,12 @@ class Shape17 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_100(String aliasedName) =>
-    i1.GeneratedColumn<String>('draft_message', aliasedName, true,
-        type: i1.DriftSqlType.string);
+    i1.GeneratedColumn<String>(
+      'draft_message',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 
 final class Schema4 extends i0.VersionedSchema {
   Schema4({required super.database}) : super(version: 4);
@@ -1591,362 +1906,302 @@ final class Schema4 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape17 groups = Shape17(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_100,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_100,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape2 mediaFiles = Shape2(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape3 messages = Shape3(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape7 receipts = Shape7(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_101,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_101,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 i1.GeneratedColumn<int> _column_101(String aliasedName) =>
-    i1.GeneratedColumn<int>('affected_contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int);
+    i1.GeneratedColumn<int>(
+      'affected_contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+    );
 
 final class Schema5 extends i0.VersionedSchema {
   Schema5({required super.database}) : super(version: 5);
@@ -1971,359 +2226,295 @@ final class Schema5 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape17 groups = Shape17(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_100,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_100,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape18 mediaFiles = Shape18(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_102,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_102,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape3 messages = Shape3(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape19 receipts = Shape19(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_103,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_103,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_101,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_101,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape18 extends i0.VersionedTable {
@@ -2364,8 +2555,12 @@ class Shape18 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<i2.Uint8List> _column_102(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('stored_file_hash', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+    i1.GeneratedColumn<i2.Uint8List>(
+      'stored_file_hash',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 
 class Shape19 extends i0.VersionedTable {
   Shape19({required super.source, required super.alias}) : super.aliased();
@@ -2392,8 +2587,12 @@ class Shape19 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<DateTime> _column_103(String aliasedName) =>
-    i1.GeneratedColumn<DateTime>('mark_for_retry', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+    i1.GeneratedColumn<DateTime>(
+      'mark_for_retry',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 
 final class Schema6 extends i0.VersionedSchema {
   Schema6({required super.database}) : super(version: 6);
@@ -2418,360 +2617,296 @@ final class Schema6 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape17 groups = Shape17(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_100,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_100,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape18 mediaFiles = Shape18(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_102,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_102,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape3 messages = Shape3(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape20 receipts = Shape20(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_103,
-          _column_104,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_103,
+        _column_104,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_101,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_101,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape20 extends i0.VersionedTable {
@@ -2803,8 +2938,11 @@ class Shape20 extends i0.VersionedTable {
 
 i1.GeneratedColumn<DateTime> _column_104(String aliasedName) =>
     i1.GeneratedColumn<DateTime>(
-        'mark_for_retry_after_accepted', aliasedName, true,
-        type: i1.DriftSqlType.dateTime);
+      'mark_for_retry_after_accepted',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
 
 final class Schema7 extends i0.VersionedSchema {
   Schema7({required super.database}) : super(version: 7);
@@ -2829,361 +2967,297 @@ final class Schema7 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape0 contacts = Shape0(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_0,
-          _column_1,
-          _column_2,
-          _column_3,
-          _column_4,
-          _column_5,
-          _column_6,
-          _column_7,
-          _column_8,
-          _column_9,
-          _column_10,
-          _column_11,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape17 groups = Shape17(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_13,
-          _column_14,
-          _column_15,
-          _column_16,
-          _column_17,
-          _column_18,
-          _column_19,
-          _column_20,
-          _column_21,
-          _column_22,
-          _column_23,
-          _column_24,
-          _column_100,
-          _column_25,
-          _column_26,
-          _column_27,
-          _column_12,
-          _column_28,
-          _column_29,
-          _column_30,
-          _column_31,
-          _column_32,
-          _column_33,
-          _column_34,
-          _column_35,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_100,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_12,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_35,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape18 mediaFiles = Shape18(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_36,
-          _column_37,
-          _column_38,
-          _column_39,
-          _column_40,
-          _column_41,
-          _column_42,
-          _column_43,
-          _column_44,
-          _column_45,
-          _column_46,
-          _column_47,
-          _column_48,
-          _column_49,
-          _column_102,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_102,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape21 messages = Shape21(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_51,
-          _column_52,
-          _column_37,
-          _column_53,
-          _column_54,
-          _column_105,
-          _column_55,
-          _column_56,
-          _column_46,
-          _column_57,
-          _column_58,
-          _column_59,
-          _column_60,
-          _column_12,
-          _column_61,
-          _column_62,
-          _column_63,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_50,
+        _column_51,
+        _column_52,
+        _column_37,
+        _column_53,
+        _column_54,
+        _column_105,
+        _column_55,
+        _column_56,
+        _column_46,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_12,
+        _column_61,
+        _column_62,
+        _column_63,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape4 messageHistories = Shape4(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(id)',
-        ],
-        columns: [
-          _column_64,
-          _column_65,
-          _column_66,
-          _column_53,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_64, _column_65, _column_66, _column_53, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape5 reactions = Shape5(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_65,
-          _column_67,
-          _column_68,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_65, _column_67, _column_68, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape6 groupMembers = Shape6(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_50,
-          _column_69,
-          _column_70,
-          _column_71,
-          _column_72,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_50,
+        _column_69,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape20 receipts = Shape20(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_74,
-          _column_75,
-          _column_76,
-          _column_77,
-          _column_103,
-          _column_104,
-          _column_78,
-          _column_79,
-          _column_80,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_73,
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_77,
+        _column_103,
+        _column_104,
+        _column_78,
+        _column_79,
+        _column_80,
+        _column_12,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 receivedReceipts = Shape8(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_73,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_73, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape9 signalIdentityKeyStores = Shape9(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_83,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_83, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape10 signalPreKeyStores = Shape10(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_86,
-          _column_87,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_86, _column_87],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape12 signalSessionStores = Shape12(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_81,
-          _column_82,
-          _column_88,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_81, _column_82, _column_88, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape13 signalContactPreKeys = Shape13(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id, pre_key_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_84,
-          _column_85,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id, pre_key_id)'],
+      columns: [_column_74, _column_84, _column_85, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape14 signalContactSignedPreKeys = Shape14(
-      source: i0.VersionedTable(
-        entityName: 'signal_contact_signed_pre_keys',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(contact_id)',
-        ],
-        columns: [
-          _column_74,
-          _column_89,
-          _column_90,
-          _column_91,
-          _column_12,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_contact_signed_pre_keys',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(contact_id)'],
+      columns: [_column_74, _column_89, _column_90, _column_91, _column_12],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape15 messageActions = Shape15(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_65,
-          _column_92,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_65, _column_92, _column_37, _column_93],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape16 groupHistories = Shape16(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_94,
-          _column_50,
-          _column_95,
-          _column_101,
-          _column_97,
-          _column_98,
-          _column_99,
-          _column_37,
-          _column_93,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_94,
+        _column_50,
+        _column_95,
+        _column_101,
+        _column_97,
+        _column_98,
+        _column_99,
+        _column_37,
+        _column_93,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape21 extends i0.VersionedTable {
@@ -3229,8 +3303,11 @@ class Shape21 extends i0.VersionedTable {
 
 i1.GeneratedColumn<i2.Uint8List> _column_105(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
-        'additional_message_data', aliasedName, true,
-        type: i1.DriftSqlType.blob);
+      'additional_message_data',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+    );
 
 final class Schema8 extends i0.VersionedSchema {
   Schema8({required super.database}) : super(version: 8);
@@ -3253,324 +3330,281 @@ final class Schema8 extends i0.VersionedSchema {
     groupHistories,
   ];
   late final Shape22 contacts = Shape22(
-      source: i0.VersionedTable(
-        entityName: 'contacts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(user_id)',
-        ],
-        columns: [
-          _column_106,
-          _column_107,
-          _column_108,
-          _column_109,
-          _column_110,
-          _column_111,
-          _column_112,
-          _column_113,
-          _column_114,
-          _column_115,
-          _column_116,
-          _column_117,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_106,
+        _column_107,
+        _column_108,
+        _column_109,
+        _column_110,
+        _column_111,
+        _column_112,
+        _column_113,
+        _column_114,
+        _column_115,
+        _column_116,
+        _column_117,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape23 groups = Shape23(
-      source: i0.VersionedTable(
-        entityName: 'groups',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id)',
-        ],
-        columns: [
-          _column_119,
-          _column_120,
-          _column_121,
-          _column_122,
-          _column_123,
-          _column_124,
-          _column_125,
-          _column_126,
-          _column_127,
-          _column_128,
-          _column_129,
-          _column_130,
-          _column_131,
-          _column_132,
-          _column_133,
-          _column_134,
-          _column_118,
-          _column_135,
-          _column_136,
-          _column_137,
-          _column_138,
-          _column_139,
-          _column_140,
-          _column_141,
-          _column_142,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_119,
+        _column_120,
+        _column_121,
+        _column_122,
+        _column_123,
+        _column_124,
+        _column_125,
+        _column_126,
+        _column_127,
+        _column_128,
+        _column_129,
+        _column_130,
+        _column_131,
+        _column_132,
+        _column_133,
+        _column_134,
+        _column_118,
+        _column_135,
+        _column_136,
+        _column_137,
+        _column_138,
+        _column_139,
+        _column_140,
+        _column_141,
+        _column_142,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape24 mediaFiles = Shape24(
-      source: i0.VersionedTable(
-        entityName: 'media_files',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(media_id)',
-        ],
-        columns: [
-          _column_143,
-          _column_144,
-          _column_145,
-          _column_146,
-          _column_147,
-          _column_148,
-          _column_149,
-          _column_150,
-          _column_151,
-          _column_152,
-          _column_153,
-          _column_154,
-          _column_155,
-          _column_156,
-          _column_157,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_143,
+        _column_144,
+        _column_145,
+        _column_146,
+        _column_147,
+        _column_148,
+        _column_149,
+        _column_150,
+        _column_151,
+        _column_152,
+        _column_153,
+        _column_154,
+        _column_155,
+        _column_156,
+        _column_157,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape25 messages = Shape25(
-      source: i0.VersionedTable(
-        entityName: 'messages',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id)',
-        ],
-        columns: [
-          _column_158,
-          _column_159,
-          _column_160,
-          _column_144,
-          _column_161,
-          _column_162,
-          _column_163,
-          _column_164,
-          _column_165,
-          _column_153,
-          _column_166,
-          _column_167,
-          _column_168,
-          _column_169,
-          _column_118,
-          _column_170,
-          _column_171,
-          _column_172,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_158,
+        _column_159,
+        _column_160,
+        _column_144,
+        _column_161,
+        _column_162,
+        _column_163,
+        _column_164,
+        _column_165,
+        _column_153,
+        _column_166,
+        _column_167,
+        _column_168,
+        _column_169,
+        _column_118,
+        _column_170,
+        _column_171,
+        _column_172,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape26 messageHistories = Shape26(
-      source: i0.VersionedTable(
-        entityName: 'message_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [],
-        columns: [
-          _column_173,
-          _column_174,
-          _column_175,
-          _column_161,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_173,
+        _column_174,
+        _column_175,
+        _column_161,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape27 reactions = Shape27(
-      source: i0.VersionedTable(
-        entityName: 'reactions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, sender_id, emoji)',
-        ],
-        columns: [
-          _column_174,
-          _column_176,
-          _column_177,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_174, _column_176, _column_177, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape28 groupMembers = Shape28(
-      source: i0.VersionedTable(
-        entityName: 'group_members',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_id, contact_id)',
-        ],
-        columns: [
-          _column_158,
-          _column_178,
-          _column_179,
-          _column_180,
-          _column_181,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_158,
+        _column_178,
+        _column_179,
+        _column_180,
+        _column_181,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape29 receipts = Shape29(
-      source: i0.VersionedTable(
-        entityName: 'receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_182,
-          _column_183,
-          _column_184,
-          _column_185,
-          _column_186,
-          _column_187,
-          _column_188,
-          _column_189,
-          _column_190,
-          _column_191,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_182,
+        _column_183,
+        _column_184,
+        _column_185,
+        _column_186,
+        _column_187,
+        _column_188,
+        _column_189,
+        _column_190,
+        _column_191,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape30 receivedReceipts = Shape30(
-      source: i0.VersionedTable(
-        entityName: 'received_receipts',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(receipt_id)',
-        ],
-        columns: [
-          _column_182,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_182, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape31 signalIdentityKeyStores = Shape31(
-      source: i0.VersionedTable(
-        entityName: 'signal_identity_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_192,
-          _column_193,
-          _column_194,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_194, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape32 signalPreKeyStores = Shape32(
-      source: i0.VersionedTable(
-        entityName: 'signal_pre_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(pre_key_id)',
-        ],
-        columns: [
-          _column_195,
-          _column_196,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_195, _column_196, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape11 signalSenderKeyStores = Shape11(
-      source: i0.VersionedTable(
-        entityName: 'signal_sender_key_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(sender_key_name)',
-        ],
-        columns: [
-          _column_197,
-          _column_198,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_197, _column_198],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape33 signalSessionStores = Shape33(
-      source: i0.VersionedTable(
-        entityName: 'signal_session_stores',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(device_id, name)',
-        ],
-        columns: [
-          _column_192,
-          _column_193,
-          _column_199,
-          _column_118,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_199, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape34 messageActions = Shape34(
-      source: i0.VersionedTable(
-        entityName: 'message_actions',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(message_id, contact_id, type)',
-        ],
-        columns: [
-          _column_174,
-          _column_183,
-          _column_144,
-          _column_200,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_174, _column_183, _column_144, _column_200],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape35 groupHistories = Shape35(
-      source: i0.VersionedTable(
-        entityName: 'group_histories',
-        withoutRowId: false,
-        isStrict: false,
-        tableConstraints: [
-          'PRIMARY KEY(group_history_id)',
-        ],
-        columns: [
-          _column_201,
-          _column_158,
-          _column_202,
-          _column_203,
-          _column_204,
-          _column_205,
-          _column_206,
-          _column_144,
-          _column_200,
-        ],
-        attachedDatabase: database,
-      ),
-      alias: null);
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_201,
+        _column_158,
+        _column_202,
+        _column_203,
+        _column_204,
+        _column_205,
+        _column_206,
+        _column_144,
+        _column_200,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
 }
 
 class Shape22 extends i0.VersionedTable {
@@ -3605,65 +3639,123 @@ class Shape22 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_106(String aliasedName) =>
-    i1.GeneratedColumn<int>('user_id', aliasedName, false,
-        type: i1.DriftSqlType.int, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<int>(
+      'user_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_107(String aliasedName) =>
-    i1.GeneratedColumn<String>('username', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'username',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_108(String aliasedName) =>
-    i1.GeneratedColumn<String>('display_name', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'display_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_109(String aliasedName) =>
-    i1.GeneratedColumn<String>('nick_name', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'nick_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_110(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('avatar_svg_compressed', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'avatar_svg_compressed',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_111(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_profile_counter', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'sender_profile_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_112(String aliasedName) =>
-    i1.GeneratedColumn<int>('accepted', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (accepted IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'accepted',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (accepted IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_113(String aliasedName) =>
-    i1.GeneratedColumn<int>('deleted_by_user', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (deleted_by_user IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'deleted_by_user',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (deleted_by_user IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_114(String aliasedName) =>
-    i1.GeneratedColumn<int>('requested', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (requested IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'requested',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (requested IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_115(String aliasedName) =>
-    i1.GeneratedColumn<int>('blocked', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (blocked IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'blocked',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (blocked IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_116(String aliasedName) =>
-    i1.GeneratedColumn<int>('verified', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (verified IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'verified',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (verified IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_117(String aliasedName) =>
-    i1.GeneratedColumn<int>('account_deleted', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (account_deleted IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
-i1.GeneratedColumn<int> _column_118(String aliasedName) => i1.GeneratedColumn<
-        int>(
-    'created_at', aliasedName, false,
-    type: i1.DriftSqlType.int,
-    $customConstraints:
-        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-    defaultValue: const i1.CustomExpression(
-        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    i1.GeneratedColumn<int>(
+      'account_deleted',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (account_deleted IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_118(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'created_at',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+  defaultValue: const i1.CustomExpression(
+    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+  ),
+);
 
 class Shape23 extends i0.VersionedTable {
   Shape23({required super.source, required super.alias}) : super.aliased();
@@ -3723,112 +3815,217 @@ class Shape23 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_119(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_id', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'group_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_120(String aliasedName) =>
-    i1.GeneratedColumn<int>('is_group_admin', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (is_group_admin IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'is_group_admin',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_group_admin IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_121(String aliasedName) =>
-    i1.GeneratedColumn<int>('is_direct_chat', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (is_direct_chat IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'is_direct_chat',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_direct_chat IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_122(String aliasedName) =>
-    i1.GeneratedColumn<int>('pinned', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'pinned',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_123(String aliasedName) =>
-    i1.GeneratedColumn<int>('archived', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'archived',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_124(String aliasedName) =>
-    i1.GeneratedColumn<int>('joined_group', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (joined_group IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'joined_group',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (joined_group IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_125(String aliasedName) =>
-    i1.GeneratedColumn<int>('left_group', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (left_group IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'left_group',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (left_group IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_126(String aliasedName) =>
-    i1.GeneratedColumn<int>('deleted_content', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (deleted_content IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'deleted_content',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (deleted_content IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_127(String aliasedName) =>
-    i1.GeneratedColumn<int>('state_version_id', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'state_version_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_128(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('state_encryption_key', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'state_encryption_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_129(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('my_group_private_key', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'my_group_private_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_130(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_name', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'group_name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_131(String aliasedName) =>
-    i1.GeneratedColumn<String>('draft_message', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'draft_message',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_132(String aliasedName) =>
-    i1.GeneratedColumn<int>('total_media_counter', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'total_media_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_133(String aliasedName) =>
-    i1.GeneratedColumn<int>('also_best_friend', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (also_best_friend IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'also_best_friend',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (also_best_friend IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_134(String aliasedName) =>
     i1.GeneratedColumn<int>(
-        'delete_messages_after_milliseconds', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 86400000',
-        defaultValue: const i1.CustomExpression('86400000'));
+      'delete_messages_after_milliseconds',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 86400000',
+      defaultValue: const i1.CustomExpression('86400000'),
+    );
 i1.GeneratedColumn<int> _column_135(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_message_send', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_message_send',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_136(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_message_received', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_message_received',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_137(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_flame_counter_change', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_flame_counter_change',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_138(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_flame_sync', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_flame_sync',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_139(String aliasedName) =>
-    i1.GeneratedColumn<int>('flame_counter', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'flame_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_140(String aliasedName) =>
-    i1.GeneratedColumn<int>('max_flame_counter', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'max_flame_counter',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_141(String aliasedName) =>
-    i1.GeneratedColumn<int>('max_flame_counter_from', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
-i1.GeneratedColumn<int> _column_142(String aliasedName) => i1.GeneratedColumn<
-        int>('last_message_exchange', aliasedName, false,
-    type: i1.DriftSqlType.int,
-    $customConstraints:
-        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-    defaultValue: const i1.CustomExpression(
-        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    i1.GeneratedColumn<int>(
+      'max_flame_counter_from',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<int> _column_142(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'last_message_exchange',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+  defaultValue: const i1.CustomExpression(
+    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+  ),
+);
 
 class Shape24 extends i0.VersionedTable {
   Shape24({required super.source, required super.alias}) : super.aliased();
@@ -3868,59 +4065,129 @@ class Shape24 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_143(String aliasedName) =>
-    i1.GeneratedColumn<String>('media_id', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'media_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_144(String aliasedName) =>
-    i1.GeneratedColumn<String>('type', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'type',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_145(String aliasedName) =>
-    i1.GeneratedColumn<String>('upload_state', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'upload_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_146(String aliasedName) =>
-    i1.GeneratedColumn<String>('download_state', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'download_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_147(String aliasedName) =>
-    i1.GeneratedColumn<int>('requires_authentication', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (requires_authentication IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'requires_authentication',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (requires_authentication IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_148(String aliasedName) =>
-    i1.GeneratedColumn<int>('stored', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK ("stored" IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'stored',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK ("stored" IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_149(String aliasedName) =>
-    i1.GeneratedColumn<int>('is_draft_media', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (is_draft_media IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'is_draft_media',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_draft_media IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<String> _column_150(String aliasedName) =>
-    i1.GeneratedColumn<String>('reupload_requested_by', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'reupload_requested_by',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_151(String aliasedName) =>
-    i1.GeneratedColumn<int>('display_limit_in_milliseconds', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'display_limit_in_milliseconds',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_152(String aliasedName) =>
-    i1.GeneratedColumn<int>('remove_audio', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NULL CHECK (remove_audio IN (0, 1))');
+    i1.GeneratedColumn<int>(
+      'remove_audio',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL CHECK (remove_audio IN (0, 1))',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_153(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('download_token', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'download_token',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_154(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_key', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_155(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_mac', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_mac',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_156(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('encryption_nonce', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'encryption_nonce',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_157(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('stored_file_hash', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'stored_file_hash',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 
 class Shape25 extends i0.VersionedTable {
   Shape25({required super.source, required super.alias}) : super.aliased();
@@ -3964,64 +4231,131 @@ class Shape25 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_158(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_id', aliasedName, false,
-        type: i1.DriftSqlType.string,
-        $customConstraints:
-            'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<String>(
+      'group_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints:
+          'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE',
+    );
 i1.GeneratedColumn<String> _column_159(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_160(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NULL REFERENCES contacts(user_id)');
+    i1.GeneratedColumn<int>(
+      'sender_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL REFERENCES contacts(user_id)',
+    );
 i1.GeneratedColumn<String> _column_161(String aliasedName) =>
-    i1.GeneratedColumn<String>('content', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'content',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_162(String aliasedName) =>
-    i1.GeneratedColumn<String>('media_id', aliasedName, true,
-        type: i1.DriftSqlType.string,
-        $customConstraints:
-            'NULL REFERENCES media_files(media_id)ON DELETE SET NULL');
+    i1.GeneratedColumn<String>(
+      'media_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints:
+          'NULL REFERENCES media_files(media_id)ON DELETE SET NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_163(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
-        'additional_message_data', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+      'additional_message_data',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_164(String aliasedName) =>
-    i1.GeneratedColumn<int>('media_stored', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_stored IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'media_stored',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_stored IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_165(String aliasedName) =>
-    i1.GeneratedColumn<int>('media_reopened', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (media_reopened IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'media_reopened',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_reopened IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<String> _column_166(String aliasedName) =>
-    i1.GeneratedColumn<String>('quotes_message_id', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'quotes_message_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_167(String aliasedName) =>
-    i1.GeneratedColumn<int>('is_deleted_from_sender', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 0 CHECK (is_deleted_from_sender IN (0, 1))',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'is_deleted_from_sender',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (is_deleted_from_sender IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_168(String aliasedName) =>
-    i1.GeneratedColumn<int>('opened_at', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'opened_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_169(String aliasedName) =>
-    i1.GeneratedColumn<int>('opened_by_all', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'opened_by_all',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_170(String aliasedName) =>
-    i1.GeneratedColumn<int>('modified_at', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'modified_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_171(String aliasedName) =>
-    i1.GeneratedColumn<int>('ack_by_user', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'ack_by_user',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_172(String aliasedName) =>
-    i1.GeneratedColumn<int>('ack_by_server', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'ack_by_server',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 
 class Shape26 extends i0.VersionedTable {
   Shape26({required super.source, required super.alias}) : super.aliased();
@@ -4038,20 +4372,31 @@ class Shape26 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_173(String aliasedName) =>
-    i1.GeneratedColumn<int>('id', aliasedName, false,
-        hasAutoIncrement: true,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT');
+    i1.GeneratedColumn<int>(
+      'id',
+      aliasedName,
+      false,
+      hasAutoIncrement: true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    );
 i1.GeneratedColumn<String> _column_174(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, false,
-        type: i1.DriftSqlType.string,
-        $customConstraints:
-            'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints:
+          'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+    );
 i1.GeneratedColumn<int> _column_175(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+    );
 
 class Shape27 extends i0.VersionedTable {
   Shape27({required super.source, required super.alias}) : super.aliased();
@@ -4066,13 +4411,21 @@ class Shape27 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_176(String aliasedName) =>
-    i1.GeneratedColumn<String>('emoji', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'emoji',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_177(String aliasedName) =>
-    i1.GeneratedColumn<int>('sender_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<int>(
+      'sender_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+    );
 
 class Shape28 extends i0.VersionedTable {
   Shape28({required super.source, required super.alias}) : super.aliased();
@@ -4091,18 +4444,37 @@ class Shape28 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_178(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL REFERENCES contacts(user_id)');
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL REFERENCES contacts(user_id)',
+    );
 i1.GeneratedColumn<String> _column_179(String aliasedName) =>
-    i1.GeneratedColumn<String>('member_state', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'member_state',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_180(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('group_public_key', aliasedName, true,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'group_public_key',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_181(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_message', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_message',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 
 class Shape29 extends i0.VersionedTable {
   Shape29({required super.source, required super.alias}) : super.aliased();
@@ -4132,44 +4504,90 @@ class Shape29 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_182(String aliasedName) =>
-    i1.GeneratedColumn<String>('receipt_id', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'receipt_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_183(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+    );
 i1.GeneratedColumn<String> _column_184(String aliasedName) =>
-    i1.GeneratedColumn<String>('message_id', aliasedName, true,
-        type: i1.DriftSqlType.string,
-        $customConstraints:
-            'NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    i1.GeneratedColumn<String>(
+      'message_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints:
+          'NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_185(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('message', aliasedName, false,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'message',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_186(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_will_sends_receipt', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints:
-            'NOT NULL DEFAULT 1 CHECK (contact_will_sends_receipt IN (0, 1))',
-        defaultValue: const i1.CustomExpression('1'));
+    i1.GeneratedColumn<int>(
+      'contact_will_sends_receipt',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 1 CHECK (contact_will_sends_receipt IN (0, 1))',
+      defaultValue: const i1.CustomExpression('1'),
+    );
 i1.GeneratedColumn<int> _column_187(String aliasedName) =>
-    i1.GeneratedColumn<int>('mark_for_retry', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'mark_for_retry',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_188(String aliasedName) =>
-    i1.GeneratedColumn<int>('mark_for_retry_after_accepted', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'mark_for_retry_after_accepted',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_189(String aliasedName) =>
-    i1.GeneratedColumn<int>('ack_by_server_at', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'ack_by_server_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_190(String aliasedName) =>
-    i1.GeneratedColumn<int>('retry_count', aliasedName, false,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NOT NULL DEFAULT 0',
-        defaultValue: const i1.CustomExpression('0'));
+    i1.GeneratedColumn<int>(
+      'retry_count',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 i1.GeneratedColumn<int> _column_191(String aliasedName) =>
-    i1.GeneratedColumn<int>('last_retry', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'last_retry',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 
 class Shape30 extends i0.VersionedTable {
   Shape30({required super.source, required super.alias}) : super.aliased();
@@ -4192,14 +4610,29 @@ class Shape31 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_192(String aliasedName) =>
-    i1.GeneratedColumn<int>('device_id', aliasedName, false,
-        type: i1.DriftSqlType.int, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<int>(
+      'device_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_193(String aliasedName) =>
-    i1.GeneratedColumn<String>('name', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_194(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('identity_key', aliasedName, false,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'identity_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NOT NULL',
+    );
 
 class Shape32 extends i0.VersionedTable {
   Shape32({required super.source, required super.alias}) : super.aliased();
@@ -4212,17 +4645,37 @@ class Shape32 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<int> _column_195(String aliasedName) =>
-    i1.GeneratedColumn<int>('pre_key_id', aliasedName, false,
-        type: i1.DriftSqlType.int, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<int>(
+      'pre_key_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_196(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('pre_key', aliasedName, false,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'pre_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<String> _column_197(String aliasedName) =>
-    i1.GeneratedColumn<String>('sender_key_name', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'sender_key_name',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<i2.Uint8List> _column_198(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('sender_key', aliasedName, false,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'sender_key',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NOT NULL',
+    );
 
 class Shape33 extends i0.VersionedTable {
   Shape33({required super.source, required super.alias}) : super.aliased();
@@ -4237,8 +4690,13 @@ class Shape33 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<i2.Uint8List> _column_199(String aliasedName) =>
-    i1.GeneratedColumn<i2.Uint8List>('session_record', aliasedName, false,
-        type: i1.DriftSqlType.blob, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<i2.Uint8List>(
+      'session_record',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.blob,
+      $customConstraints: 'NOT NULL',
+    );
 
 class Shape34 extends i0.VersionedTable {
   Shape34({required super.source, required super.alias}) : super.aliased();
@@ -4252,13 +4710,19 @@ class Shape34 extends i0.VersionedTable {
       columnsByName['action_at']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_200(String aliasedName) => i1.GeneratedColumn<
-        int>('action_at', aliasedName, false,
-    type: i1.DriftSqlType.int,
-    $customConstraints:
-        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-    defaultValue: const i1.CustomExpression(
-        'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+i1.GeneratedColumn<int> _column_200(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'action_at',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+  defaultValue: const i1.CustomExpression(
+    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+  ),
+);
 
 class Shape35 extends i0.VersionedTable {
   Shape35({required super.source, required super.alias}) : super.aliased();
@@ -4284,25 +4748,742 @@ class Shape35 extends i0.VersionedTable {
 }
 
 i1.GeneratedColumn<String> _column_201(String aliasedName) =>
-    i1.GeneratedColumn<String>('group_history_id', aliasedName, false,
-        type: i1.DriftSqlType.string, $customConstraints: 'NOT NULL');
+    i1.GeneratedColumn<String>(
+      'group_history_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i1.GeneratedColumn<int> _column_202(String aliasedName) =>
-    i1.GeneratedColumn<int>('contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int,
-        $customConstraints: 'NULL REFERENCES contacts(user_id)');
+    i1.GeneratedColumn<int>(
+      'contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL REFERENCES contacts(user_id)',
+    );
 i1.GeneratedColumn<int> _column_203(String aliasedName) =>
-    i1.GeneratedColumn<int>('affected_contact_id', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+    i1.GeneratedColumn<int>(
+      'affected_contact_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_204(String aliasedName) =>
-    i1.GeneratedColumn<String>('old_group_name', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'old_group_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<String> _column_205(String aliasedName) =>
-    i1.GeneratedColumn<String>('new_group_name', aliasedName, true,
-        type: i1.DriftSqlType.string, $customConstraints: 'NULL');
+    i1.GeneratedColumn<String>(
+      'new_group_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
 i1.GeneratedColumn<int> _column_206(String aliasedName) =>
     i1.GeneratedColumn<int>(
-        'new_delete_messages_after_milliseconds', aliasedName, true,
-        type: i1.DriftSqlType.int, $customConstraints: 'NULL');
+      'new_delete_messages_after_milliseconds',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+
+final class Schema9 extends i0.VersionedSchema {
+  Schema9({required super.database}) : super(version: 9);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    contacts,
+    groups,
+    mediaFiles,
+    messages,
+    messageHistories,
+    reactions,
+    groupMembers,
+    receipts,
+    receivedReceipts,
+    signalIdentityKeyStores,
+    signalPreKeyStores,
+    signalSenderKeyStores,
+    signalSessionStores,
+    messageActions,
+    groupHistories,
+  ];
+  late final Shape22 contacts = Shape22(
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_106,
+        _column_107,
+        _column_108,
+        _column_109,
+        _column_110,
+        _column_111,
+        _column_112,
+        _column_113,
+        _column_114,
+        _column_115,
+        _column_116,
+        _column_117,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape23 groups = Shape23(
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_119,
+        _column_120,
+        _column_121,
+        _column_122,
+        _column_123,
+        _column_124,
+        _column_125,
+        _column_126,
+        _column_127,
+        _column_128,
+        _column_129,
+        _column_130,
+        _column_131,
+        _column_132,
+        _column_133,
+        _column_134,
+        _column_118,
+        _column_135,
+        _column_136,
+        _column_137,
+        _column_138,
+        _column_139,
+        _column_140,
+        _column_141,
+        _column_142,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape36 mediaFiles = Shape36(
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_143,
+        _column_144,
+        _column_145,
+        _column_146,
+        _column_147,
+        _column_148,
+        _column_149,
+        _column_207,
+        _column_150,
+        _column_151,
+        _column_152,
+        _column_153,
+        _column_154,
+        _column_155,
+        _column_156,
+        _column_157,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape25 messages = Shape25(
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_158,
+        _column_159,
+        _column_160,
+        _column_144,
+        _column_161,
+        _column_162,
+        _column_163,
+        _column_164,
+        _column_165,
+        _column_153,
+        _column_166,
+        _column_167,
+        _column_168,
+        _column_169,
+        _column_118,
+        _column_170,
+        _column_171,
+        _column_172,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape26 messageHistories = Shape26(
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_173,
+        _column_174,
+        _column_175,
+        _column_161,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape27 reactions = Shape27(
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_174, _column_176, _column_177, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape28 groupMembers = Shape28(
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_158,
+        _column_178,
+        _column_179,
+        _column_180,
+        _column_181,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape29 receipts = Shape29(
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_182,
+        _column_183,
+        _column_184,
+        _column_185,
+        _column_186,
+        _column_187,
+        _column_188,
+        _column_189,
+        _column_190,
+        _column_191,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape30 receivedReceipts = Shape30(
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_182, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape31 signalIdentityKeyStores = Shape31(
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_194, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape32 signalPreKeyStores = Shape32(
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_195, _column_196, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape11 signalSenderKeyStores = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_197, _column_198],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape33 signalSessionStores = Shape33(
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_199, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape34 messageActions = Shape34(
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_174, _column_183, _column_144, _column_200],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape35 groupHistories = Shape35(
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_201,
+        _column_158,
+        _column_202,
+        _column_203,
+        _column_204,
+        _column_205,
+        _column_206,
+        _column_144,
+        _column_200,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape36 extends i0.VersionedTable {
+  Shape36({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get mediaId =>
+      columnsByName['media_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get uploadState =>
+      columnsByName['upload_state']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get downloadState =>
+      columnsByName['download_state']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get requiresAuthentication =>
+      columnsByName['requires_authentication']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get stored =>
+      columnsByName['stored']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isDraftMedia =>
+      columnsByName['is_draft_media']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get preProgressingProcess =>
+      columnsByName['pre_progressing_process']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get reuploadRequestedBy =>
+      columnsByName['reupload_requested_by']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get displayLimitInMilliseconds =>
+      columnsByName['display_limit_in_milliseconds']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get removeAudio =>
+      columnsByName['remove_audio']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<i2.Uint8List> get downloadToken =>
+      columnsByName['download_token']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionKey =>
+      columnsByName['encryption_key']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionMac =>
+      columnsByName['encryption_mac']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionNonce =>
+      columnsByName['encryption_nonce']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get storedFileHash =>
+      columnsByName['stored_file_hash']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<int> _column_207(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'pre_progressing_process',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NULL',
+    );
+
+final class Schema10 extends i0.VersionedSchema {
+  Schema10({required super.database}) : super(version: 10);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    contacts,
+    groups,
+    mediaFiles,
+    messages,
+    messageHistories,
+    reactions,
+    groupMembers,
+    receipts,
+    receivedReceipts,
+    signalIdentityKeyStores,
+    signalPreKeyStores,
+    signalSenderKeyStores,
+    signalSessionStores,
+    messageActions,
+    groupHistories,
+  ];
+  late final Shape22 contacts = Shape22(
+    source: i0.VersionedTable(
+      entityName: 'contacts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(user_id)'],
+      columns: [
+        _column_106,
+        _column_107,
+        _column_108,
+        _column_109,
+        _column_110,
+        _column_111,
+        _column_112,
+        _column_113,
+        _column_114,
+        _column_115,
+        _column_116,
+        _column_117,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape23 groups = Shape23(
+    source: i0.VersionedTable(
+      entityName: 'groups',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id)'],
+      columns: [
+        _column_119,
+        _column_120,
+        _column_121,
+        _column_122,
+        _column_123,
+        _column_124,
+        _column_125,
+        _column_126,
+        _column_127,
+        _column_128,
+        _column_129,
+        _column_130,
+        _column_131,
+        _column_132,
+        _column_133,
+        _column_134,
+        _column_118,
+        _column_135,
+        _column_136,
+        _column_137,
+        _column_138,
+        _column_139,
+        _column_140,
+        _column_141,
+        _column_142,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape36 mediaFiles = Shape36(
+    source: i0.VersionedTable(
+      entityName: 'media_files',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(media_id)'],
+      columns: [
+        _column_143,
+        _column_144,
+        _column_145,
+        _column_146,
+        _column_147,
+        _column_148,
+        _column_149,
+        _column_207,
+        _column_150,
+        _column_151,
+        _column_152,
+        _column_153,
+        _column_154,
+        _column_155,
+        _column_156,
+        _column_157,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape25 messages = Shape25(
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id)'],
+      columns: [
+        _column_158,
+        _column_159,
+        _column_160,
+        _column_144,
+        _column_161,
+        _column_162,
+        _column_163,
+        _column_164,
+        _column_165,
+        _column_153,
+        _column_166,
+        _column_167,
+        _column_168,
+        _column_169,
+        _column_118,
+        _column_170,
+        _column_171,
+        _column_172,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape26 messageHistories = Shape26(
+    source: i0.VersionedTable(
+      entityName: 'message_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [],
+      columns: [
+        _column_173,
+        _column_174,
+        _column_175,
+        _column_161,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape27 reactions = Shape27(
+    source: i0.VersionedTable(
+      entityName: 'reactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, sender_id, emoji)'],
+      columns: [_column_174, _column_176, _column_177, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape28 groupMembers = Shape28(
+    source: i0.VersionedTable(
+      entityName: 'group_members',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_id, contact_id)'],
+      columns: [
+        _column_158,
+        _column_178,
+        _column_179,
+        _column_180,
+        _column_181,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape37 receipts = Shape37(
+    source: i0.VersionedTable(
+      entityName: 'receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [
+        _column_182,
+        _column_183,
+        _column_184,
+        _column_185,
+        _column_186,
+        _column_208,
+        _column_187,
+        _column_188,
+        _column_189,
+        _column_190,
+        _column_191,
+        _column_118,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape30 receivedReceipts = Shape30(
+    source: i0.VersionedTable(
+      entityName: 'received_receipts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(receipt_id)'],
+      columns: [_column_182, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape31 signalIdentityKeyStores = Shape31(
+    source: i0.VersionedTable(
+      entityName: 'signal_identity_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_194, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape32 signalPreKeyStores = Shape32(
+    source: i0.VersionedTable(
+      entityName: 'signal_pre_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(pre_key_id)'],
+      columns: [_column_195, _column_196, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape11 signalSenderKeyStores = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'signal_sender_key_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(sender_key_name)'],
+      columns: [_column_197, _column_198],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape33 signalSessionStores = Shape33(
+    source: i0.VersionedTable(
+      entityName: 'signal_session_stores',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(device_id, name)'],
+      columns: [_column_192, _column_193, _column_199, _column_118],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape34 messageActions = Shape34(
+    source: i0.VersionedTable(
+      entityName: 'message_actions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(message_id, contact_id, type)'],
+      columns: [_column_174, _column_183, _column_144, _column_200],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape35 groupHistories = Shape35(
+    source: i0.VersionedTable(
+      entityName: 'group_histories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(group_history_id)'],
+      columns: [
+        _column_201,
+        _column_158,
+        _column_202,
+        _column_203,
+        _column_204,
+        _column_205,
+        _column_206,
+        _column_144,
+        _column_200,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape37 extends i0.VersionedTable {
+  Shape37({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get receiptId =>
+      columnsByName['receipt_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get contactId =>
+      columnsByName['contact_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get messageId =>
+      columnsByName['message_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<i2.Uint8List> get message =>
+      columnsByName['message']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<int> get contactWillSendsReceipt =>
+      columnsByName['contact_will_sends_receipt']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get willBeRetriedByMediaUpload =>
+      columnsByName['will_be_retried_by_media_upload']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get markForRetry =>
+      columnsByName['mark_for_retry']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get markForRetryAfterAccepted =>
+      columnsByName['mark_for_retry_after_accepted']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get ackByServerAt =>
+      columnsByName['ack_by_server_at']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get retryCount =>
+      columnsByName['retry_count']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get lastRetry =>
+      columnsByName['last_retry']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<int> _column_208(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'will_be_retried_by_media_upload',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT 0 CHECK (will_be_retried_by_media_upload IN (0, 1))',
+  defaultValue: const i1.CustomExpression('0'),
+);
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
@@ -4311,6 +5492,8 @@ i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
   required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
+  required Future<void> Function(i1.Migrator m, Schema9 schema) from8To9,
+  required Future<void> Function(i1.Migrator m, Schema10 schema) from9To10,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -4349,6 +5532,16 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from7To8(migrator, schema);
         return 8;
+      case 8:
+        final schema = Schema9(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from8To9(migrator, schema);
+        return 9;
+      case 9:
+        final schema = Schema10(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from9To10(migrator, schema);
+        return 10;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -4363,14 +5556,18 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
   required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
-}) =>
-    i0.VersionedSchema.stepByStepHelper(
-        step: migrationSteps(
-      from1To2: from1To2,
-      from2To3: from2To3,
-      from3To4: from3To4,
-      from4To5: from4To5,
-      from5To6: from5To6,
-      from6To7: from6To7,
-      from7To8: from7To8,
-    ));
+  required Future<void> Function(i1.Migrator m, Schema9 schema) from8To9,
+  required Future<void> Function(i1.Migrator m, Schema10 schema) from9To10,
+}) => i0.VersionedSchema.stepByStepHelper(
+  step: migrationSteps(
+    from1To2: from1To2,
+    from2To3: from2To3,
+    from3To4: from3To4,
+    from4To5: from4To5,
+    from5To6: from5To6,
+    from6To7: from6To7,
+    from7To8: from7To8,
+    from8To9: from8To9,
+    from9To10: from9To10,
+  ),
+);

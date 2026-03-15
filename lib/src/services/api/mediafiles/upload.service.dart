@@ -24,10 +24,13 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
 Future<void> finishStartedPreprocessing() async {
-  final mediaFiles =
-      await twonlyDB.mediaFilesDao.getAllMediaFilesPendingUpload();
+  final mediaFiles = await twonlyDB.mediaFilesDao
+      .getAllMediaFilesPendingUpload();
+
+  Log.info('There are ${mediaFiles.length} media files pending');
 
   for (final mediaFile in mediaFiles) {
     if (mediaFile.isDraftMedia) {
@@ -51,6 +54,50 @@ Future<void> finishStartedPreprocessing() async {
       await startBackgroundMediaUpload(service);
     } catch (e) {
       Log.warn(e);
+    }
+  }
+}
+
+/// It can happen, that a media files is uploaded but not yet marked for been uploaded.
+/// For example because the background_downloader plugin has not yet reported the finished upload.
+/// In case the the message receipts or a reaction was received, mark the media file as been uploaded.
+Future<void> handleMediaRelatedResponseFromReceiver(String messageId) async {
+  final message = await twonlyDB.messagesDao
+      .getMessageById(messageId)
+      .getSingleOrNull();
+  if (message == null || message.mediaId == null) return;
+  final media = await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+  if (media == null) return;
+
+  if (media.uploadState != UploadState.uploaded) {
+    Log.info('Media was not yet marked as uploaded. Doing it now.');
+    await markUploadAsSuccessful(media);
+  }
+}
+
+Future<void> markUploadAsSuccessful(MediaFile media) async {
+  await twonlyDB.mediaFilesDao.updateMedia(
+    media.mediaId,
+    const MediaFilesCompanion(
+      uploadState: Value(UploadState.uploaded),
+    ),
+  );
+
+  /// As the messages where send in a bulk acknowledge all messages.
+
+  final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+    media.mediaId,
+  );
+  for (final message in messages) {
+    final contacts = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+      message.groupId,
+    );
+    for (final contact in contacts) {
+      await twonlyDB.messagesDao.handleMessageAckByServer(
+        contact.contactId,
+        message.messageId,
+        clock.now(),
+      );
     }
   }
 }
@@ -103,8 +150,9 @@ Future<void> insertMediaFileInMessagesTable(
         groupId: Value(groupId),
         mediaId: Value(mediaService.mediaFile.mediaId),
         type: Value(MessageType.media.name),
-        additionalMessageData:
-            Value.absentIfNull(additionalData?.writeToBuffer()),
+        additionalMessageData: Value.absentIfNull(
+          additionalData?.writeToBuffer(),
+        ),
       ),
     );
     await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
@@ -192,8 +240,9 @@ Future<void> _encryptMediaFiles(MediaFileService mediaService) async {
 
   await mediaService.setEncryptedMac(Uint8List.fromList(secretBox.mac.bytes));
 
-  mediaService.encryptedPath
-      .writeAsBytesSync(Uint8List.fromList(secretBox.cipherText));
+  mediaService.encryptedPath.writeAsBytesSync(
+    Uint8List.fromList(secretBox.cipherText),
+  );
 }
 
 Future<void> _createUploadRequest(MediaFileService media) async {
@@ -201,8 +250,9 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   final messagesOnSuccess = <TextMessage>[];
 
-  final messages =
-      await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaFile.mediaId);
+  final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+    media.mediaFile.mediaId,
+  );
 
   if (messages.isEmpty) {
     // There where no user selected who should receive the image, so waiting with this step...
@@ -210,8 +260,9 @@ Future<void> _createUploadRequest(MediaFileService media) async {
   }
 
   for (final message in messages) {
-    final groupMembers =
-        await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
+    final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+      message.groupId,
+    );
 
     if (media.mediaFile.reuploadRequestedBy == null) {
       await incFlameCounter(message.groupId, false, message.createdAt);
@@ -220,8 +271,9 @@ Future<void> _createUploadRequest(MediaFileService media) async {
     for (final groupMember in groupMembers) {
       /// only send the upload to the users
       if (media.mediaFile.reuploadRequestedBy != null) {
-        if (!media.mediaFile.reuploadRequestedBy!
-            .contains(groupMember.contactId)) {
+        if (!media.mediaFile.reuploadRequestedBy!.contains(
+          groupMember.contactId,
+        )) {
           continue;
         }
       }
@@ -260,8 +312,9 @@ Future<void> _createUploadRequest(MediaFileService media) async {
       );
 
       if (media.mediaFile.displayLimitInMilliseconds != null) {
-        notEncryptedContent.media.displayLimitInMilliseconds =
-            Int64(media.mediaFile.displayLimitInMilliseconds!);
+        notEncryptedContent.media.displayLimitInMilliseconds = Int64(
+          media.mediaFile.displayLimitInMilliseconds!,
+        );
       }
 
       final cipherText = await sendCipherText(
@@ -299,6 +352,19 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   final uploadRequestBytes = uploadRequest.writeToBuffer();
 
+  if (uploadRequestBytes.length > 49_000_000) {
+    await media.setUploadState(UploadState.fileLimitReached);
+
+    await twonlyDB.messagesDao.updateMessagesByMediaId(
+      media.mediaFile.mediaId,
+      MessagesCompanion(
+        openedAt: Value(DateTime.now()),
+        ackByServer: Value(DateTime.now()),
+      ),
+    );
+    return;
+  }
+
   await media.uploadRequestPath.writeAsBytes(uploadRequestBytes);
 }
 
@@ -306,8 +372,9 @@ Mutex protectUpload = Mutex();
 
 Future<void> _uploadUploadRequest(MediaFileService media) async {
   await protectUpload.protect(() async {
-    final currentMedia =
-        await twonlyDB.mediaFilesDao.getMediaFileById(media.mediaFile.mediaId);
+    final currentMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
+      media.mediaFile.mediaId,
+    );
 
     if (currentMedia == null ||
         currentMedia.uploadState == UploadState.backgroundUploadTaskStarted) {
@@ -315,8 +382,9 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
       return null;
     }
 
-    final apiAuthTokenRaw = await const FlutterSecureStorage()
-        .read(key: SecureStorageKeys.apiAuthToken);
+    final apiAuthTokenRaw = await const FlutterSecureStorage().read(
+      key: SecureStorageKeys.apiAuthToken,
+    );
 
     if (apiAuthTokenRaw == null) {
       Log.error('api auth token not defined.');
@@ -344,8 +412,9 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
 
     final connectivityResult = await Connectivity().checkConnectivity();
 
-    if (!connectivityResult.contains(ConnectivityResult.mobile) &&
-        !connectivityResult.contains(ConnectivityResult.wifi)) {
+    if (globalIsInBackgroundTask ||
+        !connectivityResult.contains(ConnectivityResult.mobile) &&
+            !connectivityResult.contains(ConnectivityResult.wifi)) {
       // no internet, directly put it into the background...
       await FileDownloader().enqueue(task);
       await media.setUploadState(UploadState.backgroundUploadTaskStarted);
@@ -376,15 +445,30 @@ Future<void> uploadFileFastOrEnqueue(
   );
 
   try {
+    final workmanagerUniqueName =
+        'progressing_finish_uploads_${media.mediaFile.mediaId}';
+
+    await Workmanager().registerOneOffTask(
+      workmanagerUniqueName,
+      'eu.twonly.processing_task',
+      initialDelay: const Duration(minutes: 15),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+    );
+
     Log.info('Uploading fast: ${task.taskId}');
-    final response =
-        await requestMultipart.send().timeout(const Duration(seconds: 8));
+
+    final response = await requestMultipart.send();
     var status = TaskStatus.failed;
     if (response.statusCode == 200) {
       status = TaskStatus.complete;
     } else if (response.statusCode == 404) {
       status = TaskStatus.notFound;
     }
+
+    await Workmanager().cancelByUniqueName(workmanagerUniqueName);
+
     await handleUploadStatusUpdate(
       TaskStatusUpdate(
         task,

@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class KeyValueStore {
   static Future<File> _getFilePath(String key) async {
-    final directory = await getApplicationSupportDirectory();
-    return File('${directory.path}/keyvalue/$key.json');
+    return File('$globalApplicationSupportDirectory/keyvalue/$key.json');
   }
 
   static Future<void> delete(String key) async {

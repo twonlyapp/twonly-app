@@ -26,15 +26,17 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
   }
 
   Future<void> openShareContactView() async {
-    final selectedContacts = await context.navPush(
-      SelectContactsView(
-        text: SelectedContactViewText(
-          title: context.lang.shareContactsTitle,
-          submitButton: (_, __) => context.lang.shareContactsSubmit,
-          submitIcon: FontAwesomeIcons.shareNodes,
-        ),
-      ),
-    ) as List<int>?;
+    final selectedContacts =
+        await context.navPush(
+              SelectContactsView(
+                text: SelectedContactViewText(
+                  title: context.lang.shareContactsTitle,
+                  submitButton: (_, _) => context.lang.shareContactsSubmit,
+                  submitIcon: FontAwesomeIcons.shareNodes,
+                ),
+              ),
+            )
+            as List<int>?;
     if (selectedContacts != null && selectedContacts.isNotEmpty) {
       await insertAndSendContactShareMessage(
         widget.group.groupId,

@@ -326,7 +326,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAppearance => 'Erscheinungsbild';
 
   @override
-  String get settingsPrivacy => 'Datenschutz';
+  String get settingsPrivacy => 'Datenschutz & Sicherheit';
 
   @override
   String get settingsPrivacyBlockUsers => 'Benutzer blockieren';
@@ -1117,6 +1117,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Upload-Limit wurde\nerreicht. Upgrade auf Pro\noder warte bis morgen.';
 
   @override
+  String get fileLimitReached => 'Maximale Dateigröße\nerreicht';
+
+  @override
   String get retransmissionRequested => 'Wird erneut versucht.';
 
   @override
@@ -1695,4 +1698,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Unbekannter Kontakt, dessen Identität bisher nicht verifiziert wurde.';
+
+  @override
+  String chatEntryFlameRestored(Object count) {
+    return '$count Flammen wiederhergestellt';
+  }
+
+  @override
+  String requestedUserToastText(Object username) {
+    return '$username wurde erfolgreich angefragt.';
+  }
+
+  @override
+  String get profileYourQrCode => 'Dein QR-Code';
 }

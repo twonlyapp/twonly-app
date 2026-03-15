@@ -8,23 +8,25 @@ import 'package:drift/drift.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
-import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
+import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-Future<void> recoverTwonlySafe(
+Future<void> recoverBackup(
   String username,
   String password,
   BackupServer? server,
 ) async {
   final (backupId, encryptionKey) = await getMasterKey(password, username);
 
-  final backupServerUrl =
-      await getTwonlySafeBackupUrlFromServer(backupId, server);
+  final backupServerUrl = await getTwonlySafeBackupUrlFromServer(
+    backupId,
+    server,
+  );
 
   if (backupServerUrl == null) {
     Log.error('Could not create backup url');
@@ -87,8 +89,9 @@ Future<void> handleBackupData(
     plaintextBytes,
   );
 
-  final baseDir = (await getApplicationSupportDirectory()).path;
-  final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
+  final originalDatabase = File(
+    join(globalApplicationSupportDirectory, 'twonly.sqlite'),
+  );
   await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
 
   const storage = FlutterSecureStorage();

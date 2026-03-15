@@ -31,10 +31,14 @@ class MessagesDaoManager {
       $$ReactionsTableTableManager(_db.attachedDatabase, _db.reactions);
   $$MessageHistoriesTableTableManager get messageHistories =>
       $$MessageHistoriesTableTableManager(
-          _db.attachedDatabase, _db.messageHistories);
+        _db.attachedDatabase,
+        _db.messageHistories,
+      );
   $$GroupMembersTableTableManager get groupMembers =>
       $$GroupMembersTableTableManager(_db.attachedDatabase, _db.groupMembers);
   $$MessageActionsTableTableManager get messageActions =>
       $$MessageActionsTableTableManager(
-          _db.attachedDatabase, _db.messageActions);
+        _db.attachedDatabase,
+        _db.messageActions,
+      );
 }

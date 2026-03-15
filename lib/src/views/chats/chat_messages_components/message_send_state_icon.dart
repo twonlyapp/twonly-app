@@ -101,8 +101,9 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
       final mediaFile = message.mediaId == null
           ? null
-          : widget.mediaFiles
-              .firstWhereOrNull((t) => t.mediaId == message.mediaId);
+          : widget.mediaFiles.firstWhereOrNull(
+              (t) => t.mediaId == message.mediaId,
+            );
 
       final color = getMessageColorFromType(message, mediaFile, context);
 
@@ -144,8 +145,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             }
           }
         case MessageSendState.send:
-          icon =
-              FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
+          icon = FaIcon(
+            FontAwesomeIcons.solidPaperPlane,
+            size: 12,
+            color: color,
+          );
           text = context.lang.messageSendState_Send;
         case MessageSendState.sending:
           icon = getLoaderIcon(color);
@@ -163,12 +167,19 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
                 context.lang.uploadLimitReached,
                 style: const TextStyle(fontSize: 9),
               );
-
               onTap = () => context.push(Routes.settingsSubscription);
             }
-            if (mediaFile.uploadState == UploadState.preprocessing ||
-                mediaFile.uploadState == UploadState.initialized) {
+
+            if (mediaFile.uploadState == UploadState.initialized) {
               text = context.lang.inProcess;
+            }
+            if (mediaFile.uploadState == UploadState.preprocessing) {
+              final progress = mediaFile.preProgressingProcess ?? 0;
+              if (progress > 0) {
+                text = '${context.lang.inProcess} ($progress%)';
+              } else {
+                text = context.lang.inProcess;
+              }
             }
           }
 
@@ -191,10 +202,25 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         }
 
         if (mediaFile.downloadState == DownloadState.reuploadRequested) {
-          icon =
-              FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
+          icon = FaIcon(
+            FontAwesomeIcons.clockRotateLeft,
+            size: 12,
+            color: color,
+          );
           textWidget = Text(
             context.lang.retransmissionRequested,
+            style: const TextStyle(fontSize: 9),
+          );
+        }
+        if (mediaFile.uploadState == UploadState.fileLimitReached) {
+          icon = FaIcon(
+            FontAwesomeIcons.triangleExclamation,
+            size: 12,
+            color: color,
+          );
+
+          textWidget = Text(
+            context.lang.fileLimitReached,
             style: const TextStyle(fontSize: 9),
           );
         }
@@ -220,10 +246,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     if (!widget.messages.any((t) => t.openedAt == null)) {
       if (widget.lastReaction != null) {
         /// No messages are still open, so check if the reaction is the last message received.
-        if (!widget.messages
-            .any((m) => m.createdAt.isAfter(widget.lastReaction!.createdAt))) {
-          if (EmojiAnimation.animatedIcons
-              .containsKey(widget.lastReaction!.emoji)) {
+        if (!widget.messages.any(
+          (m) => m.createdAt.isAfter(widget.lastReaction!.createdAt),
+        )) {
+          if (EmojiAnimation.animatedIcons.containsKey(
+            widget.lastReaction!.emoji,
+          )) {
             icons = [
               SizedBox(
                 height: 18,

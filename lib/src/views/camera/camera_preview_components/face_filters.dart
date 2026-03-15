@@ -6,7 +6,6 @@ enum FaceFilterType {
   none,
   dogBrown,
   beardUpperLipGreen,
-  beardUpperLip,
 }
 
 extension FaceFilterTypeExtension on FaceFilterType {
@@ -27,8 +26,6 @@ extension FaceFilterTypeExtension on FaceFilterType {
         return Container();
       case FaceFilterType.dogBrown:
         return DogFilterPainter.getPreview();
-      case FaceFilterType.beardUpperLip:
-        return BeardFilterPainter.getPreview(this);
       case FaceFilterType.beardUpperLipGreen:
         return BeardFilterPainter.getPreview(this);
     }

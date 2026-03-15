@@ -8,11 +8,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-import '../../firebase_options.dart';
+import '../../../firebase_options.dart';
 
 // see more here: https://firebase.google.com/docs/cloud-messaging/flutter/receive?hl=de
 
@@ -111,8 +112,15 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   initLogger();
   // Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
-  // make sure every thing run...
-  await Future.delayed(const Duration(milliseconds: 2000));
+
+  if (Platform.isAndroid) {
+    if (await initBackgroundExecution()) {
+      await handlePeriodicTask();
+    }
+  } else {
+    // make sure every thing run...
+    await Future.delayed(const Duration(milliseconds: 2000));
+  }
 }
 
 Future<void> handleRemoteMessage(RemoteMessage message) async {

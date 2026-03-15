@@ -43,6 +43,13 @@ class _PrivacyViewState extends State<PrivacyView> {
             ),
             onTap: () => context.push(Routes.settingsPrivacyBlockUsers),
           ),
+          ListTile(
+            title: Text(context.lang.contactVerifyNumberTitle),
+            onTap: () async {
+              await context.push(Routes.settingsPublicProfile);
+              setState(() {});
+            },
+          ),
         ],
       ),
     );

@@ -11,6 +11,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
@@ -180,6 +181,10 @@ class _GroupViewState extends State<GroupView> {
               Text(
                 substringBy(_group!.groupName, 25),
                 style: const TextStyle(fontSize: 20),
+              ),
+              FlameCounterWidget(
+                groupId: _group?.groupId,
+                prefix: true,
               ),
             ],
           ),

@@ -1,22 +1,21 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:pro_video_editor/pro_video_editor.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/channels/video_compression.channel.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:video_compress/video_compress.dart';
 
 Future<void> compressImage(
   File sourceFile,
   File destinationFile,
 ) async {
   final stopwatch = Stopwatch()..start();
-
-  //   // ffmpeg -i input.png -vcodec libwebp -lossless 1 -preset default output.webp
 
   try {
     var compressedBytes = await FlutterImageCompress.compressWithFile(
@@ -74,37 +73,53 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
   try {
     final task = VideoRenderData(
       video: EditorVideo.file(media.originalPath),
-      // qualityPreset: VideoQualityPreset.p720High,
       imageBytes: media.overlayImagePath.readAsBytesSync(),
       enableAudio: !media.removeAudio,
     );
 
-    final result = await ProVideoEditor.instance.renderVideo(task);
-    media.ffmpegOutputPath.writeAsBytesSync(result);
+    await ProVideoEditor.instance
+        .renderVideoToFile(media.ffmpegOutputPath.path, task);
 
-    MediaInfo? mediaInfo;
-    try {
-      mediaInfo = await VideoCompress.compressVideo(
-        media.ffmpegOutputPath.path,
-        quality: VideoQuality.Res640x480Quality,
-        includeAudio: true,
-      );
-      Log.info('Video has now size of ${mediaInfo!.filesize} bytes.');
-    } catch (e) {
-      Log.error('during video compression: $e');
-    }
+    if (Platform.isIOS ||
+        media.ffmpegOutputPath.statSync().size >= 10_000_000 ||
+        !kReleaseMode) {
+      String? compressedPath;
+      try {
+        compressedPath = await VideoCompressionChannel.compressVideo(
+          inputPath: media.ffmpegOutputPath.path,
+          outputPath: media.tempPath.path,
+          onProgress: (progress) async {
+            await twonlyDB.mediaFilesDao.updateMedia(
+              media.mediaFile.mediaId,
+              MediaFilesCompanion(
+                preProgressingProcess: Value((progress * 100).toInt()),
+              ),
+            );
+          },
+        );
+      } catch (e) {
+        Log.error('during video compression: $e');
+      }
 
-    if (mediaInfo == null) {
-      Log.error('Could not compress video using original video.');
-      // as a fall back use the non compressed version
-      media.ffmpegOutputPath.copySync(media.tempPath.path);
+      if (compressedPath == null) {
+        Log.error('Could not compress video using original video.');
+        // as a fall back use the non compressed version
+        media.ffmpegOutputPath.copySync(media.tempPath.path);
+      }
     } else {
-      mediaInfo.file!.copySync(media.tempPath.path);
+      // In case the video is smaller than 10MB do not compress it...
+      media.ffmpegOutputPath.copySync(media.tempPath.path);
     }
 
     stopwatch.stop();
+
+    final sizeFrom = (media.ffmpegOutputPath.statSync().size / 1024 / 1024)
+        .toStringAsFixed(2);
+    final sizeTo =
+        (media.tempPath.statSync().size / 1024 / 1024).toStringAsFixed(2);
+
     Log.info(
-      'It took ${stopwatch.elapsedMilliseconds}ms to compress the video. Reduced from ${media.ffmpegOutputPath.statSync().size} to ${media.tempPath.statSync().size} bytes.',
+      'It took ${stopwatch.elapsedMilliseconds}ms to compress the video. Reduced from $sizeFrom to $sizeTo bytes.',
     );
   } catch (e) {
     Log.error(e);

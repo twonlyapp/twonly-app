@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:background_downloader/background_downloader.dart';
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:twonly/globals.dart';
@@ -8,8 +8,8 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> initFileDownloader() async {
@@ -74,30 +74,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.complete) {
     if (update.responseStatusCode == 200) {
       Log.info('Upload of ${media.mediaId} success!');
-
-      await twonlyDB.mediaFilesDao.updateMedia(
-        media.mediaId,
-        const MediaFilesCompanion(
-          uploadState: Value(UploadState.uploaded),
-        ),
-      );
-
-      /// As the messages where send in a bulk acknowledge all messages.
-
-      final messages =
-          await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaId);
-      for (final message in messages) {
-        final contacts =
-            await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
-        for (final contact in contacts) {
-          await twonlyDB.messagesDao.handleMessageAckByServer(
-            contact.contactId,
-            message.messageId,
-            clock.now(),
-          );
-        }
-      }
-
+      await markUploadAsSuccessful(media);
       return;
     }
     Log.error(
@@ -122,6 +99,20 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     'Background status $mediaId with status ${update.status} and ${update.responseStatusCode}. ',
   );
 
+  if (update.status == TaskStatus.waitingToRetry) {
+    if (update.responseStatusCode == 401) {
+      // auth token is not valid, so either create a new task with a new token, or cancel task
+      final mediaService = MediaFileService(media);
+      await FileDownloader().cancelTaskWithId(update.task.taskId);
+      Log.info('Cancel task, already uploaded or will be reuploaded');
+      if (mediaService.mediaFile.uploadState != UploadState.uploaded) {
+        await mediaService.setUploadState(UploadState.uploading);
+        // In all other cases just try the upload again...
+        await startBackgroundMediaUpload(mediaService);
+      }
+    }
+  }
+
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
     Log.error(
@@ -129,8 +120,11 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     );
     final mediaService = MediaFileService(media);
 
-    await mediaService.setUploadState(UploadState.uploading);
-    // In all other cases just try the upload again...
-    await startBackgroundMediaUpload(mediaService);
+    // in case the media file is already uploaded to not reqtry
+    if (mediaService.mediaFile.uploadState != UploadState.uploaded) {
+      await mediaService.setUploadState(UploadState.uploading);
+      // In all other cases just try the upload again...
+      await startBackgroundMediaUpload(mediaService);
+    }
   }
 }

@@ -81,22 +81,27 @@ Future<void> handleMediaError(MediaFile media) async {
   );
 }
 
-Future<void> importSignalContactAndCreateRequest(
+Future<bool> importSignalContactAndCreateRequest(
   server.Response_UserData userdata,
 ) async {
-  if (await processSignalUserData(userdata)) {
-    // 1. Setup notifications keys with the other user
-    await setupNotificationWithUsers(
-      forceContact: userdata.userId.toInt(),
-    );
-    // 2. Then send user request
-    await sendCipherText(
-      userdata.userId.toInt(),
-      EncryptedContent(
-        contactRequest: EncryptedContent_ContactRequest(
-          type: EncryptedContent_ContactRequest_Type.REQUEST,
-        ),
-      ),
-    );
+  if (!await processSignalUserData(userdata)) {
+    return false;
   }
+
+  // 1. Setup notifications keys with the other user
+  await setupNotificationWithUsers(
+    forceContact: userdata.userId.toInt(),
+  );
+
+  // 2. Then send user request
+  await sendCipherText(
+    userdata.userId.toInt(),
+    EncryptedContent(
+      contactRequest: EncryptedContent_ContactRequest(
+        type: EncryptedContent_ContactRequest_Type.REQUEST,
+      ),
+    ),
+  );
+
+  return true;
 }
