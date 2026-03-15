@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/exclusive_access.dart';
 
 void initLogger() {
   // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
@@ -91,46 +92,11 @@ Future<String> readLast1000Lines() async {
 final Mutex _logMutex = Mutex();
 
 Future<T> _protectFileAccess<T>(Future<T> Function() action) async {
-  return _logMutex.protect(() async {
-    final lockFile = File('$globalApplicationSupportDirectory/app.log.lock');
-    var lockAcquired = false;
-
-    while (!lockAcquired) {
-      try {
-        lockFile.createSync(exclusive: true);
-        lockAcquired = true;
-      } on FileSystemException catch (e) {
-        final isExists = e is PathExistsException || e.osError?.errorCode == 17;
-        if (!isExists) {
-          break;
-        }
-        try {
-          final stat = lockFile.statSync();
-          if (stat.type != FileSystemEntityType.notFound) {
-            final age = DateTime.now().difference(stat.modified).inMilliseconds;
-            if (age > 1000) {
-              lockFile.deleteSync();
-              continue;
-            }
-          }
-        } catch (_) {}
-        await Future.delayed(const Duration(milliseconds: 50));
-      } catch (_) {
-        break;
-      }
-    }
-    try {
-      return await action();
-    } finally {
-      if (lockAcquired) {
-        try {
-          if (lockFile.existsSync()) {
-            lockFile.deleteSync();
-          }
-        } catch (_) {}
-      }
-    }
-  });
+  return exclusiveAccess(
+    lockName: 'app.log',
+    action: action,
+    mutex: _logMutex,
+  );
 }
 
 Future<void> _writeLogToFile(LogRecord record) async {

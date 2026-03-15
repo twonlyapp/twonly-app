@@ -124,14 +124,15 @@ Future<void> handleContactUpdate(
         await twonlyDB.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(
-            avatarSvgCompressed:
-                Value(Uint8List.fromList(contactUpdate.avatarSvgCompressed)),
+            avatarSvgCompressed: Value(
+              Uint8List.fromList(contactUpdate.avatarSvgCompressed),
+            ),
             displayName: Value(contactUpdate.displayName),
             username: Value(contactUpdate.username),
             senderProfileCounter: Value(senderProfileCounter),
           ),
         );
-        unawaited(createPushAvatars());
+        unawaited(createPushAvatars(forceForUserId: fromUserId));
       }
   }
 }

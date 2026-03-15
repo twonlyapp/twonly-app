@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.99
+## 0.1.1
 
 - New: Groups can now collect flames as well
 - New: Background execution to pre-load messages 

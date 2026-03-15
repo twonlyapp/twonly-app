@@ -6,11 +6,20 @@ import 'package:flutter_svg/svg.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-Future<void> createPushAvatars() async {
+Future<void> createPushAvatars({int? forceForUserId}) async {
   final contacts = await twonlyDB.contactsDao.getAllContacts();
 
   for (final contact in contacts) {
     if (contact.avatarSvgCompressed == null) continue;
+
+    if (forceForUserId == null) {
+      if (avatarPNGFile(contact.userId).existsSync()) {
+        continue; // only create the avatar in case no avatar exists yet fot this user
+      }
+    } else if (contact.userId != forceForUserId) {
+      // only update the avatar for this specified contact
+      continue;
+    }
 
     final avatarSvg = getAvatarSvg(contact.avatarSvgCompressed!);
 
@@ -27,8 +36,9 @@ Future<void> createPushAvatars() async {
 }
 
 File avatarPNGFile(int contactId) {
-  final avatarsDirectory =
-      Directory('$globalApplicationCacheDirectory/avatars');
+  final avatarsDirectory = Directory(
+    '$globalApplicationCacheDirectory/avatars',
+  );
 
   if (!avatarsDirectory.existsSync()) {
     avatarsDirectory.createSync(recursive: true);
@@ -42,8 +52,10 @@ Future<Uint8List> getUserAvatar() async {
     return data.buffer.asUint8List();
   }
 
-  final pictureInfo =
-      await vg.loadPicture(SvgStringLoader(gUser.avatarSvg!), null);
+  final pictureInfo = await vg.loadPicture(
+    SvgStringLoader(gUser.avatarSvg!),
+    null,
+  );
 
   final image = await pictureInfo.picture.toImage(270, 300);
 
