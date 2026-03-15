@@ -26,8 +26,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
       final rowId = await into(mediaFiles).insert(insertMediaFile);
 
-      return await (select(mediaFiles)..where((t) => t.rowId.equals(rowId)))
-          .getSingle();
+      return await (select(
+        mediaFiles,
+      )..where((t) => t.rowId.equals(rowId))).getSingle();
     } catch (e) {
       Log.error('Could not insert media file: $e');
       return null;
@@ -35,10 +36,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Future<void> deleteMediaFile(String mediaId) async {
-    await (delete(mediaFiles)
-          ..where(
-            (t) => t.mediaId.equals(mediaId),
-          ))
+    await (delete(mediaFiles)..where(
+          (t) => t.mediaId.equals(mediaId),
+        ))
         .go();
   }
 
@@ -46,8 +46,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     String mediaId,
     MediaFilesCompanion updates,
   ) async {
-    await (update(mediaFiles)..where((c) => c.mediaId.equals(mediaId)))
-        .write(updates);
+    await (update(
+      mediaFiles,
+    )..where((c) => c.mediaId.equals(mediaId))).write(updates);
   }
 
   Future<void> updateAllMediaFiles(
@@ -57,14 +58,15 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Future<MediaFile?> getMediaFileById(String mediaId) async {
-    return (select(mediaFiles)..where((t) => t.mediaId.equals(mediaId)))
-        .getSingleOrNull();
+    return (select(
+      mediaFiles,
+    )..where((t) => t.mediaId.equals(mediaId))).getSingleOrNull();
   }
 
   Future<MediaFile?> getDraftMediaFile() async {
-    final medias = await (select(mediaFiles)
-          ..where((t) => t.isDraftMedia.equals(true)))
-        .get();
+    final medias = await (select(
+      mediaFiles,
+    )..where((t) => t.isDraftMedia.equals(true))).get();
     if (medias.isEmpty) {
       return null;
     }
@@ -72,65 +74,62 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Stream<MediaFile?> watchMedia(String mediaId) {
-    return (select(mediaFiles)..where((t) => t.mediaId.equals(mediaId)))
-        .watchSingleOrNull();
+    return (select(
+      mediaFiles,
+    )..where((t) => t.mediaId.equals(mediaId))).watchSingleOrNull();
   }
 
   Future<void> resetPendingDownloadState() async {
-    await (update(mediaFiles)
-          ..where(
-            (c) => c.downloadState.equals(
-              DownloadState.downloading.name,
-            ),
-          ))
+    await (update(mediaFiles)..where(
+          (c) => c.downloadState.equals(
+            DownloadState.downloading.name,
+          ),
+        ))
         .write(
-      const MediaFilesCompanion(
-        downloadState: Value(DownloadState.pending),
-      ),
-    );
+          const MediaFilesCompanion(
+            downloadState: Value(DownloadState.pending),
+          ),
+        );
   }
 
   Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
-    return (select(mediaFiles)
-          ..where(
-            (t) =>
-                t.downloadState.equals(DownloadState.pending.name) |
-                t.downloadState.equals(DownloadState.downloading.name),
-          ))
+    return (select(mediaFiles)..where(
+          (t) =>
+              t.downloadState.equals(DownloadState.pending.name) |
+              t.downloadState.equals(DownloadState.downloading.name),
+        ))
         .get();
   }
 
   Future<List<MediaFile>> getAllMediaFilesReuploadRequested() async {
-    return (select(mediaFiles)
-          ..where(
-            (t) => t.downloadState.equals(DownloadState.reuploadRequested.name),
-          ))
+    return (select(mediaFiles)..where(
+          (t) => t.downloadState.equals(DownloadState.reuploadRequested.name),
+        ))
         .get();
   }
 
   Future<List<MediaFile>> getAllNonHashedStoredMediaFiles() async {
-    return (select(mediaFiles)
-          ..where(
-            (t) => t.stored.equals(true) & t.storedFileHash.isNull(),
-          ))
+    return (select(mediaFiles)..where(
+          (t) => t.stored.equals(true) & t.storedFileHash.isNull(),
+        ))
         .get();
   }
 
   Future<List<MediaFile>> getAllMediaFilesPendingUpload() async {
-    return (select(mediaFiles)
-          ..where(
-            (t) => (t.uploadState.equals(UploadState.initialized.name) |
-                t.uploadState.equals(UploadState.uploadLimitReached.name) |
-                t.uploadState.equals(UploadState.uploading.name) |
-                t.uploadState.equals(UploadState.preprocessing.name)),
-          ))
+    return (select(mediaFiles)..where(
+          (t) =>
+              (t.uploadState.equals(UploadState.initialized.name) |
+              t.uploadState.equals(UploadState.uploadLimitReached.name) |
+              t.uploadState.equals(UploadState.uploading.name) |
+              t.uploadState.equals(UploadState.preprocessing.name)),
+        ))
         .get();
   }
 
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
-    final query = (select(mediaFiles)..where((t) => t.stored.equals(true)))
-        .join([])
-      ..groupBy([mediaFiles.storedFileHash]);
+    final query =
+        (select(mediaFiles)..where((t) => t.stored.equals(true))).join([])
+          ..groupBy([mediaFiles.storedFileHash]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
@@ -142,16 +141,15 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Future<void> updateAllRetransmissionUploadingState() async {
-    await (update(mediaFiles)
-          ..where(
-            (t) =>
-                t.uploadState.equals(UploadState.uploading.name) &
-                t.reuploadRequestedBy.isNotNull(),
-          ))
+    await (update(mediaFiles)..where(
+          (t) =>
+              t.uploadState.equals(UploadState.uploading.name) &
+              t.reuploadRequestedBy.isNotNull(),
+        ))
         .write(
-      const MediaFilesCompanion(
-        uploadState: Value(UploadState.preprocessing),
-      ),
-    );
+          const MediaFilesCompanion(
+            uploadState: Value(UploadState.preprocessing),
+          ),
+        );
   }
 }

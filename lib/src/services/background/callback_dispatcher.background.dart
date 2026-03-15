@@ -51,15 +51,15 @@ void callbackDispatcher() {
 
 Future<bool> initBackgroundExecution() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
+  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
+  globalApplicationSupportDirectory =
+      (await getApplicationSupportDirectory()).path;
+
   initLogger();
 
   final user = await getUser();
   if (user == null) return false;
   gUser = user;
-
-  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
-  globalApplicationSupportDirectory =
-      (await getApplicationSupportDirectory()).path;
 
   twonlyDB = TwonlyDB();
   apiService = ApiService();
@@ -92,7 +92,7 @@ Future<void> handlePeriodicTask() async {
       await KeyValueStore.put(KeyValueKeys.lastPeriodicTaskExecution, {
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       });
-      return false;
+      return true;
     },
   );
 

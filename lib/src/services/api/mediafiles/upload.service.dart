@@ -30,10 +30,9 @@ Future<void> finishStartedPreprocessing() async {
   final mediaFiles = await twonlyDB.mediaFilesDao
       .getAllMediaFilesPendingUpload();
 
-  Log.info('There are ${mediaFiles.length} media files pending');
-
   for (final mediaFile in mediaFiles) {
     if (mediaFile.isDraftMedia) {
+      Log.info('Ignoring media files as it is a draft');
       continue;
     }
     try {
@@ -51,6 +50,9 @@ Future<void> finishStartedPreprocessing() async {
         await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
         continue;
       }
+      Log.info(
+        'Finishing started preprocessing of ${mediaFile.mediaId} in state ${mediaFile.uploadState}.',
+      );
       await startBackgroundMediaUpload(service);
     } catch (e) {
       Log.warn(e);
