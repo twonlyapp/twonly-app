@@ -121,7 +121,12 @@ class _SettingsMainViewState extends State<SettingsMainView> {
           BetterListTile(
             icon: FontAwesomeIcons.circleQuestion,
             text: context.lang.settingsHelp,
-            onTap: () => context.push(Routes.settingsHelp),
+            onTap: () async {
+              await context.push(Routes.settingsHelp);
+              setState(() {
+                // gUser could have been changed
+              });
+            },
           ),
           if (gUser.isDeveloper)
             BetterListTile(

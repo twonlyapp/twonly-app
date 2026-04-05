@@ -3,6 +3,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
@@ -32,6 +33,14 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
     setState(() {});
   }
 
+  Future<void> toggleVideoStabilization() async {
+    await updateUserdata((u) {
+      u.videoStabilizationEnabled = !u.videoStabilizationEnabled;
+      return u;
+    });
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,6 +63,14 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 context.push(Routes.settingsDeveloperRetransmissionDatabase),
           ),
           ListTile(
+            title: const Text('Toggle Video Stabilization'),
+            onTap: toggleVideoStabilization,
+            trailing: Switch(
+              value: gUser.videoStabilizationEnabled,
+              onChanged: (a) => toggleVideoStabilization(),
+            ),
+          ),
+          ListTile(
             title: const Text('Delete all (!) app data'),
             onTap: () async {
               final ok = await showAlertDialog(
@@ -71,6 +88,10 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               }
             },
           ),
+          ListTile(
+            title: const Text('Reduce flames'),
+            onTap: () => context.push(Routes.settingsDeveloperReduceFlames),
+          ),
           if (!kReleaseMode)
             ListTile(
               title: const Text('Make it possible to reset flames'),
@@ -84,9 +105,13 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       flameCounter: const Value(0),
                       maxFlameCounter: const Value(365),
                       lastFlameCounterChange: Value(clock.now()),
+                      maxFlameCounterFrom: Value(
+                        clock.now().subtract(const Duration(days: 1)),
+                      ),
                     ),
                   );
                 }
+                await HapticFeedback.heavyImpact();
               },
             ),
           if (!kReleaseMode)
