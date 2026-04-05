@@ -6,6 +6,7 @@
 - Improve: Improved troubleshooting for issues with push notifications 
 - Fix: Flash not activated when starting a video recording
 - Fix: Problem sending media when a recipient has deleted their account.
+- Fix: Incorrect processing of messages that have already been fetched from the server causes the UI to freeze 
 
 ## 0.1.1
 

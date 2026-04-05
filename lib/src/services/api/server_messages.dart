@@ -79,13 +79,18 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
 
-  await protectReceiptCheck.protect(() async {
+  final isDuplicated = await protectReceiptCheck.protect(() async {
     if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
       Log.warn('Got duplicated message from the server.');
-      return;
+      return true;
     }
     await twonlyDB.receiptsDao.gotReceipt(receiptId);
+    return false;
   });
+
+  if (isDuplicated) {
+    return;
+  }
 
   switch (message.type) {
     case Message_Type.SENDER_DELIVERY_RECEIPT:
@@ -131,8 +136,9 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
       if (message.hasEncryptedContent()) {
         Value<String>? receiptIdDB;
 
-        final encryptedContentRaw =
-            Uint8List.fromList(message.encryptedContent);
+        final encryptedContentRaw = Uint8List.fromList(
+          message.encryptedContent,
+        );
 
         Message? response;
 
@@ -155,8 +161,10 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
         }
 
         if (response == null) {
-          final (encryptedContent, plainTextContent) =
-              await handleEncryptedMessage(
+          final (
+            encryptedContent,
+            plainTextContent,
+          ) = await handleEncryptedMessage(
             fromUserId,
             encryptedContentRaw,
             message.type,
@@ -215,7 +223,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       null,
       PlaintextContent()
         ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
-          ..type = decryptionErrorType!)
+          ..type = decryptionErrorType!),
     );
   }
 
@@ -235,7 +243,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       return (
         null,
         PlaintextContent()
-          ..retryControlError = PlaintextContent_RetryErrorMessage()
+          ..retryControlError = PlaintextContent_RetryErrorMessage(),
       );
     }
     return (null, null);
@@ -312,7 +320,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
               relatedReceiptId: receiptId,
             ),
           ),
-          null
+          null,
         );
       }
       Log.info(
@@ -333,7 +341,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
         return (
           null,
           PlaintextContent()
-            ..retryControlError = PlaintextContent_RetryErrorMessage()
+            ..retryControlError = PlaintextContent_RetryErrorMessage(),
         );
       }
 
@@ -365,7 +373,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       return (
         null,
         PlaintextContent()
-          ..retryControlError = PlaintextContent_RetryErrorMessage()
+          ..retryControlError = PlaintextContent_RetryErrorMessage(),
       );
     }
     return (null, null);
