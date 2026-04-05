@@ -49,7 +49,18 @@ void callbackDispatcher() {
   });
 }
 
+bool _isInitialized = false;
+
 Future<bool> initBackgroundExecution() async {
+  if (_isInitialized) {
+    // Reload the users, as on Android the background isolate can
+    // stay alive for multiple hours between task executions
+    final user = await getUser();
+    if (user == null) return false;
+    gUser = user;
+    return true;
+  }
+
   SentryWidgetsFlutterBinding.ensureInitialized();
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
   globalApplicationSupportDirectory =
@@ -65,6 +76,7 @@ Future<bool> initBackgroundExecution() async {
   apiService = ApiService();
   globalIsInBackgroundTask = true;
 
+  _isInitialized = true;
   return true;
 }
 
