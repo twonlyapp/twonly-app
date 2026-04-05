@@ -126,17 +126,34 @@ Future<void> cleanLogFile() async {
   return _protectFileAccess(() async {
     final logFile = File('$globalApplicationSupportDirectory/app.log');
 
-    if (logFile.existsSync()) {
-      final lines = await logFile.readAsLines();
-
-      if (lines.length <= 100000) return;
-
-      final removeCount = lines.length - 100000;
-      final remaining = lines.sublist(removeCount, lines.length);
-
-      final sink = logFile.openWrite()..writeAll(remaining, '\n');
-      await sink.close();
+    if (!logFile.existsSync()) {
+      return;
     }
+    final lines = await logFile.readAsLines();
+
+    final twoWeekAgo = clock.now().subtract(const Duration(days: 14));
+    var keepStartIndex = -1;
+
+    for (var i = 0; i < lines.length; i += 100) {
+      if (lines[i].length >= 19) {
+        final date = DateTime.tryParse(lines[i].substring(0, 19));
+        if (date != null && date.isAfter(twoWeekAgo)) {
+          keepStartIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (keepStartIndex == 0) return;
+
+    if (keepStartIndex == -1) {
+      await logFile.writeAsString('');
+      return;
+    }
+
+    final remaining = lines.sublist(keepStartIndex);
+    final sink = logFile.openWrite()..writeAll(remaining, '\n');
+    await sink.close();
   });
 }
 
