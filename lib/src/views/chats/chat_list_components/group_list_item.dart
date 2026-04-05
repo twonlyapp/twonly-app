@@ -128,8 +128,14 @@ class _UserListItem extends State<GroupListItem> {
       }
     } else {
       // there are no not opened messages show just the last message in the table
-      _currentMessage = newLastMessage;
-      _previewMessages = [newLastMessage];
+      // only shows the last message in case there was no newer messages which already got deleted
+      // This prevents, that it will show that a images got stored 10 days ago...
+      if (newLastMessage.createdAt.isAfter(
+        widget.group.lastMessageExchange.subtract(const Duration(minutes: 10)),
+      )) {
+        _currentMessage = newLastMessage;
+        _previewMessages = [newLastMessage];
+      }
     }
 
     final msgs = _previewMessages

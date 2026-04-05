@@ -209,6 +209,7 @@ Future<void> showLocalPushNotification(
       (pushNotification.kind == PushKind.text ||
           pushNotification.kind == PushKind.response ||
           pushNotification.kind == PushKind.reactionToAudio ||
+          pushNotification.kind == PushKind.storedMediaFile ||
           pushNotification.kind == PushKind.reactionToImage ||
           pushNotification.kind == PushKind.reactionToText ||
           pushNotification.kind == PushKind.reactionToAudio)) {
