@@ -147,6 +147,16 @@ Future<void> insertMediaFileInMessagesTable(
     ),
   );
   for (final groupId in groupIds) {
+    final groupMembers = await twonlyDB.groupsDao.getGroupContact(groupId);
+    if (groupMembers.length == 1) {
+      if (groupMembers.first.accountDeleted) {
+        Log.warn(
+          'Did not send media file to $groupId because the only account has deleted his account.',
+        );
+        continue;
+      }
+    }
+
     final message = await twonlyDB.messagesDao.insertMessage(
       MessagesCompanion(
         groupId: Value(groupId),

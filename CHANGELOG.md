@@ -5,6 +5,7 @@
 - New: Developer settings to reduce flames
 - Improve: Improved troubleshooting for issues with push notifications 
 - Fix: Flash not activated when starting a video recording
+- Fix: Problem sending media when a recipient has deleted their account.
 
 ## 0.1.1
 
