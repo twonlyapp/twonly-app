@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.2
+## 0.1.3
 
 - New: Developer settings to reduce flames
 - New: Clicking on “Text Notifications” will now open the chat directly (Android only)

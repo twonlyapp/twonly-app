@@ -131,7 +131,7 @@ class _UserListItem extends State<GroupListItem> {
       // only shows the last message in case there was no newer messages which already got deleted
       // This prevents, that it will show that a images got stored 10 days ago...
       if (newLastMessage.createdAt.isAfter(
-        widget.group.lastMessageExchange.subtract(const Duration(minutes: 10)),
+        widget.group.lastMessageExchange.subtract(const Duration(days: 2)),
       )) {
         _currentMessage = newLastMessage;
         _previewMessages = [newLastMessage];
