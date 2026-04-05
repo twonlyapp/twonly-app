@@ -110,35 +110,23 @@ Future<void> initFCMService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  unawaited(checkForTokenUpdates());
+  await checkForTokenUpdates();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // You may set the permission requests to "provisional" which allows the user to choose what type
-  // of notifications they would like to receive once the user receives a notification.
-  // final notificationSettings =
-  // await FirebaseMessaging.instance.requestPermission(provisional: true);
   await FirebaseMessaging.instance.requestPermission();
-
-  // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
-  // if (Platform.isIOS) {
-  //   final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-  //   if (apnsToken == null) {
-  //     return;
-  //   }
-  // }
 
   FirebaseMessaging.onMessage.listen(handleRemoteMessage);
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  initLogger();
-  // Log.info('Handling a background message: ${message.messageId}');
+  final isInitialized = await initBackgroundExecution();
+  Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
 
   if (Platform.isAndroid) {
-    if (await initBackgroundExecution()) {
+    if (isInitialized) {
       await handlePeriodicTask();
     }
   } else {
@@ -164,7 +152,11 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
     final body =
         message.notification?.body ?? message.data['body'] as String? ?? '';
     await customLocalPushNotification(title, body);
-  } else if (message.data['push_data'] != null) {
-    await handlePushData(message.data['push_data'] as String);
   }
+
+  // On Android the push notification is now shown in the server_message.dart. This ensures
+  // that the messages was successfully decrypted before showing the push notification
+  //  else if (message.data['push_data'] != null) {
+  // await handlePushData(message.data['push_data'] as String);
+  // }
 }

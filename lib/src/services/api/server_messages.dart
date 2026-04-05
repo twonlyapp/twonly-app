@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
@@ -25,6 +26,7 @@ import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -164,7 +166,7 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
           final (
             encryptedContent,
             plainTextContent,
-          ) = await handleEncryptedMessage(
+          ) = await handleEncryptedMessageRaw(
             fromUserId,
             encryptedContentRaw,
             message.type,
@@ -182,6 +184,9 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
               encryptedContent: encryptedContent.writeToBuffer(),
             );
             receiptIdDB = const Value.absent();
+          } else {
+            // Message was successful processed
+            //
           }
         }
 
@@ -206,19 +211,19 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   }
 }
 
-Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
+Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   int fromUserId,
   Uint8List encryptedContentRaw,
   Message_Type messageType,
   String receiptId,
 ) async {
-  final (content, decryptionErrorType) = await signalDecryptMessage(
+  final (encryptedContent, decryptionErrorType) = await signalDecryptMessage(
     fromUserId,
     encryptedContentRaw,
     messageType.value,
   );
 
-  if (content == null) {
+  if (encryptedContent == null) {
     return (
       null,
       PlaintextContent()
@@ -227,6 +232,27 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     );
   }
 
+  final (a, b) = await handleEncryptedMessage(
+    fromUserId,
+    encryptedContent,
+    messageType,
+    receiptId,
+  );
+
+  if (Platform.isAndroid && a == null && b == null) {
+    // Message was handled without any error -> Show push notification to the user.
+    await showPushNotificationFromServerMessages(fromUserId, encryptedContent);
+  }
+
+  return (a, b);
+}
+
+Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
+  int fromUserId,
+  EncryptedContent content,
+  Message_Type messageType,
+  String receiptId,
+) async {
   // We got a valid message fromUserId, so mark all messages which where
   // send to the user but not yet ACK for retransmission. All marked messages
   // will be either transmitted again after a new server connection (minimum 20 seconds).

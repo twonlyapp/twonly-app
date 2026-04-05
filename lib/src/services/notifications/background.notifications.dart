@@ -6,10 +6,12 @@ import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/localization/generated/app_localizations_de.dart';
 import 'package:twonly/src/localization/generated/app_localizations_en.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -45,10 +47,34 @@ Future<void> customLocalPushNotification(String title, String msg) async {
   );
 }
 
+Future<void> showPushNotificationFromServerMessages(
+  int fromUserId,
+  EncryptedContent encryptedContent,
+) async {
+  final pushData = await getPushNotificationFromEncryptedContent(
+    null, // this is the toUserID which must be null as this means that the targetMessageId was send from this user.
+    null,
+    encryptedContent,
+  );
+  if (pushData != null) {
+    final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
+    for (final pushUser in pushUsers) {
+      if (pushUser.userId.toInt() == fromUserId) {
+        String? groupId;
+        if (encryptedContent.hasGroupId()) {
+          groupId = encryptedContent.groupId;
+        }
+        return showLocalPushNotification(pushUser, pushData, groupId: groupId);
+      }
+    }
+  }
+}
+
 Future<void> handlePushData(String pushDataB64) async {
   try {
-    final pushData =
-        EncryptedPushNotification.fromBuffer(base64.decode(pushDataB64));
+    final pushData = EncryptedPushNotification.fromBuffer(
+      base64.decode(pushDataB64),
+    );
 
     PushNotification? pushNotification;
     PushUser? foundPushUser;
@@ -121,8 +147,10 @@ Future<PushNotification?> tryDecryptMessage(
       mac: Mac(push.mac),
     );
 
-    final plaintext =
-        await chacha20.decrypt(secretBox, secretKey: secretKeyData);
+    final plaintext = await chacha20.decrypt(
+      secretBox,
+      secretKey: secretKeyData,
+    );
     return PushNotification.fromBuffer(plaintext);
   } catch (e) {
     // this error is allowed to happen...
@@ -132,8 +160,9 @@ Future<PushNotification?> tryDecryptMessage(
 
 Future<void> showLocalPushNotification(
   PushUser pushUser,
-  PushNotification pushNotification,
-) async {
+  PushNotification pushNotification, {
+  String? groupId,
+}) async {
   String? title;
   String? body;
 
@@ -174,13 +203,25 @@ Future<void> showLocalPushNotification(
     iOS: darwinNotificationDetails,
   );
 
+  String? payload;
+
+  if (groupId != null &&
+      (pushNotification.kind == PushKind.text ||
+          pushNotification.kind == PushKind.response ||
+          pushNotification.kind == PushKind.reactionToAudio ||
+          pushNotification.kind == PushKind.reactionToImage ||
+          pushNotification.kind == PushKind.reactionToText ||
+          pushNotification.kind == PushKind.reactionToAudio)) {
+    payload = Routes.chatsMessages(groupId);
+  }
+
   await flutterLocalNotificationsPlugin.show(
-    pushUser.userId.toInt() %
-        2147483647, // Invalid argument (id): must fit within the size of a 32-bit integer
+    // Invalid argument (id): must fit within the size of a 32-bit integer
+    pushUser.userId.toInt() % 2147483647,
     title,
     body,
     notificationDetails,
-    // payload: pushNotification.kind.name,
+    payload: payload,
   );
 }
 
@@ -259,17 +300,22 @@ String getPushNotificationText(PushNotification pushNotification) {
     PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,
     PushKind.reaction.name: lang.notificationReaction,
     PushKind.reopenedMedia.name: lang.notificationReopenedMedia,
-    PushKind.reactionToVideo.name:
-        lang.notificationReactionToVideo(pushNotification.additionalContent),
-    PushKind.reactionToAudio.name:
-        lang.notificationReactionToAudio(pushNotification.additionalContent),
-    PushKind.reactionToText.name:
-        lang.notificationReactionToText(pushNotification.additionalContent),
-    PushKind.reactionToImage.name:
-        lang.notificationReactionToImage(pushNotification.additionalContent),
+    PushKind.reactionToVideo.name: lang.notificationReactionToVideo(
+      pushNotification.additionalContent,
+    ),
+    PushKind.reactionToAudio.name: lang.notificationReactionToAudio(
+      pushNotification.additionalContent,
+    ),
+    PushKind.reactionToText.name: lang.notificationReactionToText(
+      pushNotification.additionalContent,
+    ),
+    PushKind.reactionToImage.name: lang.notificationReactionToImage(
+      pushNotification.additionalContent,
+    ),
     PushKind.response.name: lang.notificationResponse(inGroup),
-    PushKind.addedToGroup.name:
-        lang.notificationAddedToGroup(pushNotification.additionalContent),
+    PushKind.addedToGroup.name: lang.notificationAddedToGroup(
+      pushNotification.additionalContent,
+    ),
   };
 
   return pushNotificationText[pushNotification.kind.name] ?? '';

@@ -72,13 +72,19 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
 
   try {
     final task = VideoRenderData(
-      video: EditorVideo.file(media.originalPath),
-      imageBytes: media.overlayImagePath.readAsBytesSync(),
+      videoSegments: [
+        VideoSegment(video: EditorVideo.file(media.originalPath)),
+      ],
+      imageLayers: [
+        ImageLayer(image: EditorLayerImage.file(media.overlayImagePath)),
+      ],
       enableAudio: !media.removeAudio,
     );
 
-    await ProVideoEditor.instance
-        .renderVideoToFile(media.ffmpegOutputPath.path, task);
+    await ProVideoEditor.instance.renderVideoToFile(
+      media.ffmpegOutputPath.path,
+      task,
+    );
 
     if (Platform.isIOS ||
         media.ffmpegOutputPath.statSync().size >= 10_000_000 ||
@@ -115,8 +121,8 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
 
     final sizeFrom = (media.ffmpegOutputPath.statSync().size / 1024 / 1024)
         .toStringAsFixed(2);
-    final sizeTo =
-        (media.tempPath.statSync().size / 1024 / 1024).toStringAsFixed(2);
+    final sizeTo = (media.tempPath.statSync().size / 1024 / 1024)
+        .toStringAsFixed(2);
 
     Log.info(
       'It took ${stopwatch.elapsedMilliseconds}ms to compress the video. Reduced from $sizeFrom to $sizeTo bytes.',

@@ -176,6 +176,6 @@ bool isItPossibleToRestoreFlames(Group group) {
   return group.maxFlameCounter > 2 &&
       flameCounter < group.maxFlameCounter &&
       group.maxFlameCounterFrom!.isAfter(
-        clock.now().subtract(const Duration(days: 5)),
+        clock.now().subtract(const Duration(days: 7)),
       );
 }

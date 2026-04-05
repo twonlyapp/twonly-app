@@ -3,6 +3,7 @@
 ## 0.1.2
 
 - New: Developer settings to reduce flames
+- New: Clicking on “Text Notifications” will now open the chat directly (Android only)
 - Improve: Improved troubleshooting for issues with push notifications 
 - Fix: Flash not activated when starting a video recording
 - Fix: Problem sending media when a recipient has deleted their account.

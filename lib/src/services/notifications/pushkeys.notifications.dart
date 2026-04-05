@@ -49,13 +49,15 @@ Future<void> setupNotificationWithUsers({
 
   final contacts = await twonlyDB.contactsDao.getAllContacts();
   for (final contact in contacts) {
-    final pushUser =
-        pushUsers.firstWhereOrNull((x) => x.userId == contact.userId);
+    final pushUser = pushUsers.firstWhereOrNull(
+      (x) => x.userId == contact.userId,
+    );
 
     if (pushUser != null && pushUser.pushKeys.isNotEmpty) {
       // make it harder to predict the change of the key
-      final timeBefore =
-          clock.now().subtract(Duration(days: 10 + random.nextInt(5)));
+      final timeBefore = clock.now().subtract(
+        Duration(days: 10 + random.nextInt(5)),
+      );
       final lastKey = pushUser.pushKeys.last;
       final createdAt = DateTime.fromMillisecondsSinceEpoch(
         lastKey.createdAtUnixTimestamp.toInt(),
@@ -197,7 +199,7 @@ Future<void> updateLastMessageId(int fromUserId, String messageId) async {
 }
 
 Future<PushNotification?> getPushNotificationFromEncryptedContent(
-  int toUserId,
+  int? toUserId,
   String? messageId,
   EncryptedContent content,
 ) async {
@@ -210,7 +212,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     final msg = await twonlyDB.messagesDao
         .getMessageById(content.reaction.targetMessageId)
         .getSingleOrNull();
-    if (msg == null || msg.senderId == null || msg.senderId != toUserId) {
+    if (msg == null || msg.senderId != toUserId) {
       return null;
     }
     if (msg.content != null) {
@@ -285,7 +287,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
         .getMessageById(content.reaction.targetMessageId)
         .getSingleOrNull();
     // These notifications should only be send to the original sender.
-    if (msg == null || msg.senderId == null || msg.senderId != toUserId) {
+    if (msg == null || msg.senderId != toUserId) {
       return null;
     }
     switch (content.mediaUpdate.type) {

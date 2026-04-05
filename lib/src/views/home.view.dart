@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -106,7 +108,12 @@ class HomeViewState extends State<HomeView> {
       });
     };
     selectNotificationStream.stream.listen((response) async {
-      globalUpdateOfHomeViewPageIndex(0);
+      if (response.payload != null &&
+          response.payload!.startsWith(Routes.chats)) {
+        await routerProvider.push(response.payload!);
+      } else {
+        globalUpdateOfHomeViewPageIndex(0);
+      }
     });
     unawaited(_mainCameraController.selectCamera(0, true));
     unawaited(initAsync());
@@ -140,13 +147,26 @@ class HomeViewState extends State<HomeView> {
   }
 
   Future<void> initAsync() async {
-    final notificationAppLaunchDetails =
-        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
 
     if (widget.initialPage == 0 ||
         (notificationAppLaunchDetails != null &&
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
-      globalUpdateOfHomeViewPageIndex(0);
+      var pushed = false;
+
+      if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+        final payload =
+            notificationAppLaunchDetails?.notificationResponse?.payload;
+        if (payload != null && payload.startsWith(Routes.chats)) {
+          await routerProvider.push(payload);
+          pushed = true;
+        }
+      }
+
+      if (!pushed) {
+        globalUpdateOfHomeViewPageIndex(0);
+      }
     }
 
     final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
@@ -168,8 +188,9 @@ class HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap:
-            offsetRatio == 0 ? _mainCameraController.onDoubleTap : null,
+        onDoubleTap: offsetRatio == 0
+            ? _mainCameraController.onDoubleTap
+            : null,
         onTapDown: offsetRatio == 0 ? _mainCameraController.onTapDown : null,
         child: Stack(
           children: <Widget>[

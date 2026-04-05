@@ -8,8 +8,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/exclusive_access.dart';
 
+bool _isInitialized = false;
+
 void initLogger() {
-  // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
+  if (_isInitialized) return;
+  _isInitialized = true;
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
     unawaited(_writeLogToFile(record));
