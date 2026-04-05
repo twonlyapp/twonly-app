@@ -82,7 +82,7 @@ Future<bool> initBackgroundExecution() async {
 
 final Mutex _keyValueMutex = Mutex();
 
-Future<void> handlePeriodicTask() async {
+Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
   final shouldBeExecuted = await exclusiveAccess(
     lockName: 'periodic_task',
     mutex: _keyValueMutex,
@@ -96,7 +96,8 @@ Future<void> handlePeriodicTask() async {
           final lastExecutionDate = DateTime.fromMillisecondsSinceEpoch(
             lastExecutionTime,
           );
-          if (DateTime.now().difference(lastExecutionDate).inMinutes < 2) {
+          if (DateTime.now().difference(lastExecutionDate).inSeconds <
+              lastExecutionInSecondsLimit) {
             return false;
           }
         }

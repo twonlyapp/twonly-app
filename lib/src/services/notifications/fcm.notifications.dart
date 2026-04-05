@@ -127,7 +127,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   if (Platform.isAndroid) {
     if (isInitialized) {
-      await handlePeriodicTask();
+      await handlePeriodicTask(lastExecutionInSecondsLimit: 10);
     }
   } else {
     // make sure every thing run...
