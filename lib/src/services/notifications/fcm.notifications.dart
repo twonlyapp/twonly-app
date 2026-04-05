@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -41,44 +42,67 @@ Future<void> checkForTokenUpdates() async {
       Log.error('Could not get fcm token');
       return;
     }
-    Log.info('Loaded fcm token');
+
+    Log.info('Loaded FCM token.');
+
     if (storedToken == null || fcmToken != storedToken) {
+      Log.info('Got new FCM TOKEN.');
+      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
       await updateUserdata((u) {
         u.updateFCMToken = true;
         return u;
       });
-      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }
 
-    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
-      await updateUserdata((u) {
-        u.updateFCMToken = true;
-        return u;
-      });
-      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
-    }).onError((err) {
-      Log.error('could not listen on token refresh');
-    });
+    FirebaseMessaging.instance.onTokenRefresh
+        .listen((fcmToken) async {
+          Log.info('Got new FCM TOKEN.');
+          await storage.write(
+            key: SecureStorageKeys.googleFcm,
+            value: fcmToken,
+          );
+          await updateUserdata((u) {
+            u.updateFCMToken = true;
+            return u;
+          });
+        })
+        .onError((err) {
+          Log.error('could not listen on token refresh');
+        });
   } catch (e) {
     Log.error('could not load fcm token: $e');
   }
 }
 
-Future<void> initFCMAfterAuthenticated() async {
-  if (gUser.updateFCMToken) {
+Future<void> initFCMAfterAuthenticated({bool force = false}) async {
+  if (gUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {
       final res = await apiService.updateFCMToken(storedToken);
       if (res.isSuccess) {
-        Log.info('Uploaded new fmt token!');
+        Log.info('Uploaded new FCM token!');
         await updateUserdata((u) {
           u.updateFCMToken = false;
           return u;
         });
+      } else {
+        Log.error('Could not update FCM token!');
       }
+    } else {
+      Log.error('Could not send FCM update to server as token is empty.');
     }
   }
+}
+
+Future<void> resetFCMTokens() async {
+  await FirebaseInstallations.instance.delete();
+  Log.info('Firebase Installation successfully deleted.');
+  await FirebaseMessaging.instance.deleteToken();
+  Log.info('Old FCM deleted.');
+  await const FlutterSecureStorage().delete(key: SecureStorageKeys.googleFcm);
+  await checkForTokenUpdates();
+  await initFCMAfterAuthenticated(force: true);
 }
 
 Future<void> initFCMService() async {

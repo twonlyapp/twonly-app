@@ -46,10 +46,7 @@ class GroupContextMenu extends StatelessWidget {
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
-          onTap: () => context.push(
-            Routes.chatsMessages,
-            extra: group,
-          ),
+          onTap: () => context.push(Routes.chatsMessages(group.groupId)),
           icon: FontAwesomeIcons.comments,
         ),
         if (!group.archived)

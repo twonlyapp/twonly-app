@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- New: Developer settings to reduce flames
+- Improve: Improved troubleshooting for issues with push notifications 
+- Fix: Flash not activated when starting a video recording
+
 ## 0.1.1
 
 - New: Groups can now collect flames as well

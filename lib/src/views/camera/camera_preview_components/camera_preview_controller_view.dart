@@ -181,8 +181,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         // Maybe this is the reason?
         return;
       } else {
-        androidVolumeDownSub =
-            FlutterAndroidVolumeKeydown.stream.listen((event) {
+        androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((
+          event,
+        ) {
           if (widget.isVisible) {
             takePicture();
           } else {
@@ -297,8 +298,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    final image = await mc.screenshotController
-        .capture(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+    final image = await mc.screenshotController.capture(
+      pixelRatio: MediaQuery.of(context).devicePixelRatio,
+    );
 
     if (await pushMediaEditor(image, null)) {
       return;
@@ -314,7 +316,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     bool sharedFromGallery = false,
     MediaType? mediaType,
   }) async {
-    final type = mediaType ??
+    final type =
+        mediaType ??
         ((videoFilePath != null) ? MediaType.video : MediaType.image);
     final mediaFileService = await initializeMediaUpload(
       type,
@@ -340,25 +343,28 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     await deInitVolumeControl();
     if (!mounted) return true;
 
-    final shouldReturn = await Navigator.push(
-      context,
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, a1, a2) => ShareImageEditorView(
-          screenshotImage: screenshotImage,
-          sharedFromGallery: sharedFromGallery,
-          sendToGroup: widget.sendToGroup,
-          mediaFileService: mediaFileService,
-          mainCameraController: mc,
-          previewLink: mc.sharedLinkForPreview,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return child;
-        },
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    ) as bool?;
+    final shouldReturn =
+        await Navigator.push(
+              context,
+              PageRouteBuilder(
+                opaque: false,
+                pageBuilder: (context, a1, a2) => ShareImageEditorView(
+                  screenshotImage: screenshotImage,
+                  sharedFromGallery: sharedFromGallery,
+                  sendToGroup: widget.sendToGroup,
+                  mediaFileService: mediaFileService,
+                  mainCameraController: mc,
+                  previewLink: mc.sharedLinkForPreview,
+                ),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                      return child;
+                    },
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            )
+            as bool?;
     if (mounted) {
       setState(() {
         mc.isSharePreviewIsShown = false;
@@ -396,13 +402,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    mc.selectedCameraDetails.scaleFactor = (_baseScaleFactor +
-            // ignore: avoid_dynamic_calls
-            (_basePanY - (details.localPosition.dy as double)) / 30)
-        .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
+    mc.selectedCameraDetails.scaleFactor =
+        (_baseScaleFactor +
+                // ignore: avoid_dynamic_calls
+                (_basePanY - (details.localPosition.dy as double)) / 30)
+            .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
 
-    await mc.cameraController!
-        .setZoomLevel(mc.selectedCameraDetails.scaleFactor);
+    await mc.cameraController!.setZoomLevel(
+      mc.selectedCameraDetails.scaleFactor,
+    );
     if (mounted) {
       setState(() {});
     }
@@ -434,8 +442,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       ScreenshotImage? image;
       MediaType? mediaType;
 
-      final isImage =
-          imageExtensions.any((ext) => pickedFile.name.contains(ext));
+      final isImage = imageExtensions.any(
+        (ext) => pickedFile.name.contains(ext),
+      );
       if (isImage) {
         if (pickedFile.name.contains('.gif')) {
           mediaType = MediaType.gif;
@@ -497,10 +506,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       mc.isVideoRecording = true;
     });
 
+    if (mc.selectedCameraDetails.isFlashOn) {
+      await mc.cameraController?.setFlashMode(FlashMode.torch);
+    }
+
     try {
       await mc.cameraController?.startVideoRecording();
-      _videoRecordingTimer =
-          Timer.periodic(const Duration(milliseconds: 15), (timer) {
+      _videoRecordingTimer = Timer.periodic(const Duration(milliseconds: 15), (
+        timer,
+      ) {
         setState(() {
           _currentTime = clock.now();
         });
@@ -521,6 +535,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         mc.isVideoRecording = false;
       });
       _showCameraException(e);
+      await mc.cameraController?.setFlashMode(FlashMode.off);
       return;
     }
   }
@@ -530,6 +545,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _videoRecordingTimer?.cancel();
       _videoRecordingTimer = null;
     }
+
+    await mc.cameraController?.setFlashMode(FlashMode.off);
 
     setState(() {
       _videoRecordingStarted = null;
@@ -601,8 +618,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               keyTriggerButton.currentContext!.findRenderObject()! as RenderBox;
           final localPosition = renderBox.globalToLocal(details.globalPosition);
 
-          final containerRect =
-              Rect.fromLTWH(0, 0, renderBox.size.width, renderBox.size.height);
+          final containerRect = Rect.fromLTWH(
+            0,
+            0,
+            renderBox.size.width,
+            renderBox.size.height,
+          );
 
           if (containerRect.contains(localPosition)) {
             startVideoRecording();
@@ -676,12 +697,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               : Colors.white.withAlpha(160),
                           onPressed: () async {
                             if (mc.selectedCameraDetails.isFlashOn) {
-                              await mc.cameraController
-                                  ?.setFlashMode(FlashMode.off);
+                              await mc.cameraController?.setFlashMode(
+                                FlashMode.off,
+                              );
                               mc.selectedCameraDetails.isFlashOn = false;
                             } else {
-                              await mc.cameraController
-                                  ?.setFlashMode(FlashMode.always);
+                              await mc.cameraController?.setFlashMode(
+                                FlashMode.always,
+                              );
                               mc.selectedCameraDetails.isFlashOn = true;
                             }
                             setState(() {});
@@ -739,8 +762,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                     child: FaIcon(
                                       mc.isSelectingFaceFilters
                                           ? mc.currentFilterType.index == 1
-                                              ? FontAwesomeIcons.xmark
-                                              : FontAwesomeIcons.arrowLeft
+                                                ? FontAwesomeIcons.xmark
+                                                : FontAwesomeIcons.arrowLeft
                                           : FontAwesomeIcons.photoFilm,
                                       color: Colors.white,
                                       size: 25,
@@ -785,13 +808,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                       child: FaIcon(
                                         mc.isSelectingFaceFilters
                                             ? mc.currentFilterType.index ==
-                                                    FaceFilterType
-                                                            .values.length -
-                                                        1
-                                                ? FontAwesomeIcons.xmark
-                                                : FontAwesomeIcons.arrowRight
+                                                      FaceFilterType
+                                                              .values
+                                                              .length -
+                                                          1
+                                                  ? FontAwesomeIcons.xmark
+                                                  : FontAwesomeIcons.arrowRight
                                             : FontAwesomeIcons
-                                                .faceGrinTongueSquint,
+                                                  .faceGrinTongueSquint,
                                         color: Colors.white,
                                         size: 25,
                                       ),
@@ -843,64 +867,64 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   children: [
                     ...widget.mainCameraController.scannedNewProfiles.values
                         .map(
-                      (c) {
-                        if (c.isLoading) return Container();
-                        return GestureDetector(
-                          onTap: () async {
-                            c.isLoading = true;
-                            widget.mainCameraController.setState();
-                            if (await addNewContactFromPublicProfile(
-                                  c.profile,
-                                ) &&
-                                context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    context.lang.requestedUserToastText(
-                                      c.profile.username,
+                          (c) {
+                            if (c.isLoading) return Container();
+                            return GestureDetector(
+                              onTap: () async {
+                                c.isLoading = true;
+                                widget.mainCameraController.setState();
+                                if (await addNewContactFromPublicProfile(
+                                      c.profile,
+                                    ) &&
+                                    context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        context.lang.requestedUserToastText(
+                                          c.profile.username,
+                                        ),
+                                      ),
+                                      duration: const Duration(seconds: 8),
                                     ),
-                                  ),
-                                  duration: const Duration(seconds: 8),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.only(bottom: 10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: context.color.surfaceContainer,
                                 ),
-                              );
-                            }
+                                child: Row(
+                                  children: [
+                                    Text(c.profile.username),
+                                    Expanded(child: Container()),
+                                    if (c.isLoading)
+                                      const SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    else
+                                      ColoredBox(
+                                        color: Colors.transparent,
+                                        child: FaIcon(
+                                          FontAwesomeIcons.userPlus,
+                                          color: isDarkMode(context)
+                                              ? Colors.white
+                                              : Colors.black,
+                                          size: 17,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: context.color.surfaceContainer,
-                            ),
-                            child: Row(
-                              children: [
-                                Text(c.profile.username),
-                                Expanded(child: Container()),
-                                if (c.isLoading)
-                                  const SizedBox(
-                                    width: 12,
-                                    height: 12,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                else
-                                  ColoredBox(
-                                    color: Colors.transparent,
-                                    child: FaIcon(
-                                      FontAwesomeIcons.userPlus,
-                                      color: isDarkMode(context)
-                                          ? Colors.white
-                                          : Colors.black,
-                                      size: 17,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                        ),
                     ...widget.mainCameraController.contactsVerified.values.map(
                       (c) {
                         return Container(
@@ -936,10 +960,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                         : 'assets/animations/failed.lottie',
                                     repeat: false,
                                     onLoaded: (p0) {
-                                      Future.delayed(const Duration(seconds: 4),
-                                          () {
-                                        widget.mainCameraController.setState();
-                                      });
+                                      Future.delayed(
+                                        const Duration(seconds: 4),
+                                        () {
+                                          widget.mainCameraController
+                                              .setState();
+                                        },
+                                      );
                                     },
                                   ),
                                 ),

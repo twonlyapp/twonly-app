@@ -129,9 +129,9 @@ Future<void> cleanLogFile() async {
     if (logFile.existsSync()) {
       final lines = await logFile.readAsLines();
 
-      if (lines.length <= 10000) return;
+      if (lines.length <= 100000) return;
 
-      final removeCount = lines.length - 10000;
+      final removeCount = lines.length - 100000;
       final remaining = lines.sublist(removeCount, lines.length);
 
       final sink = logFile.openWrite()..writeAll(remaining, '\n');

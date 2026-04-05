@@ -351,7 +351,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Press OK to receive a test notification. When you receive no message even after waiting for 10 minutes, please send us your debug log in Settings > Help > Debug log, so we can look at that issue.';
+      'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.';
+
+  @override
+  String get settingsNotifyResetTitle => 'Didn\'t receive a test notification?';
+
+  @override
+  String get settingsNotifyResetTitleSubtitle =>
+      'If you haven\'t received any test notifications, click here to reset your notification tokens.';
+
+  @override
+  String get settingsNotifyResetTitleReset =>
+      'Your notification tokens have been reset.';
+
+  @override
+  String get settingsNotifyResetTitleResetDesc =>
+      'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.';
 
   @override
   String get settingsHelp => 'Help';

@@ -733,8 +733,32 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyTroubleshootingNoProblemDesc.
   ///
   /// In en, this message translates to:
-  /// **'Press OK to receive a test notification. When you receive no message even after waiting for 10 minutes, please send us your debug log in Settings > Help > Debug log, so we can look at that issue.'**
+  /// **'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.'**
   String get settingsNotifyTroubleshootingNoProblemDesc;
+
+  /// No description provided for @settingsNotifyResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive a test notification?'**
+  String get settingsNotifyResetTitle;
+
+  /// No description provided for @settingsNotifyResetTitleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If you haven\'t received any test notifications, click here to reset your notification tokens.'**
+  String get settingsNotifyResetTitleSubtitle;
+
+  /// No description provided for @settingsNotifyResetTitleReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Your notification tokens have been reset.'**
+  String get settingsNotifyResetTitleReset;
+
+  /// No description provided for @settingsNotifyResetTitleResetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.'**
+  String get settingsNotifyResetTitleResetDesc;
 
   /// No description provided for @settingsHelp.
   ///

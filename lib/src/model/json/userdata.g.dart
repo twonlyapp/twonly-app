@@ -30,6 +30,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
+      ..videoStabilizationEnabled =
+          json['videoStabilizationEnabled'] as bool? ?? false
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
       ..showShowImagePreviewWhenSending =
           json['showShowImagePreviewWhenSending'] as bool? ?? false
@@ -105,6 +107,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
+  'videoStabilizationEnabled': instance.videoStabilizationEnabled,
   'showFeedbackShortcut': instance.showFeedbackShortcut,
   'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
   'startWithCameraOpen': instance.startWithCameraOpen,

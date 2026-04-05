@@ -36,8 +36,9 @@ class _ContactViewState extends State<ContactView> {
 
   @override
   void initState() {
-    _contactSub =
-        twonlyDB.contactsDao.watchContact(widget.userId).listen((update) {
+    _contactSub = twonlyDB.contactsDao.watchContact(widget.userId).listen((
+      update,
+    ) {
       setState(() {
         _contact = update;
       });
@@ -45,8 +46,8 @@ class _ContactViewState extends State<ContactView> {
     _groupMemberSub = twonlyDB.groupsDao
         .watchContactGroupMember(widget.userId)
         .listen((groups) async {
-      _memberOfGroups = groups;
-    });
+          _memberOfGroups = groups;
+        });
     super.initState();
   }
 
@@ -81,8 +82,9 @@ class _ContactViewState extends State<ContactView> {
 
     final remove = await showAlertDialog(
       context,
-      context.lang
-          .contactRemoveTitle(getContactDisplayName(contact, maxLength: 20)),
+      context.lang.contactRemoveTitle(
+        getContactDisplayName(contact, maxLength: 20),
+      ),
       context.lang.contactRemoveBody,
     );
     if (remove) {
@@ -177,13 +179,11 @@ class _ContactViewState extends State<ContactView> {
             icon: FontAwesomeIcons.solidComments,
             text: context.lang.contactViewMessage,
             onTap: () async {
-              final group =
-                  await twonlyDB.groupsDao.getDirectChat(contact.userId);
+              final group = await twonlyDB.groupsDao.getDirectChat(
+                contact.userId,
+              );
               if (group != null && context.mounted) {
-                await context.push(
-                  Routes.chatsMessages,
-                  extra: group,
-                );
+                await context.push(Routes.chatsMessages(group.groupId));
               }
             },
           ),
@@ -196,8 +196,10 @@ class _ContactViewState extends State<ContactView> {
 
               if (context.mounted && nickName != null && nickName != '') {
                 final update = ContactsCompanion(nickName: Value(nickName));
-                await twonlyDB.contactsDao
-                    .updateContact(contact.userId, update);
+                await twonlyDB.contactsDao.updateContact(
+                  contact.userId,
+                  update,
+                );
               }
             },
           ),
@@ -247,8 +249,9 @@ Future<String?> showNicknameChangeDialog(
   BuildContext context,
   Contact contact,
 ) {
-  final controller =
-      TextEditingController(text: getContactDisplayName(contact));
+  final controller = TextEditingController(
+    text: getContactDisplayName(contact),
+  );
 
   return showDialog<String>(
     context: context,
@@ -258,8 +261,9 @@ Future<String?> showNicknameChangeDialog(
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration:
-              InputDecoration(hintText: context.lang.contactNicknameNew),
+          decoration: InputDecoration(
+            hintText: context.lang.contactNicknameNew,
+          ),
         ),
         actions: <Widget>[
           TextButton(
@@ -271,8 +275,9 @@ Future<String?> showNicknameChangeDialog(
           TextButton(
             child: Text(context.lang.ok),
             onPressed: () {
-              Navigator.of(context)
-                  .pop(controller.text); // Return the input text
+              Navigator.of(
+                context,
+              ).pop(controller.text); // Return the input text
             },
           ),
         ],
@@ -291,8 +296,9 @@ Future<String?> showReportDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title:
-            Text(context.lang.reportUserTitle(getContactDisplayName(contact))),
+        title: Text(
+          context.lang.reportUserTitle(getContactDisplayName(contact)),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,

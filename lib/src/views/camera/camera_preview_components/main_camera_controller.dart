@@ -133,6 +133,11 @@ class MainCameraController {
       await cameraController?.initialize();
       await cameraController?.startImageStream(_processCameraImage);
       await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
+      if (gUser.videoStabilizationEnabled) {
+        await cameraController?.setVideoStabilizationMode(
+          VideoStabilizationMode.level1,
+        );
+      }
     } else {
       try {
         if (!isVideoRecording) {

@@ -23,40 +23,11 @@ import 'package:twonly/src/views/components/blink.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 
-Color getMessageColor(Message message) {
-  return (message.senderId == null)
-      ? const Color.fromARGB(255, 58, 136, 102)
-      : const Color.fromARGB(233, 68, 137, 255);
-}
-
-class ChatItem {
-  const ChatItem._({
-    this.message,
-    this.date,
-    this.groupAction,
-  });
-  factory ChatItem.date(DateTime date) {
-    return ChatItem._(date: date);
-  }
-  factory ChatItem.message(Message message) {
-    return ChatItem._(message: message);
-  }
-  factory ChatItem.groupAction(GroupHistory groupAction) {
-    return ChatItem._(groupAction: groupAction);
-  }
-  final GroupHistory? groupAction;
-  final Message? message;
-  final DateTime? date;
-  bool get isMessage => message != null;
-  bool get isDate => date != null;
-  bool get isGroupAction => groupAction != null;
-}
-
 /// Displays detailed information about a SampleItem.
 class ChatMessagesView extends StatefulWidget {
-  const ChatMessagesView(this.group, {super.key});
+  const ChatMessagesView(this.groupId, {super.key});
 
-  final Group group;
+  final String groupId;
 
   @override
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
@@ -64,11 +35,12 @@ class ChatMessagesView extends StatefulWidget {
 
 class _ChatMessagesViewState extends State<ChatMessagesView> {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  late Group group;
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   StreamSubscription<List<GroupHistory>>? groupActionsSub;
   StreamSubscription<List<Contact>>? contactSub;
+
+  Group? _group;
 
   Map<int, Contact> userIdToContact = {};
 
@@ -85,7 +57,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   @override
   void initState() {
     super.initState();
-    group = widget.group;
     textFieldFocus = FocusNode();
     initStreams();
   }
@@ -102,30 +73,34 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Mutex protectMessageUpdating = Mutex();
 
   Future<void> initStreams() async {
-    final groupStream = twonlyDB.groupsDao.watchGroup(group.groupId);
+    final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
     userSub = groupStream.listen((newGroup) {
       if (newGroup == null) return;
       setState(() {
-        group = newGroup;
+        _group = newGroup;
+      });
+
+      protectMessageUpdating.protect(() async {
+        if (groupActionsSub == null && !newGroup.isDirectChat) {
+          final actionsStream = twonlyDB.groupsDao.watchGroupActions(
+            newGroup.groupId,
+          );
+          groupActionsSub = actionsStream.listen((update) async {
+            groupActions = update;
+            await setMessages(allMessages, update);
+          });
+
+          final contactsStream = twonlyDB.contactsDao.watchAllContacts();
+          contactSub = contactsStream.listen((contacts) {
+            for (final contact in contacts) {
+              userIdToContact[contact.userId] = contact;
+            }
+          });
+        }
       });
     });
 
-    if (!widget.group.isDirectChat) {
-      final actionsStream = twonlyDB.groupsDao.watchGroupActions(group.groupId);
-      groupActionsSub = actionsStream.listen((update) async {
-        groupActions = update;
-        await setMessages(allMessages, update);
-      });
-
-      final contactsStream = twonlyDB.contactsDao.watchAllContacts();
-      contactSub = contactsStream.listen((contacts) {
-        for (final contact in contacts) {
-          userIdToContact[contact.userId] = contact;
-        }
-      });
-    }
-
-    final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
+    final msgStream = twonlyDB.messagesDao.watchByGroupId(widget.groupId);
     messageSub = msgStream.listen((update) async {
       allMessages = update;
       await protectMessageUpdating.protect(() async {
@@ -153,8 +128,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       if (groupHistoryIndex < groupActions.length) {
         for (; groupHistoryIndex < groupActions.length; groupHistoryIndex++) {
           if (msg.createdAt.isAfter(groupActions[groupHistoryIndex].actionAt)) {
-            chatItems
-                .add(ChatItem.groupAction(groupActions[groupHistoryIndex]));
+            chatItems.add(
+              ChatItem.groupAction(groupActions[groupHistoryIndex]),
+            );
             // groupHistoryIndex++;
           } else {
             break;
@@ -230,6 +206,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_group == null) return Container();
+    final group = _group!;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -237,12 +215,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           title: GestureDetector(
             onTap: () async {
               if (group.isDirectChat) {
-                final member =
-                    await twonlyDB.groupsDao.getAllGroupMembers(group.groupId);
+                final member = await twonlyDB.groupsDao.getAllGroupMembers(
+                  group.groupId,
+                );
                 if (!context.mounted) return;
                 if (member.isEmpty) return;
-                await context
-                    .push(Routes.profileContact(member.first.contactId));
+                await context.push(
+                  Routes.profileContact(member.first.contactId),
+                );
               } else {
                 await context.push(Routes.profileGroup(group.groupId));
               }
@@ -371,4 +351,33 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       ),
     );
   }
+}
+
+Color getMessageColor(Message message) {
+  return (message.senderId == null)
+      ? const Color.fromARGB(255, 58, 136, 102)
+      : const Color.fromARGB(233, 68, 137, 255);
+}
+
+class ChatItem {
+  const ChatItem._({
+    this.message,
+    this.date,
+    this.groupAction,
+  });
+  factory ChatItem.date(DateTime date) {
+    return ChatItem._(date: date);
+  }
+  factory ChatItem.message(Message message) {
+    return ChatItem._(message: message);
+  }
+  factory ChatItem.groupAction(GroupHistory groupAction) {
+    return ChatItem._(groupAction: groupAction);
+  }
+  final GroupHistory? groupAction;
+  final Message? message;
+  final DateTime? date;
+  bool get isMessage => message != null;
+  bool get isDate => date != null;
+  bool get isGroupAction => groupAction != null;
 }

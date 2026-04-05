@@ -280,6 +280,14 @@ Future<void> _createUploadRequest(MediaFileService media) async {
         }
       }
 
+      final contact = await twonlyDB.contactsDao.getContactById(
+        groupMember.contactId,
+      );
+
+      if (contact == null || contact.accountDeleted) {
+        continue;
+      }
+
       final downloadToken = getRandomUint8List(32);
 
       late EncryptedContent_Media_Type type;
@@ -329,10 +337,11 @@ Future<void> _createUploadRequest(MediaFileService media) async {
         Log.error(
           'Could not generate ciphertext message for ${groupMember.contactId}',
         );
+        continue;
       }
 
       final messageOnSuccess = TextMessage()
-        ..body = cipherText!.$1
+        ..body = cipherText.$1
         ..userId = Int64(groupMember.contactId);
 
       if (cipherText.$2 != null) {
