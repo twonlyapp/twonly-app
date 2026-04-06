@@ -45,6 +45,7 @@ class _UserListItem extends State<GroupListItem> {
   List<Message> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
   bool _hasNonOpenedMediaFile = false;
+  bool _receiverDeletedAccount = false;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _UserListItem extends State<GroupListItem> {
     super.dispose();
   }
 
-  void initStreams() {
+  Future<void> initStreams() async {
     _lastMessageStream = twonlyDB.messagesDao
         .watchLastMessage(widget.group.groupId)
         .listen((update) {
@@ -99,6 +100,13 @@ class _UserListItem extends State<GroupListItem> {
           }
           setState(() {});
         });
+
+    final groupContacts = await twonlyDB.groupsDao.getGroupContact(
+      widget.group.groupId,
+    );
+    if (groupContacts.length == 1) {
+      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    }
   }
 
   Mutex protectUpdateState = Mutex();
@@ -133,6 +141,9 @@ class _UserListItem extends State<GroupListItem> {
       )) {
         _currentMessage = newLastMessage;
         _previewMessages = [newLastMessage];
+      } else {
+        _currentMessage = null;
+        _previewMessages = [];
       }
     }
 
@@ -220,7 +231,9 @@ class _UserListItem extends State<GroupListItem> {
             ),
           ],
         ),
-        subtitle: (_currentMessage == null)
+        subtitle: _receiverDeletedAccount
+            ? Text(context.lang.userDeletedAccount)
+            : (_currentMessage == null)
             ? (widget.group.totalMediaCounter == 0)
                   ? Text(context.lang.chatsTapToSend)
                   : Row(
@@ -267,7 +280,7 @@ class _UserListItem extends State<GroupListItem> {
           },
           child: AvatarIcon(group: widget.group),
         ),
-        trailing: (widget.group.leftGroup)
+        trailing: (widget.group.leftGroup || _receiverDeletedAccount)
             ? null
             : IconButton(
                 onPressed: () {

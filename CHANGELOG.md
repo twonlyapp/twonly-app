@@ -3,13 +3,16 @@
 ## 0.1.3
 
 - New: Video stabilization
-- New: Crop or rotate images before share them
+- New: Crop or rotate images before sharing them.
 - New: Clicking on “Text Notifications” will now open the chat directly (Android only)
 - New: Developer settings to reduce flames
 - Improve: Improved troubleshooting for issues with push notifications 
+- Improve: A message appears if someone has deleted their account.
+- Improve: Make the verification badge more visible.
 - Fix: Flash not activated when starting a video recording
 - Fix: Problem sending media when a recipient has deleted their account.
 - Fix: Receive push notifications without receiving an in-app message (Android)
+- Fix: Issue with sending GIFs from Memories
 - Fix: Incorrect processing of messages that have already been fetched from the server causes the UI to freeze 
 
 ## 0.1.1

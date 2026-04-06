@@ -13,6 +13,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_date_chip.dart';
@@ -53,6 +54,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   late FocusNode textFieldFocus;
   final ItemScrollController itemScrollController = ItemScrollController();
   int? focusedScrollItem;
+  bool _receiverDeletedAccount = false;
 
   @override
   void initState() {
@@ -107,6 +109,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         await setMessages(update, groupActions);
       });
     });
+
+    final groupContacts = await twonlyDB.groupsDao.getGroupContact(
+      widget.groupId,
+    );
+    if (groupContacts.length == 1) {
+      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    }
   }
 
   Future<void> setMessages(
@@ -334,7 +343,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     ],
                   ),
                 ),
-              if (!group.leftGroup)
+              if (!group.leftGroup && !_receiverDeletedAccount)
                 MessageInput(
                   group: group,
                   quotesMessage: quotesMessage,
@@ -345,6 +354,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     });
                   },
                 ),
+              if (_receiverDeletedAccount)
+                Text(context.lang.userDeletedAccount),
             ],
           ),
         ),

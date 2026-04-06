@@ -14,7 +14,6 @@ import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/max_flame_list_title.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
-import 'package:twonly/src/views/components/svg_icon.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
 

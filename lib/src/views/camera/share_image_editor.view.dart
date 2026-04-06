@@ -507,7 +507,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaService.tempPath.deleteSync();
     }
     if (mediaService.originalPath.existsSync()) {
-      if (media.type != MediaType.video) {
+      if (media.type == MediaType.image) {
         mediaService.originalPath.deleteSync();
       }
     }
@@ -516,8 +516,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (media.type == MediaType.gif) {
       if (bytes != null) {
         mediaService.originalPath.writeAsBytesSync(bytes.toList());
-      } else {
-        Log.error('Could not load image bytes for gif!');
       }
     } else {
       image = await getEditedImageBytes();
