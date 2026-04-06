@@ -2842,6 +2842,12 @@ abstract class AppLocalizations {
   /// **'Scan other profile'**
   String get scanOtherProfile;
 
+  /// No description provided for @openYourOwnQRcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your own QR code'**
+  String get openYourOwnQRcode;
+
   /// No description provided for @skipForNow.
   ///
   /// In en, this message translates to:

@@ -17,6 +17,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/message_send_sta
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/group_context_menu.component.dart';
+import 'package:twonly/src/views/components/verified_shield.dart';
 
 class GroupListItem extends StatefulWidget {
   const GroupListItem({
@@ -206,8 +207,18 @@ class _UserListItem extends State<GroupListItem> {
     return GroupContextMenu(
       group: widget.group,
       child: ListTile(
-        title: Text(
-          substringBy(widget.group.groupName, 30),
+        title: Row(
+          children: [
+            Text(
+              substringBy(widget.group.groupName, 30),
+            ),
+            const SizedBox(width: 3),
+            VerifiedShield(
+              group: widget.group,
+              showOnlyIfVerified: true,
+              size: 12,
+            ),
+          ],
         ),
         subtitle: (_currentMessage == null)
             ? (widget.group.totalMediaCounter == 0)

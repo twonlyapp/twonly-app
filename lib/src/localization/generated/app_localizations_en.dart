@@ -1559,6 +1559,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanOtherProfile => 'Scan other profile';
 
   @override
+  String get openYourOwnQRcode => 'Open your own QR code';
+
+  @override
   String get skipForNow => 'Skip for now';
 
   @override

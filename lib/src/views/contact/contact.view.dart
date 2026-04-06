@@ -210,18 +210,18 @@ class _ContactViewState extends State<ContactView> {
           MaxFlameListTitle(
             contactId: widget.userId,
           ),
-          BetterListTile(
-            leading: SvgIcon(
-              assetPath: SvgIcons.verifiedGreen,
-              size: 20,
-              color: IconTheme.of(context).color,
+          if (!contact.verified)
+            BetterListTile(
+              leading: VerifiedShield(
+                contact: contact,
+                size: 20,
+              ),
+              text: context.lang.contactVerifyNumberTitle,
+              onTap: () async {
+                await context.push(Routes.settingsHelpFaqVerifyBadge);
+                setState(() {});
+              },
             ),
-            text: context.lang.contactVerifyNumberTitle,
-            onTap: () async {
-              await context.push(Routes.settingsPublicProfile);
-              setState(() {});
-            },
-          ),
           BetterListTile(
             icon: FontAwesomeIcons.flag,
             text: context.lang.reportUser,
