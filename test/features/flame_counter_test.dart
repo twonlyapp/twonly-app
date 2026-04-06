@@ -128,6 +128,20 @@ void main() {
       Clock.fixed(DateTime(2026, 3, 25, 19)),
       () async {
         final group2 = (await twonlyDB.groupsDao.getGroup(group.groupId))!;
+        expect(isItPossibleToRestoreFlames(group2), true);
+      },
+    );
+    await withClock(
+      Clock.fixed(DateTime(2026, 3, 26, 19)),
+      () async {
+        final group2 = (await twonlyDB.groupsDao.getGroup(group.groupId))!;
+        expect(isItPossibleToRestoreFlames(group2), true);
+      },
+    );
+    await withClock(
+      Clock.fixed(DateTime(2026, 3, 27, 19)),
+      () async {
+        final group2 = (await twonlyDB.groupsDao.getGroup(group.groupId))!;
         expect(isItPossibleToRestoreFlames(group2), false);
       },
     );
