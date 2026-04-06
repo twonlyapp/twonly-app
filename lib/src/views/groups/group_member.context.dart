@@ -124,14 +124,15 @@ class GroupMemberContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.contextMenuOpenChat,
             onTap: () async {
-              final directChat =
-                  await twonlyDB.groupsDao.getDirectChat(contact.userId);
+              final directChat = await twonlyDB.groupsDao.getDirectChat(
+                contact.userId,
+              );
               if (directChat == null) {
                 // create
                 return;
               }
               if (!context.mounted) return;
-              await context.push(Routes.chatsMessages, extra: directChat);
+              await context.push(Routes.chatsMessages(directChat.groupId));
             },
             icon: FontAwesomeIcons.message,
           ),

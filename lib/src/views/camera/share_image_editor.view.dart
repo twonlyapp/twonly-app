@@ -109,13 +109,21 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         sendingOrLoadingImage = false;
         loadingImage = false;
       });
-      videoController = VideoPlayerController.file(mediaService.originalPath);
+      videoController = VideoPlayerController.file(
+        mediaService.originalPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+        ),
+      );
       videoController?.setLooping(true);
-      videoController?.initialize().then((_) async {
-        await videoController!.play();
-        setState(() {});
-        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
-      }).catchError(Log.error);
+      videoController
+          ?.initialize()
+          .then((_) async {
+            await videoController!.play();
+            setState(() {});
+          })
+          // ignore: argument_type_not_assignable_to_error_handler, invalid_return_type_for_catch_error
+          .catchError(Log.error);
     }
   }
 
@@ -205,8 +213,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheRight {
     if (layers.isNotEmpty &&
-        layers.last.isEditing &&
-        layers.last.hasCustomActionButtons) {
+        (layers.first.isEditing ||
+            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return <Widget>[
@@ -246,13 +254,15 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           Icons.add_reaction_outlined,
           tooltipText: context.lang.addEmoji,
           onPressed: () async {
-            final layer = await showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.black,
-              builder: (context) {
-                return const EmojiPickerBottom();
-              },
-            ) as Layer?;
+            final layer =
+                await showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.black,
+                      builder: (context) {
+                        return const EmojiPickerBottom();
+                      },
+                    )
+                    as Layer?;
             if (layer == null) return;
             undoLayers.clear();
             removedLayers.clear();
@@ -265,19 +275,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         count: (media.type == MediaType.video)
             ? '0'
             : media.displayLimitInMilliseconds == null
-                ? '∞'
-                : (media.displayLimitInMilliseconds! ~/ 1000).toString(),
+            ? '∞'
+            : (media.displayLimitInMilliseconds! ~/ 1000).toString(),
         child: ActionButton(
           (media.type == MediaType.video)
               ? media.displayLimitInMilliseconds == null
-                  ? Icons.repeat_rounded
-                  : Icons.repeat_one_rounded
+                    ? Icons.repeat_rounded
+                    : Icons.repeat_one_rounded
               : Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
           onPressed: _setImageDisplayTime,
         ),
       ),
-      if (media.type == MediaType.video)
+      if (media.type == MediaType.video) ...[
+        const SizedBox(height: 8),
         ActionButton(
           (mediaService.removeAudio)
               ? Icons.volume_off_rounded
@@ -296,6 +307,29 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             if (mounted) setState(() {});
           },
         ),
+      ],
+      if (media.type == MediaType.image) ...[
+        const SizedBox(height: 8),
+        ActionButton(
+          Icons.crop_rotate_outlined,
+          tooltipText: 'Crop or rotate image',
+          color: Colors.white,
+          onPressed: () async {
+            final first = layers.first;
+            if (first is BackgroundLayerData) {
+              first.isEditing = !first.isEditing;
+            }
+            setState(() {});
+            // await mediaService.toggleRemoveAudio();
+            // if (mediaService.removeAudio) {
+            //   await videoController?.setVolume(0);
+            // } else {
+            //   await videoController?.setVolume(100);
+            // }
+            // if (mounted) setState(() {});
+          },
+        ),
+      ],
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
@@ -348,8 +382,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheTop {
     if (layers.isNotEmpty &&
-        layers.last.isEditing &&
-        layers.last.hasCustomActionButtons) {
+        (layers.first.isEditing ||
+            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return [
@@ -411,18 +445,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     await videoController?.pause();
     if (isDisposed || !mounted) return;
-    final wasSend = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ShareImageView(
-          selectedGroupIds: selectedGroupIds,
-          updateSelectedGroupIds: updateSelectedGroupIds,
-          mediaStoreFuture: mediaStoreFuture,
-          mediaFileService: mediaService,
-          additionalData: getAdditionalData(),
-        ),
-      ),
-    ) as bool?;
+    final wasSend =
+        await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ShareImageView(
+                  selectedGroupIds: selectedGroupIds,
+                  updateSelectedGroupIds: updateSelectedGroupIds,
+                  mediaStoreFuture: mediaStoreFuture,
+                  mediaFileService: mediaService,
+                  additionalData: getAdditionalData(),
+                ),
+              ),
+            )
+            as bool?;
     if (wasSend != null && wasSend && mounted) {
       widget.mainCameraController?.onImageSend();
       Navigator.pop(context, true);
@@ -471,7 +507,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaService.tempPath.deleteSync();
     }
     if (mediaService.originalPath.existsSync()) {
-      if (media.type != MediaType.video) {
+      if (media.type == MediaType.image) {
         mediaService.originalPath.deleteSync();
       }
     }
@@ -480,8 +516,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (media.type == MediaType.gif) {
       if (bytes != null) {
         mediaService.originalPath.writeAsBytesSync(bytes.toList());
-      } else {
-        Log.error('Could not load image bytes for gif!');
       }
     } else {
       image = await getEditedImageBytes();
@@ -552,8 +586,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     });
     // It is important that the user can sending the image only when the image is fully loaded otherwise if the user
     // will click on send before the image is painted the screenshot will be transparent..
-    _imageLoadingTimer =
-        Timer.periodic(const Duration(milliseconds: 10), (timer) {
+    _imageLoadingTimer = Timer.periodic(const Duration(milliseconds: 10), (
+      timer,
+    ) {
       final imageLayer = layers.first;
       if (imageLayer is BackgroundLayerData) {
         if (imageLayer.imageLoaded) {
@@ -619,8 +654,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         await askToCloseThenClose();
       },
       child: Scaffold(
-        backgroundColor:
-            widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
+        backgroundColor: widget.sharedFromGallery
+            ? null
+            : Colors.white.withAlpha(0),
         resizeToAvoidBottomInset: false,
         body: Stack(
           fit: StackFit.expand,
@@ -667,8 +703,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             iconColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                           ),
                           onPressed: pushShareImageView,
                           child: const FaIcon(FontAwesomeIcons.userPlus),
@@ -681,9 +718,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                                 width: 12,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.inversePrimary,
                                 ),
                               )
                             : const FaIcon(FontAwesomeIcons.solidPaperPlane),

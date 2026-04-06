@@ -102,8 +102,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> asyncLoadNextMedia(bool firstRun) async {
-    final messages =
-        twonlyDB.messagesDao.watchMediaNotOpened(widget.group.groupId);
+    final messages = twonlyDB.messagesDao.watchMediaNotOpened(
+      widget.group.groupId,
+    );
 
     _subscription = messages.listen((messages) async {
       for (final msg in messages) {
@@ -121,8 +122,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
         /// If the messages was already there just replace it and go to the next...
 
-        final index =
-            allMediaFiles.indexWhere((m) => m.messageId == msg.messageId);
+        final index = allMediaFiles.indexWhere(
+          (m) => m.messageId == msg.messageId,
+        );
 
         if (index >= 1) {
           allMediaFiles[index] = msg;
@@ -160,7 +162,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         if (group != null &&
             group.draftMessage != null &&
             group.draftMessage != '') {
-          context.replace(Routes.chatsMessages, extra: group);
+          context.replace(Routes.chatsMessages(group.groupId));
         } else {
           Navigator.pop(context);
         }
@@ -190,8 +192,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     unawaited(flutterLocalNotificationsPlugin.cancelAll());
 
-    final stream =
-        twonlyDB.mediaFilesDao.watchMedia(allMediaFiles.first.mediaId!);
+    final stream = twonlyDB.mediaFilesDao.watchMedia(
+      allMediaFiles.first.mediaId!,
+    );
 
     var downloadTriggered = false;
 
@@ -204,8 +207,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         });
         if (!downloadTriggered) {
           downloadTriggered = true;
-          final mediaFile = await twonlyDB.mediaFilesDao
-              .getMediaFileById(allMediaFiles.first.mediaId!);
+          final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+            allMediaFiles.first.mediaId!,
+          );
           if (mediaFile == null) return;
           await startDownloadMedia(mediaFile, true);
           unawaited(tryDownloadAllMediaFiles(force: true));
@@ -226,8 +230,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     setState(() {
       _showDownloadingLoader = false;
     });
-    final currentMediaLocal =
-        await MediaFileService.fromMediaId(allMediaFiles.first.mediaId!);
+    final currentMediaLocal = await MediaFileService.fromMediaId(
+      allMediaFiles.first.mediaId!,
+    );
     if (currentMediaLocal == null || !mounted) return;
 
     if (currentMediaLocal.mediaFile.requiresAuthentication) {
@@ -259,8 +264,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
 
     if (!widget.group.isDirectChat) {
-      final sender =
-          await twonlyDB.contactsDao.getContactById(currentMessage!.senderId!);
+      final sender = await twonlyDB.contactsDao.getContactById(
+        currentMessage!.senderId!,
+      );
       if (sender != null) {
         _currentMediaSender =
             '${getContactDisplayName(sender)} (${widget.group.groupName})';
@@ -281,36 +287,49 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     var timerRequired = false;
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
-      videoController = VideoPlayerController.file(currentMediaLocal.tempPath);
+      videoController = VideoPlayerController.file(
+        currentMediaLocal.tempPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          // only mix in case the video can be played multiple times,
+          // otherwise stop the background music in case the video contains audio
+          mixWithOthers:
+              currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
+        ),
+      );
       await videoController?.setLooping(
         currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
       );
-      await videoController?.initialize().then((_) {
-        if (videoController == null) return;
-        videoController?.play();
-        videoController?.addListener(() {
-          setState(() {
-            progress = 1 -
-                videoController!.value.position.inSeconds /
-                    videoController!.value.duration.inSeconds;
-          });
-          if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
-            if (videoController?.value.position ==
-                videoController?.value.duration) {
-              nextMediaOrExit();
-            }
-          }
-        });
-        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
-      }).catchError(Log.error);
+      await videoController
+          ?.initialize()
+          .then((_) {
+            if (videoController == null) return;
+            videoController?.play();
+            videoController?.addListener(() {
+              setState(() {
+                progress =
+                    1 -
+                    videoController!.value.position.inSeconds /
+                        videoController!.value.duration.inSeconds;
+              });
+              if (currentMediaLocal.mediaFile.displayLimitInMilliseconds !=
+                  null) {
+                if (videoController?.value.position ==
+                    videoController?.value.duration) {
+                  nextMediaOrExit();
+                }
+              }
+            });
+          })
+          // ignore: argument_type_not_assignable_to_error_handler, invalid_return_type_for_catch_error
+          .catchError(Log.error);
     } else {
       if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
         canBeSeenUntil = clock.now().add(
-              Duration(
-                milliseconds:
-                    currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
-              ),
-            );
+          Duration(
+            milliseconds:
+                currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
+          ),
+        );
         timerRequired = true;
       }
     }
@@ -434,8 +453,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     height: 8,
                     child: Center(
                       child: EmojiAnimation(
-                        emoji:
-                            EmojiAnimation.animatedIcons.keys.toList()[index],
+                        emoji: EmojiAnimation.animatedIcons.keys
+                            .toList()[index],
                       ),
                     ),
                   );

@@ -49,7 +49,18 @@ void callbackDispatcher() {
   });
 }
 
+bool _isInitialized = false;
+
 Future<bool> initBackgroundExecution() async {
+  if (_isInitialized) {
+    // Reload the users, as on Android the background isolate can
+    // stay alive for multiple hours between task executions
+    final user = await getUser();
+    if (user == null) return false;
+    gUser = user;
+    return true;
+  }
+
   SentryWidgetsFlutterBinding.ensureInitialized();
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
   globalApplicationSupportDirectory =
@@ -65,12 +76,13 @@ Future<bool> initBackgroundExecution() async {
   apiService = ApiService();
   globalIsInBackgroundTask = true;
 
+  _isInitialized = true;
   return true;
 }
 
 final Mutex _keyValueMutex = Mutex();
 
-Future<void> handlePeriodicTask() async {
+Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
   final shouldBeExecuted = await exclusiveAccess(
     lockName: 'periodic_task',
     mutex: _keyValueMutex,
@@ -84,7 +96,8 @@ Future<void> handlePeriodicTask() async {
           final lastExecutionDate = DateTime.fromMillisecondsSinceEpoch(
             lastExecutionTime,
           );
-          if (DateTime.now().difference(lastExecutionDate).inMinutes < 2) {
+          if (DateTime.now().difference(lastExecutionDate).inSeconds <
+              lastExecutionInSecondsLimit) {
             return false;
           }
         }

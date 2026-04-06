@@ -26,19 +26,19 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
       Log.error('Did not update reaction as it is not an emoji!');
       return;
     }
-    final msg =
-        await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+    final msg = await twonlyDB.messagesDao
+        .getMessageById(messageId)
+        .getSingleOrNull();
     if (msg == null || msg.groupId != groupId) return;
 
     try {
       if (remove) {
-        await (delete(reactions)
-              ..where(
-                (t) =>
-                    t.senderId.equals(contactId) &
-                    t.messageId.equals(messageId) &
-                    t.emoji.equals(emoji),
-              ))
+        await (delete(reactions)..where(
+              (t) =>
+                  t.senderId.equals(contactId) &
+                  t.messageId.equals(messageId) &
+                  t.emoji.equals(emoji),
+            ))
             .go();
       } else {
         await into(reactions).insertOnConflictUpdate(
@@ -63,18 +63,18 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
       Log.error('Did not update reaction as it is not an emoji!');
       return;
     }
-    final msg =
-        await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+    final msg = await twonlyDB.messagesDao
+        .getMessageById(messageId)
+        .getSingleOrNull();
     if (msg == null) return;
 
     try {
-      await (delete(reactions)
-            ..where(
-              (t) =>
-                  t.senderId.isNull() &
-                  t.messageId.equals(messageId) &
-                  t.emoji.equals(emoji),
-            ))
+      await (delete(reactions)..where(
+            (t) =>
+                t.senderId.isNull() &
+                t.messageId.equals(messageId) &
+                t.emoji.equals(emoji),
+          ))
           .go();
       if (!remove) {
         await into(reactions).insert(
@@ -98,20 +98,19 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
   }
 
   Stream<Reaction?> watchLastReactions(String groupId) {
-    final query = (select(reactions)
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .join(
-      [
-        innerJoin(
-          messages,
-          messages.messageId.equalsExp(reactions.messageId),
-          useColumns: false,
-        ),
-      ],
-    )
-      ..where(messages.groupId.equals(groupId))
-      // ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-      ..limit(1);
+    final query =
+        (select(reactions)).join(
+            [
+              innerJoin(
+                messages,
+                messages.messageId.equalsExp(reactions.messageId),
+                useColumns: false,
+              ),
+            ],
+          )
+          ..where(messages.groupId.equals(groupId))
+          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..limit(1);
     return query.map((row) => row.readTable(reactions)).watchSingleOrNull();
   }
 

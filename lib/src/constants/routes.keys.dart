@@ -6,7 +6,8 @@ class Routes {
   static const String chatsStartNewChat = '/chats/start_new_chat';
   static const String chatsCameraSendTo = '/chats/camera_send_to';
   static const String chatsMediaViewer = '/chats/media_viewer';
-  static const String chatsMessages = '/chats/messages';
+
+  static String chatsMessages(String groupId) => '/chats/messages/$groupId';
 
   static String groupCreateSelectMember(String? groupId) =>
       '/group/create/select_member${groupId == null ? '' : '/$groupId'}';
@@ -53,5 +54,7 @@ class Routes {
       '/settings/developer/retransmission_database';
   static const String settingsDeveloperAutomatedTesting =
       '/settings/developer/automated_testing';
+  static const String settingsDeveloperReduceFlames =
+      '/settings/developer/reduce_flames';
   static const String settingsInvite = '/settings/invite';
 }

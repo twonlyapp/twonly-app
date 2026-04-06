@@ -35,8 +35,9 @@ class _StartNewChatView extends State<StartNewChatView> {
   void initState() {
     super.initState();
 
-    contactSub =
-        twonlyDB.contactsDao.watchAllAcceptedContacts().listen((update) async {
+    contactSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
+      update,
+    ) async {
       update.sort(
         (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
       );
@@ -46,13 +47,14 @@ class _StartNewChatView extends State<StartNewChatView> {
       await filterUsers();
     });
 
-    allNonDirectGroupsSub =
-        twonlyDB.groupsDao.watchGroupsForStartNewChat().listen((update) async {
-      setState(() {
-        allNonDirectGroups = update;
-      });
-      await filterUsers();
-    });
+    allNonDirectGroupsSub = twonlyDB.groupsDao
+        .watchGroupsForStartNewChat()
+        .listen((update) async {
+          setState(() {
+            allNonDirectGroups = update;
+          });
+          await filterUsers();
+        });
   }
 
   @override
@@ -72,16 +74,16 @@ class _StartNewChatView extends State<StartNewChatView> {
     }
     final usersFiltered = allContacts
         .where(
-          (user) => getContactDisplayName(user)
-              .toLowerCase()
-              .contains(searchUserName.value.text.toLowerCase()),
+          (user) => getContactDisplayName(
+            user,
+          ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
         )
         .toList();
     final groupsFiltered = allNonDirectGroups
         .where(
-          (g) => g.groupName
-              .toLowerCase()
-              .contains(searchUserName.value.text.toLowerCase()),
+          (g) => g.groupName.toLowerCase().contains(
+            searchUserName.value.text.toLowerCase(),
+          ),
         )
         .toList();
     setState(() {
@@ -108,7 +110,7 @@ class _StartNewChatView extends State<StartNewChatView> {
       context,
       MaterialPageRoute(
         builder: (context) {
-          return ChatMessagesView(directChat!);
+          return ChatMessagesView(directChat!.groupId);
         },
       ),
     );
@@ -119,7 +121,7 @@ class _StartNewChatView extends State<StartNewChatView> {
       context,
       MaterialPageRoute(
         builder: (context) {
-          return ChatMessagesView(group);
+          return ChatMessagesView(group.groupId);
         },
       ),
     );
@@ -133,8 +135,12 @@ class _StartNewChatView extends State<StartNewChatView> {
       ),
       body: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+          padding: const EdgeInsets.only(
+            bottom: 40,
+            left: 10,
+            top: 20,
+            right: 10,
+          ),
           child: Column(
             children: [
               Padding(
@@ -167,8 +173,9 @@ class _StartNewChatView extends State<StartNewChatView> {
                               size: 13,
                             ),
                           ),
-                          onTap: () => context
-                              .push(Routes.groupCreateSelectMember(null)),
+                          onTap: () => context.push(
+                            Routes.groupCreateSelectMember(null),
+                          ),
                         );
                       }
                       if (i == 1) {

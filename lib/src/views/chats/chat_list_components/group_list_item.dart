@@ -17,6 +17,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/message_send_sta
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/group_context_menu.component.dart';
+import 'package:twonly/src/views/components/verified_shield.dart';
 
 class GroupListItem extends StatefulWidget {
   const GroupListItem({
@@ -44,6 +45,7 @@ class _UserListItem extends State<GroupListItem> {
   List<Message> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
   bool _hasNonOpenedMediaFile = false;
+  bool _receiverDeletedAccount = false;
 
   @override
   void initState() {
@@ -60,45 +62,51 @@ class _UserListItem extends State<GroupListItem> {
     super.dispose();
   }
 
-  void initStreams() {
+  Future<void> initStreams() async {
     _lastMessageStream = twonlyDB.messagesDao
         .watchLastMessage(widget.group.groupId)
         .listen((update) {
-      protectUpdateState.protect(() async {
-        await updateState(update, _messagesNotOpened);
-      });
-    });
+          protectUpdateState.protect(() async {
+            await updateState(update, _messagesNotOpened);
+          });
+        });
 
     _lastReactionStream = twonlyDB.reactionsDao
         .watchLastReactions(widget.group.groupId)
         .listen((update) {
-      setState(() {
-        _lastReaction = update;
-      });
-      // protectUpdateState.protect(() async {
-      //   await updateState(lastMessage, update, messagesNotOpened);
-      // });
-    });
+          setState(() {
+            _lastReaction = update;
+          });
+        });
 
     _messagesNotOpenedStream = twonlyDB.messagesDao
         .watchMessageNotOpened(widget.group.groupId)
         .listen((update) {
-      protectUpdateState.protect(() async {
-        await updateState(_lastMessage, update);
-      });
-    });
+          protectUpdateState.protect(() async {
+            await updateState(_lastMessage, update);
+          });
+        });
 
-    _lastMediaFilesStream =
-        twonlyDB.mediaFilesDao.watchNewestMediaFiles().listen((mediaFiles) {
-      for (final mediaFile in mediaFiles) {
-        final index = _previewMediaFiles
-            .indexWhere((t) => t.mediaId == mediaFile.mediaId);
-        if (index >= 0) {
-          _previewMediaFiles[index] = mediaFile;
-        }
-      }
-      setState(() {});
-    });
+    _lastMediaFilesStream = twonlyDB.mediaFilesDao
+        .watchNewestMediaFiles()
+        .listen((mediaFiles) {
+          for (final mediaFile in mediaFiles) {
+            final index = _previewMediaFiles.indexWhere(
+              (t) => t.mediaId == mediaFile.mediaId,
+            );
+            if (index >= 0) {
+              _previewMediaFiles[index] = mediaFile;
+            }
+          }
+          setState(() {});
+        });
+
+    final groupContacts = await twonlyDB.groupsDao.getGroupContact(
+      widget.group.groupId,
+    );
+    if (groupContacts.length == 1) {
+      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    }
   }
 
   Mutex protectUpdateState = Mutex();
@@ -113,8 +121,9 @@ class _UserListItem extends State<GroupListItem> {
       _previewMessages = [];
     } else if (newMessagesNotOpened.isNotEmpty) {
       // Filter for the preview non opened messages. First messages which where send but not yet opened by the other side.
-      final receivedMessages =
-          newMessagesNotOpened.where((x) => x.senderId != null).toList();
+      final receivedMessages = newMessagesNotOpened
+          .where((x) => x.senderId != null)
+          .toList();
 
       if (receivedMessages.isNotEmpty) {
         _previewMessages = receivedMessages;
@@ -125,8 +134,17 @@ class _UserListItem extends State<GroupListItem> {
       }
     } else {
       // there are no not opened messages show just the last message in the table
-      _currentMessage = newLastMessage;
-      _previewMessages = [newLastMessage];
+      // only shows the last message in case there was no newer messages which already got deleted
+      // This prevents, that it will show that a images got stored 10 days ago...
+      if (newLastMessage.createdAt.isAfter(
+        widget.group.lastMessageExchange.subtract(const Duration(days: 2)),
+      )) {
+        _currentMessage = newLastMessage;
+        _previewMessages = [newLastMessage];
+      } else {
+        _currentMessage = null;
+        _previewMessages = [];
+      }
     }
 
     final msgs = _previewMessages
@@ -145,8 +163,9 @@ class _UserListItem extends State<GroupListItem> {
     for (final message in _previewMessages) {
       if (message.mediaId != null &&
           !_previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
-        final mediaFile =
-            await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+        final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+          message.mediaId!,
+        );
         if (mediaFile != null) {
           _previewMediaFiles.add(mediaFile);
         }
@@ -171,8 +190,9 @@ class _UserListItem extends State<GroupListItem> {
       final msgs = _previewMessages
           .where((x) => x.type == MessageType.media.name)
           .toList();
-      final mediaFile =
-          await twonlyDB.mediaFilesDao.getMediaFileById(msgs.first.mediaId!);
+      final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+        msgs.first.mediaId!,
+      );
       if (mediaFile?.type != MediaType.audio) {
         if (mediaFile?.downloadState == null) return;
         if (mediaFile!.downloadState! == DownloadState.pending) {
@@ -190,10 +210,7 @@ class _UserListItem extends State<GroupListItem> {
       }
     }
     if (!mounted) return;
-    await context.push(
-      Routes.chatsMessages,
-      extra: widget.group,
-    );
+    await context.push(Routes.chatsMessages(widget.group.groupId));
   }
 
   @override
@@ -201,23 +218,35 @@ class _UserListItem extends State<GroupListItem> {
     return GroupContextMenu(
       group: widget.group,
       child: ListTile(
-        title: Text(
-          substringBy(widget.group.groupName, 30),
+        title: Row(
+          children: [
+            Text(
+              substringBy(widget.group.groupName, 30),
+            ),
+            const SizedBox(width: 3),
+            VerifiedShield(
+              group: widget.group,
+              showOnlyIfVerified: true,
+              size: 12,
+            ),
+          ],
         ),
-        subtitle: (_currentMessage == null)
+        subtitle: _receiverDeletedAccount
+            ? Text(context.lang.userDeletedAccount)
+            : (_currentMessage == null)
             ? (widget.group.totalMediaCounter == 0)
-                ? Text(context.lang.chatsTapToSend)
-                : Row(
-                    children: [
-                      LastMessageTime(
-                        dateTime: widget.group.lastMessageExchange,
-                      ),
-                      FlameCounterWidget(
-                        groupId: widget.group.groupId,
-                        prefix: true,
-                      ),
-                    ],
-                  )
+                  ? Text(context.lang.chatsTapToSend)
+                  : Row(
+                      children: [
+                        LastMessageTime(
+                          dateTime: widget.group.lastMessageExchange,
+                        ),
+                        FlameCounterWidget(
+                          groupId: widget.group.groupId,
+                          prefix: true,
+                        ),
+                      ],
+                    )
             : Row(
                 children: [
                   MessageSendStateIcon(
@@ -239,8 +268,9 @@ class _UserListItem extends State<GroupListItem> {
         leading: GestureDetector(
           onTap: () async {
             if (widget.group.isDirectChat) {
-              final contacts = await twonlyDB.groupsDao
-                  .getGroupContact(widget.group.groupId);
+              final contacts = await twonlyDB.groupsDao.getGroupContact(
+                widget.group.groupId,
+              );
               if (!context.mounted) return;
               await context.push(Routes.profileContact(contacts.first.userId));
               return;
@@ -250,15 +280,19 @@ class _UserListItem extends State<GroupListItem> {
           },
           child: AvatarIcon(group: widget.group),
         ),
-        trailing: (widget.group.leftGroup)
+        trailing: (widget.group.leftGroup || _receiverDeletedAccount)
             ? null
             : IconButton(
-                onPressed: () => context.push(
-                  _hasNonOpenedMediaFile
-                      ? Routes.chatsMessages
-                      : Routes.chatsCameraSendTo,
-                  extra: widget.group,
-                ),
+                onPressed: () {
+                  if (_hasNonOpenedMediaFile) {
+                    context.push(Routes.chatsMessages(widget.group.groupId));
+                  } else {
+                    context.push(
+                      Routes.chatsCameraSendTo,
+                      extra: widget.group,
+                    );
+                  }
+                },
                 icon: FaIcon(
                   _hasNonOpenedMediaFile
                       ? FontAwesomeIcons.solidComments

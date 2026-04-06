@@ -356,7 +356,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Klicke auf OK, um eine Testbenachrichtigung zu erhalten. Wenn du auch nach 10 Minuten warten keine Nachricht erhältst, sende uns bitte dein Diagnoseprotokoll unter Einstellungen > Hilfe > Diagnoseprotokoll, damit wir uns das Problem ansehen können.';
+      'Um eine Testbenachrichtigung zu erhalten, klicke auf OK. Falls du die Testbenachrichtigung nicht erhältst, klicke bitte auf den neuen Menüpunkt, der nach dem Klicken auf „OK“ angezeigt wird.';
+
+  @override
+  String get settingsNotifyResetTitle => 'Keine Testbenachrichtigung erhalten?';
+
+  @override
+  String get settingsNotifyResetTitleSubtitle =>
+      'Falls du keine Testbenachrichtigungen erhalten hast, klicke hier, um deine Benachrichtigungstoken zurückzusetzen.';
+
+  @override
+  String get settingsNotifyResetTitleReset =>
+      'Deine Benachrichtigungstoken wurden zurückgesetzt.';
+
+  @override
+  String get settingsNotifyResetTitleResetDesc =>
+      'Sollte das Problem weiterhin bestehen, sende uns bitte dein Debug-Protokoll über „Einstellungen“ > „Hilfe“, damit wir das Problem untersuchen können.';
 
   @override
   String get settingsHelp => 'Hilfe';
@@ -1552,6 +1567,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scanOtherProfile => 'Scanne ein anderes Profil';
+
+  @override
+  String get openYourOwnQRcode => 'Eigenen QR-Code öffnen';
 
   @override
   String get skipForNow => 'Vorerst überspringen';

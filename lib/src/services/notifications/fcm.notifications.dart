@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -41,44 +42,67 @@ Future<void> checkForTokenUpdates() async {
       Log.error('Could not get fcm token');
       return;
     }
-    Log.info('Loaded fcm token');
+
+    Log.info('Loaded FCM token.');
+
     if (storedToken == null || fcmToken != storedToken) {
+      Log.info('Got new FCM TOKEN.');
+      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
       await updateUserdata((u) {
         u.updateFCMToken = true;
         return u;
       });
-      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }
 
-    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
-      await updateUserdata((u) {
-        u.updateFCMToken = true;
-        return u;
-      });
-      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
-    }).onError((err) {
-      Log.error('could not listen on token refresh');
-    });
+    FirebaseMessaging.instance.onTokenRefresh
+        .listen((fcmToken) async {
+          Log.info('Got new FCM TOKEN.');
+          await storage.write(
+            key: SecureStorageKeys.googleFcm,
+            value: fcmToken,
+          );
+          await updateUserdata((u) {
+            u.updateFCMToken = true;
+            return u;
+          });
+        })
+        .onError((err) {
+          Log.error('could not listen on token refresh');
+        });
   } catch (e) {
     Log.error('could not load fcm token: $e');
   }
 }
 
-Future<void> initFCMAfterAuthenticated() async {
-  if (gUser.updateFCMToken) {
+Future<void> initFCMAfterAuthenticated({bool force = false}) async {
+  if (gUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {
       final res = await apiService.updateFCMToken(storedToken);
       if (res.isSuccess) {
-        Log.info('Uploaded new fmt token!');
+        Log.info('Uploaded new FCM token!');
         await updateUserdata((u) {
           u.updateFCMToken = false;
           return u;
         });
+      } else {
+        Log.error('Could not update FCM token!');
       }
+    } else {
+      Log.error('Could not send FCM update to server as token is empty.');
     }
   }
+}
+
+Future<void> resetFCMTokens() async {
+  await FirebaseInstallations.instance.delete();
+  Log.info('Firebase Installation successfully deleted.');
+  await FirebaseMessaging.instance.deleteToken();
+  Log.info('Old FCM deleted.');
+  await const FlutterSecureStorage().delete(key: SecureStorageKeys.googleFcm);
+  await checkForTokenUpdates();
+  await initFCMAfterAuthenticated(force: true);
 }
 
 Future<void> initFCMService() async {
@@ -86,36 +110,24 @@ Future<void> initFCMService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  unawaited(checkForTokenUpdates());
+  await checkForTokenUpdates();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // You may set the permission requests to "provisional" which allows the user to choose what type
-  // of notifications they would like to receive once the user receives a notification.
-  // final notificationSettings =
-  // await FirebaseMessaging.instance.requestPermission(provisional: true);
   await FirebaseMessaging.instance.requestPermission();
-
-  // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
-  // if (Platform.isIOS) {
-  //   final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-  //   if (apnsToken == null) {
-  //     return;
-  //   }
-  // }
 
   FirebaseMessaging.onMessage.listen(handleRemoteMessage);
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  initLogger();
-  // Log.info('Handling a background message: ${message.messageId}');
+  final isInitialized = await initBackgroundExecution();
+  Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
 
   if (Platform.isAndroid) {
-    if (await initBackgroundExecution()) {
-      await handlePeriodicTask();
+    if (isInitialized) {
+      await handlePeriodicTask(lastExecutionInSecondsLimit: 10);
     }
   } else {
     // make sure every thing run...
@@ -140,7 +152,11 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
     final body =
         message.notification?.body ?? message.data['body'] as String? ?? '';
     await customLocalPushNotification(title, body);
-  } else if (message.data['push_data'] != null) {
-    await handlePushData(message.data['push_data'] as String);
   }
+
+  // On Android the push notification is now shown in the server_message.dart. This ensures
+  // that the messages was successfully decrypted before showing the push notification
+  //  else if (message.data['push_data'] != null) {
+  // await handlePushData(message.data['push_data'] as String);
+  // }
 }

@@ -12,10 +12,13 @@ class VerifiedShield extends StatefulWidget {
     this.group,
     super.key,
     this.size = 15,
+    this.showOnlyIfVerified = false,
   });
   final Group? group;
   final Contact? contact;
   final double size;
+
+  final bool showOnlyIfVerified;
 
   @override
   State<VerifiedShield> createState() => _VerifiedShieldState();
@@ -33,13 +36,13 @@ class _VerifiedShieldState extends State<VerifiedShield> {
       stream = twonlyDB.groupsDao
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {
-        if (contacts.length == 1) {
-          contact = contacts.first;
-        }
-        setState(() {
-          isVerified = contacts.every((t) => t.verified);
-        });
-      });
+            if (contacts.length == 1) {
+              contact = contacts.first;
+            }
+            setState(() {
+              isVerified = contacts.every((t) => t.verified);
+            });
+          });
     } else if (widget.contact != null) {
       isVerified = widget.contact!.verified;
       contact = widget.contact;
@@ -56,19 +59,24 @@ class _VerifiedShieldState extends State<VerifiedShield> {
 
   @override
   Widget build(BuildContext context) {
+    if (!isVerified && widget.showOnlyIfVerified) return Container();
     return GestureDetector(
       onTap: (contact == null)
           ? null
-          : () => context.push(Routes.settingsPublicProfile),
-      child: Tooltip(
-        message: isVerified
-            ? 'You verified this contact'
-            : 'You have not verifies this contact.',
+          : () => context.push(Routes.settingsHelpFaqVerifyBadge),
+      child: ColoredBox(
+        color: Colors.transparent,
         child: Padding(
-          padding: const EdgeInsetsGeometry.only(top: 2),
+          padding: const EdgeInsetsGeometry.only(
+            top: 4,
+            left: 3,
+            right: 3,
+            bottom: 3,
+          ),
           child: SvgIcon(
-            assetPath:
-                isVerified ? SvgIcons.verifiedGreen : SvgIcons.verifiedRed,
+            assetPath: isVerified
+                ? SvgIcons.verifiedGreen
+                : SvgIcons.verifiedRed,
             size: widget.size,
           ),
         ),

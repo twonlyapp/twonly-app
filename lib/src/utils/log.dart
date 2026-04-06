@@ -8,8 +8,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/exclusive_access.dart';
 
+bool _isInitialized = false;
+
 void initLogger() {
-  // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
+  if (_isInitialized) return;
+  _isInitialized = true;
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
     unawaited(_writeLogToFile(record));
@@ -126,17 +129,34 @@ Future<void> cleanLogFile() async {
   return _protectFileAccess(() async {
     final logFile = File('$globalApplicationSupportDirectory/app.log');
 
-    if (logFile.existsSync()) {
-      final lines = await logFile.readAsLines();
-
-      if (lines.length <= 10000) return;
-
-      final removeCount = lines.length - 10000;
-      final remaining = lines.sublist(removeCount, lines.length);
-
-      final sink = logFile.openWrite()..writeAll(remaining, '\n');
-      await sink.close();
+    if (!logFile.existsSync()) {
+      return;
     }
+    final lines = await logFile.readAsLines();
+
+    final twoWeekAgo = clock.now().subtract(const Duration(days: 14));
+    var keepStartIndex = -1;
+
+    for (var i = 0; i < lines.length; i += 100) {
+      if (lines[i].length >= 19) {
+        final date = DateTime.tryParse(lines[i].substring(0, 19));
+        if (date != null && date.isAfter(twoWeekAgo)) {
+          keepStartIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (keepStartIndex == 0) return;
+
+    if (keepStartIndex == -1) {
+      await logFile.writeAsString('');
+      return;
+    }
+
+    final remaining = lines.sublist(keepStartIndex);
+    final sink = logFile.openWrite()..writeAll(remaining, '\n');
+    await sink.close();
   });
 }
 

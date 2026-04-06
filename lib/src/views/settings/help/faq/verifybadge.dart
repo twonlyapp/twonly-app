@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/svg_icon.dart';
+
+const colorVerificationBadgeYellow = Color(0xffffa500);
 
 class VerificationBadeFaqView extends StatefulWidget {
   const VerificationBadeFaqView({super.key});
@@ -33,13 +39,25 @@ class _VerificationBadeFaqViewState extends State<VerificationBadeFaqView> {
             icon: const SvgIcon(
               assetPath: SvgIcons.verifiedGreen,
               size: 40,
-              color: Color.fromARGB(255, 227, 227, 3),
+              color: colorVerificationBadgeYellow,
             ),
             description: context.lang.verificationBadgeYellowDesc,
           ),
           _buildItem(
             icon: const SvgIcon(assetPath: SvgIcons.verifiedRed, size: 40),
             description: context.lang.verificationBadgeRedDesc,
+          ),
+          const SizedBox(height: 20),
+          const SizedBox(height: 20),
+          BetterListTile(
+            leading: const FaIcon(FontAwesomeIcons.camera),
+            text: context.lang.scanOtherProfile,
+            onTap: () => context.push(Routes.cameraQRScanner),
+          ),
+          BetterListTile(
+            leading: const FaIcon(FontAwesomeIcons.qrcode),
+            text: context.lang.openYourOwnQRcode,
+            onTap: () => context.push(Routes.settingsPublicProfile),
           ),
         ],
       ),

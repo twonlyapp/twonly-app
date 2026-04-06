@@ -26,6 +26,7 @@ import 'package:twonly/src/views/settings/data_and_storage/export_media.view.dar
 import 'package:twonly/src/views/settings/data_and_storage/import_media.view.dart';
 import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/developer.view.dart';
+import 'package:twonly/src/views/settings/developer/reduce_flames.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
@@ -84,10 +85,10 @@ final routerProvider = GoRouter(
           },
         ),
         GoRoute(
-          path: 'messages',
+          path: 'messages/:groupId',
           builder: (context, state) {
-            final group = state.extra! as Group;
-            return ChatMessagesView(group);
+            final groupId = state.pathParameters['groupId']!;
+            return ChatMessagesView(groupId);
           },
         ),
       ],
@@ -279,6 +280,10 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'automated_testing',
               builder: (context, state) => const AutomatedTestingView(),
+            ),
+            GoRoute(
+              path: 'reduce_flames',
+              builder: (context, state) => const ReduceFlamesView(),
             ),
           ],
         ),

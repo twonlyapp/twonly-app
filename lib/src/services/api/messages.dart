@@ -111,8 +111,8 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     );
 
     Uint8List? pushData;
-    if (pushNotification != null && receipt.retryCount <= 3) {
-      /// In case the message has to be resend more than three times, do not show a notification again...
+    if (pushNotification != null && receipt.retryCount <= 1) {
+      // Only show the push notification the first two time.
       pushData = await encryptPushNotification(
         receipt.contactId,
         pushNotification,

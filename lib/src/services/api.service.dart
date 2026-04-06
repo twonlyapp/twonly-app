@@ -133,11 +133,12 @@ class ApiService {
       return;
     }
     reconnectionTimer?.cancel();
-    Log.info('Starting reconnection timer with $_reconnectionDelay s delay');
     reconnectionTimer = Timer(Duration(seconds: _reconnectionDelay), () async {
-      Log.info('Reconnection timer triggered');
       reconnectionTimer = null;
-      await connect();
+      // only try to reconnect in case the app is in the foreground
+      if (!globalIsAppInBackground) {
+        await connect();
+      }
     });
     _reconnectionDelay = 3;
   }

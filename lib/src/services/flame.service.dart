@@ -13,8 +13,9 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
   final groups = await twonlyDB.groupsDao.getAllGroups();
   if (groups.isEmpty) return;
   final maxMessageCounter = groups.map((x) => x.totalMediaCounter).max;
-  final bestFriend =
-      groups.firstWhere((x) => x.totalMediaCounter == maxMessageCounter);
+  final bestFriend = groups.firstWhere(
+    (x) => x.totalMediaCounter == maxMessageCounter,
+  );
 
   if (gUser.myBestFriendGroupId != bestFriend.groupId) {
     await updateUserdata((user) {
@@ -42,8 +43,9 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
       EncryptedContent(
         flameSync: EncryptedContent_FlameSync(
           flameCounter: Int64(flameCounter),
-          lastFlameCounterChange:
-              Int64(group.lastFlameCounterChange!.millisecondsSinceEpoch),
+          lastFlameCounterChange: Int64(
+            group.lastFlameCounterChange!.millisecondsSinceEpoch,
+          ),
           bestFriend: group.groupId == bestFriend.groupId,
           forceUpdate: group.groupId == forceForGroup,
         ),
@@ -134,8 +136,9 @@ Future<void> incFlameCounter(
       // Overwrite max flame counter either the current is bigger or the the max flame counter is older then 4 days
       if (flameCounter >= maxFlameCounter ||
           maxFlameCounterFrom == null ||
-          maxFlameCounterFrom
-              .isBefore(clock.now().subtract(const Duration(days: 5)))) {
+          maxFlameCounterFrom.isBefore(
+            clock.now().subtract(const Duration(days: 5)),
+          )) {
         maxFlameCounter = flameCounter;
         maxFlameCounterFrom = clock.now();
       }
@@ -172,6 +175,7 @@ bool isItPossibleToRestoreFlames(Group group) {
   final flameCounter = getFlameCounterFromGroup(group);
   return group.maxFlameCounter > 2 &&
       flameCounter < group.maxFlameCounter &&
-      group.maxFlameCounterFrom!
-          .isAfter(clock.now().subtract(const Duration(days: 5)));
+      group.maxFlameCounterFrom!.isAfter(
+        clock.now().subtract(const Duration(days: 7)),
+      );
 }
