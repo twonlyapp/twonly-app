@@ -75,9 +75,6 @@ class _UserListItem extends State<GroupListItem> {
           setState(() {
             _lastReaction = update;
           });
-          // protectUpdateState.protect(() async {
-          //   await updateState(lastMessage, update, messagesNotOpened);
-          // });
         });
 
     _messagesNotOpenedStream = twonlyDB.messagesDao

@@ -53,8 +53,8 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool requestedAudioPermission = false;
 
-  @JsonKey(defaultValue: false)
-  bool videoStabilizationEnabled = false;
+  @JsonKey(defaultValue: true)
+  bool videoStabilizationEnabled = true;
 
   @JsonKey(defaultValue: true)
   bool showFeedbackShortcut = true;

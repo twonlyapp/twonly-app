@@ -287,7 +287,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     var timerRequired = false;
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
-      videoController = VideoPlayerController.file(currentMediaLocal.tempPath);
+      videoController = VideoPlayerController.file(
+        currentMediaLocal.tempPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          // only mix in case the video can be played multiple times,
+          // otherwise stop the background music in case the video contains audio
+          mixWithOthers:
+              currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
+        ),
+      );
       await videoController?.setLooping(
         currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
       );

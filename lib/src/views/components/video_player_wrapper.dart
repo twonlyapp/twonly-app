@@ -21,7 +21,12 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(widget.videoPath);
+    _controller = VideoPlayerController.file(
+      widget.videoPath,
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: true,
+      ),
+    );
 
     unawaited(
       _controller.initialize().then((_) async {

@@ -2,8 +2,10 @@
 
 ## 0.1.3
 
-- New: Developer settings to reduce flames
+- New: Video stabilization
+- New: Crop or rotate images before share them
 - New: Clicking on “Text Notifications” will now open the chat directly (Android only)
+- New: Developer settings to reduce flames
 - Improve: Improved troubleshooting for issues with push notifications 
 - Fix: Flash not activated when starting a video recording
 - Fix: Problem sending media when a recipient has deleted their account.

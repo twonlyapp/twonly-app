@@ -23,11 +23,15 @@ class LayersViewer extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         ...layers.whereType<BackgroundLayerData>().map((layerItem) {
-          return BackgroundLayer(
-            key: layerItem.key,
-            layerData: layerItem,
-            onUpdate: onUpdate,
-          );
+          if (!layerItem.isEditing) {
+            return BackgroundLayer(
+              key: layerItem.key,
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          } else {
+            return Container();
+          }
         }),
         ...layers.whereType<FilterLayerData>().map((layerItem) {
           return FilterLayer(
@@ -37,39 +41,50 @@ class LayersViewer extends StatelessWidget {
         }),
         ...layers
             .where(
-          (layerItem) =>
-              layerItem is EmojiLayerData ||
-              layerItem is DrawLayerData ||
-              layerItem is LinkPreviewLayerData ||
-              layerItem is TextLayerData,
-        )
+              (layerItem) =>
+                  layerItem is EmojiLayerData ||
+                  layerItem is DrawLayerData ||
+                  layerItem is LinkPreviewLayerData ||
+                  layerItem is TextLayerData,
+            )
             .map((layerItem) {
-          if (layerItem is EmojiLayerData) {
-            return EmojiLayer(
+              if (layerItem is EmojiLayerData) {
+                return EmojiLayer(
+                  key: layerItem.key,
+                  layerData: layerItem,
+                  onUpdate: onUpdate,
+                );
+              } else if (layerItem is DrawLayerData) {
+                return DrawLayer(
+                  key: layerItem.key,
+                  layerData: layerItem,
+                  onUpdate: onUpdate,
+                );
+              } else if (layerItem is TextLayerData) {
+                return TextLayer(
+                  key: layerItem.key,
+                  layerData: layerItem,
+                  onUpdate: onUpdate,
+                );
+              } else if (layerItem is LinkPreviewLayerData) {
+                return LinkPreviewLayer(
+                  key: layerItem.key,
+                  layerData: layerItem,
+                  onUpdate: onUpdate,
+                );
+              }
+              return Container();
+            }),
+        ...layers.whereType<BackgroundLayerData>().map((layerItem) {
+          if (layerItem.isEditing) {
+            return BackgroundLayer(
               key: layerItem.key,
               layerData: layerItem,
               onUpdate: onUpdate,
             );
-          } else if (layerItem is DrawLayerData) {
-            return DrawLayer(
-              key: layerItem.key,
-              layerData: layerItem,
-              onUpdate: onUpdate,
-            );
-          } else if (layerItem is TextLayerData) {
-            return TextLayer(
-              key: layerItem.key,
-              layerData: layerItem,
-              onUpdate: onUpdate,
-            );
-          } else if (layerItem is LinkPreviewLayerData) {
-            return LinkPreviewLayer(
-              key: layerItem.key,
-              layerData: layerItem,
-              onUpdate: onUpdate,
-            );
+          } else {
+            return Container();
           }
-          return Container();
         }),
       ],
     );

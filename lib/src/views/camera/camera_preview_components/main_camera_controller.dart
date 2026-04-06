@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -133,7 +134,7 @@ class MainCameraController {
       await cameraController?.initialize();
       await cameraController?.startImageStream(_processCameraImage);
       await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
-      if (gUser.videoStabilizationEnabled) {
+      if (gUser.videoStabilizationEnabled && !kDebugMode) {
         await cameraController?.setVideoStabilizationMode(
           VideoStabilizationMode.level1,
         );
