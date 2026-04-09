@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/base.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 
 class MastodonPostCard extends StatelessWidget {
   const MastodonPostCard({required this.info, super.key});

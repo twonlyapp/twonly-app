@@ -10,7 +10,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
@@ -43,8 +43,8 @@ class MemoriesViewState extends State<MemoriesView> {
   }
 
   Future<void> initAsync() async {
-    final nonHashedFiles =
-        await twonlyDB.mediaFilesDao.getAllNonHashedStoredMediaFiles();
+    final nonHashedFiles = await twonlyDB.mediaFilesDao
+        .getAllNonHashedStoredMediaFiles();
     if (nonHashedFiles.isNotEmpty) {
       setState(() {
         _filesToMigrate = nonHashedFiles.length;
@@ -100,8 +100,9 @@ class MemoriesViewState extends State<MemoriesView> {
         ),
       );
       for (var i = 0; i < galleryItems.length; i++) {
-        final month = DateFormat('MMMM yyyy')
-            .format(galleryItems[i].mediaService.mediaFile.createdAt);
+        final month = DateFormat(
+          'MMMM yyyy',
+        ).format(galleryItems[i].mediaService.mediaFile.createdAt);
         if (lastMonth != month) {
           lastMonth = month;
           months.add(month);
@@ -259,15 +260,16 @@ class MemoriesViewState extends State<MemoriesView> {
     int index,
   ) async {
     await Navigator.push(
-      context,
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
-          galleryItems: galleryItems,
-          initialIndex: index,
-        ),
-      ),
-    ) as bool?;
+          context,
+          PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
+              galleryItems: galleryItems,
+              initialIndex: index,
+            ),
+          ),
+        )
+        as bool?;
     if (mounted) setState(() {});
   }
 }

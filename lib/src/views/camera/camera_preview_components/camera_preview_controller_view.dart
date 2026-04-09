@@ -31,7 +31,7 @@ import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.
 import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:url_launcher/url_launcher_string.dart';

@@ -6,7 +6,7 @@ import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/c
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/cards/youtube.card.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parse_link.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/base.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 
 class LinkPreviewLayer extends StatefulWidget {
   const LinkPreviewLayer({
@@ -32,8 +32,9 @@ class _LinkPreviewLayerState extends State<LinkPreviewLayer> {
 
   Future<void> initAsync() async {
     if (widget.layerData.metadata == null) {
-      widget.layerData.metadata =
-          await getMetadata(widget.layerData.link.toString());
+      widget.layerData.metadata = await getMetadata(
+        widget.layerData.link.toString(),
+      );
       if (widget.layerData.metadata == null) {
         widget.layerData.error = true;
       }

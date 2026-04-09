@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 
 class DiagnosticsView extends StatefulWidget {
   const DiagnosticsView({super.key});
@@ -98,8 +98,11 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
   @override
   void initState() {
     super.initState();
-    _entries =
-        widget.logLines.split('\n').reversed.map(_LogEntry.parse).toList();
+    _entries = widget.logLines
+        .split('\n')
+        .reversed
+        .map(_LogEntry.parse)
+        .toList();
   }
 
   void _setFilter(String level) => setState(() => _filterLevel = level);
@@ -187,8 +190,9 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
           child: Row(
             children: [
               IconButton(
-                tooltip:
-                    _showTimestamps ? 'Hide timestamps' : 'Show timestamps',
+                tooltip: _showTimestamps
+                    ? 'Hide timestamps'
+                    : 'Show timestamps',
                 onPressed: _toggleTimestamps,
                 icon: Icon(
                   _showTimestamps
