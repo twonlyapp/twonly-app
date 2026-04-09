@@ -376,11 +376,11 @@ abstract class AppLocalizations {
   /// **'Username'**
   String get searchUsernameInput;
 
-  /// No description provided for @searchUsernameTitle.
+  /// No description provided for @addFriendTitle.
   ///
   /// In en, this message translates to:
-  /// **'Search username'**
-  String get searchUsernameTitle;
+  /// **'Add friends'**
+  String get addFriendTitle;
 
   /// No description provided for @searchUserNamePreview.
   ///

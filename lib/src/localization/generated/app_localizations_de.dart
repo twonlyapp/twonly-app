@@ -162,7 +162,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUsernameInput => 'Benutzername';
 
   @override
-  String get searchUsernameTitle => 'Benutzernamen suchen';
+  String get addFriendTitle => 'Freunde hinzufügen';
 
   @override
   String get searchUserNamePreview =>

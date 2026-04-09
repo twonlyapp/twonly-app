@@ -4,7 +4,9 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
@@ -41,10 +43,10 @@ class _SearchUsernameView extends State<AddNewUserView> {
   void initState() {
     super.initState();
     contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
-          (update) => setState(() {
-            contacts = update;
-          }),
-        );
+      (update) => setState(() {
+        contacts = update;
+      }),
+    );
 
     if (widget.username != null) {
       searchUserName.text = widget.username!;
@@ -131,7 +133,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.lang.searchUsernameTitle),
+        title: Text(context.lang.addFriendTitle),
       ),
       body: SafeArea(
         child: Padding(
@@ -140,23 +142,40 @@ class _SearchUsernameView extends State<AddNewUserView> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onSubmitted: (_) async {
-                    await _addNewUser(context);
-                  },
-                  onChanged: (value) {
-                    searchUserName.text = value.toLowerCase();
-                    searchUserName.selection = TextSelection.fromPosition(
-                      TextPosition(offset: searchUserName.text.length),
-                    );
-                  },
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(12),
-                    FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        onSubmitted: (_) async {
+                          await _addNewUser(context);
+                        },
+                        onChanged: (value) {
+                          searchUserName.text = value.toLowerCase();
+                          searchUserName.selection = TextSelection.fromPosition(
+                            TextPosition(offset: searchUserName.text.length),
+                          );
+                        },
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(12),
+                          FilteringTextInputFormatter.allow(
+                            RegExp('[a-z0-9A-Z._]'),
+                          ),
+                        ],
+                        controller: searchUserName,
+                        decoration: getInputDecoration(
+                          context.lang.searchUsernameInput,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        onPressed: () =>
+                            context.push(Routes.settingsPublicProfile),
+                        icon: const FaIcon(FontAwesomeIcons.qrcode),
+                      ),
+                    ),
                   ],
-                  controller: searchUserName,
-                  decoration:
-                      getInputDecoration(context.lang.searchUsernameInput),
                 ),
               ),
               const SizedBox(height: 20),
@@ -174,7 +193,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
-          onPressed: _isLoading ? null : () async => _addNewUser(context),
+          onPressed: _isLoading || searchUserName.text.isEmpty
+              ? null
+              : () async => _addNewUser(context),
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : const FaIcon(FontAwesomeIcons.magnifyingGlassPlus),

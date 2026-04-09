@@ -161,7 +161,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get searchUsernameInput => 'Username';
 
   @override
-  String get searchUsernameTitle => 'Search username';
+  String get addFriendTitle => 'Add friends';
 
   @override
   String get searchUserNamePreview =>
