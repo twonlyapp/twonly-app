@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Fix: Several minor issues with the user interface
+
 ## 0.1.3
 
 - New: Video stabilization

@@ -1,6 +1,7 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
 import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,57 +40,67 @@ class MessageContextMenu extends StatelessWidget {
   final VoidCallback onResponseTriggered;
 
   Future<void> reopenMediaFile(BuildContext context) async {
-    final isAuth = await authenticateUser(
-      context.lang.authRequestReopenImage,
-      force: false,
-    );
+    if (message.senderId == null) {
+      final isAuth = await authenticateUser(
+        context.lang.authRequestReopenImage,
+        force: false,
+      );
+      if (!isAuth) return;
+    }
 
-    if (isAuth && context.mounted && mediaFileService != null) {
-      final galleryItems = [
-        MemoryItem(mediaService: mediaFileService!, messages: []),
-      ];
+    if (!context.mounted || mediaFileService == null) return;
 
-      await Navigator.push(
-        context,
-        PageRouteBuilder(
-          opaque: false,
-          pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
-            galleryItems: galleryItems,
+    if (message.senderId != null) {
+      // notify the sender
+      await sendCipherText(
+        message.senderId!,
+        pb.EncryptedContent(
+          mediaUpdate: pb.EncryptedContent_MediaUpdate(
+            type: pb.EncryptedContent_MediaUpdate_Type.REOPENED,
+            targetMessageId: message.messageId,
           ),
         ),
       );
+      await twonlyDB.messagesDao.updateMessageId(
+        message.messageId,
+        const MessagesCompanion(openedAt: Value(null)),
+      );
+      return;
     }
+    if (!context.mounted) return;
+
+    final galleryItems = [
+      MemoryItem(mediaService: mediaFileService!, messages: []),
+    ];
+
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
+          galleryItems: galleryItems,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    var canBeOpenedAgain = false;
-    // in case this is a media send from this user...
-    if (mediaFileService != null && message.senderId == null) {
-      // and the media was send with unlimited display limit time and without auth required...
-      if (!mediaFileService!.mediaFile.requiresAuthentication &&
-          mediaFileService!.mediaFile.displayLimitInMilliseconds == null) {
-        // and the temp media file still exists
-        if (mediaFileService!.tempPath.existsSync()) {
-          // the media file can be opened again...
-          canBeOpenedAgain = true;
-        }
-      }
-    }
-
     return ContextMenu(
       items: [
         if (!message.isDeletedFromSender)
           ContextMenuItem(
             title: context.lang.react,
             onTap: () async {
-              final layer = await showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.black,
-                builder: (context) {
-                  return const EmojiPickerBottom();
-                },
-              ) as EmojiLayerData?;
+              final layer =
+                  await showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.black,
+                        builder: (context) {
+                          return const EmojiPickerBottom();
+                        },
+                      )
+                      as EmojiLayerData?;
               if (layer == null) return;
 
               await twonlyDB.reactionsDao.updateMyReaction(
@@ -111,7 +122,7 @@ class MessageContextMenu extends StatelessWidget {
             },
             icon: FontAwesomeIcons.faceLaugh,
           ),
-        if (canBeOpenedAgain)
+        if (mediaFileService?.canBeOpenedAgain ?? false)
           ContextMenuItem(
             title: context.lang.contextMenuViewAgain,
             onTap: () => reopenMediaFile(context),
@@ -153,8 +164,8 @@ class MessageContextMenu extends StatelessWidget {
               null,
               customOk:
                   (message.senderId == null && !message.isDeletedFromSender)
-                      ? context.lang.deleteOkBtnForAll
-                      : context.lang.deleteOkBtnForMe,
+                  ? context.lang.deleteOkBtnForAll
+                  : context.lang.deleteOkBtnForMe,
             );
             if (delete) {
               if (message.senderId == null && !message.isDeletedFromSender) {
@@ -173,8 +184,9 @@ class MessageContextMenu extends StatelessWidget {
                   ),
                 );
               } else {
-                await twonlyDB.messagesDao
-                    .deleteMessagesById(message.messageId);
+                await twonlyDB.messagesDao.deleteMessagesById(
+                  message.messageId,
+                );
               }
             }
           },
