@@ -95,8 +95,6 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       return null;
     }
 
-    Log.info('Uploading $receiptId');
-
     final message = pb.Message.fromBuffer(receipt.message)
       ..receiptId = receiptId;
 
@@ -109,6 +107,8 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       receipt.messageId,
       encryptedContent,
     );
+
+    Log.info('Uploading $receiptId. (${pushNotification?.kind})');
 
     Uint8List? pushData;
     if (pushNotification != null && receipt.retryCount <= 1) {

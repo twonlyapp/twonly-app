@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
@@ -94,22 +95,24 @@ class _TypingIndicatorState extends State<TypingIndicator>
 
   bool isTyping(GroupMember member) {
     return member.lastTypeIndicator != null &&
-        DateTime.now()
+        clock
+                .now()
                 .difference(
                   member.lastTypeIndicator!,
                 )
                 .inSeconds <=
-            12;
+            2;
   }
 
   bool hasChatOpen(GroupMember member) {
     return member.lastChatOpened != null &&
-        DateTime.now()
+        clock
+                .now()
                 .difference(
                   member.lastChatOpened!,
                 )
                 .inSeconds <=
-            12;
+            8;
   }
 
   @override

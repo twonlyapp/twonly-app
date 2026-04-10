@@ -54,6 +54,13 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         .go();
   }
 
+  Future<void> deleteReceiptForUser(int contactId) async {
+    await (delete(receipts)..where(
+          (t) => t.contactId.equals(contactId),
+        ))
+        .go();
+  }
+
   Future<void> purgeReceivedReceipts() async {
     await (delete(receivedReceipts)..where(
           (t) => (t.createdAt.isSmallerThanValue(

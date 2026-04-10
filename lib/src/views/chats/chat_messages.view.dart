@@ -124,7 +124,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     if (gUser.typingIndicators) {
       unawaited(sendTypingIndication(widget.groupId, false));
-      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 8), (
+      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 5), (
         _,
       ) async {
         await sendTypingIndication(widget.groupId, false);

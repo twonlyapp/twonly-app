@@ -1760,5 +1760,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsTypingIndicationSubtitle =>
-      'Bei deaktiviertem Tipp-Indikatoren kannst du nicht sehen, wenn andere gerade eine Nachricht tippen.';
+      'Bei deaktivierten Tipp-Indikatoren kannst du nicht sehen, wenn andere gerade eine Nachricht tippen.';
 }

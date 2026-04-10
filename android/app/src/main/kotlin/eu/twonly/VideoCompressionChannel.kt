@@ -6,8 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
-import com.otaliastudios.transcoder.strategy.DefaultAudioStrategy
 import com.otaliastudios.transcoder.strategy.DefaultVideoStrategy
+import com.otaliastudios.transcoder.strategy.PassThroughTrackStrategy
 import com.otaliastudios.transcoder.strategy.TrackStrategy
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,11 +17,6 @@ object VideoCompressionChannel {
 
     // Compression parameters defined natively (as requested)
     private const val VIDEO_BITRATE = 2_000_000L // 2 Mbps
-    
-    // Audio parameters defined natively
-    private const val AUDIO_BITRATE = 128_000L // 128 kbps
-    private const val AUDIO_SAMPLE_RATE = 44_100
-    private const val AUDIO_CHANNELS = 2
 
     fun configure(flutterEngine: FlutterEngine, context: Context) {
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
@@ -54,6 +49,14 @@ object VideoCompressionChannel {
                         val result = if (args != null) method.invoke(baseVideoStrategy, *args) else method.invoke(baseVideoStrategy)
                         if (method.name == "createOutputFormat" && result is MediaFormat) {
                             result.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_VIDEO_HEVC)
+                            
+                            if (result.containsKey(MediaFormat.KEY_WIDTH) && result.containsKey(MediaFormat.KEY_HEIGHT)) {
+                                val width = result.getInteger(MediaFormat.KEY_WIDTH)
+                                val height = result.getInteger(MediaFormat.KEY_HEIGHT)
+                                // Align dimensions to a multiple of 16 to prevent edge artifacts (green lines/distortions)
+                                result.setInteger(MediaFormat.KEY_WIDTH, width - (width % 16))
+                                result.setInteger(MediaFormat.KEY_HEIGHT, height - (height % 16))
+                            }
                         }
                         result
                     } as TrackStrategy
@@ -61,13 +64,7 @@ object VideoCompressionChannel {
                     Transcoder.into(outputPath)
                         .addDataSource(inputPath)
                         .setVideoTrackStrategy(hevcStrategy)
-                        .setAudioTrackStrategy(
-                            DefaultAudioStrategy.builder()
-                                .channels(AUDIO_CHANNELS)
-                                .sampleRate(AUDIO_SAMPLE_RATE)
-                                .bitRate(AUDIO_BITRATE)
-                                .build()
-                        )
+                        .setAudioTrackStrategy(PassThroughTrackStrategy())
                         .setListener(object : TranscoderListener {
                             override fun onTranscodeProgress(progress: Double) {
                                 mainHandler.post {
