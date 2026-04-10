@@ -19,7 +19,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_med
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_text_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_unkown.entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/common.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/message_actions.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/message_reply_drag.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
@@ -74,8 +74,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   Future<void> initAsync() async {
     if (widget.message.mediaId != null) {
-      final mediaFileStream =
-          twonlyDB.mediaFilesDao.watchMedia(widget.message.mediaId!);
+      final mediaFileStream = twonlyDB.mediaFilesDao.watchMedia(
+        widget.message.mediaId!,
+      );
       mediaFileSub = mediaFileStream.listen((mediaFiles) {
         if (mediaFiles != null) {
           mediaService = MediaFileService(mediaFiles);
@@ -87,8 +88,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
         }
       });
     }
-    final stream =
-        twonlyDB.reactionsDao.watchReactions(widget.message.messageId);
+    final stream = twonlyDB.reactionsDao.watchReactions(
+      widget.message.messageId,
+    );
 
     reactionsSub = stream.listen((update) {
       setState(() {
@@ -159,8 +161,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
     );
 
     final seen = <String>{};
-    var reactionsForWidth =
-        reactions.where((t) => seen.add(t.emoji)).toList().length;
+    var reactionsForWidth = reactions
+        .where((t) => seen.add(t.emoji))
+        .toList()
+        .length;
     if (reactionsForWidth > 4) reactionsForWidth = 4;
 
     Widget child = Stack(
@@ -205,7 +209,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
     );
 
     if (widget.onResponseTriggered != null) {
-      child = MessageActions(
+      child = MessageReplyDrag(
         message: widget.message,
         onResponseTriggered: widget.onResponseTriggered!,
         child: child,
@@ -228,8 +232,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
       child: Padding(
         padding: padding,
         child: Row(
-          mainAxisAlignment:
-              right ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment: right
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
           children: [
             if (!right && !widget.group.isDirectChat)
               hideContactAvatar
@@ -306,6 +311,6 @@ class _ChatListEntryState extends State<ChatListEntry> {
       bottomRight: Radius.circular(bottomRight),
       bottomLeft: Radius.circular(bottomLeft),
     ),
-    hideContactAvatar
+    hideContactAvatar,
   );
 }

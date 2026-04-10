@@ -20,7 +20,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_dat
 import 'package:twonly/src/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
-import 'package:twonly/src/views/components/blink.component.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 
