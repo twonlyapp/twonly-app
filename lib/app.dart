@@ -19,6 +19,7 @@ import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
 import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
+import 'package:twonly/src/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -36,9 +37,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     globalCallbackConnectionState = ({required isConnected}) async {
-      await context
-          .read<CustomChangeProvider>()
-          .updateConnectionState(isConnected);
+      await context.read<CustomChangeProvider>().updateConnectionState(
+        isConnected,
+      );
       await setUserPlan();
     };
 
@@ -54,8 +55,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     if (user != null && mounted) {
       if (mounted) {
         context.read<PurchasesProvider>().updatePlan(
-              planFromString(user.subscriptionPlan),
-            );
+          planFromString(user.subscriptionPlan),
+        );
       }
     }
   }
@@ -134,6 +135,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
   bool _skipBackup = false;
+  bool _isTwonlyLocked = true;
   int _initialPage = 0;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
@@ -149,6 +151,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     _isUserCreated = await isUserCreated();
 
     if (_isUserCreated) {
+      if (_isTwonlyLocked) {
+        // do not change in case twonly was already unlocked at some point
+        _isTwonlyLocked = gUser.screenLockEnabled;
+      }
       if (gUser.appVersion < 62) {
         _showDatabaseMigration = true;
       }
@@ -164,8 +170,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
         // Starting with the proof of work.
-        _proofOfWork =
-            (calculatePoW(proof.prefix, proof.difficulty.toInt()), false);
+        _proofOfWork = (
+          calculatePoW(proof.prefix, proof.difficulty.toInt()),
+          false,
+        );
       } else {
         _proofOfWork = (null, disabled);
       }
@@ -187,7 +195,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_showDatabaseMigration) {
       child = const Center(child: Text('Please reinstall twonly.'));
     } else if (_isUserCreated) {
-      if (gUser.twonlySafeBackup == null && !_skipBackup) {
+      if (_isTwonlyLocked) {
+        child = UnlockTwonlyView(
+          callbackOnSuccess: () => setState(() {
+            _isTwonlyLocked = false;
+          }),
+        );
+      } else if (gUser.twonlySafeBackup == null && !_skipBackup) {
         child = SetupBackupView(
           callBack: () {
             _skipBackup = true;

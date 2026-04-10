@@ -27,7 +27,7 @@ import 'package:twonly/src/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/additional_message_content.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/reaction_buttons.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
-import 'package:twonly/src/views/components/loader.dart';
+import 'package:twonly/src/views/components/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:video_player/video_player.dart';
 

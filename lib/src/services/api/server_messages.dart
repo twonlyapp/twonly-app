@@ -83,7 +83,6 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
 
   final isDuplicated = await protectReceiptCheck.protect(() async {
     if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
-      Log.warn('Got duplicated message from the server.');
       return true;
     }
     await twonlyDB.receiptsDao.gotReceipt(receiptId);
@@ -448,6 +447,14 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.media,
     );
     return (null, null);
+  }
+
+  if (content.hasTypingIndicator()) {
+    await handleTypingIndicator(
+      fromUserId,
+      content.groupId,
+      content.typingIndicator,
+    );
   }
 
   return (null, null);

@@ -54,7 +54,7 @@ class _BackgroundLayerState extends State<BackgroundLayer> {
             ),
           ),
         ),
-        if (widget.layerData.isEditing)
+        if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
           Positioned(
             top: 5,
             left: 5,

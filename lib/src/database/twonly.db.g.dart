@@ -5198,6 +5198,30 @@ class $GroupMembersTable extends GroupMembers
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _lastChatOpenedMeta = const VerificationMeta(
+    'lastChatOpened',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastChatOpened =
+      GeneratedColumn<DateTime>(
+        'last_chat_opened',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastTypeIndicatorMeta = const VerificationMeta(
+    'lastTypeIndicator',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastTypeIndicator =
+      GeneratedColumn<DateTime>(
+        'last_type_indicator',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _lastMessageMeta = const VerificationMeta(
     'lastMessage',
   );
@@ -5227,6 +5251,8 @@ class $GroupMembersTable extends GroupMembers
     contactId,
     memberState,
     groupPublicKey,
+    lastChatOpened,
+    lastTypeIndicator,
     lastMessage,
     createdAt,
   ];
@@ -5264,6 +5290,24 @@ class $GroupMembersTable extends GroupMembers
         groupPublicKey.isAcceptableOrUnknown(
           data['group_public_key']!,
           _groupPublicKeyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_chat_opened')) {
+      context.handle(
+        _lastChatOpenedMeta,
+        lastChatOpened.isAcceptableOrUnknown(
+          data['last_chat_opened']!,
+          _lastChatOpenedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_type_indicator')) {
+      context.handle(
+        _lastTypeIndicatorMeta,
+        lastTypeIndicator.isAcceptableOrUnknown(
+          data['last_type_indicator']!,
+          _lastTypeIndicatorMeta,
         ),
       );
     }
@@ -5309,6 +5353,14 @@ class $GroupMembersTable extends GroupMembers
         DriftSqlType.blob,
         data['${effectivePrefix}group_public_key'],
       ),
+      lastChatOpened: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_chat_opened'],
+      ),
+      lastTypeIndicator: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_type_indicator'],
+      ),
       lastMessage: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_message'],
@@ -5336,6 +5388,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
   final int contactId;
   final MemberState? memberState;
   final Uint8List? groupPublicKey;
+  final DateTime? lastChatOpened;
+  final DateTime? lastTypeIndicator;
   final DateTime? lastMessage;
   final DateTime createdAt;
   const GroupMember({
@@ -5343,6 +5397,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     required this.contactId,
     this.memberState,
     this.groupPublicKey,
+    this.lastChatOpened,
+    this.lastTypeIndicator,
     this.lastMessage,
     required this.createdAt,
   });
@@ -5358,6 +5414,12 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     }
     if (!nullToAbsent || groupPublicKey != null) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey);
+    }
+    if (!nullToAbsent || lastChatOpened != null) {
+      map['last_chat_opened'] = Variable<DateTime>(lastChatOpened);
+    }
+    if (!nullToAbsent || lastTypeIndicator != null) {
+      map['last_type_indicator'] = Variable<DateTime>(lastTypeIndicator);
     }
     if (!nullToAbsent || lastMessage != null) {
       map['last_message'] = Variable<DateTime>(lastMessage);
@@ -5376,6 +5438,12 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       groupPublicKey: groupPublicKey == null && nullToAbsent
           ? const Value.absent()
           : Value(groupPublicKey),
+      lastChatOpened: lastChatOpened == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastChatOpened),
+      lastTypeIndicator: lastTypeIndicator == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastTypeIndicator),
       lastMessage: lastMessage == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessage),
@@ -5395,6 +5463,10 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
         serializer.fromJson<String?>(json['memberState']),
       ),
       groupPublicKey: serializer.fromJson<Uint8List?>(json['groupPublicKey']),
+      lastChatOpened: serializer.fromJson<DateTime?>(json['lastChatOpened']),
+      lastTypeIndicator: serializer.fromJson<DateTime?>(
+        json['lastTypeIndicator'],
+      ),
       lastMessage: serializer.fromJson<DateTime?>(json['lastMessage']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -5409,6 +5481,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
         $GroupMembersTable.$convertermemberStaten.toJson(memberState),
       ),
       'groupPublicKey': serializer.toJson<Uint8List?>(groupPublicKey),
+      'lastChatOpened': serializer.toJson<DateTime?>(lastChatOpened),
+      'lastTypeIndicator': serializer.toJson<DateTime?>(lastTypeIndicator),
       'lastMessage': serializer.toJson<DateTime?>(lastMessage),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -5419,6 +5493,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     int? contactId,
     Value<MemberState?> memberState = const Value.absent(),
     Value<Uint8List?> groupPublicKey = const Value.absent(),
+    Value<DateTime?> lastChatOpened = const Value.absent(),
+    Value<DateTime?> lastTypeIndicator = const Value.absent(),
     Value<DateTime?> lastMessage = const Value.absent(),
     DateTime? createdAt,
   }) => GroupMember(
@@ -5428,6 +5504,12 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     groupPublicKey: groupPublicKey.present
         ? groupPublicKey.value
         : this.groupPublicKey,
+    lastChatOpened: lastChatOpened.present
+        ? lastChatOpened.value
+        : this.lastChatOpened,
+    lastTypeIndicator: lastTypeIndicator.present
+        ? lastTypeIndicator.value
+        : this.lastTypeIndicator,
     lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -5441,6 +5523,12 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       groupPublicKey: data.groupPublicKey.present
           ? data.groupPublicKey.value
           : this.groupPublicKey,
+      lastChatOpened: data.lastChatOpened.present
+          ? data.lastChatOpened.value
+          : this.lastChatOpened,
+      lastTypeIndicator: data.lastTypeIndicator.present
+          ? data.lastTypeIndicator.value
+          : this.lastTypeIndicator,
       lastMessage: data.lastMessage.present
           ? data.lastMessage.value
           : this.lastMessage,
@@ -5455,6 +5543,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
           ..write('groupPublicKey: $groupPublicKey, ')
+          ..write('lastChatOpened: $lastChatOpened, ')
+          ..write('lastTypeIndicator: $lastTypeIndicator, ')
           ..write('lastMessage: $lastMessage, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -5467,6 +5557,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     contactId,
     memberState,
     $driftBlobEquality.hash(groupPublicKey),
+    lastChatOpened,
+    lastTypeIndicator,
     lastMessage,
     createdAt,
   );
@@ -5481,6 +5573,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
             other.groupPublicKey,
             this.groupPublicKey,
           ) &&
+          other.lastChatOpened == this.lastChatOpened &&
+          other.lastTypeIndicator == this.lastTypeIndicator &&
           other.lastMessage == this.lastMessage &&
           other.createdAt == this.createdAt);
 }
@@ -5490,6 +5584,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
   final Value<int> contactId;
   final Value<MemberState?> memberState;
   final Value<Uint8List?> groupPublicKey;
+  final Value<DateTime?> lastChatOpened;
+  final Value<DateTime?> lastTypeIndicator;
   final Value<DateTime?> lastMessage;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -5498,6 +5594,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     this.contactId = const Value.absent(),
     this.memberState = const Value.absent(),
     this.groupPublicKey = const Value.absent(),
+    this.lastChatOpened = const Value.absent(),
+    this.lastTypeIndicator = const Value.absent(),
     this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5507,6 +5605,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     required int contactId,
     this.memberState = const Value.absent(),
     this.groupPublicKey = const Value.absent(),
+    this.lastChatOpened = const Value.absent(),
+    this.lastTypeIndicator = const Value.absent(),
     this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -5517,6 +5617,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     Expression<int>? contactId,
     Expression<String>? memberState,
     Expression<Uint8List>? groupPublicKey,
+    Expression<DateTime>? lastChatOpened,
+    Expression<DateTime>? lastTypeIndicator,
     Expression<DateTime>? lastMessage,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -5526,6 +5628,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       if (contactId != null) 'contact_id': contactId,
       if (memberState != null) 'member_state': memberState,
       if (groupPublicKey != null) 'group_public_key': groupPublicKey,
+      if (lastChatOpened != null) 'last_chat_opened': lastChatOpened,
+      if (lastTypeIndicator != null) 'last_type_indicator': lastTypeIndicator,
       if (lastMessage != null) 'last_message': lastMessage,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -5537,6 +5641,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     Value<int>? contactId,
     Value<MemberState?>? memberState,
     Value<Uint8List?>? groupPublicKey,
+    Value<DateTime?>? lastChatOpened,
+    Value<DateTime?>? lastTypeIndicator,
     Value<DateTime?>? lastMessage,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -5546,6 +5652,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       contactId: contactId ?? this.contactId,
       memberState: memberState ?? this.memberState,
       groupPublicKey: groupPublicKey ?? this.groupPublicKey,
+      lastChatOpened: lastChatOpened ?? this.lastChatOpened,
+      lastTypeIndicator: lastTypeIndicator ?? this.lastTypeIndicator,
       lastMessage: lastMessage ?? this.lastMessage,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -5569,6 +5677,12 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     if (groupPublicKey.present) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey.value);
     }
+    if (lastChatOpened.present) {
+      map['last_chat_opened'] = Variable<DateTime>(lastChatOpened.value);
+    }
+    if (lastTypeIndicator.present) {
+      map['last_type_indicator'] = Variable<DateTime>(lastTypeIndicator.value);
+    }
     if (lastMessage.present) {
       map['last_message'] = Variable<DateTime>(lastMessage.value);
     }
@@ -5588,6 +5702,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
           ..write('groupPublicKey: $groupPublicKey, ')
+          ..write('lastChatOpened: $lastChatOpened, ')
+          ..write('lastTypeIndicator: $lastTypeIndicator, ')
           ..write('lastMessage: $lastMessage, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -13326,6 +13442,8 @@ typedef $$GroupMembersTableCreateCompanionBuilder =
       required int contactId,
       Value<MemberState?> memberState,
       Value<Uint8List?> groupPublicKey,
+      Value<DateTime?> lastChatOpened,
+      Value<DateTime?> lastTypeIndicator,
       Value<DateTime?> lastMessage,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -13336,6 +13454,8 @@ typedef $$GroupMembersTableUpdateCompanionBuilder =
       Value<int> contactId,
       Value<MemberState?> memberState,
       Value<Uint8List?> groupPublicKey,
+      Value<DateTime?> lastChatOpened,
+      Value<DateTime?> lastTypeIndicator,
       Value<DateTime?> lastMessage,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -13400,6 +13520,16 @@ class $$GroupMembersTableFilterComposer
 
   ColumnFilters<Uint8List> get groupPublicKey => $composableBuilder(
     column: $table.groupPublicKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastChatOpened => $composableBuilder(
+    column: $table.lastChatOpened,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastTypeIndicator => $composableBuilder(
+    column: $table.lastTypeIndicator,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13479,6 +13609,16 @@ class $$GroupMembersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get lastChatOpened => $composableBuilder(
+    column: $table.lastChatOpened,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastTypeIndicator => $composableBuilder(
+    column: $table.lastTypeIndicator,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastMessage => $composableBuilder(
     column: $table.lastMessage,
     builder: (column) => ColumnOrderings(column),
@@ -13553,6 +13693,16 @@ class $$GroupMembersTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get groupPublicKey => $composableBuilder(
     column: $table.groupPublicKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastChatOpened => $composableBuilder(
+    column: $table.lastChatOpened,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastTypeIndicator => $composableBuilder(
+    column: $table.lastTypeIndicator,
     builder: (column) => column,
   );
 
@@ -13643,6 +13793,8 @@ class $$GroupMembersTableTableManager
                 Value<int> contactId = const Value.absent(),
                 Value<MemberState?> memberState = const Value.absent(),
                 Value<Uint8List?> groupPublicKey = const Value.absent(),
+                Value<DateTime?> lastChatOpened = const Value.absent(),
+                Value<DateTime?> lastTypeIndicator = const Value.absent(),
                 Value<DateTime?> lastMessage = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -13651,6 +13803,8 @@ class $$GroupMembersTableTableManager
                 contactId: contactId,
                 memberState: memberState,
                 groupPublicKey: groupPublicKey,
+                lastChatOpened: lastChatOpened,
+                lastTypeIndicator: lastTypeIndicator,
                 lastMessage: lastMessage,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -13661,6 +13815,8 @@ class $$GroupMembersTableTableManager
                 required int contactId,
                 Value<MemberState?> memberState = const Value.absent(),
                 Value<Uint8List?> groupPublicKey = const Value.absent(),
+                Value<DateTime?> lastChatOpened = const Value.absent(),
+                Value<DateTime?> lastTypeIndicator = const Value.absent(),
                 Value<DateTime?> lastMessage = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -13669,6 +13825,8 @@ class $$GroupMembersTableTableManager
                 contactId: contactId,
                 memberState: memberState,
                 groupPublicKey: groupPublicKey,
+                lastChatOpened: lastChatOpened,
+                lastTypeIndicator: lastTypeIndicator,
                 lastMessage: lastMessage,
                 createdAt: createdAt,
                 rowid: rowid,

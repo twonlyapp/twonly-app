@@ -9,15 +9,14 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
 import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/connection_status_badge.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 
 class ChatListView extends StatefulWidget {
@@ -45,8 +44,9 @@ class _ChatListViewState extends State<ChatListView> {
     final stream = twonlyDB.groupsDao.watchGroupsForChatList();
     _contactsSub = stream.listen((groups) {
       setState(() {
-        _groupsNotPinned =
-            groups.where((x) => !x.pinned && !x.archived).toList();
+        _groupsNotPinned = groups
+            .where((x) => !x.pinned && !x.archived)
+            .toList();
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
       });
@@ -64,8 +64,10 @@ class _ChatListViewState extends State<ChatListView> {
       }
 
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
-      final changeLogHash =
-          (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
+      final changeLogHash = (await compute(
+        Sha256().hash,
+        changeLog.codeUnits,
+      )).bytes;
       if (!gUser.hideChangeLog &&
           gUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
         await updateUserdata((u) {
@@ -93,22 +95,23 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   Widget build(BuildContext context) {
-    final isConnected = context.watch<CustomChangeProvider>().isConnected;
     final plan = context.watch<PurchasesProvider>().plan;
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            GestureDetector(
-              onTap: () async {
-                await context.push(Routes.settingsProfile);
-                if (!mounted) return;
-                setState(() {}); // gUser has updated
-              },
-              child: AvatarIcon(
-                myAvatar: true,
-                fontSize: 14,
-                color: context.color.onSurface.withAlpha(20),
+            ConnectionStatusBadge(
+              child: GestureDetector(
+                onTap: () async {
+                  await context.push(Routes.settingsProfile);
+                  if (!mounted) return;
+                  setState(() {}); // gUser has updated
+                },
+                child: AvatarIcon(
+                  myAvatar: true,
+                  fontSize: 14,
+                  color: context.color.onSurface.withAlpha(20),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -121,8 +124,10 @@ class _ChatListViewState extends State<ChatListView> {
                     color: context.color.primary,
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 3,
+                  ),
                   child: Text(
                     plan.name,
                     style: TextStyle(
@@ -163,87 +168,77 @@ class _ChatListViewState extends State<ChatListView> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: isConnected ? Container() : const ConnectionInfo(),
-          ),
-          Positioned.fill(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await apiService.close(() {});
-                await apiService.connect();
-                await Future.delayed(const Duration(seconds: 1));
-              },
-              child: (_groupsNotPinned.isEmpty &&
-                      _groupsPinned.isEmpty &&
-                      _groupsArchived.isEmpty)
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.person_add),
-                          onPressed: () => context.push(Routes.chatsAddNewUser),
-                          label: Text(
-                            context.lang.chatListViewSearchUserNameBtn,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _groupsPinned.length +
-                          (_groupsPinned.isNotEmpty ? 1 : 0) +
-                          _groupsNotPinned.length +
-                          (_groupsArchived.isNotEmpty ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index >=
-                            _groupsNotPinned.length +
-                                _groupsPinned.length +
-                                (_groupsPinned.isNotEmpty ? 1 : 0)) {
-                          if (_groupsArchived.isEmpty) return Container();
-                          return ListTile(
-                            title: Text(
-                              '${context.lang.archivedChats} (${_groupsArchived.length})',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                            onTap: () => context.push(Routes.chatsArchived),
-                          );
-                        }
-                        // Check if the index is for the pinned users
-                        if (index < _groupsPinned.length) {
-                          final group = _groupsPinned[index];
-                          return GroupListItem(
-                            key: ValueKey(group.groupId),
-                            group: group,
-                          );
-                        }
-
-                        // If there are pinned users, account for the Divider
-                        var adjustedIndex = index - _groupsPinned.length;
-                        if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
-                          return const Divider();
-                        }
-
-                        // Adjust the index for the contacts list
-                        adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
-
-                        // Get the contacts that are not pinned
-                        final group = _groupsNotPinned.elementAt(
-                          adjustedIndex,
-                        );
-                        return GroupListItem(
-                          key: ValueKey(group.groupId),
-                          group: group,
-                        );
-                      },
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await apiService.close(() {});
+          await apiService.connect();
+          await Future.delayed(const Duration(seconds: 1));
+        },
+        child:
+            (_groupsNotPinned.isEmpty &&
+                _groupsPinned.isEmpty &&
+                _groupsArchived.isEmpty)
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.person_add),
+                    onPressed: () => context.push(Routes.chatsAddNewUser),
+                    label: Text(
+                      context.lang.chatListViewSearchUserNameBtn,
                     ),
-            ),
-          ),
-        ],
+                  ),
+                ),
+              )
+            : ListView.builder(
+                itemCount:
+                    _groupsPinned.length +
+                    (_groupsPinned.isNotEmpty ? 1 : 0) +
+                    _groupsNotPinned.length +
+                    (_groupsArchived.isNotEmpty ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >=
+                      _groupsNotPinned.length +
+                          _groupsPinned.length +
+                          (_groupsPinned.isNotEmpty ? 1 : 0)) {
+                    if (_groupsArchived.isEmpty) return Container();
+                    return ListTile(
+                      title: Text(
+                        '${context.lang.archivedChats} (${_groupsArchived.length})',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onTap: () => context.push(Routes.chatsArchived),
+                    );
+                  }
+                  // Check if the index is for the pinned users
+                  if (index < _groupsPinned.length) {
+                    final group = _groupsPinned[index];
+                    return GroupListItem(
+                      key: ValueKey(group.groupId),
+                      group: group,
+                    );
+                  }
+
+                  // If there are pinned users, account for the Divider
+                  var adjustedIndex = index - _groupsPinned.length;
+                  if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
+                    return const Divider();
+                  }
+
+                  // Adjust the index for the contacts list
+                  adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
+
+                  // Get the contacts that are not pinned
+                  final group = _groupsNotPinned.elementAt(
+                    adjustedIndex,
+                  );
+                  return GroupListItem(
+                    key: ValueKey(group.groupId),
+                    group: group,
+                  );
+                },
+              ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),

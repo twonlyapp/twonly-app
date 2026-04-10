@@ -190,7 +190,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           hasLoader = true;
       }
 
-      if (message.mediaStored) {
+      if (message.mediaStored && message.openedAt != null) {
         icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
         text = context.lang.messageStoredInGallery;
       }
@@ -275,7 +275,6 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
               ),
             ];
           }
-          // Log.info("DISPLAY REACTION");
         }
       }
       if (widget.group != null &&

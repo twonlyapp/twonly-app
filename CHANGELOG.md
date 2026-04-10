@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4
+
+- New: Typing and chat open indicator
+- New: Screen lock for twonly (Can be enabled in the settings.)
+- Improve: Visual indication when connected to the server 
+- Improve: Several minor issues with the user interface
+- Fix: Poor audio quality and edge distortions in videos sent from Android
+
 ## 0.1.3
 
 - New: Video stabilization

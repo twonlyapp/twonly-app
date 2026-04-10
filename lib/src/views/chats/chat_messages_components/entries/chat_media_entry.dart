@@ -57,12 +57,10 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         widget.mediaService.mediaFile.displayLimitInMilliseconds != null) {
       return;
     }
-    if (widget.mediaService.tempPath.existsSync()) {
-      if (mounted) {
-        setState(() {
-          _canBeReopened = true;
-        });
-      }
+    if (widget.mediaService.tempPath.existsSync() && mounted) {
+      setState(() {
+        _canBeReopened = true;
+      });
     }
   }
 
@@ -70,7 +68,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     if (widget.message.openedAt == null || widget.message.mediaStored) {
       return;
     }
-    if (widget.mediaService.tempPath.existsSync() &&
+    if (widget.mediaService.canBeOpenedAgain &&
         widget.message.senderId != null) {
       await sendCipherText(
         widget.message.senderId!,
@@ -123,8 +121,14 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
 
     final addData = widget.message.additionalMessageData;
     if (addData != null) {
-      final info =
-          getBubbleInfo(context, widget.message, null, null, null, 200);
+      final info = getBubbleInfo(
+        context,
+        widget.message,
+        null,
+        null,
+        null,
+        200,
+      );
       final data = AdditionalMessageData.fromBuffer(addData);
       if (data.hasLink() && widget.message.mediaStored) {
         imageBorderRadius = const BorderRadius.only(
@@ -138,8 +142,12 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.8,
           ),
-          padding:
-              const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
+          padding: const EdgeInsets.only(
+            left: 10,
+            top: 6,
+            bottom: 6,
+            right: 10,
+          ),
           decoration: BoxDecoration(
             color: info.color,
             borderRadius: const BorderRadius.only(
@@ -170,7 +178,8 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
           child: SizedBox(
             width: (widget.minWidth > 150) ? widget.minWidth : 150,
-            height: (widget.message.mediaStored &&
+            height:
+                (widget.message.mediaStored &&
                     widget.mediaService.imagePreviewAvailable)
                 ? 271
                 : null,

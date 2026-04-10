@@ -6,6 +6,7 @@ import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -137,8 +138,9 @@ Future<void> handleGroupUpdate(
         GroupHistoriesCompanion(
           groupId: Value(groupId),
           type: Value(actionType),
-          newDeleteMessagesAfterMilliseconds:
-              Value(update.newDeleteMessagesAfterMilliseconds.toInt()),
+          newDeleteMessagesAfterMilliseconds: Value(
+            update.newDeleteMessagesAfterMilliseconds.toInt(),
+          ),
           contactId: Value(fromUserId),
         ),
       );
@@ -146,8 +148,9 @@ Future<void> handleGroupUpdate(
         await twonlyDB.groupsDao.updateGroup(
           group.groupId,
           GroupsCompanion(
-            deleteMessagesAfterMilliseconds:
-                Value(update.newDeleteMessagesAfterMilliseconds.toInt()),
+            deleteMessagesAfterMilliseconds: Value(
+              update.newDeleteMessagesAfterMilliseconds.toInt(),
+            ),
           ),
         );
       }
@@ -218,6 +221,27 @@ Future<void> handleResendGroupPublicKey(
       groupJoin: EncryptedContent_GroupJoin(
         groupPublicKey: keyPair.getPublicKey().serialize(),
       ),
+    ),
+  );
+}
+
+Future<void> handleTypingIndicator(
+  int fromUserId,
+  String groupId,
+  EncryptedContent_TypingIndicator indicator,
+) async {
+  var lastTypeIndicator = const Value<DateTime?>.absent();
+
+  if (indicator.isTyping) {
+    lastTypeIndicator = Value(fromTimestamp(indicator.createdAt));
+  }
+
+  await twonlyDB.groupsDao.updateMember(
+    groupId,
+    fromUserId,
+    GroupMembersCompanion(
+      lastChatOpened: Value(fromTimestamp(indicator.createdAt)),
+      lastTypeIndicator: lastTypeIndicator,
     ),
   );
 }

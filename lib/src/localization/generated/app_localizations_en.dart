@@ -161,7 +161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchUsernameInput => 'Username';
 
   @override
-  String get searchUsernameTitle => 'Search username';
+  String get addFriendTitle => 'Add friends';
 
   @override
   String get searchUserNamePreview =>
@@ -1717,4 +1717,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileYourQrCode => 'Your QR code';
+
+  @override
+  String get settingsScreenLock => 'Screen lock';
+
+  @override
+  String get settingsScreenLockSubtitle =>
+      'To open twonly, you\'ll need to use your smartphone\'s unlock feature.';
+
+  @override
+  String get settingsScreenLockAuthMessageEnable =>
+      'Use the screen lock from twonly.';
+
+  @override
+  String get settingsScreenLockAuthMessageDisable =>
+      'Disable the screen lock from twonly.';
+
+  @override
+  String get unlockTwonly => 'Unlock twonly';
+
+  @override
+  String get unlockTwonlyTryAgain => 'Try again';
+
+  @override
+  String get unlockTwonlyDesc =>
+      'Use your phone\'s unlock settings to unlock twonly';
+
+  @override
+  String get settingsTypingIndication => 'Typing Indicators';
+
+  @override
+  String get settingsTypingIndicationSubtitle =>
+      'When the typing indicator is turned off, you can\'t see when others are typing a message.';
 }

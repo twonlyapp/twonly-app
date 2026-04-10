@@ -30,11 +30,8 @@ class _ReduceFlamesViewState extends State<ReduceFlamesView> {
       if (backupFlames.isEmpty) {
         backupFlames = update;
       }
-      update.sort(
-        (a, b) => a.flameCounter.compareTo(b.flameCounter),
-      );
       setState(() {
-        allGroups = update.where((g) => g.flameCounter > 1).toList();
+        allGroups = update.where((g) => g.flameCounter >= 1).toList();
       });
     });
   }

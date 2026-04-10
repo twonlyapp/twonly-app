@@ -376,11 +376,11 @@ abstract class AppLocalizations {
   /// **'Username'**
   String get searchUsernameInput;
 
-  /// No description provided for @searchUsernameTitle.
+  /// No description provided for @addFriendTitle.
   ///
   /// In en, this message translates to:
-  /// **'Search username'**
-  String get searchUsernameTitle;
+  /// **'Add friends'**
+  String get addFriendTitle;
 
   /// No description provided for @searchUserNamePreview.
   ///
@@ -3087,6 +3087,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your QR code'**
   String get profileYourQrCode;
+
+  /// No description provided for @settingsScreenLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen lock'**
+  String get settingsScreenLock;
+
+  /// No description provided for @settingsScreenLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'To open twonly, you\'ll need to use your smartphone\'s unlock feature.'**
+  String get settingsScreenLockSubtitle;
+
+  /// No description provided for @settingsScreenLockAuthMessageEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the screen lock from twonly.'**
+  String get settingsScreenLockAuthMessageEnable;
+
+  /// No description provided for @settingsScreenLockAuthMessageDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable the screen lock from twonly.'**
+  String get settingsScreenLockAuthMessageDisable;
+
+  /// No description provided for @unlockTwonly.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock twonly'**
+  String get unlockTwonly;
+
+  /// No description provided for @unlockTwonlyTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get unlockTwonlyTryAgain;
+
+  /// No description provided for @unlockTwonlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your phone\'s unlock settings to unlock twonly'**
+  String get unlockTwonlyDesc;
+
+  /// No description provided for @settingsTypingIndication.
+  ///
+  /// In en, this message translates to:
+  /// **'Typing Indicators'**
+  String get settingsTypingIndication;
+
+  /// No description provided for @settingsTypingIndicationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
+  String get settingsTypingIndicationSubtitle;
 }
 
 class _AppLocalizationsDelegate

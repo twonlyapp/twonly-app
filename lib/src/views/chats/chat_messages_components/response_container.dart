@@ -73,7 +73,7 @@ class _ResponseContainerState extends State<ResponseContainer> {
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: getMessageColor(widget.msg),
+          color: getMessageColor(widget.msg.senderId != null),
           borderRadius: widget.borderRadius,
         ),
         child: Column(
@@ -192,7 +192,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         // _username = _message!.senderId.toString();
       }
 
-      color = getMessageColor(_message!);
+      color = getMessageColor(_message!.senderId != null);
 
       if (!_message!.mediaStored) {
         return Container(

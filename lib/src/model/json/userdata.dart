@@ -75,6 +75,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool autoStoreAllSendUnlimitedMediaFiles = false;
 
+  @JsonKey(defaultValue: true)
+  bool typingIndicators = true;
+
   String? lastPlanBallance;
   String? additionalUserInvites;
 
@@ -86,6 +89,9 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool allowErrorTrackingViaSentry = false;
+
+  @JsonKey(defaultValue: false)
+  bool screenLockEnabled = false;
 
   //  -- Custom DATA --
 

@@ -44,8 +44,9 @@ class MediaFileService {
             delete = false;
           }
 
-          final messages =
-              await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
+          final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+            mediaId,
+          );
 
           // in case messages in empty the file will be deleted, as delete is true by default
 
@@ -63,16 +64,18 @@ class MediaFileService {
               // This branch will prevent to reach the next if condition, with would otherwise store the image for two days
               // delete = true; // do not overwrite a previous delete = false
               // this is just to make it easier to understand :)
-            } else if (message.openedAt!
-                .isAfter(clock.now().subtract(const Duration(days: 2)))) {
+            } else if (message.openedAt!.isAfter(
+              clock.now().subtract(const Duration(days: 2)),
+            )) {
               // In case the image was opened, but send with unlimited time or no authentication.
               if (message.senderId == null) {
                 delete = false;
               } else {
                 // Check weather the image was send in a group. Then the images is preserved for two days in case another person stores the image.
                 // This also allows to reopen this image for two days.
-                final group =
-                    await twonlyDB.groupsDao.getGroup(message.groupId);
+                final group = await twonlyDB.groupsDao.getGroup(
+                  message.groupId,
+                );
                 if (group != null && !group.isDirectChat) {
                   delete = false;
                 }
@@ -93,8 +96,9 @@ class MediaFileService {
   }
 
   Future<void> updateFromDB() async {
-    final updated =
-        await twonlyDB.mediaFilesDao.getMediaFileById(mediaFile.mediaId);
+    final updated = await twonlyDB.mediaFilesDao.getMediaFileById(
+      mediaFile.mediaId,
+    );
     if (updated != null) {
       mediaFile = updated;
     }
@@ -151,8 +155,9 @@ class MediaFileService {
       mediaFile.mediaId,
       MediaFilesCompanion(
         requiresAuthentication: Value(requiresAuthentication),
-        displayLimitInMilliseconds:
-            requiresAuthentication ? const Value(12000) : const Value.absent(),
+        displayLimitInMilliseconds: requiresAuthentication
+            ? const Value(12000)
+            : const Value.absent(),
       ),
     );
     await updateFromDB();
@@ -207,6 +212,13 @@ class MediaFileService {
       }
     }
   }
+
+  // Media was send with unlimited display limit time and without auth required
+  // and the temp media file still exists, then the media file can be reopened again...
+  bool get canBeOpenedAgain =>
+      !mediaFile.requiresAuthentication &&
+      mediaFile.displayLimitInMilliseconds == null &&
+      tempPath.existsSync();
 
   bool get imagePreviewAvailable =>
       thumbnailPath.existsSync() || storedPath.existsSync();
@@ -293,8 +305,10 @@ class MediaFileService {
           extension = 'm4a';
       }
     }
-    final mediaBaseDir =
-        buildDirectoryPath(directory, globalApplicationSupportDirectory);
+    final mediaBaseDir = buildDirectoryPath(
+      directory,
+      globalApplicationSupportDirectory,
+    );
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),
     );
@@ -303,29 +317,29 @@ class MediaFileService {
   File get tempPath => _buildFilePath('tmp');
   File get storedPath => _buildFilePath('stored');
   File get thumbnailPath => _buildFilePath(
-        'stored',
-        namePrefix: '.thumbnail',
-        extensionParam: 'webp',
-      );
+    'stored',
+    namePrefix: '.thumbnail',
+    extensionParam: 'webp',
+  );
   File get encryptedPath => _buildFilePath(
-        'tmp',
-        namePrefix: '.encrypted',
-      );
+    'tmp',
+    namePrefix: '.encrypted',
+  );
   File get uploadRequestPath => _buildFilePath(
-        'tmp',
-        namePrefix: '.upload',
-      );
+    'tmp',
+    namePrefix: '.upload',
+  );
   File get originalPath => _buildFilePath(
-        'tmp',
-        namePrefix: '.original',
-      );
+    'tmp',
+    namePrefix: '.original',
+  );
   File get ffmpegOutputPath => _buildFilePath(
-        'tmp',
-        namePrefix: '.ffmpeg',
-      );
+    'tmp',
+    namePrefix: '.ffmpeg',
+  );
   File get overlayImagePath => _buildFilePath(
-        'tmp',
-        namePrefix: '.overlay',
-        extensionParam: 'png',
-      );
+    'tmp',
+    namePrefix: '.overlay',
+    extensionParam: 'png',
+  );
 }
