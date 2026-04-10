@@ -94,8 +94,10 @@ class _SetupBackupViewState extends State<SetupBackupView> {
           ],
         ),
         body: Padding(
-          padding:
-              const EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
+          padding: const EdgeInsetsGeometry.symmetric(
+            vertical: 40,
+            horizontal: 40,
+          ),
           child: ListView(
             children: [
               Text(
@@ -143,7 +145,8 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                   context.lang.backupPasswordRequirement,
                   style: TextStyle(
                     fontSize: 13,
-                    color: (passwordCtrl.text.length < 8 &&
+                    color:
+                        (passwordCtrl.text.length < 8 &&
                             passwordCtrl.text.isNotEmpty)
                         ? Colors.red
                         : Colors.transparent,
@@ -169,7 +172,8 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                   context.lang.passwordRepeatedNotEqual,
                   style: TextStyle(
                     fontSize: 13,
-                    color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
+                    color:
+                        (passwordCtrl.text != repeatedPasswordCtrl.text &&
                             repeatedPasswordCtrl.text.isNotEmpty)
                         ? Colors.red
                         : Colors.transparent,
@@ -192,7 +196,8 @@ class _SetupBackupViewState extends State<SetupBackupView> {
               const SizedBox(height: 10),
               Center(
                 child: FilledButton.icon(
-                  onPressed: (!isLoading &&
+                  onPressed:
+                      (!isLoading &&
                           (passwordCtrl.text == repeatedPasswordCtrl.text &&
                                   passwordCtrl.text.length >= 8 ||
                               !kReleaseMode))
@@ -236,8 +241,9 @@ class _SetupBackupViewState extends State<SetupBackupView> {
 }
 
 Future<bool> isSecurePassword(String password) async {
-  final badPasswordsStr =
-      await rootBundle.loadString('assets/passwords/bad_passwords.txt');
+  final badPasswordsStr = await rootBundle.loadString(
+    'assets/passwords/bad_passwords.txt',
+  );
   final badPasswords = badPasswordsStr.split('\n');
   if (badPasswords.contains(password)) {
     return false;

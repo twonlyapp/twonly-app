@@ -6,9 +6,10 @@ import 'package:twonly/src/database/twonly.db.dart';
 class ConnectSenderKeyStore extends SenderKeyStore {
   @override
   Future<SenderKeyRecord> loadSenderKey(SenderKeyName senderKeyName) async {
-    final identity = await (twonlyDB.select(twonlyDB.signalSenderKeyStores)
-          ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
-        .getSingleOrNull();
+    final identity =
+        await (twonlyDB.select(twonlyDB.signalSenderKeyStores)
+              ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
+            .getSingleOrNull();
     if (identity == null) {
       throw InvalidKeyIdException(
         'No such sender key record! - $senderKeyName',
@@ -22,7 +23,9 @@ class ConnectSenderKeyStore extends SenderKeyStore {
     SenderKeyName senderKeyName,
     SenderKeyRecord record,
   ) async {
-    await twonlyDB.into(twonlyDB.signalSenderKeyStores).insert(
+    await twonlyDB
+        .into(twonlyDB.signalSenderKeyStores)
+        .insert(
           SignalSenderKeyStoresCompanion(
             senderKey: Value(record.serialize()),
             senderKeyName: Value(senderKeyName.serialize()),

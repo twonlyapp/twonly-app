@@ -48,7 +48,8 @@ class _BlinkWidgetState extends State<BlinkWidget>
   void _onTick(Duration elapsed) {
     var visible = true;
     if (elapsed.inMilliseconds < widget.blinkDuration.inMilliseconds) {
-      visible = elapsed.inMilliseconds % (widget.interval.inMilliseconds * 2) <
+      visible =
+          elapsed.inMilliseconds % (widget.interval.inMilliseconds * 2) <
           widget.interval.inMilliseconds;
     } else {
       _ticker.stop();

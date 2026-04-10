@@ -133,8 +133,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
         final jsonData = base64Decode(b64Data);
         final data = jsonDecode(utf8.decode(jsonData)) as Map<String, dynamic>;
         final expiresDate = data['expiresDate'] as int;
-        final dt =
-            DateTime.fromMillisecondsSinceEpoch(expiresDate, isUtc: true);
+        final dt = DateTime.fromMillisecondsSinceEpoch(
+          expiresDate,
+          isUtc: true,
+        );
         if (dt.isBefore(DateTime.now())) {
           Log.warn('ExpiresDate is in the past: $dt');
           if (_userTriggeredBuyButton && Platform.isIOS) {

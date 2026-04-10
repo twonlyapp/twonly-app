@@ -170,16 +170,18 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
         children: [
           CheckboxListTile(
             title: const Text('Image'),
-            value: autoDownloadOptions[widget.connectionMode.name]!
-                .contains(DownloadMediaTypes.image.name),
+            value: autoDownloadOptions[widget.connectionMode.name]!.contains(
+              DownloadMediaTypes.image.name,
+            ),
             onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.image, value);
             },
           ),
           CheckboxListTile(
             title: const Text('Video'),
-            value: autoDownloadOptions[widget.connectionMode.name]!
-                .contains(DownloadMediaTypes.video.name),
+            value: autoDownloadOptions[widget.connectionMode.name]!.contains(
+              DownloadMediaTypes.video.name,
+            ),
             onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
             },
@@ -204,8 +206,9 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
     if (value == null) return;
 
     // Update the autoDownloadOptions based on the checkbox state
-    autoDownloadOptions[widget.connectionMode.name]!
-        .removeWhere((element) => element == type.name);
+    autoDownloadOptions[widget.connectionMode.name]!.removeWhere(
+      (element) => element == type.name,
+    );
     if (value) {
       autoDownloadOptions[widget.connectionMode.name]!.add(type.name);
     }

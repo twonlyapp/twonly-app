@@ -32,8 +32,10 @@ class _GroupCreateSelectGroupNameViewState
       _isLoading = true;
     });
 
-    final wasSuccess =
-        await createNewGroup(textFieldGroupName.text, widget.selectedUsers);
+    final wasSuccess = await createNewGroup(
+      textFieldGroupName.text,
+      widget.selectedUsers,
+    );
     if (wasSuccess) {
       // POP
       if (mounted) {
@@ -72,8 +74,12 @@ class _GroupCreateSelectGroupNameViewState
         ),
         body: SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+            padding: const EdgeInsets.only(
+              bottom: 40,
+              left: 10,
+              top: 20,
+              right: 10,
+            ),
             child: Column(
               children: [
                 Padding(

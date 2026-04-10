@@ -95,21 +95,27 @@ class _HelpViewState extends State<HelpView> {
             onTap: () => launchUrl(
               Uri.parse('https://github.com/twonlyapp/twonly-app'),
             ),
-            trailing:
-                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 15,
+            ),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpImprint),
             onTap: () => launchUrl(Uri.parse('https://twonly.eu/de/legal/')),
-            trailing:
-                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 15,
+            ),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpTerms),
             onTap: () =>
                 launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html')),
-            trailing:
-                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 15,
+            ),
           ),
           ListTile(
             onLongPress: () async {

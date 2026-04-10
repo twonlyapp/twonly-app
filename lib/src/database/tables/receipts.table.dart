@@ -10,9 +10,11 @@ class Receipts extends Table {
       integer().references(Contacts, #userId, onDelete: KeyAction.cascade)();
 
   // in case a message is deleted, it should be also deleted from the receipts table
-  TextColumn get messageId => text()
-      .nullable()
-      .references(Messages, #messageId, onDelete: KeyAction.cascade)();
+  TextColumn get messageId => text().nullable().references(
+    Messages,
+    #messageId,
+    onDelete: KeyAction.cascade,
+  )();
 
   /// This is the protobuf 'Message'
   BlobColumn get message => blob()();

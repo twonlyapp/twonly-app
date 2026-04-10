@@ -65,8 +65,9 @@ Future<void> handleMediaError(MediaFile media) async {
       downloadState: Value(DownloadState.reuploadRequested),
     ),
   );
-  final messages =
-      await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaId);
+  final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+    media.mediaId,
+  );
   if (messages.length != 1) return;
   final message = messages.first;
   if (message.senderId == null) return;

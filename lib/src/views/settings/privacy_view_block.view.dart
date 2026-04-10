@@ -32,8 +32,12 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsersView> {
         title: Text(context.lang.settingsPrivacyBlockUsers),
       ),
       body: Padding(
-        padding:
-            const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+        padding: const EdgeInsets.only(
+          bottom: 20,
+          left: 10,
+          top: 20,
+          right: 10,
+        ),
         child: Column(
           children: [
             Padding(
@@ -63,9 +67,9 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsersView> {
                   }
 
                   final filteredContacts = snapshot.data!.where((contact) {
-                    return getContactDisplayName(contact)
-                        .toLowerCase()
-                        .contains(filter.toLowerCase());
+                    return getContactDisplayName(
+                      contact,
+                    ).toLowerCase().contains(filter.toLowerCase());
                   }).toList();
 
                   return UserList(

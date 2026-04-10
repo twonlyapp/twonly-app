@@ -159,8 +159,12 @@ class BeardFilterPainter extends FaceFilterPainter {
       ..rotate(rotation)
       ..scale(scaleX, Platform.isAndroid ? -1 : 1);
 
-    final srcRect =
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+    final srcRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
 
     final aspectRatio = image.width / image.height;
     final dstWidth = width;

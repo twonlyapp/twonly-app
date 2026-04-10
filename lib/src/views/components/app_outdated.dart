@@ -62,10 +62,10 @@ class _AppOutdatedState extends State<AppOutdated> {
                   context.lang.newDeviceRegistered,
                   textAlign: TextAlign.center,
                   softWrap: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white, fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -92,10 +92,10 @@ class _AppOutdatedState extends State<AppOutdated> {
                   context.lang.appOutdated,
                   textAlign: TextAlign.center,
                   softWrap: true,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white, fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
                 if (Platform.isAndroid) const SizedBox(height: 5),
                 if (Platform.isAndroid)
@@ -114,10 +114,10 @@ class _AppOutdatedState extends State<AppOutdated> {
                     ),
                     child: Text(
                       context.lang.appOutdatedBtn,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: Colors.white, fontSize: 16),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
               ],

@@ -137,8 +137,10 @@ class _RegisterViewState extends State<RegisterView> {
       subscriptionPlan: 'Preview',
     )..appVersion = 62;
 
-    await const FlutterSecureStorage()
-        .write(key: SecureStorageKeys.userData, value: jsonEncode(userData));
+    await const FlutterSecureStorage().write(
+      key: SecureStorageKeys.userData,
+      value: jsonEncode(userData),
+    );
 
     gUser = userData;
 
@@ -258,8 +260,9 @@ class _RegisterViewState extends State<RegisterView> {
               Text(
                 context.lang.registerProofOfWorkFailed,
                 style: TextStyle(
-                  color:
-                      _showProofOfWorkError ? Colors.red : Colors.transparent,
+                  color: _showProofOfWorkError
+                      ? Colors.red
+                      : Colors.transparent,
                   fontSize: 12,
                 ),
                 textAlign: TextAlign.center,

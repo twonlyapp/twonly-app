@@ -101,17 +101,19 @@ class _CheckoutViewState extends State<CheckoutView> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: FilledButton(
                 onPressed: () async {
-                  final success = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return SelectPaymentView(
-                          plan: widget.plan,
-                          payMonthly: paidMonthly,
-                        );
-                      },
-                    ),
-                  ) as bool?;
+                  final success =
+                      await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return SelectPaymentView(
+                                  plan: widget.plan,
+                                  payMonthly: paidMonthly,
+                                );
+                              },
+                            ),
+                          )
+                          as bool?;
                   if (success != null && success && context.mounted) {
                     Navigator.pop(context);
                   }

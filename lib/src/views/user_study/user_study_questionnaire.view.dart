@@ -194,8 +194,10 @@ class _UserStudyQuestionnaireViewState
                 onPressed: _submitData,
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  child:
-                      Text('Jetzt teilnehmen', style: TextStyle(fontSize: 18)),
+                  child: Text(
+                    'Jetzt teilnehmen',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
             ),
@@ -208,23 +210,23 @@ class _UserStudyQuestionnaireViewState
 
   // Hilfsmethoden für das UI
   Widget _sectionTitle(String title) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Text(
+      title,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   Widget _questionText(String text) => Padding(
-        padding: const EdgeInsets.only(top: 20, bottom: 5),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 20, bottom: 5),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    ),
+  );
 
   Widget _buildRadioList(List<String> options, String key) {
     return Padding(
@@ -253,8 +255,10 @@ class _UserStudyQuestionnaireViewState
 
   Widget _buildTextField(String hint, void Function(String) onChanged) {
     return TextField(
-      decoration:
-          InputDecoration(hintText: hint, border: const OutlineInputBorder()),
+      decoration: InputDecoration(
+        hintText: hint,
+        border: const OutlineInputBorder(),
+      ),
       onChanged: onChanged,
     );
   }

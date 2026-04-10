@@ -55,8 +55,9 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    allGroupSub =
-        twonlyDB.groupsDao.watchGroupsForShareImage().listen((allGroups) async {
+    allGroupSub = twonlyDB.groupsDao.watchGroupsForShareImage().listen((
+      allGroups,
+    ) async {
       setState(() {
         contacts = allGroups;
       });
@@ -86,8 +87,9 @@ class _ShareImageView extends State<ShareImageView> {
     groups.sort((a, b) {
       // First, compare by flameCounter
 
-      final flameComparison =
-          getFlameCounterFromGroup(b).compareTo(getFlameCounterFromGroup(a));
+      final flameComparison = getFlameCounterFromGroup(
+        b,
+      ).compareTo(getFlameCounterFromGroup(a));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -156,8 +158,12 @@ class _ShareImageView extends State<ShareImageView> {
       ),
       body: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+          padding: const EdgeInsets.only(
+            bottom: 40,
+            left: 10,
+            top: 20,
+            right: 10,
+          ),
           child: Column(
             children: [
               Padding(
@@ -211,8 +217,9 @@ class _ShareImageView extends State<ShareImageView> {
                                     return const BorderSide(width: 0);
                                   }
                                   return BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.outline,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   );
                                 },
                               ),
@@ -254,8 +261,10 @@ class _ShareImageView extends State<ShareImageView> {
                   child: Container(
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
-                      border:
-                          Border.all(color: context.color.primary, width: 2),
+                      border: Border.all(
+                        color: context.color.primary,
+                        width: 2,
+                      ),
                       color: context.color.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -336,8 +345,9 @@ class UserList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    groups
-        .sort((a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange));
+    groups.sort(
+      (a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange),
+    );
 
     return ListView.builder(
       restorationId: 'new_message_users_list',

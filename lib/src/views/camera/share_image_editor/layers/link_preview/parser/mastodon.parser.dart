@@ -6,8 +6,10 @@ class MastodonParser with BaseMetaInfo {
   final Document? _document;
 
   @override
-  Vendor? get vendor => ((_document?.head?.innerHtml
-                  .contains('"repository":"mastodon/mastodon"') ??
+  Vendor? get vendor =>
+      ((_document?.head?.innerHtml.contains(
+                '"repository":"mastodon/mastodon"',
+              ) ??
               false) &&
           (_document?.head?.innerHtml.contains('SocialMediaPosting') ?? false))
       ? Vendor.mastodonSocialMediaPosting

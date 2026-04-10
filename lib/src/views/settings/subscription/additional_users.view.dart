@@ -56,24 +56,28 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   }
 
   Future<void> addAdditionalUser() async {
-    final selectedUserIds = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SelectAdditionalUsers(
-          limit: _planLimit,
-          alreadySelected: ballance?.additionalAccounts
-                  .map((e) => e.userId.toInt())
-                  .toList() ??
-              [],
-        ),
-      ),
-    ) as List<int>?;
+    final selectedUserIds =
+        await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SelectAdditionalUsers(
+                  limit: _planLimit,
+                  alreadySelected:
+                      ballance?.additionalAccounts
+                          .map((e) => e.userId.toInt())
+                          .toList() ??
+                      [],
+                ),
+              ),
+            )
+            as List<int>?;
     if (selectedUserIds == null) return;
     for (final selectedUserId in selectedUserIds) {
       final res = await apiService.addAdditionalUser(Int64(selectedUserId));
       if (res.isError && mounted) {
-        final contact =
-            await twonlyDB.contactsDao.getContactById(selectedUserId);
+        final contact = await twonlyDB.contactsDao.getContactById(
+          selectedUserId,
+        );
         if (contact != null && mounted) {
           if (res.error == ErrorCode.UserIsNotInFreePlan) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -89,8 +93,9 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  context.lang
-                      .additionalUserAddError(getContactDisplayName(contact)),
+                  context.lang.additionalUserAddError(
+                    getContactDisplayName(contact),
+                  ),
                 ),
               ),
             );
@@ -219,8 +224,9 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                   context.lang.additionalUserRemoveDesc,
                 );
                 if (remove) {
-                  final res = await apiService
-                      .removeAdditionalUser(widget.account.userId);
+                  final res = await apiService.removeAdditionalUser(
+                    widget.account.userId,
+                  );
                   if (!context.mounted) return;
                   if (res.isSuccess) {
                     widget.refresh();

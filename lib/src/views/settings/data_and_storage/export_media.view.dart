@@ -64,8 +64,10 @@ class _ExportMediaViewState extends State<ExportMediaView> {
 
     try {
       final folder = _mediaFolder();
-      final allFiles =
-          folder.listSync(recursive: true).whereType<File>().toList();
+      final allFiles = folder
+          .listSync(recursive: true)
+          .whereType<File>()
+          .toList();
 
       final mediaFiles = allFiles.where((f) {
         final name = p.basename(f.path).toLowerCase();

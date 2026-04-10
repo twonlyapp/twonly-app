@@ -17,8 +17,9 @@ class _ShareWithFriendsView extends State<ShareWithFriendsView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.text =
-          context.lang.inviteFriendsShareText('https://twonly.eu/install');
+      _controller.text = context.lang.inviteFriendsShareText(
+        'https://twonly.eu/install',
+      );
     });
   }
 

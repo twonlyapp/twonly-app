@@ -37,8 +37,9 @@ class _AllReactionsViewState extends State<AllReactionsView> {
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.reactionsDao
-        .watchReactionWithContacts(widget.message.messageId);
+    final stream = twonlyDB.reactionsDao.watchReactionWithContacts(
+      widget.message.messageId,
+    );
 
     reactionsSub = stream.listen((update) {
       setState(() {
@@ -139,8 +140,9 @@ class _AllReactionsViewState extends State<AllReactionsView> {
                               ],
                             ),
                           ),
-                          if (EmojiAnimation.animatedIcons
-                              .containsKey(entry.$1.emoji))
+                          if (EmojiAnimation.animatedIcons.containsKey(
+                            entry.$1.emoji,
+                          ))
                             SizedBox(
                               height: 25,
                               child: EmojiAnimation(emoji: entry.$1.emoji),

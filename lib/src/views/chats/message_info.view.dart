@@ -53,24 +53,27 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   }
 
   Future<void> initAsync() async {
-    final streamActions =
-        twonlyDB.messagesDao.watchMessageActions(widget.message.messageId);
+    final streamActions = twonlyDB.messagesDao.watchMessageActions(
+      widget.message.messageId,
+    );
     actionsStream = streamActions.listen((update) {
       setState(() {
         messageActions = update;
       });
     });
 
-    final streamGroup =
-        twonlyDB.messagesDao.watchMembersByGroupId(widget.message.groupId);
+    final streamGroup = twonlyDB.messagesDao.watchMembersByGroupId(
+      widget.message.groupId,
+    );
     groupMemberStream = streamGroup.listen((update) {
       setState(() {
         groupMembers = update;
       });
     });
 
-    final streamHistory =
-        twonlyDB.messagesDao.watchMessageHistory(widget.message.messageId);
+    final streamHistory = twonlyDB.messagesDao.watchMessageHistory(
+      widget.message.messageId,
+    );
     historyStream = streamHistory.listen((update) {
       setState(() {
         messageHistory = update;

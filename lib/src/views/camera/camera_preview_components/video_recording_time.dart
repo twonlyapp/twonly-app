@@ -26,7 +26,8 @@ class VideoRecordingTimer extends StatelessWidget {
               children: [
                 Center(
                   child: CircularProgressIndicator(
-                    value: currentTime
+                    value:
+                        currentTime
                             .difference(videoRecordingStarted!)
                             .inMilliseconds /
                         (maxVideoRecordingTime * 1000),

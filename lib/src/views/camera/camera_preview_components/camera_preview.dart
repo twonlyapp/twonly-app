@@ -34,9 +34,15 @@ class MainCameraPreview extends StatelessWidget {
                     fit: BoxFit.cover,
                     child: SizedBox(
                       width: mainCameraController
-                          .cameraController!.value.previewSize!.height,
+                          .cameraController!
+                          .value
+                          .previewSize!
+                          .height,
                       height: mainCameraController
-                          .cameraController!.value.previewSize!.width,
+                          .cameraController!
+                          .value
+                          .previewSize!
+                          .width,
                       child: CameraPreview(
                         key: mainCameraController.cameraPreviewKey,
                         mainCameraController.cameraController!,
@@ -67,9 +73,15 @@ class MainCameraPreview extends StatelessWidget {
                     fit: BoxFit.cover,
                     child: SizedBox(
                       width: mainCameraController
-                          .cameraController!.value.previewSize!.height,
+                          .cameraController!
+                          .value
+                          .previewSize!
+                          .height,
                       height: mainCameraController
-                          .cameraController!.value.previewSize!.width,
+                          .cameraController!
+                          .value
+                          .previewSize!
+                          .width,
                       child: Stack(
                         children: [
                           Positioned(

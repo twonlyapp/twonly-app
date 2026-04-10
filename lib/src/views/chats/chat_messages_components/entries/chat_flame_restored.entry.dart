@@ -40,8 +40,9 @@ class ChatFlameRestoredEntry extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: BetterText(
-        text: context.lang
-            .chatEntryFlameRestored(data.restoredFlameCounter.toInt()),
+        text: context.lang.chatEntryFlameRestored(
+          data.restoredFlameCounter.toInt(),
+        ),
         textColor: isDarkMode(context) ? Colors.black : Colors.black,
       ),
     );

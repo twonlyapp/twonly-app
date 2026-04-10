@@ -33,7 +33,7 @@ enum DownloadState {
   downloading,
   downloaded,
   ready,
-  reuploadRequested
+  reuploadRequested,
 }
 
 @DataClassName('MediaFile')

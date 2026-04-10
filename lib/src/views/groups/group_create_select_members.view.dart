@@ -72,9 +72,9 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
     }
     final usersFiltered = allContacts
         .where(
-          (user) => getContactDisplayName(user)
-              .toLowerCase()
-              .contains(searchUserName.value.text.toLowerCase()),
+          (user) => getContactDisplayName(
+            user,
+          ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
         )
         .toList();
     setState(() {
@@ -142,8 +142,12 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
         ),
         body: SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+            padding: const EdgeInsets.only(
+              bottom: 40,
+              left: 10,
+              top: 20,
+              right: 10,
+            ),
             child: Column(
               children: [
                 Padding(
@@ -182,8 +186,9 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                                     spacing: 8,
                                     children: selected.map((w) {
                                       return _Chip(
-                                        contact: allContacts
-                                            .firstWhere((t) => t.userId == w),
+                                        contact: allContacts.firstWhere(
+                                          (t) => t.userId == w,
+                                        ),
                                         onTap: toggleSelectedUser,
                                       );
                                     }).toList(),
@@ -220,7 +225,8 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                             fontSize: 13,
                           ),
                           trailing: Checkbox(
-                            value: selectedUsers.contains(user.userId) |
+                            value:
+                                selectedUsers.contains(user.userId) |
                                 alreadyInGroup.contains(user.userId),
                             side: WidgetStateBorderSide.resolveWith(
                               (states) {

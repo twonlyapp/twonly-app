@@ -91,8 +91,10 @@ class _EmojiLayerState extends State<EmojiLayer> {
                   initialScale = widget.layerData.size;
                   initialRotation = widget.layerData.rotation;
                   initialOffset = widget.layerData.offset;
-                  initialFocalPoint =
-                      Offset(details.focalPoint.dx, details.focalPoint.dy);
+                  initialFocalPoint = Offset(
+                    details.focalPoint.dx,
+                    details.focalPoint.dy,
+                  );
 
                   setState(() {});
                 },
@@ -100,22 +102,23 @@ class _EmojiLayerState extends State<EmojiLayer> {
                   if (twoPointerWhereDown && details.pointerCount != 2) {
                     return;
                   }
-                  final outlineBox = outlineKey.currentContext!
-                      .findRenderObject()! as RenderBox;
+                  final outlineBox =
+                      outlineKey.currentContext!.findRenderObject()!
+                          as RenderBox;
 
                   final emojiBox =
                       emojiKey.currentContext!.findRenderObject()! as RenderBox;
 
                   final isAtTheBottom =
                       (widget.layerData.offset.dy + emojiBox.size.height / 2) >
-                          outlineBox.size.height - 80;
+                      outlineBox.size.height - 80;
                   final isInTheCenter =
                       MediaQuery.of(context).size.width / 2 - 30 <
-                              (widget.layerData.offset.dx +
-                                  emojiBox.size.width / 2) &&
-                          MediaQuery.of(context).size.width / 2 + 20 >
-                              (widget.layerData.offset.dx +
-                                  emojiBox.size.width / 2);
+                          (widget.layerData.offset.dx +
+                              emojiBox.size.width / 2) &&
+                      MediaQuery.of(context).size.width / 2 + 20 >
+                          (widget.layerData.offset.dx +
+                              emojiBox.size.width / 2);
 
                   if (isAtTheBottom && isInTheCenter) {
                     if (!deleteLayer) {
@@ -133,9 +136,11 @@ class _EmojiLayerState extends State<EmojiLayer> {
                         initialRotation + details.rotation;
 
                     // Update the position based on the translation
-                    final dx = (initialOffset.dx) +
+                    final dx =
+                        (initialOffset.dx) +
                         (details.focalPoint.dx - initialFocalPoint.dx);
-                    final dy = (initialOffset.dy) +
+                    final dy =
+                        (initialOffset.dy) +
                         (details.focalPoint.dy - initialFocalPoint.dy);
                     widget.layerData.offset = Offset(dx, dy);
                   });
@@ -203,8 +208,9 @@ class _ScreenshotEmojiState extends State<ScreenshotEmoji> {
 
   Future<void> _captureEmoji() async {
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return;
 
       final image = await boundary.toImage(pixelRatio: 4);

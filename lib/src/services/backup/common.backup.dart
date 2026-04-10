@@ -11,8 +11,10 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Future<void> enableTwonlySafe(String password) async {
-  final (backupId, encryptionKey) =
-      await getMasterKey(password, gUser.username);
+  final (backupId, encryptionKey) = await getMasterKey(
+    password,
+    gUser.username,
+  );
 
   await updateUserdata((user) {
     user.twonlySafeBackup = TwonlySafeBackup(

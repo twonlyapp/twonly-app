@@ -37,8 +37,9 @@ class BetterText extends StatelessWidget {
           ),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              final lUrl =
-                  Uri.parse(url!.startsWith('http') ? url : 'http://$url');
+              final lUrl = Uri.parse(
+                url!.startsWith('http') ? url : 'http://$url',
+              );
               try {
                 await launchUrl(lUrl);
               } catch (e) {

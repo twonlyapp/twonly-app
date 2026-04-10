@@ -53,8 +53,9 @@ class EmojiPickerBottom extends StatelessWidget {
                   config: Config(
                     height: 400,
                     locale: Localizations.localeOf(context),
-                    emojiTextStyle:
-                        TextStyle(fontSize: 24 * (Platform.isIOS ? 1.2 : 1)),
+                    emojiTextStyle: TextStyle(
+                      fontSize: 24 * (Platform.isIOS ? 1.2 : 1),
+                    ),
                     emojiViewConfig: EmojiViewConfig(
                       backgroundColor: context.color.surfaceContainer,
                       recentsLimit: 40,

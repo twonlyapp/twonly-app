@@ -66,9 +66,9 @@ class _AppearanceViewState extends State<AppearanceView> {
       },
     );
     if (selectedValue != null && context.mounted) {
-      await context
-          .read<SettingsChangeProvider>()
-          .updateThemeMode(selectedValue);
+      await context.read<SettingsChangeProvider>().updateThemeMode(
+        selectedValue,
+      );
     }
   }
 

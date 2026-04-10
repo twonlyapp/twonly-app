@@ -115,14 +115,16 @@ class _ContactRowState extends State<_ContactRow> {
     });
 
     try {
-      final userdata =
-          await apiService.getUserById(widget.contact.userId.toInt());
+      final userdata = await apiService.getUserById(
+        widget.contact.userId.toInt(),
+      );
       if (userdata == null) return;
 
       var verified = false;
       if (userdata.publicIdentityKey == widget.contact.publicIdentityKey) {
-        final sender =
-            await twonlyDB.contactsDao.getContactById(widget.message.senderId!);
+        final sender = await twonlyDB.contactsDao.getContactById(
+          widget.message.senderId!,
+        );
         // in case the sender is verified and the public keys are the same, this trust can be transferred
         verified = sender != null && sender.verified;
       }
@@ -158,7 +160,8 @@ class _ContactRowState extends State<_ContactRow> {
       stream: twonlyDB.contactsDao.watchContact(widget.contact.userId.toInt()),
       builder: (context, snapshot) {
         final contactInDb = snapshot.data;
-        final isAdded = contactInDb != null ||
+        final isAdded =
+            contactInDb != null ||
             widget.contact.userId.toInt() == gUser.userId;
 
         return GestureDetector(
@@ -191,8 +194,9 @@ class _ContactRowState extends State<_ContactRow> {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     else

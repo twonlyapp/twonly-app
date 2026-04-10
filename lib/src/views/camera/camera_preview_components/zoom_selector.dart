@@ -51,8 +51,9 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
 
-    var index =
-        gCameras.indexWhere((t) => t.lensType == CameraLensType.ultraWide);
+    var index = gCameras.indexWhere(
+      (t) => t.lensType == CameraLensType.ultraWide,
+    );
     if (index == -1) {
       index = gCameras.indexWhere(
         (t) => t.lensType == CameraLensType.wide,
@@ -62,7 +63,8 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
       _wideCameraIndex = index;
     }
 
-    final isFront = widget.controller.description.lensDirection ==
+    final isFront =
+        widget.controller.description.lensDirection ==
         CameraLensDirection.front;
 
     if (!showWideAngleZoom &&
@@ -94,10 +96,12 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
     );
 
     const zoomTextStyle = TextStyle(fontSize: 13);
-    final isSmallerFocused = widget.scaleFactor < 1 ||
+    final isSmallerFocused =
+        widget.scaleFactor < 1 ||
         (showWideAngleZoomIOS &&
             widget.selectedCameraDetails.cameraId == _wideCameraIndex);
-    final isMiddleFocused = widget.scaleFactor >= 1 &&
+    final isMiddleFocused =
+        widget.scaleFactor >= 1 &&
         widget.scaleFactor < 2 &&
         !(showWideAngleZoomIOS &&
             widget.selectedCameraDetails.cameraId == _wideCameraIndex);
@@ -107,8 +111,9 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
       widget.scaleFactor,
     );
 
-    final minLevel =
-        beautifulZoomScale(widget.selectedCameraDetails.minAvailableZoom);
+    final minLevel = beautifulZoomScale(
+      widget.selectedCameraDetails.minAvailableZoom,
+    );
     final currentLevel = beautifulZoomScale(widget.scaleFactor);
     return Center(
       child: ClipRRect(
@@ -173,9 +178,10 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   ),
                 ),
                 onPressed: () async {
-                  final level =
-                      min(await widget.controller.getMaxZoomLevel(), 2)
-                          .toDouble();
+                  final level = min(
+                    await widget.controller.getMaxZoomLevel(),
+                    2,
+                  ).toDouble();
 
                   if (showWideAngleZoomIOS &&
                       widget.selectedCameraDetails.cameraId ==

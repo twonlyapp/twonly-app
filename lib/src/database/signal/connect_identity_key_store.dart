@@ -12,13 +12,13 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
 
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
-    final identity = await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)
-          ..where(
-            (t) =>
-                t.deviceId.equals(address.getDeviceId()) &
-                t.name.equals(address.getName()),
-          ))
-        .getSingleOrNull();
+    final identity =
+        await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)..where(
+              (t) =>
+                  t.deviceId.equals(address.getDeviceId()) &
+                  t.name.equals(address.getName()),
+            ))
+            .getSingleOrNull();
     if (identity == null) return null;
     return IdentityKey.fromBytes(identity.identityKey, 0);
   }
@@ -40,8 +40,10 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
       return false;
     }
     return trusted == null ||
-        const ListEquality<dynamic>()
-            .equals(trusted.serialize(), identityKey.serialize());
+        const ListEquality<dynamic>().equals(
+          trusted.serialize(),
+          identityKey.serialize(),
+        );
   }
 
   @override
@@ -53,7 +55,9 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
       return false;
     }
     if (await getIdentity(address) == null) {
-      await twonlyDB.into(twonlyDB.signalIdentityKeyStores).insert(
+      await twonlyDB
+          .into(twonlyDB.signalIdentityKeyStores)
+          .insert(
             SignalIdentityKeyStoresCompanion(
               deviceId: Value(address.getDeviceId()),
               name: Value(address.getName()),
@@ -61,17 +65,16 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
             ),
           );
     } else {
-      await (twonlyDB.update(twonlyDB.signalIdentityKeyStores)
-            ..where(
-              (t) =>
-                  t.deviceId.equals(address.getDeviceId()) &
-                  t.name.equals(address.getName()),
-            ))
+      await (twonlyDB.update(twonlyDB.signalIdentityKeyStores)..where(
+            (t) =>
+                t.deviceId.equals(address.getDeviceId()) &
+                t.name.equals(address.getName()),
+          ))
           .write(
-        SignalIdentityKeyStoresCompanion(
-          identityKey: Value(identityKey.serialize()),
-        ),
-      );
+            SignalIdentityKeyStoresCompanion(
+              identityKey: Value(identityKey.serialize()),
+            ),
+          );
     }
     return true;
   }

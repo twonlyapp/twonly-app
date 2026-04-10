@@ -7,17 +7,17 @@ import 'package:twonly/src/utils/log.dart';
 class ConnectPreKeyStore extends PreKeyStore {
   @override
   Future<bool> containsPreKey(int preKeyId) async {
-    final preKeyRecord = await (twonlyDB.select(twonlyDB.signalPreKeyStores)
-          ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
-        .get();
+    final preKeyRecord = await (twonlyDB.select(
+      twonlyDB.signalPreKeyStores,
+    )..where((tbl) => tbl.preKeyId.equals(preKeyId))).get();
     return preKeyRecord.isNotEmpty;
   }
 
   @override
   Future<PreKeyRecord> loadPreKey(int preKeyId) async {
-    final preKeyRecord = await (twonlyDB.select(twonlyDB.signalPreKeyStores)
-          ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
-        .get();
+    final preKeyRecord = await (twonlyDB.select(
+      twonlyDB.signalPreKeyStores,
+    )..where((tbl) => tbl.preKeyId.equals(preKeyId))).get();
     if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException(
         '[PREKEY] No such preKey record!',
@@ -29,9 +29,9 @@ class ConnectPreKeyStore extends PreKeyStore {
 
   @override
   Future<void> removePreKey(int preKeyId) async {
-    await (twonlyDB.delete(twonlyDB.signalPreKeyStores)
-          ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
-        .go();
+    await (twonlyDB.delete(
+      twonlyDB.signalPreKeyStores,
+    )..where((tbl) => tbl.preKeyId.equals(preKeyId))).go();
   }
 
   @override

@@ -15,7 +15,8 @@ extension FaceFilterTypeExtension on FaceFilterType {
   }
 
   FaceFilterType goLeft() {
-    final prevIndex = (index - 1 + FaceFilterType.values.length) %
+    final prevIndex =
+        (index - 1 + FaceFilterType.values.length) %
         FaceFilterType.values.length;
     return FaceFilterType.values[prevIndex];
   }

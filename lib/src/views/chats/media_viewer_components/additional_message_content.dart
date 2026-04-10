@@ -14,8 +14,9 @@ class AdditionalMessageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (message.additionalMessageData == null) return Container();
     try {
-      final data =
-          AdditionalMessageData.fromBuffer(message.additionalMessageData!);
+      final data = AdditionalMessageData.fromBuffer(
+        message.additionalMessageData!,
+      );
 
       switch (data.type) {
         case AdditionalMessageData_Type.LINK:

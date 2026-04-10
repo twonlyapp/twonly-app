@@ -19,8 +19,9 @@ Future<Uint8List> getProfileQrCodeData() async {
   final publicProfile = PublicProfile(
     userId: Int64(gUser.userId),
     username: gUser.username,
-    publicIdentityKey:
-        (await signalStore.getIdentityKeyPair()).getPublicKey().serialize(),
+    publicIdentityKey: (await signalStore.getIdentityKeyPair())
+        .getPublicKey()
+        .serialize(),
     registrationId: Int64(signalIdentity.registrationId),
     signedPrekey: signedPreKey.getKeyPair().publicKey.serialize(),
     signedPrekeySignature: signedPreKey.signature,

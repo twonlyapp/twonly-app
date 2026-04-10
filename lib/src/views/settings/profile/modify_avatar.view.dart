@@ -50,8 +50,9 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
         unselectedIconColor: Colors.grey,
         primaryBgColor: Colors.black, // Dark mode background
         secondaryBgColor: Colors.grey[850], // Dark mode secondary background
-        labelTextStyle:
-            const TextStyle(color: Colors.white), // Light text for dark mode
+        labelTextStyle: const TextStyle(
+          color: Colors.white,
+        ), // Light text for dark mode
       );
     } else {
       return AvatarMakerThemeData(
@@ -70,8 +71,9 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
         unselectedIconColor: Colors.grey,
         primaryBgColor: Colors.white, // Light mode background
         secondaryBgColor: Colors.grey[200], // Light mode secondary background
-        labelTextStyle:
-            const TextStyle(color: Colors.black), // Dark text for light mode
+        labelTextStyle: const TextStyle(
+          color: Colors.black,
+        ), // Dark text for light mode
       );
     }
   }
@@ -161,8 +163,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
                       IconButton(
                         icon: const Icon(FontAwesomeIcons.rotateLeft),
                         onLongPress: () async {
-                          await PersistentAvatarMakerController
-                              .clearAvatarMaker();
+                          await PersistentAvatarMakerController.clearAvatarMaker();
                           await _avatarMakerController.restoreState();
                         },
                         onPressed: _avatarMakerController.restoreState,
@@ -171,11 +172,15 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 30,
+                  ),
                   child: AvatarMakerCustomizer(
-                    scaffoldWidth:
-                        min(600, MediaQuery.of(context).size.width * 0.85),
+                    scaffoldWidth: min(
+                      600,
+                      MediaQuery.of(context).size.width * 0.85,
+                    ),
                     theme: getAvatarMakerTheme(context),
                     controller: _avatarMakerController,
                   ),

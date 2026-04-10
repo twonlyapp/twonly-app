@@ -42,8 +42,10 @@ class BestFriendsSelector extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.outline.withAlpha(50),
                     boxShadow: const [
@@ -75,8 +77,9 @@ class BestFriendsSelector extends StatelessWidget {
                   Expanded(
                     child: UserCheckbox(
                       key: ValueKey(groups[firstUserIndex]),
-                      isChecked: selectedGroupIds
-                          .contains(groups[firstUserIndex].groupId),
+                      isChecked: selectedGroupIds.contains(
+                        groups[firstUserIndex].groupId,
+                      ),
                       group: groups[firstUserIndex],
                       onChanged: updateSelectedGroupIds,
                     ),
@@ -85,8 +88,9 @@ class BestFriendsSelector extends StatelessWidget {
                     Expanded(
                       child: UserCheckbox(
                         key: ValueKey(groups[secondUserIndex]),
-                        isChecked: selectedGroupIds
-                            .contains(groups[secondUserIndex].groupId),
+                        isChecked: selectedGroupIds.contains(
+                          groups[secondUserIndex].groupId,
+                        ),
                         group: groups[secondUserIndex],
                         onChanged: updateSelectedGroupIds,
                       ),

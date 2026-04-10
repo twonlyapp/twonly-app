@@ -46,8 +46,9 @@ Future<bool> processSignalUserData(Response_UserData userData) async {
 
   final tempIdentityKey = IdentityKey(
     Curve.decodePoint(
-      DjbECPublicKey(Uint8List.fromList(userData.publicIdentityKey))
-          .serialize(),
+      DjbECPublicKey(
+        Uint8List.fromList(userData.publicIdentityKey),
+      ).serialize(),
       1,
     ),
   );

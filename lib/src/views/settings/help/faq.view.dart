@@ -34,8 +34,9 @@ class _FaqViewState extends State<FaqView> {
 
       if (response.statusCode == 200) {
         setState(() {
-          _faqData = json.decode(utf8.decode(response.bodyBytes))
-              as Map<String, dynamic>?;
+          _faqData =
+              json.decode(utf8.decode(response.bodyBytes))
+                  as Map<String, dynamic>?;
           noInternet = false;
         });
       } else {
@@ -87,12 +88,14 @@ class _FaqViewState extends State<FaqView> {
             child: ExpansionTile(
               title: Text(categoryData['meta']['title'] as String),
               subtitle: Text(categoryData['meta']['desc'] as String),
-              children: categoryData['questions'].map<Widget>((question) {
-                return ListTile(
-                  title: Text(question['title'] as String),
-                  onTap: () => _launchURL(question['path'] as String),
-                );
-              }).toList() as List<Widget>,
+              children:
+                  categoryData['questions'].map<Widget>((question) {
+                        return ListTile(
+                          title: Text(question['title'] as String),
+                          onTap: () => _launchURL(question['path'] as String),
+                        );
+                      }).toList()
+                      as List<Widget>,
             ),
           );
         },
