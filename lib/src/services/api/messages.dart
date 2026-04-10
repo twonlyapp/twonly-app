@@ -304,7 +304,9 @@ Future<void> sendCipherTextToGroup(
 }) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
-  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
+  if (!onlySendIfNoReceiptsAreOpen) {
+    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
+  }
 
   encryptedContent.groupId = groupId;
 
