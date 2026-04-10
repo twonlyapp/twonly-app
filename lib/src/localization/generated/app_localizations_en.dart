@@ -1742,4 +1742,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get unlockTwonlyDesc =>
       'Use your phone\'s unlock settings to unlock twonly';
+
+  @override
+  String get settingsTypingIndication => 'Typing Indicators';
+
+  @override
+  String get settingsTypingIndicationSubtitle =>
+      'When the typing indicator is turned off, you can\'t see when others are typing a message.';
 }

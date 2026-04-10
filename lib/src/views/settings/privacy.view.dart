@@ -32,6 +32,14 @@ class _PrivacyViewState extends State<PrivacyView> {
     setState(() {});
   }
 
+  Future<void> toggleTypingIndicators() async {
+    await updateUserdata((u) {
+      u.typingIndicators = !u.typingIndicators;
+      return u;
+    });
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,6 +67,24 @@ class _PrivacyViewState extends State<PrivacyView> {
             onTap: () => context.push(Routes.settingsPrivacyBlockUsers),
           ),
           ListTile(
+            title: Text(context.lang.contactVerifyNumberTitle),
+            onTap: () async {
+              await context.push(Routes.settingsPublicProfile);
+              setState(() {});
+            },
+          ),
+          const Divider(),
+          ListTile(
+            title: Text(context.lang.settingsTypingIndication),
+            subtitle: Text(context.lang.settingsTypingIndicationSubtitle),
+            onTap: toggleTypingIndicators,
+            trailing: Switch(
+              value: gUser.typingIndicators,
+              onChanged: (a) => toggleTypingIndicators(),
+            ),
+          ),
+          const Divider(),
+          ListTile(
             title: Text(context.lang.settingsScreenLock),
             subtitle: Text(context.lang.settingsScreenLockSubtitle),
             onTap: toggleAuthRequirementOnStartup,
@@ -66,13 +92,6 @@ class _PrivacyViewState extends State<PrivacyView> {
               value: gUser.screenLockEnabled,
               onChanged: (a) => toggleAuthRequirementOnStartup(),
             ),
-          ),
-          ListTile(
-            title: Text(context.lang.contactVerifyNumberTitle),
-            onTap: () async {
-              await context.push(Routes.settingsPublicProfile);
-              setState(() {});
-            },
           ),
         ],
       ),

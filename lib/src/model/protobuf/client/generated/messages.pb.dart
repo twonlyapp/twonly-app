@@ -1692,6 +1692,79 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   void clearForceUpdate() => $_clearField(4);
 }
 
+class EncryptedContent_TypingIndicator extends $pb.GeneratedMessage {
+  factory EncryptedContent_TypingIndicator({
+    $core.bool? isTyping,
+    $fixnum.Int64? createdAt,
+  }) {
+    final result = create();
+    if (isTyping != null) result.isTyping = isTyping;
+    if (createdAt != null) result.createdAt = createdAt;
+    return result;
+  }
+
+  EncryptedContent_TypingIndicator._();
+
+  factory EncryptedContent_TypingIndicator.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_TypingIndicator.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.TypingIndicator',
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'isTyping')
+    ..aInt64(2, _omitFieldNames ? '' : 'createdAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_TypingIndicator clone() =>
+      EncryptedContent_TypingIndicator()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_TypingIndicator copyWith(
+          void Function(EncryptedContent_TypingIndicator) updates) =>
+      super.copyWith(
+              (message) => updates(message as EncryptedContent_TypingIndicator))
+          as EncryptedContent_TypingIndicator;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_TypingIndicator create() =>
+      EncryptedContent_TypingIndicator._();
+  @$core.override
+  EncryptedContent_TypingIndicator createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_TypingIndicator> createRepeated() =>
+      $pb.PbList<EncryptedContent_TypingIndicator>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_TypingIndicator getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedContent_TypingIndicator>(
+          create);
+  static EncryptedContent_TypingIndicator? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get isTyping => $_getBF(0);
+  @$pb.TagNumber(1)
+  set isTyping($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIsTyping() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIsTyping() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get createdAt => $_getI64(1);
+  @$pb.TagNumber(2)
+  set createdAt($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCreatedAt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCreatedAt() => $_clearField(2);
+}
+
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
@@ -1712,6 +1785,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_ResendGroupPublicKey? resendGroupPublicKey,
     EncryptedContent_ErrorMessages? errorMessages,
     EncryptedContent_AdditionalDataMessage? additionalDataMessage,
+    EncryptedContent_TypingIndicator? typingIndicator,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1735,6 +1809,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (errorMessages != null) result.errorMessages = errorMessages;
     if (additionalDataMessage != null)
       result.additionalDataMessage = additionalDataMessage;
+    if (typingIndicator != null) result.typingIndicator = typingIndicator;
     return result;
   }
 
@@ -1801,6 +1876,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_AdditionalDataMessage>(
         19, _omitFieldNames ? '' : 'additionalDataMessage',
         subBuilder: EncryptedContent_AdditionalDataMessage.create)
+    ..aOM<EncryptedContent_TypingIndicator>(
+        20, _omitFieldNames ? '' : 'typingIndicator',
+        subBuilder: EncryptedContent_TypingIndicator.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2025,6 +2103,18 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(19)
   EncryptedContent_AdditionalDataMessage ensureAdditionalDataMessage() =>
       $_ensure(17);
+
+  @$pb.TagNumber(20)
+  EncryptedContent_TypingIndicator get typingIndicator => $_getN(18);
+  @$pb.TagNumber(20)
+  set typingIndicator(EncryptedContent_TypingIndicator value) =>
+      $_setField(20, value);
+  @$pb.TagNumber(20)
+  $core.bool hasTypingIndicator() => $_has(18);
+  @$pb.TagNumber(20)
+  void clearTypingIndicator() => $_clearField(20);
+  @$pb.TagNumber(20)
+  EncryptedContent_TypingIndicator ensureTypingIndicator() => $_ensure(18);
 }
 
 const $core.bool _omitFieldNames =

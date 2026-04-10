@@ -63,8 +63,9 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
   }
 
   Future<void> initAsync() async {
-    subscriptionContacts =
-        twonlyDB.contactsDao.watchAllContacts().listen((updated) {
+    subscriptionContacts = twonlyDB.contactsDao.watchAllContacts().listen((
+      updated,
+    ) {
       for (final contact in updated) {
         contacts[contact.userId] = contact;
       }
@@ -73,8 +74,9 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
       }
       setState(() {});
     });
-    subscriptionRetransmission =
-        twonlyDB.receiptsDao.watchAll().listen((updated) {
+    subscriptionRetransmission = twonlyDB.receiptsDao.watchAll().listen((
+      updated,
+    ) {
       retransmissions = updated;
       if (contacts.isNotEmpty) {
         messages = RetransMsg.fromRaw(retransmissions, contacts);
@@ -93,6 +95,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
         children: [
           Expanded(
             child: ListView(
+              reverse: true,
               children: messages
                   .map(
                     (retrans) => ListTile(
@@ -118,8 +121,9 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                                 retrans.receipt.contactId,
                                 retrans.receipt.messageId,
                                 pb.EncryptedContent.fromBuffer(
-                                  pb.Message.fromBuffer(retrans.receipt.message)
-                                      .encryptedContent,
+                                  pb.Message.fromBuffer(
+                                    retrans.receipt.message,
+                                  ).encryptedContent,
                                 ),
                               ),
                               builder: (d, a) {

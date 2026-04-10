@@ -3129,6 +3129,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use your phone\'s unlock settings to unlock twonly'**
   String get unlockTwonlyDesc;
+
+  /// No description provided for @settingsTypingIndication.
+  ///
+  /// In en, this message translates to:
+  /// **'Typing Indicators'**
+  String get settingsTypingIndication;
+
+  /// No description provided for @settingsTypingIndicationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
+  String get settingsTypingIndicationSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -300,6 +300,7 @@ Future<void> sendCipherTextToGroup(
   String groupId,
   pb.EncryptedContent encryptedContent, {
   String? messageId,
+  bool onlySendIfNoReceiptsAreOpen = false,
 }) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
@@ -313,6 +314,7 @@ Future<void> sendCipherTextToGroup(
       encryptedContent,
       messageId: messageId,
       blocking: false,
+      onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
     );
   }
 }
@@ -323,7 +325,17 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   bool onlyReturnEncryptedData = false,
   bool blocking = true,
   String? messageId,
+  bool onlySendIfNoReceiptsAreOpen = false,
 }) async {
+  if (onlySendIfNoReceiptsAreOpen) {
+    if (await twonlyDB.receiptsDao.getReceiptCountForContact(
+          contactId,
+        ) >
+        0) {
+      // this prevents that this message is send in case the receiver is not online
+      return null;
+    }
+  }
   encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
 
   final response = pb.Message()
@@ -351,6 +363,20 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     return tmp;
   }
   return null;
+}
+
+Future<void> sendTypingIndication(String groupId, bool isTyping) async {
+  if (!gUser.typingIndicators) return;
+  await sendCipherTextToGroup(
+    groupId,
+    pb.EncryptedContent(
+      typingIndicator: pb.EncryptedContent_TypingIndicator(
+        isTyping: isTyping,
+        createdAt: Int64(clock.now().millisecondsSinceEpoch),
+      ),
+    ),
+    onlySendIfNoReceiptsAreOpen: true,
+  );
 }
 
 Future<void> notifyContactAboutOpeningMessage(

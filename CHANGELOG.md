@@ -2,6 +2,7 @@
 
 ## 0.1.4
 
+- New: Typing and chat open indicator
 - New: Screen lock for twonly (Can be enabled in the settings.)
 - Fix: Several minor issues with the user interface
 

@@ -129,6 +129,16 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     return select(receipts).watch();
   }
 
+  Future<int> getReceiptCountForContact(int contactId) {
+    final countExp = countAll();
+
+    final query = selectOnly(receipts)
+      ..addColumns([countExp])
+      ..where(receipts.contactId.equals(contactId));
+
+    return query.map((row) => row.read(countExp)!).getSingle();
+  }
+
   Future<void> updateReceipt(
     String receiptId,
     ReceiptsCompanion updates,

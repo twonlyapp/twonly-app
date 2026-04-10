@@ -27,7 +27,7 @@ BubbleInfo getBubbleInfo(
   final info = BubbleInfo()
     ..text = message.content ?? ''
     ..textColor = Colors.white
-    ..color = getMessageColor(message)
+    ..color = getMessageColor(message.senderId != null)
     ..displayTime = !combineTextMessageWithNext(message, nextMessage)
     ..displayUserName = '';
 
@@ -35,12 +35,14 @@ BubbleInfo getBubbleInfo(
       userIdToContact != null &&
       userIdToContact[message.senderId] != null) {
     if (prevMessage == null) {
-      info.displayUserName =
-          getContactDisplayName(userIdToContact[message.senderId]!);
+      info.displayUserName = getContactDisplayName(
+        userIdToContact[message.senderId]!,
+      );
     } else {
       if (!combineTextMessageWithNext(prevMessage, message)) {
-        info.displayUserName =
-            getContactDisplayName(userIdToContact[message.senderId]!);
+        info.displayUserName = getContactDisplayName(
+          userIdToContact[message.senderId]!,
+        );
       }
     }
   }
@@ -50,7 +52,7 @@ BubbleInfo getBubbleInfo(
 
   info.expanded = false;
   if (message.quotesMessageId == null) {
-    info.color = getMessageColor(message);
+    info.color = getMessageColor(message.senderId != null);
   }
   if (message.isDeletedFromSender) {
     info
@@ -88,8 +90,9 @@ bool combineTextMessageWithNext(Message message, Message? nextMessage) {
       if (nextMessage.type == MessageType.text.name &&
           message.type == MessageType.text.name) {
         if (!EmojiAnimation.supported(nextMessage.content!)) {
-          final diff =
-              nextMessage.createdAt.difference(message.createdAt).inMinutes;
+          final diff = nextMessage.createdAt
+              .difference(message.createdAt)
+              .inMinutes;
           if (diff <= 1) {
             return true;
           }

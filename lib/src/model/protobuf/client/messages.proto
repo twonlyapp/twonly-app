@@ -53,6 +53,7 @@ message EncryptedContent {
     optional ResendGroupPublicKey resendGroupPublicKey = 17;
     optional ErrorMessages error_messages = 18;
     optional AdditionalDataMessage additional_data_message = 19;
+    optional TypingIndicator typing_indicator = 20;
 
     message ErrorMessages {
         enum Type {
@@ -192,6 +193,11 @@ message EncryptedContent {
         int64 lastFlameCounterChange = 2;
         bool bestFriend = 3;
         bool forceUpdate = 4;
+    }
+
+    message TypingIndicator {
+        bool is_typing = 1;
+        int64 created_at = 2;
     }
 
 }

@@ -14,6 +14,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/themes/colors.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_group_action.dart';
@@ -21,11 +22,11 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_date_chip.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 
-/// Displays detailed information about a SampleItem.
 class ChatMessagesView extends StatefulWidget {
   const ChatMessagesView(this.groupId, {super.key});
 
@@ -57,6 +58,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   int? focusedScrollItem;
   bool _receiverDeletedAccount = false;
 
+  Timer? _nextTypingIndicator;
+
   @override
   void initState() {
     super.initState();
@@ -70,6 +73,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     messageSub.cancel();
     contactSub?.cancel();
     groupActionsSub?.cancel();
+    _nextTypingIndicator?.cancel();
     super.dispose();
   }
 
@@ -116,6 +120,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     );
     if (groupContacts.length == 1) {
       _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    }
+
+    if (gUser.typingIndicators) {
+      unawaited(sendTypingIndication(widget.groupId, false));
+      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 8), (
+        _,
+      ) async {
+        await sendTypingIndication(widget.groupId, false);
+      });
     }
   }
 
@@ -270,9 +283,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               Expanded(
                 child: ScrollablePositionedList.builder(
                   reverse: true,
-                  itemCount: messages.length + 1,
+                  itemCount: messages.length + 1 + 1,
                   itemScrollController: itemScrollController,
                   itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return gUser.typingIndicators
+                          ? TypingIndicator(group: group)
+                          : Container();
+                    }
+                    i -= 1;
                     if (i == messages.length) {
                       return const Padding(
                         padding: EdgeInsetsGeometry.only(top: 10),
@@ -344,6 +363,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     ],
                   ),
                 ),
+
               if (!group.leftGroup && !_receiverDeletedAccount)
                 MessageInput(
                   group: group,
@@ -365,10 +385,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 }
 
-Color getMessageColor(Message message) {
-  return (message.senderId == null)
-      ? const Color.fromARGB(255, 58, 136, 102)
-      : const Color.fromARGB(233, 68, 137, 255);
+Color getMessageColor(bool isOther) {
+  return isOther ? DefaultColors.messageSelf : DefaultColors.messageOther;
 }
 
 class ChatItem {

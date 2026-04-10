@@ -30,8 +30,9 @@ class Groups extends Table {
   BoolColumn get alsoBestFriend =>
       boolean().withDefault(const Constant(false))();
 
-  IntColumn get deleteMessagesAfterMilliseconds => integer()
-      .withDefault(const Constant(defaultDeleteMessagesAfterMilliseconds))();
+  IntColumn get deleteMessagesAfterMilliseconds => integer().withDefault(
+    const Constant(defaultDeleteMessagesAfterMilliseconds),
+  )();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
@@ -62,6 +63,9 @@ class GroupMembers extends Table {
   IntColumn get contactId => integer().references(Contacts, #userId)();
   TextColumn get memberState => textEnum<MemberState>().nullable()();
   BlobColumn get groupPublicKey => blob().nullable()();
+
+  DateTimeColumn get lastChatOpened => dateTime().nullable()();
+  DateTimeColumn get lastTypeIndicator => dateTime().nullable()();
 
   DateTimeColumn get lastMessage => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

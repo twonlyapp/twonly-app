@@ -23,7 +23,7 @@ class _UnlockTwonlyViewState extends State<UnlockTwonlyView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // _unlockTwonly();
+      _unlockTwonly();
     });
   }
 

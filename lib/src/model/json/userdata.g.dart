@@ -50,6 +50,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['storeMediaFilesInGallery'] as bool? ?? false
       ..autoStoreAllSendUnlimitedMediaFiles =
           json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
+      ..typingIndicators = json['typingIndicators'] as bool? ?? true
       ..lastPlanBallance = json['lastPlanBallance'] as String?
       ..additionalUserInvites = json['additionalUserInvites'] as String?
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
@@ -117,6 +118,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
   'autoStoreAllSendUnlimitedMediaFiles':
       instance.autoStoreAllSendUnlimitedMediaFiles,
+  'typingIndicators': instance.typingIndicators,
   'lastPlanBallance': instance.lastPlanBallance,
   'additionalUserInvites': instance.additionalUserInvites,
   'tutorialDisplayed': instance.tutorialDisplayed,

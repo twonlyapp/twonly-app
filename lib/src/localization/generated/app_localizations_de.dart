@@ -1754,4 +1754,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get unlockTwonlyDesc =>
       'Entsperre twonly über die Sperreinstellungen deines Handys';
+
+  @override
+  String get settingsTypingIndication => 'Tipp-Indikatoren';
+
+  @override
+  String get settingsTypingIndicationSubtitle =>
+      'Bei deaktiviertem Tipp-Indikatoren kannst du nicht sehen, wenn andere gerade eine Nachricht tippen.';
 }
