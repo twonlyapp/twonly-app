@@ -31,7 +31,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
       ..videoStabilizationEnabled =
-          json['videoStabilizationEnabled'] as bool? ?? false
+          json['videoStabilizationEnabled'] as bool? ?? true
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
       ..showShowImagePreviewWhenSending =
           json['showShowImagePreviewWhenSending'] as bool? ?? false
@@ -62,6 +62,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
+      ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -123,6 +124,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
+  'screenLockEnabled': instance.screenLockEnabled,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,

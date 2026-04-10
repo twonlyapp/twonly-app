@@ -31,7 +31,7 @@ class _SlidingResponseWidgetState extends State<MessageReplyDrag> {
       _animatedScale = 1.3;
     });
 
-    await Future.delayed(Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 50));
 
     if (mounted) {
       setState(() {

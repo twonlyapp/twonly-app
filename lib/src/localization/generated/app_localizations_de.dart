@@ -1729,4 +1729,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get profileYourQrCode => 'Dein QR-Code';
+
+  @override
+  String get settingsScreenLock => 'Bildschirmsperre';
+
+  @override
+  String get settingsScreenLockSubtitle =>
+      'Um twonly zu öffnen, wird die Entsperrfunktion deines Smartphones verwenden.';
+
+  @override
+  String get settingsScreenLockAuthMessageEnable =>
+      'Bildschirmsperre von twonly verwenden';
+
+  @override
+  String get settingsScreenLockAuthMessageDisable =>
+      'Bildschirmsperre von twonly deaktivieren.';
+
+  @override
+  String get unlockTwonly => 'twonly entsperren';
+
+  @override
+  String get unlockTwonlyTryAgain => 'Erneut versuchen';
+
+  @override
+  String get unlockTwonlyDesc =>
+      'Entsperre twonly über die Sperreinstellungen deines Handys';
 }

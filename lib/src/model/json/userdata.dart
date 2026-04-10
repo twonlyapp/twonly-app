@@ -87,6 +87,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool allowErrorTrackingViaSentry = false;
 
+  @JsonKey(defaultValue: false)
+  bool screenLockEnabled = false;
+
   //  -- Custom DATA --
 
   @JsonKey(defaultValue: 100_000)

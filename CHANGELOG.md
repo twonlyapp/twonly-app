@@ -2,6 +2,7 @@
 
 ## 0.1.4
 
+- New: Screen lock for twonly (Can be enabled in the settings.)
 - Fix: Several minor issues with the user interface
 
 ## 0.1.3
