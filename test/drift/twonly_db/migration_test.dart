@@ -120,52 +120,92 @@ void main() {
         batch.insertAll(oldDb.receipts, oldReceiptsData);
         batch.insertAll(oldDb.receivedReceipts, oldReceivedReceiptsData);
         batch.insertAll(
-            oldDb.signalIdentityKeyStores, oldSignalIdentityKeyStoresData);
+          oldDb.signalIdentityKeyStores,
+          oldSignalIdentityKeyStoresData,
+        );
         batch.insertAll(oldDb.signalPreKeyStores, oldSignalPreKeyStoresData);
         batch.insertAll(
-            oldDb.signalSenderKeyStores, oldSignalSenderKeyStoresData);
+          oldDb.signalSenderKeyStores,
+          oldSignalSenderKeyStoresData,
+        );
         batch.insertAll(oldDb.signalSessionStores, oldSignalSessionStoresData);
         batch.insertAll(
-            oldDb.signalContactPreKeys, oldSignalContactPreKeysData);
-        batch.insertAll(oldDb.signalContactSignedPreKeys,
-            oldSignalContactSignedPreKeysData);
+          oldDb.signalContactPreKeys,
+          oldSignalContactPreKeysData,
+        );
+        batch.insertAll(
+          oldDb.signalContactSignedPreKeys,
+          oldSignalContactSignedPreKeysData,
+        );
         batch.insertAll(oldDb.messageActions, oldMessageActionsData);
         batch.insertAll(oldDb.groupHistories, oldGroupHistoriesData);
       },
       validateItems: (newDb) async {
         expect(
-            expectedNewContactsData, await newDb.select(newDb.contacts).get());
+          expectedNewContactsData,
+          await newDb.select(newDb.contacts).get(),
+        );
         expect(expectedNewGroupsData, await newDb.select(newDb.groups).get());
-        expect(expectedNewMediaFilesData,
-            await newDb.select(newDb.mediaFiles).get());
         expect(
-            expectedNewMessagesData, await newDb.select(newDb.messages).get());
-        expect(expectedNewMessageHistoriesData,
-            await newDb.select(newDb.messageHistories).get());
-        expect(expectedNewReactionsData,
-            await newDb.select(newDb.reactions).get());
-        expect(expectedNewGroupMembersData,
-            await newDb.select(newDb.groupMembers).get());
+          expectedNewMediaFilesData,
+          await newDb.select(newDb.mediaFiles).get(),
+        );
         expect(
-            expectedNewReceiptsData, await newDb.select(newDb.receipts).get());
-        expect(expectedNewReceivedReceiptsData,
-            await newDb.select(newDb.receivedReceipts).get());
-        expect(expectedNewSignalIdentityKeyStoresData,
-            await newDb.select(newDb.signalIdentityKeyStores).get());
-        expect(expectedNewSignalPreKeyStoresData,
-            await newDb.select(newDb.signalPreKeyStores).get());
-        expect(expectedNewSignalSenderKeyStoresData,
-            await newDb.select(newDb.signalSenderKeyStores).get());
-        expect(expectedNewSignalSessionStoresData,
-            await newDb.select(newDb.signalSessionStores).get());
-        expect(expectedNewSignalContactPreKeysData,
-            await newDb.select(newDb.signalContactPreKeys).get());
-        expect(expectedNewSignalContactSignedPreKeysData,
-            await newDb.select(newDb.signalContactSignedPreKeys).get());
-        expect(expectedNewMessageActionsData,
-            await newDb.select(newDb.messageActions).get());
-        expect(expectedNewGroupHistoriesData,
-            await newDb.select(newDb.groupHistories).get());
+          expectedNewMessagesData,
+          await newDb.select(newDb.messages).get(),
+        );
+        expect(
+          expectedNewMessageHistoriesData,
+          await newDb.select(newDb.messageHistories).get(),
+        );
+        expect(
+          expectedNewReactionsData,
+          await newDb.select(newDb.reactions).get(),
+        );
+        expect(
+          expectedNewGroupMembersData,
+          await newDb.select(newDb.groupMembers).get(),
+        );
+        expect(
+          expectedNewReceiptsData,
+          await newDb.select(newDb.receipts).get(),
+        );
+        expect(
+          expectedNewReceivedReceiptsData,
+          await newDb.select(newDb.receivedReceipts).get(),
+        );
+        expect(
+          expectedNewSignalIdentityKeyStoresData,
+          await newDb.select(newDb.signalIdentityKeyStores).get(),
+        );
+        expect(
+          expectedNewSignalPreKeyStoresData,
+          await newDb.select(newDb.signalPreKeyStores).get(),
+        );
+        expect(
+          expectedNewSignalSenderKeyStoresData,
+          await newDb.select(newDb.signalSenderKeyStores).get(),
+        );
+        expect(
+          expectedNewSignalSessionStoresData,
+          await newDb.select(newDb.signalSessionStores).get(),
+        );
+        expect(
+          expectedNewSignalContactPreKeysData,
+          await newDb.select(newDb.signalContactPreKeys).get(),
+        );
+        expect(
+          expectedNewSignalContactSignedPreKeysData,
+          await newDb.select(newDb.signalContactSignedPreKeys).get(),
+        );
+        expect(
+          expectedNewMessageActionsData,
+          await newDb.select(newDb.messageActions).get(),
+        );
+        expect(
+          expectedNewGroupHistoriesData,
+          await newDb.select(newDb.groupHistories).get(),
+        );
       },
     );
   });

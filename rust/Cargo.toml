@@ -1,0 +1,25 @@
+[package]
+name = "rust_lib_twonly"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.12.0"
+thiserror = "2.0.18"
+sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
+    "runtime-tokio",
+    "sqlite",
+    "migrate",
+    "macros",
+    "chrono",
+    "derive",
+    "json",
+] }
+tokio = { version = "1.44", features = ["full"] }
+tracing = "0.1.44"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

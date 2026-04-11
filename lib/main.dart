@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/core/frb_generated.dart';
+import 'package:twonly/core/twonly.dart' as core;
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
@@ -29,9 +31,17 @@ import 'package:twonly/src/utils/storage.dart';
 void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
 
+  await RustLib.init();
+
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
   globalApplicationSupportDirectory =
       (await getApplicationSupportDirectory()).path;
+
+  await core.initializeTwonly(
+    config: core.TwonlyConfig(
+      databasePath: '$globalApplicationSupportDirectory/twonly.sqlite',
+    ),
+  );
 
   await initFCMService();
 

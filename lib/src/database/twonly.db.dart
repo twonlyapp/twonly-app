@@ -67,9 +67,14 @@ class TwonlyDB extends _$TwonlyDB {
   static QueryExecutor _openConnection() {
     return driftDatabase(
       name: 'twonly',
-      native: const DriftNativeOptions(
+      native: DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
         shareAcrossIsolates: true,
+        setup: (rawDb) {
+          rawDb
+            ..execute('PRAGMA journal_mode=WAL;')
+            ..execute('PRAGMA busy_timeout=5000;');
+        },
       ),
     );
   }
