@@ -20,8 +20,9 @@ Future<void> handleAdditionalDataMessage(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       type: Value(message.type),
-      additionalMessageData:
-          Value(Uint8List.fromList(message.additionalMessageData)),
+      additionalMessageData: Value(
+        Uint8List.fromList(message.additionalMessageData),
+      ),
       createdAt: Value(fromTimestamp(message.timestamp)),
       ackByServer: Value(clock.now()),
     ),

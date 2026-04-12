@@ -43,7 +43,8 @@ class _TextViewState extends State<TextLayer> {
       if (parentBox != null) {
         final parentTopGlobal = parentBox.localToGlobal(Offset.zero).dy;
         final screenHeight = mq.size.height;
-        localBottom = (screenHeight - globalDesiredBottom) -
+        localBottom =
+            (screenHeight - globalDesiredBottom) -
             parentTopGlobal -
             (parentBox.size.height);
       }
@@ -87,7 +88,8 @@ class _TextViewState extends State<TextLayer> {
   Widget build(BuildContext context) {
     if (widget.layerData.isDeleted) return Container();
 
-    final bottom = MediaQuery.of(context).viewInsets.bottom +
+    final bottom =
+        MediaQuery.of(context).viewInsets.bottom +
         MediaQuery.of(context).viewPadding.bottom;
 
     // On Android it is possible to close the keyboard without `onEditingComplete` is triggered.
@@ -181,7 +183,8 @@ class _TextViewState extends State<TextLayer> {
               }
               setState(() {});
             },
-            onTap: (context
+            onTap:
+                (context
                     .watch<ImageEditorProvider>()
                     .someTextViewIsAlreadyEditing)
                 ? null

@@ -85,11 +85,11 @@ const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
 Random _rnd = Random();
 
 String getRandomString(int length) => String.fromCharCodes(
-      Iterable.generate(
-        length,
-        (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length)),
-      ),
-    );
+  Iterable.generate(
+    length,
+    (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length)),
+  ),
+);
 
 String errorCodeToText(BuildContext context, ErrorCode code) {
   // ignore: exhaustive_cases
@@ -224,13 +224,17 @@ InputDecoration inputTextMessageDeco(BuildContext context) {
     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.primary,
+        width: 2,
+      ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
@@ -253,11 +257,13 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
   final now = clock.now();
   final difference = now.difference(dateTime);
 
-  final date = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
-      .format(dateTime);
+  final date = DateFormat.yMd(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(dateTime);
 
-  final time = DateFormat.Hm(Localizations.localeOf(context).toLanguageTag())
-      .format(dateTime);
+  final time = DateFormat.Hm(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(dateTime);
 
   if (difference.inDays == 0) {
     return time;
@@ -289,11 +295,11 @@ String uint8ListToHex(List<int> bytes) {
 }
 
 Uint8List hexToUint8List(String hex) => Uint8List.fromList(
-      List<int>.generate(
-        hex.length ~/ 2,
-        (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
-      ),
-    );
+  List<int>.generate(
+    hex.length ~/ 2,
+    (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
+  ),
+);
 
 Color getMessageColorFromType(
   Message message,
@@ -359,18 +365,21 @@ String friendlyDateTime(
   Locale? locale,
 }) {
   // Build date part
-  final datePart =
-      DateFormat.yMd(Localizations.localeOf(context).toString()).format(dt);
+  final datePart = DateFormat.yMd(
+    Localizations.localeOf(context).toString(),
+  ).format(dt);
 
   final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
 
   var timePart = '';
   if (use24Hour) {
-    timePart =
-        DateFormat.jm(Localizations.localeOf(context).toString()).format(dt);
+    timePart = DateFormat.jm(
+      Localizations.localeOf(context).toString(),
+    ).format(dt);
   } else {
-    timePart =
-        DateFormat.Hm(Localizations.localeOf(context).toString()).format(dt);
+    timePart = DateFormat.Hm(
+      Localizations.localeOf(context).toString(),
+    ).format(dt);
   }
 
   return '$timePart $datePart';

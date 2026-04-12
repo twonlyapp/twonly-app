@@ -24,18 +24,22 @@ class _LastMessageTimeState extends State<LastMessageTime> {
   void initState() {
     super.initState();
     // Change the color every 200 milliseconds
-    updateTime =
-        Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+    updateTime = Timer.periodic(const Duration(milliseconds: 500), (
+      timer,
+    ) async {
       if (widget.message != null) {
-        final lastAction = await twonlyDB.messagesDao
-            .getLastMessageAction(widget.message!.messageId);
+        final lastAction = await twonlyDB.messagesDao.getLastMessageAction(
+          widget.message!.messageId,
+        );
         lastMessageInSeconds = clock
             .now()
             .difference(lastAction?.actionAt ?? widget.message!.createdAt)
             .inSeconds;
       } else if (widget.dateTime != null) {
-        lastMessageInSeconds =
-            clock.now().difference(widget.dateTime!).inSeconds;
+        lastMessageInSeconds = clock
+            .now()
+            .difference(widget.dateTime!)
+            .inSeconds;
       }
       if (mounted) {
         setState(() {

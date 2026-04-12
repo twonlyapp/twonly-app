@@ -102,35 +102,37 @@ class _BackupViewState extends State<BackupView> {
                               context.lang.backupServer,
                               (backupServer.serverUrl.contains('@'))
                                   ? backupServer.serverUrl.split('@')[1]
-                                  : backupServer.serverUrl
-                                      .replaceAll('https://', '')
+                                  : backupServer.serverUrl.replaceAll(
+                                      'https://',
+                                      '',
+                                    ),
                             ),
                             (
                               context.lang.backupMaxBackupSize,
-                              formatBytes(backupServer.maxBackupBytes)
+                              formatBytes(backupServer.maxBackupBytes),
                             ),
                             (
                               context.lang.backupStorageRetention,
-                              '${backupServer.retentionDays} Days'
+                              '${backupServer.retentionDays} Days',
                             ),
                             (
                               context.lang.backupLastBackupDate,
                               formatDateTime(
                                 context,
                                 gUser.twonlySafeBackup!.lastBackupDone,
-                              )
+                              ),
                             ),
                             (
                               context.lang.backupLastBackupSize,
                               formatBytes(
                                 gUser.twonlySafeBackup!.lastBackupSize,
-                              )
+                              ),
                             ),
                             (
                               context.lang.backupLastBackupResult,
                               backupStatus(
                                 gUser.twonlySafeBackup!.backupUploadState,
-                              )
+                              ),
                             ),
                           ].map((pair) {
                             return TableRow(
@@ -185,8 +187,9 @@ class _BackupViewState extends State<BackupView> {
         unselectedIconTheme: IconThemeData(
           color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
         ),
-        selectedIconTheme:
-            IconThemeData(color: Theme.of(context).colorScheme.inverseSurface),
+        selectedIconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.inverseSurface,
+        ),
         items: [
           const BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.vault, size: 17),

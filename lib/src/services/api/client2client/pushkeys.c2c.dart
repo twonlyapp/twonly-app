@@ -14,8 +14,9 @@ Future<void> handlePushKey(
   switch (pushKeys.type) {
     case EncryptedContent_PushKeys_Type.REQUEST:
       Log.info('Got a pushkey request from $contactId');
-      if (lastPushKeyRequest
-          .isBefore(clock.now().subtract(const Duration(seconds: 60)))) {
+      if (lastPushKeyRequest.isBefore(
+        clock.now().subtract(const Duration(seconds: 60)),
+      )) {
         lastPushKeyRequest = clock.now();
         unawaited(setupNotificationWithUsers(forceContact: contactId));
       }

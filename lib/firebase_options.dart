@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'twonly-ff605.firebasestorage.app',
     iosBundleId: 'eu.twonly',
   );
-
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5
+
+- Fix: Reupload of media files was not working properly
+- Fix: Chats were sometimes ordered wrongly  
+- Fix: Typing indicator was not always shown
+- Fix: Multiple smaller issues
+
 ## 0.1.4
 
 - New: Typing and chat open indicator

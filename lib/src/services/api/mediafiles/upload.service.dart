@@ -26,6 +26,148 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
+final lockRetransmission = Mutex();
+
+Future<void> reuploadMediaFiles() async {
+  return lockRetransmission.protect(() async {
+    final receipts = await twonlyDB.receiptsDao
+        .getReceiptsForMediaRetransmissions();
+
+    if (receipts.isEmpty) return;
+
+    Log.info('Reuploading ${receipts.length} media files to the server.');
+
+    final contacts = <int, Contact>{};
+
+    for (final receipt in receipts) {
+      if (receipt.retryCount > 1 && receipt.lastRetry != null) {
+        final twentyFourHoursAgo = DateTime.now().subtract(
+          const Duration(hours: 24),
+        );
+        if (receipt.lastRetry!.isAfter(twentyFourHoursAgo)) {
+          Log.info(
+            'Ignoring ${receipt.receiptId} as it was retried in the last 24h',
+          );
+          continue;
+        }
+      }
+      var messageId = receipt.messageId;
+      if (receipt.messageId == null) {
+        Log.info('Message not in receipt. Loading it from the content.');
+        try {
+          final content = EncryptedContent.fromBuffer(receipt.message);
+          if (content.hasMedia()) {
+            messageId = content.media.senderMessageId;
+            await twonlyDB.receiptsDao.updateReceipt(
+              receipt.receiptId,
+              ReceiptsCompanion(
+                messageId: Value(messageId),
+              ),
+            );
+          }
+        } catch (e) {
+          Log.error(e);
+        }
+      }
+      if (messageId == null) {
+        Log.error('MessageId is empty for media file receipts');
+        continue;
+      }
+      if (receipt.markForRetryAfterAccepted != null) {
+        if (!contacts.containsKey(receipt.contactId)) {
+          final contact = await twonlyDB.contactsDao
+              .getContactByUserId(receipt.contactId)
+              .getSingleOrNull();
+          if (contact == null) {
+            Log.error(
+              'Contact does not exists, but has a record in receipts, this should not be possible, because of the DELETE CASCADE relation.',
+            );
+            continue;
+          }
+          contacts[receipt.contactId] = contact;
+        }
+        if (!(contacts[receipt.contactId]?.accepted ?? true)) {
+          Log.warn(
+            'Could not send message as contact has still not yet accepted.',
+          );
+          continue;
+        }
+      }
+
+      if (receipt.ackByServerAt == null) {
+        // media file must be reuploaded again in case the media files
+        // was deleted by the server, the receiver will request a new media reupload
+
+        final message = await twonlyDB.messagesDao
+            .getMessageById(messageId)
+            .getSingleOrNull();
+        if (message == null || message.mediaId == null) {
+          Log.error(
+            'Message not found for reupload of the receipt (${message == null} - ${message?.mediaId}).',
+          );
+          continue;
+        }
+
+        final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+          message.mediaId!,
+        );
+        if (mediaFile == null) {
+          Log.error(
+            'Mediafile not found for reupload of the receipt (${message.messageId} - ${message.mediaId}).',
+          );
+          continue;
+        }
+        await reuploadMediaFile(
+          receipt.contactId,
+          mediaFile,
+          message.messageId,
+        );
+      } else {
+        Log.info('Reuploading media file $messageId');
+        // the media file should be still on the server, so it should be enough
+        // to just resend the message containing the download token.
+        await tryToSendCompleteMessage(receipt: receipt);
+      }
+    }
+  });
+}
+
+Future<void> reuploadMediaFile(
+  int contactId,
+  MediaFile mediaFile,
+  String messageId,
+) async {
+  Log.info('Reuploading media file: ${mediaFile.mediaId}');
+
+  await twonlyDB.receiptsDao.updateReceiptByContactAndMessageId(
+    contactId,
+    messageId,
+    const ReceiptsCompanion(
+      markForRetry: Value(null),
+      markForRetryAfterAccepted: Value(null),
+    ),
+  );
+
+  final reuploadRequestedBy = (mediaFile.reuploadRequestedBy ?? [])
+    ..add(contactId);
+  await twonlyDB.mediaFilesDao.updateMedia(
+    mediaFile.mediaId,
+    MediaFilesCompanion(
+      uploadState: const Value(UploadState.preprocessing),
+      reuploadRequestedBy: Value(reuploadRequestedBy),
+    ),
+  );
+  final mediaFileUpdated = await MediaFileService.fromMediaId(
+    mediaFile.mediaId,
+  );
+  if (mediaFileUpdated != null) {
+    if (mediaFileUpdated.uploadRequestPath.existsSync()) {
+      mediaFileUpdated.uploadRequestPath.deleteSync();
+    }
+    unawaited(startBackgroundMediaUpload(mediaFileUpdated));
+  }
+}
+
 Future<void> finishStartedPreprocessing() async {
   final mediaFiles = await twonlyDB.mediaFilesDao
       .getAllMediaFilesPendingUpload();
@@ -62,7 +204,7 @@ Future<void> finishStartedPreprocessing() async {
 
 /// It can happen, that a media files is uploaded but not yet marked for been uploaded.
 /// For example because the background_downloader plugin has not yet reported the finished upload.
-/// In case the the message receipts or a reaction was received, mark the media file as been uploaded.
+/// In case the message receipts or a reaction was received, mark the media file as been uploaded.
 Future<void> handleMediaRelatedResponseFromReceiver(String messageId) async {
   final message = await twonlyDB.messagesDao
       .getMessageById(messageId)
@@ -100,6 +242,16 @@ Future<void> markUploadAsSuccessful(MediaFile media) async {
         message.messageId,
         clock.now(),
       );
+      await twonlyDB.receiptsDao.updateReceiptByContactAndMessageId(
+        contact.contactId,
+        message.messageId,
+        ReceiptsCompanion(
+          ackByServerAt: Value(clock.now()),
+          retryCount: const Value(1),
+          lastRetry: Value(clock.now()),
+          markForRetry: const Value(null),
+        ),
+      );
     }
   }
 }
@@ -122,7 +274,7 @@ Future<MediaFileService?> initializeMediaUpload(
     const MediaFilesCompanion(isDraftMedia: Value(false)),
   );
 
-  final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+  final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
     MediaFilesCompanion(
       uploadState: const Value(UploadState.initialized),
       displayLimitInMilliseconds: Value(displayLimitInMilliseconds),
@@ -313,7 +465,8 @@ Future<void> _createUploadRequest(MediaFileService media) async {
       }
 
       if (media.mediaFile.reuploadRequestedBy != null) {
-        type = EncryptedContent_Media_Type.REUPLOAD;
+        // not used any more... Receiver detects automatically if it is an reupload...
+        // type = EncryptedContent_Media_Type.REUPLOAD;
       }
 
       final notEncryptedContent = EncryptedContent(
@@ -340,6 +493,7 @@ Future<void> _createUploadRequest(MediaFileService media) async {
       final cipherText = await sendCipherText(
         groupMember.contactId,
         notEncryptedContent,
+        messageId: message.messageId,
         onlyReturnEncryptedData: true,
       );
 

@@ -112,7 +112,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
                   member.lastChatOpened!,
                 )
                 .inSeconds <=
-            8;
+            6;
   }
 
   @override

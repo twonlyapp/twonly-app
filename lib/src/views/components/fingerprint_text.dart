@@ -9,8 +9,10 @@ class FingerprintText extends StatelessWidget {
     var blockCount = 0;
 
     for (var i = 0; i < input.length; i += 4) {
-      final block =
-          input.substring(i, i + 4 > input.length ? input.length : i + 4);
+      final block = input.substring(
+        i,
+        i + 4 > input.length ? input.length : i + 4,
+      );
       formattedString.write(block);
       blockCount++;
 

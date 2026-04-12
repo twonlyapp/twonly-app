@@ -65,8 +65,9 @@ class _SelectChatDeletionTimeListTitleState
         height: 216,
         padding: const EdgeInsets.only(top: 6),
         // The Bottom margin is provided to align the popup above the system navigation bar.
-        margin:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         // Provide a background color for the popup.
         color: CupertinoColors.systemBackground.resolveFrom(context),
         // Use a SafeArea widget to avoid system overlaps.
@@ -128,29 +129,28 @@ class _SelectChatDeletionTimeListTitleState
       onTap: widget.disabled
           ? null
           : () => _showDialog(
-                CupertinoPicker(
-                  magnification: 1.22,
-                  squeeze: 1.2,
-                  useMagnifier: true,
-                  itemExtent: 32,
-                  // This sets the initial item.
-                  scrollController: FixedExtentScrollController(
-                    initialItem: _selectedDeletionTime,
-                  ),
-                  // This is called when selected item is changed.
-                  onSelectedItemChanged: (selectedItem) {
-                    setState(() {
-                      _selectedDeletionTime = selectedItem;
-                    });
-                  },
-                  children:
-                      List<Widget>.generate(_getOptions().length, (index) {
-                    return Center(
-                      child: Text(_getOptions()[index].$2),
-                    );
-                  }),
+              CupertinoPicker(
+                magnification: 1.22,
+                squeeze: 1.2,
+                useMagnifier: true,
+                itemExtent: 32,
+                // This sets the initial item.
+                scrollController: FixedExtentScrollController(
+                  initialItem: _selectedDeletionTime,
                 ),
+                // This is called when selected item is changed.
+                onSelectedItemChanged: (selectedItem) {
+                  setState(() {
+                    _selectedDeletionTime = selectedItem;
+                  });
+                },
+                children: List<Widget>.generate(_getOptions().length, (index) {
+                  return Center(
+                    child: Text(_getOptions()[index].$2),
+                  );
+                }),
               ),
+            ),
     );
   }
 }

@@ -57,8 +57,10 @@ class ReactionRow extends StatelessWidget {
         );
       }
       if (emojis.containsKey(reaction.emoji)) {
-        emojis[reaction.emoji] =
-            (emojis[reaction.emoji]!.$1, emojis[reaction.emoji]!.$2 + 1);
+        emojis[reaction.emoji] = (
+          emojis[reaction.emoji]!.$1,
+          emojis[reaction.emoji]!.$2 + 1,
+        );
       } else {
         emojis[reaction.emoji] = (child, 1);
       }
@@ -80,7 +82,7 @@ class ReactionRow extends StatelessWidget {
                 child: const FaIcon(FontAwesomeIcons.ellipsis),
               ),
             ),
-            1
+            1,
           ),
         );
     }
@@ -117,8 +119,9 @@ class ReactionRow extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color:
-                              isDarkMode(context) ? Colors.white : Colors.black,
+                          color: isDarkMode(context)
+                              ? Colors.white
+                              : Colors.black,
                           decoration: TextDecoration.none,
                           fontWeight: FontWeight.normal,
                         ),

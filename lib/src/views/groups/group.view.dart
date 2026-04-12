@@ -85,14 +85,16 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> _addNewGroupMembers() async {
-    final selectedUserIds = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GroupCreateSelectMembersView(
-          groupId: _group?.groupId,
-        ),
-      ),
-    ) as List<int>?;
+    final selectedUserIds =
+        await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GroupCreateSelectMembersView(
+                  groupId: _group?.groupId,
+                ),
+              ),
+            )
+            as List<int>?;
     if (selectedUserIds == null) return;
     if (!await addNewGroupMembers(_group!, selectedUserIds)) {
       if (mounted) {
@@ -134,8 +136,9 @@ class _GroupViewState extends State<GroupView> {
 
     if (_group!.isGroupAdmin) {
       // Current user is a admin, to the state can be updated by the user him self.
-      final keyPair =
-          IdentityKeyPair.fromSerialized(_group!.myGroupPrivateKey!);
+      final keyPair = IdentityKeyPair.fromSerialized(
+        _group!.myGroupPrivateKey!,
+      );
       success = await removeMemberFromGroup(
         _group!,
         keyPair.getPublicKey().serialize(),

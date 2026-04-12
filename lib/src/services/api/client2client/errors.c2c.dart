@@ -13,7 +13,7 @@ Future<void> handleErrorMessage(
 
   switch (error.type) {
     case EncryptedContent_ErrorMessages_Type
-          .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD:
+        .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD:
       await twonlyDB.receiptsDao.updateReceiptWidthUserId(
         fromUserId,
         error.relatedReceiptId,

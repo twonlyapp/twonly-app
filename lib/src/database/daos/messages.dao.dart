@@ -318,7 +318,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
-      final rowId = await into(messages).insert(insertMessage);
+      final rowId = await into(messages).insertOnConflictUpdate(insertMessage);
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,

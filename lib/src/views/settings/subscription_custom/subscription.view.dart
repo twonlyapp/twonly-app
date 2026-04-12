@@ -112,11 +112,13 @@ class _SubscriptionCustomViewState extends State<SubscriptionCustomView> {
         ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000,
       );
       if (isPayingUser(currentPlan)) {
-        nextPayment = lastPaymentDateTime
-            .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
+        nextPayment = lastPaymentDateTime.add(
+          Duration(days: ballance!.paymentPeriodDays.toInt()),
+        );
       }
-      final ballanceInCents =
-          ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
+      final ballanceInCents = ballance!.transactions
+          .map((a) => a.depositCents.toInt())
+          .sum;
       formattedBalance = NumberFormat.currency(
         locale: myLocale.toString(),
         symbol: '€',
@@ -217,8 +219,8 @@ class _SubscriptionCustomViewState extends State<SubscriptionCustomView> {
                         plan: SubscriptionPlan.Family,
                         disableMonthlyOption:
                             currentPlan == SubscriptionPlan.Pro &&
-                                ballance!.paymentPeriodDays.toInt() ==
-                                    YEARLY_PAYMENT_DAYS,
+                            ballance!.paymentPeriodDays.toInt() ==
+                                YEARLY_PAYMENT_DAYS,
                       );
                     },
                   ),
@@ -444,8 +446,9 @@ class PlanCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 7),
                     child: Text(
-                      context.lang
-                          .subscriptionRefund(localePrizing(context, refund!)),
+                      context.lang.subscriptionRefund(
+                        localePrizing(context, refund!),
+                      ),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: context.color.primary,

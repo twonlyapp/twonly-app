@@ -118,8 +118,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
           BetterListTile(
             icon: FontAwesomeIcons.fileContract,
             text: context.lang.termsOfService,
-            trailing:
-                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 15,
+            ),
             onTap: () async {
               await launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
             },
@@ -130,8 +132,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               size: 15,
             ),
             text: context.lang.privacyPolicy,
-            trailing:
-                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 15,
+            ),
             onTap: () async {
               await launchUrl(
                 Uri.parse('https://twonly.eu/de/legal/privacy.html'),

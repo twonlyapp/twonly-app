@@ -67,9 +67,9 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
     }
     final usersFiltered = allContacts
         .where(
-          (user) => getContactDisplayName(user)
-              .toLowerCase()
-              .contains(searchUserName.value.text.toLowerCase()),
+          (user) => getContactDisplayName(
+            user,
+          ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
         )
         .toList();
     setState(() {
@@ -111,8 +111,12 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
         ),
         body: SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+            padding: const EdgeInsets.only(
+              bottom: 40,
+              left: 10,
+              top: 20,
+              right: 10,
+            ),
             child: Column(
               children: [
                 Padding(
@@ -150,8 +154,9 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
                                     spacing: 8,
                                     children: selected.map((w) {
                                       return _Chip(
-                                        contact: allContacts
-                                            .firstWhere((t) => t.userId == w),
+                                        contact: allContacts.firstWhere(
+                                          (t) => t.userId == w,
+                                        ),
                                         onTap: toggleSelectedUser,
                                       );
                                     }).toList(),
@@ -188,7 +193,8 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
                             fontSize: 13,
                           ),
                           trailing: Checkbox(
-                            value: selectedUsers.contains(user.userId) |
+                            value:
+                                selectedUsers.contains(user.userId) |
                                 _alreadySelected.contains(user.userId),
                             side: WidgetStateBorderSide.resolveWith(
                               (states) {

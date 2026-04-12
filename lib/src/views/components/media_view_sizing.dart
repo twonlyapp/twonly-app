@@ -30,7 +30,8 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
 
     // Calculate the available width and height
     final availableWidth = screenSize.width;
-    availableHeight = screenSize.height -
+    availableHeight =
+        screenSize.height -
         safeAreaPadding.top -
         safeAreaPadding.bottom -
         (widget.additionalPadding ?? 0);

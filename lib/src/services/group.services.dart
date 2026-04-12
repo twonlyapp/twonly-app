@@ -45,8 +45,9 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
     memberIds: [Int64(gUser.userId)] + memberIds,
     adminIds: [Int64(gUser.userId)],
     groupName: groupName,
-    deleteMessagesAfterMilliseconds:
-        Int64(defaultDeleteMessagesAfterMilliseconds),
+    deleteMessagesAfterMilliseconds: Int64(
+      defaultDeleteMessagesAfterMilliseconds,
+    ),
     padding: List<int>.generate(Random().nextInt(80), (_) => 0),
   );
 
@@ -158,8 +159,9 @@ Future<void> fetchMissingGroupPublicKey() async {
   for (final member in members) {
     if (member.lastMessage == null) continue;
     // only request if the users has send a message in the last two days.
-    if (member.lastMessage!
-        .isAfter(clock.now().subtract(const Duration(days: 2)))) {
+    if (member.lastMessage!.isAfter(
+      clock.now().subtract(const Duration(days: 2)),
+    )) {
       await sendCipherText(
         member.contactId,
         EncryptedContent(
@@ -227,12 +229,15 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
     final groupStateServer = GroupState.fromBuffer(response.bodyBytes);
 
-    final encryptedStateRaw =
-        await _decryptEnvelop(group, groupStateServer.encryptedGroupState);
+    final encryptedStateRaw = await _decryptEnvelop(
+      group,
+      groupStateServer.encryptedGroupState,
+    );
     if (encryptedStateRaw == null) return null;
 
-    final encryptedGroupState =
-        EncryptedGroupState.fromBuffer(encryptedStateRaw);
+    final encryptedGroupState = EncryptedGroupState.fromBuffer(
+      encryptedStateRaw,
+    );
 
     if (group.stateVersionId >= groupStateServer.versionId.toInt()) {
       Log.info(
@@ -266,24 +271,28 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       );
       if (encryptedStateRaw == null) continue;
 
-      final appended =
-          EncryptedAppendedGroupState.fromBuffer(encryptedStateRaw);
+      final appended = EncryptedAppendedGroupState.fromBuffer(
+        encryptedStateRaw,
+      );
       if (appended.type == EncryptedAppendedGroupState_Type.LEFT_GROUP) {
-        final keyPair =
-            IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+        final keyPair = IdentityKeyPair.fromSerialized(
+          group.myGroupPrivateKey!,
+        );
 
         final appendedPubKey = appendedState.appendTBS.publicKey;
         final myPubKey = keyPair.getPublicKey().serialize().toList();
 
         if (listEquals(appendedPubKey, myPubKey)) {
           adminIds.remove(Int64(gUser.userId));
-          memberIds
-              .remove(Int64(gUser.userId)); // -> Will remove the user later...
+          memberIds.remove(
+            Int64(gUser.userId),
+          ); // -> Will remove the user later...
         } else {
           Log.info('A non admin left the group!!!');
 
-          final member = await twonlyDB.groupsDao
-              .getGroupMemberByPublicKey(Uint8List.fromList(appendedPubKey));
+          final member = await twonlyDB.groupsDao.getGroupMemberByPublicKey(
+            Uint8List.fromList(appendedPubKey),
+          );
           if (member == null) {
             Log.error('Member is already not in this group...');
             continue;
@@ -353,8 +362,9 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       ),
     );
 
-    var currentGroupMembers =
-        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
+    var currentGroupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+      group.groupId,
+    );
 
     // First find and insert NEW members
     for (final memberId in memberIds) {
@@ -391,8 +401,9 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
       // Send the new user my public group key
       if (group.myGroupPrivateKey != null) {
-        final keyPair =
-            IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+        final keyPair = IdentityKeyPair.fromSerialized(
+          group.myGroupPrivateKey!,
+        );
         await sendCipherText(
           memberId.toInt(),
           EncryptedContent(
@@ -407,8 +418,9 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
     // check if there is a member which is not in the server list...
 
     // update the current members list
-    currentGroupMembers =
-        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
+    currentGroupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+      group.groupId,
+    );
 
     for (final member in currentGroupMembers) {
       // Member is not any more in the members list
@@ -468,8 +480,9 @@ Future<bool> addNewHiddenContact(int contactId) async {
     ContactsCompanion(
       username: Value(utf8.decode(userData.username)),
       userId: Value(contactId),
-      deletedByUser:
-          const Value(true), // this will hide the contact in the contact list
+      deletedByUser: const Value(
+        true,
+      ), // this will hide the contact in the contact list
     ),
   );
   await processSignalUserData(userData);
@@ -594,8 +607,9 @@ Future<bool> manageAdminState(
     return false;
   }
 
-  final groupActionType =
-      remove ? GroupActionType.demoteToMember : GroupActionType.promoteToAdmin;
+  final groupActionType = remove
+      ? GroupActionType.demoteToMember
+      : GroupActionType.promoteToAdmin;
 
   await sendCipherTextToGroup(
     group.groupId,
@@ -664,8 +678,9 @@ Future<bool> updateChatDeletionTime(
   if (currentState == null) return false;
   final (versionId, state) = currentState;
 
-  state.deleteMessagesAfterMilliseconds =
-      Int64(deleteMessagesAfterMilliseconds);
+  state.deleteMessagesAfterMilliseconds = Int64(
+    deleteMessagesAfterMilliseconds,
+  );
 
   // send new state to the server
   if (!await _updateGroupState(group, state)) {
@@ -688,8 +703,9 @@ Future<bool> updateChatDeletionTime(
     GroupHistoriesCompanion(
       groupId: Value(group.groupId),
       type: const Value(GroupActionType.changeDisplayMaxTime),
-      newDeleteMessagesAfterMilliseconds:
-          Value(deleteMessagesAfterMilliseconds),
+      newDeleteMessagesAfterMilliseconds: Value(
+        deleteMessagesAfterMilliseconds,
+      ),
     ),
   );
 

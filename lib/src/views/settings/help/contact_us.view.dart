@@ -47,8 +47,9 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiAuthTokenRaw = await const FlutterSecureStorage()
-        .read(key: SecureStorageKeys.apiAuthToken);
+    final apiAuthTokenRaw = await const FlutterSecureStorage().read(
+      key: SecureStorageKeys.apiAuthToken,
+    );
     if (apiAuthTokenRaw == null) {
       Log.error('api auth token not defined.');
       return null;

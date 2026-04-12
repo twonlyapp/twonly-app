@@ -135,8 +135,9 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
 
     _playerController.onPlayerStateChanged.listen((a) async {
       if (a == PlayerState.initialized) {
-        _displayDuration =
-            await _playerController.getDuration(DurationType.max);
+        _displayDuration = await _playerController.getDuration(
+          DurationType.max,
+        );
         _maxDuration = _displayDuration;
         setState(() {});
       }

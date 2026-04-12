@@ -23,7 +23,7 @@ import 'package:twonly/src/utils/misc.dart';
 
 final lockRetransmission = Mutex();
 
-Future<void> tryTransmitMessages() async {
+Future<void> retransmitAllMessages() async {
   return lockRetransmission.protect(() async {
     final receipts = await twonlyDB.receiptsDao.getReceiptsForRetransmission();
 
@@ -304,7 +304,13 @@ Future<void> sendCipherTextToGroup(
 }) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
-  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
+  if (messageId != null ||
+      encryptedContent.hasReaction() ||
+      encryptedContent.hasMedia() ||
+      encryptedContent.hasTextMessage()) {
+    // only update the counter in case this is a actual message
+    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
+  }
 
   encryptedContent.groupId = groupId;
 
@@ -328,11 +334,11 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   bool onlySendIfNoReceiptsAreOpen = false,
 }) async {
   if (onlySendIfNoReceiptsAreOpen) {
-    if (await twonlyDB.receiptsDao.getReceiptCountForContact(
-          contactId,
-        ) >
-        0) {
-      // this prevents that this message is send in case the receiver is not online
+    final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
+      contactId,
+    );
+    if (openReceipts > 2) {
+      // this prevents that these types of messages are send in case the receiver is offline
       return null;
     }
   }
@@ -342,12 +348,31 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     ..type = pb.Message_Type.CIPHERTEXT
     ..encryptedContent = encryptedContent.writeToBuffer();
 
+  var retryCounter = 0;
+  DateTime? lastRetry;
+
+  if (messageId != null) {
+    final receipts = await twonlyDB.receiptsDao
+        .getReceiptsByContactAndMessageId(contactId, messageId);
+
+    for (final receipt in receipts) {
+      if (receipt.lastRetry != null) {
+        lastRetry = receipt.lastRetry;
+      }
+      retryCounter += 1;
+      Log.info('Removing duplicated receipt for message $messageId');
+      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
+    }
+  }
+
   final receipt = await twonlyDB.receiptsDao.insertReceipt(
     ReceiptsCompanion(
       contactId: Value(contactId),
       message: Value(response.writeToBuffer()),
       messageId: Value(messageId),
       willBeRetriedByMediaUpload: Value(onlyReturnEncryptedData),
+      retryCount: Value(retryCounter),
+      lastRetry: Value(lastRetry),
     ),
   );
 

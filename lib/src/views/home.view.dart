@@ -101,6 +101,7 @@ class HomeViewState extends State<HomeView> {
       if (mounted) setState(() {});
     };
     activePageIdx = widget.initialPage;
+
     globalUpdateOfHomeViewPageIndex = (index) {
       homeViewPageController.jumpToPage(index);
       setState(() {
@@ -111,9 +112,8 @@ class HomeViewState extends State<HomeView> {
       if (response.payload != null &&
           response.payload!.startsWith(Routes.chats)) {
         await routerProvider.push(response.payload!);
-      } else {
-        globalUpdateOfHomeViewPageIndex(0);
       }
+      globalUpdateOfHomeViewPageIndex(0);
     });
     unawaited(_mainCameraController.selectCamera(0, true));
     unawaited(initAsync());
@@ -153,19 +153,13 @@ class HomeViewState extends State<HomeView> {
     if (widget.initialPage == 0 ||
         (notificationAppLaunchDetails != null &&
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
-      var pushed = false;
-
       if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
         final payload =
             notificationAppLaunchDetails?.notificationResponse?.payload;
         if (payload != null && payload.startsWith(Routes.chats)) {
           await routerProvider.push(payload);
-          pushed = true;
+          globalUpdateOfHomeViewPageIndex(0);
         }
-      }
-
-      if (!pushed) {
-        globalUpdateOfHomeViewPageIndex(0);
       }
     }
 

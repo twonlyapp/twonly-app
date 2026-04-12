@@ -94,8 +94,10 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
         child: FloatingActionButton(
           foregroundColor: Colors.white,
           onPressed: () async {
-            selectedEmojis =
-                EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
+            selectedEmojis = EmojiAnimation.animatedIcons.keys.toList().sublist(
+              0,
+              6,
+            );
             setState(() {});
             await updateUserdata((user) {
               user.preSelectedEmojies = selectedEmojis;

@@ -11,4 +11,3 @@
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
 export 'client_to_server.pb.dart';
-

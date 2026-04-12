@@ -55,8 +55,9 @@ class _UserStudyWelcomeViewState extends State<UserStudyWelcomeView> {
             const SizedBox(height: 40),
             Center(
               child: FilledButton(
-                onPressed: () => context
-                    .pushReplacement(Routes.settingsHelpUserStudyQuestionnaire),
+                onPressed: () => context.pushReplacement(
+                  Routes.settingsHelpUserStudyQuestionnaire,
+                ),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   child: Text(

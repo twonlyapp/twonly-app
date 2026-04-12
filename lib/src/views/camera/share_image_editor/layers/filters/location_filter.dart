@@ -145,8 +145,9 @@ Future<List<Sticker>> getStickerIndex() async {
     }
   }
   try {
-    final response = await http
-        .get(Uri.parse('https://twonly.eu/api/sticker/stickers.json'));
+    final response = await http.get(
+      Uri.parse('https://twonly.eu/api/sticker/stickers.json'),
+    );
     if (response.statusCode == 200) {
       await indexFile.writeAsString(response.body);
       final jsonList = json.decode(response.body) as List;

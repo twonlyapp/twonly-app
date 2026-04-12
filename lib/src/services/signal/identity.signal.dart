@@ -22,8 +22,9 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 Future<void> signalHandleNewServerConnection() async {
   if (gUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
-    final isYoungerThan48Hours =
-        (gUser.signalLastSignedPreKeyUpdated!).isAfter(fortyEightHoursAgo);
+    final isYoungerThan48Hours = (gUser.signalLastSignedPreKeyUpdated!).isAfter(
+      fortyEightHoursAgo,
+    );
     if (isYoungerThan48Hours) {
       // The key does live for 48 hours then it expires and a new key is generated.
       return;
@@ -76,8 +77,9 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
     const storage = FlutterSecureStorage();
-    var signalIdentityJson =
-        await storage.read(key: SecureStorageKeys.signalIdentity);
+    var signalIdentityJson = await storage.read(
+      key: SecureStorageKeys.signalIdentity,
+    );
     if (signalIdentityJson == null) {
       return null;
     }
@@ -104,13 +106,17 @@ Future<void> createIfNotExistsSignalIdentity() async {
   final identityKeyPair = generateIdentityKeyPair();
   final registrationId = generateRegistrationId(true);
 
-  final signalStore =
-      ConnectSignalProtocolStore(identityKeyPair, registrationId);
+  final signalStore = ConnectSignalProtocolStore(
+    identityKeyPair,
+    registrationId,
+  );
 
   final signedPreKey = generateSignedPreKey(identityKeyPair, defaultDeviceId);
 
-  await signalStore.signedPreKeyStore
-      .storeSignedPreKey(signedPreKey.id, signedPreKey);
+  await signalStore.signedPreKeyStore.storeSignedPreKey(
+    signedPreKey.id,
+    signedPreKey,
+  );
 
   final storedSignalIdentity = SignalIdentity(
     identityKeyPairU8List: identityKeyPair.serialize(),

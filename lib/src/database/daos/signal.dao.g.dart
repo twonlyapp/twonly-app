@@ -19,9 +19,13 @@ class SignalDaoManager {
       $$ContactsTableTableManager(_db.attachedDatabase, _db.contacts);
   $$SignalContactPreKeysTableTableManager get signalContactPreKeys =>
       $$SignalContactPreKeysTableTableManager(
-          _db.attachedDatabase, _db.signalContactPreKeys);
+        _db.attachedDatabase,
+        _db.signalContactPreKeys,
+      );
   $$SignalContactSignedPreKeysTableTableManager
-      get signalContactSignedPreKeys =>
-          $$SignalContactSignedPreKeysTableTableManager(
-              _db.attachedDatabase, _db.signalContactSignedPreKeys);
+  get signalContactSignedPreKeys =>
+      $$SignalContactSignedPreKeysTableTableManager(
+        _db.attachedDatabase,
+        _db.signalContactSignedPreKeys,
+      );
 }

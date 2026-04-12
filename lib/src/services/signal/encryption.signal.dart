@@ -33,7 +33,7 @@ Future<CiphertextMessage?> signalEncryptMessage(
 bool alreadyPerformedAnResync = false;
 
 Future<(EncryptedContent?, PlaintextContent_DecryptionErrorMessage_Type?)>
-    signalDecryptMessage(
+signalDecryptMessage(
   int fromUserId,
   Uint8List encryptedContentRaw,
   int type,

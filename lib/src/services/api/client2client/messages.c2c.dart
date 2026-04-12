@@ -54,8 +54,9 @@ Future<void> handleMessageUpdate(
 }
 
 Future<bool> isSender(int fromUserId, String messageId) async {
-  final message =
-      await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+  final message = await twonlyDB.messagesDao
+      .getMessageById(messageId)
+      .getSingleOrNull();
   if (message == null) return false;
   if (message.senderId == fromUserId) {
     return true;

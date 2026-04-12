@@ -22,8 +22,9 @@ Future<bool> isUserCreated() async {
 
 Future<UserData?> getUser() async {
   try {
-    final userJson = await const FlutterSecureStorage()
-        .read(key: SecureStorageKeys.userData);
+    final userJson = await const FlutterSecureStorage().read(
+      key: SecureStorageKeys.userData,
+    );
     if (userJson == null) {
       return null;
     }
@@ -64,8 +65,10 @@ Future<UserData?> updateUserdata(
       user.defaultShowTime = null;
     }
     final updated = updateUser(user);
-    await const FlutterSecureStorage()
-        .write(key: SecureStorageKeys.userData, value: jsonEncode(updated));
+    await const FlutterSecureStorage().write(
+      key: SecureStorageKeys.userData,
+      value: jsonEncode(updated),
+    );
     gUser = updated;
     return updated;
   });

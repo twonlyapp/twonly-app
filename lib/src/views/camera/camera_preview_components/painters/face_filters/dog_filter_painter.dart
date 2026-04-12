@@ -56,8 +56,9 @@ class DogFilterPainter extends FaceFilterPainter {
         final points = faceContour.points;
         if (points.isEmpty) continue;
 
-        final upperPoints =
-            points.where((p) => p.y < noseBase.position.y).toList();
+        final upperPoints = points
+            .where((p) => p.y < noseBase.position.y)
+            .toList();
 
         if (upperPoints.isEmpty) continue;
 
@@ -186,8 +187,12 @@ class DogFilterPainter extends FaceFilterPainter {
       canvas.scale(scaleX, Platform.isAndroid ? -1 : 1);
     }
 
-    final srcRect =
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+    final srcRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
     final aspectRatio = image.width / image.height;
     final dstWidth = size;
     final dstHeight = size / aspectRatio;

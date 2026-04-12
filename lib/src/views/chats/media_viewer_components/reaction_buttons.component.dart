@@ -39,8 +39,9 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   int selectedShortReaction = -1;
   final GlobalKey _keyEmojiPicker = GlobalKey();
 
-  List<String> selectedEmojis =
-      EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
+  List<String> selectedEmojis = EmojiAnimation.animatedIcons.keys
+      .toList()
+      .sublist(0, 6);
 
   @override
   void initState() {
@@ -58,15 +59,16 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   @override
   Widget build(BuildContext context) {
     final firstRowEmojis = selectedEmojis.take(6).toList();
-    final secondRowEmojis =
-        selectedEmojis.length > 6 ? selectedEmojis.skip(6).toList() : [];
+    final secondRowEmojis = selectedEmojis.length > 6
+        ? selectedEmojis.skip(6).toList()
+        : [];
 
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 200), // Animation duration
       bottom: widget.show
           ? (widget.textInputFocused
-              ? 50
-              : widget.mediaViewerDistanceFromBottom)
+                ? 50
+                : widget.mediaViewerDistanceFromBottom)
           : widget.mediaViewerDistanceFromBottom - 20,
       left: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
       right: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
@@ -76,8 +78,9 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         duration: const Duration(milliseconds: 150),
         child: Container(
           color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
-          padding:
-              widget.show ? const EdgeInsets.symmetric(vertical: 32) : null,
+          padding: widget.show
+              ? const EdgeInsets.symmetric(vertical: 32)
+              : null,
           child: Column(
             children: [
               if (secondRowEmojis.isNotEmpty)
@@ -115,14 +118,16 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                   GestureDetector(
                     key: _keyEmojiPicker,
                     onTap: () async {
-                      // ignore: inference_failure_on_function_invocation
-                      final layer = await showModalBottomSheet(
-                        context: context,
-                        backgroundColor: context.color.surface,
-                        builder: (context) {
-                          return const EmojiPickerBottom();
-                        },
-                      ) as EmojiLayerData?;
+                      final layer =
+                          // ignore: inference_failure_on_function_invocation
+                          await showModalBottomSheet(
+                                context: context,
+                                backgroundColor: context.color.surface,
+                                builder: (context) {
+                                  return const EmojiPickerBottom();
+                                },
+                              )
+                              as EmojiLayerData?;
                       if (layer == null) return;
                       await sendReaction(
                         widget.groupId,

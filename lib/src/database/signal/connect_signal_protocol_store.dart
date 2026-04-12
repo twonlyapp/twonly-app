@@ -9,8 +9,10 @@ class ConnectSignalProtocolStore implements SignalProtocolStore {
     IdentityKeyPair identityKeyPair,
     int registrationId,
   ) {
-    _identityKeyStore =
-        ConnectIdentityKeyStore(identityKeyPair, registrationId);
+    _identityKeyStore = ConnectIdentityKeyStore(
+      identityKeyPair,
+      registrationId,
+    );
   }
 
   final preKeyStore = ConnectPreKeyStore();
@@ -31,8 +33,7 @@ class ConnectSignalProtocolStore implements SignalProtocolStore {
   Future<bool> saveIdentity(
     SignalProtocolAddress address,
     IdentityKey? identityKey,
-  ) async =>
-      _identityKeyStore.saveIdentity(address, identityKey);
+  ) async => _identityKeyStore.saveIdentity(address, identityKey);
 
   @override
   Future<bool> isTrustedIdentity(

@@ -93,26 +93,28 @@ class _AccountViewState extends State<AccountView> {
             subtitle: (formattedBallance == null)
                 ? Text(context.lang.settingsAccountDeleteAccountNoInternet)
                 : hasRemainingBallance
-                    ? Text(
-                        context.lang.settingsAccountDeleteAccountWithBallance(
-                          formattedBallance!,
-                        ),
-                      )
-                    : Text(context.lang.settingsAccountDeleteAccountNoBallance),
+                ? Text(
+                    context.lang.settingsAccountDeleteAccountWithBallance(
+                      formattedBallance!,
+                    ),
+                  )
+                : Text(context.lang.settingsAccountDeleteAccountNoBallance),
             onTap: (formattedBallance == null)
                 ? null
                 : () async {
                     if (hasRemainingBallance) {
-                      final canGoNext = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return RefundCreditsView(
-                              formattedBalance: formattedBallance!,
-                            );
-                          },
-                        ),
-                      ) as bool?;
+                      final canGoNext =
+                          await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) {
+                                    return RefundCreditsView(
+                                      formattedBalance: formattedBallance!,
+                                    );
+                                  },
+                                ),
+                              )
+                              as bool?;
                       unawaited(initAsync());
                       if (canGoNext == null || !canGoNext) return;
                     }

@@ -30,6 +30,6 @@ class TwitterParser with BaseMetaInfo {
   @override
   Vendor? get vendor =>
       _url.startsWith('https://x.com/') && _url.contains('/status/')
-          ? Vendor.twitterPosting
-          : null;
+      ? Vendor.twitterPosting
+      : null;
 }

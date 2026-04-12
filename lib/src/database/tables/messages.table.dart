@@ -18,9 +18,11 @@ class Messages extends Table {
   TextColumn get type => text()();
 
   TextColumn get content => text().nullable()();
-  TextColumn get mediaId => text()
-      .nullable()
-      .references(MediaFiles, #mediaId, onDelete: KeyAction.setNull)();
+  TextColumn get mediaId => text().nullable().references(
+    MediaFiles,
+    #mediaId,
+    onDelete: KeyAction.setNull,
+  )();
 
   BlobColumn get additionalMessageData => blob().nullable()();
 
@@ -75,9 +77,11 @@ class MessageHistories extends Table {
   TextColumn get messageId =>
       text().references(Messages, #messageId, onDelete: KeyAction.cascade)();
 
-  IntColumn get contactId => integer()
-      .nullable()
-      .references(Contacts, #userId, onDelete: KeyAction.cascade)();
+  IntColumn get contactId => integer().nullable().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
 
   TextColumn get content => text().nullable()();
 

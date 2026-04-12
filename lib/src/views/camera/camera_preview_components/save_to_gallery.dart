@@ -52,13 +52,14 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 await widget.storeImageAsOriginal!();
               }
 
-              final newMediaFile = await twonlyDB.mediaFilesDao.insertMedia(
-                MediaFilesCompanion(
-                  type: Value(widget.mediaService.mediaFile.type),
-                  createdAt: Value(clock.now()),
-                  stored: const Value(true),
-                ),
-              );
+              final newMediaFile = await twonlyDB.mediaFilesDao
+                  .insertOrUpdateMedia(
+                    MediaFilesCompanion(
+                      type: Value(widget.mediaService.mediaFile.type),
+                      createdAt: Value(clock.now()),
+                      stored: const Value(true),
+                    ),
+                  );
 
               if (newMediaFile != null) {
                 final newService = MediaFileService(newMediaFile);

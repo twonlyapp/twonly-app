@@ -89,8 +89,10 @@ class _ContactUsState extends State<SubmitMessage> {
                 maxLines: 20,
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40,
+                  horizontal: 40,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

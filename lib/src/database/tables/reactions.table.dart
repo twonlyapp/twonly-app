@@ -10,9 +10,11 @@ class Reactions extends Table {
   TextColumn get emoji => text()();
 
   // in case senderId is null, it was send by user itself
-  IntColumn get senderId => integer()
-      .nullable()
-      .references(Contacts, #userId, onDelete: KeyAction.cascade)();
+  IntColumn get senderId => integer().nullable().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 

@@ -78,8 +78,10 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
         ],
       ),
       body: Padding(
-        padding:
-            const EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
+        padding: const EdgeInsetsGeometry.symmetric(
+          vertical: 40,
+          horizontal: 40,
+        ),
         child: ListView(
           children: [
             Text(
@@ -137,8 +139,9 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
             Center(
               child: OutlinedButton(
                 onPressed: () async {
-                  backupServer =
-                      await context.push(Routes.settingsBackupServer);
+                  backupServer = await context.push(
+                    Routes.settingsBackupServer,
+                  );
                   setState(() {});
                 },
                 child: Text(context.lang.backupExpertSettings),

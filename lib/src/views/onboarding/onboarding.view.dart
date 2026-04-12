@@ -76,8 +76,11 @@ class OnboardingView extends StatelessWidget {
                     style: const TextStyle(fontSize: 18),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(left: 50, right: 50, top: 20),
+                    padding: const EdgeInsets.only(
+                      left: 50,
+                      right: 50,
+                      top: 20,
+                    ),
                     child: FilledButton(
                       onPressed: callbackOnSuccess,
                       child: Text(context.lang.registerSubmitButton),
@@ -116,8 +119,9 @@ class OnboardingView extends StatelessWidget {
             activeColor: Theme.of(context).colorScheme.primary,
             color: Theme.of(context).colorScheme.secondary,
             spacing: const EdgeInsets.symmetric(horizontal: 3),
-            activeShape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            activeShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
           ),
         ),
       ),

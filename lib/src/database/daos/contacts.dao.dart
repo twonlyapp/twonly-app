@@ -37,18 +37,18 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 
   Future<Contact?> getContactById(int userId) async {
-    return (select(contacts)..where((t) => t.userId.equals(userId)))
-        .getSingleOrNull();
+    return (select(
+      contacts,
+    )..where((t) => t.userId.equals(userId))).getSingleOrNull();
   }
 
   Future<List<Contact>> getContactsByUsername(
     String username, {
     String username2 = '_______',
   }) async {
-    return (select(contacts)
-          ..where(
-            (t) => t.username.equals(username) | t.username.equals(username2),
-          ))
+    return (select(contacts)..where(
+          (t) => t.username.equals(username) | t.username.equals(username2),
+        ))
         .get();
   }
 
@@ -60,8 +60,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     int userId,
     ContactsCompanion updatedValues,
   ) async {
-    await (update(contacts)..where((c) => c.userId.equals(userId)))
-        .write(updatedValues);
+    await (update(
+      contacts,
+    )..where((c) => c.userId.equals(userId))).write(updatedValues);
     if (updatedValues.blocked.present ||
         updatedValues.displayName.present ||
         updatedValues.nickName.present ||
@@ -83,19 +84,19 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 
   Stream<List<Contact>> watchNotAcceptedContacts() {
-    return (select(contacts)
-          ..where(
-            (t) =>
-                t.accepted.equals(false) &
-                t.blocked.equals(false) &
-                t.deletedByUser.equals(false),
-          ))
+    return (select(contacts)..where(
+          (t) =>
+              t.accepted.equals(false) &
+              t.blocked.equals(false) &
+              t.deletedByUser.equals(false),
+        ))
         .watch();
   }
 
   Stream<Contact?> watchContact(int userid) {
-    return (select(contacts)..where((t) => t.userId.equals(userid)))
-        .watchSingleOrNull();
+    return (select(
+      contacts,
+    )..where((t) => t.userId.equals(userid))).watchSingleOrNull();
   }
 
   Future<List<Contact>> getAllContacts() {
@@ -124,13 +125,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 
   Stream<List<Contact>> watchAllAcceptedContacts() {
-    return (select(contacts)
-          ..where(
-            (t) =>
-                t.blocked.equals(false) &
-                t.accepted.equals(true) &
-                t.accountDeleted.equals(false),
-          ))
+    return (select(contacts)..where(
+          (t) =>
+              t.blocked.equals(false) &
+              t.accepted.equals(true) &
+              t.accountDeleted.equals(false),
+        ))
         .watch();
   }
 

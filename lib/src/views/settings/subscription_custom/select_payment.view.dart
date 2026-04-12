@@ -52,8 +52,9 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
     if (balance == null) {
       balanceInCents = 0;
     } else {
-      balanceInCents =
-          balance.transactions.map((a) => a.depositCents.toInt()).sum;
+      balanceInCents = balance.transactions
+          .map((a) => a.depositCents.toInt())
+          .sum;
     }
     setState(() {});
   }
@@ -62,8 +63,10 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
     if (widget.valueInCents != null && widget.valueInCents! > 0) {
       checkoutInCents = widget.valueInCents!;
     } else if (widget.plan != null) {
-      checkoutInCents =
-          getPlanPrice(widget.plan!, paidMonthly: widget.payMonthly!);
+      checkoutInCents = getPlanPrice(
+        widget.plan!,
+        paidMonthly: widget.payMonthly!,
+      );
     } else {
       /// Nothing to checkout for...
       Navigator.pop(context);
@@ -79,7 +82,8 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
     final totalPrice = (widget.plan != null && widget.payMonthly != null)
         ? '${localePrizing(context, checkoutInCents)}/${(widget.payMonthly!) ? context.lang.month : context.lang.year}'
         : localePrizing(context, checkoutInCents);
-    final canPay = paymentMethods == PaymentMethods.twonlyCredit &&
+    final canPay =
+        paymentMethods == PaymentMethods.twonlyCredit &&
         (balanceInCents == null || balanceInCents! >= checkoutInCents);
     return Scaffold(
       appBar: AppBar(

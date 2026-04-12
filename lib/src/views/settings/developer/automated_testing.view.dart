@@ -40,8 +40,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
             onTap: () async {
               final username = await showUserNameDialog(context);
               if (username == null) return;
-              final contacts = await twonlyDB.contactsDao
-                  .getContactsByUsername(username.toLowerCase());
+              final contacts = await twonlyDB.contactsDao.getContactsByUsername(
+                username.toLowerCase(),
+              );
               if (contacts.length != 1) {
                 Log.error('No single user fund');
                 return;
@@ -57,8 +58,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
               final sessionStore = await getSignalStore();
 
               // 1. Store a valid session
-              final originalSession =
-                  await sessionStore!.loadSession(getSignalAddress(userId));
+              final originalSession = await sessionStore!.loadSession(
+                getSignalAddress(userId),
+              );
               final serializedSession = originalSession.serialize();
 
               for (var i = 0; i < 10; i++) {
@@ -69,8 +71,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
                 );
               }
 
-              final corruptedSession =
-                  SessionRecord.fromSerialized(serializedSession);
+              final corruptedSession = SessionRecord.fromSerialized(
+                serializedSession,
+              );
               await sessionStore.storeSession(
                 getSignalAddress(userId),
                 corruptedSession,
@@ -93,13 +96,15 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
               if (username == null) return;
               Log.info('Requested to send to $username');
 
-              final contacts = await twonlyDB.contactsDao
-                  .getContactsByUsername(username.toLowerCase());
+              final contacts = await twonlyDB.contactsDao.getContactsByUsername(
+                username.toLowerCase(),
+              );
 
               for (final contact in contacts) {
                 Log.info('Sending to ${contact.username}');
-                final group =
-                    await twonlyDB.groupsDao.getDirectChat(contact.userId);
+                final group = await twonlyDB.groupsDao.getDirectChat(
+                  contact.userId,
+                );
                 for (var i = 0; i < 200; i++) {
                   setState(() {
                     lotsOfMessagesStatus =
@@ -144,8 +149,9 @@ Future<String?> showUserNameDialog(
           TextButton(
             child: Text(context.lang.ok),
             onPressed: () {
-              Navigator.of(context)
-                  .pop(controller.text); // Return the input text
+              Navigator.of(
+                context,
+              ).pop(controller.text); // Return the input text
             },
           ),
         ],

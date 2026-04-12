@@ -9,9 +9,11 @@ final StreamController<NotificationResponse> selectNotificationStream =
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
   // ignore: avoid_print
-  print('notification(${notificationResponse.id}) action tapped: '
-      '${notificationResponse.actionId} with'
-      ' payload: ${notificationResponse.payload}');
+  print(
+    'notification(${notificationResponse.id}) action tapped: '
+    '${notificationResponse.actionId} with'
+    ' payload: ${notificationResponse.payload}',
+  );
   if (notificationResponse.input?.isNotEmpty ?? false) {
     // ignore: avoid_print
     print(
@@ -26,8 +28,9 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 int id = 0;
 
 Future<void> setupPushNotification() async {
-  const initializationSettingsAndroid =
-      AndroidInitializationSettings('ic_launcher_foreground');
+  const initializationSettingsAndroid = AndroidInitializationSettings(
+    'ic_launcher_foreground',
+  );
 
   final darwinNotificationCategories = <DarwinNotificationCategory>[];
 

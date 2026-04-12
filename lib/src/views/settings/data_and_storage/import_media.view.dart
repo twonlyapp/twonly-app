@@ -111,7 +111,7 @@ class _ImportMediaViewState extends State<ImportMediaView> {
             continue;
         }
 
-        final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+        final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
           MediaFilesCompanion(
             type: Value(type),
             createdAt: Value(file.lastModDateTime),
@@ -165,8 +165,9 @@ class _ImportMediaViewState extends State<ImportMediaView> {
             const SizedBox(height: 24),
             if (_isProcessing || _zipFile != null)
               LinearProgressIndicator(
-                value:
-                    _isProcessing ? _progress : (_zipFile != null ? 1.0 : 0.0),
+                value: _isProcessing
+                    ? _progress
+                    : (_zipFile != null ? 1.0 : 0.0),
               ),
             const SizedBox(height: 8),
             if (_status != null)

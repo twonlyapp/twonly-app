@@ -30,13 +30,15 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
   Future<void> initAsync() async {
     if (widget.action.contactId != null) {
-      contact =
-          await twonlyDB.contactsDao.getContactById(widget.action.contactId!);
+      contact = await twonlyDB.contactsDao.getContactById(
+        widget.action.contactId!,
+      );
     }
 
     if (widget.action.affectedContactId != null) {
-      affectedContact = await twonlyDB.contactsDao
-          .getContactById(widget.action.affectedContactId!);
+      affectedContact = await twonlyDB.contactsDao.getContactById(
+        widget.action.affectedContactId!,
+      );
     }
 
     if (mounted) setState(() {});
@@ -50,8 +52,9 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
     final affected = (affectedContact == null)
         ? context.lang.groupActionYou
         : getContactDisplayName(affectedContact!);
-    final affectedR =
-        (affectedContact == null) ? context.lang.groupActionYour : affected;
+    final affectedR = (affectedContact == null)
+        ? context.lang.groupActionYour
+        : affected;
     final maker = (contact == null) ? '' : getContactDisplayName(contact!);
 
     switch (widget.action.type) {
@@ -67,8 +70,10 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
       case GroupActionType.updatedGroupName:
         text = (contact == null)
             ? context.lang.youChangedGroupName(widget.action.newGroupName!)
-            : context.lang
-                .makerChangedGroupName(maker, widget.action.newGroupName!);
+            : context.lang.makerChangedGroupName(
+                maker,
+                widget.action.newGroupName!,
+              );
         icon = FontAwesomeIcons.pencil;
       case GroupActionType.createdGroup:
         icon = FontAwesomeIcons.penToSquare;

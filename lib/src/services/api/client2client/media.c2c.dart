@@ -73,12 +73,38 @@ Future<void> handleMedia(
       mediaType = MediaType.audio;
   }
 
+  var mediaIdValue = const Value<String>.absent();
+
   final messageTmp = await twonlyDB.messagesDao
       .getMessageById(media.senderMessageId)
       .getSingleOrNull();
   if (messageTmp != null) {
-    Log.warn('This message already exit. Message is dropped.');
-    return;
+    if (messageTmp.senderId != fromUserId) {
+      Log.warn(
+        '$fromUserId tried to modify the message from ${messageTmp.senderId}.',
+      );
+      return;
+    }
+    if (messageTmp.mediaId == null) {
+      Log.warn(
+        'This message already exit without a mediaId. Message is dropped.',
+      );
+      return;
+    }
+    final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+      messageTmp.mediaId!,
+    );
+    if (mediaFile?.downloadState != DownloadState.reuploadRequested) {
+      Log.warn(
+        'This message and media file already exit and was not requested again. Dropping it.',
+      );
+      return;
+    }
+
+    if (mediaFile != null) {
+      // media file is reuploaded use the same mediaId
+      mediaIdValue = Value(mediaFile.mediaId);
+    }
   }
 
   int? displayLimitInMilliseconds;
@@ -95,8 +121,9 @@ Future<void> handleMedia(
   late Message? message;
 
   await twonlyDB.transaction(() async {
-    mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+    mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
       MediaFilesCompanion(
+        mediaId: mediaIdValue,
         downloadState: const Value(DownloadState.pending),
         type: Value(mediaType),
         requiresAuthentication: Value(media.requiresAuthentication),
@@ -205,23 +232,6 @@ Future<void> handleMediaUpdate(
 
     case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
       Log.info('Got media file decryption error ${mediaFile.mediaId}');
-      final reuploadRequestedBy = mediaFile.reuploadRequestedBy ?? [];
-      reuploadRequestedBy.add(fromUserId);
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        MediaFilesCompanion(
-          uploadState: const Value(UploadState.preprocessing),
-          reuploadRequestedBy: Value(reuploadRequestedBy),
-        ),
-      );
-      final mediaFileUpdated = await MediaFileService.fromMediaId(
-        mediaFile.mediaId,
-      );
-      if (mediaFileUpdated != null) {
-        if (mediaFileUpdated.uploadRequestPath.existsSync()) {
-          mediaFileUpdated.uploadRequestPath.deleteSync();
-        }
-        unawaited(startBackgroundMediaUpload(mediaFileUpdated));
-      }
+      await reuploadMediaFile(fromUserId, mediaFile, message.messageId);
   }
 }
