@@ -92,12 +92,14 @@ class ApiService {
 
     if (globalIsInBackgroundTask) {
       await retransmitRawBytes();
-      await tryTransmitMessages();
+      await retransmitAllMessages();
+      await reuploadMediaFiles();
       await tryDownloadAllMediaFiles();
     } else if (!globalIsAppInBackground) {
       unawaited(retransmitRawBytes());
-      unawaited(tryTransmitMessages());
+      unawaited(retransmitAllMessages());
       unawaited(tryDownloadAllMediaFiles());
+      unawaited(reuploadMediaFiles());
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());

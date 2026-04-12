@@ -31,7 +31,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     if (receipt == null) return;
 
     if (receipt.messageId != null) {
-      await into(messageActions).insert(
+      await into(messageActions).insertOnConflictUpdate(
         MessageActionsCompanion(
           messageId: Value(receipt.messageId!),
           contactId: Value(fromUserId),
@@ -113,6 +113,16 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     }
   }
 
+  Future<List<Receipt>> getReceiptsByContactAndMessageId(
+    int contactId,
+    String messageId,
+  ) async {
+    return (select(receipts)..where(
+          (t) => t.contactId.equals(contactId) & t.messageId.equals(messageId),
+        ))
+        .get();
+  }
+
   Future<List<Receipt>> getReceiptsForRetransmission() async {
     final markedRetriesTime = clock.now().subtract(
       const Duration(
@@ -128,6 +138,24 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
                     markedRetriesTime,
                   )) &
               t.willBeRetriedByMediaUpload.equals(false),
+        ))
+        .get();
+  }
+
+  Future<List<Receipt>> getReceiptsForMediaRetransmissions() async {
+    final markedRetriesTime = clock.now().subtract(
+      const Duration(
+        // give the server time to transmit all messages to the client
+        seconds: 20,
+      ),
+    );
+    return (select(receipts)..where(
+          (t) =>
+              (t.markForRetry.isSmallerThanValue(markedRetriesTime) |
+                  t.markForRetryAfterAccepted.isSmallerThanValue(
+                    markedRetriesTime,
+                  )) &
+              t.willBeRetriedByMediaUpload.equals(true),
         ))
         .get();
   }
@@ -155,6 +183,19 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     )..where((c) => c.receiptId.equals(receiptId))).write(updates);
   }
 
+  Future<void> updateReceiptByContactAndMessageId(
+    int contactId,
+    String messageId,
+    ReceiptsCompanion updates,
+  ) async {
+    await (update(
+          receipts,
+        )..where(
+          (c) => c.contactId.equals(contactId) & c.messageId.equals(messageId),
+        ))
+        .write(updates);
+  }
+
   Future<void> updateReceiptWidthUserId(
     int fromUserId,
     String receiptId,
@@ -168,9 +209,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
 
   Future<void> markMessagesForRetry(int contactId) async {
     await (update(receipts)..where(
-          (c) =>
-              c.contactId.equals(contactId) &
-              c.willBeRetriedByMediaUpload.equals(false),
+          (c) => c.contactId.equals(contactId) & c.markForRetry.isNull(),
         ))
         .write(
           ReceiptsCompanion(
