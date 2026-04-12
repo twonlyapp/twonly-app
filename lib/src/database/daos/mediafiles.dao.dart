@@ -14,7 +14,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   // ignore: matching_super_parameters
   MediaFilesDao(super.db);
 
-  Future<MediaFile?> insertMedia(MediaFilesCompanion mediaFile) async {
+  Future<MediaFile?> insertOrUpdateMedia(MediaFilesCompanion mediaFile) async {
     try {
       var insertMediaFile = mediaFile;
 
@@ -24,7 +24,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         );
       }
 
-      final rowId = await into(mediaFiles).insert(insertMediaFile);
+      final rowId = await into(
+        mediaFiles,
+      ).insertOnConflictUpdate(insertMediaFile);
 
       return await (select(
         mediaFiles,

@@ -111,7 +111,7 @@ class _ImportMediaViewState extends State<ImportMediaView> {
             continue;
         }
 
-        final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+        final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
           MediaFilesCompanion(
             type: Value(type),
             createdAt: Value(file.lastModDateTime),
