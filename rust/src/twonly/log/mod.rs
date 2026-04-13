@@ -28,7 +28,7 @@ pub(crate) fn init_tracing(logs_dir: &std::path::Path) {
 fn build_writers(logs_dir: &std::path::Path) -> (NonBlocking, NonBlocking) {
     let file_appender = tracing_appender::rolling::RollingFileAppender::builder()
         .rotation(tracing_appender::rolling::Rotation::DAILY)
-        .filename_prefix("whitenoise")
+        .filename_prefix("twonly")
         .filename_suffix("log")
         .build(logs_dir)
         .expect("Failed to create file appender");

@@ -1,9 +1,8 @@
 mod error;
 pub mod stores;
-mod traits;
+pub mod traits;
 
 use std::collections::HashMap;
-
 use blahaj::{Share, Sharks};
 use postcard::{from_bytes, to_allocvec};
 use prost::Message;
@@ -19,6 +18,8 @@ pub use traits::UserDiscoveryStore;
 static TRANSMITTED_NETWORK_BYTES: std::sync::OnceLock<std::sync::Mutex<usize>> =
     std::sync::OnceLock::new();
 
+/// Type of the user id, this must be consistent with the user id defined in
+/// the types.proto
 pub type UserID = i64;
 
 include!(concat!(env!("OUT_DIR"), "/_.rs"));
@@ -41,20 +42,11 @@ struct UserDiscoveryConfig {
     user_id: UserID,
 }
 
-impl Default for UserDiscoveryConfig {
-    fn default() -> Self {
-        Self {
-            threshold: 2,
-            total_number_of_shares: 255,
-            announcement_version: 0,
-            promotion_version: 0,
-            verification_shares: vec![],
-            public_id: 0,
-            user_id: 0,
-        }
-    }
-}
-
+///
+/// The main struct to access the user discovery functionality.
+///
+/// As generic values it requires a UserDiscoveryStore and a UserDiscoveryUtils.
+///
 pub struct UserDiscovery<Store, Utils>
 where
     Store: UserDiscoveryStore,
@@ -65,10 +57,26 @@ where
 }
 
 impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, Utils> {
+    /// Creates a new instance of the user discovery.
     pub fn new(store: Store, utils: Utils) -> Result<Self> {
         Ok(Self { store, utils })
     }
 
+    /// Initializes or updates the user discovery.
+    ///
+    /// This function will generate new verification shares and update the config.
+    ///
+    /// # Arguments
+    ///
+    /// * `threshold` - The number of required shares to get the secret
+    /// * `user_id` - The owner's user id
+    /// * `public_key` - The owner's public key
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the user discovery was initialized or updated successfully
+    /// * `Err(UserDiscoveryError)` - If the user discovery was not initialized or updated successfully
+    ///
     pub fn initialize_or_update(
         &self,
         threshold: u8,
@@ -105,6 +113,167 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         config.verification_shares = verification_shares;
 
         self.store.update_config(to_allocvec(&config)?)?;
+
+        Ok(())
+    }
+
+    ///
+    /// Returns the current version of the owner's user discovery state.
+    ///
+    /// The version is incremented every time the user discovery is initialized or updated.
+    /// It should be send contacts which participate in the user discovery, so they can
+    /// check if there is new data available for them using the `get_new_messages` function
+    /// on there side.  
+    ///
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Vec<u8>)` - The current version of the user discovery
+    /// * `Err(UserDiscoveryError)` - If there where errors in the store.
+    ///
+    pub fn get_current_version(&self) -> Result<Vec<u8>> {
+        let config = self.get_config()?;
+        Ok(UserDiscoveryVersion {
+            announcement: config.announcement_version,
+            promotion: config.promotion_version,
+        }
+        .encode_to_vec())
+    }
+
+    ///
+    /// Returns all users discovery though the user discovery and there relations
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>)` - All connections the user has discovered
+    /// * `Err(UserDiscoveryError)` - If there where erros in the store.
+    ///
+    pub fn get_all_announced_users(
+        &self,
+    ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
+        self.store.get_all_announced_users()
+    }
+
+    ///
+    /// Returns all new user discovery messages for the provided contact and his current version.
+    ///
+    /// # Arguments
+    ///
+    /// * `contact_id` - The contact id of the user
+    /// * `received_version` - The version of the user discovery the contact has received so far
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Vec<Vec<u8>>)` - The new user discovery messages
+    /// * `Err(UserDiscoveryError)` - If there where errors in the store or if the received version is invalid.
+    ///
+    pub fn get_new_messages(
+        &self,
+        contact_id: UserID,
+        received_version: &[u8],
+    ) -> Result<Vec<Vec<u8>>> {
+        let mut messages = vec![];
+        let received_version = UserDiscoveryVersion::decode(received_version)?;
+
+        let config = self.get_config()?;
+        let version = Some(UserDiscoveryVersion {
+            announcement: config.announcement_version,
+            promotion: config.promotion_version,
+        });
+
+        if received_version.announcement < config.announcement_version {
+            tracing::info!("New announcement message available for {}", contact_id);
+
+            let announcement_share = self.store.get_share_for_contact(contact_id)?;
+
+            let user_discovery_announcement = Some(UserDiscoveryAnnouncement {
+                public_id: config.public_id,
+                threshold: config.threshold as u32,
+                announcement_share,
+                verification_shares: config.verification_shares,
+            });
+
+            messages.push(
+                UserDiscoveryMessage {
+                    user_discovery_announcement,
+                    version,
+                    ..Default::default()
+                }
+                .encode_to_vec(),
+            );
+        }
+        if received_version.promotion < config.promotion_version {
+            tracing::info!("New promotion message available for user {}", contact_id);
+            let promoting_messages = self
+                .store
+                .get_own_promotions_after_version(received_version.promotion)?;
+            messages.extend_from_slice(&promoting_messages);
+        }
+        #[cfg(test)]
+        {
+            let mut count = TRANSMITTED_NETWORK_BYTES.get().unwrap().lock().unwrap();
+            for message in &messages {
+                *count += message.len();
+            }
+        }
+        Ok(messages)
+    }
+
+    ///
+    /// Checks if the provided user has new announcements and a request of update should be send.
+    ///
+    /// # Arguments
+    ///
+    /// * `contact_id` - The contact id of the user
+    /// * `version` - The current version of the user discovery from the contact
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(bool)` - True if the user has new announcements
+    /// * `Err(UserDiscoveryError)` - If there where errors in the store or if the received version is invalid.
+    ///
+    pub fn should_request_new_messages(&self, contact_id: UserID, version: &[u8]) -> Result<bool> {
+        let received_version = UserDiscoveryVersion::decode(version)?;
+        let stored_version = match self.store.get_contact_version(contact_id)? {
+            Some(buf) => UserDiscoveryVersion::decode(buf.as_slice())?,
+            None => UserDiscoveryVersion {
+                announcement: 0,
+                promotion: 0,
+            },
+        };
+        Ok(received_version.announcement > stored_version.announcement
+            || received_version.promotion > stored_version.promotion)
+    }
+
+    pub(crate) fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
+        self.store.get_contact_version(contact_id)
+    }
+
+    /// Returns the latest version for this discovery.
+    /// Before calling this function the application must sure that contact_id is qualified to be announced.
+    pub fn handle_user_discovery_messages(
+        &self,
+        contact_id: UserID,
+        messages: Vec<Vec<u8>>,
+    ) -> Result<()> {
+        for message in messages {
+            let message = UserDiscoveryMessage::decode(message.as_slice())?;
+            let Some(version) = message.version else {
+                continue;
+            };
+
+            if let Some(uda) = message.user_discovery_announcement {
+                self.handle_user_discovery_announcement(contact_id, uda)?;
+            } else if let Some(udp) = message.user_discovery_promotion {
+                self.handle_user_discovery_promotion(contact_id, udp)?;
+            } else {
+                tracing::warn!("Got unknown user discovery messaging. Ignoring it.");
+                continue;
+            }
+
+            self.store
+                .set_contact_version(contact_id, version.encode_to_vec())?;
+        }
 
         Ok(())
     }
@@ -162,128 +331,6 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
     fn get_config(&self) -> Result<UserDiscoveryConfig> {
         Ok(from_bytes(&self.store.get_config()?)?)
-    }
-
-    /// Returns the current version of the user discovery.
-    pub fn get_current_version(&self) -> Result<Vec<u8>> {
-        let config = self.get_config()?;
-        Ok(UserDiscoveryVersion {
-            announcement: config.announcement_version,
-            promotion: config.promotion_version,
-        }
-        .encode_to_vec())
-    }
-
-    /// Returns all users discovery though the user discovery and there relations
-    pub fn get_all_announced_users(
-        &self,
-    ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
-        self.store.get_all_announced_users()
-    }
-
-    /// Returns all new user discovery messages for the provided contact
-    pub fn get_new_messages(
-        &self,
-        contact_id: UserID,
-        received_version: &[u8],
-    ) -> Result<Vec<Vec<u8>>> {
-        let mut messages = vec![];
-        let received_version = UserDiscoveryVersion::decode(received_version)?;
-
-        let config = self.get_config()?;
-        let version = Some(UserDiscoveryVersion {
-            announcement: config.announcement_version,
-            promotion: config.promotion_version,
-        });
-
-        if received_version.announcement < config.announcement_version {
-            tracing::info!("New announcement message available for {}", contact_id);
-
-            let announcement_share = self.store.get_share_for_contact(contact_id)?;
-
-            let user_discovery_announcement = Some(UserDiscoveryAnnouncement {
-                public_id: config.public_id,
-                threshold: config.threshold as u32,
-                announcement_share,
-                verification_shares: config.verification_shares,
-            });
-
-            messages.push(
-                UserDiscoveryMessage {
-                    user_discovery_announcement,
-                    version,
-                    ..Default::default()
-                }
-                .encode_to_vec(),
-            );
-
-            // messages.push(value);
-        }
-        if received_version.promotion < config.promotion_version {
-            tracing::info!("New promotion message available for user {}", contact_id);
-            let promoting_messages = self
-                .store
-                .get_own_promotions_after_version(received_version.promotion)?;
-            messages.extend_from_slice(&promoting_messages);
-        }
-        #[cfg(test)]
-        {
-            let mut count = TRANSMITTED_NETWORK_BYTES.get().unwrap().lock().unwrap();
-            for message in &messages {
-                *count += message.len();
-            }
-        }
-        // static TRANSMITTED_NETWORK_BYTES: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
-        Ok(messages)
-    }
-
-    /// Checks if the provided user has new announcements.
-    /// In this case the user should be requested to send there updates.
-    pub fn should_request_new_messages(&self, contact_id: UserID, version: &[u8]) -> Result<bool> {
-        let received_version = UserDiscoveryVersion::decode(version)?;
-        let stored_version = match self.store.get_contact_version(contact_id)? {
-            Some(buf) => UserDiscoveryVersion::decode(buf.as_slice())?,
-            None => UserDiscoveryVersion {
-                announcement: 0,
-                promotion: 0,
-            },
-        };
-        // tracing::debug!("{received_version:?} >  {stored_version:?}");
-        Ok(received_version.announcement > stored_version.announcement
-            || received_version.promotion > stored_version.promotion)
-    }
-
-    pub(crate) fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
-        self.store.get_contact_version(contact_id)
-    }
-
-    /// Returns the latest version for this discovery.
-    /// Before calling this function the application must sure that contact_id is qualified to be announced.
-    pub fn handle_user_discovery_messages(
-        &self,
-        contact_id: UserID,
-        messages: Vec<Vec<u8>>,
-    ) -> Result<()> {
-        for message in messages {
-            let message = UserDiscoveryMessage::decode(message.as_slice())?;
-            let Some(version) = message.version else {
-                continue;
-            };
-
-            if let Some(uda) = message.user_discovery_announcement {
-                self.handle_user_discovery_announcement(contact_id, uda)?;
-            } else if let Some(udp) = message.user_discovery_promotion {
-                self.handle_user_discovery_promotion(contact_id, udp)?;
-            } else {
-                tracing::warn!("Got unknown user discovery messaging. Ignoring it.");
-                continue;
-            }
-
-            self.store
-                .set_contact_version(contact_id, version.encode_to_vec())?;
-        }
-
-        Ok(())
     }
 
     fn handle_user_discovery_announcement(
@@ -501,6 +548,20 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 Ok(())
             }
             Err(err) => Err(UserDiscoveryError::ShamirsSecret(err.to_string())),
+        }
+    }
+}
+
+impl Default for UserDiscoveryConfig {
+    fn default() -> Self {
+        Self {
+            threshold: 2,
+            total_number_of_shares: 255,
+            announcement_version: 0,
+            promotion_version: 0,
+            verification_shares: vec![],
+            public_id: 0,
+            user_id: 0,
         }
     }
 }
