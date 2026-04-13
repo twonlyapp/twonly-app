@@ -1,9 +1,5 @@
-// Table is defined in contacts.table.dart
-
-use sqlx::{
-    types::chrono::{DateTime, Utc},
-    FromRow,
-};
+// use sqlx::types::chrono::{DateTime, Utc};
+use sqlx::FromRow;
 
 use crate::twonly::{database::Database, error::Result};
 
@@ -11,7 +7,7 @@ use crate::twonly::{database::Database, error::Result};
 struct ContactRow {
     pub(crate) user_id: i64,
     pub(crate) username: String,
-    pub(crate) created_at: DateTime<Utc>,
+    // pub(crate) created_at: DateTime<Utc>,
 }
 
 pub struct Contact {
@@ -36,5 +32,25 @@ impl Contact {
             .fetch_all(&db.pool)
             .await?;
         Ok(rows.into_iter().map(Into::into).collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::twonly::{database::contact::Contact, tests::initialize_twonly_for_testing};
+
+    #[tokio::test]
+    async fn test_get_all_contacts() {
+        let twonly = initialize_twonly_for_testing().await.unwrap();
+
+        let contacts = Contact::get_all_contacts(&twonly.database).await.unwrap();
+
+        let users = vec!["alice", "bob", "charlie", "diana", "eve", "frank", "grace"];
+
+        assert_eq!(contacts.len(), users.len());
+
+        for contact in contacts {
+            assert_eq!(users[contact.user_id as usize], &contact.username);
+        }
     }
 }

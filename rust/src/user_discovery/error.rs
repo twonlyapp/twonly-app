@@ -1,0 +1,28 @@
+use prost::DecodeError;
+use thiserror::Error;
+
+pub type Result<T> = core::result::Result<T, UserDiscoveryError>;
+
+#[derive(Error, Debug)]
+pub enum UserDiscoveryError {
+    #[error("The encrypted announcement data contains malicious data: `{0}`")]
+    MaliciousAnnouncementData(String),
+
+    #[error("no shares left.")]
+    NoSharesLeft,
+
+    #[error("User discovery contains no configuration.")]
+    NotInitialized,
+
+    #[error("`{0}`")]
+    PostcardError(#[from] postcard::Error),
+
+    #[error("error while calculating shamirs secret shares: `{0}`")]
+    ShamirsSecret(String),
+
+    #[error("tried to push a invalid version")]
+    PushedInvalidVersion,
+
+    #[error("`{0}`")]
+    Prost(#[from] DecodeError),
+}
