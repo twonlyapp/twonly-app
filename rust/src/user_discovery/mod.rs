@@ -2,16 +2,22 @@ mod error;
 pub mod stores;
 mod traits;
 
+use std::collections::HashMap;
+
 use blahaj::{Share, Sharks};
 use postcard::{from_bytes, to_allocvec};
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use crate::user_discovery::error::{Result, UserDiscoveryError};
-use crate::user_discovery::traits::UserDiscoveryUtils;
+use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryUtils};
 use crate::user_discovery::user_discovery_message::{UserDiscoveryAnnouncement, UserDiscoveryPromotion};
 use crate::user_discovery::user_discovery_message::user_discovery_promotion::AnnouncementShareDecrypted;
 use crate::user_discovery::user_discovery_message::user_discovery_promotion::announcement_share_decrypted::SignedData;
 pub use traits::UserDiscoveryStore;
+
+#[cfg(test)]
+static TRANSMITTED_NETWORK_BYTES: std::sync::OnceLock<std::sync::Mutex<usize>> =
+    std::sync::OnceLock::new();
 
 pub type UserID = i64;
 
@@ -31,6 +37,8 @@ struct UserDiscoveryConfig {
     public_id: u64,
     /// Verification shares
     verification_shares: Vec<Vec<u8>>,
+    // The users' id:
+    user_id: UserID,
 }
 
 impl Default for UserDiscoveryConfig {
@@ -42,6 +50,7 @@ impl Default for UserDiscoveryConfig {
             promotion_version: 0,
             verification_shares: vec![],
             public_id: 0,
+            user_id: 0,
         }
     }
 }
@@ -74,6 +83,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             }
             Err(_) => UserDiscoveryConfig {
                 threshold,
+                user_id,
                 ..Default::default()
             },
         };
@@ -86,7 +96,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             public_key,
         };
 
-        let signature = self.utils.sign_data(signed_data.encode_to_vec())?;
+        let signature = self.utils.sign_data(&signed_data.encode_to_vec())?;
 
         let verification_shares = self.setup_announcements(&config, signed_data, signature)?;
 
@@ -164,6 +174,13 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         .encode_to_vec())
     }
 
+    /// Returns all users discovery though the user discovery and there relations
+    pub fn get_all_announced_users(
+        &self,
+    ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
+        self.store.get_all_announced_users()
+    }
+
     /// Returns all new user discovery messages for the provided contact
     pub fn get_new_messages(
         &self,
@@ -206,9 +223,17 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             tracing::info!("New promotion message available for user {}", contact_id);
             let promoting_messages = self
                 .store
-                .get_promotions_after_version(received_version.promotion)?;
+                .get_own_promotions_after_version(received_version.promotion)?;
             messages.extend_from_slice(&promoting_messages);
         }
+        #[cfg(test)]
+        {
+            let mut count = TRANSMITTED_NETWORK_BYTES.get().unwrap().lock().unwrap();
+            for message in &messages {
+                *count += message.len();
+            }
+        }
+        // static TRANSMITTED_NETWORK_BYTES: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
         Ok(messages)
     }
 
@@ -223,8 +248,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 promotion: 0,
             },
         };
+        // tracing::debug!("{received_version:?} >  {stored_version:?}");
         Ok(received_version.announcement > stored_version.announcement
-            || received_version.promotion < received_version.promotion)
+            || received_version.promotion > stored_version.promotion)
     }
 
     pub(crate) fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
@@ -246,10 +272,11 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
             if let Some(uda) = message.user_discovery_announcement {
                 self.handle_user_discovery_announcement(contact_id, uda)?;
-            }
-            if let Some(udp) = message.user_discovery_promotion {
-                self.handle
-                tracing::info!("Got UDP from {contact_id}");
+            } else if let Some(udp) = message.user_discovery_promotion {
+                self.handle_user_discovery_promotion(contact_id, udp)?;
+            } else {
+                tracing::warn!("Got unknown user discovery messaging. Ignoring it.");
+                continue;
             }
 
             self.store
@@ -301,17 +328,26 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     )));
                 }
 
-                if !self.utils.verify_pubkey_and_signature_from(
-                    contact_id,
-                    signed_data.encode_to_vec(),
-                    signed_data.public_key,
-                    asd.signature,
-                )? {
+                if !self
+                    .utils
+                    .verify_stored_pubkey(contact_id, &signed_data.public_key)?
+                {
                     return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
-                        "signature invalid or public key does not match with stored one",
+                        "public key does not match with stored one",
                     )));
                 }
 
+                if !self.utils.verify_signature(
+                    &signed_data.encode_to_vec(),
+                    &signed_data.public_key,
+                    &asd.signature,
+                )? {
+                    return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
+                        "signature invalid",
+                    )));
+                }
+
+                tracing::debug!("Increased promotion version id.");
                 let mut config = self.get_config()?;
                 config.promotion_version += 1;
                 self.store.update_config(to_allocvec(&config)?)?;
@@ -326,50 +362,160 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         public_id: signed_data.public_id,
                         threshold: uda.threshold,
                         announcement_share: uda.announcement_share,
-                        verification_state: None,
+                        public_key_verified_timestamp: None,
                     }),
                     ..Default::default()
                 };
 
-                self.store
-                    .push_promotion(config.promotion_version, message.encode_to_vec())?;
+                self.store.push_own_promotion(
+                    contact_id,
+                    config.promotion_version,
+                    message.encode_to_vec(),
+                )?;
+
+                let announced_user = AnnouncedUser {
+                    user_id: signed_data.user_id,
+                    public_key: signed_data.public_key,
+                    public_id: uda.public_id,
+                };
+
+                tracing::debug!(
+                    "NEW PROMOTION: {} knows {}",
+                    contact_id,
+                    announced_user.user_id
+                );
+                // User is known, so add him to thr users relations
+                self.store.push_new_user_relation(
+                    contact_id,
+                    announced_user,
+                    None, // This flag mus be handled by the applications as this comes from an announcement.
+                )?;
 
                 Ok(())
             }
-            Err(err) => {
-                return Err(UserDiscoveryError::ShamirsSecret(err.to_string()));
-            }
+            Err(err) => Err(UserDiscoveryError::ShamirsSecret(err.to_string())),
         }
     }
 
     fn handle_user_discovery_promotion(
         &self,
-        contact_id: UserID,
-        uda: UserDiscoveryPromotion,
-    ) {
+        from_contact_id: UserID,
+        udp: UserDiscoveryPromotion,
+    ) -> Result<()> {
+        tracing::debug!("Received a new UDP with public_id = {}.", &udp.public_id);
 
-        // contact_id
-        // uda.promotion_id
-        // uda.public_id
-        // uda.threshold
-        // uda.announcement_share
-        // uda.verification_state
+        self.store.store_other_promotion(OtherPromotion {
+            from_contact_id,
+            promotion_id: udp.promotion_id,
+            threshold: udp.threshold as u8,
+            public_id: udp.public_id,
+            announcement_share: udp.announcement_share,
+            public_key_verified_timestamp: udp.public_key_verified_timestamp,
+        })?;
 
-        // store this into the received_promotion_table 
-        // check if the threshold is reached
-        // in case thr threshold is reached -> CALL STORE -> NEW USER
-        // otherwise do nothing
+        if let Some(contact) = self.store.get_announced_user_by_public_id(udp.public_id)? {
+            tracing::debug!(
+                "NEW PROMOTION 2: {} knows {}",
+                from_contact_id,
+                contact.user_id
+            );
+            // The user is already known, just propagate the relation ship
+            self.store.push_new_user_relation(
+                from_contact_id,
+                contact,
+                udp.public_key_verified_timestamp,
+            )?;
+            return Ok(());
+        }
 
+        let promotions = self.store.get_other_promotions_by_public_id(udp.public_id);
+
+        if promotions.len() < udp.threshold as usize {
+            tracing::debug!(
+                "Not enough shares ({} < {}) to decrypt announcement. Waiting for next share.",
+                promotions.len(),
+                udp.threshold
+            );
+            return Ok(());
+        }
+
+        tracing::debug!("Enough shares decrypting announcement.");
+
+        let shares: Vec<_> = promotions
+            .iter()
+            .map(|x| x.announcement_share.to_owned())
+            .filter_map(|x| Share::try_from(x.as_slice()).ok())
+            .collect();
+
+        match Sharks(udp.threshold as u8).recover(&shares) {
+            Ok(secret) => {
+                tracing::debug!("Could decrypt announcement.");
+                let asd = AnnouncementShareDecrypted::decode(secret.as_slice())?;
+                if let Some(signed_data) = asd.signed_data {
+                    if udp.public_id != signed_data.public_id {
+                        tracing::error!(
+                            "Mismatch of the announced public id and the signed public id "
+                        );
+                        return Ok(());
+                    }
+
+                    if !self.utils.verify_signature(
+                        &signed_data.encode_to_vec(),
+                        &signed_data.public_key,
+                        &asd.signature,
+                    )? {
+                        return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
+                            "signature is invalid",
+                        )));
+                    }
+
+                    tracing::debug!("Announcement valid.");
+
+                    let announced_user = AnnouncedUser {
+                        user_id: signed_data.user_id,
+                        public_key: signed_data.public_key,
+                        public_id: udp.public_id,
+                    };
+
+                    let user_id = self.get_config()?.user_id;
+                    for promotion in promotions {
+                        // Do not store the announcement of the users itself.
+                        // Or in case the promotion promotes myself
+                        if promotion.from_contact_id == announced_user.user_id
+                            || announced_user.user_id == user_id
+                        {
+                            continue;
+                        }
+                        tracing::debug!(
+                            "NEW PROMOTION: {} knows {}",
+                            promotion.from_contact_id,
+                            announced_user.user_id
+                        );
+                        self.store.push_new_user_relation(
+                            promotion.from_contact_id,
+                            announced_user.clone(),
+                            promotion.public_key_verified_timestamp,
+                        )?;
+                    }
+                }
+                Ok(())
+            }
+            Err(err) => Err(UserDiscoveryError::ShamirsSecret(err.to_string())),
+        }
     }
-
 }
 
 #[cfg(test)]
 mod tests {
 
+    use std::collections::{HashMap, HashSet};
+    use std::vec;
+
     use crate::user_discovery::stores::InMemoryStore;
     use crate::user_discovery::traits::tests::TestingUtils;
-    use crate::user_discovery::{UserDiscovery, UserDiscoveryVersion, UserID};
+    use crate::user_discovery::{
+        UserDiscovery, UserDiscoveryVersion, UserID, TRANSMITTED_NETWORK_BYTES,
+    };
     use prost::Message;
 
     fn get_version_bytes(announcement: u32, promotion: u32) -> Vec<u8> {
@@ -380,16 +526,11 @@ mod tests {
         .encode_to_vec()
     }
 
-    fn zero() -> Vec<u8> {
-        get_version_bytes(0, 0)
-    }
-
-    fn get_ud(user_id: UserID, friends: &[UserID]) -> UserDiscovery<InMemoryStore, TestingUtils> {
+    fn get_ud(user_id: usize) -> UserDiscovery<InMemoryStore, TestingUtils> {
         let store = InMemoryStore::default();
-        store.set_friends(friends.iter().copied().collect());
         let ud = UserDiscovery::new(store.to_owned(), TestingUtils::default()).unwrap();
 
-        ud.initialize_or_update(3, user_id, vec![user_id as u8; 32])
+        ud.initialize_or_update(2, user_id as UserID, vec![user_id as u8; 32])
             .unwrap();
 
         let version = ud.get_current_version().unwrap();
@@ -398,74 +539,236 @@ mod tests {
         ud
     }
 
-    fn init() {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
-            .init();
+    fn assert_new_messages(
+        from: (usize, &UserDiscovery<InMemoryStore, TestingUtils>),
+        to: (usize, &UserDiscovery<InMemoryStore, TestingUtils>),
+        has_new_messages: bool,
+    ) {
+        // From sends a message with his current version to To
+        let to_received_version = &from.1.get_current_version().unwrap();
+        assert_eq!(
+            to.1.should_request_new_messages(from.0 as UserID, to_received_version)
+                .unwrap(),
+            has_new_messages
+        );
     }
 
     fn request_and_handle_messages(
-        from: (UserID, &UserDiscovery<InMemoryStore, TestingUtils>),
-        to: (UserID, &UserDiscovery<InMemoryStore, TestingUtils>),
+        from: (usize, &UserDiscovery<InMemoryStore, TestingUtils>),
+        to: (usize, &UserDiscovery<InMemoryStore, TestingUtils>),
         messages_count: usize,
     ) {
         // From sends a message with his current version to To
         let to_received_version = &from.1.get_current_version().unwrap();
         assert_eq!(
-            to.1.should_request_new_messages(from.0, to_received_version)
+            to.1.should_request_new_messages(from.0 as UserID, to_received_version)
                 .unwrap(),
             true
         );
 
         // As To has a older version stored he sends a request to From: Give me all messages since version.
         let from_request_version_from_to =
-            to.1.get_contact_version(from.0).unwrap().unwrap_or(zero());
+            to.1.get_contact_version(from.0 as UserID)
+                .unwrap()
+                .unwrap_or(get_version_bytes(0, 0));
 
         let new_messages = from
             .1
-            .get_new_messages(to.0, &from_request_version_from_to)
+            .get_new_messages(to.0 as UserID, &from_request_version_from_to)
             .unwrap();
 
-        assert_eq!(new_messages.len(), messages_count);
+        assert!(new_messages.len() <= messages_count);
 
-        to.1.handle_user_discovery_messages(from.0, new_messages)
+        to.1.handle_user_discovery_messages(from.0 as UserID, new_messages)
             .unwrap();
 
         assert_eq!(
-            to.1.should_request_new_messages(from.0, &from.1.get_current_version().unwrap())
-                .unwrap(),
+            to.1.should_request_new_messages(
+                from.0 as UserID,
+                &from.1.get_current_version().unwrap()
+            )
+            .unwrap(),
             false
         );
     }
 
+    const ALICE: usize = 0;
+    const BOB: usize = 1;
+    const CHARLIE: usize = 2;
+    const DAVID: usize = 3;
+    const FRANK: usize = 4;
+    const TEST_USER_COUNT: usize = 5;
+    struct TestUsers {
+        names: [&'static str; TEST_USER_COUNT],
+        friends: [Vec<usize>; TEST_USER_COUNT],
+        uds: Vec<UserDiscovery<InMemoryStore, TestingUtils>>,
+    }
+
+    impl TestUsers {
+        fn get() -> Self {
+            let names = ["ALICE", "BOB", "CHARLIE", "DAVID", "FRANK"];
+            let mut uds = vec![];
+            for index in 0..names.len() {
+                uds.push(get_ud(index));
+            }
+            let friends = [
+                vec![BOB, CHARLIE],
+                vec![ALICE, CHARLIE, DAVID],
+                vec![ALICE, BOB, DAVID, FRANK],
+                vec![BOB, CHARLIE],
+                vec![CHARLIE],
+            ];
+            Self {
+                names,
+                uds,
+                friends,
+            }
+        }
+    }
+
     #[tokio::test]
     async fn test_initialize_user_discovery() {
-        init();
+        pretty_env_logger::init();
+        let counter = TRANSMITTED_NETWORK_BYTES.get_or_init(|| std::sync::Mutex::new(0));
 
-        const ALICE: UserID = 0;
-        const BOB: UserID = 1;
-        const CHARLIE: UserID = 2;
-        const DAVID: UserID = 3;
-        const FRANK: UserID = 4;
+        let users = TestUsers::get();
 
-        let alice_ud = get_ud(ALICE, &[BOB, CHARLIE]);
-        let bob_ud = get_ud(BOB, &[ALICE, CHARLIE, DAVID]);
-        let charlie_ud = get_ud(CHARLIE, &[ALICE, BOB, DAVID, FRANK]);
-        let david_ud = get_ud(DAVID, &[BOB, CHARLIE]);
-        let frank_ud = get_ud(FRANK, &[CHARLIE]);
+        fn to_all_friends(from: usize, message_count: usize, users: &TestUsers) {
+            for friend in &users.friends[from] {
+                tracing::debug!("From {} to {}", users.names[from], users.names[*friend]);
 
-        {
-            // Alice send UDA to Bob and Charlie
-            request_and_handle_messages((ALICE, &alice_ud), (BOB, &bob_ud), 1);
-            request_and_handle_messages((ALICE, &alice_ud), (CHARLIE, &charlie_ud), 1);
+                if message_count == 0 {
+                    assert_new_messages(
+                        (from, &users.uds[from]),
+                        (*friend, &users.uds[*friend]),
+                        false,
+                    );
+                } else {
+                    request_and_handle_messages(
+                        (from, &users.uds[from]),
+                        (*friend, &users.uds[*friend]),
+                        message_count,
+                    );
+                }
+            }
         }
 
-        {
-            // This now contains Bob's own announcement in addition this now also contains the promotion from Alice 
-            request_and_handle_messages((BOB, &bob_ud), (DAVID, &david_ud), 2);
-            request_and_handle_messages((BOB, &bob_ud), (CHARLIE, &charlie_ud), 2);
+        let message_flows = [
+            // ALICE: own announcement sending to BOB and CHARLIE
+            (ALICE, 1),
+            // BOB: own announcement + promotion for ALICE
+            (BOB, 2),
+            // BOBs version should not have any new messages for his friends
+            (BOB, 0),
+            // ALICE: promotion for BOB
+            (ALICE, 1),
+            // CHARLIE: own announcement + promotion for ALICE, BOB
+            (CHARLIE, 3),
+            // DAVID: own announcement + promotion for BOB, CHARLIE
+            (DAVID, 3),
+            // BOB: promotion for CHARLIE, DAVID
+            (BOB, 2),
+            // CHARLIE: promotion for DAVID
+            (CHARLIE, 1),
+            // FRANK: own announcement +  promotion for CHARLIE
+            (FRANK, 2),
+            // CHARLIE: promotion for FRANK
+            (CHARLIE, 1),
+            // ALICE: promotion for CHARLIE
+            (ALICE, 1),
+        ];
+
+        for (i, (from, count)) in message_flows.into_iter().enumerate() {
+            tracing::debug!("MESSAGE FLOW: {i}");
+            to_all_friends(from, count, &users);
         }
 
-        todo!();
+        tracing::debug!("Now all users should have the newest version.");
+
+        for from in 0..TEST_USER_COUNT {
+            for to in &users.friends[from] {
+                tracing::debug!(
+                    "Does {} has open messages for {}?",
+                    &users.names[from],
+                    &users.names[*to]
+                );
+                assert_new_messages((from, &users.uds[from]), (*to, &users.uds[*to]), false);
+            }
+        }
+
+        tracing::debug!("Test if all exchanges where successful.");
+
+        let announced_users_expected = [
+            // ALICE should now know that BOB and CHARLIE, BOB and DAVID and CHARLIE and DAVID are friends.
+            // Alice should also have one protected share from Frank.
+            (
+                ALICE,
+                vec![
+                    (BOB, vec![CHARLIE]), // ALICE knows Bob and that CHARLIE is connected with BOB
+                    (CHARLIE, vec![BOB]), // ALICE knows CHARLIE and that BOB is connected with CHARLIE
+                    (DAVID, vec![BOB, CHARLIE]), // ALICE knows DAVID and that BOB and CHARLIE are connected with DAVID
+                ],
+            ),
+            (
+                BOB,
+                vec![
+                    (ALICE, vec![CHARLIE]),
+                    (CHARLIE, vec![ALICE, DAVID]),
+                    (DAVID, vec![CHARLIE]),
+                ],
+            ),
+            (
+                CHARLIE,
+                vec![
+                    (ALICE, vec![BOB]),
+                    (BOB, vec![ALICE, DAVID]),
+                    (DAVID, vec![BOB]),
+                    (FRANK, vec![]),
+                ],
+            ),
+            (
+                DAVID,
+                vec![
+                    (ALICE, vec![BOB, CHARLIE]),
+                    (BOB, vec![CHARLIE]),
+                    (CHARLIE, vec![BOB]),
+                ],
+            ),
+            (FRANK, vec![(CHARLIE, vec![])]),
+        ];
+
+        for (user, announcements) in announced_users_expected {
+            let announced_users2 = users.uds[user].get_all_announced_users().unwrap();
+            let mut announced_users = HashMap::new();
+            for a in announced_users2 {
+                announced_users.insert(a.0.user_id, a.1.iter().map(|x| x.0).collect::<Vec<_>>());
+            }
+            tracing::debug!("{} knows now: {}", users.names[user], announced_users.len());
+            assert_eq!(announced_users.len(), announcements.len());
+            for (contact_id, announced_users_expected) in announcements {
+                let announced_users = announced_users.get(&(contact_id as i64)).unwrap();
+                tracing::debug!(
+                    "{} knows now that {} has the following friends: {}",
+                    users.names[user],
+                    users.names[contact_id],
+                    announced_users
+                        .iter()
+                        .map(|x| users.names[*x as usize])
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+                let announced_users: HashSet<i64> = announced_users.iter().cloned().collect();
+                let announced_users_expected: HashSet<i64> = announced_users_expected
+                    .iter()
+                    .cloned()
+                    .map(|x| x as i64)
+                    .collect();
+                assert_eq!(announced_users, announced_users_expected);
+            }
+        }
+
+        let count = TRANSMITTED_NETWORK_BYTES.get().unwrap().lock().unwrap();
+
+        tracing::info!("Transmitted a total of {} bytes.", *count);
     }
 }

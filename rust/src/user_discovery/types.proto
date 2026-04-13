@@ -17,7 +17,7 @@ message UserDiscoveryMessage {
     uint64         public_id           = 1;
     uint32         threshold           = 2;
     bytes          announcement_share  = 4;
-    repeated bytes verification_shares = 5;
+    repeated bytes verification_shares = 6;
   }
 
   message UserDiscoveryPromotion {
@@ -26,7 +26,7 @@ message UserDiscoveryMessage {
     uint32 threshold          = 3;
     bytes  announcement_share = 5;
 
-    optional VerificationState verification_state = 6;
+    optional int64 public_key_verified_timestamp = 6;
 
     message AnnouncementShareDecrypted {
       message SignedData {
@@ -36,11 +36,6 @@ message UserDiscoveryMessage {
       }
       SignedData signed_data = 1;
       bytes      signature   = 2;
-    }
-
-    message VerificationState {
-      int64 timestamp = 1;
-      bytes signature = 2;
     }
 
   }

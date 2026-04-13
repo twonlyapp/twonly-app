@@ -1,7 +1,7 @@
-use crate::user_discovery::error::UserDiscoveryError;
-use crate::user_discovery::traits::UserDiscoveryStore;
+use crate::user_discovery::error::{Result, UserDiscoveryError};
+use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryStore};
 use crate::user_discovery::UserID;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
@@ -10,8 +10,9 @@ pub(crate) struct Storage {
     unused_shares: Vec<Vec<u8>>,
     used_shares: HashMap<UserID, Vec<u8>>,
     contact_versions: HashMap<UserID, Vec<u8>>,
-    friends: HashSet<UserID>,
-    promotions: Vec<Vec<u8>>,
+    other_promotions: Vec<OtherPromotion>,
+    announced_users: HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>,
+    own_promotions: Vec<(UserID, Vec<u8>)>,
 }
 
 #[derive(Default, Clone)]
@@ -23,33 +24,27 @@ impl InMemoryStore {
     fn storage(&self) -> std::sync::MutexGuard<'_, Storage> {
         self.storage.lock().unwrap()
     }
-    pub fn set_friends(&self, friends: HashSet<UserID>) {
-        self.storage().friends = friends;
-    }
 }
 
 impl UserDiscoveryStore for InMemoryStore {
-    fn get_config(&self) -> crate::user_discovery::error::Result<Vec<u8>> {
+    fn get_config(&self) -> Result<Vec<u8>> {
         if let Some(storage) = self.storage().config.clone() {
             return Ok(storage);
         }
         Err(UserDiscoveryError::NotInitialized)
     }
 
-    fn update_config(&self, update: Vec<u8>) -> crate::user_discovery::error::Result<()> {
+    fn update_config(&self, update: Vec<u8>) -> Result<()> {
         self.storage().config = Some(update);
         Ok(())
     }
 
-    fn set_shares(&self, shares: Vec<Vec<u8>>) -> crate::user_discovery::error::Result<()> {
+    fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()> {
         self.storage().unused_shares = shares;
         Ok(())
     }
 
-    fn get_share_for_contact(
-        &self,
-        contact_id: UserID,
-    ) -> crate::user_discovery::error::Result<Vec<u8>> {
+    fn get_share_for_contact(&self, contact_id: UserID) -> Result<Vec<u8>> {
         let mut storage = self.storage();
         if let Some(share) = storage.used_shares.get(&contact_id) {
             return Ok(share.to_vec());
@@ -61,42 +56,82 @@ impl UserDiscoveryStore for InMemoryStore {
         Err(UserDiscoveryError::NoSharesLeft)
     }
 
-    fn get_contact_version(
-        &self,
-        contact_id: UserID,
-    ) -> crate::user_discovery::error::Result<Option<Vec<u8>>> {
+    fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
         Ok(self.storage().contact_versions.get(&contact_id).cloned())
     }
 
-    fn set_contact_version(
-        &self,
-        contact_id: UserID,
-        update: Vec<u8>,
-    ) -> crate::user_discovery::error::Result<()> {
+    fn set_contact_version(&self, contact_id: UserID, update: Vec<u8>) -> Result<()> {
         self.storage().contact_versions.insert(contact_id, update);
         Ok(())
     }
 
-    fn push_promotion(
+    fn push_own_promotion(
         &self,
+        contact_id: UserID,
         version: u32,
         promotion: Vec<u8>,
-    ) -> crate::user_discovery::error::Result<()> {
+    ) -> Result<()> {
         let mut storage = self.storage();
         // println!("{} != {}", version, storage.promotions.len());
-        if version as usize != storage.promotions.len() + 1 {
+        if version as usize != storage.own_promotions.len() + 1 {
             return Err(UserDiscoveryError::PushedInvalidVersion);
         }
-        storage.promotions.push(promotion);
+        storage.own_promotions.push((contact_id, promotion));
         Ok(())
     }
 
-    fn get_promotions_after_version(
-        &self,
-        version: u32,
-    ) -> crate::user_discovery::error::Result<Vec<Vec<u8>>> {
+    fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>> {
         let storage = self.storage();
-        let elements = storage.promotions[(version as usize)..].to_vec();
+        let elements = storage.own_promotions[(version as usize)..]
+            .into_iter()
+            .map(|(_, promotion)| promotion.to_owned())
+            .collect();
         Ok(elements)
+    }
+
+    fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()> {
+        self.storage().other_promotions.push(promotion);
+        Ok(())
+    }
+
+    fn get_other_promotions_by_public_id(&self, public_id: u64) -> Vec<OtherPromotion> {
+        self.storage()
+            .other_promotions
+            .iter()
+            .filter(|other| other.public_id == public_id)
+            .map(OtherPromotion::to_owned)
+            .collect()
+    }
+
+    fn get_announced_user_by_public_id(&self, public_id: u64) -> Result<Option<AnnouncedUser>> {
+        Ok(self
+            .storage()
+            .announced_users
+            .iter()
+            .find(|(u, _)| u.public_id == public_id)
+            .map(|u| u.0.to_owned()))
+    }
+
+    fn get_all_announced_users(
+        &self,
+    ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
+        Ok(self.storage().announced_users.clone())
+    }
+
+    fn push_new_user_relation(
+        &self,
+        from_contact_id: UserID,
+        announced_user: AnnouncedUser,
+        public_key_verified_timestamp: Option<i64>,
+    ) -> Result<()> {
+        let mut storage = self.storage();
+        let entry = storage
+            .announced_users
+            .entry(announced_user.clone())
+            .or_insert(vec![]);
+        if announced_user.user_id != from_contact_id {
+            entry.push((from_contact_id, public_key_verified_timestamp));
+        }
+        Ok(())
     }
 }
