@@ -1,13 +1,8 @@
-pub mod contact;
-
-use crate::twonly::error::TwonlyError;
-
-use super::error::Result;
-use sqlx::{
-    migrate::MigrateDatabase,
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    ConnectOptions, Sqlite, SqlitePool,
-};
+pub(crate) mod contact;
+use crate::bridge::error::{Result, TwonlyError};
+use sqlx::migrate::MigrateDatabase;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::{ConnectOptions, Sqlite, SqlitePool};
 use std::time::Duration;
 
 pub(crate) struct Database {

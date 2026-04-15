@@ -1,7 +1,8 @@
 // use sqlx::types::chrono::{DateTime, Utc};
 use sqlx::FromRow;
 
-use crate::twonly::{database::Database, error::Result};
+use super::Database;
+use crate::bridge::error::Result;
 
 #[derive(FromRow, Clone, Debug)]
 struct ContactRow {
@@ -37,7 +38,8 @@ impl Contact {
 
 #[cfg(test)]
 mod tests {
-    use crate::twonly::{database::contact::Contact, tests::initialize_twonly_for_testing};
+    use crate::bridge::tests::initialize_twonly_for_testing;
+    use crate::database::contact::Contact;
 
     #[tokio::test]
     async fn test_get_all_contacts() {

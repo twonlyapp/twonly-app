@@ -5,6 +5,9 @@ pub type Result<T> = core::result::Result<T, UserDiscoveryError>;
 
 #[derive(Error, Debug)]
 pub enum UserDiscoveryError {
+    #[error("Store error: `{0}`")]
+    Store(String),
+
     #[error("The encrypted announcement data contains malicious data: `{0}`")]
     MaliciousAnnouncementData(String),
 

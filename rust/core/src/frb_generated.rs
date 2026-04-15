@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 741438464;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 776002844;
 
 // Section: executor
 
@@ -46,7 +46,7 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__twonly__get_all_contacts_impl(
+fn wire__crate__bridge__get_all_contacts_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -72,7 +72,7 @@ fn wire__crate__twonly__get_all_contacts_impl(
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok = crate::twonly::get_all_contacts().await?;
+                        let output_ok = crate::bridge::get_all_contacts().await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -81,7 +81,7 @@ fn wire__crate__twonly__get_all_contacts_impl(
         },
     )
 }
-fn wire__crate__twonly__initialize_twonly_impl(
+fn wire__crate__bridge__initialize_twonly_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -103,12 +103,12 @@ fn wire__crate__twonly__initialize_twonly_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_config = <crate::twonly::TwonlyConfig>::sse_decode(&mut deserializer);
+            let api_config = <crate::bridge::TwonlyConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok = crate::twonly::initialize_twonly(api_config).await?;
+                        let output_ok = crate::bridge::initialize_twonly(api_config).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -117,6 +117,51 @@ fn wire__crate__twonly__initialize_twonly_impl(
         },
     )
 }
+fn wire__crate__bridge__load_promotions_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "load_promotions",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::bridge::load_promotions())?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+
+// Section: static_checks
+
+#[allow(clippy::unnecessary_literal_unwrap)]
+const _: fn() = || {
+    let OtherPromotion = None::<crate::bridge::OtherPromotion>.unwrap();
+    let _: u32 = OtherPromotion.promotion_id;
+    let _: u64 = OtherPromotion.public_id;
+    let _: i64 = OtherPromotion.from_contact_id;
+    let _: u8 = OtherPromotion.threshold;
+    let _: Vec<u8> = OtherPromotion.announcement_share;
+    let _: Option<i64> = OtherPromotion.public_key_verified_timestamp;
+};
 
 // Section: dart2rust
 
@@ -136,12 +181,12 @@ impl SseDecode for String {
     }
 }
 
-impl SseDecode for crate::twonly::database::contact::Contact {
+impl SseDecode for crate::database::contact::Contact {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_userId = <i64>::sse_decode(deserializer);
         let mut var_username = <String>::sse_decode(deserializer);
-        return crate::twonly::database::contact::Contact {
+        return crate::database::contact::Contact {
             user_id: var_userId,
             username: var_username,
         };
@@ -155,13 +200,13 @@ impl SseDecode for i64 {
     }
 }
 
-impl SseDecode for Vec<crate::twonly::database::contact::Contact> {
+impl SseDecode for Vec<crate::database::contact::Contact> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
-            ans_.push(<crate::twonly::database::contact::Contact>::sse_decode(
+            ans_.push(<crate::database::contact::Contact>::sse_decode(
                 deserializer,
             ));
         }
@@ -181,13 +226,58 @@ impl SseDecode for Vec<u8> {
     }
 }
 
-impl SseDecode for crate::twonly::TwonlyConfig {
+impl SseDecode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for crate::bridge::OtherPromotion {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_promotionId = <u32>::sse_decode(deserializer);
+        let mut var_publicId = <u64>::sse_decode(deserializer);
+        let mut var_fromContactId = <i64>::sse_decode(deserializer);
+        let mut var_threshold = <u8>::sse_decode(deserializer);
+        let mut var_announcementShare = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_publicKeyVerifiedTimestamp = <Option<i64>>::sse_decode(deserializer);
+        return crate::bridge::OtherPromotion {
+            promotion_id: var_promotionId,
+            public_id: var_publicId,
+            from_contact_id: var_fromContactId,
+            threshold: var_threshold,
+            announcement_share: var_announcementShare,
+            public_key_verified_timestamp: var_publicKeyVerifiedTimestamp,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::TwonlyConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_databasePath = <String>::sse_decode(deserializer);
-        return crate::twonly::TwonlyConfig {
+        return crate::bridge::TwonlyConfig {
             database_path: var_databasePath,
         };
+    }
+}
+
+impl SseDecode for u32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
     }
 }
 
@@ -226,8 +316,9 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__twonly__get_all_contacts_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__twonly__initialize_twonly_impl(port, ptr, rust_vec_len, data_len),
+        1 => wire__crate__bridge__get_all_contacts_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire__crate__bridge__initialize_twonly_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__bridge__load_promotions_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -247,7 +338,7 @@ fn pde_ffi_dispatcher_sync_impl(
 // Section: rust2dart
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::twonly::database::contact::Contact {
+impl flutter_rust_bridge::IntoDart for crate::database::contact::Contact {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.user_id.into_into_dart().into_dart(),
@@ -257,27 +348,55 @@ impl flutter_rust_bridge::IntoDart for crate::twonly::database::contact::Contact
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::twonly::database::contact::Contact
+    for crate::database::contact::Contact
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::twonly::database::contact::Contact>
-    for crate::twonly::database::contact::Contact
+impl flutter_rust_bridge::IntoIntoDart<crate::database::contact::Contact>
+    for crate::database::contact::Contact
 {
-    fn into_into_dart(self) -> crate::twonly::database::contact::Contact {
+    fn into_into_dart(self) -> crate::database::contact::Contact {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::twonly::TwonlyConfig {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bridge::OtherPromotion> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.promotion_id.into_into_dart().into_dart(),
+            self.0.public_id.into_into_dart().into_dart(),
+            self.0.from_contact_id.into_into_dart().into_dart(),
+            self.0.threshold.into_into_dart().into_dart(),
+            self.0.announcement_share.into_into_dart().into_dart(),
+            self.0
+                .public_key_verified_timestamp
+                .into_into_dart()
+                .into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::bridge::OtherPromotion>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bridge::OtherPromotion>>
+    for crate::bridge::OtherPromotion
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::bridge::OtherPromotion> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::TwonlyConfig {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [self.database_path.into_into_dart().into_dart()].into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::twonly::TwonlyConfig {}
-impl flutter_rust_bridge::IntoIntoDart<crate::twonly::TwonlyConfig>
-    for crate::twonly::TwonlyConfig
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::TwonlyConfig {}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::TwonlyConfig>
+    for crate::bridge::TwonlyConfig
 {
-    fn into_into_dart(self) -> crate::twonly::TwonlyConfig {
+    fn into_into_dart(self) -> crate::bridge::TwonlyConfig {
         self
     }
 }
@@ -296,7 +415,7 @@ impl SseEncode for String {
     }
 }
 
-impl SseEncode for crate::twonly::database::contact::Contact {
+impl SseEncode for crate::database::contact::Contact {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i64>::sse_encode(self.user_id, serializer);
@@ -311,12 +430,12 @@ impl SseEncode for i64 {
     }
 }
 
-impl SseEncode for Vec<crate::twonly::database::contact::Contact> {
+impl SseEncode for Vec<crate::database::contact::Contact> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::twonly::database::contact::Contact>::sse_encode(item, serializer);
+            <crate::database::contact::Contact>::sse_encode(item, serializer);
         }
     }
 }
@@ -331,10 +450,46 @@ impl SseEncode for Vec<u8> {
     }
 }
 
-impl SseEncode for crate::twonly::TwonlyConfig {
+impl SseEncode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::bridge::OtherPromotion {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.promotion_id, serializer);
+        <u64>::sse_encode(self.public_id, serializer);
+        <i64>::sse_encode(self.from_contact_id, serializer);
+        <u8>::sse_encode(self.threshold, serializer);
+        <Vec<u8>>::sse_encode(self.announcement_share, serializer);
+        <Option<i64>>::sse_encode(self.public_key_verified_timestamp, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::TwonlyConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.database_path, serializer);
+    }
+}
+
+impl SseEncode for u32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
     }
 }
 

@@ -8,11 +8,11 @@ import 'dart:convert';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+import 'bridge.dart';
+import 'database/contact.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
-import 'twonly.dart';
-import 'twonly/database/contact.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -70,20 +70,22 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 741438464;
+  int get rustContentHash => 776002844;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
         stem: 'rust_lib_twonly',
-        ioDirectory: 'rust/target/release/',
+        ioDirectory: 'rust/core/target/release/',
         webPrefix: 'pkg/',
       );
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<List<Contact>> crateTwonlyGetAllContacts();
+  Future<List<Contact>> crateBridgeGetAllContacts();
 
-  Future<void> crateTwonlyInitializeTwonly({required TwonlyConfig config});
+  Future<void> crateBridgeInitializeTwonly({required TwonlyConfig config});
+
+  Future<OtherPromotion> crateBridgeLoadPromotions();
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -95,7 +97,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<List<Contact>> crateTwonlyGetAllContacts() {
+  Future<List<Contact>> crateBridgeGetAllContacts() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -111,20 +113,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_contact,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateTwonlyGetAllContactsConstMeta,
+        constMeta: kCrateBridgeGetAllContactsConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateTwonlyGetAllContactsConstMeta => const TaskConstMeta(
+  TaskConstMeta get kCrateBridgeGetAllContactsConstMeta => const TaskConstMeta(
     debugName: 'get_all_contacts',
     argNames: [],
   );
 
   @override
-  Future<void> crateTwonlyInitializeTwonly({required TwonlyConfig config}) {
+  Future<void> crateBridgeInitializeTwonly({required TwonlyConfig config}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -141,18 +143,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateTwonlyInitializeTwonlyConstMeta,
+        constMeta: kCrateBridgeInitializeTwonlyConstMeta,
         argValues: [config],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateTwonlyInitializeTwonlyConstMeta =>
+  TaskConstMeta get kCrateBridgeInitializeTwonlyConstMeta =>
       const TaskConstMeta(
         debugName: 'initialize_twonly',
         argNames: ['config'],
       );
+
+  @override
+  Future<OtherPromotion> crateBridgeLoadPromotions() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_other_promotion,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateBridgeLoadPromotionsConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeLoadPromotionsConstMeta => const TaskConstMeta(
+    debugName: 'load_promotions',
+    argNames: [],
+  );
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -164,6 +195,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_i_64(raw);
   }
 
   @protected
@@ -203,6 +240,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  OtherPromotion dco_decode_other_promotion(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return OtherPromotion(
+      promotionId: dco_decode_u_32(arr[0]),
+      publicId: dco_decode_u_64(arr[1]),
+      fromContactId: dco_decode_i_64(arr[2]),
+      threshold: dco_decode_u_8(arr[3]),
+      announcementShare: dco_decode_list_prim_u_8_strict(arr[4]),
+      publicKeyVerifiedTimestamp: dco_decode_opt_box_autoadd_i_64(arr[5]),
+    );
+  }
+
+  @protected
   TwonlyConfig dco_decode_twonly_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -211,6 +270,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return TwonlyConfig(
       databasePath: dco_decode_String(arr[0]),
     );
+  }
+
+  @protected
+  int dco_decode_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -237,6 +308,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return sse_decode_i_64(deserializer);
   }
 
   @protected
@@ -281,10 +358,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_i_64(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  OtherPromotion sse_decode_other_promotion(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_promotionId = sse_decode_u_32(deserializer);
+    final var_publicId = sse_decode_u_64(deserializer);
+    final var_fromContactId = sse_decode_i_64(deserializer);
+    final var_threshold = sse_decode_u_8(deserializer);
+    final var_announcementShare = sse_decode_list_prim_u_8_strict(deserializer);
+    final var_publicKeyVerifiedTimestamp = sse_decode_opt_box_autoadd_i_64(
+      deserializer,
+    );
+    return OtherPromotion(
+      promotionId: var_promotionId,
+      publicId: var_publicId,
+      fromContactId: var_fromContactId,
+      threshold: var_threshold,
+      announcementShare: var_announcementShare,
+      publicKeyVerifiedTimestamp: var_publicKeyVerifiedTimestamp,
+    );
+  }
+
+  @protected
   TwonlyConfig sse_decode_twonly_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final var_databasePath = sse_decode_String(deserializer);
     return TwonlyConfig(databasePath: var_databasePath);
+  }
+
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint32();
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -323,6 +444,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self, serializer);
   }
 
   @protected
@@ -367,9 +497,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_other_promotion(
+    OtherPromotion self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.promotionId, serializer);
+    sse_encode_u_64(self.publicId, serializer);
+    sse_encode_i_64(self.fromContactId, serializer);
+    sse_encode_u_8(self.threshold, serializer);
+    sse_encode_list_prim_u_8_strict(self.announcementShare, serializer);
+    sse_encode_opt_box_autoadd_i_64(
+      self.publicKeyVerifiedTimestamp,
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_twonly_config(TwonlyConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.databasePath, serializer);
+  }
+
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected

@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 pub mod stores;
 pub mod traits;
 
@@ -22,7 +22,7 @@ static TRANSMITTED_NETWORK_BYTES: std::sync::OnceLock<std::sync::Mutex<usize>> =
 /// the types.proto
 pub type UserID = i64;
 
-include!(concat!(env!("OUT_DIR"), "/_.rs"));
+include!(concat!(env!("OUT_DIR"), "/user_discovery.rs"));
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct UserDiscoveryConfig {
@@ -245,6 +245,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             || received_version.promotion > stored_version.promotion)
     }
 
+    #[cfg(test)]
     pub(crate) fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
         self.store.get_contact_version(contact_id)
     }
@@ -687,10 +688,10 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn test_initialize_user_discovery() {
-        pretty_env_logger::init();
-        let counter = TRANSMITTED_NETWORK_BYTES.get_or_init(|| std::sync::Mutex::new(0));
+    #[test]
+    fn test_initialize_user_discovery() {
+        let _ = pretty_env_logger::try_init();
+        let _ = TRANSMITTED_NETWORK_BYTES.get_or_init(|| std::sync::Mutex::new(0));
 
         let users = TestUsers::get();
 

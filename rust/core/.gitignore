@@ -1,0 +1,3 @@
+/target
+
+tests/tmp_testing.db*

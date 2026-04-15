@@ -1,19 +1,33 @@
-pub mod database;
 pub mod error;
-use crate::twonly::{database::contact::Contact, error::TwonlyError};
-use database::Database;
+mod user_discovery;
+use crate::database::contact::Contact;
+use crate::database::Database;
 use error::Result;
+use error::TwonlyError;
+use flutter_rust_bridge::frb;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
+
+use protocols::user_discovery::traits::OtherPromotion;
+
+#[frb(mirror(OtherPromotion))]
+pub struct _OtherPromotion {
+    pub promotion_id: u32,
+    pub public_id: u64,
+    pub from_contact_id: i64,
+    pub threshold: u8,
+    pub announcement_share: Vec<u8>,
+    pub public_key_verified_timestamp: Option<i64>,
+}
 
 pub struct TwonlyConfig {
     pub database_path: String,
 }
 
-struct Twonly {
+pub(crate) struct Twonly {
     #[allow(dead_code)]
     pub(crate) config: TwonlyConfig,
-    database: Arc<Database>,
+    pub(crate) database: Arc<Database>,
 }
 
 static GLOBAL_TWONLY: OnceCell<Twonly> = OnceCell::const_new();
@@ -41,15 +55,19 @@ pub async fn get_all_contacts() -> Result<Vec<Contact>> {
     Contact::get_all_contacts(twonly.database.as_ref()).await
 }
 
+pub fn load_promotions() -> OtherPromotion {
+    todo!()
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::error::Result;
     use super::Twonly;
     use std::path::PathBuf;
 
-    use crate::twonly::{get_instance, initialize_twonly, TwonlyConfig};
+    use super::{get_instance, initialize_twonly, TwonlyConfig};
 
-    pub(super) async fn initialize_twonly_for_testing() -> Result<&'static Twonly> {
+    pub(crate) async fn initialize_twonly_for_testing() -> Result<&'static Twonly> {
         let default_twonly_database = PathBuf::from("tests/testing.db");
 
         if !default_twonly_database.is_file() {
