@@ -40,6 +40,7 @@ void main() async {
   await bridge.initializeTwonly(
     config: bridge.TwonlyConfig(
       databasePath: '$globalApplicationSupportDirectory/twonly.sqlite',
+      dataDirectory: globalApplicationSupportDirectory,
     ),
   );
 

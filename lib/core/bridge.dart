@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'database/contact.dart';
 import 'frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_instance`
+// These functions are ignored because they are not marked as `pub`: `get_workspace`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Twonly`
 
 Future<void> initializeTwonly({required TwonlyConfig config}) =>
@@ -30,7 +30,7 @@ class OtherPromotion {
     this.publicKeyVerifiedTimestamp,
   });
   final int promotionId;
-  final BigInt publicId;
+  final PlatformInt64 publicId;
   final PlatformInt64 fromContactId;
   final int threshold;
   final Uint8List announcementShare;
@@ -61,16 +61,19 @@ class OtherPromotion {
 class TwonlyConfig {
   const TwonlyConfig({
     required this.databasePath,
+    required this.dataDirectory,
   });
   final String databasePath;
+  final String dataDirectory;
 
   @override
-  int get hashCode => databasePath.hashCode;
+  int get hashCode => databasePath.hashCode ^ dataDirectory.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is TwonlyConfig &&
           runtimeType == other.runtimeType &&
-          databasePath == other.databasePath;
+          databasePath == other.databasePath &&
+          dataDirectory == other.dataDirectory;
 }

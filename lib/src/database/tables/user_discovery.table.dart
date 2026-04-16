@@ -1,12 +1,39 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 
-// contact_versions: HashMap<UserID, Vec<u8>>,
-// -> New Column in Contacts
-
 // config: Option<Vec<u8>>,
 
 // announced_users: HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>,
+@DataClassName('UserDiscoveryAnnouncedUser')
+class UserDiscoveryAnnouncedUsers extends Table {
+  IntColumn get announcedUserId => integer()();
+  BlobColumn get announcedPublicKey => blob()();
+  IntColumn get publicId => integer().unique()();
+
+  @override
+  Set<Column> get primaryKey => {announcedUserId};
+}
+
+// announced_users: HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>,
+@DataClassName('UserDiscoveryUserRelation')
+class UserDiscoveryUserRelations extends Table {
+  IntColumn get announcedUserId => integer().references(
+    UserDiscoveryAnnouncedUsers,
+    #announcedUserId,
+    onDelete: KeyAction.cascade,
+  )();
+
+  IntColumn get fromContactId => integer().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
+
+  DateTimeColumn get publicKeyVerifiedTimestamp => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {announcedUserId, fromContactId};
+}
 
 // own_promotions: Vec<(UserID, Vec<u8>)>,
 @DataClassName('UserDiscoveryOwnPromotion')
@@ -17,21 +44,26 @@ class UserDiscoveryOwnPromotions extends Table {
     #userId,
     onDelete: KeyAction.cascade,
   )();
-
   BlobColumn get promotion => blob()();
 }
 
 // other_promotions: Vec<OtherPromotion>,
 @DataClassName('UserDiscoveryOtherPromotion')
 class UserDiscoveryOtherPromotions extends Table {
-  IntColumn get versionId => integer().autoIncrement()();
-  IntColumn get contactId => integer().references(
+  IntColumn get fromContactId => integer().references(
     Contacts,
     #userId,
     onDelete: KeyAction.cascade,
   )();
 
-  BlobColumn get promotion => blob()();
+  IntColumn get promotionId => integer()();
+  IntColumn get publicId => integer()();
+  IntColumn get threshold => integer()();
+  BlobColumn get announcementShare => blob()();
+  DateTimeColumn get publicKeyVerifiedTimestamp => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {fromContactId, promotionId};
 }
 
 // unused_shares: Vec<Vec<u8>>,

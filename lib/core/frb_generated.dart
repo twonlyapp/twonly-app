@@ -253,7 +253,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return OtherPromotion(
       promotionId: dco_decode_u_32(arr[0]),
-      publicId: dco_decode_u_64(arr[1]),
+      publicId: dco_decode_i_64(arr[1]),
       fromContactId: dco_decode_i_64(arr[2]),
       threshold: dco_decode_u_8(arr[3]),
       announcementShare: dco_decode_list_prim_u_8_strict(arr[4]),
@@ -265,10 +265,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TwonlyConfig dco_decode_twonly_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 1)
-      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return TwonlyConfig(
       databasePath: dco_decode_String(arr[0]),
+      dataDirectory: dco_decode_String(arr[1]),
     );
   }
 
@@ -276,12 +277,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
-  }
-
-  @protected
-  BigInt dco_decode_u_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -372,7 +367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   OtherPromotion sse_decode_other_promotion(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final var_promotionId = sse_decode_u_32(deserializer);
-    final var_publicId = sse_decode_u_64(deserializer);
+    final var_publicId = sse_decode_i_64(deserializer);
     final var_fromContactId = sse_decode_i_64(deserializer);
     final var_threshold = sse_decode_u_8(deserializer);
     final var_announcementShare = sse_decode_list_prim_u_8_strict(deserializer);
@@ -393,19 +388,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TwonlyConfig sse_decode_twonly_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final var_databasePath = sse_decode_String(deserializer);
-    return TwonlyConfig(databasePath: var_databasePath);
+    final var_dataDirectory = sse_decode_String(deserializer);
+    return TwonlyConfig(
+      databasePath: var_databasePath,
+      dataDirectory: var_dataDirectory,
+    );
   }
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
-  }
-
-  @protected
-  BigInt sse_decode_u_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -516,7 +509,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.promotionId, serializer);
-    sse_encode_u_64(self.publicId, serializer);
+    sse_encode_i_64(self.publicId, serializer);
     sse_encode_i_64(self.fromContactId, serializer);
     sse_encode_u_8(self.threshold, serializer);
     sse_encode_list_prim_u_8_strict(self.announcementShare, serializer);
@@ -530,18 +523,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_twonly_config(TwonlyConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.databasePath, serializer);
+    sse_encode_String(self.dataDirectory, serializer);
   }
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
-  }
-
-  @protected
-  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putBigUint64(self);
   }
 
   @protected

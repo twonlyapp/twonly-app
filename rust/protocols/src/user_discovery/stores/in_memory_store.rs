@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Default)]
 pub(crate) struct Storage {
-    config: Option<Vec<u8>>,
+    config: Option<String>,
     unused_shares: Vec<Vec<u8>>,
     used_shares: HashMap<UserID, Vec<u8>>,
     contact_versions: HashMap<UserID, Vec<u8>>,
@@ -27,24 +27,27 @@ impl InMemoryStore {
 }
 
 impl UserDiscoveryStore for InMemoryStore {
-    fn get_config(&self) -> Result<Vec<u8>> {
+    async fn new() -> Self {
+        Self::default()
+    }
+    async fn get_config(&self) -> Result<String> {
         if let Some(storage) = self.storage().config.clone() {
             return Ok(storage);
         }
         Err(UserDiscoveryError::NotInitialized)
     }
 
-    fn update_config(&self, update: Vec<u8>) -> Result<()> {
+    async fn update_config(&self, update: String) -> Result<()> {
         self.storage().config = Some(update);
         Ok(())
     }
 
-    fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()> {
+    async fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()> {
         self.storage().unused_shares = shares;
         Ok(())
     }
 
-    fn get_share_for_contact(&self, contact_id: UserID) -> Result<Vec<u8>> {
+    async fn get_share_for_contact(&self, contact_id: UserID) -> Result<Vec<u8>> {
         let mut storage = self.storage();
         if let Some(share) = storage.used_shares.get(&contact_id) {
             return Ok(share.to_vec());
@@ -56,16 +59,16 @@ impl UserDiscoveryStore for InMemoryStore {
         Err(UserDiscoveryError::NoSharesLeft)
     }
 
-    fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
+    async fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
         Ok(self.storage().contact_versions.get(&contact_id).cloned())
     }
 
-    fn set_contact_version(&self, contact_id: UserID, update: Vec<u8>) -> Result<()> {
+    async fn set_contact_version(&self, contact_id: UserID, update: Vec<u8>) -> Result<()> {
         self.storage().contact_versions.insert(contact_id, update);
         Ok(())
     }
 
-    fn push_own_promotion(
+    async fn push_own_promotion(
         &self,
         contact_id: UserID,
         version: u32,
@@ -80,7 +83,7 @@ impl UserDiscoveryStore for InMemoryStore {
         Ok(())
     }
 
-    fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>> {
+    async fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>> {
         let storage = self.storage();
         let elements = storage.own_promotions[(version as usize)..]
             .into_iter()
@@ -89,21 +92,28 @@ impl UserDiscoveryStore for InMemoryStore {
         Ok(elements)
     }
 
-    fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()> {
+    async fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()> {
         self.storage().other_promotions.push(promotion);
         Ok(())
     }
 
-    fn get_other_promotions_by_public_id(&self, public_id: u64) -> Vec<OtherPromotion> {
-        self.storage()
+    async fn get_other_promotions_by_public_id(
+        &self,
+        public_id: i64,
+    ) -> Result<Vec<OtherPromotion>> {
+        Ok(self
+            .storage()
             .other_promotions
             .iter()
             .filter(|other| other.public_id == public_id)
             .map(OtherPromotion::to_owned)
-            .collect()
+            .collect())
     }
 
-    fn get_announced_user_by_public_id(&self, public_id: u64) -> Result<Option<AnnouncedUser>> {
+    async fn get_announced_user_by_public_id(
+        &self,
+        public_id: i64,
+    ) -> Result<Option<AnnouncedUser>> {
         Ok(self
             .storage()
             .announced_users
@@ -112,13 +122,13 @@ impl UserDiscoveryStore for InMemoryStore {
             .map(|u| u.0.to_owned()))
     }
 
-    fn get_all_announced_users(
+    async fn get_all_announced_users(
         &self,
     ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
         Ok(self.storage().announced_users.clone())
     }
 
-    fn push_new_user_relation(
+    async fn push_new_user_relation(
         &self,
         from_contact_id: UserID,
         announced_user: AnnouncedUser,

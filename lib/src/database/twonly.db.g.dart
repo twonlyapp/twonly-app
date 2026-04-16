@@ -174,6 +174,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _userDiscoveryVersionMeta =
+      const VerificationMeta('userDiscoveryVersion');
+  @override
+  late final GeneratedColumn<Uint8List> userDiscoveryVersion =
+      GeneratedColumn<Uint8List>(
+        'user_discovery_version',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -189,6 +200,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     verified,
     accountDeleted,
     createdAt,
+    userDiscoveryVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -297,6 +309,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('user_discovery_version')) {
+      context.handle(
+        _userDiscoveryVersionMeta,
+        userDiscoveryVersion.isAcceptableOrUnknown(
+          data['user_discovery_version']!,
+          _userDiscoveryVersionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -358,6 +379,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      userDiscoveryVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}user_discovery_version'],
+      ),
     );
   }
 
@@ -381,6 +406,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool accountDeleted;
   final DateTime createdAt;
+  final Uint8List? userDiscoveryVersion;
   const Contact({
     required this.userId,
     required this.username,
@@ -395,6 +421,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.verified,
     required this.accountDeleted,
     required this.createdAt,
+    this.userDiscoveryVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -418,6 +445,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['verified'] = Variable<bool>(verified);
     map['account_deleted'] = Variable<bool>(accountDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || userDiscoveryVersion != null) {
+      map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
+    }
     return map;
   }
 
@@ -442,6 +472,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: Value(verified),
       accountDeleted: Value(accountDeleted),
       createdAt: Value(createdAt),
+      userDiscoveryVersion: userDiscoveryVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userDiscoveryVersion),
     );
   }
 
@@ -468,6 +501,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: serializer.fromJson<bool>(json['verified']),
       accountDeleted: serializer.fromJson<bool>(json['accountDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      userDiscoveryVersion: serializer.fromJson<Uint8List?>(
+        json['userDiscoveryVersion'],
+      ),
     );
   }
   @override
@@ -487,6 +523,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'verified': serializer.toJson<bool>(verified),
       'accountDeleted': serializer.toJson<bool>(accountDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'userDiscoveryVersion': serializer.toJson<Uint8List?>(
+        userDiscoveryVersion,
+      ),
     };
   }
 
@@ -504,6 +543,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? verified,
     bool? accountDeleted,
     DateTime? createdAt,
+    Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
   }) => Contact(
     userId: userId ?? this.userId,
     username: username ?? this.username,
@@ -520,6 +560,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified: verified ?? this.verified,
     accountDeleted: accountDeleted ?? this.accountDeleted,
     createdAt: createdAt ?? this.createdAt,
+    userDiscoveryVersion: userDiscoveryVersion.present
+        ? userDiscoveryVersion.value
+        : this.userDiscoveryVersion,
   );
   Contact copyWithCompanion(ContactsCompanion data) {
     return Contact(
@@ -546,6 +589,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? data.accountDeleted.value
           : this.accountDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      userDiscoveryVersion: data.userDiscoveryVersion.present
+          ? data.userDiscoveryVersion.value
+          : this.userDiscoveryVersion,
     );
   }
 
@@ -564,7 +610,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('userDiscoveryVersion: $userDiscoveryVersion')
           ..write(')'))
         .toString();
   }
@@ -584,6 +631,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified,
     accountDeleted,
     createdAt,
+    $driftBlobEquality.hash(userDiscoveryVersion),
   );
   @override
   bool operator ==(Object other) =>
@@ -604,7 +652,11 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.blocked == this.blocked &&
           other.verified == this.verified &&
           other.accountDeleted == this.accountDeleted &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          $driftBlobEquality.equals(
+            other.userDiscoveryVersion,
+            this.userDiscoveryVersion,
+          ));
 }
 
 class ContactsCompanion extends UpdateCompanion<Contact> {
@@ -621,6 +673,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> verified;
   final Value<bool> accountDeleted;
   final Value<DateTime> createdAt;
+  final Value<Uint8List?> userDiscoveryVersion;
   const ContactsCompanion({
     this.userId = const Value.absent(),
     this.username = const Value.absent(),
@@ -635,6 +688,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.userDiscoveryVersion = const Value.absent(),
   });
   ContactsCompanion.insert({
     this.userId = const Value.absent(),
@@ -650,6 +704,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.userDiscoveryVersion = const Value.absent(),
   }) : username = Value(username);
   static Insertable<Contact> custom({
     Expression<int>? userId,
@@ -665,6 +720,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? verified,
     Expression<bool>? accountDeleted,
     Expression<DateTime>? createdAt,
+    Expression<Uint8List>? userDiscoveryVersion,
   }) {
     return RawValuesInsertable({
       if (userId != null) 'user_id': userId,
@@ -682,6 +738,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (verified != null) 'verified': verified,
       if (accountDeleted != null) 'account_deleted': accountDeleted,
       if (createdAt != null) 'created_at': createdAt,
+      if (userDiscoveryVersion != null)
+        'user_discovery_version': userDiscoveryVersion,
     });
   }
 
@@ -699,6 +757,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? verified,
     Value<bool>? accountDeleted,
     Value<DateTime>? createdAt,
+    Value<Uint8List?>? userDiscoveryVersion,
   }) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
@@ -714,6 +773,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       verified: verified ?? this.verified,
       accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
+      userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
     );
   }
 
@@ -761,6 +821,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (userDiscoveryVersion.present) {
+      map['user_discovery_version'] = Variable<Uint8List>(
+        userDiscoveryVersion.value,
+      );
+    }
     return map;
   }
 
@@ -779,7 +844,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('userDiscoveryVersion: $userDiscoveryVersion')
           ..write(')'))
         .toString();
   }
@@ -8805,6 +8871,2143 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   }
 }
 
+class $KeyVerificationsTable extends KeyVerifications
+    with TableInfo<$KeyVerificationsTable, KeyVerification> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $KeyVerificationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<VerificationType, String> type =
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<VerificationType>($KeyVerificationsTable.$convertertype);
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [contactId, type, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'key_verifications';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<KeyVerification> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contactId};
+  @override
+  KeyVerification map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return KeyVerification(
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      type: $KeyVerificationsTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $KeyVerificationsTable createAlias(String alias) {
+    return $KeyVerificationsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<VerificationType, String, String> $convertertype =
+      const EnumNameConverter<VerificationType>(VerificationType.values);
+}
+
+class KeyVerification extends DataClass implements Insertable<KeyVerification> {
+  final int contactId;
+  final VerificationType type;
+  final DateTime createdAt;
+  const KeyVerification({
+    required this.contactId,
+    required this.type,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['contact_id'] = Variable<int>(contactId);
+    {
+      map['type'] = Variable<String>(
+        $KeyVerificationsTable.$convertertype.toSql(type),
+      );
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  KeyVerificationsCompanion toCompanion(bool nullToAbsent) {
+    return KeyVerificationsCompanion(
+      contactId: Value(contactId),
+      type: Value(type),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory KeyVerification.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return KeyVerification(
+      contactId: serializer.fromJson<int>(json['contactId']),
+      type: $KeyVerificationsTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contactId': serializer.toJson<int>(contactId),
+      'type': serializer.toJson<String>(
+        $KeyVerificationsTable.$convertertype.toJson(type),
+      ),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  KeyVerification copyWith({
+    int? contactId,
+    VerificationType? type,
+    DateTime? createdAt,
+  }) => KeyVerification(
+    contactId: contactId ?? this.contactId,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  KeyVerification copyWithCompanion(KeyVerificationsCompanion data) {
+    return KeyVerification(
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      type: data.type.present ? data.type.value : this.type,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KeyVerification(')
+          ..write('contactId: $contactId, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(contactId, type, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is KeyVerification &&
+          other.contactId == this.contactId &&
+          other.type == this.type &&
+          other.createdAt == this.createdAt);
+}
+
+class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
+  final Value<int> contactId;
+  final Value<VerificationType> type;
+  final Value<DateTime> createdAt;
+  const KeyVerificationsCompanion({
+    this.contactId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  KeyVerificationsCompanion.insert({
+    this.contactId = const Value.absent(),
+    required VerificationType type,
+    this.createdAt = const Value.absent(),
+  }) : type = Value(type);
+  static Insertable<KeyVerification> custom({
+    Expression<int>? contactId,
+    Expression<String>? type,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (contactId != null) 'contact_id': contactId,
+      if (type != null) 'type': type,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  KeyVerificationsCompanion copyWith({
+    Value<int>? contactId,
+    Value<VerificationType>? type,
+    Value<DateTime>? createdAt,
+  }) {
+    return KeyVerificationsCompanion(
+      contactId: contactId ?? this.contactId,
+      type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+        $KeyVerificationsTable.$convertertype.toSql(type.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KeyVerificationsCompanion(')
+          ..write('contactId: $contactId, ')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VerificationTokensTable extends VerificationTokens
+    with TableInfo<$VerificationTokensTable, VerificationToken> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VerificationTokensTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _tokenIdMeta = const VerificationMeta(
+    'tokenId',
+  );
+  @override
+  late final GeneratedColumn<int> tokenId = GeneratedColumn<int>(
+    'token_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
+  @override
+  late final GeneratedColumn<Uint8List> token = GeneratedColumn<Uint8List>(
+    'token',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [tokenId, token, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'verification_tokens';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VerificationToken> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('token_id')) {
+      context.handle(
+        _tokenIdMeta,
+        tokenId.isAcceptableOrUnknown(data['token_id']!, _tokenIdMeta),
+      );
+    }
+    if (data.containsKey('token')) {
+      context.handle(
+        _tokenMeta,
+        token.isAcceptableOrUnknown(data['token']!, _tokenMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tokenMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {tokenId};
+  @override
+  VerificationToken map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VerificationToken(
+      tokenId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}token_id'],
+      )!,
+      token: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}token'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $VerificationTokensTable createAlias(String alias) {
+    return $VerificationTokensTable(attachedDatabase, alias);
+  }
+}
+
+class VerificationToken extends DataClass
+    implements Insertable<VerificationToken> {
+  final int tokenId;
+  final Uint8List token;
+  final DateTime createdAt;
+  const VerificationToken({
+    required this.tokenId,
+    required this.token,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['token_id'] = Variable<int>(tokenId);
+    map['token'] = Variable<Uint8List>(token);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  VerificationTokensCompanion toCompanion(bool nullToAbsent) {
+    return VerificationTokensCompanion(
+      tokenId: Value(tokenId),
+      token: Value(token),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory VerificationToken.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VerificationToken(
+      tokenId: serializer.fromJson<int>(json['tokenId']),
+      token: serializer.fromJson<Uint8List>(json['token']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'tokenId': serializer.toJson<int>(tokenId),
+      'token': serializer.toJson<Uint8List>(token),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  VerificationToken copyWith({
+    int? tokenId,
+    Uint8List? token,
+    DateTime? createdAt,
+  }) => VerificationToken(
+    tokenId: tokenId ?? this.tokenId,
+    token: token ?? this.token,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  VerificationToken copyWithCompanion(VerificationTokensCompanion data) {
+    return VerificationToken(
+      tokenId: data.tokenId.present ? data.tokenId.value : this.tokenId,
+      token: data.token.present ? data.token.value : this.token,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VerificationToken(')
+          ..write('tokenId: $tokenId, ')
+          ..write('token: $token, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(tokenId, $driftBlobEquality.hash(token), createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VerificationToken &&
+          other.tokenId == this.tokenId &&
+          $driftBlobEquality.equals(other.token, this.token) &&
+          other.createdAt == this.createdAt);
+}
+
+class VerificationTokensCompanion extends UpdateCompanion<VerificationToken> {
+  final Value<int> tokenId;
+  final Value<Uint8List> token;
+  final Value<DateTime> createdAt;
+  const VerificationTokensCompanion({
+    this.tokenId = const Value.absent(),
+    this.token = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  VerificationTokensCompanion.insert({
+    this.tokenId = const Value.absent(),
+    required Uint8List token,
+    this.createdAt = const Value.absent(),
+  }) : token = Value(token);
+  static Insertable<VerificationToken> custom({
+    Expression<int>? tokenId,
+    Expression<Uint8List>? token,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (tokenId != null) 'token_id': tokenId,
+      if (token != null) 'token': token,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  VerificationTokensCompanion copyWith({
+    Value<int>? tokenId,
+    Value<Uint8List>? token,
+    Value<DateTime>? createdAt,
+  }) {
+    return VerificationTokensCompanion(
+      tokenId: tokenId ?? this.tokenId,
+      token: token ?? this.token,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (tokenId.present) {
+      map['token_id'] = Variable<int>(tokenId.value);
+    }
+    if (token.present) {
+      map['token'] = Variable<Uint8List>(token.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VerificationTokensCompanion(')
+          ..write('tokenId: $tokenId, ')
+          ..write('token: $token, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
+    with
+        TableInfo<
+          $UserDiscoveryAnnouncedUsersTable,
+          UserDiscoveryAnnouncedUser
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDiscoveryAnnouncedUsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _announcedUserIdMeta = const VerificationMeta(
+    'announcedUserId',
+  );
+  @override
+  late final GeneratedColumn<int> announcedUserId = GeneratedColumn<int>(
+    'announced_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _announcedPublicKeyMeta =
+      const VerificationMeta('announcedPublicKey');
+  @override
+  late final GeneratedColumn<Uint8List> announcedPublicKey =
+      GeneratedColumn<Uint8List>(
+        'announced_public_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _publicIdMeta = const VerificationMeta(
+    'publicId',
+  );
+  @override
+  late final GeneratedColumn<int> publicId = GeneratedColumn<int>(
+    'public_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    announcedUserId,
+    announcedPublicKey,
+    publicId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_discovery_announced_users';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDiscoveryAnnouncedUser> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('announced_user_id')) {
+      context.handle(
+        _announcedUserIdMeta,
+        announcedUserId.isAcceptableOrUnknown(
+          data['announced_user_id']!,
+          _announcedUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('announced_public_key')) {
+      context.handle(
+        _announcedPublicKeyMeta,
+        announcedPublicKey.isAcceptableOrUnknown(
+          data['announced_public_key']!,
+          _announcedPublicKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_announcedPublicKeyMeta);
+    }
+    if (data.containsKey('public_id')) {
+      context.handle(
+        _publicIdMeta,
+        publicId.isAcceptableOrUnknown(data['public_id']!, _publicIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_publicIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {announcedUserId};
+  @override
+  UserDiscoveryAnnouncedUser map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDiscoveryAnnouncedUser(
+      announcedUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}announced_user_id'],
+      )!,
+      announcedPublicKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}announced_public_key'],
+      )!,
+      publicId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}public_id'],
+      )!,
+    );
+  }
+
+  @override
+  $UserDiscoveryAnnouncedUsersTable createAlias(String alias) {
+    return $UserDiscoveryAnnouncedUsersTable(attachedDatabase, alias);
+  }
+}
+
+class UserDiscoveryAnnouncedUser extends DataClass
+    implements Insertable<UserDiscoveryAnnouncedUser> {
+  final int announcedUserId;
+  final Uint8List announcedPublicKey;
+  final int publicId;
+  const UserDiscoveryAnnouncedUser({
+    required this.announcedUserId,
+    required this.announcedPublicKey,
+    required this.publicId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['announced_user_id'] = Variable<int>(announcedUserId);
+    map['announced_public_key'] = Variable<Uint8List>(announcedPublicKey);
+    map['public_id'] = Variable<int>(publicId);
+    return map;
+  }
+
+  UserDiscoveryAnnouncedUsersCompanion toCompanion(bool nullToAbsent) {
+    return UserDiscoveryAnnouncedUsersCompanion(
+      announcedUserId: Value(announcedUserId),
+      announcedPublicKey: Value(announcedPublicKey),
+      publicId: Value(publicId),
+    );
+  }
+
+  factory UserDiscoveryAnnouncedUser.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDiscoveryAnnouncedUser(
+      announcedUserId: serializer.fromJson<int>(json['announcedUserId']),
+      announcedPublicKey: serializer.fromJson<Uint8List>(
+        json['announcedPublicKey'],
+      ),
+      publicId: serializer.fromJson<int>(json['publicId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'announcedUserId': serializer.toJson<int>(announcedUserId),
+      'announcedPublicKey': serializer.toJson<Uint8List>(announcedPublicKey),
+      'publicId': serializer.toJson<int>(publicId),
+    };
+  }
+
+  UserDiscoveryAnnouncedUser copyWith({
+    int? announcedUserId,
+    Uint8List? announcedPublicKey,
+    int? publicId,
+  }) => UserDiscoveryAnnouncedUser(
+    announcedUserId: announcedUserId ?? this.announcedUserId,
+    announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
+    publicId: publicId ?? this.publicId,
+  );
+  UserDiscoveryAnnouncedUser copyWithCompanion(
+    UserDiscoveryAnnouncedUsersCompanion data,
+  ) {
+    return UserDiscoveryAnnouncedUser(
+      announcedUserId: data.announcedUserId.present
+          ? data.announcedUserId.value
+          : this.announcedUserId,
+      announcedPublicKey: data.announcedPublicKey.present
+          ? data.announcedPublicKey.value
+          : this.announcedPublicKey,
+      publicId: data.publicId.present ? data.publicId.value : this.publicId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryAnnouncedUser(')
+          ..write('announcedUserId: $announcedUserId, ')
+          ..write('announcedPublicKey: $announcedPublicKey, ')
+          ..write('publicId: $publicId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    announcedUserId,
+    $driftBlobEquality.hash(announcedPublicKey),
+    publicId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDiscoveryAnnouncedUser &&
+          other.announcedUserId == this.announcedUserId &&
+          $driftBlobEquality.equals(
+            other.announcedPublicKey,
+            this.announcedPublicKey,
+          ) &&
+          other.publicId == this.publicId);
+}
+
+class UserDiscoveryAnnouncedUsersCompanion
+    extends UpdateCompanion<UserDiscoveryAnnouncedUser> {
+  final Value<int> announcedUserId;
+  final Value<Uint8List> announcedPublicKey;
+  final Value<int> publicId;
+  const UserDiscoveryAnnouncedUsersCompanion({
+    this.announcedUserId = const Value.absent(),
+    this.announcedPublicKey = const Value.absent(),
+    this.publicId = const Value.absent(),
+  });
+  UserDiscoveryAnnouncedUsersCompanion.insert({
+    this.announcedUserId = const Value.absent(),
+    required Uint8List announcedPublicKey,
+    required int publicId,
+  }) : announcedPublicKey = Value(announcedPublicKey),
+       publicId = Value(publicId);
+  static Insertable<UserDiscoveryAnnouncedUser> custom({
+    Expression<int>? announcedUserId,
+    Expression<Uint8List>? announcedPublicKey,
+    Expression<int>? publicId,
+  }) {
+    return RawValuesInsertable({
+      if (announcedUserId != null) 'announced_user_id': announcedUserId,
+      if (announcedPublicKey != null)
+        'announced_public_key': announcedPublicKey,
+      if (publicId != null) 'public_id': publicId,
+    });
+  }
+
+  UserDiscoveryAnnouncedUsersCompanion copyWith({
+    Value<int>? announcedUserId,
+    Value<Uint8List>? announcedPublicKey,
+    Value<int>? publicId,
+  }) {
+    return UserDiscoveryAnnouncedUsersCompanion(
+      announcedUserId: announcedUserId ?? this.announcedUserId,
+      announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
+      publicId: publicId ?? this.publicId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (announcedUserId.present) {
+      map['announced_user_id'] = Variable<int>(announcedUserId.value);
+    }
+    if (announcedPublicKey.present) {
+      map['announced_public_key'] = Variable<Uint8List>(
+        announcedPublicKey.value,
+      );
+    }
+    if (publicId.present) {
+      map['public_id'] = Variable<int>(publicId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryAnnouncedUsersCompanion(')
+          ..write('announcedUserId: $announcedUserId, ')
+          ..write('announcedPublicKey: $announcedPublicKey, ')
+          ..write('publicId: $publicId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDiscoveryUserRelationsTable extends UserDiscoveryUserRelations
+    with
+        TableInfo<$UserDiscoveryUserRelationsTable, UserDiscoveryUserRelation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDiscoveryUserRelationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _announcedUserIdMeta = const VerificationMeta(
+    'announcedUserId',
+  );
+  @override
+  late final GeneratedColumn<int> announcedUserId = GeneratedColumn<int>(
+    'announced_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES user_discovery_announced_users (announced_user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _fromContactIdMeta = const VerificationMeta(
+    'fromContactId',
+  );
+  @override
+  late final GeneratedColumn<int> fromContactId = GeneratedColumn<int>(
+    'from_contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _publicKeyVerifiedTimestampMeta =
+      const VerificationMeta('publicKeyVerifiedTimestamp');
+  @override
+  late final GeneratedColumn<DateTime> publicKeyVerifiedTimestamp =
+      GeneratedColumn<DateTime>(
+        'public_key_verified_timestamp',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    announcedUserId,
+    fromContactId,
+    publicKeyVerifiedTimestamp,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_discovery_user_relations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDiscoveryUserRelation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('announced_user_id')) {
+      context.handle(
+        _announcedUserIdMeta,
+        announcedUserId.isAcceptableOrUnknown(
+          data['announced_user_id']!,
+          _announcedUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_announcedUserIdMeta);
+    }
+    if (data.containsKey('from_contact_id')) {
+      context.handle(
+        _fromContactIdMeta,
+        fromContactId.isAcceptableOrUnknown(
+          data['from_contact_id']!,
+          _fromContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fromContactIdMeta);
+    }
+    if (data.containsKey('public_key_verified_timestamp')) {
+      context.handle(
+        _publicKeyVerifiedTimestampMeta,
+        publicKeyVerifiedTimestamp.isAcceptableOrUnknown(
+          data['public_key_verified_timestamp']!,
+          _publicKeyVerifiedTimestampMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {announcedUserId, fromContactId};
+  @override
+  UserDiscoveryUserRelation map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDiscoveryUserRelation(
+      announcedUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}announced_user_id'],
+      )!,
+      fromContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}from_contact_id'],
+      )!,
+      publicKeyVerifiedTimestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}public_key_verified_timestamp'],
+      ),
+    );
+  }
+
+  @override
+  $UserDiscoveryUserRelationsTable createAlias(String alias) {
+    return $UserDiscoveryUserRelationsTable(attachedDatabase, alias);
+  }
+}
+
+class UserDiscoveryUserRelation extends DataClass
+    implements Insertable<UserDiscoveryUserRelation> {
+  final int announcedUserId;
+  final int fromContactId;
+  final DateTime? publicKeyVerifiedTimestamp;
+  const UserDiscoveryUserRelation({
+    required this.announcedUserId,
+    required this.fromContactId,
+    this.publicKeyVerifiedTimestamp,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['announced_user_id'] = Variable<int>(announcedUserId);
+    map['from_contact_id'] = Variable<int>(fromContactId);
+    if (!nullToAbsent || publicKeyVerifiedTimestamp != null) {
+      map['public_key_verified_timestamp'] = Variable<DateTime>(
+        publicKeyVerifiedTimestamp,
+      );
+    }
+    return map;
+  }
+
+  UserDiscoveryUserRelationsCompanion toCompanion(bool nullToAbsent) {
+    return UserDiscoveryUserRelationsCompanion(
+      announcedUserId: Value(announcedUserId),
+      fromContactId: Value(fromContactId),
+      publicKeyVerifiedTimestamp:
+          publicKeyVerifiedTimestamp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(publicKeyVerifiedTimestamp),
+    );
+  }
+
+  factory UserDiscoveryUserRelation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDiscoveryUserRelation(
+      announcedUserId: serializer.fromJson<int>(json['announcedUserId']),
+      fromContactId: serializer.fromJson<int>(json['fromContactId']),
+      publicKeyVerifiedTimestamp: serializer.fromJson<DateTime?>(
+        json['publicKeyVerifiedTimestamp'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'announcedUserId': serializer.toJson<int>(announcedUserId),
+      'fromContactId': serializer.toJson<int>(fromContactId),
+      'publicKeyVerifiedTimestamp': serializer.toJson<DateTime?>(
+        publicKeyVerifiedTimestamp,
+      ),
+    };
+  }
+
+  UserDiscoveryUserRelation copyWith({
+    int? announcedUserId,
+    int? fromContactId,
+    Value<DateTime?> publicKeyVerifiedTimestamp = const Value.absent(),
+  }) => UserDiscoveryUserRelation(
+    announcedUserId: announcedUserId ?? this.announcedUserId,
+    fromContactId: fromContactId ?? this.fromContactId,
+    publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp.present
+        ? publicKeyVerifiedTimestamp.value
+        : this.publicKeyVerifiedTimestamp,
+  );
+  UserDiscoveryUserRelation copyWithCompanion(
+    UserDiscoveryUserRelationsCompanion data,
+  ) {
+    return UserDiscoveryUserRelation(
+      announcedUserId: data.announcedUserId.present
+          ? data.announcedUserId.value
+          : this.announcedUserId,
+      fromContactId: data.fromContactId.present
+          ? data.fromContactId.value
+          : this.fromContactId,
+      publicKeyVerifiedTimestamp: data.publicKeyVerifiedTimestamp.present
+          ? data.publicKeyVerifiedTimestamp.value
+          : this.publicKeyVerifiedTimestamp,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryUserRelation(')
+          ..write('announcedUserId: $announcedUserId, ')
+          ..write('fromContactId: $fromContactId, ')
+          ..write('publicKeyVerifiedTimestamp: $publicKeyVerifiedTimestamp')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(announcedUserId, fromContactId, publicKeyVerifiedTimestamp);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDiscoveryUserRelation &&
+          other.announcedUserId == this.announcedUserId &&
+          other.fromContactId == this.fromContactId &&
+          other.publicKeyVerifiedTimestamp == this.publicKeyVerifiedTimestamp);
+}
+
+class UserDiscoveryUserRelationsCompanion
+    extends UpdateCompanion<UserDiscoveryUserRelation> {
+  final Value<int> announcedUserId;
+  final Value<int> fromContactId;
+  final Value<DateTime?> publicKeyVerifiedTimestamp;
+  final Value<int> rowid;
+  const UserDiscoveryUserRelationsCompanion({
+    this.announcedUserId = const Value.absent(),
+    this.fromContactId = const Value.absent(),
+    this.publicKeyVerifiedTimestamp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserDiscoveryUserRelationsCompanion.insert({
+    required int announcedUserId,
+    required int fromContactId,
+    this.publicKeyVerifiedTimestamp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : announcedUserId = Value(announcedUserId),
+       fromContactId = Value(fromContactId);
+  static Insertable<UserDiscoveryUserRelation> custom({
+    Expression<int>? announcedUserId,
+    Expression<int>? fromContactId,
+    Expression<DateTime>? publicKeyVerifiedTimestamp,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (announcedUserId != null) 'announced_user_id': announcedUserId,
+      if (fromContactId != null) 'from_contact_id': fromContactId,
+      if (publicKeyVerifiedTimestamp != null)
+        'public_key_verified_timestamp': publicKeyVerifiedTimestamp,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserDiscoveryUserRelationsCompanion copyWith({
+    Value<int>? announcedUserId,
+    Value<int>? fromContactId,
+    Value<DateTime?>? publicKeyVerifiedTimestamp,
+    Value<int>? rowid,
+  }) {
+    return UserDiscoveryUserRelationsCompanion(
+      announcedUserId: announcedUserId ?? this.announcedUserId,
+      fromContactId: fromContactId ?? this.fromContactId,
+      publicKeyVerifiedTimestamp:
+          publicKeyVerifiedTimestamp ?? this.publicKeyVerifiedTimestamp,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (announcedUserId.present) {
+      map['announced_user_id'] = Variable<int>(announcedUserId.value);
+    }
+    if (fromContactId.present) {
+      map['from_contact_id'] = Variable<int>(fromContactId.value);
+    }
+    if (publicKeyVerifiedTimestamp.present) {
+      map['public_key_verified_timestamp'] = Variable<DateTime>(
+        publicKeyVerifiedTimestamp.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryUserRelationsCompanion(')
+          ..write('announcedUserId: $announcedUserId, ')
+          ..write('fromContactId: $fromContactId, ')
+          ..write('publicKeyVerifiedTimestamp: $publicKeyVerifiedTimestamp, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDiscoveryOtherPromotionsTable extends UserDiscoveryOtherPromotions
+    with
+        TableInfo<
+          $UserDiscoveryOtherPromotionsTable,
+          UserDiscoveryOtherPromotion
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDiscoveryOtherPromotionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _fromContactIdMeta = const VerificationMeta(
+    'fromContactId',
+  );
+  @override
+  late final GeneratedColumn<int> fromContactId = GeneratedColumn<int>(
+    'from_contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _promotionIdMeta = const VerificationMeta(
+    'promotionId',
+  );
+  @override
+  late final GeneratedColumn<int> promotionId = GeneratedColumn<int>(
+    'promotion_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _publicIdMeta = const VerificationMeta(
+    'publicId',
+  );
+  @override
+  late final GeneratedColumn<int> publicId = GeneratedColumn<int>(
+    'public_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _thresholdMeta = const VerificationMeta(
+    'threshold',
+  );
+  @override
+  late final GeneratedColumn<int> threshold = GeneratedColumn<int>(
+    'threshold',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _announcementShareMeta = const VerificationMeta(
+    'announcementShare',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> announcementShare =
+      GeneratedColumn<Uint8List>(
+        'announcement_share',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _publicKeyVerifiedTimestampMeta =
+      const VerificationMeta('publicKeyVerifiedTimestamp');
+  @override
+  late final GeneratedColumn<DateTime> publicKeyVerifiedTimestamp =
+      GeneratedColumn<DateTime>(
+        'public_key_verified_timestamp',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    fromContactId,
+    promotionId,
+    publicId,
+    threshold,
+    announcementShare,
+    publicKeyVerifiedTimestamp,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_discovery_other_promotions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDiscoveryOtherPromotion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('from_contact_id')) {
+      context.handle(
+        _fromContactIdMeta,
+        fromContactId.isAcceptableOrUnknown(
+          data['from_contact_id']!,
+          _fromContactIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fromContactIdMeta);
+    }
+    if (data.containsKey('promotion_id')) {
+      context.handle(
+        _promotionIdMeta,
+        promotionId.isAcceptableOrUnknown(
+          data['promotion_id']!,
+          _promotionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_promotionIdMeta);
+    }
+    if (data.containsKey('public_id')) {
+      context.handle(
+        _publicIdMeta,
+        publicId.isAcceptableOrUnknown(data['public_id']!, _publicIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_publicIdMeta);
+    }
+    if (data.containsKey('threshold')) {
+      context.handle(
+        _thresholdMeta,
+        threshold.isAcceptableOrUnknown(data['threshold']!, _thresholdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_thresholdMeta);
+    }
+    if (data.containsKey('announcement_share')) {
+      context.handle(
+        _announcementShareMeta,
+        announcementShare.isAcceptableOrUnknown(
+          data['announcement_share']!,
+          _announcementShareMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_announcementShareMeta);
+    }
+    if (data.containsKey('public_key_verified_timestamp')) {
+      context.handle(
+        _publicKeyVerifiedTimestampMeta,
+        publicKeyVerifiedTimestamp.isAcceptableOrUnknown(
+          data['public_key_verified_timestamp']!,
+          _publicKeyVerifiedTimestampMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {fromContactId, promotionId};
+  @override
+  UserDiscoveryOtherPromotion map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDiscoveryOtherPromotion(
+      fromContactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}from_contact_id'],
+      )!,
+      promotionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}promotion_id'],
+      )!,
+      publicId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}public_id'],
+      )!,
+      threshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}threshold'],
+      )!,
+      announcementShare: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}announcement_share'],
+      )!,
+      publicKeyVerifiedTimestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}public_key_verified_timestamp'],
+      ),
+    );
+  }
+
+  @override
+  $UserDiscoveryOtherPromotionsTable createAlias(String alias) {
+    return $UserDiscoveryOtherPromotionsTable(attachedDatabase, alias);
+  }
+}
+
+class UserDiscoveryOtherPromotion extends DataClass
+    implements Insertable<UserDiscoveryOtherPromotion> {
+  final int fromContactId;
+  final int promotionId;
+  final int publicId;
+  final int threshold;
+  final Uint8List announcementShare;
+  final DateTime? publicKeyVerifiedTimestamp;
+  const UserDiscoveryOtherPromotion({
+    required this.fromContactId,
+    required this.promotionId,
+    required this.publicId,
+    required this.threshold,
+    required this.announcementShare,
+    this.publicKeyVerifiedTimestamp,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['from_contact_id'] = Variable<int>(fromContactId);
+    map['promotion_id'] = Variable<int>(promotionId);
+    map['public_id'] = Variable<int>(publicId);
+    map['threshold'] = Variable<int>(threshold);
+    map['announcement_share'] = Variable<Uint8List>(announcementShare);
+    if (!nullToAbsent || publicKeyVerifiedTimestamp != null) {
+      map['public_key_verified_timestamp'] = Variable<DateTime>(
+        publicKeyVerifiedTimestamp,
+      );
+    }
+    return map;
+  }
+
+  UserDiscoveryOtherPromotionsCompanion toCompanion(bool nullToAbsent) {
+    return UserDiscoveryOtherPromotionsCompanion(
+      fromContactId: Value(fromContactId),
+      promotionId: Value(promotionId),
+      publicId: Value(publicId),
+      threshold: Value(threshold),
+      announcementShare: Value(announcementShare),
+      publicKeyVerifiedTimestamp:
+          publicKeyVerifiedTimestamp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(publicKeyVerifiedTimestamp),
+    );
+  }
+
+  factory UserDiscoveryOtherPromotion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDiscoveryOtherPromotion(
+      fromContactId: serializer.fromJson<int>(json['fromContactId']),
+      promotionId: serializer.fromJson<int>(json['promotionId']),
+      publicId: serializer.fromJson<int>(json['publicId']),
+      threshold: serializer.fromJson<int>(json['threshold']),
+      announcementShare: serializer.fromJson<Uint8List>(
+        json['announcementShare'],
+      ),
+      publicKeyVerifiedTimestamp: serializer.fromJson<DateTime?>(
+        json['publicKeyVerifiedTimestamp'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'fromContactId': serializer.toJson<int>(fromContactId),
+      'promotionId': serializer.toJson<int>(promotionId),
+      'publicId': serializer.toJson<int>(publicId),
+      'threshold': serializer.toJson<int>(threshold),
+      'announcementShare': serializer.toJson<Uint8List>(announcementShare),
+      'publicKeyVerifiedTimestamp': serializer.toJson<DateTime?>(
+        publicKeyVerifiedTimestamp,
+      ),
+    };
+  }
+
+  UserDiscoveryOtherPromotion copyWith({
+    int? fromContactId,
+    int? promotionId,
+    int? publicId,
+    int? threshold,
+    Uint8List? announcementShare,
+    Value<DateTime?> publicKeyVerifiedTimestamp = const Value.absent(),
+  }) => UserDiscoveryOtherPromotion(
+    fromContactId: fromContactId ?? this.fromContactId,
+    promotionId: promotionId ?? this.promotionId,
+    publicId: publicId ?? this.publicId,
+    threshold: threshold ?? this.threshold,
+    announcementShare: announcementShare ?? this.announcementShare,
+    publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp.present
+        ? publicKeyVerifiedTimestamp.value
+        : this.publicKeyVerifiedTimestamp,
+  );
+  UserDiscoveryOtherPromotion copyWithCompanion(
+    UserDiscoveryOtherPromotionsCompanion data,
+  ) {
+    return UserDiscoveryOtherPromotion(
+      fromContactId: data.fromContactId.present
+          ? data.fromContactId.value
+          : this.fromContactId,
+      promotionId: data.promotionId.present
+          ? data.promotionId.value
+          : this.promotionId,
+      publicId: data.publicId.present ? data.publicId.value : this.publicId,
+      threshold: data.threshold.present ? data.threshold.value : this.threshold,
+      announcementShare: data.announcementShare.present
+          ? data.announcementShare.value
+          : this.announcementShare,
+      publicKeyVerifiedTimestamp: data.publicKeyVerifiedTimestamp.present
+          ? data.publicKeyVerifiedTimestamp.value
+          : this.publicKeyVerifiedTimestamp,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryOtherPromotion(')
+          ..write('fromContactId: $fromContactId, ')
+          ..write('promotionId: $promotionId, ')
+          ..write('publicId: $publicId, ')
+          ..write('threshold: $threshold, ')
+          ..write('announcementShare: $announcementShare, ')
+          ..write('publicKeyVerifiedTimestamp: $publicKeyVerifiedTimestamp')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    fromContactId,
+    promotionId,
+    publicId,
+    threshold,
+    $driftBlobEquality.hash(announcementShare),
+    publicKeyVerifiedTimestamp,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDiscoveryOtherPromotion &&
+          other.fromContactId == this.fromContactId &&
+          other.promotionId == this.promotionId &&
+          other.publicId == this.publicId &&
+          other.threshold == this.threshold &&
+          $driftBlobEquality.equals(
+            other.announcementShare,
+            this.announcementShare,
+          ) &&
+          other.publicKeyVerifiedTimestamp == this.publicKeyVerifiedTimestamp);
+}
+
+class UserDiscoveryOtherPromotionsCompanion
+    extends UpdateCompanion<UserDiscoveryOtherPromotion> {
+  final Value<int> fromContactId;
+  final Value<int> promotionId;
+  final Value<int> publicId;
+  final Value<int> threshold;
+  final Value<Uint8List> announcementShare;
+  final Value<DateTime?> publicKeyVerifiedTimestamp;
+  final Value<int> rowid;
+  const UserDiscoveryOtherPromotionsCompanion({
+    this.fromContactId = const Value.absent(),
+    this.promotionId = const Value.absent(),
+    this.publicId = const Value.absent(),
+    this.threshold = const Value.absent(),
+    this.announcementShare = const Value.absent(),
+    this.publicKeyVerifiedTimestamp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserDiscoveryOtherPromotionsCompanion.insert({
+    required int fromContactId,
+    required int promotionId,
+    required int publicId,
+    required int threshold,
+    required Uint8List announcementShare,
+    this.publicKeyVerifiedTimestamp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : fromContactId = Value(fromContactId),
+       promotionId = Value(promotionId),
+       publicId = Value(publicId),
+       threshold = Value(threshold),
+       announcementShare = Value(announcementShare);
+  static Insertable<UserDiscoveryOtherPromotion> custom({
+    Expression<int>? fromContactId,
+    Expression<int>? promotionId,
+    Expression<int>? publicId,
+    Expression<int>? threshold,
+    Expression<Uint8List>? announcementShare,
+    Expression<DateTime>? publicKeyVerifiedTimestamp,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (fromContactId != null) 'from_contact_id': fromContactId,
+      if (promotionId != null) 'promotion_id': promotionId,
+      if (publicId != null) 'public_id': publicId,
+      if (threshold != null) 'threshold': threshold,
+      if (announcementShare != null) 'announcement_share': announcementShare,
+      if (publicKeyVerifiedTimestamp != null)
+        'public_key_verified_timestamp': publicKeyVerifiedTimestamp,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserDiscoveryOtherPromotionsCompanion copyWith({
+    Value<int>? fromContactId,
+    Value<int>? promotionId,
+    Value<int>? publicId,
+    Value<int>? threshold,
+    Value<Uint8List>? announcementShare,
+    Value<DateTime?>? publicKeyVerifiedTimestamp,
+    Value<int>? rowid,
+  }) {
+    return UserDiscoveryOtherPromotionsCompanion(
+      fromContactId: fromContactId ?? this.fromContactId,
+      promotionId: promotionId ?? this.promotionId,
+      publicId: publicId ?? this.publicId,
+      threshold: threshold ?? this.threshold,
+      announcementShare: announcementShare ?? this.announcementShare,
+      publicKeyVerifiedTimestamp:
+          publicKeyVerifiedTimestamp ?? this.publicKeyVerifiedTimestamp,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (fromContactId.present) {
+      map['from_contact_id'] = Variable<int>(fromContactId.value);
+    }
+    if (promotionId.present) {
+      map['promotion_id'] = Variable<int>(promotionId.value);
+    }
+    if (publicId.present) {
+      map['public_id'] = Variable<int>(publicId.value);
+    }
+    if (threshold.present) {
+      map['threshold'] = Variable<int>(threshold.value);
+    }
+    if (announcementShare.present) {
+      map['announcement_share'] = Variable<Uint8List>(announcementShare.value);
+    }
+    if (publicKeyVerifiedTimestamp.present) {
+      map['public_key_verified_timestamp'] = Variable<DateTime>(
+        publicKeyVerifiedTimestamp.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryOtherPromotionsCompanion(')
+          ..write('fromContactId: $fromContactId, ')
+          ..write('promotionId: $promotionId, ')
+          ..write('publicId: $publicId, ')
+          ..write('threshold: $threshold, ')
+          ..write('announcementShare: $announcementShare, ')
+          ..write('publicKeyVerifiedTimestamp: $publicKeyVerifiedTimestamp, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDiscoveryOwnPromotionsTable extends UserDiscoveryOwnPromotions
+    with
+        TableInfo<$UserDiscoveryOwnPromotionsTable, UserDiscoveryOwnPromotion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDiscoveryOwnPromotionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _versionIdMeta = const VerificationMeta(
+    'versionId',
+  );
+  @override
+  late final GeneratedColumn<int> versionId = GeneratedColumn<int>(
+    'version_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _promotionMeta = const VerificationMeta(
+    'promotion',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> promotion = GeneratedColumn<Uint8List>(
+    'promotion',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [versionId, contactId, promotion];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_discovery_own_promotions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDiscoveryOwnPromotion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('version_id')) {
+      context.handle(
+        _versionIdMeta,
+        versionId.isAcceptableOrUnknown(data['version_id']!, _versionIdMeta),
+      );
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('promotion')) {
+      context.handle(
+        _promotionMeta,
+        promotion.isAcceptableOrUnknown(data['promotion']!, _promotionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_promotionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {versionId};
+  @override
+  UserDiscoveryOwnPromotion map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDiscoveryOwnPromotion(
+      versionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      promotion: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}promotion'],
+      )!,
+    );
+  }
+
+  @override
+  $UserDiscoveryOwnPromotionsTable createAlias(String alias) {
+    return $UserDiscoveryOwnPromotionsTable(attachedDatabase, alias);
+  }
+}
+
+class UserDiscoveryOwnPromotion extends DataClass
+    implements Insertable<UserDiscoveryOwnPromotion> {
+  final int versionId;
+  final int contactId;
+  final Uint8List promotion;
+  const UserDiscoveryOwnPromotion({
+    required this.versionId,
+    required this.contactId,
+    required this.promotion,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['version_id'] = Variable<int>(versionId);
+    map['contact_id'] = Variable<int>(contactId);
+    map['promotion'] = Variable<Uint8List>(promotion);
+    return map;
+  }
+
+  UserDiscoveryOwnPromotionsCompanion toCompanion(bool nullToAbsent) {
+    return UserDiscoveryOwnPromotionsCompanion(
+      versionId: Value(versionId),
+      contactId: Value(contactId),
+      promotion: Value(promotion),
+    );
+  }
+
+  factory UserDiscoveryOwnPromotion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDiscoveryOwnPromotion(
+      versionId: serializer.fromJson<int>(json['versionId']),
+      contactId: serializer.fromJson<int>(json['contactId']),
+      promotion: serializer.fromJson<Uint8List>(json['promotion']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'versionId': serializer.toJson<int>(versionId),
+      'contactId': serializer.toJson<int>(contactId),
+      'promotion': serializer.toJson<Uint8List>(promotion),
+    };
+  }
+
+  UserDiscoveryOwnPromotion copyWith({
+    int? versionId,
+    int? contactId,
+    Uint8List? promotion,
+  }) => UserDiscoveryOwnPromotion(
+    versionId: versionId ?? this.versionId,
+    contactId: contactId ?? this.contactId,
+    promotion: promotion ?? this.promotion,
+  );
+  UserDiscoveryOwnPromotion copyWithCompanion(
+    UserDiscoveryOwnPromotionsCompanion data,
+  ) {
+    return UserDiscoveryOwnPromotion(
+      versionId: data.versionId.present ? data.versionId.value : this.versionId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      promotion: data.promotion.present ? data.promotion.value : this.promotion,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryOwnPromotion(')
+          ..write('versionId: $versionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('promotion: $promotion')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(versionId, contactId, $driftBlobEquality.hash(promotion));
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDiscoveryOwnPromotion &&
+          other.versionId == this.versionId &&
+          other.contactId == this.contactId &&
+          $driftBlobEquality.equals(other.promotion, this.promotion));
+}
+
+class UserDiscoveryOwnPromotionsCompanion
+    extends UpdateCompanion<UserDiscoveryOwnPromotion> {
+  final Value<int> versionId;
+  final Value<int> contactId;
+  final Value<Uint8List> promotion;
+  const UserDiscoveryOwnPromotionsCompanion({
+    this.versionId = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.promotion = const Value.absent(),
+  });
+  UserDiscoveryOwnPromotionsCompanion.insert({
+    this.versionId = const Value.absent(),
+    required int contactId,
+    required Uint8List promotion,
+  }) : contactId = Value(contactId),
+       promotion = Value(promotion);
+  static Insertable<UserDiscoveryOwnPromotion> custom({
+    Expression<int>? versionId,
+    Expression<int>? contactId,
+    Expression<Uint8List>? promotion,
+  }) {
+    return RawValuesInsertable({
+      if (versionId != null) 'version_id': versionId,
+      if (contactId != null) 'contact_id': contactId,
+      if (promotion != null) 'promotion': promotion,
+    });
+  }
+
+  UserDiscoveryOwnPromotionsCompanion copyWith({
+    Value<int>? versionId,
+    Value<int>? contactId,
+    Value<Uint8List>? promotion,
+  }) {
+    return UserDiscoveryOwnPromotionsCompanion(
+      versionId: versionId ?? this.versionId,
+      contactId: contactId ?? this.contactId,
+      promotion: promotion ?? this.promotion,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (versionId.present) {
+      map['version_id'] = Variable<int>(versionId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (promotion.present) {
+      map['promotion'] = Variable<Uint8List>(promotion.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryOwnPromotionsCompanion(')
+          ..write('versionId: $versionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('promotion: $promotion')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserDiscoverySharesTable extends UserDiscoveryShares
+    with TableInfo<$UserDiscoverySharesTable, UserDiscoveryShare> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDiscoverySharesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _shareIdMeta = const VerificationMeta(
+    'shareId',
+  );
+  @override
+  late final GeneratedColumn<int> shareId = GeneratedColumn<int>(
+    'share_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _shareMeta = const VerificationMeta('share');
+  @override
+  late final GeneratedColumn<Uint8List> share = GeneratedColumn<Uint8List>(
+    'share',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [shareId, share, contactId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_discovery_shares';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserDiscoveryShare> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('share_id')) {
+      context.handle(
+        _shareIdMeta,
+        shareId.isAcceptableOrUnknown(data['share_id']!, _shareIdMeta),
+      );
+    }
+    if (data.containsKey('share')) {
+      context.handle(
+        _shareMeta,
+        share.isAcceptableOrUnknown(data['share']!, _shareMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shareMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {shareId};
+  @override
+  UserDiscoveryShare map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserDiscoveryShare(
+      shareId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}share_id'],
+      )!,
+      share: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}share'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
+    );
+  }
+
+  @override
+  $UserDiscoverySharesTable createAlias(String alias) {
+    return $UserDiscoverySharesTable(attachedDatabase, alias);
+  }
+}
+
+class UserDiscoveryShare extends DataClass
+    implements Insertable<UserDiscoveryShare> {
+  final int shareId;
+  final Uint8List share;
+  final int? contactId;
+  const UserDiscoveryShare({
+    required this.shareId,
+    required this.share,
+    this.contactId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['share_id'] = Variable<int>(shareId);
+    map['share'] = Variable<Uint8List>(share);
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<int>(contactId);
+    }
+    return map;
+  }
+
+  UserDiscoverySharesCompanion toCompanion(bool nullToAbsent) {
+    return UserDiscoverySharesCompanion(
+      shareId: Value(shareId),
+      share: Value(share),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
+    );
+  }
+
+  factory UserDiscoveryShare.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserDiscoveryShare(
+      shareId: serializer.fromJson<int>(json['shareId']),
+      share: serializer.fromJson<Uint8List>(json['share']),
+      contactId: serializer.fromJson<int?>(json['contactId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'shareId': serializer.toJson<int>(shareId),
+      'share': serializer.toJson<Uint8List>(share),
+      'contactId': serializer.toJson<int?>(contactId),
+    };
+  }
+
+  UserDiscoveryShare copyWith({
+    int? shareId,
+    Uint8List? share,
+    Value<int?> contactId = const Value.absent(),
+  }) => UserDiscoveryShare(
+    shareId: shareId ?? this.shareId,
+    share: share ?? this.share,
+    contactId: contactId.present ? contactId.value : this.contactId,
+  );
+  UserDiscoveryShare copyWithCompanion(UserDiscoverySharesCompanion data) {
+    return UserDiscoveryShare(
+      shareId: data.shareId.present ? data.shareId.value : this.shareId,
+      share: data.share.present ? data.share.value : this.share,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoveryShare(')
+          ..write('shareId: $shareId, ')
+          ..write('share: $share, ')
+          ..write('contactId: $contactId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(shareId, $driftBlobEquality.hash(share), contactId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserDiscoveryShare &&
+          other.shareId == this.shareId &&
+          $driftBlobEquality.equals(other.share, this.share) &&
+          other.contactId == this.contactId);
+}
+
+class UserDiscoverySharesCompanion extends UpdateCompanion<UserDiscoveryShare> {
+  final Value<int> shareId;
+  final Value<Uint8List> share;
+  final Value<int?> contactId;
+  const UserDiscoverySharesCompanion({
+    this.shareId = const Value.absent(),
+    this.share = const Value.absent(),
+    this.contactId = const Value.absent(),
+  });
+  UserDiscoverySharesCompanion.insert({
+    this.shareId = const Value.absent(),
+    required Uint8List share,
+    this.contactId = const Value.absent(),
+  }) : share = Value(share);
+  static Insertable<UserDiscoveryShare> custom({
+    Expression<int>? shareId,
+    Expression<Uint8List>? share,
+    Expression<int>? contactId,
+  }) {
+    return RawValuesInsertable({
+      if (shareId != null) 'share_id': shareId,
+      if (share != null) 'share': share,
+      if (contactId != null) 'contact_id': contactId,
+    });
+  }
+
+  UserDiscoverySharesCompanion copyWith({
+    Value<int>? shareId,
+    Value<Uint8List>? share,
+    Value<int?>? contactId,
+  }) {
+    return UserDiscoverySharesCompanion(
+      shareId: shareId ?? this.shareId,
+      share: share ?? this.share,
+      contactId: contactId ?? this.contactId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (shareId.present) {
+      map['share_id'] = Variable<int>(shareId.value);
+    }
+    if (share.present) {
+      map['share'] = Variable<Uint8List>(share.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDiscoverySharesCompanion(')
+          ..write('shareId: $shareId, ')
+          ..write('share: $share, ')
+          ..write('contactId: $contactId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -8831,12 +11034,30 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $SignalSessionStoresTable(this);
   late final $MessageActionsTable messageActions = $MessageActionsTable(this);
   late final $GroupHistoriesTable groupHistories = $GroupHistoriesTable(this);
+  late final $KeyVerificationsTable keyVerifications = $KeyVerificationsTable(
+    this,
+  );
+  late final $VerificationTokensTable verificationTokens =
+      $VerificationTokensTable(this);
+  late final $UserDiscoveryAnnouncedUsersTable userDiscoveryAnnouncedUsers =
+      $UserDiscoveryAnnouncedUsersTable(this);
+  late final $UserDiscoveryUserRelationsTable userDiscoveryUserRelations =
+      $UserDiscoveryUserRelationsTable(this);
+  late final $UserDiscoveryOtherPromotionsTable userDiscoveryOtherPromotions =
+      $UserDiscoveryOtherPromotionsTable(this);
+  late final $UserDiscoveryOwnPromotionsTable userDiscoveryOwnPromotions =
+      $UserDiscoveryOwnPromotionsTable(this);
+  late final $UserDiscoverySharesTable userDiscoveryShares =
+      $UserDiscoverySharesTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final ReceiptsDao receiptsDao = ReceiptsDao(this as TwonlyDB);
   late final GroupsDao groupsDao = GroupsDao(this as TwonlyDB);
   late final ReactionsDao reactionsDao = ReactionsDao(this as TwonlyDB);
   late final MediaFilesDao mediaFilesDao = MediaFilesDao(this as TwonlyDB);
+  late final UserDiscoveryDao userDiscoveryDao = UserDiscoveryDao(
+    this as TwonlyDB,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8857,6 +11078,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     signalSessionStores,
     messageActions,
     groupHistories,
+    keyVerifications,
+    verificationTokens,
+    userDiscoveryAnnouncedUsers,
+    userDiscoveryUserRelations,
+    userDiscoveryOtherPromotions,
+    userDiscoveryOwnPromotions,
+    userDiscoveryShares,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -8944,6 +11172,56 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       ),
       result: [TableUpdate('group_histories', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('key_verifications', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'user_discovery_announced_users',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('user_discovery_user_relations', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('user_discovery_user_relations', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('user_discovery_other_promotions', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('user_discovery_own_promotions', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('user_discovery_shares', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -8962,6 +11240,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<Uint8List?> userDiscoveryVersion,
     });
 typedef $$ContactsTableUpdateCompanionBuilder =
     ContactsCompanion Function({
@@ -8978,6 +11257,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<Uint8List?> userDiscoveryVersion,
     });
 
 final class $$ContactsTableReferences
@@ -9124,6 +11404,153 @@ final class $$ContactsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$KeyVerificationsTable, List<KeyVerification>>
+  _keyVerificationsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.keyVerifications,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.keyVerifications.contactId,
+    ),
+  );
+
+  $$KeyVerificationsTableProcessedTableManager get keyVerificationsRefs {
+    final manager =
+        $$KeyVerificationsTableTableManager($_db, $_db.keyVerifications).filter(
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _keyVerificationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $UserDiscoveryUserRelationsTable,
+    List<UserDiscoveryUserRelation>
+  >
+  _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
+      MultiTypedResultKey.fromTable(
+        db.userDiscoveryUserRelations,
+        aliasName: $_aliasNameGenerator(
+          db.contacts.userId,
+          db.userDiscoveryUserRelations.fromContactId,
+        ),
+      );
+
+  $$UserDiscoveryUserRelationsTableProcessedTableManager
+  get userDiscoveryUserRelationsRefs {
+    final manager =
+        $$UserDiscoveryUserRelationsTableTableManager(
+          $_db,
+          $_db.userDiscoveryUserRelations,
+        ).filter(
+          (f) =>
+              f.fromContactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _userDiscoveryUserRelationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $UserDiscoveryOtherPromotionsTable,
+    List<UserDiscoveryOtherPromotion>
+  >
+  _userDiscoveryOtherPromotionsRefsTable(_$TwonlyDB db) =>
+      MultiTypedResultKey.fromTable(
+        db.userDiscoveryOtherPromotions,
+        aliasName: $_aliasNameGenerator(
+          db.contacts.userId,
+          db.userDiscoveryOtherPromotions.fromContactId,
+        ),
+      );
+
+  $$UserDiscoveryOtherPromotionsTableProcessedTableManager
+  get userDiscoveryOtherPromotionsRefs {
+    final manager =
+        $$UserDiscoveryOtherPromotionsTableTableManager(
+          $_db,
+          $_db.userDiscoveryOtherPromotions,
+        ).filter(
+          (f) =>
+              f.fromContactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _userDiscoveryOtherPromotionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $UserDiscoveryOwnPromotionsTable,
+    List<UserDiscoveryOwnPromotion>
+  >
+  _userDiscoveryOwnPromotionsRefsTable(_$TwonlyDB db) =>
+      MultiTypedResultKey.fromTable(
+        db.userDiscoveryOwnPromotions,
+        aliasName: $_aliasNameGenerator(
+          db.contacts.userId,
+          db.userDiscoveryOwnPromotions.contactId,
+        ),
+      );
+
+  $$UserDiscoveryOwnPromotionsTableProcessedTableManager
+  get userDiscoveryOwnPromotionsRefs {
+    final manager =
+        $$UserDiscoveryOwnPromotionsTableTableManager(
+          $_db,
+          $_db.userDiscoveryOwnPromotions,
+        ).filter(
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _userDiscoveryOwnPromotionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $UserDiscoverySharesTable,
+    List<UserDiscoveryShare>
+  >
+  _userDiscoverySharesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.userDiscoveryShares,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.userDiscoveryShares.contactId,
+    ),
+  );
+
+  $$UserDiscoverySharesTableProcessedTableManager get userDiscoverySharesRefs {
+    final manager =
+        $$UserDiscoverySharesTableTableManager(
+          $_db,
+          $_db.userDiscoveryShares,
+        ).filter(
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _userDiscoverySharesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ContactsTableFilterComposer
@@ -9197,6 +11624,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get userDiscoveryVersion => $composableBuilder(
+    column: $table.userDiscoveryVersion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9374,6 +11806,139 @@ class $$ContactsTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> keyVerificationsRefs(
+    Expression<bool> Function($$KeyVerificationsTableFilterComposer f) f,
+  ) {
+    final $$KeyVerificationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.keyVerifications,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KeyVerificationsTableFilterComposer(
+            $db: $db,
+            $table: $db.keyVerifications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> userDiscoveryUserRelationsRefs(
+    Expression<bool> Function($$UserDiscoveryUserRelationsTableFilterComposer f)
+    f,
+  ) {
+    final $$UserDiscoveryUserRelationsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryUserRelations,
+          getReferencedColumn: (t) => t.fromContactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryUserRelationsTableFilterComposer(
+                $db: $db,
+                $table: $db.userDiscoveryUserRelations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> userDiscoveryOtherPromotionsRefs(
+    Expression<bool> Function(
+      $$UserDiscoveryOtherPromotionsTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$UserDiscoveryOtherPromotionsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryOtherPromotions,
+          getReferencedColumn: (t) => t.fromContactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryOtherPromotionsTableFilterComposer(
+                $db: $db,
+                $table: $db.userDiscoveryOtherPromotions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> userDiscoveryOwnPromotionsRefs(
+    Expression<bool> Function($$UserDiscoveryOwnPromotionsTableFilterComposer f)
+    f,
+  ) {
+    final $$UserDiscoveryOwnPromotionsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryOwnPromotions,
+          getReferencedColumn: (t) => t.contactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryOwnPromotionsTableFilterComposer(
+                $db: $db,
+                $table: $db.userDiscoveryOwnPromotions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> userDiscoverySharesRefs(
+    Expression<bool> Function($$UserDiscoverySharesTableFilterComposer f) f,
+  ) {
+    final $$UserDiscoverySharesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userDiscoveryShares,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserDiscoverySharesTableFilterComposer(
+            $db: $db,
+            $table: $db.userDiscoveryShares,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableOrderingComposer
@@ -9449,6 +12014,11 @@ class $$ContactsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<Uint8List> get userDiscoveryVersion => $composableBuilder(
+    column: $table.userDiscoveryVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ContactsTableAnnotationComposer
@@ -9508,6 +12078,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get userDiscoveryVersion => $composableBuilder(
+    column: $table.userDiscoveryVersion,
+    builder: (column) => column,
+  );
 
   Expression<T> messagesRefs<T extends Object>(
     Expression<T> Function($$MessagesTableAnnotationComposer a) f,
@@ -9683,6 +12258,144 @@ class $$ContactsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> keyVerificationsRefs<T extends Object>(
+    Expression<T> Function($$KeyVerificationsTableAnnotationComposer a) f,
+  ) {
+    final $$KeyVerificationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.keyVerifications,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KeyVerificationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.keyVerifications,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
+    Expression<T> Function(
+      $$UserDiscoveryUserRelationsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$UserDiscoveryUserRelationsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryUserRelations,
+          getReferencedColumn: (t) => t.fromContactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryUserRelationsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryUserRelations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> userDiscoveryOtherPromotionsRefs<T extends Object>(
+    Expression<T> Function(
+      $$UserDiscoveryOtherPromotionsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$UserDiscoveryOtherPromotionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryOtherPromotions,
+          getReferencedColumn: (t) => t.fromContactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryOtherPromotionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryOtherPromotions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> userDiscoveryOwnPromotionsRefs<T extends Object>(
+    Expression<T> Function(
+      $$UserDiscoveryOwnPromotionsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$UserDiscoveryOwnPromotionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryOwnPromotions,
+          getReferencedColumn: (t) => t.contactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryOwnPromotionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryOwnPromotions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> userDiscoverySharesRefs<T extends Object>(
+    Expression<T> Function($$UserDiscoverySharesTableAnnotationComposer a) f,
+  ) {
+    final $$UserDiscoverySharesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.userDiscoveryShares,
+          getReferencedColumn: (t) => t.contactId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoverySharesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryShares,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager
@@ -9706,6 +12419,11 @@ class $$ContactsTableTableManager
             bool receiptsRefs,
             bool messageActionsRefs,
             bool groupHistoriesRefs,
+            bool keyVerificationsRefs,
+            bool userDiscoveryUserRelationsRefs,
+            bool userDiscoveryOtherPromotionsRefs,
+            bool userDiscoveryOwnPromotionsRefs,
+            bool userDiscoverySharesRefs,
           })
         > {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
@@ -9734,6 +12452,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
               }) => ContactsCompanion(
                 userId: userId,
                 username: username,
@@ -9748,6 +12467,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                userDiscoveryVersion: userDiscoveryVersion,
               ),
           createCompanionCallback:
               ({
@@ -9764,6 +12484,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
               }) => ContactsCompanion.insert(
                 userId: userId,
                 username: username,
@@ -9778,6 +12499,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                userDiscoveryVersion: userDiscoveryVersion,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -9796,6 +12518,11 @@ class $$ContactsTableTableManager
                 receiptsRefs = false,
                 messageActionsRefs = false,
                 groupHistoriesRefs = false,
+                keyVerificationsRefs = false,
+                userDiscoveryUserRelationsRefs = false,
+                userDiscoveryOtherPromotionsRefs = false,
+                userDiscoveryOwnPromotionsRefs = false,
+                userDiscoverySharesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -9807,6 +12534,14 @@ class $$ContactsTableTableManager
                     if (receiptsRefs) db.receipts,
                     if (messageActionsRefs) db.messageActions,
                     if (groupHistoriesRefs) db.groupHistories,
+                    if (keyVerificationsRefs) db.keyVerifications,
+                    if (userDiscoveryUserRelationsRefs)
+                      db.userDiscoveryUserRelations,
+                    if (userDiscoveryOtherPromotionsRefs)
+                      db.userDiscoveryOtherPromotions,
+                    if (userDiscoveryOwnPromotionsRefs)
+                      db.userDiscoveryOwnPromotions,
+                    if (userDiscoverySharesRefs) db.userDiscoveryShares,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -9958,6 +12693,111 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (keyVerificationsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          KeyVerification
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._keyVerificationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).keyVerificationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (userDiscoveryUserRelationsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          UserDiscoveryUserRelation
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._userDiscoveryUserRelationsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userDiscoveryUserRelationsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.fromContactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (userDiscoveryOtherPromotionsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          UserDiscoveryOtherPromotion
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._userDiscoveryOtherPromotionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userDiscoveryOtherPromotionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.fromContactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (userDiscoveryOwnPromotionsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          UserDiscoveryOwnPromotion
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._userDiscoveryOwnPromotionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userDiscoveryOwnPromotionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (userDiscoverySharesRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          UserDiscoveryShare
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._userDiscoverySharesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userDiscoverySharesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9986,6 +12826,11 @@ typedef $$ContactsTableProcessedTableManager =
         bool receiptsRefs,
         bool messageActionsRefs,
         bool groupHistoriesRefs,
+        bool keyVerificationsRefs,
+        bool userDiscoveryUserRelationsRefs,
+        bool userDiscoveryOtherPromotionsRefs,
+        bool userDiscoveryOwnPromotionsRefs,
+        bool userDiscoverySharesRefs,
       })
     >;
 typedef $$GroupsTableCreateCompanionBuilder =
@@ -16244,6 +19089,2161 @@ typedef $$GroupHistoriesTableProcessedTableManager =
       GroupHistory,
       PrefetchHooks Function({bool groupId, bool contactId})
     >;
+typedef $$KeyVerificationsTableCreateCompanionBuilder =
+    KeyVerificationsCompanion Function({
+      Value<int> contactId,
+      required VerificationType type,
+      Value<DateTime> createdAt,
+    });
+typedef $$KeyVerificationsTableUpdateCompanionBuilder =
+    KeyVerificationsCompanion Function({
+      Value<int> contactId,
+      Value<VerificationType> type,
+      Value<DateTime> createdAt,
+    });
+
+final class $$KeyVerificationsTableReferences
+    extends
+        BaseReferences<_$TwonlyDB, $KeyVerificationsTable, KeyVerification> {
+  $$KeyVerificationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(db.keyVerifications.contactId, db.contacts.userId),
+      );
+
+  $$ContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<int>('contact_id')!;
+
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$KeyVerificationsTableFilterComposer
+    extends Composer<_$TwonlyDB, $KeyVerificationsTable> {
+  $$KeyVerificationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnWithTypeConverterFilters<VerificationType, VerificationType, String>
+  get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$KeyVerificationsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $KeyVerificationsTable> {
+  $$KeyVerificationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$KeyVerificationsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $KeyVerificationsTable> {
+  $$KeyVerificationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumnWithTypeConverter<VerificationType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$KeyVerificationsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $KeyVerificationsTable,
+          KeyVerification,
+          $$KeyVerificationsTableFilterComposer,
+          $$KeyVerificationsTableOrderingComposer,
+          $$KeyVerificationsTableAnnotationComposer,
+          $$KeyVerificationsTableCreateCompanionBuilder,
+          $$KeyVerificationsTableUpdateCompanionBuilder,
+          (KeyVerification, $$KeyVerificationsTableReferences),
+          KeyVerification,
+          PrefetchHooks Function({bool contactId})
+        > {
+  $$KeyVerificationsTableTableManager(
+    _$TwonlyDB db,
+    $KeyVerificationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$KeyVerificationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$KeyVerificationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$KeyVerificationsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> contactId = const Value.absent(),
+                Value<VerificationType> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => KeyVerificationsCompanion(
+                contactId: contactId,
+                type: type,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> contactId = const Value.absent(),
+                required VerificationType type,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => KeyVerificationsCompanion.insert(
+                contactId: contactId,
+                type: type,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$KeyVerificationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable:
+                                    $$KeyVerificationsTableReferences
+                                        ._contactIdTable(db),
+                                referencedColumn:
+                                    $$KeyVerificationsTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$KeyVerificationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $KeyVerificationsTable,
+      KeyVerification,
+      $$KeyVerificationsTableFilterComposer,
+      $$KeyVerificationsTableOrderingComposer,
+      $$KeyVerificationsTableAnnotationComposer,
+      $$KeyVerificationsTableCreateCompanionBuilder,
+      $$KeyVerificationsTableUpdateCompanionBuilder,
+      (KeyVerification, $$KeyVerificationsTableReferences),
+      KeyVerification,
+      PrefetchHooks Function({bool contactId})
+    >;
+typedef $$VerificationTokensTableCreateCompanionBuilder =
+    VerificationTokensCompanion Function({
+      Value<int> tokenId,
+      required Uint8List token,
+      Value<DateTime> createdAt,
+    });
+typedef $$VerificationTokensTableUpdateCompanionBuilder =
+    VerificationTokensCompanion Function({
+      Value<int> tokenId,
+      Value<Uint8List> token,
+      Value<DateTime> createdAt,
+    });
+
+class $$VerificationTokensTableFilterComposer
+    extends Composer<_$TwonlyDB, $VerificationTokensTable> {
+  $$VerificationTokensTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get tokenId => $composableBuilder(
+    column: $table.tokenId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VerificationTokensTableOrderingComposer
+    extends Composer<_$TwonlyDB, $VerificationTokensTable> {
+  $$VerificationTokensTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get tokenId => $composableBuilder(
+    column: $table.tokenId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VerificationTokensTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $VerificationTokensTable> {
+  $$VerificationTokensTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get tokenId =>
+      $composableBuilder(column: $table.tokenId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get token =>
+      $composableBuilder(column: $table.token, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$VerificationTokensTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $VerificationTokensTable,
+          VerificationToken,
+          $$VerificationTokensTableFilterComposer,
+          $$VerificationTokensTableOrderingComposer,
+          $$VerificationTokensTableAnnotationComposer,
+          $$VerificationTokensTableCreateCompanionBuilder,
+          $$VerificationTokensTableUpdateCompanionBuilder,
+          (
+            VerificationToken,
+            BaseReferences<
+              _$TwonlyDB,
+              $VerificationTokensTable,
+              VerificationToken
+            >,
+          ),
+          VerificationToken,
+          PrefetchHooks Function()
+        > {
+  $$VerificationTokensTableTableManager(
+    _$TwonlyDB db,
+    $VerificationTokensTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VerificationTokensTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VerificationTokensTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VerificationTokensTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> tokenId = const Value.absent(),
+                Value<Uint8List> token = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => VerificationTokensCompanion(
+                tokenId: tokenId,
+                token: token,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> tokenId = const Value.absent(),
+                required Uint8List token,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => VerificationTokensCompanion.insert(
+                tokenId: tokenId,
+                token: token,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VerificationTokensTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $VerificationTokensTable,
+      VerificationToken,
+      $$VerificationTokensTableFilterComposer,
+      $$VerificationTokensTableOrderingComposer,
+      $$VerificationTokensTableAnnotationComposer,
+      $$VerificationTokensTableCreateCompanionBuilder,
+      $$VerificationTokensTableUpdateCompanionBuilder,
+      (
+        VerificationToken,
+        BaseReferences<_$TwonlyDB, $VerificationTokensTable, VerificationToken>,
+      ),
+      VerificationToken,
+      PrefetchHooks Function()
+    >;
+typedef $$UserDiscoveryAnnouncedUsersTableCreateCompanionBuilder =
+    UserDiscoveryAnnouncedUsersCompanion Function({
+      Value<int> announcedUserId,
+      required Uint8List announcedPublicKey,
+      required int publicId,
+    });
+typedef $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder =
+    UserDiscoveryAnnouncedUsersCompanion Function({
+      Value<int> announcedUserId,
+      Value<Uint8List> announcedPublicKey,
+      Value<int> publicId,
+    });
+
+final class $$UserDiscoveryAnnouncedUsersTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $UserDiscoveryAnnouncedUsersTable,
+          UserDiscoveryAnnouncedUser
+        > {
+  $$UserDiscoveryAnnouncedUsersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $UserDiscoveryUserRelationsTable,
+    List<UserDiscoveryUserRelation>
+  >
+  _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
+      MultiTypedResultKey.fromTable(
+        db.userDiscoveryUserRelations,
+        aliasName: $_aliasNameGenerator(
+          db.userDiscoveryAnnouncedUsers.announcedUserId,
+          db.userDiscoveryUserRelations.announcedUserId,
+        ),
+      );
+
+  $$UserDiscoveryUserRelationsTableProcessedTableManager
+  get userDiscoveryUserRelationsRefs {
+    final manager =
+        $$UserDiscoveryUserRelationsTableTableManager(
+          $_db,
+          $_db.userDiscoveryUserRelations,
+        ).filter(
+          (f) => f.announcedUserId.announcedUserId.sqlEquals(
+            $_itemColumn<int>('announced_user_id')!,
+          ),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _userDiscoveryUserRelationsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$UserDiscoveryAnnouncedUsersTableFilterComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryAnnouncedUsersTable> {
+  $$UserDiscoveryAnnouncedUsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get announcedUserId => $composableBuilder(
+    column: $table.announcedUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get announcedPublicKey => $composableBuilder(
+    column: $table.announcedPublicKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get publicId => $composableBuilder(
+    column: $table.publicId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> userDiscoveryUserRelationsRefs(
+    Expression<bool> Function($$UserDiscoveryUserRelationsTableFilterComposer f)
+    f,
+  ) {
+    final $$UserDiscoveryUserRelationsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.announcedUserId,
+          referencedTable: $db.userDiscoveryUserRelations,
+          getReferencedColumn: (t) => t.announcedUserId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryUserRelationsTableFilterComposer(
+                $db: $db,
+                $table: $db.userDiscoveryUserRelations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$UserDiscoveryAnnouncedUsersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryAnnouncedUsersTable> {
+  $$UserDiscoveryAnnouncedUsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get announcedUserId => $composableBuilder(
+    column: $table.announcedUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get announcedPublicKey => $composableBuilder(
+    column: $table.announcedPublicKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get publicId => $composableBuilder(
+    column: $table.publicId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserDiscoveryAnnouncedUsersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryAnnouncedUsersTable> {
+  $$UserDiscoveryAnnouncedUsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get announcedUserId => $composableBuilder(
+    column: $table.announcedUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get announcedPublicKey => $composableBuilder(
+    column: $table.announcedPublicKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get publicId =>
+      $composableBuilder(column: $table.publicId, builder: (column) => column);
+
+  Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
+    Expression<T> Function(
+      $$UserDiscoveryUserRelationsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$UserDiscoveryUserRelationsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.announcedUserId,
+          referencedTable: $db.userDiscoveryUserRelations,
+          getReferencedColumn: (t) => t.announcedUserId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryUserRelationsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryUserRelations,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$UserDiscoveryAnnouncedUsersTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $UserDiscoveryAnnouncedUsersTable,
+          UserDiscoveryAnnouncedUser,
+          $$UserDiscoveryAnnouncedUsersTableFilterComposer,
+          $$UserDiscoveryAnnouncedUsersTableOrderingComposer,
+          $$UserDiscoveryAnnouncedUsersTableAnnotationComposer,
+          $$UserDiscoveryAnnouncedUsersTableCreateCompanionBuilder,
+          $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder,
+          (
+            UserDiscoveryAnnouncedUser,
+            $$UserDiscoveryAnnouncedUsersTableReferences,
+          ),
+          UserDiscoveryAnnouncedUser,
+          PrefetchHooks Function({bool userDiscoveryUserRelationsRefs})
+        > {
+  $$UserDiscoveryAnnouncedUsersTableTableManager(
+    _$TwonlyDB db,
+    $UserDiscoveryAnnouncedUsersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDiscoveryAnnouncedUsersTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$UserDiscoveryAnnouncedUsersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDiscoveryAnnouncedUsersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> announcedUserId = const Value.absent(),
+                Value<Uint8List> announcedPublicKey = const Value.absent(),
+                Value<int> publicId = const Value.absent(),
+              }) => UserDiscoveryAnnouncedUsersCompanion(
+                announcedUserId: announcedUserId,
+                announcedPublicKey: announcedPublicKey,
+                publicId: publicId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> announcedUserId = const Value.absent(),
+                required Uint8List announcedPublicKey,
+                required int publicId,
+              }) => UserDiscoveryAnnouncedUsersCompanion.insert(
+                announcedUserId: announcedUserId,
+                announcedPublicKey: announcedPublicKey,
+                publicId: publicId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserDiscoveryAnnouncedUsersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userDiscoveryUserRelationsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (userDiscoveryUserRelationsRefs)
+                  db.userDiscoveryUserRelations,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (userDiscoveryUserRelationsRefs)
+                    await $_getPrefetchedData<
+                      UserDiscoveryAnnouncedUser,
+                      $UserDiscoveryAnnouncedUsersTable,
+                      UserDiscoveryUserRelation
+                    >(
+                      currentTable: table,
+                      referencedTable:
+                          $$UserDiscoveryAnnouncedUsersTableReferences
+                              ._userDiscoveryUserRelationsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$UserDiscoveryAnnouncedUsersTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).userDiscoveryUserRelationsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.announcedUserId == item.announcedUserId,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserDiscoveryAnnouncedUsersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $UserDiscoveryAnnouncedUsersTable,
+      UserDiscoveryAnnouncedUser,
+      $$UserDiscoveryAnnouncedUsersTableFilterComposer,
+      $$UserDiscoveryAnnouncedUsersTableOrderingComposer,
+      $$UserDiscoveryAnnouncedUsersTableAnnotationComposer,
+      $$UserDiscoveryAnnouncedUsersTableCreateCompanionBuilder,
+      $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder,
+      (
+        UserDiscoveryAnnouncedUser,
+        $$UserDiscoveryAnnouncedUsersTableReferences,
+      ),
+      UserDiscoveryAnnouncedUser,
+      PrefetchHooks Function({bool userDiscoveryUserRelationsRefs})
+    >;
+typedef $$UserDiscoveryUserRelationsTableCreateCompanionBuilder =
+    UserDiscoveryUserRelationsCompanion Function({
+      required int announcedUserId,
+      required int fromContactId,
+      Value<DateTime?> publicKeyVerifiedTimestamp,
+      Value<int> rowid,
+    });
+typedef $$UserDiscoveryUserRelationsTableUpdateCompanionBuilder =
+    UserDiscoveryUserRelationsCompanion Function({
+      Value<int> announcedUserId,
+      Value<int> fromContactId,
+      Value<DateTime?> publicKeyVerifiedTimestamp,
+      Value<int> rowid,
+    });
+
+final class $$UserDiscoveryUserRelationsTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $UserDiscoveryUserRelationsTable,
+          UserDiscoveryUserRelation
+        > {
+  $$UserDiscoveryUserRelationsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $UserDiscoveryAnnouncedUsersTable _announcedUserIdTable(
+    _$TwonlyDB db,
+  ) => db.userDiscoveryAnnouncedUsers.createAlias(
+    $_aliasNameGenerator(
+      db.userDiscoveryUserRelations.announcedUserId,
+      db.userDiscoveryAnnouncedUsers.announcedUserId,
+    ),
+  );
+
+  $$UserDiscoveryAnnouncedUsersTableProcessedTableManager get announcedUserId {
+    final $_column = $_itemColumn<int>('announced_user_id')!;
+
+    final manager = $$UserDiscoveryAnnouncedUsersTableTableManager(
+      $_db,
+      $_db.userDiscoveryAnnouncedUsers,
+    ).filter((f) => f.announcedUserId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_announcedUserIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.userDiscoveryUserRelations.fromContactId,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager get fromContactId {
+    final $_column = $_itemColumn<int>('from_contact_id')!;
+
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_fromContactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserDiscoveryUserRelationsTableFilterComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryUserRelationsTable> {
+  $$UserDiscoveryUserRelationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get publicKeyVerifiedTimestamp => $composableBuilder(
+    column: $table.publicKeyVerifiedTimestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UserDiscoveryAnnouncedUsersTableFilterComposer get announcedUserId {
+    final $$UserDiscoveryAnnouncedUsersTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.announcedUserId,
+          referencedTable: $db.userDiscoveryAnnouncedUsers,
+          getReferencedColumn: (t) => t.announcedUserId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryAnnouncedUsersTableFilterComposer(
+                $db: $db,
+                $table: $db.userDiscoveryAnnouncedUsers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get fromContactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryUserRelationsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryUserRelationsTable> {
+  $$UserDiscoveryUserRelationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get publicKeyVerifiedTimestamp =>
+      $composableBuilder(
+        column: $table.publicKeyVerifiedTimestamp,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  $$UserDiscoveryAnnouncedUsersTableOrderingComposer get announcedUserId {
+    final $$UserDiscoveryAnnouncedUsersTableOrderingComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.announcedUserId,
+          referencedTable: $db.userDiscoveryAnnouncedUsers,
+          getReferencedColumn: (t) => t.announcedUserId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryAnnouncedUsersTableOrderingComposer(
+                $db: $db,
+                $table: $db.userDiscoveryAnnouncedUsers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get fromContactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryUserRelationsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryUserRelationsTable> {
+  $$UserDiscoveryUserRelationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get publicKeyVerifiedTimestamp =>
+      $composableBuilder(
+        column: $table.publicKeyVerifiedTimestamp,
+        builder: (column) => column,
+      );
+
+  $$UserDiscoveryAnnouncedUsersTableAnnotationComposer get announcedUserId {
+    final $$UserDiscoveryAnnouncedUsersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.announcedUserId,
+          referencedTable: $db.userDiscoveryAnnouncedUsers,
+          getReferencedColumn: (t) => t.announcedUserId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UserDiscoveryAnnouncedUsersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.userDiscoveryAnnouncedUsers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$ContactsTableAnnotationComposer get fromContactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryUserRelationsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $UserDiscoveryUserRelationsTable,
+          UserDiscoveryUserRelation,
+          $$UserDiscoveryUserRelationsTableFilterComposer,
+          $$UserDiscoveryUserRelationsTableOrderingComposer,
+          $$UserDiscoveryUserRelationsTableAnnotationComposer,
+          $$UserDiscoveryUserRelationsTableCreateCompanionBuilder,
+          $$UserDiscoveryUserRelationsTableUpdateCompanionBuilder,
+          (
+            UserDiscoveryUserRelation,
+            $$UserDiscoveryUserRelationsTableReferences,
+          ),
+          UserDiscoveryUserRelation,
+          PrefetchHooks Function({bool announcedUserId, bool fromContactId})
+        > {
+  $$UserDiscoveryUserRelationsTableTableManager(
+    _$TwonlyDB db,
+    $UserDiscoveryUserRelationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDiscoveryUserRelationsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$UserDiscoveryUserRelationsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDiscoveryUserRelationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> announcedUserId = const Value.absent(),
+                Value<int> fromContactId = const Value.absent(),
+                Value<DateTime?> publicKeyVerifiedTimestamp =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDiscoveryUserRelationsCompanion(
+                announcedUserId: announcedUserId,
+                fromContactId: fromContactId,
+                publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int announcedUserId,
+                required int fromContactId,
+                Value<DateTime?> publicKeyVerifiedTimestamp =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDiscoveryUserRelationsCompanion.insert(
+                announcedUserId: announcedUserId,
+                fromContactId: fromContactId,
+                publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserDiscoveryUserRelationsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({announcedUserId = false, fromContactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (announcedUserId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.announcedUserId,
+                                referencedTable:
+                                    $$UserDiscoveryUserRelationsTableReferences
+                                        ._announcedUserIdTable(db),
+                                referencedColumn:
+                                    $$UserDiscoveryUserRelationsTableReferences
+                                        ._announcedUserIdTable(db)
+                                        .announcedUserId,
+                              )
+                              as T;
+                    }
+                    if (fromContactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.fromContactId,
+                                referencedTable:
+                                    $$UserDiscoveryUserRelationsTableReferences
+                                        ._fromContactIdTable(db),
+                                referencedColumn:
+                                    $$UserDiscoveryUserRelationsTableReferences
+                                        ._fromContactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserDiscoveryUserRelationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $UserDiscoveryUserRelationsTable,
+      UserDiscoveryUserRelation,
+      $$UserDiscoveryUserRelationsTableFilterComposer,
+      $$UserDiscoveryUserRelationsTableOrderingComposer,
+      $$UserDiscoveryUserRelationsTableAnnotationComposer,
+      $$UserDiscoveryUserRelationsTableCreateCompanionBuilder,
+      $$UserDiscoveryUserRelationsTableUpdateCompanionBuilder,
+      (UserDiscoveryUserRelation, $$UserDiscoveryUserRelationsTableReferences),
+      UserDiscoveryUserRelation,
+      PrefetchHooks Function({bool announcedUserId, bool fromContactId})
+    >;
+typedef $$UserDiscoveryOtherPromotionsTableCreateCompanionBuilder =
+    UserDiscoveryOtherPromotionsCompanion Function({
+      required int fromContactId,
+      required int promotionId,
+      required int publicId,
+      required int threshold,
+      required Uint8List announcementShare,
+      Value<DateTime?> publicKeyVerifiedTimestamp,
+      Value<int> rowid,
+    });
+typedef $$UserDiscoveryOtherPromotionsTableUpdateCompanionBuilder =
+    UserDiscoveryOtherPromotionsCompanion Function({
+      Value<int> fromContactId,
+      Value<int> promotionId,
+      Value<int> publicId,
+      Value<int> threshold,
+      Value<Uint8List> announcementShare,
+      Value<DateTime?> publicKeyVerifiedTimestamp,
+      Value<int> rowid,
+    });
+
+final class $$UserDiscoveryOtherPromotionsTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $UserDiscoveryOtherPromotionsTable,
+          UserDiscoveryOtherPromotion
+        > {
+  $$UserDiscoveryOtherPromotionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.userDiscoveryOtherPromotions.fromContactId,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager get fromContactId {
+    final $_column = $_itemColumn<int>('from_contact_id')!;
+
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_fromContactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserDiscoveryOtherPromotionsTableFilterComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOtherPromotionsTable> {
+  $$UserDiscoveryOtherPromotionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get promotionId => $composableBuilder(
+    column: $table.promotionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get publicId => $composableBuilder(
+    column: $table.publicId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get threshold => $composableBuilder(
+    column: $table.threshold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get announcementShare => $composableBuilder(
+    column: $table.announcementShare,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get publicKeyVerifiedTimestamp => $composableBuilder(
+    column: $table.publicKeyVerifiedTimestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactsTableFilterComposer get fromContactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOtherPromotionsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOtherPromotionsTable> {
+  $$UserDiscoveryOtherPromotionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get promotionId => $composableBuilder(
+    column: $table.promotionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get publicId => $composableBuilder(
+    column: $table.publicId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get threshold => $composableBuilder(
+    column: $table.threshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get announcementShare => $composableBuilder(
+    column: $table.announcementShare,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get publicKeyVerifiedTimestamp =>
+      $composableBuilder(
+        column: $table.publicKeyVerifiedTimestamp,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  $$ContactsTableOrderingComposer get fromContactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOtherPromotionsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOtherPromotionsTable> {
+  $$UserDiscoveryOtherPromotionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get promotionId => $composableBuilder(
+    column: $table.promotionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get publicId =>
+      $composableBuilder(column: $table.publicId, builder: (column) => column);
+
+  GeneratedColumn<int> get threshold =>
+      $composableBuilder(column: $table.threshold, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get announcementShare => $composableBuilder(
+    column: $table.announcementShare,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get publicKeyVerifiedTimestamp =>
+      $composableBuilder(
+        column: $table.publicKeyVerifiedTimestamp,
+        builder: (column) => column,
+      );
+
+  $$ContactsTableAnnotationComposer get fromContactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.fromContactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOtherPromotionsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $UserDiscoveryOtherPromotionsTable,
+          UserDiscoveryOtherPromotion,
+          $$UserDiscoveryOtherPromotionsTableFilterComposer,
+          $$UserDiscoveryOtherPromotionsTableOrderingComposer,
+          $$UserDiscoveryOtherPromotionsTableAnnotationComposer,
+          $$UserDiscoveryOtherPromotionsTableCreateCompanionBuilder,
+          $$UserDiscoveryOtherPromotionsTableUpdateCompanionBuilder,
+          (
+            UserDiscoveryOtherPromotion,
+            $$UserDiscoveryOtherPromotionsTableReferences,
+          ),
+          UserDiscoveryOtherPromotion,
+          PrefetchHooks Function({bool fromContactId})
+        > {
+  $$UserDiscoveryOtherPromotionsTableTableManager(
+    _$TwonlyDB db,
+    $UserDiscoveryOtherPromotionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDiscoveryOtherPromotionsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$UserDiscoveryOtherPromotionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDiscoveryOtherPromotionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> fromContactId = const Value.absent(),
+                Value<int> promotionId = const Value.absent(),
+                Value<int> publicId = const Value.absent(),
+                Value<int> threshold = const Value.absent(),
+                Value<Uint8List> announcementShare = const Value.absent(),
+                Value<DateTime?> publicKeyVerifiedTimestamp =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDiscoveryOtherPromotionsCompanion(
+                fromContactId: fromContactId,
+                promotionId: promotionId,
+                publicId: publicId,
+                threshold: threshold,
+                announcementShare: announcementShare,
+                publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int fromContactId,
+                required int promotionId,
+                required int publicId,
+                required int threshold,
+                required Uint8List announcementShare,
+                Value<DateTime?> publicKeyVerifiedTimestamp =
+                    const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDiscoveryOtherPromotionsCompanion.insert(
+                fromContactId: fromContactId,
+                promotionId: promotionId,
+                publicId: publicId,
+                threshold: threshold,
+                announcementShare: announcementShare,
+                publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserDiscoveryOtherPromotionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({fromContactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (fromContactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.fromContactId,
+                                referencedTable:
+                                    $$UserDiscoveryOtherPromotionsTableReferences
+                                        ._fromContactIdTable(db),
+                                referencedColumn:
+                                    $$UserDiscoveryOtherPromotionsTableReferences
+                                        ._fromContactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserDiscoveryOtherPromotionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $UserDiscoveryOtherPromotionsTable,
+      UserDiscoveryOtherPromotion,
+      $$UserDiscoveryOtherPromotionsTableFilterComposer,
+      $$UserDiscoveryOtherPromotionsTableOrderingComposer,
+      $$UserDiscoveryOtherPromotionsTableAnnotationComposer,
+      $$UserDiscoveryOtherPromotionsTableCreateCompanionBuilder,
+      $$UserDiscoveryOtherPromotionsTableUpdateCompanionBuilder,
+      (
+        UserDiscoveryOtherPromotion,
+        $$UserDiscoveryOtherPromotionsTableReferences,
+      ),
+      UserDiscoveryOtherPromotion,
+      PrefetchHooks Function({bool fromContactId})
+    >;
+typedef $$UserDiscoveryOwnPromotionsTableCreateCompanionBuilder =
+    UserDiscoveryOwnPromotionsCompanion Function({
+      Value<int> versionId,
+      required int contactId,
+      required Uint8List promotion,
+    });
+typedef $$UserDiscoveryOwnPromotionsTableUpdateCompanionBuilder =
+    UserDiscoveryOwnPromotionsCompanion Function({
+      Value<int> versionId,
+      Value<int> contactId,
+      Value<Uint8List> promotion,
+    });
+
+final class $$UserDiscoveryOwnPromotionsTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $UserDiscoveryOwnPromotionsTable,
+          UserDiscoveryOwnPromotion
+        > {
+  $$UserDiscoveryOwnPromotionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.userDiscoveryOwnPromotions.contactId,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<int>('contact_id')!;
+
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserDiscoveryOwnPromotionsTableFilterComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOwnPromotionsTable> {
+  $$UserDiscoveryOwnPromotionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get versionId => $composableBuilder(
+    column: $table.versionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get promotion => $composableBuilder(
+    column: $table.promotion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOwnPromotionsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOwnPromotionsTable> {
+  $$UserDiscoveryOwnPromotionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get versionId => $composableBuilder(
+    column: $table.versionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get promotion => $composableBuilder(
+    column: $table.promotion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOwnPromotionsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $UserDiscoveryOwnPromotionsTable> {
+  $$UserDiscoveryOwnPromotionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get versionId =>
+      $composableBuilder(column: $table.versionId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get promotion =>
+      $composableBuilder(column: $table.promotion, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoveryOwnPromotionsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $UserDiscoveryOwnPromotionsTable,
+          UserDiscoveryOwnPromotion,
+          $$UserDiscoveryOwnPromotionsTableFilterComposer,
+          $$UserDiscoveryOwnPromotionsTableOrderingComposer,
+          $$UserDiscoveryOwnPromotionsTableAnnotationComposer,
+          $$UserDiscoveryOwnPromotionsTableCreateCompanionBuilder,
+          $$UserDiscoveryOwnPromotionsTableUpdateCompanionBuilder,
+          (
+            UserDiscoveryOwnPromotion,
+            $$UserDiscoveryOwnPromotionsTableReferences,
+          ),
+          UserDiscoveryOwnPromotion,
+          PrefetchHooks Function({bool contactId})
+        > {
+  $$UserDiscoveryOwnPromotionsTableTableManager(
+    _$TwonlyDB db,
+    $UserDiscoveryOwnPromotionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDiscoveryOwnPromotionsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$UserDiscoveryOwnPromotionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDiscoveryOwnPromotionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> versionId = const Value.absent(),
+                Value<int> contactId = const Value.absent(),
+                Value<Uint8List> promotion = const Value.absent(),
+              }) => UserDiscoveryOwnPromotionsCompanion(
+                versionId: versionId,
+                contactId: contactId,
+                promotion: promotion,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> versionId = const Value.absent(),
+                required int contactId,
+                required Uint8List promotion,
+              }) => UserDiscoveryOwnPromotionsCompanion.insert(
+                versionId: versionId,
+                contactId: contactId,
+                promotion: promotion,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserDiscoveryOwnPromotionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable:
+                                    $$UserDiscoveryOwnPromotionsTableReferences
+                                        ._contactIdTable(db),
+                                referencedColumn:
+                                    $$UserDiscoveryOwnPromotionsTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserDiscoveryOwnPromotionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $UserDiscoveryOwnPromotionsTable,
+      UserDiscoveryOwnPromotion,
+      $$UserDiscoveryOwnPromotionsTableFilterComposer,
+      $$UserDiscoveryOwnPromotionsTableOrderingComposer,
+      $$UserDiscoveryOwnPromotionsTableAnnotationComposer,
+      $$UserDiscoveryOwnPromotionsTableCreateCompanionBuilder,
+      $$UserDiscoveryOwnPromotionsTableUpdateCompanionBuilder,
+      (UserDiscoveryOwnPromotion, $$UserDiscoveryOwnPromotionsTableReferences),
+      UserDiscoveryOwnPromotion,
+      PrefetchHooks Function({bool contactId})
+    >;
+typedef $$UserDiscoverySharesTableCreateCompanionBuilder =
+    UserDiscoverySharesCompanion Function({
+      Value<int> shareId,
+      required Uint8List share,
+      Value<int?> contactId,
+    });
+typedef $$UserDiscoverySharesTableUpdateCompanionBuilder =
+    UserDiscoverySharesCompanion Function({
+      Value<int> shareId,
+      Value<Uint8List> share,
+      Value<int?> contactId,
+    });
+
+final class $$UserDiscoverySharesTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $UserDiscoverySharesTable,
+          UserDiscoveryShare
+        > {
+  $$UserDiscoverySharesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.userDiscoveryShares.contactId,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager? get contactId {
+    final $_column = $_itemColumn<int>('contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserDiscoverySharesTableFilterComposer
+    extends Composer<_$TwonlyDB, $UserDiscoverySharesTable> {
+  $$UserDiscoverySharesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get shareId => $composableBuilder(
+    column: $table.shareId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get share => $composableBuilder(
+    column: $table.share,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoverySharesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $UserDiscoverySharesTable> {
+  $$UserDiscoverySharesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get shareId => $composableBuilder(
+    column: $table.shareId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get share => $composableBuilder(
+    column: $table.share,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoverySharesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $UserDiscoverySharesTable> {
+  $$UserDiscoverySharesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get shareId =>
+      $composableBuilder(column: $table.shareId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get share =>
+      $composableBuilder(column: $table.share, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserDiscoverySharesTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $UserDiscoverySharesTable,
+          UserDiscoveryShare,
+          $$UserDiscoverySharesTableFilterComposer,
+          $$UserDiscoverySharesTableOrderingComposer,
+          $$UserDiscoverySharesTableAnnotationComposer,
+          $$UserDiscoverySharesTableCreateCompanionBuilder,
+          $$UserDiscoverySharesTableUpdateCompanionBuilder,
+          (UserDiscoveryShare, $$UserDiscoverySharesTableReferences),
+          UserDiscoveryShare,
+          PrefetchHooks Function({bool contactId})
+        > {
+  $$UserDiscoverySharesTableTableManager(
+    _$TwonlyDB db,
+    $UserDiscoverySharesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDiscoverySharesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserDiscoverySharesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UserDiscoverySharesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> shareId = const Value.absent(),
+                Value<Uint8List> share = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
+              }) => UserDiscoverySharesCompanion(
+                shareId: shareId,
+                share: share,
+                contactId: contactId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> shareId = const Value.absent(),
+                required Uint8List share,
+                Value<int?> contactId = const Value.absent(),
+              }) => UserDiscoverySharesCompanion.insert(
+                shareId: shareId,
+                share: share,
+                contactId: contactId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserDiscoverySharesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable:
+                                    $$UserDiscoverySharesTableReferences
+                                        ._contactIdTable(db),
+                                referencedColumn:
+                                    $$UserDiscoverySharesTableReferences
+                                        ._contactIdTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserDiscoverySharesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $UserDiscoverySharesTable,
+      UserDiscoveryShare,
+      $$UserDiscoverySharesTableFilterComposer,
+      $$UserDiscoverySharesTableOrderingComposer,
+      $$UserDiscoverySharesTableAnnotationComposer,
+      $$UserDiscoverySharesTableCreateCompanionBuilder,
+      $$UserDiscoverySharesTableUpdateCompanionBuilder,
+      (UserDiscoveryShare, $$UserDiscoverySharesTableReferences),
+      UserDiscoveryShare,
+      PrefetchHooks Function({bool contactId})
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -16281,4 +21281,34 @@ class $TwonlyDBManager {
       $$MessageActionsTableTableManager(_db, _db.messageActions);
   $$GroupHistoriesTableTableManager get groupHistories =>
       $$GroupHistoriesTableTableManager(_db, _db.groupHistories);
+  $$KeyVerificationsTableTableManager get keyVerifications =>
+      $$KeyVerificationsTableTableManager(_db, _db.keyVerifications);
+  $$VerificationTokensTableTableManager get verificationTokens =>
+      $$VerificationTokensTableTableManager(_db, _db.verificationTokens);
+  $$UserDiscoveryAnnouncedUsersTableTableManager
+  get userDiscoveryAnnouncedUsers =>
+      $$UserDiscoveryAnnouncedUsersTableTableManager(
+        _db,
+        _db.userDiscoveryAnnouncedUsers,
+      );
+  $$UserDiscoveryUserRelationsTableTableManager
+  get userDiscoveryUserRelations =>
+      $$UserDiscoveryUserRelationsTableTableManager(
+        _db,
+        _db.userDiscoveryUserRelations,
+      );
+  $$UserDiscoveryOtherPromotionsTableTableManager
+  get userDiscoveryOtherPromotions =>
+      $$UserDiscoveryOtherPromotionsTableTableManager(
+        _db,
+        _db.userDiscoveryOtherPromotions,
+      );
+  $$UserDiscoveryOwnPromotionsTableTableManager
+  get userDiscoveryOwnPromotions =>
+      $$UserDiscoveryOwnPromotionsTableTableManager(
+        _db,
+        _db.userDiscoveryOwnPromotions,
+      );
+  $$UserDiscoverySharesTableTableManager get userDiscoveryShares =>
+      $$UserDiscoverySharesTableTableManager(_db, _db.userDiscoveryShares);
 }

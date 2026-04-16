@@ -2,11 +2,12 @@ use std::collections::HashMap;
 
 use crate::user_discovery::error::Result;
 use crate::user_discovery::UserID;
+use std::future::Future;
 
-#[derive(Clone)]
+#[derive(Clone, sqlx::FromRow)]
 pub struct OtherPromotion {
     pub promotion_id: u32,
-    pub public_id: u64,
+    pub public_id: i64,
     pub from_contact_id: UserID,
     pub threshold: u8,
     pub announcement_share: Vec<u8>,
@@ -17,62 +18,97 @@ pub struct OtherPromotion {
 pub struct AnnouncedUser {
     pub user_id: UserID,
     pub public_key: Vec<u8>,
-    pub public_id: u64,
+    pub public_id: i64,
 }
 
 pub trait UserDiscoveryStore {
-    fn get_config(&self) -> Result<Vec<u8>>;
-    fn update_config(&self, update: Vec<u8>) -> Result<()>;
-    fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()>;
+    fn new() -> impl std::future::Future<Output = Self> + Send;
+    fn get_config(&self) -> impl Future<Output = Result<String>> + Send;
+    fn update_config(&self, update: String) -> impl Future<Output = Result<()>> + Send;
+    fn set_shares(&self, shares: Vec<Vec<u8>>) -> impl Future<Output = Result<()>> + Send;
 
-    fn get_share_for_contact(&self, contact_id: UserID) -> Result<Vec<u8>>;
+    fn get_share_for_contact(
+        &self,
+        contact_id: UserID,
+    ) -> impl Future<Output = Result<Vec<u8>>> + Send;
 
     fn push_own_promotion(
         &self,
         contact_id: UserID,
         version: u32,
         promotion: Vec<u8>,
-    ) -> Result<()>;
+    ) -> impl Future<Output = Result<()>> + Send;
 
-    fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>>;
+    fn get_own_promotions_after_version(
+        &self,
+        version: u32,
+    ) -> impl Future<Output = Result<Vec<Vec<u8>>>> + Send;
 
-    fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()>;
-    fn get_other_promotions_by_public_id(&self, public_id: u64) -> Vec<OtherPromotion>;
+    fn store_other_promotion(
+        &self,
+        promotion: OtherPromotion,
+    ) -> impl Future<Output = Result<()>> + Send;
+    fn get_other_promotions_by_public_id(
+        &self,
+        public_id: i64,
+    ) -> impl Future<Output = Result<Vec<OtherPromotion>>> + Send;
 
-    fn get_announced_user_by_public_id(&self, public_id: u64) -> Result<Option<AnnouncedUser>>;
+    fn get_announced_user_by_public_id(
+        &self,
+        public_id: i64,
+    ) -> impl Future<Output = Result<Option<AnnouncedUser>>> + Send;
 
     fn push_new_user_relation(
         &self,
         from_contact_id: UserID,
         announced_user: AnnouncedUser,
         public_key_verified_timestamp: Option<i64>,
-    ) -> Result<()>;
+    ) -> impl Future<Output = Result<()>> + Send;
 
-    fn get_all_announced_users(&self)
-        -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>>;
+    fn get_all_announced_users(
+        &self,
+    ) -> impl Future<Output = Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>>> + Send;
 
-    fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>>;
-    fn set_contact_version(&self, contact_id: UserID, update: Vec<u8>) -> Result<()>;
+    fn get_contact_version(
+        &self,
+        contact_id: UserID,
+    ) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send;
+    fn set_contact_version(
+        &self,
+        contact_id: UserID,
+        update: Vec<u8>,
+    ) -> impl Future<Output = Result<()>> + Send;
 }
 
 pub trait UserDiscoveryUtils {
-    fn sign_data(&self, input_data: &[u8]) -> Result<Vec<u8>>;
-    fn verify_signature(&self, input_data: &[u8], pubkey: &[u8], signature: &[u8]) -> Result<bool>;
-    fn verify_stored_pubkey(&self, from_contact_id: UserID, pubkey: &[u8]) -> Result<bool>;
+    fn sign_data(&self, input_data: &[u8]) -> impl Future<Output = Result<Vec<u8>>> + Send;
+    fn verify_signature(
+        &self,
+        input_data: &[u8],
+        pubkey: &[u8],
+        signature: &[u8],
+    ) -> impl Future<Output = Result<bool>> + Send;
+    fn verify_stored_pubkey(
+        &self,
+        from_contact_id: UserID,
+        pubkey: &[u8],
+    ) -> impl Future<Output = Result<bool>> + Send;
 }
 
-#[cfg(test)]
 pub(crate) mod tests {
     use crate::user_discovery::traits::UserDiscoveryUtils;
 
     #[derive(Default)]
     pub(crate) struct TestingUtils {}
     impl UserDiscoveryUtils for TestingUtils {
-        fn sign_data(&self, _input_data: &[u8]) -> crate::user_discovery::error::Result<Vec<u8>> {
+        async fn sign_data(
+            &self,
+            _input_data: &[u8],
+        ) -> crate::user_discovery::error::Result<Vec<u8>> {
             Ok(vec![0; 64])
         }
 
-        fn verify_signature(
+        async fn verify_signature(
             &self,
             _data: &[u8],
             _pubkey: &[u8],
@@ -81,7 +117,7 @@ pub(crate) mod tests {
             Ok(true)
         }
 
-        fn verify_stored_pubkey(
+        async fn verify_stored_pubkey(
             &self,
             _from_contact_id: crate::user_discovery::UserID,
             _pubkey: &[u8],

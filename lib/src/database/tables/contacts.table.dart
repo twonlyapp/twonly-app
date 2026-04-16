@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+@DataClassName('Contact')
 class Contacts extends Table {
   IntColumn get userId => integer()();
 
@@ -22,6 +23,37 @@ class Contacts extends Table {
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
+  // contact_versions: HashMap<UserID, Vec<u8>>,
+  BlobColumn get userDiscoveryVersion => blob().nullable()();
+
   @override
   Set<Column> get primaryKey => {userId};
+}
+
+enum VerificationType {
+  qr,
+  link,
+}
+
+@DataClassName('KeyVerification')
+class KeyVerifications extends Table {
+  IntColumn get contactId => integer().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
+
+  TextColumn get type => textEnum<VerificationType>()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {contactId};
+}
+
+@DataClassName('VerificationToken')
+class VerificationTokens extends Table {
+  IntColumn get tokenId => integer().autoIncrement()();
+  BlobColumn get token => blob()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

@@ -156,7 +156,7 @@ fn wire__crate__bridge__load_promotions_impl(
 const _: fn() = || {
     let OtherPromotion = None::<crate::bridge::OtherPromotion>.unwrap();
     let _: u32 = OtherPromotion.promotion_id;
-    let _: u64 = OtherPromotion.public_id;
+    let _: i64 = OtherPromotion.public_id;
     let _: i64 = OtherPromotion.from_contact_id;
     let _: u8 = OtherPromotion.threshold;
     let _: Vec<u8> = OtherPromotion.announcement_share;
@@ -241,7 +241,7 @@ impl SseDecode for crate::bridge::OtherPromotion {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_promotionId = <u32>::sse_decode(deserializer);
-        let mut var_publicId = <u64>::sse_decode(deserializer);
+        let mut var_publicId = <i64>::sse_decode(deserializer);
         let mut var_fromContactId = <i64>::sse_decode(deserializer);
         let mut var_threshold = <u8>::sse_decode(deserializer);
         let mut var_announcementShare = <Vec<u8>>::sse_decode(deserializer);
@@ -261,8 +261,10 @@ impl SseDecode for crate::bridge::TwonlyConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_databasePath = <String>::sse_decode(deserializer);
+        let mut var_dataDirectory = <String>::sse_decode(deserializer);
         return crate::bridge::TwonlyConfig {
             database_path: var_databasePath,
+            data_directory: var_dataDirectory,
         };
     }
 }
@@ -271,13 +273,6 @@ impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for u64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
     }
 }
 
@@ -389,7 +384,11 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bridge::OtherPromotion>
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::bridge::TwonlyConfig {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.database_path.into_into_dart().into_dart()].into_dart()
+        [
+            self.database_path.into_into_dart().into_dart(),
+            self.data_directory.into_into_dart().into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::TwonlyConfig {}
@@ -464,7 +463,7 @@ impl SseEncode for crate::bridge::OtherPromotion {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.promotion_id, serializer);
-        <u64>::sse_encode(self.public_id, serializer);
+        <i64>::sse_encode(self.public_id, serializer);
         <i64>::sse_encode(self.from_contact_id, serializer);
         <u8>::sse_encode(self.threshold, serializer);
         <Vec<u8>>::sse_encode(self.announcement_share, serializer);
@@ -476,6 +475,7 @@ impl SseEncode for crate::bridge::TwonlyConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.database_path, serializer);
+        <String>::sse_encode(self.data_directory, serializer);
     }
 }
 
@@ -483,13 +483,6 @@ impl SseEncode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for u64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
     }
 }
 

@@ -11,7 +11,7 @@ void main() {
   late File dbFile;
 
   setUp(() {
-    dbFile = File('rust/tests/testing.db');
+    dbFile = File('rust/core/tests/testing.db');
     if (dbFile.existsSync()) {
       dbFile.deleteSync();
     }

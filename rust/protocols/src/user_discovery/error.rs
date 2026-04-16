@@ -18,7 +18,10 @@ pub enum UserDiscoveryError {
     NotInitialized,
 
     #[error("`{0}`")]
-    PostcardError(#[from] postcard::Error),
+    JsonError(#[from] serde_json::Error),
+
+    #[error("`{0}`")]
+    IoError(#[from] std::io::Error),
 
     #[error("error while calculating shamirs secret shares: `{0}`")]
     ShamirsSecret(String),

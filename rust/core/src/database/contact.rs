@@ -43,11 +43,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_all_contacts() {
-        let twonly = initialize_twonly_for_testing().await.unwrap();
+        let twonly = initialize_twonly_for_testing(true).await.unwrap();
 
         let contacts = Contact::get_all_contacts(&twonly.database).await.unwrap();
 
-        let users = vec!["alice", "bob", "charlie", "diana", "eve", "frank", "grace"];
+        let users = vec!["alice", "bob", "charlie", "david", "frank"];
 
         assert_eq!(contacts.len(), users.len());
 

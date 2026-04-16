@@ -9,6 +9,7 @@ import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
+import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -19,6 +20,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_session_store.table.dart';
+import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -42,6 +44,13 @@ part 'twonly.db.g.dart';
     SignalSessionStores,
     MessageActions,
     GroupHistories,
+    KeyVerifications,
+    VerificationTokens,
+    UserDiscoveryAnnouncedUsers,
+    UserDiscoveryUserRelations,
+    UserDiscoveryOtherPromotions,
+    UserDiscoveryOwnPromotions,
+    UserDiscoveryShares,
   ],
   daos: [
     MessagesDao,
@@ -50,6 +59,7 @@ part 'twonly.db.g.dart';
     GroupsDao,
     ReactionsDao,
     MediaFilesDao,
+    UserDiscoveryDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
@@ -62,7 +72,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -156,6 +166,19 @@ class TwonlyDB extends _$TwonlyDB {
             await m.addColumn(
               schema.groupMembers,
               schema.groupMembers.lastTypeIndicator,
+            );
+          },
+          from11To12: (m, schema) async {
+            await m.createTable(schema.verificationTokens);
+            await m.createTable(schema.keyVerifications);
+            await m.createTable(schema.userDiscoveryAnnouncedUsers);
+            await m.createTable(schema.userDiscoveryOwnPromotions);
+            await m.createTable(schema.userDiscoveryOtherPromotions);
+            await m.createTable(schema.userDiscoveryShares);
+            await m.createTable(schema.userDiscoveryUserRelations);
+            await m.addColumn(
+              schema.contacts,
+              schema.contacts.userDiscoveryVersion,
             );
           },
         )(m, from, to);

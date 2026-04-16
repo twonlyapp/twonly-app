@@ -15,7 +15,7 @@ message UserDiscoveryMessage {
   optional UserDiscoveryRecall       user_discovery_recall       = 4;
 
   message UserDiscoveryAnnouncement {
-    uint64         public_id           = 1;
+    int64          public_id           = 1;
     uint32         threshold           = 2;
     bytes          announcement_share  = 4;
     repeated bytes verification_shares = 6;
@@ -23,7 +23,7 @@ message UserDiscoveryMessage {
 
   message UserDiscoveryPromotion {
     uint32 promotion_id       = 1;
-    uint64 public_id          = 2;
+    int64  public_id          = 2;
     uint32 threshold          = 3;
     bytes  announcement_share = 5;
 
@@ -31,9 +31,9 @@ message UserDiscoveryMessage {
 
     message AnnouncementShareDecrypted {
       message SignedData {
-        uint64 public_id  = 1;
-        int64  user_id    = 2;
-        bytes  public_key = 3;
+        int64 public_id  = 1;
+        int64 user_id    = 2;
+        bytes public_key = 3;
       }
       SignedData signed_data = 1;
       bytes      signature   = 2;
