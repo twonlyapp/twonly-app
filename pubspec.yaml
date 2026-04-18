@@ -58,12 +58,13 @@ dependencies:
   json_annotation: ^4.9.0 # google.dev
   protobuf: ^4.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
+  drift: ^2.25.1
+  drift_flutter: ^0.2.4
+  sqlite3: ^2.9.4
 
 
   # Flutter Favorite 
   provider: ^6.1.2
-  drift: ^2.25.1
-  drift_flutter: ^0.2.4
   flutter_local_notifications: ^19.1.0
   sentry_flutter: ^9.14.0
 
@@ -111,6 +112,7 @@ dependencies:
   rust_lib_twonly:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
+
 
 dependency_overrides:
   dots_indicator:
