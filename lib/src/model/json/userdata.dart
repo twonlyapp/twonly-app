@@ -43,6 +43,9 @@ class UserData {
   DateTime? lastImageSend;
   int? todaysImageCounter;
 
+  String? lastPlanBallance;
+  String? additionalUserInvites;
+
   // --- SETTINGS ---
 
   @JsonKey(defaultValue: ThemeMode.system)
@@ -78,11 +81,6 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool typingIndicators = true;
 
-  String? lastPlanBallance;
-  String? additionalUserInvites;
-
-  List<String>? tutorialDisplayed;
-
   String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
@@ -92,6 +90,11 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool screenLockEnabled = false;
+
+  // > User Discovery Configurations
+
+  @JsonKey(defaultValue: false)
+  bool isUserDiscoveryEnabled = false;
 
   //  -- Custom DATA --
 

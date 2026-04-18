@@ -24,6 +24,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['lastImageSend'] as String)
       ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
+      ..lastPlanBallance = json['lastPlanBallance'] as String?
+      ..additionalUserInvites = json['additionalUserInvites'] as String?
       ..themeMode =
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
           ThemeMode.system
@@ -51,11 +53,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..autoStoreAllSendUnlimitedMediaFiles =
           json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
       ..typingIndicators = json['typingIndicators'] as bool? ?? true
-      ..lastPlanBallance = json['lastPlanBallance'] as String?
-      ..additionalUserInvites = json['additionalUserInvites'] as String?
-      ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList()
       ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
@@ -64,6 +61,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
+      ..isUserDiscoveryEnabled =
+          json['isUserDiscoveryEnabled'] as bool? ?? false
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -106,6 +105,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
   'lastImageSend': instance.lastImageSend?.toIso8601String(),
   'todaysImageCounter': instance.todaysImageCounter,
+  'lastPlanBallance': instance.lastPlanBallance,
+  'additionalUserInvites': instance.additionalUserInvites,
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
@@ -119,14 +120,12 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'autoStoreAllSendUnlimitedMediaFiles':
       instance.autoStoreAllSendUnlimitedMediaFiles,
   'typingIndicators': instance.typingIndicators,
-  'lastPlanBallance': instance.lastPlanBallance,
-  'additionalUserInvites': instance.additionalUserInvites,
-  'tutorialDisplayed': instance.tutorialDisplayed,
   'myBestFriendGroupId': instance.myBestFriendGroupId,
   'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,
+  'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,

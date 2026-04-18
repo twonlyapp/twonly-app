@@ -52,17 +52,7 @@ class _ChatListViewState extends State<ChatListView> {
       });
     });
 
-    // In case the user is already a Tester, ask him for permission.
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (gUser.subscriptionPlan == SubscriptionPlan.Tester.name &&
-          !gUser.askedForUserStudyPermission) {
-        await context.push(
-          Routes.settingsHelpUserStudy,
-          extra: true,
-        );
-      }
-
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
       final changeLogHash = (await compute(
         Sha256().hash,
