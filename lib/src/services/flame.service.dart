@@ -89,6 +89,25 @@ Future<void> incFlameCounter(
   final group = await twonlyDB.groupsDao.getGroup(groupId);
   if (group == null) return;
 
+  if (group.isDirectChat) {
+    final contacts = await twonlyDB.groupsDao.getGroupContact(
+      group.groupId,
+    );
+    if (contacts.length == 1) {
+      await twonlyDB.contactsDao.updateContact(
+        contacts.first.userId,
+        ContactsCompanion(
+          mediaReceivedCounter: Value(
+            contacts.first.mediaReceivedCounter + (received ? 1 : 0),
+          ),
+          mediaSendCounter: Value(
+            contacts.first.mediaSendCounter + (received ? 0 : 1),
+          ),
+        ),
+      );
+    }
+  }
+
   final totalMediaCounter = group.totalMediaCounter + 1;
   var flameCounter = group.flameCounter;
   var maxFlameCounter = group.maxFlameCounter;

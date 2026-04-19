@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 
-final primaryColor = const Color(0xFF57CC99);
+const primaryColor = Color(0xFF57CC99);
 
 final ThemeData lightTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
@@ -15,18 +16,18 @@ final ButtonStyle primaryColorButtonStyle = FilledButton.styleFrom(
   backgroundColor: primaryColor,
   foregroundColor: Colors.black87,
   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-  // Adjusting the border radius (default is usually 20+)
   shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(8), // Lower number = sharper corners
+    borderRadius: BorderRadius.circular(8),
   ),
 );
 
-final ButtonStyle secondaryGreyButtonStyle = FilledButton.styleFrom(
-  backgroundColor: Colors.grey[200],
-  foregroundColor: Colors.black87,
-  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-  // Adjusting the border radius (default is usually 20+)
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(8), // Lower number = sharper corners
-  ),
-);
+ButtonStyle secondaryGreyButtonStyle(BuildContext context) {
+  return FilledButton.styleFrom(
+    backgroundColor: isDarkMode(context) ? Colors.grey[800] : Colors.grey[200],
+    foregroundColor: isDarkMode(context) ? Colors.white : Colors.black87,
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  );
+}

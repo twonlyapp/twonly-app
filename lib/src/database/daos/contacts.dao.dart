@@ -134,6 +134,17 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
         .watch();
   }
 
+  Stream<List<Contact>> watchContactsAnnouncedViaUserDiscovery() {
+    return (select(contacts)..where(
+          (t) =>
+              t.userDiscoveryVersion.isNotNull() &
+              t.mediaSendCounter.isBiggerOrEqualValue(
+                gUser.minimumRequiredImagesExchanged,
+              ),
+        ))
+        .watch();
+  }
+
   Stream<List<Contact>> watchAllContacts() {
     return select(contacts).watch();
   }

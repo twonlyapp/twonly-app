@@ -419,7 +419,6 @@ List<TextSpan> formattedText(String input) {
       spans.add(
         TextSpan(
           text: input.substring(lastMatchEnd, match.start),
-          style: const TextStyle(color: Colors.black),
         ),
       );
     }
@@ -431,7 +430,6 @@ List<TextSpan> formattedText(String input) {
         text: match.group(1),
         style: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.black,
         ),
       ),
     );
@@ -444,7 +442,6 @@ List<TextSpan> formattedText(String input) {
     spans.add(
       TextSpan(
         text: input.substring(lastMatchEnd),
-        style: const TextStyle(color: Colors.black),
       ),
     );
   }

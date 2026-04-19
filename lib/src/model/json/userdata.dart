@@ -96,8 +96,11 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool isUserDiscoveryEnabled = false;
 
-  @JsonKey(defaultValue: false)
+  @JsonKey(defaultValue: 4)
   int minimumRequiredImagesExchanged = 4;
+
+  @JsonKey(defaultValue: 2)
+  int userDiscoveryThreshold = 2;
 
   //  -- Custom DATA --
 

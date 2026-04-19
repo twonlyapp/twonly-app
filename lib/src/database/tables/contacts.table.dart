@@ -26,6 +26,10 @@ class Contacts extends Table {
   // contact_versions: HashMap<UserID, Vec<u8>>,
   BlobColumn get userDiscoveryVersion => blob().nullable()();
 
+  IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
+  IntColumn get mediaReceivedCounter =>
+      integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {userId};
 }

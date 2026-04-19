@@ -63,6 +63,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
       ..isUserDiscoveryEnabled =
           json['isUserDiscoveryEnabled'] as bool? ?? false
+      ..minimumRequiredImagesExchanged =
+          (json['minimumRequiredImagesExchanged'] as num?)?.toInt() ?? 4
+      ..userDiscoveryThreshold =
+          (json['userDiscoveryThreshold'] as num?)?.toInt() ?? 2
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -126,6 +130,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,
   'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
+  'minimumRequiredImagesExchanged': instance.minimumRequiredImagesExchanged,
+  'userDiscoveryThreshold': instance.userDiscoveryThreshold,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,

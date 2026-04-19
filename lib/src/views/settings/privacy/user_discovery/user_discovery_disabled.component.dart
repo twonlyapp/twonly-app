@@ -16,7 +16,7 @@ class UserDiscoveryDisabledComponent extends StatefulWidget {
 class _UserDiscoveryDisabledComponentState
     extends State<UserDiscoveryDisabledComponent> {
   Future<void> initializeUserDiscoveryWithDefaultSettings() async {
-    await initializeOrUpdateUserDiscovery(
+    await UserDiscoveryService.initializeOrUpdate(
       threshold: 2,
       minimumRequiredImagesExchanged: 4,
     );
@@ -73,7 +73,7 @@ class _UserDiscoveryDisabledComponentState
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: FilledButton(
               onPressed: () {},
-              style: secondaryGreyButtonStyle,
+              style: secondaryGreyButtonStyle(context),
               child: const Text('Einstellungen anpassen'),
             ),
           ),
@@ -82,7 +82,7 @@ class _UserDiscoveryDisabledComponentState
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: FilledButton(
               onPressed: () {},
-              style: secondaryGreyButtonStyle,
+              style: secondaryGreyButtonStyle(context),
               child: const Text('Mehr erfahren'),
             ),
           ),
