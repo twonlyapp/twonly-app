@@ -37,7 +37,8 @@ import 'package:twonly/src/views/settings/help/faq/verifybadge.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
 import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
-import 'package:twonly/src/views/settings/privacy_view_block.view.dart';
+import 'package:twonly/src/views/settings/privacy/block_users.view.dart';
+import 'package:twonly/src/views/settings/privacy/user_discovery.view.dart';
 import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
@@ -200,7 +201,11 @@ final routerProvider = GoRouter(
           routes: [
             GoRoute(
               path: 'block_users',
-              builder: (context, state) => const PrivacyViewBlockUsersView(),
+              builder: (context, state) => const BlockUsersView(),
+            ),
+            GoRoute(
+              path: 'user_discovery',
+              builder: (context, state) => const UserDiscoverySettingsView(),
             ),
           ],
         ),

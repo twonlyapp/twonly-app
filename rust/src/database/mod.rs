@@ -1,4 +1,3 @@
-pub(crate) mod contact;
 use crate::bridge::error::{Result, TwonlyError};
 use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
@@ -10,7 +9,7 @@ pub(crate) struct Database {
 }
 
 impl Database {
-    pub(crate) async fn new(db_path: &String) -> Result<Self> {
+    pub(crate) async fn new(db_path: &String, read_only: bool) -> Result<Self> {
         let db_url = format!("sqlite://{}", db_path);
 
         match Sqlite::database_exists(&db_url).await {
@@ -41,6 +40,7 @@ impl Database {
         let connect_options = format!("{db_url}?mode=rwc")
             .parse::<SqliteConnectOptions>()?
             .log_statements(log_statements_level)
+            .read_only(read_only)
             .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
             .foreign_keys(true)
             .busy_timeout(Duration::from_millis(5000))
@@ -52,6 +52,13 @@ impl Database {
             .max_connections(10)
             .connect_with(connect_options)
             .await?;
+
+        let row: (String, String) = sqlx::query_as("SELECT sqlite_version(), sqlite_source_id()")
+            .fetch_one(&pool)
+            .await?;
+
+        tracing::info!("Rust SQLite Version: {}", row.0);
+        tracing::info!("Rust SQLite Source ID: {}", row.1);
 
         Ok(Self { pool: pool })
     }

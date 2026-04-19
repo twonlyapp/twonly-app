@@ -1,3 +1,35 @@
-[workspace]
-members = ["protocols", "core"]
-resolver = "3"
+[package]
+name = "rust_lib_twonly"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.12.0"
+thiserror = "2.0.18"
+sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
+    "runtime-tokio",
+    "sqlite",
+    "migrate",
+    "macros",
+    "chrono",
+    "derive",
+    "json",
+] }
+tokio = { version = "1.44", features = ["full"] }
+tracing = "0.1.44"
+rand = "0.10.1"
+protocols = { path = "../rust_dependencies/protocols" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2.5"
+paste = "1.0.15"
+
+[dev-dependencies]
+pretty_env_logger = "0.5.0"
+tempfile = "3.27.0"
+
+
+[build-dependencies]
+prost-build = "0.14.1"

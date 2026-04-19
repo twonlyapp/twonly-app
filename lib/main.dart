@@ -10,6 +10,7 @@ import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/callbacks/callbacks.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
@@ -37,7 +38,11 @@ void main() async {
   globalApplicationSupportDirectory =
       (await getApplicationSupportDirectory()).path;
 
-  await bridge.initializeTwonly(
+  initLogger();
+
+  await initFlutterCallbacksForRust();
+
+  await bridge.initializeTwonlyFlutter(
     config: bridge.TwonlyConfig(
       databasePath: '$globalApplicationSupportDirectory/twonly.sqlite',
       dataDirectory: globalApplicationSupportDirectory,
@@ -67,8 +72,6 @@ void main() async {
     Log.info('User is not yet register. Ensure all local data is removed.');
     await deleteLocalUserData();
   }
-
-  initLogger();
 
   final settingsController = SettingsChangeProvider();
 

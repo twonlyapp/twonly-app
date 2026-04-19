@@ -22,7 +22,6 @@ pub struct AnnouncedUser {
 }
 
 pub trait UserDiscoveryStore {
-    fn new() -> impl std::future::Future<Output = Self> + Send;
     fn get_config(&self) -> impl Future<Output = Result<String>> + Send;
     fn update_config(&self, update: String) -> impl Future<Output = Result<()>> + Send;
     fn set_shares(&self, shares: Vec<Vec<u8>>) -> impl Future<Output = Result<()>> + Send;
@@ -88,6 +87,9 @@ pub trait UserDiscoveryUtils {
         pubkey: &[u8],
         signature: &[u8],
     ) -> impl Future<Output = Result<bool>> + Send;
+    /// In case the the user does not exists yet return false.
+    /// If this happens this should trigger an error, as this functions is only when a message was received from this user...
+    /// This is used to verify that the share of the promotions contains the same public key and the user is not secretly announcing a different one
     fn verify_stored_pubkey(
         &self,
         from_contact_id: UserID,

@@ -5,20 +5,36 @@
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-import 'database/contact.dart';
 import 'frb_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_workspace`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Twonly`
+// These functions are ignored because they are not marked as `pub`: `get_twonly_flutter`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `TwonlyFlutter`
 
-Future<void> initializeTwonly({required TwonlyConfig config}) =>
-    RustLib.instance.api.crateBridgeInitializeTwonly(config: config);
+Future<void> initializeTwonlyFlutter({required TwonlyConfig config}) =>
+    RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);
 
-Future<List<Contact>> getAllContacts() =>
-    RustLib.instance.api.crateBridgeGetAllContacts();
+class AnnouncedUser {
+  const AnnouncedUser({
+    required this.userId,
+    required this.publicKey,
+    required this.publicId,
+  });
+  final PlatformInt64 userId;
+  final Uint8List publicKey;
+  final PlatformInt64 publicId;
 
-Future<OtherPromotion> loadPromotions() =>
-    RustLib.instance.api.crateBridgeLoadPromotions();
+  @override
+  int get hashCode => userId.hashCode ^ publicKey.hashCode ^ publicId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AnnouncedUser &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId &&
+          publicKey == other.publicKey &&
+          publicId == other.publicId;
+}
 
 class OtherPromotion {
   const OtherPromotion({

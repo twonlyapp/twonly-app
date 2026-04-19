@@ -9,7 +9,8 @@ import 'dart:convert';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 import 'bridge.dart';
-import 'database/contact.dart';
+import 'bridge/callbacks.dart';
+import 'bridge/wrapper/user_discovery.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
@@ -70,7 +71,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 776002844;
+  int get rustContentHash => 523281685;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -81,11 +82,69 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<List<Contact>> crateBridgeGetAllContacts();
+  Future<Uint8List>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion();
 
-  Future<void> crateBridgeInitializeTwonly({required TwonlyConfig config});
+  Future<List<Uint8List>>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages({
+    required PlatformInt64 contactId,
+    required List<int> receivedVersion,
+  });
 
-  Future<OtherPromotion> crateBridgeLoadPromotions();
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessages({
+    required PlatformInt64 contactId,
+    required List<Uint8List> messages,
+  });
+
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate({
+    required int threshold,
+    required PlatformInt64 userId,
+    required List<int> publicKey,
+  });
+
+  Future<bool>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
+    required PlatformInt64 contactId,
+    required List<int> version,
+  });
+
+  Future<void> crateBridgeCallbacksInitFlutterCallbacks({
+    required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
+    required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
+    required FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
+    userDiscoveryVerifySignature,
+    required FutureOr<bool> Function(PlatformInt64, Uint8List)
+    userDiscoveryVerifyStoredPubkey,
+    required FutureOr<bool> Function(List<Uint8List>) userDiscoverySetShares,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetShareForContact,
+    required FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
+    userDiscoveryPushOwnPromotion,
+    required FutureOr<List<Uint8List>?> Function(PlatformInt64)
+    userDiscoveryGetOwnPromotionsAfterVersion,
+    required FutureOr<bool> Function(OtherPromotion)
+    userDiscoveryStoreOtherPromotion,
+    required FutureOr<List<OtherPromotion>?> Function(PlatformInt64)
+    userDiscoveryGetOtherPromotionsByPublicId,
+    required FutureOr<AnnouncedUser?> Function(PlatformInt64)
+    userDiscoveryGetAnnouncedUserByPublicId,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetContactVersion,
+    required FutureOr<bool> Function(PlatformInt64, Uint8List)
+    userDiscoverySetContactVersion,
+    required FutureOr<bool> Function(
+      PlatformInt64,
+      AnnouncedUser,
+      PlatformInt64?,
+    )
+    userDiscoveryPushNewUserRelation,
+  });
+
+  Future<void> crateBridgeInitializeTwonlyFlutter({
+    required TwonlyConfig config,
+  });
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -97,7 +156,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<List<Contact>> crateBridgeGetAllContacts() {
+  Future<Uint8List>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -110,28 +170,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_contact,
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateBridgeGetAllContactsConstMeta,
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersionConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateBridgeGetAllContactsConstMeta => const TaskConstMeta(
-    debugName: 'get_all_contacts',
-    argNames: [],
-  );
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: 'flutter_user_discovery_get_current_version',
+        argNames: [],
+      );
 
   @override
-  Future<void> crateBridgeInitializeTwonly({required TwonlyConfig config}) {
+  Future<List<Uint8List>>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages({
+    required PlatformInt64 contactId,
+    required List<int> receivedVersion,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_twonly_config(config, serializer);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_list_prim_u_8_loose(receivedVersion, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -140,28 +208,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_list_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateBridgeInitializeTwonlyConstMeta,
-        argValues: [config],
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessagesConstMeta,
+        argValues: [contactId, receivedVersion],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateBridgeInitializeTwonlyConstMeta =>
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessagesConstMeta =>
       const TaskConstMeta(
-        debugName: 'initialize_twonly',
-        argNames: ['config'],
+        debugName: 'flutter_user_discovery_get_new_messages',
+        argNames: ['contactId', 'receivedVersion'],
       );
 
   @override
-  Future<OtherPromotion> crateBridgeLoadPromotions() {
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessages({
+    required PlatformInt64 contactId,
+    required List<Uint8List> messages,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_list_list_prim_u_8_strict(messages, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -170,20 +246,709 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_other_promotion,
-          decodeErrorData: null,
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateBridgeLoadPromotionsConstMeta,
-        argValues: [],
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessagesConstMeta,
+        argValues: [contactId, messages],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateBridgeLoadPromotionsConstMeta => const TaskConstMeta(
-    debugName: 'load_promotions',
-    argNames: [],
-  );
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessagesConstMeta =>
+      const TaskConstMeta(
+        debugName: 'flutter_user_discovery_handle_user_discovery_messages',
+        argNames: ['contactId', 'messages'],
+      );
+
+  @override
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate({
+    required int threshold,
+    required PlatformInt64 userId,
+    required List<int> publicKey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_8(threshold, serializer);
+          sse_encode_i_64(userId, serializer);
+          sse_encode_list_prim_u_8_loose(publicKey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta,
+        argValues: [threshold, userId, publicKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta =>
+      const TaskConstMeta(
+        debugName: 'flutter_user_discovery_initialize_or_update',
+        argNames: ['threshold', 'userId', 'publicKey'],
+      );
+
+  @override
+  Future<bool>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
+    required PlatformInt64 contactId,
+    required List<int> version,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_list_prim_u_8_loose(version, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessagesConstMeta,
+        argValues: [contactId, version],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessagesConstMeta =>
+      const TaskConstMeta(
+        debugName: 'flutter_user_discovery_should_request_new_messages',
+        argNames: ['contactId', 'version'],
+      );
+
+  @override
+  Future<void> crateBridgeCallbacksInitFlutterCallbacks({
+    required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
+    required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
+    required FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
+    userDiscoveryVerifySignature,
+    required FutureOr<bool> Function(PlatformInt64, Uint8List)
+    userDiscoveryVerifyStoredPubkey,
+    required FutureOr<bool> Function(List<Uint8List>) userDiscoverySetShares,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetShareForContact,
+    required FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
+    userDiscoveryPushOwnPromotion,
+    required FutureOr<List<Uint8List>?> Function(PlatformInt64)
+    userDiscoveryGetOwnPromotionsAfterVersion,
+    required FutureOr<bool> Function(OtherPromotion)
+    userDiscoveryStoreOtherPromotion,
+    required FutureOr<List<OtherPromotion>?> Function(PlatformInt64)
+    userDiscoveryGetOtherPromotionsByPublicId,
+    required FutureOr<AnnouncedUser?> Function(PlatformInt64)
+    userDiscoveryGetAnnouncedUserByPublicId,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetContactVersion,
+    required FutureOr<bool> Function(PlatformInt64, Uint8List)
+    userDiscoverySetContactVersion,
+    required FutureOr<bool> Function(
+      PlatformInt64,
+      AnnouncedUser,
+      PlatformInt64?,
+    )
+    userDiscoveryPushNewUserRelation,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
+            loggingGetStreamSink,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
+            userDiscoverySignData,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
+            userDiscoveryVerifySignature,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+            userDiscoveryVerifyStoredPubkey,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
+            userDiscoverySetShares,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+            userDiscoveryGetShareForContact,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+            userDiscoveryPushOwnPromotion,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
+            userDiscoveryGetOwnPromotionsAfterVersion,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
+            userDiscoveryStoreOtherPromotion,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
+            userDiscoveryGetOtherPromotionsByPublicId,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
+            userDiscoveryGetAnnouncedUserByPublicId,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+            userDiscoveryGetContactVersion,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+            userDiscoverySetContactVersion,
+            serializer,
+          );
+          sse_encode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
+            userDiscoveryPushNewUserRelation,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateBridgeCallbacksInitFlutterCallbacksConstMeta,
+        argValues: [
+          loggingGetStreamSink,
+          userDiscoverySignData,
+          userDiscoveryVerifySignature,
+          userDiscoveryVerifyStoredPubkey,
+          userDiscoverySetShares,
+          userDiscoveryGetShareForContact,
+          userDiscoveryPushOwnPromotion,
+          userDiscoveryGetOwnPromotionsAfterVersion,
+          userDiscoveryStoreOtherPromotion,
+          userDiscoveryGetOtherPromotionsByPublicId,
+          userDiscoveryGetAnnouncedUserByPublicId,
+          userDiscoveryGetContactVersion,
+          userDiscoverySetContactVersion,
+          userDiscoveryPushNewUserRelation,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeCallbacksInitFlutterCallbacksConstMeta =>
+      const TaskConstMeta(
+        debugName: 'init_flutter_callbacks',
+        argNames: [
+          'loggingGetStreamSink',
+          'userDiscoverySignData',
+          'userDiscoveryVerifySignature',
+          'userDiscoveryVerifyStoredPubkey',
+          'userDiscoverySetShares',
+          'userDiscoveryGetShareForContact',
+          'userDiscoveryPushOwnPromotion',
+          'userDiscoveryGetOwnPromotionsAfterVersion',
+          'userDiscoveryStoreOtherPromotion',
+          'userDiscoveryGetOtherPromotionsByPublicId',
+          'userDiscoveryGetAnnouncedUserByPublicId',
+          'userDiscoveryGetContactVersion',
+          'userDiscoverySetContactVersion',
+          'userDiscoveryPushNewUserRelation',
+        ],
+      );
+
+  @override
+  Future<void> crateBridgeInitializeTwonlyFlutter({
+    required TwonlyConfig config,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_twonly_config(config, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeInitializeTwonlyFlutterConstMeta,
+        argValues: [config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeInitializeTwonlyFlutterConstMeta =>
+      const TaskConstMeta(
+        debugName: 'initialize_twonly_flutter',
+        argNames: ['config'],
+      );
+
+  Future<void> Function(
+    int,
+  )
+  encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
+    FutureOr<RustStreamSink<String>> Function() raw,
+  ) {
+    return (
+      callId,
+    ) async {
+      Box<RustStreamSink<String>>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw());
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_StreamSink_String_Sse(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
+    FutureOr<AnnouncedUser?> Function(PlatformInt64) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+
+      Box<AnnouncedUser?>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_opt_box_autoadd_announced_user(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
+    FutureOr<List<Uint8List>?> Function(PlatformInt64) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+
+      Box<List<Uint8List>?>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_opt_list_list_prim_u_8_strict(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
+    FutureOr<List<OtherPromotion>?> Function(PlatformInt64) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+
+      Box<List<OtherPromotion>?>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_opt_list_other_promotion(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+    FutureOr<Uint8List?> Function(PlatformInt64) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+
+      Box<Uint8List?>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_opt_list_prim_u_8_strict(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic, dynamic, dynamic)
+  encode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?) raw,
+  ) {
+    return (callId, rawArg0, rawArg1, rawArg2) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+      final arg1 = dco_decode_announced_user(rawArg1);
+      final arg2 = dco_decode_opt_box_autoadd_i_64(rawArg2);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1, arg2));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic, dynamic, dynamic)
+  encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List) raw,
+  ) {
+    return (callId, rawArg0, rawArg1, rawArg2) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+      final arg1 = dco_decode_i_64(rawArg1);
+      final arg2 = dco_decode_list_prim_u_8_strict(rawArg2);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1, arg2));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic, dynamic)
+  encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, Uint8List) raw,
+  ) {
+    return (callId, rawArg0, rawArg1) async {
+      final arg0 = dco_decode_i_64(rawArg0);
+      final arg1 = dco_decode_list_prim_u_8_strict(rawArg1);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(List<Uint8List>) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_list_list_prim_u_8_strict(rawArg0);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
+    FutureOr<Uint8List?> Function(Uint8List) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_list_prim_u_8_strict(rawArg0);
+
+      Box<Uint8List?>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_opt_list_prim_u_8_strict(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic, dynamic, dynamic)
+  encode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(Uint8List, Uint8List, Uint8List) raw,
+  ) {
+    return (callId, rawArg0, rawArg1, rawArg2) async {
+      final arg0 = dco_decode_list_prim_u_8_strict(rawArg0);
+      final arg1 = dco_decode_list_prim_u_8_strict(rawArg1);
+      final arg2 = dco_decode_list_prim_u_8_strict(rawArg2);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1, arg2));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
+  Future<void> Function(int, dynamic)
+  encode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
+    FutureOr<bool> Function(OtherPromotion) raw,
+  ) {
+    return (callId, rawArg0) async {
+      final arg0 = dco_decode_other_promotion(rawArg0);
+
+      Box<bool>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0));
+      } catch (e, s) {
+        rawError = Box(AnyhowException('$e\n\n$s'));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_bool(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -192,9 +957,154 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FutureOr<RustStreamSink<String>> Function()
+  dco_decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<AnnouncedUser?> Function(PlatformInt64)
+  dco_decode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<List<Uint8List>?> Function(PlatformInt64)
+  dco_decode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<List<OtherPromotion>?> Function(PlatformInt64)
+  dco_decode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<Uint8List?> Function(PlatformInt64)
+  dco_decode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?)
+  dco_decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
+  dco_decode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(PlatformInt64, Uint8List)
+  dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(List<Uint8List>)
+  dco_decode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<Uint8List?> Function(Uint8List)
+  dco_decode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
+  dco_decode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  FutureOr<bool> Function(OtherPromotion)
+  dco_decode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
+  Object dco_decode_DartOpaque(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return decodeDartOpaque(raw, generalizedFrbRustBinding);
+  }
+
+  @protected
+  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  AnnouncedUser dco_decode_announced_user(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return AnnouncedUser(
+      userId: dco_decode_i_64(arr[0]),
+      publicKey: dco_decode_list_prim_u_8_strict(arr[1]),
+      publicId: dco_decode_i_64(arr[2]),
+    );
+  }
+
+  @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
+  AnnouncedUser dco_decode_box_autoadd_announced_user(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_announced_user(raw);
   }
 
   @protected
@@ -210,15 +1120,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Contact dco_decode_contact(dynamic raw) {
+  FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return Contact(
-      userId: dco_decode_i_64(arr[0]),
-      username: dco_decode_String(arr[1]),
-    );
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return const FlutterUserDiscovery();
   }
 
   @protected
@@ -228,9 +1135,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<Contact> dco_decode_list_contact(dynamic raw) {
+  PlatformInt64 dco_decode_isize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_contact).toList();
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<Uint8List> dco_decode_list_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_list_prim_u_8_strict).toList();
+  }
+
+  @protected
+  List<OtherPromotion> dco_decode_list_other_promotion(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_other_promotion).toList();
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
   }
 
   @protected
@@ -240,9 +1165,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AnnouncedUser? dco_decode_opt_box_autoadd_announced_user(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_announced_user(raw);
+  }
+
+  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  List<Uint8List>? dco_decode_opt_list_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_list_prim_u_8_strict(raw);
+  }
+
+  @protected
+  List<OtherPromotion>? dco_decode_opt_list_other_promotion(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_other_promotion(raw);
+  }
+
+  @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -292,6 +1241,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final inner = sse_decode_String(deserializer);
@@ -299,10 +1254,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Object sse_decode_DartOpaque(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final inner = sse_decode_isize(deserializer);
+    return decodeDartOpaque(inner, generalizedFrbRustBinding);
+  }
+
+  @protected
+  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     final inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  AnnouncedUser sse_decode_announced_user(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final var_userId = sse_decode_i_64(deserializer);
+    final var_publicKey = sse_decode_list_prim_u_8_strict(deserializer);
+    final var_publicId = sse_decode_i_64(deserializer);
+    return AnnouncedUser(
+      userId: var_userId,
+      publicKey: var_publicKey,
+      publicId: var_publicId,
+    );
+  }
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  AnnouncedUser sse_decode_box_autoadd_announced_user(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return sse_decode_announced_user(deserializer);
   }
 
   @protected
@@ -320,11 +1317,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Contact sse_decode_contact(SseDeserializer deserializer) {
+  FlutterUserDiscovery sse_decode_flutter_user_discovery(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_userId = sse_decode_i_64(deserializer);
-    final var_username = sse_decode_String(deserializer);
-    return Contact(userId: var_userId, username: var_username);
+    return const FlutterUserDiscovery();
   }
 
   @protected
@@ -334,15 +1331,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<Contact> sse_decode_list_contact(SseDeserializer deserializer) {
+  PlatformInt64 sse_decode_isize(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<Uint8List> sse_decode_list_list_prim_u_8_strict(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     final len_ = sse_decode_i_32(deserializer);
-    final ans_ = <Contact>[];
+    final ans_ = <Uint8List>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_contact(deserializer));
+      ans_.add(sse_decode_list_prim_u_8_strict(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  List<OtherPromotion> sse_decode_list_other_promotion(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    final len_ = sse_decode_i_32(deserializer);
+    final ans_ = <OtherPromotion>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_other_promotion(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    final len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
   }
 
   @protected
@@ -353,11 +1379,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AnnouncedUser? sse_decode_opt_box_autoadd_announced_user(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_box_autoadd_announced_user(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
       return sse_decode_box_autoadd_i_64(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  List<Uint8List>? sse_decode_opt_list_list_prim_u_8_strict(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_list_list_prim_u_8_strict(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  List<OtherPromotion>? sse_decode_opt_list_other_promotion(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_list_other_promotion(deserializer);
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return sse_decode_list_prim_u_8_strict(deserializer);
     } else {
       return null;
     }
@@ -413,15 +1489,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
+  BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
+  int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
+    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -434,9 +1510,238 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
+    FutureOr<RustStreamSink<String>> Function() self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(self),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
+    FutureOr<AnnouncedUser?> Function(PlatformInt64) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
+    FutureOr<List<Uint8List>?> Function(PlatformInt64) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
+    FutureOr<List<OtherPromotion>?> Function(PlatformInt64) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_Output_opt_list_other_promotion_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+    FutureOr<Uint8List?> Function(PlatformInt64) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(PlatformInt64, Uint8List) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(List<Uint8List>) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_list_list_prim_u_8_strict_Output_bool_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
+    FutureOr<Uint8List?> Function(Uint8List) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_list_prim_u_8_strict_Output_opt_list_prim_u_8_strict_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(Uint8List, Uint8List, Uint8List) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_list_prim_u_8_strict_list_prim_u_8_strict_list_prim_u_8_strict_Output_bool_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(
+    FutureOr<bool> Function(OtherPromotion) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_other_promotion_Output_bool_AnyhowException(self),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_DartOpaque(Object self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_isize(
+      PlatformPointerUtil.ptrToPlatformInt64(
+        encodeDartOpaque(
+          self,
+          portManager.dartHandlerPort,
+          generalizedFrbRustBinding,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_String_Sse(
+    RustStreamSink<String> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_announced_user(AnnouncedUser self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.userId, serializer);
+    sse_encode_list_prim_u_8_strict(self.publicKey, serializer);
+    sse_encode_i_64(self.publicId, serializer);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_announced_user(
+    AnnouncedUser self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_announced_user(self, serializer);
   }
 
   @protected
@@ -458,10 +1763,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_contact(Contact self, SseSerializer serializer) {
+  void sse_encode_flutter_user_discovery(
+    FlutterUserDiscovery self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.userId, serializer);
-    sse_encode_String(self.username, serializer);
   }
 
   @protected
@@ -471,12 +1777,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_contact(List<Contact> self, SseSerializer serializer) {
+  void sse_encode_isize(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_list_prim_u_8_strict(
+    List<Uint8List> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
-      sse_encode_contact(item, serializer);
+      sse_encode_list_prim_u_8_strict(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_other_promotion(
+    List<OtherPromotion> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_other_promotion(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
   }
 
   @protected
@@ -490,6 +1829,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_announced_user(
+    AnnouncedUser? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_announced_user(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_i_64(
     PlatformInt64? self,
     SseSerializer serializer,
@@ -499,6 +1851,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_list_prim_u_8_strict(
+    List<Uint8List>? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_list_prim_u_8_strict(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_other_promotion(
+    List<OtherPromotion>? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_other_promotion(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(
+    Uint8List? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 
@@ -544,14 +1935,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
+  void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
+  void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
+    serializer.buffer.putInt32(self);
   }
 }

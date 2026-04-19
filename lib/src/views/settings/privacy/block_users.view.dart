@@ -7,14 +7,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
-class PrivacyViewBlockUsersView extends StatefulWidget {
-  const PrivacyViewBlockUsersView({super.key});
+class BlockUsersView extends StatefulWidget {
+  const BlockUsersView({super.key});
 
   @override
-  State<PrivacyViewBlockUsersView> createState() => _PrivacyViewBlockUsers();
+  State<BlockUsersView> createState() => _PrivacyViewBlockUsers();
 }
 
-class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsersView> {
+class _PrivacyViewBlockUsers extends State<BlockUsersView> {
   late Stream<List<Contact>> allUsers;
   List<Contact> filteredUsers = [];
   String filter = '';

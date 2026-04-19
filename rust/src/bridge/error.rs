@@ -7,8 +7,14 @@ pub type Result<T> = core::result::Result<T, TwonlyError>;
 pub enum TwonlyError {
     #[error("global twonly is not initialized")]
     Initialization,
+    #[error("init_flutter_callbacks was not called")]
+    MissingCallbackInitialization,
     #[error("Could not find the given database")]
     DatabaseNotFound,
+    #[error("{0}")]
+    UserDiscoveryError(#[from] UserDiscoveryError),
+    #[error("Error in dart callback")]
+    DartError,
     #[error("{0}")]
     SqliteError(#[from] sqlx::Error),
 }

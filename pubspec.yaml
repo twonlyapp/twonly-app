@@ -58,9 +58,8 @@ dependencies:
   json_annotation: ^4.9.0 # google.dev
   protobuf: ^4.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
-  drift: ^2.25.1
-  drift_flutter: ^0.2.4
-  sqlite3: ^2.9.4
+  drift: ^2.32.0
+  drift_flutter: ^0.3.0
 
 
   # Flutter Favorite 

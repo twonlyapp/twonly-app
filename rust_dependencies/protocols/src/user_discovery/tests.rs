@@ -12,8 +12,10 @@ fn get_version_bytes(announcement: u32, promotion: u32) -> Vec<u8> {
     .encode_to_vec()
 }
 
-async fn get_ud<S: UserDiscoveryStore + Clone>(user_id: usize) -> UserDiscovery<S, TestingUtils> {
-    let store = S::new().await;
+async fn get_ud<S: UserDiscoveryStore + Clone + Default>(
+    user_id: usize,
+) -> UserDiscovery<S, TestingUtils> {
+    let store = S::default();
     let ud = UserDiscovery::new(store.to_owned(), TestingUtils::default()).unwrap();
 
     ud.initialize_or_update(2, user_id as UserID, vec![user_id as u8; 32])
@@ -97,7 +99,7 @@ struct TestUsers<S: UserDiscoveryStore> {
     uds: Vec<UserDiscovery<S, TestingUtils>>,
 }
 
-impl<S: UserDiscoveryStore + Clone> TestUsers<S> {
+impl<S: UserDiscoveryStore + Clone + Default> TestUsers<S> {
     async fn get() -> Self {
         let names = ["ALICE", "BOB", "CHARLIE", "DAVID", "FRANK"];
         let mut uds = vec![];
@@ -119,7 +121,7 @@ impl<S: UserDiscoveryStore + Clone> TestUsers<S> {
     }
 }
 
-pub async fn test_initialize_user_discovery<S: UserDiscoveryStore + Clone>() {
+pub async fn test_initialize_user_discovery<S: UserDiscoveryStore + Clone + Default>() {
     #[cfg(test)]
     let _ = pretty_env_logger::try_init();
 

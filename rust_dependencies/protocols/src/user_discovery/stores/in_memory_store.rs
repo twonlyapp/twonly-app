@@ -27,9 +27,6 @@ impl InMemoryStore {
 }
 
 impl UserDiscoveryStore for InMemoryStore {
-    async fn new() -> Self {
-        Self::default()
-    }
     async fn get_config(&self) -> Result<String> {
         if let Some(storage) = self.storage().config.clone() {
             return Ok(storage);

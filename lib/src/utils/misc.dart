@@ -404,3 +404,50 @@ Future<List<int>> sha256File(File file) async {
   converter.close();
   return sha256Sink.events.single.bytes;
 }
+
+List<TextSpan> formattedText(String input) {
+  // Pattern to find text between asterisks
+  final regex = RegExp(r'\*(.*?)\*');
+  final List<TextSpan> spans = [];
+
+  // Track the current position in the string
+  int lastMatchEnd = 0;
+
+  for (final match in regex.allMatches(input)) {
+    // Add text before the match (Normal style)
+    if (match.start > lastMatchEnd) {
+      spans.add(
+        TextSpan(
+          text: input.substring(lastMatchEnd, match.start),
+          style: const TextStyle(color: Colors.black),
+        ),
+      );
+    }
+
+    // Add the matched text (Bold style)
+    // match.group(1) is the text without the asterisks
+    spans.add(
+      TextSpan(
+        text: match.group(1),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+    );
+
+    lastMatchEnd = match.end;
+  }
+
+  // Add any remaining text after the last match
+  if (lastMatchEnd < input.length) {
+    spans.add(
+      TextSpan(
+        text: input.substring(lastMatchEnd),
+        style: const TextStyle(color: Colors.black),
+      ),
+    );
+  }
+
+  return spans;
+}

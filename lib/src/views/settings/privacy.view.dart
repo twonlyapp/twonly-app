@@ -73,6 +73,13 @@ class _PrivacyViewState extends State<PrivacyView> {
               setState(() {});
             },
           ),
+          ListTile(
+            title: const Text('Freunde finden'),
+            onTap: () async {
+              await context.push(Routes.settingsPrivacyUserDiscovery);
+              setState(() {});
+            },
+          ),
           const Divider(),
           ListTile(
             title: Text(context.lang.settingsTypingIndication),
