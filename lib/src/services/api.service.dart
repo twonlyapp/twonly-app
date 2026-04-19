@@ -37,6 +37,7 @@ import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -100,6 +101,7 @@ class ApiService {
       unawaited(retransmitAllMessages());
       unawaited(tryDownloadAllMediaFiles());
       unawaited(reuploadMediaFiles());
+
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
@@ -107,6 +109,8 @@ class ApiService {
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());
+
+      unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 
       if (gUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection

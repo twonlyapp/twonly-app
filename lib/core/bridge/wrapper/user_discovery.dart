@@ -22,11 +22,11 @@ class FlutterUserDiscovery {
         receivedVersion: receivedVersion,
       );
 
-  static Future<void> handleUserDiscoveryMessages({
+  static Future<void> handleNewMessages({
     required PlatformInt64 contactId,
     required List<Uint8List> messages,
   }) => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessages(
+      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages(
         contactId: contactId,
         messages: messages,
       );
@@ -42,7 +42,7 @@ class FlutterUserDiscovery {
         publicKey: publicKey,
       );
 
-  static Future<bool> shouldRequestNewMessages({
+  static Future<Uint8List?> shouldRequestNewMessages({
     required PlatformInt64 contactId,
     required List<int> version,
   }) => RustLib.instance.api

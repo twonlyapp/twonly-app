@@ -231,7 +231,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         &self,
         contact_id: UserID,
         version: &[u8],
-    ) -> Result<bool> {
+    ) -> Result<Option<Vec<u8>>> {
         let received_version = UserDiscoveryVersion::decode(version)?;
         let stored_version = match self.store.get_contact_version(contact_id).await? {
             Some(buf) => UserDiscoveryVersion::decode(buf.as_slice())?,
@@ -247,8 +247,13 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             stored.promotion = %stored_version.promotion,
             "Comparing version numbers"
         );
-        Ok(received_version.announcement > stored_version.announcement
-            || received_version.promotion > stored_version.promotion)
+        if received_version.announcement > stored_version.announcement
+            || received_version.promotion > stored_version.promotion
+        {
+            Ok(Some(stored_version.encode_to_vec()))
+        } else {
+            Ok(None)
+        }
     }
 
     pub(crate) async fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
@@ -257,7 +262,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
     /// Returns the latest version for this discovery.
     /// Before calling this function the application must sure that contact_id is qualified to be announced.
-    pub async fn handle_user_discovery_messages(
+    pub async fn handle_new_messages(
         &self,
         contact_id: UserID,
         messages: Vec<Vec<u8>>,

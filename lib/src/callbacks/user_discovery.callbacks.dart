@@ -216,10 +216,10 @@ class UserDiscoveryCallbacks {
         await twonlyDB
             .into(twonlyDB.userDiscoveryAnnouncedUsers)
             .insertOnConflictUpdate(
-              UserDiscoveryAnnouncedUser(
-                announcedUserId: announcedUser.userId,
-                announcedPublicKey: announcedUser.publicKey,
-                publicId: announcedUser.publicId,
+              UserDiscoveryAnnouncedUsersCompanion(
+                announcedUserId: Value(announcedUser.userId),
+                announcedPublicKey: Value(announcedUser.publicKey),
+                publicId: Value(announcedUser.publicId),
               ),
             );
 

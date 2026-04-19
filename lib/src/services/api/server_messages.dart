@@ -24,6 +24,7 @@ import 'package:twonly/src/services/api/client2client/prekeys.c2c.dart';
 import 'package:twonly/src/services/api/client2client/pushkeys.c2c.dart';
 import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
+import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
@@ -262,6 +263,12 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
   await twonlyDB.receiptsDao.markMessagesForRetry(fromUserId);
 
   final senderProfileCounter = await checkForProfileUpdate(fromUserId, content);
+  if (gUser.isUserDiscoveryEnabled && content.hasSenderUserDiscoveryVersion()) {
+    await checkForUserDiscoveryChanges(
+      fromUserId,
+      content.senderUserDiscoveryVersion,
+    );
+  }
 
   if (content.hasContactRequest()) {
     if (!await handleContactRequest(fromUserId, content.contactRequest)) {
@@ -287,6 +294,22 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.contactUpdate,
       senderProfileCounter,
+    );
+    return (null, null);
+  }
+
+  if (content.hasUserDiscoveryRequest()) {
+    await handleUserDiscoveryRequest(
+      fromUserId,
+      content.userDiscoveryRequest,
+    );
+    return (null, null);
+  }
+
+  if (content.hasUserDiscoveryUpdate()) {
+    await handleUserDiscoveryUpdate(
+      fromUserId,
+      content.userDiscoveryUpdate,
     );
     return (null, null);
   }

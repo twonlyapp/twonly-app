@@ -38,7 +38,10 @@ impl FlutterUserDiscovery {
             .await?)
     }
 
-    pub async fn should_request_new_messages(contact_id: i64, version: &[u8]) -> Result<bool> {
+    pub async fn should_request_new_messages(
+        contact_id: i64,
+        version: &[u8],
+    ) -> Result<Option<Vec<u8>>> {
         Ok(get_twonly_flutter()?
             .user_discovery
             .get()
@@ -47,15 +50,12 @@ impl FlutterUserDiscovery {
             .await?)
     }
 
-    pub async fn handle_user_discovery_messages(
-        contact_id: i64,
-        messages: Vec<Vec<u8>>,
-    ) -> Result<()> {
+    pub async fn handle_new_messages(contact_id: i64, messages: Vec<Vec<u8>>) -> Result<()> {
         Ok(get_twonly_flutter()?
             .user_discovery
             .get()
             .await
-            .handle_user_discovery_messages(contact_id, messages)
+            .handle_new_messages(contact_id, messages)
             .await?)
     }
 }

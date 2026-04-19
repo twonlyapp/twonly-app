@@ -10,6 +10,13 @@ class UserDiscoveryAnnouncedUsers extends Table {
   BlobColumn get announcedPublicKey => blob()();
   IntColumn get publicId => integer().unique()();
 
+  // When a new user got announced this data will be requested without adding the users to the contacts...
+  TextColumn get username => text().nullable()();
+
+  BoolColumn get wasShownToTheUser =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get isHidden => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {announcedUserId};
 }

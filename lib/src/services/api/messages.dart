@@ -18,6 +18,7 @@ import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -343,6 +344,17 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     }
   }
   encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
+
+  if (gUser.isUserDiscoveryEnabled) {
+    final contact = await twonlyDB.contactsDao.getContactById(contactId);
+    if (contact != null &&
+        contact.mediaSendCounter >= gUser.minimumRequiredImagesExchanged) {
+      final version = await UserDiscoveryService.getCurrentVersion();
+      if (version != null) {
+        encryptedContent.senderUserDiscoveryVersion = version;
+      }
+    }
+  }
 
   final response = pb.Message()
     ..type = pb.Message_Type.CIPHERTEXT

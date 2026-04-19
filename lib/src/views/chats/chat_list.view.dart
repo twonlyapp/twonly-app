@@ -34,6 +34,11 @@ class _ChatListViewState extends State<ChatListView> {
   GlobalKey searchForOtherUsers = GlobalKey();
   bool showFeedbackShortcut = false;
 
+  int _countContactRequest = 0;
+  int _countAnnouncedUsers = 0;
+  late StreamSubscription<int?> _countContactRequestStream;
+  late StreamSubscription<int?> _countAnnouncedStream;
+
   @override
   void initState() {
     initAsync();
@@ -51,6 +56,24 @@ class _ChatListViewState extends State<ChatListView> {
         _groupsArchived = groups.where((x) => x.archived).toList();
       });
     });
+
+    _countContactRequestStream = twonlyDB.contactsDao
+        .watchContactsRequestedCount()
+        .listen((update) {
+          if (update != null) {
+            setState(() {
+              _countContactRequest = update;
+            });
+          }
+        });
+
+    _countContactRequestStream = twonlyDB.userDiscoveryDao
+        .watchNewAnnouncementsWithDataCount()
+        .listen((update) {
+          setState(() {
+            _countAnnouncedUsers = update;
+          });
+        });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
@@ -80,6 +103,8 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   void dispose() {
     _contactsSub.cancel();
+    _countContactRequestStream.cancel();
+    _countAnnouncedStream.cancel();
     super.dispose();
   }
 
@@ -132,23 +157,38 @@ class _ChatListViewState extends State<ChatListView> {
         ),
         actions: [
           const FeedbackIconButton(),
-          StreamBuilder(
-            stream: twonlyDB.contactsDao.watchContactsRequestedCount(),
-            builder: (context, snapshot) {
-              var count = 0;
-              if (snapshot.hasData && snapshot.data != null) {
-                count = snapshot.data!;
-              }
-              return NotificationBadge(
-                count: count.toString(),
-                child: IconButton(
-                  key: searchForOtherUsers,
-                  icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
-                  onPressed: () => context.push(Routes.chatsAddNewUser),
+          Stack(
+            children: [
+              if (_countAnnouncedUsers + _countContactRequest > 0)
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: context.color.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
+              Center(
+                child: NotificationBadge(
+                  count: (_countAnnouncedUsers + _countContactRequest)
+                      .toString(),
+                  child: IconButton(
+                    color: (_countAnnouncedUsers + _countContactRequest > 0)
+                        ? Colors.black
+                        : null,
+                    key: searchForOtherUsers,
+                    icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
+                    onPressed: () => context.push(Routes.chatsAddNewUser),
+                  ),
+                ),
+              ),
+            ],
           ),
+
           IconButton(
             onPressed: () async {
               await context.push(Routes.settings);

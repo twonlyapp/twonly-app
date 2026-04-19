@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 523281685;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -630534473;
 
 // Section: executor
 
@@ -77,19 +77,19 @@ let api_received_version = <Vec<u8>>::sse_decode(&mut deserializer);deserializer
                     })().await)
                 } })
 }
-fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_user_discovery_messages_impl(
+fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_new_messages_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_handle_user_discovery_messages", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_handle_new_messages", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_contact_id = <i64>::sse_decode(&mut deserializer);
 let api_messages = <Vec<Vec<u8>>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
                     transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::handle_user_discovery_messages(api_contact_id, api_messages).await?;   Ok(output_ok)
+                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::handle_new_messages(api_contact_id, api_messages).await?;   Ok(output_ok)
                     })().await)
                 } })
 }
@@ -900,7 +900,7 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
                         1 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_current_version_impl(port, ptr, rust_vec_len, data_len),
 2 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_new_messages_impl(port, ptr, rust_vec_len, data_len),
-3 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_user_discovery_messages_impl(port, ptr, rust_vec_len, data_len),
+3 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_new_messages_impl(port, ptr, rust_vec_len, data_len),
 4 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_initialize_or_update_impl(port, ptr, rust_vec_len, data_len),
 5 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_should_request_new_messages_impl(port, ptr, rust_vec_len, data_len),
 6 => wire__crate__bridge__callbacks__init_flutter_callbacks_impl(port, ptr, rust_vec_len, data_len),

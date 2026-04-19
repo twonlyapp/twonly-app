@@ -38,7 +38,8 @@ async fn assert_new_messages<S: UserDiscoveryStore>(
     assert_eq!(
         to.1.should_request_new_messages(from.0 as UserID, to_received_version)
             .await
-            .unwrap(),
+            .unwrap()
+            .is_some(),
         has_new_messages
     );
 }
@@ -53,7 +54,8 @@ async fn request_and_handle_messages<S: UserDiscoveryStore>(
     assert_eq!(
         to.1.should_request_new_messages(from.0 as UserID, to_received_version)
             .await
-            .unwrap(),
+            .unwrap()
+            .is_some(),
         true
     );
 
@@ -72,7 +74,7 @@ async fn request_and_handle_messages<S: UserDiscoveryStore>(
 
     assert!(new_messages.len() <= messages_count);
 
-    to.1.handle_user_discovery_messages(from.0 as UserID, new_messages)
+    to.1.handle_new_messages(from.0 as UserID, new_messages)
         .await
         .unwrap();
 
@@ -82,7 +84,8 @@ async fn request_and_handle_messages<S: UserDiscoveryStore>(
             &from.1.get_current_version().await.unwrap()
         )
         .await
-        .unwrap(),
+        .unwrap()
+        .is_some(),
         false
     );
 }

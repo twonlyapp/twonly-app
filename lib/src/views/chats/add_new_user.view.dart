@@ -167,16 +167,16 @@ class _SearchUsernameView extends State<AddNewUserView> {
                         ),
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        onPressed: () =>
-                            context.push(Routes.settingsPublicProfile),
-                        icon: const FaIcon(FontAwesomeIcons.qrcode),
-                      ),
-                    ),
                   ],
                 ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.push(Routes.settingsPublicProfile),
+                icon: const FaIcon(FontAwesomeIcons.qrcode),
+                label: Text(context.lang.scanQrOrShow),
               ),
               const SizedBox(height: 20),
               if (contacts.isNotEmpty)

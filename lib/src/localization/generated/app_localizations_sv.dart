@@ -1749,4 +1749,7 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settingsTypingIndicationSubtitle =>
       'When the typing indicator is turned off, you can\'t see when others are typing a message.';
+
+  @override
+  String get scanQrOrShow => 'Scan / Show QR';
 }

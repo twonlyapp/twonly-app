@@ -9537,11 +9537,55 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
+  @override
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _wasShownToTheUserMeta = const VerificationMeta(
+    'wasShownToTheUser',
+  );
+  @override
+  late final GeneratedColumn<bool> wasShownToTheUser = GeneratedColumn<bool>(
+    'was_shown_to_the_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("was_shown_to_the_user" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isHiddenMeta = const VerificationMeta(
+    'isHidden',
+  );
+  @override
+  late final GeneratedColumn<bool> isHidden = GeneratedColumn<bool>(
+    'is_hidden',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_hidden" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     announcedUserId,
     announcedPublicKey,
     publicId,
+    username,
+    wasShownToTheUser,
+    isHidden,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9583,6 +9627,27 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
     } else if (isInserting) {
       context.missing(_publicIdMeta);
     }
+    if (data.containsKey('username')) {
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
+    }
+    if (data.containsKey('was_shown_to_the_user')) {
+      context.handle(
+        _wasShownToTheUserMeta,
+        wasShownToTheUser.isAcceptableOrUnknown(
+          data['was_shown_to_the_user']!,
+          _wasShownToTheUserMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_hidden')) {
+      context.handle(
+        _isHiddenMeta,
+        isHidden.isAcceptableOrUnknown(data['is_hidden']!, _isHiddenMeta),
+      );
+    }
     return context;
   }
 
@@ -9607,6 +9672,18 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
         DriftSqlType.int,
         data['${effectivePrefix}public_id'],
       )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      ),
+      wasShownToTheUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}was_shown_to_the_user'],
+      )!,
+      isHidden: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_hidden'],
+      )!,
     );
   }
 
@@ -9621,10 +9698,16 @@ class UserDiscoveryAnnouncedUser extends DataClass
   final int announcedUserId;
   final Uint8List announcedPublicKey;
   final int publicId;
+  final String? username;
+  final bool wasShownToTheUser;
+  final bool isHidden;
   const UserDiscoveryAnnouncedUser({
     required this.announcedUserId,
     required this.announcedPublicKey,
     required this.publicId,
+    this.username,
+    required this.wasShownToTheUser,
+    required this.isHidden,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -9632,6 +9715,11 @@ class UserDiscoveryAnnouncedUser extends DataClass
     map['announced_user_id'] = Variable<int>(announcedUserId);
     map['announced_public_key'] = Variable<Uint8List>(announcedPublicKey);
     map['public_id'] = Variable<int>(publicId);
+    if (!nullToAbsent || username != null) {
+      map['username'] = Variable<String>(username);
+    }
+    map['was_shown_to_the_user'] = Variable<bool>(wasShownToTheUser);
+    map['is_hidden'] = Variable<bool>(isHidden);
     return map;
   }
 
@@ -9640,6 +9728,11 @@ class UserDiscoveryAnnouncedUser extends DataClass
       announcedUserId: Value(announcedUserId),
       announcedPublicKey: Value(announcedPublicKey),
       publicId: Value(publicId),
+      username: username == null && nullToAbsent
+          ? const Value.absent()
+          : Value(username),
+      wasShownToTheUser: Value(wasShownToTheUser),
+      isHidden: Value(isHidden),
     );
   }
 
@@ -9654,6 +9747,9 @@ class UserDiscoveryAnnouncedUser extends DataClass
         json['announcedPublicKey'],
       ),
       publicId: serializer.fromJson<int>(json['publicId']),
+      username: serializer.fromJson<String?>(json['username']),
+      wasShownToTheUser: serializer.fromJson<bool>(json['wasShownToTheUser']),
+      isHidden: serializer.fromJson<bool>(json['isHidden']),
     );
   }
   @override
@@ -9663,6 +9759,9 @@ class UserDiscoveryAnnouncedUser extends DataClass
       'announcedUserId': serializer.toJson<int>(announcedUserId),
       'announcedPublicKey': serializer.toJson<Uint8List>(announcedPublicKey),
       'publicId': serializer.toJson<int>(publicId),
+      'username': serializer.toJson<String?>(username),
+      'wasShownToTheUser': serializer.toJson<bool>(wasShownToTheUser),
+      'isHidden': serializer.toJson<bool>(isHidden),
     };
   }
 
@@ -9670,10 +9769,16 @@ class UserDiscoveryAnnouncedUser extends DataClass
     int? announcedUserId,
     Uint8List? announcedPublicKey,
     int? publicId,
+    Value<String?> username = const Value.absent(),
+    bool? wasShownToTheUser,
+    bool? isHidden,
   }) => UserDiscoveryAnnouncedUser(
     announcedUserId: announcedUserId ?? this.announcedUserId,
     announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
     publicId: publicId ?? this.publicId,
+    username: username.present ? username.value : this.username,
+    wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
+    isHidden: isHidden ?? this.isHidden,
   );
   UserDiscoveryAnnouncedUser copyWithCompanion(
     UserDiscoveryAnnouncedUsersCompanion data,
@@ -9686,6 +9791,11 @@ class UserDiscoveryAnnouncedUser extends DataClass
           ? data.announcedPublicKey.value
           : this.announcedPublicKey,
       publicId: data.publicId.present ? data.publicId.value : this.publicId,
+      username: data.username.present ? data.username.value : this.username,
+      wasShownToTheUser: data.wasShownToTheUser.present
+          ? data.wasShownToTheUser.value
+          : this.wasShownToTheUser,
+      isHidden: data.isHidden.present ? data.isHidden.value : this.isHidden,
     );
   }
 
@@ -9694,7 +9804,10 @@ class UserDiscoveryAnnouncedUser extends DataClass
     return (StringBuffer('UserDiscoveryAnnouncedUser(')
           ..write('announcedUserId: $announcedUserId, ')
           ..write('announcedPublicKey: $announcedPublicKey, ')
-          ..write('publicId: $publicId')
+          ..write('publicId: $publicId, ')
+          ..write('username: $username, ')
+          ..write('wasShownToTheUser: $wasShownToTheUser, ')
+          ..write('isHidden: $isHidden')
           ..write(')'))
         .toString();
   }
@@ -9704,6 +9817,9 @@ class UserDiscoveryAnnouncedUser extends DataClass
     announcedUserId,
     $driftBlobEquality.hash(announcedPublicKey),
     publicId,
+    username,
+    wasShownToTheUser,
+    isHidden,
   );
   @override
   bool operator ==(Object other) =>
@@ -9714,7 +9830,10 @@ class UserDiscoveryAnnouncedUser extends DataClass
             other.announcedPublicKey,
             this.announcedPublicKey,
           ) &&
-          other.publicId == this.publicId);
+          other.publicId == this.publicId &&
+          other.username == this.username &&
+          other.wasShownToTheUser == this.wasShownToTheUser &&
+          other.isHidden == this.isHidden);
 }
 
 class UserDiscoveryAnnouncedUsersCompanion
@@ -9722,27 +9841,42 @@ class UserDiscoveryAnnouncedUsersCompanion
   final Value<int> announcedUserId;
   final Value<Uint8List> announcedPublicKey;
   final Value<int> publicId;
+  final Value<String?> username;
+  final Value<bool> wasShownToTheUser;
+  final Value<bool> isHidden;
   const UserDiscoveryAnnouncedUsersCompanion({
     this.announcedUserId = const Value.absent(),
     this.announcedPublicKey = const Value.absent(),
     this.publicId = const Value.absent(),
+    this.username = const Value.absent(),
+    this.wasShownToTheUser = const Value.absent(),
+    this.isHidden = const Value.absent(),
   });
   UserDiscoveryAnnouncedUsersCompanion.insert({
     this.announcedUserId = const Value.absent(),
     required Uint8List announcedPublicKey,
     required int publicId,
+    this.username = const Value.absent(),
+    this.wasShownToTheUser = const Value.absent(),
+    this.isHidden = const Value.absent(),
   }) : announcedPublicKey = Value(announcedPublicKey),
        publicId = Value(publicId);
   static Insertable<UserDiscoveryAnnouncedUser> custom({
     Expression<int>? announcedUserId,
     Expression<Uint8List>? announcedPublicKey,
     Expression<int>? publicId,
+    Expression<String>? username,
+    Expression<bool>? wasShownToTheUser,
+    Expression<bool>? isHidden,
   }) {
     return RawValuesInsertable({
       if (announcedUserId != null) 'announced_user_id': announcedUserId,
       if (announcedPublicKey != null)
         'announced_public_key': announcedPublicKey,
       if (publicId != null) 'public_id': publicId,
+      if (username != null) 'username': username,
+      if (wasShownToTheUser != null) 'was_shown_to_the_user': wasShownToTheUser,
+      if (isHidden != null) 'is_hidden': isHidden,
     });
   }
 
@@ -9750,11 +9884,17 @@ class UserDiscoveryAnnouncedUsersCompanion
     Value<int>? announcedUserId,
     Value<Uint8List>? announcedPublicKey,
     Value<int>? publicId,
+    Value<String?>? username,
+    Value<bool>? wasShownToTheUser,
+    Value<bool>? isHidden,
   }) {
     return UserDiscoveryAnnouncedUsersCompanion(
       announcedUserId: announcedUserId ?? this.announcedUserId,
       announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
       publicId: publicId ?? this.publicId,
+      username: username ?? this.username,
+      wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
+      isHidden: isHidden ?? this.isHidden,
     );
   }
 
@@ -9772,6 +9912,15 @@ class UserDiscoveryAnnouncedUsersCompanion
     if (publicId.present) {
       map['public_id'] = Variable<int>(publicId.value);
     }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (wasShownToTheUser.present) {
+      map['was_shown_to_the_user'] = Variable<bool>(wasShownToTheUser.value);
+    }
+    if (isHidden.present) {
+      map['is_hidden'] = Variable<bool>(isHidden.value);
+    }
     return map;
   }
 
@@ -9780,7 +9929,10 @@ class UserDiscoveryAnnouncedUsersCompanion
     return (StringBuffer('UserDiscoveryAnnouncedUsersCompanion(')
           ..write('announcedUserId: $announcedUserId, ')
           ..write('announcedPublicKey: $announcedPublicKey, ')
-          ..write('publicId: $publicId')
+          ..write('publicId: $publicId, ')
+          ..write('username: $username, ')
+          ..write('wasShownToTheUser: $wasShownToTheUser, ')
+          ..write('isHidden: $isHidden')
           ..write(')'))
         .toString();
   }
@@ -19690,12 +19842,18 @@ typedef $$UserDiscoveryAnnouncedUsersTableCreateCompanionBuilder =
       Value<int> announcedUserId,
       required Uint8List announcedPublicKey,
       required int publicId,
+      Value<String?> username,
+      Value<bool> wasShownToTheUser,
+      Value<bool> isHidden,
     });
 typedef $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder =
     UserDiscoveryAnnouncedUsersCompanion Function({
       Value<int> announcedUserId,
       Value<Uint8List> announcedPublicKey,
       Value<int> publicId,
+      Value<String?> username,
+      Value<bool> wasShownToTheUser,
+      Value<bool> isHidden,
     });
 
 final class $$UserDiscoveryAnnouncedUsersTableReferences
@@ -19769,6 +19927,21 @@ class $$UserDiscoveryAnnouncedUsersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get wasShownToTheUser => $composableBuilder(
+    column: $table.wasShownToTheUser,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isHidden => $composableBuilder(
+    column: $table.isHidden,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> userDiscoveryUserRelationsRefs(
     Expression<bool> Function($$UserDiscoveryUserRelationsTableFilterComposer f)
     f,
@@ -19820,6 +19993,21 @@ class $$UserDiscoveryAnnouncedUsersTableOrderingComposer
     column: $table.publicId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get username => $composableBuilder(
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get wasShownToTheUser => $composableBuilder(
+    column: $table.wasShownToTheUser,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isHidden => $composableBuilder(
+    column: $table.isHidden,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserDiscoveryAnnouncedUsersTableAnnotationComposer
@@ -19843,6 +20031,17 @@ class $$UserDiscoveryAnnouncedUsersTableAnnotationComposer
 
   GeneratedColumn<int> get publicId =>
       $composableBuilder(column: $table.publicId, builder: (column) => column);
+
+  GeneratedColumn<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => column);
+
+  GeneratedColumn<bool> get wasShownToTheUser => $composableBuilder(
+    column: $table.wasShownToTheUser,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isHidden =>
+      $composableBuilder(column: $table.isHidden, builder: (column) => column);
 
   Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
     Expression<T> Function(
@@ -19919,20 +20118,32 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
                 Value<int> announcedUserId = const Value.absent(),
                 Value<Uint8List> announcedPublicKey = const Value.absent(),
                 Value<int> publicId = const Value.absent(),
+                Value<String?> username = const Value.absent(),
+                Value<bool> wasShownToTheUser = const Value.absent(),
+                Value<bool> isHidden = const Value.absent(),
               }) => UserDiscoveryAnnouncedUsersCompanion(
                 announcedUserId: announcedUserId,
                 announcedPublicKey: announcedPublicKey,
                 publicId: publicId,
+                username: username,
+                wasShownToTheUser: wasShownToTheUser,
+                isHidden: isHidden,
               ),
           createCompanionCallback:
               ({
                 Value<int> announcedUserId = const Value.absent(),
                 required Uint8List announcedPublicKey,
                 required int publicId,
+                Value<String?> username = const Value.absent(),
+                Value<bool> wasShownToTheUser = const Value.absent(),
+                Value<bool> isHidden = const Value.absent(),
               }) => UserDiscoveryAnnouncedUsersCompanion.insert(
                 announcedUserId: announcedUserId,
                 announcedPublicKey: announcedPublicKey,
                 publicId: publicId,
+                username: username,
+                wasShownToTheUser: wasShownToTheUser,
+                isHidden: isHidden,
               ),
           withReferenceMapper: (p0) => p0
               .map(

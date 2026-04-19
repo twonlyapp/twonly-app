@@ -71,7 +71,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 523281685;
+  int get rustContentHash => -630534473;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -92,7 +92,7 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<void>
-  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessages({
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
     required PlatformInt64 contactId,
     required List<Uint8List> messages,
   });
@@ -104,7 +104,7 @@ abstract class RustLibApi extends BaseApi {
     required List<int> publicKey,
   });
 
-  Future<bool>
+  Future<Uint8List?>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
     required PlatformInt64 contactId,
     required List<int> version,
@@ -228,7 +228,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void>
-  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessages({
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
     required PlatformInt64 contactId,
     required List<Uint8List> messages,
   }) {
@@ -250,7 +250,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta:
-            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessagesConstMeta,
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta,
         argValues: [contactId, messages],
         apiImpl: this,
       ),
@@ -258,9 +258,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleUserDiscoveryMessagesConstMeta =>
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta =>
       const TaskConstMeta(
-        debugName: 'flutter_user_discovery_handle_user_discovery_messages',
+        debugName: 'flutter_user_discovery_handle_new_messages',
         argNames: ['contactId', 'messages'],
       );
 
@@ -305,7 +305,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<bool>
+  Future<Uint8List?>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
     required PlatformInt64 contactId,
     required List<int> version,
@@ -324,7 +324,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta:

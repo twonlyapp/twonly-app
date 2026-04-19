@@ -3141,6 +3141,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
   String get settingsTypingIndicationSubtitle;
+
+  /// No description provided for @scanQrOrShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan / Show QR'**
+  String get scanQrOrShow;
 }
 
 class _AppLocalizationsDelegate
