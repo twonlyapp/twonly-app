@@ -24,13 +24,13 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         );
       }
 
-      final rowId = await into(
-        mediaFiles,
-      ).insertOnConflictUpdate(insertMediaFile);
+      await into(mediaFiles).insertOnConflictUpdate(insertMediaFile);
+
+      final mediaId = insertMediaFile.mediaId.value;
 
       return await (select(
         mediaFiles,
-      )..where((t) => t.rowId.equals(rowId))).getSingle();
+      )..where((t) => t.mediaId.equals(mediaId))).getSingle();
     } catch (e) {
       Log.error('Could not insert media file: $e');
       return null;

@@ -117,8 +117,8 @@ Future<void> handleMedia(
     }
   }
 
-  late MediaFile? mediaFile;
-  late Message? message;
+  MediaFile? mediaFile;
+  Message? message;
 
   await twonlyDB.transaction(() async {
     mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
@@ -163,7 +163,7 @@ Future<void> handleMedia(
     );
   });
 
-  if (message != null) {
+  if (message != null && mediaFile != null) {
     await twonlyDB.groupsDao.increaseLastMessageExchange(
       groupId,
       fromTimestamp(media.timestamp),
@@ -176,6 +176,10 @@ Future<void> handleMedia(
     );
 
     unawaited(startDownloadMedia(mediaFile!, false));
+  } else {
+    Log.error(
+      'Could not insert new message as both the message and mediaFile are empty.',
+    );
   }
 }
 
