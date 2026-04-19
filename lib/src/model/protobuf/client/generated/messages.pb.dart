@@ -52,12 +52,11 @@ class Message extends $pb.GeneratedMessage {
         defaultOrMaker: Message_Type.SENDER_DELIVERY_RECEIPT,
         valueOf: Message_Type.valueOf,
         enumValues: Message_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'receiptId', protoName: 'receiptId')
+    ..aOS(2, _omitFieldNames ? '' : 'receiptId')
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'encryptedContent', $pb.PbFieldType.OY,
-        protoName: 'encryptedContent')
+        3, _omitFieldNames ? '' : 'encryptedContent', $pb.PbFieldType.OY)
     ..aOM<PlaintextContent>(4, _omitFieldNames ? '' : 'plaintextContent',
-        protoName: 'plaintextContent', subBuilder: PlaintextContent.create)
+        subBuilder: PlaintextContent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -255,11 +254,9 @@ class PlaintextContent extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<PlaintextContent_DecryptionErrorMessage>(
         1, _omitFieldNames ? '' : 'decryptionErrorMessage',
-        protoName: 'decryptionErrorMessage',
         subBuilder: PlaintextContent_DecryptionErrorMessage.create)
     ..aOM<PlaintextContent_RetryErrorMessage>(
         2, _omitFieldNames ? '' : 'retryControlError',
-        protoName: 'retryControlError',
         subBuilder: PlaintextContent_RetryErrorMessage.create)
     ..hasRequiredFields = false;
 
@@ -411,11 +408,9 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedContent.GroupCreate',
       createEmptyInstance: create)
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY,
-        protoName: 'stateKey')
+        3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY,
-        protoName: 'groupPublicKey')
+        4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -485,8 +480,7 @@ class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedContent.GroupJoin',
       createEmptyInstance: create)
     ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY,
-        protoName: 'groupPublicKey')
+        1, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -598,13 +592,10 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.GroupUpdate',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'groupActionType',
-        protoName: 'groupActionType')
-    ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId',
-        protoName: 'affectedContactId')
-    ..aOS(3, _omitFieldNames ? '' : 'newGroupName', protoName: 'newGroupName')
-    ..aInt64(4, _omitFieldNames ? '' : 'newDeleteMessagesAfterMilliseconds',
-        protoName: 'newDeleteMessagesAfterMilliseconds')
+    ..aOS(1, _omitFieldNames ? '' : 'groupActionType')
+    ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId')
+    ..aOS(3, _omitFieldNames ? '' : 'newGroupName')
+    ..aInt64(4, _omitFieldNames ? '' : 'newDeleteMessagesAfterMilliseconds')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -697,12 +688,10 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.TextMessage',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
+    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId')
     ..aOS(2, _omitFieldNames ? '' : 'text')
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
-    ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId',
-        protoName: 'quoteMessageId')
+    ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -892,8 +881,7 @@ class EncryptedContent_Reaction extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.Reaction',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'targetMessageId',
-        protoName: 'targetMessageId')
+    ..aOS(1, _omitFieldNames ? '' : 'targetMessageId')
     ..aOS(2, _omitFieldNames ? '' : 'emoji')
     ..aOB(3, _omitFieldNames ? '' : 'remove')
     ..hasRequiredFields = false;
@@ -984,10 +972,8 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
         defaultOrMaker: EncryptedContent_MessageUpdate_Type.DELETE,
         valueOf: EncryptedContent_MessageUpdate_Type.valueOf,
         enumValues: EncryptedContent_MessageUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
-    ..pPS(3, _omitFieldNames ? '' : 'multipleTargetMessageIds',
-        protoName: 'multipleTargetMessageIds')
+    ..aOS(2, _omitFieldNames ? '' : 'senderMessageId')
+    ..pPS(3, _omitFieldNames ? '' : 'multipleTargetMessageIds')
     ..aOS(4, _omitFieldNames ? '' : 'text')
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false;
@@ -1101,32 +1087,24 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.Media',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
+    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId')
     ..e<EncryptedContent_Media_Type>(
         2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
         defaultOrMaker: EncryptedContent_Media_Type.REUPLOAD,
         valueOf: EncryptedContent_Media_Type.valueOf,
         enumValues: EncryptedContent_Media_Type.values)
-    ..aInt64(3, _omitFieldNames ? '' : 'displayLimitInMilliseconds',
-        protoName: 'displayLimitInMilliseconds')
-    ..aOB(4, _omitFieldNames ? '' : 'requiresAuthentication',
-        protoName: 'requiresAuthentication')
+    ..aInt64(3, _omitFieldNames ? '' : 'displayLimitInMilliseconds')
+    ..aOB(4, _omitFieldNames ? '' : 'requiresAuthentication')
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
-    ..aOS(6, _omitFieldNames ? '' : 'quoteMessageId',
-        protoName: 'quoteMessageId')
+    ..aOS(6, _omitFieldNames ? '' : 'quoteMessageId')
     ..a<$core.List<$core.int>>(
-        7, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY,
-        protoName: 'downloadToken')
+        7, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        8, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY,
-        protoName: 'encryptionKey')
+        8, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        9, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY,
-        protoName: 'encryptionMac')
+        9, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY,
-        protoName: 'encryptionNonce')
+        10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         11, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
@@ -1283,8 +1261,7 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
         defaultOrMaker: EncryptedContent_MediaUpdate_Type.REOPENED,
         valueOf: EncryptedContent_MediaUpdate_Type.valueOf,
         enumValues: EncryptedContent_MediaUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId',
-        protoName: 'targetMessageId')
+    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1429,10 +1406,9 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
         valueOf: EncryptedContent_ContactUpdate_Type.valueOf,
         enumValues: EncryptedContent_ContactUpdate_Type.values)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY,
-        protoName: 'avatarSvgCompressed')
+        2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'username')
-    ..aOS(4, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
+    ..aOS(4, _omitFieldNames ? '' : 'displayName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1529,10 +1505,10 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
         defaultOrMaker: EncryptedContent_PushKeys_Type.REQUEST,
         valueOf: EncryptedContent_PushKeys_Type.valueOf,
         enumValues: EncryptedContent_PushKeys_Type.values)
-    ..aInt64(2, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
+    ..aInt64(2, _omitFieldNames ? '' : 'keyId')
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(4, _omitFieldNames ? '' : 'createdAt', protoName: 'createdAt')
+    ..aInt64(4, _omitFieldNames ? '' : 'createdAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1623,12 +1599,10 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.FlameSync',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'flameCounter',
-        protoName: 'flameCounter')
-    ..aInt64(2, _omitFieldNames ? '' : 'lastFlameCounterChange',
-        protoName: 'lastFlameCounterChange')
-    ..aOB(3, _omitFieldNames ? '' : 'bestFriend', protoName: 'bestFriend')
-    ..aOB(4, _omitFieldNames ? '' : 'forceUpdate', protoName: 'forceUpdate')
+    ..aInt64(1, _omitFieldNames ? '' : 'flameCounter')
+    ..aInt64(2, _omitFieldNames ? '' : 'lastFlameCounterChange')
+    ..aOB(3, _omitFieldNames ? '' : 'bestFriend')
+    ..aOB(4, _omitFieldNames ? '' : 'forceUpdate')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1765,6 +1739,124 @@ class EncryptedContent_TypingIndicator extends $pb.GeneratedMessage {
   void clearCreatedAt() => $_clearField(2);
 }
 
+class EncryptedContent_UserDiscoveryRequest extends $pb.GeneratedMessage {
+  factory EncryptedContent_UserDiscoveryRequest({
+    $core.List<$core.int>? currentVersion,
+  }) {
+    final result = create();
+    if (currentVersion != null) result.currentVersion = currentVersion;
+    return result;
+  }
+
+  EncryptedContent_UserDiscoveryRequest._();
+
+  factory EncryptedContent_UserDiscoveryRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_UserDiscoveryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.UserDiscoveryRequest',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'currentVersion', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryRequest clone() =>
+      EncryptedContent_UserDiscoveryRequest()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryRequest copyWith(
+          void Function(EncryptedContent_UserDiscoveryRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_UserDiscoveryRequest))
+          as EncryptedContent_UserDiscoveryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryRequest create() =>
+      EncryptedContent_UserDiscoveryRequest._();
+  @$core.override
+  EncryptedContent_UserDiscoveryRequest createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_UserDiscoveryRequest> createRepeated() =>
+      $pb.PbList<EncryptedContent_UserDiscoveryRequest>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_UserDiscoveryRequest>(create);
+  static EncryptedContent_UserDiscoveryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get currentVersion => $_getN(0);
+  @$pb.TagNumber(1)
+  set currentVersion($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCurrentVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCurrentVersion() => $_clearField(1);
+}
+
+class EncryptedContent_UserDiscoveryUpdate extends $pb.GeneratedMessage {
+  factory EncryptedContent_UserDiscoveryUpdate({
+    $core.Iterable<$core.List<$core.int>>? messages,
+  }) {
+    final result = create();
+    if (messages != null) result.messages.addAll(messages);
+    return result;
+  }
+
+  EncryptedContent_UserDiscoveryUpdate._();
+
+  factory EncryptedContent_UserDiscoveryUpdate.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_UserDiscoveryUpdate.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.UserDiscoveryUpdate',
+      createEmptyInstance: create)
+    ..p<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'messages', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryUpdate clone() =>
+      EncryptedContent_UserDiscoveryUpdate()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryUpdate copyWith(
+          void Function(EncryptedContent_UserDiscoveryUpdate) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_UserDiscoveryUpdate))
+          as EncryptedContent_UserDiscoveryUpdate;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryUpdate create() =>
+      EncryptedContent_UserDiscoveryUpdate._();
+  @$core.override
+  EncryptedContent_UserDiscoveryUpdate createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_UserDiscoveryUpdate> createRepeated() =>
+      $pb.PbList<EncryptedContent_UserDiscoveryUpdate>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryUpdate getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_UserDiscoveryUpdate>(create);
+  static EncryptedContent_UserDiscoveryUpdate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.List<$core.int>> get messages => $_getList(0);
+}
+
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
@@ -1786,6 +1878,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_ErrorMessages? errorMessages,
     EncryptedContent_AdditionalDataMessage? additionalDataMessage,
     EncryptedContent_TypingIndicator? typingIndicator,
+    $core.List<$core.int>? senderUserDiscoveryVersion,
+    EncryptedContent_UserDiscoveryRequest? userDiscoveryRequest,
+    EncryptedContent_UserDiscoveryUpdate? userDiscoveryUpdate,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1810,6 +1905,12 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (additionalDataMessage != null)
       result.additionalDataMessage = additionalDataMessage;
     if (typingIndicator != null) result.typingIndicator = typingIndicator;
+    if (senderUserDiscoveryVersion != null)
+      result.senderUserDiscoveryVersion = senderUserDiscoveryVersion;
+    if (userDiscoveryRequest != null)
+      result.userDiscoveryRequest = userDiscoveryRequest;
+    if (userDiscoveryUpdate != null)
+      result.userDiscoveryUpdate = userDiscoveryUpdate;
     return result;
   }
 
@@ -1825,50 +1926,41 @@ class EncryptedContent extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent',
       createEmptyInstance: create)
-    ..aOS(2, _omitFieldNames ? '' : 'groupId', protoName: 'groupId')
-    ..aOB(3, _omitFieldNames ? '' : 'isDirectChat', protoName: 'isDirectChat')
-    ..aInt64(4, _omitFieldNames ? '' : 'senderProfileCounter',
-        protoName: 'senderProfileCounter')
+    ..aOS(2, _omitFieldNames ? '' : 'groupId')
+    ..aOB(3, _omitFieldNames ? '' : 'isDirectChat')
+    ..aInt64(4, _omitFieldNames ? '' : 'senderProfileCounter')
     ..aOM<EncryptedContent_MessageUpdate>(
         5, _omitFieldNames ? '' : 'messageUpdate',
-        protoName: 'messageUpdate',
         subBuilder: EncryptedContent_MessageUpdate.create)
     ..aOM<EncryptedContent_Media>(6, _omitFieldNames ? '' : 'media',
         subBuilder: EncryptedContent_Media.create)
     ..aOM<EncryptedContent_MediaUpdate>(7, _omitFieldNames ? '' : 'mediaUpdate',
-        protoName: 'mediaUpdate',
         subBuilder: EncryptedContent_MediaUpdate.create)
     ..aOM<EncryptedContent_ContactUpdate>(
         8, _omitFieldNames ? '' : 'contactUpdate',
-        protoName: 'contactUpdate',
         subBuilder: EncryptedContent_ContactUpdate.create)
     ..aOM<EncryptedContent_ContactRequest>(
         9, _omitFieldNames ? '' : 'contactRequest',
-        protoName: 'contactRequest',
         subBuilder: EncryptedContent_ContactRequest.create)
     ..aOM<EncryptedContent_FlameSync>(10, _omitFieldNames ? '' : 'flameSync',
-        protoName: 'flameSync', subBuilder: EncryptedContent_FlameSync.create)
+        subBuilder: EncryptedContent_FlameSync.create)
     ..aOM<EncryptedContent_PushKeys>(11, _omitFieldNames ? '' : 'pushKeys',
-        protoName: 'pushKeys', subBuilder: EncryptedContent_PushKeys.create)
+        subBuilder: EncryptedContent_PushKeys.create)
     ..aOM<EncryptedContent_Reaction>(12, _omitFieldNames ? '' : 'reaction',
         subBuilder: EncryptedContent_Reaction.create)
     ..aOM<EncryptedContent_TextMessage>(
         13, _omitFieldNames ? '' : 'textMessage',
-        protoName: 'textMessage',
         subBuilder: EncryptedContent_TextMessage.create)
     ..aOM<EncryptedContent_GroupCreate>(
         14, _omitFieldNames ? '' : 'groupCreate',
-        protoName: 'groupCreate',
         subBuilder: EncryptedContent_GroupCreate.create)
     ..aOM<EncryptedContent_GroupJoin>(15, _omitFieldNames ? '' : 'groupJoin',
-        protoName: 'groupJoin', subBuilder: EncryptedContent_GroupJoin.create)
+        subBuilder: EncryptedContent_GroupJoin.create)
     ..aOM<EncryptedContent_GroupUpdate>(
         16, _omitFieldNames ? '' : 'groupUpdate',
-        protoName: 'groupUpdate',
         subBuilder: EncryptedContent_GroupUpdate.create)
     ..aOM<EncryptedContent_ResendGroupPublicKey>(
         17, _omitFieldNames ? '' : 'resendGroupPublicKey',
-        protoName: 'resendGroupPublicKey',
         subBuilder: EncryptedContent_ResendGroupPublicKey.create)
     ..aOM<EncryptedContent_ErrorMessages>(
         18, _omitFieldNames ? '' : 'errorMessages',
@@ -1879,6 +1971,14 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_TypingIndicator>(
         20, _omitFieldNames ? '' : 'typingIndicator',
         subBuilder: EncryptedContent_TypingIndicator.create)
+    ..a<$core.List<$core.int>>(21,
+        _omitFieldNames ? '' : 'senderUserDiscoveryVersion', $pb.PbFieldType.OY)
+    ..aOM<EncryptedContent_UserDiscoveryRequest>(
+        22, _omitFieldNames ? '' : 'userDiscoveryRequest',
+        subBuilder: EncryptedContent_UserDiscoveryRequest.create)
+    ..aOM<EncryptedContent_UserDiscoveryUpdate>(
+        23, _omitFieldNames ? '' : 'userDiscoveryUpdate',
+        subBuilder: EncryptedContent_UserDiscoveryUpdate.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2115,6 +2215,42 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearTypingIndicator() => $_clearField(20);
   @$pb.TagNumber(20)
   EncryptedContent_TypingIndicator ensureTypingIndicator() => $_ensure(18);
+
+  @$pb.TagNumber(21)
+  $core.List<$core.int> get senderUserDiscoveryVersion => $_getN(19);
+  @$pb.TagNumber(21)
+  set senderUserDiscoveryVersion($core.List<$core.int> value) =>
+      $_setBytes(19, value);
+  @$pb.TagNumber(21)
+  $core.bool hasSenderUserDiscoveryVersion() => $_has(19);
+  @$pb.TagNumber(21)
+  void clearSenderUserDiscoveryVersion() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  EncryptedContent_UserDiscoveryRequest get userDiscoveryRequest => $_getN(20);
+  @$pb.TagNumber(22)
+  set userDiscoveryRequest(EncryptedContent_UserDiscoveryRequest value) =>
+      $_setField(22, value);
+  @$pb.TagNumber(22)
+  $core.bool hasUserDiscoveryRequest() => $_has(20);
+  @$pb.TagNumber(22)
+  void clearUserDiscoveryRequest() => $_clearField(22);
+  @$pb.TagNumber(22)
+  EncryptedContent_UserDiscoveryRequest ensureUserDiscoveryRequest() =>
+      $_ensure(20);
+
+  @$pb.TagNumber(23)
+  EncryptedContent_UserDiscoveryUpdate get userDiscoveryUpdate => $_getN(21);
+  @$pb.TagNumber(23)
+  set userDiscoveryUpdate(EncryptedContent_UserDiscoveryUpdate value) =>
+      $_setField(23, value);
+  @$pb.TagNumber(23)
+  $core.bool hasUserDiscoveryUpdate() => $_has(21);
+  @$pb.TagNumber(23)
+  void clearUserDiscoveryUpdate() => $_clearField(23);
+  @$pb.TagNumber(23)
+  EncryptedContent_UserDiscoveryUpdate ensureUserDiscoveryUpdate() =>
+      $_ensure(21);
 }
 
 const $core.bool _omitFieldNames =

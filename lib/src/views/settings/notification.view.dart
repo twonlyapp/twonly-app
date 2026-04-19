@@ -61,7 +61,7 @@ class _NotificationViewState extends State<NotificationView> {
             user.userId,
             PushNotification(
               messageId: uuid.v4(),
-              kind: PushKind.testNotification,
+              kind: PushKind.TEST_NOTIFICATION,
             ),
           );
           await apiService.sendTextMessage(

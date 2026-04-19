@@ -100,7 +100,7 @@ Future<void> handlePushData(String pushDataB64) async {
     }
 
     if (pushNotification != null) {
-      if (pushNotification.kind == PushKind.testNotification) {
+      if (pushNotification.kind == PushKind.TEST_NOTIFICATION) {
         await customLocalPushNotification(
           'Test notification',
           'This is a test notification.',
@@ -206,13 +206,13 @@ Future<void> showLocalPushNotification(
   String? payload;
 
   if (groupId != null &&
-      (pushNotification.kind == PushKind.text ||
-          pushNotification.kind == PushKind.response ||
-          pushNotification.kind == PushKind.reactionToAudio ||
-          pushNotification.kind == PushKind.storedMediaFile ||
-          pushNotification.kind == PushKind.reactionToImage ||
-          pushNotification.kind == PushKind.reactionToText ||
-          pushNotification.kind == PushKind.reactionToAudio)) {
+      (pushNotification.kind == PushKind.TEXT ||
+          pushNotification.kind == PushKind.RESPONSE ||
+          pushNotification.kind == PushKind.REACTION_TO_AUDIO ||
+          pushNotification.kind == PushKind.STORED_MEDIA_FILE ||
+          pushNotification.kind == PushKind.REACTION_TO_IMAGE ||
+          pushNotification.kind == PushKind.REACTION_TO_TEXT ||
+          pushNotification.kind == PushKind.REACTION_TO_VIDEO)) {
     payload = Routes.chatsMessages(groupId);
   }
 
@@ -234,7 +234,7 @@ Future<void> showLocalPushNotificationWithoutUserId(
   var title = lang.notificationTitleUnknown;
   var body = lang.notificationBodyUnknown;
 
-  if (pushNotification.kind == PushKind.contactRequest) {
+  if (pushNotification.kind == PushKind.CONTACT_REQUEST) {
     title = lang.you;
     body = lang.notificationContactRequestUnknownUser;
   }
@@ -291,30 +291,30 @@ String getPushNotificationText(PushNotification pushNotification) {
   }
 
   final pushNotificationText = {
-    PushKind.text.name: lang.notificationText(inGroup),
-    PushKind.twonly.name: lang.notificationTwonly(inGroup),
-    PushKind.video.name: lang.notificationVideo(inGroup),
-    PushKind.image.name: lang.notificationImage(inGroup),
-    PushKind.audio.name: lang.notificationAudio(inGroup),
-    PushKind.contactRequest.name: lang.notificationContactRequest,
-    PushKind.acceptRequest.name: lang.notificationAcceptRequest,
-    PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,
-    PushKind.reaction.name: lang.notificationReaction,
-    PushKind.reopenedMedia.name: lang.notificationReopenedMedia,
-    PushKind.reactionToVideo.name: lang.notificationReactionToVideo(
+    PushKind.TEXT.name: lang.notificationText(inGroup),
+    PushKind.TWONLY.name: lang.notificationTwonly(inGroup),
+    PushKind.VIDEO.name: lang.notificationVideo(inGroup),
+    PushKind.IMAGE.name: lang.notificationImage(inGroup),
+    PushKind.AUDIO.name: lang.notificationAudio(inGroup),
+    PushKind.CONTACT_REQUEST.name: lang.notificationContactRequest,
+    PushKind.ACCEPT_REQUEST.name: lang.notificationAcceptRequest,
+    PushKind.STORED_MEDIA_FILE.name: lang.notificationStoredMediaFile,
+    PushKind.REACTION.name: lang.notificationReaction,
+    PushKind.REOPENED_MEDIA.name: lang.notificationReopenedMedia,
+    PushKind.REACTION_TO_VIDEO.name: lang.notificationReactionToVideo(
       pushNotification.additionalContent,
     ),
-    PushKind.reactionToAudio.name: lang.notificationReactionToAudio(
+    PushKind.REACTION_TO_AUDIO.name: lang.notificationReactionToAudio(
       pushNotification.additionalContent,
     ),
-    PushKind.reactionToText.name: lang.notificationReactionToText(
+    PushKind.REACTION_TO_TEXT.name: lang.notificationReactionToText(
       pushNotification.additionalContent,
     ),
-    PushKind.reactionToImage.name: lang.notificationReactionToImage(
+    PushKind.REACTION_TO_IMAGE.name: lang.notificationReactionToImage(
       pushNotification.additionalContent,
     ),
-    PushKind.response.name: lang.notificationResponse(inGroup),
-    PushKind.addedToGroup.name: lang.notificationAddedToGroup(
+    PushKind.RESPONSE.name: lang.notificationResponse(inGroup),
+    PushKind.ADDED_TO_GROUP.name: lang.notificationAddedToGroup(
       pushNotification.additionalContent,
     ),
   };

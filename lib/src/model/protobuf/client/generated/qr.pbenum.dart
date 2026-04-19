@@ -15,11 +15,11 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class QREnvelope_Type extends $pb.ProtobufEnum {
-  static const QREnvelope_Type PublicProfile =
-      QREnvelope_Type._(0, _omitEnumNames ? '' : 'PublicProfile');
+  static const QREnvelope_Type PUBLIC_PROFILE =
+      QREnvelope_Type._(0, _omitEnumNames ? '' : 'PUBLIC_PROFILE');
 
   static const $core.List<QREnvelope_Type> values = <QREnvelope_Type>[
-    PublicProfile,
+    PUBLIC_PROFILE,
   ];
 
   static final $core.List<QREnvelope_Type?> _byValue =

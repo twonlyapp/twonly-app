@@ -35,14 +35,14 @@ const QREnvelope$json = {
 const QREnvelope_Type$json = {
   '1': 'Type',
   '2': [
-    {'1': 'PublicProfile', '2': 0},
+    {'1': 'PUBLIC_PROFILE', '2': 0},
   ],
 };
 
 /// Descriptor for `QREnvelope`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qREnvelopeDescriptor = $convert.base64Decode(
     'CgpRUkVudmVsb3BlEiQKBHR5cGUYAiABKA4yEC5RUkVudmVsb3BlLlR5cGVSBHR5cGUSEgoEZG'
-    'F0YRgDIAEoDFIEZGF0YSIZCgRUeXBlEhEKDVB1YmxpY1Byb2ZpbGUQAA==');
+    'F0YRgDIAEoDFIEZGF0YSIaCgRUeXBlEhIKDlBVQkxJQ19QUk9GSUxFEAA=');
 
 @$core.Deprecated('Use publicProfileDescriptor instead')
 const PublicProfile$json = {

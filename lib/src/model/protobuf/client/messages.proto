@@ -1,203 +1,212 @@
 syntax = "proto3";
 
 message Message {
-    enum Type {
-        SENDER_DELIVERY_RECEIPT = 0;
-        PLAINTEXT_CONTENT = 1;
-        CIPHERTEXT = 2;
-        PREKEY_BUNDLE = 3;
-        TEST_NOTIFICATION = 4;
-    }
-    Type type = 1;
-    string receiptId = 2;
-    optional bytes encryptedContent = 3;
-    optional PlaintextContent plaintextContent = 4;
+  enum Type {
+    SENDER_DELIVERY_RECEIPT = 0;
+    PLAINTEXT_CONTENT       = 1;
+    CIPHERTEXT              = 2;
+    PREKEY_BUNDLE           = 3;
+    TEST_NOTIFICATION       = 4;
+  }
+  Type                      type              = 1;
+  string                    receipt_id        = 2;
+  optional bytes            encrypted_content = 3;
+  optional PlaintextContent plaintext_content = 4;
 }
 
 message PlaintextContent {
-    optional DecryptionErrorMessage decryptionErrorMessage = 1;
-    optional RetryErrorMessage retryControlError = 2; 
+  optional DecryptionErrorMessage decryption_error_message = 1;
+  optional RetryErrorMessage      retry_control_error      = 2;
 
-    message RetryErrorMessage { }
+  message RetryErrorMessage { }
 
-    message DecryptionErrorMessage {
-        enum Type {
-            UNKNOWN = 0;
-            PREKEY_UNKNOWN = 1;
-        }
-        Type type = 1;
+  message DecryptionErrorMessage {
+    enum Type {
+      UNKNOWN        = 0;
+      PREKEY_UNKNOWN = 1;
     }
+    Type type = 1;
+  }
 }
-
 
 message EncryptedContent {
 
-    optional string groupId = 2;
-    optional bool isDirectChat = 3;
+  optional string group_id       = 2;
+  optional bool   is_direct_chat = 3;
 
     /// This can be added, so the receiver can check weather he is up to date with the current profile
-    optional int64 senderProfileCounter = 4;
+  optional int64 sender_profile_counter        = 4;
+  optional bytes sender_user_discovery_version = 21;
 
-    optional MessageUpdate messageUpdate  = 5;
-    optional Media media = 6;
-    optional MediaUpdate mediaUpdate = 7;
-    optional ContactUpdate contactUpdate = 8;
-    optional ContactRequest contactRequest = 9;
-    optional FlameSync flameSync = 10;
-    optional PushKeys pushKeys = 11;
-    optional Reaction reaction  = 12;
-    optional TextMessage textMessage  = 13;
-    optional GroupCreate groupCreate  = 14;
-    optional GroupJoin groupJoin  = 15;
-    optional GroupUpdate groupUpdate  = 16;
-    optional ResendGroupPublicKey resendGroupPublicKey = 17;
-    optional ErrorMessages error_messages = 18;
-    optional AdditionalDataMessage additional_data_message = 19;
-    optional TypingIndicator typing_indicator = 20;
+  optional MessageUpdate         message_update          = 5;
+  optional Media                 media                   = 6;
+  optional MediaUpdate           media_update            = 7;
+  optional ContactUpdate         contact_update          = 8;
+  optional ContactRequest        contact_request         = 9;
+  optional FlameSync             flame_sync              = 10;
+  optional PushKeys              push_keys               = 11;
+  optional Reaction              reaction                = 12;
+  optional TextMessage           text_message            = 13;
+  optional GroupCreate           group_create            = 14;
+  optional GroupJoin             group_join              = 15;
+  optional GroupUpdate           group_update            = 16;
+  optional ResendGroupPublicKey  resend_group_public_key = 17;
+  optional ErrorMessages         error_messages          = 18;
+  optional AdditionalDataMessage additional_data_message = 19;
+  optional TypingIndicator       typing_indicator        = 20;
+  optional UserDiscoveryRequest  user_discovery_request  = 22;
+  optional UserDiscoveryUpdate   user_discovery_update   = 23;
 
-    message ErrorMessages {
-        enum Type {
-          ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
-          UNKNOWN_MESSAGE_TYPE = 2;
-          SESSION_OUT_OF_SYNC = 3;
-        }
-        Type type = 1;
-        string related_receipt_id = 2;
+  message ErrorMessages {
+    enum Type {
+      ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
+      UNKNOWN_MESSAGE_TYPE                                     = 2;
+      SESSION_OUT_OF_SYNC                                      = 3;
     }
+    Type   type               = 1;
+    string related_receipt_id = 2;
+  }
 
+  message GroupCreate {
+    // key for the state stored on the server
+    bytes state_key        = 3;
+    bytes group_public_key = 4;
+  }
 
-    message GroupCreate {
+  message GroupJoin {
         // key for the state stored on the server
-        bytes stateKey = 3;
-        bytes groupPublicKey = 4;
+    bytes group_public_key = 1;
+  }
+
+  message ResendGroupPublicKey {
+
+  }
+
+  message GroupUpdate {
+    string          group_action_type                      = 1; // GroupActionType.name
+    optional int64  affected_contact_id                    = 2;
+    optional string new_group_name                         = 3;
+    optional int64  new_delete_messages_after_milliseconds = 4;
+  }
+
+  message TextMessage {
+    string          sender_message_id = 1;
+    string          text              = 2;
+    int64           timestamp         = 3;
+    optional string quote_message_id  = 4;
+  }
+
+  message AdditionalDataMessage {
+    string         sender_message_id       = 1;
+    int64          timestamp               = 2;
+    string         type                    = 3;
+    optional bytes additional_message_data = 4;
+  }
+
+  message Reaction {
+    string target_message_id = 1;
+    string emoji             = 2;
+    bool   remove            = 3;
+  }
+
+  message MessageUpdate {
+    enum Type {
+      DELETE    = 0;
+      EDIT_TEXT = 1;
+      OPENED    = 2;
+    }
+    Type            type                        = 1;
+    optional string sender_message_id           = 2;
+    repeated string multiple_target_message_ids = 3;
+    optional string text                        = 4;
+    int64           timestamp                   = 5;
+  }
+
+  message Media {
+    enum Type {
+      REUPLOAD = 0;
+      IMAGE    = 1;
+      VIDEO    = 2;
+      GIF      = 3;
+      AUDIO    = 4;
     }
 
-    message GroupJoin {
-        // key for the state stored on the server
-        bytes groupPublicKey = 1;
+    string          sender_message_id             = 1;
+    Type            type                          = 2;
+    optional int64  display_limit_in_milliseconds = 3;
+    bool            requires_authentication       = 4;
+    int64           timestamp                     = 5;
+    optional string quote_message_id              = 6;
+
+    optional bytes download_token   = 7;
+    optional bytes encryption_key   = 8;
+    optional bytes encryption_mac   = 9;
+    optional bytes encryption_nonce = 10;
+
+    optional bytes additional_message_data = 11;
+  }
+
+  message MediaUpdate {
+    enum Type {
+      REOPENED         = 0;
+      STORED           = 1;
+      DECRYPTION_ERROR = 2;
+    }
+    Type   type              = 1;
+    string target_message_id = 2;
+  }
+
+  message ContactRequest {
+    enum Type {
+      REQUEST = 0;
+      REJECT  = 1;
+      ACCEPT  = 2;
+    }
+    Type type = 1;
+  }
+
+  message ContactUpdate {
+    enum Type {
+      REQUEST = 0;
+      UPDATE  = 1;
     }
 
-    message ResendGroupPublicKey {
+    Type            type                  = 1;
+    optional bytes  avatar_svg_compressed = 2;
+    optional string username              = 3;
+    optional string display_name          = 4;
+  }
 
+  message PushKeys {
+    enum Type {
+      REQUEST = 0;
+      UPDATE  = 1;
     }
 
-    message GroupUpdate {
-        string groupActionType = 1; // GroupActionType.name
-        optional int64 affectedContactId = 2;
-        optional string newGroupName = 3;
-        optional int64 newDeleteMessagesAfterMilliseconds = 4;
-    }
+    Type           type       = 1;
+    optional int64 key_id     = 2;
+    optional bytes key        = 3;
+    optional int64 created_at = 4;
+  }
 
-    message TextMessage {
-        string senderMessageId = 1;
-        string text = 2;
-        int64 timestamp = 3;
-        optional string quoteMessageId = 4;
-    }
+  message FlameSync {
+    int64 flame_counter             = 1;
+    int64 last_flame_counter_change = 2;
+    bool  best_friend               = 3;
+    bool  force_update              = 4;
+  }
 
-    message AdditionalDataMessage {
-        string sender_message_id = 1;
-        int64 timestamp = 2;
-        string type = 3;
-        optional bytes additional_message_data = 4;
-    }
+  message TypingIndicator {
+    bool  is_typing  = 1;
+    int64 created_at = 2;
+  }
 
-    message Reaction {
-        string targetMessageId = 1;
-        string emoji = 2;
-        bool remove = 3;
-    }
+  message UserDiscoveryRequest  {
+    bytes current_version = 1;
+  }
 
-    message MessageUpdate {
-        enum Type {
-            DELETE = 0;
-            EDIT_TEXT = 1;
-            OPENED = 2;
-        }
-        Type type = 1;
-        optional string senderMessageId = 2;
-        repeated string multipleTargetMessageIds = 3;
-        optional string text = 4;
-        int64 timestamp = 5;
-    }
-
-    message Media {
-        enum Type {
-            REUPLOAD = 0;
-            IMAGE = 1;
-            VIDEO = 2;
-            GIF = 3;
-            AUDIO = 4;
-        }
-
-        string senderMessageId = 1;
-        Type type = 2;
-        optional int64 displayLimitInMilliseconds = 3;
-        bool requiresAuthentication = 4;
-        int64 timestamp = 5;
-        optional string quoteMessageId = 6;
-
-        optional bytes downloadToken = 7;
-        optional bytes encryptionKey = 8;
-        optional bytes encryptionMac = 9;
-        optional bytes encryptionNonce = 10;
-
-        optional bytes additional_message_data = 11;
-    }
-
-    message MediaUpdate {
-        enum Type {
-            REOPENED = 0;
-            STORED = 1;
-            DECRYPTION_ERROR = 2;
-        }
-        Type type = 1;
-        string targetMessageId = 2;
-    }
-
-    message ContactRequest {
-        enum Type {
-            REQUEST = 0;
-            REJECT = 1;
-            ACCEPT = 2;
-        }
-        Type type = 1;
-    }
-
-    message ContactUpdate {
-        enum Type {
-            REQUEST = 0;
-            UPDATE = 1;
-        }
-
-        Type type = 1;
-        optional bytes avatarSvgCompressed = 2;
-        optional string username = 3;
-        optional string displayName = 4;
-    }
-
-    message PushKeys {
-        enum Type {
-            REQUEST = 0;
-            UPDATE = 1;
-        }
-
-        Type type = 1;
-        optional int64 keyId = 2;
-        optional bytes key = 3;
-        optional int64 createdAt = 4;
-    }
-
-    message FlameSync {
-        int64 flameCounter = 1;
-        int64 lastFlameCounterChange = 2;
-        bool bestFriend = 3;
-        bool forceUpdate = 4;
-    }
-
-    message TypingIndicator {
-        bool is_typing = 1;
-        int64 created_at = 2;
-    }
+  message UserDiscoveryUpdate {
+    repeated bytes messages = 1;
+  }
 
 }

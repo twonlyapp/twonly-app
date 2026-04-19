@@ -1,53 +1,52 @@
 syntax = "proto3";
 
 message EncryptedPushNotification {
-    int64 keyId = 1;
-    bytes nonce = 2;
-    bytes ciphertext = 3;
-    bytes mac = 4;
+  int64 key_id     = 1;
+  bytes nonce      = 2;
+  bytes ciphertext = 3;
+  bytes mac        = 4;
 }
 
 enum PushKind {
-    reaction = 0;
-    response = 1;
-    text = 2;
-    video = 3;
-    twonly = 4;
-    image = 5;
-    contactRequest = 6;
-    acceptRequest = 7;
-    storedMediaFile = 8;
-    testNotification = 9;
-    reopenedMedia = 10;
-    reactionToVideo = 11;
-    reactionToText = 12;
-    reactionToImage = 13;
-    reactionToAudio = 14;
-    addedToGroup = 15;
-    audio = 16;
+  REACTION          = 0;
+  RESPONSE          = 1;
+  TEXT              = 2;
+  VIDEO             = 3;
+  TWONLY            = 4;
+  IMAGE             = 5;
+  CONTACT_REQUEST   = 6;
+  ACCEPT_REQUEST    = 7;
+  STORED_MEDIA_FILE = 8;
+  TEST_NOTIFICATION = 9;
+  REOPENED_MEDIA    = 10;
+  REACTION_TO_VIDEO = 11;
+  REACTION_TO_TEXT  = 12;
+  REACTION_TO_IMAGE = 13;
+  REACTION_TO_AUDIO = 14;
+  ADDED_TO_GROUP    = 15;
+  AUDIO             = 16;
 };
 
 message PushNotification {
-    PushKind kind = 1;
-    optional string messageId = 2;
-    optional string additionalContent = 3;
+  PushKind        kind               = 1;
+  optional string message_id         = 2;
+  optional string additional_content = 3;
 }
 
-
 message PushUsers {
-    repeated PushUser users = 1;
+  repeated PushUser users = 1;
 }
 
 message PushUser {
-    int64 userId = 1;
-    string displayName = 2;
-    bool blocked = 3;
-    optional string lastMessageId = 4;
-    repeated PushKey pushKeys = 5;
+  int64            user_id         = 1;
+  string           display_name    = 2;
+  bool             blocked         = 3;
+  optional string  last_message_id = 4;
+  repeated PushKey push_keys       = 5;
 }
 
 message PushKey {
-    int64 id = 1;
-    bytes key = 2;
-    int64 createdAtUnixTimestamp = 3;
+  int64 id                        = 1;
+  bytes key                       = 2;
+  int64 created_at_unix_timestamp = 3;
 }

@@ -31,7 +31,7 @@ Future<Uint8List> getProfileQrCodeData() async {
   final data = publicProfile.writeToBuffer();
 
   final qrEnvelope = QREnvelope(
-    type: QREnvelope_Type.PublicProfile,
+    type: QREnvelope_Type.PUBLIC_PROFILE,
     data: data,
   );
 
@@ -47,7 +47,7 @@ Future<Uint8List> getUserPublicKey() async {
 PublicProfile? parseQrCodeData(Uint8List rawBytes) {
   try {
     final envelop = QREnvelope.fromBuffer(rawBytes);
-    if (envelop.type == QREnvelope_Type.PublicProfile) {
+    if (envelop.type == QREnvelope_Type.PUBLIC_PROFILE) {
       return PublicProfile.fromBuffer(envelop.data);
     }
   } catch (e) {

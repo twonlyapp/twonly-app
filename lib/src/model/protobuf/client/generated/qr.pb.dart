@@ -45,7 +45,7 @@ class QREnvelope extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'QREnvelope',
       createEmptyInstance: create)
     ..e<QREnvelope_Type>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: QREnvelope_Type.PublicProfile,
+        defaultOrMaker: QREnvelope_Type.PUBLIC_PROFILE,
         valueOf: QREnvelope_Type.valueOf,
         enumValues: QREnvelope_Type.values)
     ..a<$core.List<$core.int>>(

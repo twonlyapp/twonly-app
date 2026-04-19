@@ -120,7 +120,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
 
     if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
-      pushData = (PushNotification()..kind = PushKind.testNotification)
+      pushData = (PushNotification()..kind = PushKind.TEST_NOTIFICATION)
           .writeToBuffer();
     }
 

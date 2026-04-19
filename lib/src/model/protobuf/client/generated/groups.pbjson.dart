@@ -18,11 +18,11 @@ import 'dart:typed_data' as $typed_data;
 const EncryptedGroupState$json = {
   '1': 'EncryptedGroupState',
   '2': [
-    {'1': 'memberIds', '3': 1, '4': 3, '5': 3, '10': 'memberIds'},
-    {'1': 'adminIds', '3': 2, '4': 3, '5': 3, '10': 'adminIds'},
-    {'1': 'groupName', '3': 3, '4': 1, '5': 9, '10': 'groupName'},
+    {'1': 'member_ids', '3': 1, '4': 3, '5': 3, '10': 'memberIds'},
+    {'1': 'admin_ids', '3': 2, '4': 3, '5': 3, '10': 'adminIds'},
+    {'1': 'group_name', '3': 3, '4': 1, '5': 9, '10': 'groupName'},
     {
-      '1': 'deleteMessagesAfterMilliseconds',
+      '1': 'delete_messages_after_milliseconds',
       '3': 4,
       '4': 1,
       '5': 3,
@@ -33,17 +33,17 @@ const EncryptedGroupState$json = {
     {'1': 'padding', '3': 5, '4': 1, '5': 12, '10': 'padding'},
   ],
   '8': [
-    {'1': '_deleteMessagesAfterMilliseconds'},
+    {'1': '_delete_messages_after_milliseconds'},
   ],
 };
 
 /// Descriptor for `EncryptedGroupState`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List encryptedGroupStateDescriptor = $convert.base64Decode(
-    'ChNFbmNyeXB0ZWRHcm91cFN0YXRlEhwKCW1lbWJlcklkcxgBIAMoA1IJbWVtYmVySWRzEhoKCG'
-    'FkbWluSWRzGAIgAygDUghhZG1pbklkcxIcCglncm91cE5hbWUYAyABKAlSCWdyb3VwTmFtZRJN'
-    'Ch9kZWxldGVNZXNzYWdlc0FmdGVyTWlsbGlzZWNvbmRzGAQgASgDSABSH2RlbGV0ZU1lc3NhZ2'
-    'VzQWZ0ZXJNaWxsaXNlY29uZHOIAQESGAoHcGFkZGluZxgFIAEoDFIHcGFkZGluZ0IiCiBfZGVs'
-    'ZXRlTWVzc2FnZXNBZnRlck1pbGxpc2Vjb25kcw==');
+    'ChNFbmNyeXB0ZWRHcm91cFN0YXRlEh0KCm1lbWJlcl9pZHMYASADKANSCW1lbWJlcklkcxIbCg'
+    'lhZG1pbl9pZHMYAiADKANSCGFkbWluSWRzEh0KCmdyb3VwX25hbWUYAyABKAlSCWdyb3VwTmFt'
+    'ZRJQCiJkZWxldGVfbWVzc2FnZXNfYWZ0ZXJfbWlsbGlzZWNvbmRzGAQgASgDSABSH2RlbGV0ZU'
+    '1lc3NhZ2VzQWZ0ZXJNaWxsaXNlY29uZHOIAQESGAoHcGFkZGluZxgFIAEoDFIHcGFkZGluZ0Il'
+    'CiNfZGVsZXRlX21lc3NhZ2VzX2FmdGVyX21pbGxpc2Vjb25kcw==');
 
 @$core.Deprecated('Use encryptedAppendedGroupStateDescriptor instead')
 const EncryptedAppendedGroupState$json = {
@@ -81,7 +81,7 @@ const EncryptedGroupStateEnvelop$json = {
   '2': [
     {'1': 'nonce', '3': 1, '4': 1, '5': 12, '10': 'nonce'},
     {
-      '1': 'encryptedGroupState',
+      '1': 'encrypted_group_state',
       '3': 2,
       '4': 1,
       '5': 12,
@@ -94,6 +94,6 @@ const EncryptedGroupStateEnvelop$json = {
 /// Descriptor for `EncryptedGroupStateEnvelop`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List encryptedGroupStateEnvelopDescriptor =
     $convert.base64Decode(
-        'ChpFbmNyeXB0ZWRHcm91cFN0YXRlRW52ZWxvcBIUCgVub25jZRgBIAEoDFIFbm9uY2USMAoTZW'
-        '5jcnlwdGVkR3JvdXBTdGF0ZRgCIAEoDFITZW5jcnlwdGVkR3JvdXBTdGF0ZRIQCgNtYWMYAyAB'
-        'KAxSA21hYw==');
+        'ChpFbmNyeXB0ZWRHcm91cFN0YXRlRW52ZWxvcBIUCgVub25jZRgBIAEoDFIFbm9uY2USMgoVZW'
+        '5jcnlwdGVkX2dyb3VwX3N0YXRlGAIgASgMUhNlbmNyeXB0ZWRHcm91cFN0YXRlEhAKA21hYxgD'
+        'IAEoDFIDbWFj');

@@ -39,11 +39,9 @@ class TwonlySafeBackupContent extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'TwonlySafeBackupContent',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'secureStorageJson',
-        protoName: 'secureStorageJson')
+    ..aOS(1, _omitFieldNames ? '' : 'secureStorageJson')
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'twonlyDatabase', $pb.PbFieldType.OY,
-        protoName: 'twonlyDatabase')
+        2, _omitFieldNames ? '' : 'twonlyDatabase', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -118,8 +116,7 @@ class TwonlySafeBackupEncrypted extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'cipherText', $pb.PbFieldType.OY,
-        protoName: 'cipherText')
+        3, _omitFieldNames ? '' : 'cipherText', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')

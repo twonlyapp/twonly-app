@@ -53,13 +53,10 @@ class EncryptedGroupState extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedGroupState',
       createEmptyInstance: create)
     ..p<$fixnum.Int64>(
-        1, _omitFieldNames ? '' : 'memberIds', $pb.PbFieldType.K6,
-        protoName: 'memberIds')
-    ..p<$fixnum.Int64>(2, _omitFieldNames ? '' : 'adminIds', $pb.PbFieldType.K6,
-        protoName: 'adminIds')
-    ..aOS(3, _omitFieldNames ? '' : 'groupName', protoName: 'groupName')
-    ..aInt64(4, _omitFieldNames ? '' : 'deleteMessagesAfterMilliseconds',
-        protoName: 'deleteMessagesAfterMilliseconds')
+        1, _omitFieldNames ? '' : 'memberIds', $pb.PbFieldType.K6)
+    ..p<$fixnum.Int64>(2, _omitFieldNames ? '' : 'adminIds', $pb.PbFieldType.K6)
+    ..aOS(3, _omitFieldNames ? '' : 'groupName')
+    ..aInt64(4, _omitFieldNames ? '' : 'deleteMessagesAfterMilliseconds')
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'padding', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
@@ -212,8 +209,7 @@ class EncryptedGroupStateEnvelop extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         1, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY,
-        protoName: 'encryptedGroupState')
+        2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'mac', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;

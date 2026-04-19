@@ -48,7 +48,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedPushNotification',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
+    ..aInt64(1, _omitFieldNames ? '' : 'keyId')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
@@ -143,12 +143,11 @@ class PushNotification extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'PushNotification',
       createEmptyInstance: create)
     ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE,
-        defaultOrMaker: PushKind.reaction,
+        defaultOrMaker: PushKind.REACTION,
         valueOf: PushKind.valueOf,
         enumValues: PushKind.values)
-    ..aOS(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
-    ..aOS(3, _omitFieldNames ? '' : 'additionalContent',
-        protoName: 'additionalContent')
+    ..aOS(2, _omitFieldNames ? '' : 'messageId')
+    ..aOS(3, _omitFieldNames ? '' : 'additionalContent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -277,12 +276,12 @@ class PushUser extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PushUser',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'userId', protoName: 'userId')
-    ..aOS(2, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'displayName')
     ..aOB(3, _omitFieldNames ? '' : 'blocked')
-    ..aOS(4, _omitFieldNames ? '' : 'lastMessageId', protoName: 'lastMessageId')
+    ..aOS(4, _omitFieldNames ? '' : 'lastMessageId')
     ..pc<PushKey>(5, _omitFieldNames ? '' : 'pushKeys', $pb.PbFieldType.PM,
-        protoName: 'pushKeys', subBuilder: PushKey.create)
+        subBuilder: PushKey.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -373,8 +372,7 @@ class PushKey extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'id')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp',
-        protoName: 'createdAtUnixTimestamp')
+    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
