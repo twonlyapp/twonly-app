@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.6
+## 0.1.7
 
 - Improved: Show input indicator in the chat overview as well 
 - Improved: Username change error handling
