@@ -48,3 +48,4 @@ app.*.map.json
 android/.kotlin/
 devtools_options.yaml
 rust/target
+rust_dependencies/target
