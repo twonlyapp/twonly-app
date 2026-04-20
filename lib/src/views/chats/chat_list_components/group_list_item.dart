@@ -13,6 +13,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
+import 'package:twonly/src/views/chats/chat_list_components/typing_indicator_subtitle.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -251,6 +252,9 @@ class _UserListItem extends State<GroupListItem> {
                     )
             : Row(
                 children: [
+                  TypingIndicatorSubtitle(
+                    groupId: widget.group.groupId,
+                  ),
                   MessageSendStateIcon(
                     _previewMessages,
                     _previewMediaFiles,

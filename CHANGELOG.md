@@ -2,6 +2,7 @@
 
 ## 0.1.6
 
+- Improved: Show typing indicator also in the chat overview 
 - Fix: Phantom push notification 
 - Fix: Smaller UI fixes
 

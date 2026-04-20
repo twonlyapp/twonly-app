@@ -9,6 +9,28 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 
+bool isTyping(GroupMember member) {
+  return member.lastTypeIndicator != null &&
+      clock
+              .now()
+              .difference(
+                member.lastTypeIndicator!,
+              )
+              .inSeconds <=
+          2;
+}
+
+bool hasChatOpen(GroupMember member) {
+  return member.lastChatOpened != null &&
+      clock
+              .now()
+              .difference(
+                member.lastChatOpened!,
+              )
+              .inSeconds <=
+          6;
+}
+
 class TypingIndicator extends StatefulWidget {
   const TypingIndicator({required this.group, super.key});
 
@@ -18,10 +40,8 @@ class TypingIndicator extends StatefulWidget {
   State<TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-class _TypingIndicatorState extends State<TypingIndicator>
-    with SingleTickerProviderStateMixin {
+class _TypingIndicatorState extends State<TypingIndicator> {
   late AnimationController _controller;
-  late List<Animation<double>> _animations;
 
   List<GroupMember> _groupMembers = [];
 
@@ -43,7 +63,88 @@ class _TypingIndicatorState extends State<TypingIndicator>
     membersSub = membersStream.listen((update) {
       filterOpenUsers(update.map((m) => m.$2).toList());
     });
+  }
 
+  void filterOpenUsers(List<GroupMember> input) {
+    setState(() {
+      _groupMembers = input.where(hasChatOpen).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    membersSub.cancel();
+    _periodicUpdate.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_groupMembers.isEmpty) return Container();
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: _groupMembers
+              .map(
+                (member) => Padding(
+                  key: Key('typing_indicator_${member.contactId}'),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!widget.group.isDirectChat)
+                        GestureDetector(
+                          onTap: () => context.push(
+                            Routes.profileContact(member.contactId),
+                          ),
+                          child: AvatarIcon(
+                            contactId: member.contactId,
+                            fontSize: 12,
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: getMessageColor(true),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AnimatedTypingDots(
+                          isTyping: isTyping(member),
+                        ),
+                      ),
+                      Expanded(child: Container()),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatedTypingDots extends StatefulWidget {
+  const AnimatedTypingDots({required this.isTyping, super.key});
+
+  final bool isTyping;
+
+  @override
+  State<AnimatedTypingDots> createState() => _AnimatedTypingDotsState();
+}
+
+class _AnimatedTypingDotsState extends State<AnimatedTypingDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  late List<Animation<double>> _animations;
+
+  @override
+  void initState() {
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -77,93 +178,18 @@ class _TypingIndicatorState extends State<TypingIndicator>
         ),
       );
     });
-  }
-
-  void filterOpenUsers(List<GroupMember> input) {
-    setState(() {
-      _groupMembers = input.where(hasChatOpen).toList();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    membersSub.cancel();
-    _periodicUpdate.cancel();
-    super.dispose();
-  }
-
-  bool isTyping(GroupMember member) {
-    return member.lastTypeIndicator != null &&
-        clock
-                .now()
-                .difference(
-                  member.lastTypeIndicator!,
-                )
-                .inSeconds <=
-            2;
-  }
-
-  bool hasChatOpen(GroupMember member) {
-    return member.lastChatOpened != null &&
-        clock
-                .now()
-                .difference(
-                  member.lastChatOpened!,
-                )
-                .inSeconds <=
-            6;
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_groupMembers.isEmpty) return Container();
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: _groupMembers
-              .map(
-                (member) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!widget.group.isDirectChat)
-                        GestureDetector(
-                          onTap: () => context.push(
-                            Routes.profileContact(member.contactId),
-                          ),
-                          child: AvatarIcon(
-                            contactId: member.contactId,
-                            fontSize: 12,
-                          ),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: getMessageColor(true),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(
-                            3,
-                            (index) => _AnimatedDot(
-                              isTyping: isTyping(member),
-                              animation: _animations[index],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Container()),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        3,
+        (index) => _AnimatedDot(
+          isTyping: widget.isTyping,
+          animation: _animations[index],
         ),
       ),
     );
