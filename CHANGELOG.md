@@ -3,6 +3,7 @@
 ## 0.1.6
 
 - Improved: Show input indicator in the chat overview as well 
+- Improved: Username change error handling
 - Fix: Phantom push notification 
 - Fix: Start in chat, if configured
 - Fix: Smaller UI fixes
