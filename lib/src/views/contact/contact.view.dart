@@ -87,14 +87,15 @@ class _ContactViewState extends State<ContactView> {
       context.lang.contactRemoveBody,
     );
     if (remove) {
-      await twonlyDB.contactsDao.updateContact(
-        contact.userId,
-        const ContactsCompanion(
-          accepted: Value(false),
-          requested: Value(false),
-          deletedByUser: Value(true),
-        ),
-      );
+      await twonlyDB.contactsDao.deleteContactByUserId(contact.userId);
+      // await twonlyDB.contactsDao.updateContact(
+      //   contact.userId,
+      //   const ContactsCompanion(
+      //     accepted: Value(false),
+      //     requested: Value(false),
+      //     deletedByUser: Value(true),
+      //   ),
+      // );
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
@@ -220,6 +221,36 @@ class _ContactViewState extends State<ContactView> {
                 await context.push(Routes.settingsHelpFaqVerifyBadge);
                 setState(() {});
               },
+            ),
+          if (gUser.isUserDiscoveryEnabled)
+            BetterListTile(
+              icon: FontAwesomeIcons.usersViewfinder,
+              text: context.lang.userDiscoverySettingsTitle,
+              subtitle:
+                  !contact.userDiscoveryExcluded &&
+                      contact.mediaSendCounter <
+                          gUser.minimumRequiredImagesExchanged
+                  ? Text(
+                      context.lang.contactUserDiscoveryImagesLeft(
+                        gUser.minimumRequiredImagesExchanged -
+                            contact.mediaSendCounter,
+                        getContactDisplayName(contact),
+                      ),
+                      style: const TextStyle(fontSize: 9),
+                    )
+                  : null,
+              trailing: Transform.scale(
+                scale: 0.8,
+                child: Switch(
+                  value: !contact.userDiscoveryExcluded,
+                  onChanged: (a) async {
+                    await twonlyDB.contactsDao.updateContact(
+                      contact.userId,
+                      ContactsCompanion(userDiscoveryExcluded: Value(!a)),
+                    );
+                  },
+                ),
+              ),
             ),
           BetterListTile(
             icon: FontAwesomeIcons.flag,

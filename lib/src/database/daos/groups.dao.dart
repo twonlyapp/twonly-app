@@ -311,4 +311,19 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         ))
         .write(GroupsCompanion(lastMessageExchange: Value(newLastMessage)));
   }
+
+  Stream<List<Group>> watchNonDirectGroupsForMember(int contactId) {
+    final query =
+        select(groups).join([
+          innerJoin(
+            groupMembers,
+            groupMembers.groupId.equalsExp(groups.groupId),
+          ),
+        ])..where(
+          groups.isDirectChat.equals(false) &
+              groupMembers.contactId.equals(contactId),
+        );
+
+    return query.map((row) => row.readTable(groups)).watch();
+  }
 }

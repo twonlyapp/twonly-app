@@ -405,13 +405,15 @@ Future<List<int>> sha256File(File file) async {
   return sha256Sink.events.single.bytes;
 }
 
-List<TextSpan> formattedText(String input) {
-  // Pattern to find text between asterisks
-  final regex = RegExp(r'\*(.*?)\*');
-  final List<TextSpan> spans = [];
+List<TextSpan> formattedText(BuildContext context, String input) {
+  // Access the current theme's text color
+  // Defaulting to bodyMedium color, but you can use labelLarge, displaySmall, etc.
+  final defaultColor = Theme.of(context).colorScheme.onSurface;
 
-  // Track the current position in the string
-  int lastMatchEnd = 0;
+  final regex = RegExp(r'\*(.*?)\*');
+  final spans = <TextSpan>[];
+
+  var lastMatchEnd = 0;
 
   for (final match in regex.allMatches(input)) {
     // Add text before the match (Normal style)
@@ -419,17 +421,18 @@ List<TextSpan> formattedText(String input) {
       spans.add(
         TextSpan(
           text: input.substring(lastMatchEnd, match.start),
+          style: TextStyle(color: defaultColor),
         ),
       );
     }
 
     // Add the matched text (Bold style)
-    // match.group(1) is the text without the asterisks
     spans.add(
       TextSpan(
         text: match.group(1),
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
+          color: defaultColor, // Ensures bold text also uses the theme color
         ),
       ),
     );
@@ -442,9 +445,16 @@ List<TextSpan> formattedText(String input) {
     spans.add(
       TextSpan(
         text: input.substring(lastMatchEnd),
+        style: TextStyle(color: defaultColor),
       ),
     );
   }
 
   return spans;
+}
+
+String joinWithAnd(List<String> items, String andWord) {
+  if (items.isEmpty) return '';
+  if (items.length == 1) return items.first;
+  return '${items.sublist(0, items.length - 1).join(', ')} $andWord ${items.last}';
 }

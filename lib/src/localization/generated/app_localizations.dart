@@ -397,26 +397,8 @@ abstract class AppLocalizations {
   /// No description provided for @searchUserNamePending.
   ///
   /// In en, this message translates to:
-  /// **'Pending'**
+  /// **'Request pending'**
   String get searchUserNamePending;
-
-  /// No description provided for @searchUserNameBlockUserTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Block the user without informing.'**
-  String get searchUserNameBlockUserTooltip;
-
-  /// No description provided for @searchUserNameRejectUserTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Reject the request and let the requester know.'**
-  String get searchUserNameRejectUserTooltip;
-
-  /// No description provided for @searchUserNameArchiveUserTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Archive the user. He will appear again as soon as he accepts your request.'**
-  String get searchUserNameArchiveUserTooltip;
 
   /// No description provided for @searchUsernameNotFound.
   ///
@@ -433,7 +415,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchUsernameNewFollowerTitle.
   ///
   /// In en, this message translates to:
-  /// **'Follow requests'**
+  /// **'Open requests'**
   String get searchUsernameNewFollowerTitle;
 
   /// No description provided for @searchUsernameQrCodeBtn.
@@ -3147,6 +3129,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan / Show QR'**
   String get scanQrOrShow;
+
+  /// No description provided for @contactActionBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get contactActionBlock;
+
+  /// No description provided for @contactActionAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get contactActionAccept;
+
+  /// No description provided for @userDiscoverySettingsMinImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the minimum number of images you must have exchanged with a person before you securely share your friends with them.'**
+  String get userDiscoverySettingsMinImages;
+
+  /// No description provided for @userDiscoverySettingsMutualFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how many mutual friends a person must have for you to be suggested to them.'**
+  String get userDiscoverySettingsMutualFriends;
+
+  /// No description provided for @userDiscoverySettingsApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply changes'**
+  String get userDiscoverySettingsApply;
+
+  /// No description provided for @userDiscoveryEnabledDisableWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'If you disable the \"Find friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.'**
+  String get userDiscoveryEnabledDisableWarning;
+
+  /// No description provided for @userDiscoveryEnabledChangeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Change settings'**
+  String get userDiscoveryEnabledChangeSettings;
+
+  /// No description provided for @userDiscoveryEnabledFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'In our FAQ we explain how the \"Find friends\" feature works.'**
+  String get userDiscoveryEnabledFaq;
+
+  /// No description provided for @userDiscoveryDisabledIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly doesn\'t use phone numbers, so we suggest friends based on mutual contacts instead – securely and privately.'**
+  String get userDiscoveryDisabledIntro;
+
+  /// No description provided for @userDiscoveryDisabledInvisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friend list is *completely invisible to strangers*. Only your friends can see parts of it – and only those people with whom they have *mutual friends* themselves.'**
+  String get userDiscoveryDisabledInvisible;
+
+  /// No description provided for @userDiscoveryDisabledDecide.
+  ///
+  /// In en, this message translates to:
+  /// **'Decide for yourself who can see your friends. You can change your mind at any time or hide specific people.'**
+  String get userDiscoveryDisabledDecide;
+
+  /// No description provided for @userDiscoverySettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find friends'**
+  String get userDiscoverySettingsTitle;
+
+  /// No description provided for @userDiscoverySettingsMinImagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of shared images'**
+  String get userDiscoverySettingsMinImagesTitle;
+
+  /// No description provided for @userDiscoverySettingsMutualFriendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of mutual friends'**
+  String get userDiscoverySettingsMutualFriendsTitle;
+
+  /// No description provided for @userDiscoveryDisabledYouHaveControl.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in control'**
+  String get userDiscoveryDisabledYouHaveControl;
+
+  /// No description provided for @userDiscoveryDisabledEnableWithDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable with default settings'**
+  String get userDiscoveryDisabledEnableWithDefault;
+
+  /// No description provided for @userDiscoveryDisabledCustomizeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize settings'**
+  String get userDiscoveryDisabledCustomizeSettings;
+
+  /// No description provided for @userDiscoveryDisabledLearnMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get userDiscoveryDisabledLearnMore;
+
+  /// No description provided for @userDiscoveryEnabledDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Really disable?'**
+  String get userDiscoveryEnabledDialogTitle;
+
+  /// No description provided for @userDiscoveryEnabledFriendsShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends you share'**
+  String get userDiscoveryEnabledFriendsShared;
+
+  /// No description provided for @userDiscoveryEnabledFriendsSharedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You only share friends who have also activated this feature and who have reached the threshold you set.'**
+  String get userDiscoveryEnabledFriendsSharedDesc;
+
+  /// No description provided for @userDiscoveryEnabledNoFriendsShared.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not sharing anyone yet.'**
+  String get userDiscoveryEnabledNoFriendsShared;
+
+  /// No description provided for @userDiscoveryActionDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get userDiscoveryActionDisable;
+
+  /// No description provided for @friendSuggestionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend suggestions'**
+  String get friendSuggestionsTitle;
+
+  /// No description provided for @andWord.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get andWord;
+
+  /// No description provided for @friendSuggestionsFriendsWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends with {friends}.'**
+  String friendSuggestionsFriendsWith(Object friends);
+
+  /// No description provided for @friendSuggestionsGroupMemberIn.
+  ///
+  /// In en, this message translates to:
+  /// **' Group member in {groups}.'**
+  String friendSuggestionsGroupMemberIn(Object groups);
+
+  /// No description provided for @friendSuggestionsRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get friendSuggestionsRequest;
+
+  /// No description provided for @contactUserDiscoveryImagesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{imagesLeft} more images are needed until your friends are shared with {username}.'**
+  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username);
+
+  /// No description provided for @userDiscoveryEnabledVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version: {version}'**
+  String userDiscoveryEnabledVersion(Object version);
+
+  /// No description provided for @userDiscoveryEnabledYourVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your version: {version}'**
+  String userDiscoveryEnabledYourVersion(Object version);
+
+  /// No description provided for @userDiscoveryEnabledStopSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get userDiscoveryEnabledStopSharing;
 }
 
 class _AppLocalizationsDelegate

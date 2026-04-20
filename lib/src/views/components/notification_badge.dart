@@ -4,9 +4,13 @@ class NotificationBadge extends StatelessWidget {
   const NotificationBadge({
     required this.count,
     required this.child,
+    this.backgroundColor = Colors.red,
+    this.textColor = Colors.white,
     super.key,
   });
   final String count;
+  final Color backgroundColor;
+  final Color textColor;
   final Widget child;
 
   @override
@@ -23,14 +27,14 @@ class NotificationBadge extends StatelessWidget {
             height: 18,
             width: 18,
             child: CircleAvatar(
-              backgroundColor: Colors.red,
+              backgroundColor: backgroundColor,
               child: Center(
                 child: Transform.rotate(
                   angle: infinity ? 90 * (3.141592653589793 / 180) : 0,
                   child: Text(
                     infinity ? '8' : count,
-                    style: const TextStyle(
-                      color: Colors.white, // Text color
+                    style: TextStyle(
+                      color: textColor,
                       fontSize: 10,
                     ),
                   ),

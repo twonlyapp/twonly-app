@@ -7,15 +7,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/chats/add_new_user_components/friend_suggestions.dart';
+import 'package:twonly/src/views/chats/add_new_user_components/open_requests_list.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/components/avatar_icon.component.dart';
-import 'package:twonly/src/views/components/headline.dart';
 
 class AddNewUserView extends StatefulWidget {
   const AddNewUserView({
@@ -32,47 +30,76 @@ class AddNewUserView extends StatefulWidget {
 }
 
 class _SearchUsernameView extends State<AddNewUserView> {
-  final TextEditingController searchUserName = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   bool _isLoading = false;
   bool hasRequestedUsers = false;
 
-  List<Contact> contacts = [];
-  late StreamSubscription<List<Contact>> contactsStream;
+  List<Contact> _openRequestsContacts = [];
+  late StreamSubscription<List<Contact>> _contactsStream;
+
+  AnnouncedUsersWithRelations _newAnnouncedUsers = {};
+  late StreamSubscription<AnnouncedUsersWithRelations> _newAnnouncedUsersStream;
+
+  AnnouncedUsersWithRelations _allAnnouncedUsers = {};
+  late StreamSubscription<AnnouncedUsersWithRelations> _allAnnouncedUsersStream;
 
   @override
   void initState() {
     super.initState();
-    contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
-      (update) => setState(() {
-        contacts = update;
-      }),
+    _contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
+      (update) {
+        if (mounted) {
+          setState(() {
+            _openRequestsContacts = update;
+          });
+        }
+      },
     );
+    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao
+        .watchNewAnnouncedUsersWithRelations()
+        .listen((update) {
+          if (mounted) {
+            setState(() {
+              _newAnnouncedUsers = update;
+            });
+          }
+        });
+    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao
+        .watchAllAnnouncedUsersWithRelations()
+        .listen((update) {
+          if (mounted) {
+            setState(() {
+              _allAnnouncedUsers = update;
+            });
+          }
+        });
 
     if (widget.username != null) {
-      searchUserName.text = widget.username!;
+      _usernameController.text = widget.username!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _addNewUser(context);
+        _requestNewUserByUsername(widget.username!);
       });
     }
+    twonlyDB.userDiscoveryDao.markAllValidAnnouncedUsersAsShown();
   }
 
   @override
   void dispose() {
-    unawaited(contactsStream.cancel());
+    _contactsStream.cancel();
+    _newAnnouncedUsersStream.cancel();
+    _allAnnouncedUsersStream.cancel();
     super.dispose();
   }
 
-  Future<void> _addNewUser(BuildContext context) async {
-    if (gUser.username == searchUserName.text) {
-      return;
-    }
+  Future<void> _requestNewUserByUsername(String username) async {
+    if (gUser.username == username) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    final userdata = await apiService.getUserData(searchUserName.text);
-    if (!context.mounted) return;
+    final userdata = await apiService.getUserData(username);
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;
@@ -82,24 +109,22 @@ class _SearchUsernameView extends State<AddNewUserView> {
       await showAlertDialog(
         context,
         context.lang.searchUsernameNotFound,
-        context.lang.searchUsernameNotFoundBody(searchUserName.text),
+        context.lang.searchUsernameNotFoundBody(username),
       );
       return;
     }
 
     final addUser = await showAlertDialog(
       context,
-      context.lang.userFound(searchUserName.text),
+      context.lang.userFound(username),
       context.lang.userFoundBody,
     );
 
-    if (!addUser || !context.mounted) {
-      return;
-    }
+    if (!addUser || !mounted) return;
 
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
-        username: Value(searchUserName.text),
+        username: Value(username),
         userId: Value(userdata.userId.toInt()),
         requested: const Value(false),
         blocked: const Value(false),
@@ -114,7 +139,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
     if (added > 0) await importSignalContactAndCreateRequest(userdata);
   }
 
-  InputDecoration getInputDecoration(String hintText) {
+  InputDecoration _getInputDecoration(String hintText) {
     return InputDecoration(
       hintText: hintText,
       focusedBorder: OutlineInputBorder(
@@ -146,14 +171,16 @@ class _SearchUsernameView extends State<AddNewUserView> {
                   children: [
                     Expanded(
                       child: TextField(
-                        onSubmitted: (_) async {
-                          await _addNewUser(context);
-                        },
+                        onSubmitted: _requestNewUserByUsername,
                         onChanged: (value) {
-                          searchUserName.text = value.toLowerCase();
-                          searchUserName.selection = TextSelection.fromPosition(
-                            TextPosition(offset: searchUserName.text.length),
-                          );
+                          _usernameController.text = value.toLowerCase();
+                          _usernameController.selection =
+                              TextSelection.fromPosition(
+                                TextPosition(
+                                  offset: _usernameController.text.length,
+                                ),
+                              );
+                          setState(() {});
                         },
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(12),
@@ -161,8 +188,8 @@ class _SearchUsernameView extends State<AddNewUserView> {
                             RegExp('[a-z0-9A-Z._]'),
                           ),
                         ],
-                        controller: searchUserName,
-                        decoration: getInputDecoration(
+                        controller: _usernameController,
+                        decoration: _getInputDecoration(
                           context.lang.searchUsernameInput,
                         ),
                       ),
@@ -173,18 +200,24 @@ class _SearchUsernameView extends State<AddNewUserView> {
               const SizedBox(
                 height: 20,
               ),
-              OutlinedButton.icon(
-                onPressed: () => context.push(Routes.settingsPublicProfile),
-                icon: const FaIcon(FontAwesomeIcons.qrcode),
-                label: Text(context.lang.scanQrOrShow),
-              ),
-              const SizedBox(height: 20),
-              if (contacts.isNotEmpty)
-                HeadLineComponent(
-                  context.lang.searchUsernameNewFollowerTitle,
-                ),
               Expanded(
-                child: ContactsListView(contacts),
+                child: ListView(
+                  children: [
+                    Center(
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            context.push(Routes.settingsPublicProfile),
+                        icon: const FaIcon(FontAwesomeIcons.qrcode),
+                        label: Text(context.lang.scanQrOrShow),
+                      ),
+                    ),
+                    OpenRequestsList(
+                      contacts: _openRequestsContacts,
+                      relations: _allAnnouncedUsers,
+                    ),
+                    FriendSuggestions(_newAnnouncedUsers),
+                  ],
+                ),
               ),
             ],
           ),
@@ -193,125 +226,14 @@ class _SearchUsernameView extends State<AddNewUserView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
-          onPressed: _isLoading || searchUserName.text.isEmpty
+          onPressed: _isLoading || _usernameController.text.isEmpty
               ? null
-              : () async => _addNewUser(context),
+              : () => _requestNewUserByUsername(_usernameController.text),
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : const FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
         ),
       ),
-    );
-  }
-}
-
-class ContactsListView extends StatelessWidget {
-  const ContactsListView(this.contacts, {super.key});
-  final List<Contact> contacts;
-
-  List<Widget> sendRequestActions(BuildContext context, Contact contact) {
-    return [
-      Tooltip(
-        message: context.lang.searchUserNameArchiveUserTooltip,
-        child: IconButton(
-          icon: const FaIcon(Icons.archive_outlined, size: 15),
-          onPressed: () async {
-            const update = ContactsCompanion(deletedByUser: Value(true));
-            await twonlyDB.contactsDao.updateContact(contact.userId, update);
-          },
-        ),
-      ),
-      Text(context.lang.searchUserNamePending),
-    ];
-  }
-
-  List<Widget> requestedActions(BuildContext context, Contact contact) {
-    return [
-      Tooltip(
-        message: context.lang.searchUserNameBlockUserTooltip,
-        child: IconButton(
-          icon: const Icon(
-            Icons.person_off_rounded,
-            color: Color.fromARGB(164, 244, 67, 54),
-          ),
-          onPressed: () async {
-            const update = ContactsCompanion(blocked: Value(true));
-            await twonlyDB.contactsDao.updateContact(contact.userId, update);
-          },
-        ),
-      ),
-      Tooltip(
-        message: context.lang.searchUserNameRejectUserTooltip,
-        child: IconButton(
-          icon: const Icon(Icons.close, color: Colors.red),
-          onPressed: () async {
-            await sendCipherText(
-              contact.userId,
-              EncryptedContent(
-                contactRequest: EncryptedContent_ContactRequest(
-                  type: EncryptedContent_ContactRequest_Type.REJECT,
-                ),
-              ),
-            );
-            await twonlyDB.contactsDao.updateContact(
-              contact.userId,
-              const ContactsCompanion(
-                accepted: Value(false),
-                requested: Value(false),
-                deletedByUser: Value(true),
-              ),
-            );
-          },
-        ),
-      ),
-      IconButton(
-        icon: const Icon(Icons.check, color: Colors.green),
-        onPressed: () async {
-          await twonlyDB.contactsDao.updateContact(
-            contact.userId,
-            const ContactsCompanion(
-              accepted: Value(true),
-              requested: Value(false),
-            ),
-          );
-          await twonlyDB.groupsDao.createNewDirectChat(
-            contact.userId,
-            GroupsCompanion(
-              groupName: Value(getContactDisplayName(contact)),
-            ),
-          );
-          await sendCipherText(
-            contact.userId,
-            EncryptedContent(
-              contactRequest: EncryptedContent_ContactRequest(
-                type: EncryptedContent_ContactRequest_Type.ACCEPT,
-              ),
-            ),
-          );
-          await sendContactMyProfileData(contact.userId);
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: contacts.length,
-      itemBuilder: (context, index) {
-        final contact = contacts[index];
-        return ListTile(
-          key: ValueKey(contact.userId),
-          title: Text(substringBy(contact.username, 25)),
-          leading: AvatarIcon(contactId: contact.userId),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: contact.requested
-                ? requestedActions(context, contact)
-                : sendRequestActions(context, contact),
-          ),
-        );
-      },
     );
   }
 }

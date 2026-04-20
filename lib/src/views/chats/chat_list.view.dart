@@ -11,6 +11,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/themes/light.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
@@ -48,6 +49,7 @@ class _ChatListViewState extends State<ChatListView> {
   Future<void> initAsync() async {
     final stream = twonlyDB.groupsDao.watchGroupsForChatList();
     _contactsSub = stream.listen((groups) {
+      if (!mounted) return;
       setState(() {
         _groupsNotPinned = groups
             .where((x) => !x.pinned && !x.archived)
@@ -61,15 +63,17 @@ class _ChatListViewState extends State<ChatListView> {
         .watchContactsRequestedCount()
         .listen((update) {
           if (update != null) {
+            if (!mounted) return;
             setState(() {
               _countContactRequest = update;
             });
           }
         });
 
-    _countContactRequestStream = twonlyDB.userDiscoveryDao
+    _countAnnouncedStream = twonlyDB.userDiscoveryDao
         .watchNewAnnouncementsWithDataCount()
         .listen((update) {
+          if (!mounted) return;
           setState(() {
             _countAnnouncedUsers = update;
           });
@@ -165,8 +169,8 @@ class _ChatListViewState extends State<ChatListView> {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(
-                        color: context.color.primary,
+                      decoration: const BoxDecoration(
+                        color: primaryColor,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -174,6 +178,10 @@ class _ChatListViewState extends State<ChatListView> {
                 ),
               Center(
                 child: NotificationBadge(
+                  backgroundColor: isDarkMode(context)
+                      ? Colors.white
+                      : Colors.black,
+                  textColor: isDarkMode(context) ? Colors.black : Colors.white,
                   count: (_countAnnouncedUsers + _countContactRequest)
                       .toString(),
                   child: IconButton(

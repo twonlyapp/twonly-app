@@ -117,15 +117,20 @@ Future<void> handleContactUpdate(
 
     case EncryptedContent_ContactUpdate_Type.UPDATE:
       Log.info('Got a contact update $fromUserId');
-      if (contactUpdate.hasAvatarSvgCompressed() &&
-          contactUpdate.hasDisplayName() &&
+      Uint8List? avatarSvgCompressed;
+      if (contactUpdate.hasAvatarSvgCompressed()) {
+        avatarSvgCompressed = Uint8List.fromList(
+          contactUpdate.avatarSvgCompressed,
+        );
+      }
+      if (contactUpdate.hasDisplayName() &&
           contactUpdate.hasUsername() &&
           senderProfileCounter != null) {
         await twonlyDB.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(
             avatarSvgCompressed: Value(
-              Uint8List.fromList(contactUpdate.avatarSvgCompressed),
+              avatarSvgCompressed,
             ),
             displayName: Value(contactUpdate.displayName),
             username: Value(contactUpdate.username),
@@ -180,6 +185,7 @@ Future<int?> checkForProfileUpdate(
           .getSingleOrNull();
       if (contact != null) {
         if (contact.senderProfileCounter < senderProfileCounter) {
+          Log.info('${contact.senderProfileCounter} < $senderProfileCounter');
           await sendCipherText(
             fromUserId,
             EncryptedContent(

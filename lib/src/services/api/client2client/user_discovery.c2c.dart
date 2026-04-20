@@ -16,6 +16,7 @@ Future<void> checkForUserDiscoveryChanges(
   );
 
   if (currentVersion != null) {
+    Log.info('Having old version from contact. Requesting new version.');
     await sendCipherText(
       fromUserId,
       EncryptedContent(
@@ -31,6 +32,8 @@ Future<void> handleUserDiscoveryRequest(
   int fromUserId,
   EncryptedContent_UserDiscoveryRequest request,
 ) async {
+  Log.info('Got a user discovery request');
+
   if (!gUser.isUserDiscoveryEnabled) {
     Log.warn('Got a user discovery request while it is disabled');
     return;
@@ -38,9 +41,10 @@ Future<void> handleUserDiscoveryRequest(
   final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
   if (contact == null) return;
 
-  if (contact.mediaSendCounter < gUser.minimumRequiredImagesExchanged) {
+  if (contact.mediaSendCounter < gUser.minimumRequiredImagesExchanged ||
+      contact.userDiscoveryExcluded) {
     Log.warn(
-      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${gUser.minimumRequiredImagesExchanged}',
+      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${gUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
     );
     return;
   }
@@ -50,6 +54,7 @@ Future<void> handleUserDiscoveryRequest(
     request.currentVersion,
   );
   if (newMessages != null && newMessages.isNotEmpty) {
+    Log.info('Sending ${newMessages.length} user discovery messages');
     await sendCipherText(
       fromUserId,
       EncryptedContent(
@@ -71,6 +76,7 @@ Future<void> handleUserDiscoveryUpdate(
     Log.warn('Got a user discovery update while it is disabled');
     return;
   }
+  Log.info('Got ${update.messages.length} user discovery messages');
   await UserDiscoveryService.handleNewMessages(
     fromUserId,
     update.messages.map(Uint8List.fromList).toList(),

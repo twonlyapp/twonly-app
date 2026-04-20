@@ -30,28 +30,29 @@ class _UserDiscoveryDisabledComponentState
       child: ListView(
         children: [
           const SizedBox(height: 45),
-          const Text(
-            'twonly verzichten auf Telefonnummern, daher schlagen wir dir Freunde stattdessen über gemeinsame Kontakte vor – sicher und privat.',
+          Text(
+            context.lang.userDiscoveryDisabledIntro,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 30),
           RichText(
             text: TextSpan(
               children: formattedText(
-                'Deine Freundesliste ist für *Fremde komplett unsichtbar*. Nur deine Freunde können Teile davon sehen – und zwar nur die Personen, mit denen sie selbst *gemeinsame Freunde* haben.',
+                context,
+                context.lang.userDiscoveryDisabledInvisible,
               ),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 35),
-          const Text(
-            'Du hast die Kontrolle',
-            style: TextStyle(fontSize: 17),
+          Text(
+            context.lang.userDiscoveryDisabledYouHaveControl,
+            style: const TextStyle(fontSize: 17),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Entscheide selbst, wer deine Freunde sehen darf. Du kannst deine Meinung jederzeit ändern oder bestimmte Personen verstecken.',
+          Text(
+            context.lang.userDiscoveryDisabledDecide,
             textAlign: TextAlign.center,
           ),
 
@@ -61,10 +62,13 @@ class _UserDiscoveryDisabledComponentState
             onPressed: initializeUserDiscoveryWithDefaultSettings,
             style: primaryColorButtonStyle.merge(
               FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 24,
+                ),
               ),
             ),
-            child: const Text('Mit Standardeinstellungen aktivieren'),
+            child: Text(context.lang.userDiscoveryDisabledEnableWithDefault),
           ),
 
           const SizedBox(height: 20),
@@ -74,7 +78,7 @@ class _UserDiscoveryDisabledComponentState
             child: FilledButton(
               onPressed: () {},
               style: secondaryGreyButtonStyle(context),
-              child: const Text('Einstellungen anpassen'),
+              child: Text(context.lang.userDiscoveryDisabledCustomizeSettings),
             ),
           ),
           const SizedBox(height: 15),
@@ -83,7 +87,7 @@ class _UserDiscoveryDisabledComponentState
             child: FilledButton(
               onPressed: () {},
               style: secondaryGreyButtonStyle(context),
-              child: const Text('Mehr erfahren'),
+              child: Text(context.lang.userDiscoveryDisabledLearnMore),
             ),
           ),
         ],

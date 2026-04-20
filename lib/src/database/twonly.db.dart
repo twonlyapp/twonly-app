@@ -72,7 +72,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -108,7 +108,6 @@ class TwonlyDB extends _$TwonlyDB {
           },
           from3To4: (m, schema) async {
             await m.alterTable(
-              // ignore: experimental_member_use
               TableMigration(
                 schema.groupHistories,
                 columnTransformer: {
@@ -141,9 +140,7 @@ class TwonlyDB extends _$TwonlyDB {
             await m.deleteTable('signal_contact_pre_keys');
             await m.deleteTable('signal_contact_signed_pre_keys');
             // For message_actions
-            // ignore: experimental_member_use
             await m.alterTable(TableMigration(schema.messageHistories));
-            // ignore: experimental_member_use
             await m.alterTable(TableMigration(schema.messageActions));
           },
           from8To9: (m, schema) async {
@@ -203,6 +200,12 @@ class TwonlyDB extends _$TwonlyDB {
             await m.addColumn(
               schema.userDiscoveryAnnouncedUsers,
               schema.userDiscoveryAnnouncedUsers.username,
+            );
+          },
+          from14To15: (m, schema) async {
+            await m.addColumn(
+              schema.contacts,
+              schema.contacts.userDiscoveryExcluded,
             );
           },
         )(m, from, to);

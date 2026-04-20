@@ -355,7 +355,10 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(fromUserId)
           .getSingleOrNull();
-      if (contact == null || contact.deletedByUser) {
+      Log.info(
+        'Contact exists?: ${contact != null} Is deleted? ${contact?.deletedByUser} Accepted? (${contact?.accepted})',
+      );
+      if (contact == null || !contact.accepted || contact.deletedByUser) {
         await handleNewContactRequest(fromUserId);
         Log.error(
           'User tries to send message to direct chat while the user does not exists !',

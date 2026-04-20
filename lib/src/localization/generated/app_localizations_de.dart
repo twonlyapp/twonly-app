@@ -172,19 +172,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get selectSubscription => 'Abo auswählen';
 
   @override
-  String get searchUserNamePending => 'Ausstehend';
-
-  @override
-  String get searchUserNameBlockUserTooltip =>
-      'Benutzer ohne Benachrichtigung blockieren.';
-
-  @override
-  String get searchUserNameRejectUserTooltip =>
-      'Die Anfrage ablehnen und den Anfragenden informieren.';
-
-  @override
-  String get searchUserNameArchiveUserTooltip =>
-      'Benutzer archivieren. Du wirst informiert sobald er deine Anfrage akzeptiert.';
+  String get searchUserNamePending => 'Anfrage ausstehend';
 
   @override
   String get searchUsernameNotFound => 'Benutzername nicht gefunden';
@@ -195,7 +183,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get searchUsernameNewFollowerTitle => 'Folgeanfragen';
+  String get searchUsernameNewFollowerTitle => 'Offene Anfragen';
 
   @override
   String get searchUsernameQrCodeBtn => 'QR-Code scannen';
@@ -1764,4 +1752,122 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scanQrOrShow => 'QR scannen / anzeigen';
+
+  @override
+  String get contactActionBlock => 'Blockieren';
+
+  @override
+  String get contactActionAccept => 'Annehmen';
+
+  @override
+  String get userDiscoverySettingsMinImages =>
+      'Wähle die Mindestanzahl an Bildern, die du mit einer Person ausgetauscht haben musst, bevor du ihr deine Freunde sicher teilst.';
+
+  @override
+  String get userDiscoverySettingsMutualFriends =>
+      'Wähle aus, wie viele gemeinsame Freunde eine Person haben muss, damit du ihr vorgeschlagen wirst.';
+
+  @override
+  String get userDiscoverySettingsApply => 'Änderungen übernehmen';
+
+  @override
+  String get userDiscoveryEnabledDisableWarning =>
+      'Wenn du das Feature „Freunde finden“ deaktivierst, werden dir keine Vorschläge mehr angezeigt. Du teilst neuen Kontakten dann auch nicht mehr deine Freunde.';
+
+  @override
+  String get userDiscoveryEnabledChangeSettings => 'Einstellungen ändern';
+
+  @override
+  String get userDiscoveryEnabledFaq =>
+      'In unserem FAQ erklären wir dir wie das Feature \"Freunde finden\" funktioniert.';
+
+  @override
+  String get userDiscoveryDisabledIntro =>
+      'twonly verzichten auf Telefonnummern, daher schlagen wir dir Freunde stattdessen über gemeinsame Kontakte vor – sicher und privat.';
+
+  @override
+  String get userDiscoveryDisabledInvisible =>
+      'Deine Freundesliste ist für *Fremde komplett unsichtbar*. Nur deine Freunde können Teile davon sehen – und zwar nur die Personen, mit denen sie selbst *gemeinsame Freunde* haben.';
+
+  @override
+  String get userDiscoveryDisabledDecide =>
+      'Entscheide selbst, wer deine Freunde sehen darf. Du kannst deine Meinung jederzeit ändern oder bestimmte Personen verstecken.';
+
+  @override
+  String get userDiscoverySettingsTitle => 'Freunde finden';
+
+  @override
+  String get userDiscoverySettingsMinImagesTitle =>
+      'Anzahl an geteilten Bildern';
+
+  @override
+  String get userDiscoverySettingsMutualFriendsTitle =>
+      'Anzahl an gemeinsame Freunde';
+
+  @override
+  String get userDiscoveryDisabledYouHaveControl => 'Du hast die Kontrolle';
+
+  @override
+  String get userDiscoveryDisabledEnableWithDefault =>
+      'Mit Standardeinstellungen aktivieren';
+
+  @override
+  String get userDiscoveryDisabledCustomizeSettings => 'Einstellungen anpassen';
+
+  @override
+  String get userDiscoveryDisabledLearnMore => 'Mehr erfahren';
+
+  @override
+  String get userDiscoveryEnabledDialogTitle => 'Wirklich deaktivieren?';
+
+  @override
+  String get userDiscoveryEnabledFriendsShared => 'Freunde die du teilst';
+
+  @override
+  String get userDiscoveryEnabledFriendsSharedDesc =>
+      'Du teilst nur Freunde, die diese Funktion ebenfalls aktiviert haben und die den von dir festgelegten Schwellenwert erreicht haben.';
+
+  @override
+  String get userDiscoveryEnabledNoFriendsShared =>
+      'Bisher teilst du noch niemanden.';
+
+  @override
+  String get userDiscoveryActionDisable => 'Deaktivieren';
+
+  @override
+  String get friendSuggestionsTitle => 'Freundschaftsvorschläge';
+
+  @override
+  String get andWord => 'und';
+
+  @override
+  String friendSuggestionsFriendsWith(Object friends) {
+    return 'Befreundet mit $friends.';
+  }
+
+  @override
+  String friendSuggestionsGroupMemberIn(Object groups) {
+    return ' Gruppenmitglied in $groups.';
+  }
+
+  @override
+  String get friendSuggestionsRequest => 'Anfragen';
+
+  @override
+  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
+    return 'Es fehlen noch $imagesLeft Bilder bis deine Freunde mit $username geteilt werden.';
+  }
+
+  @override
+  String userDiscoveryEnabledVersion(Object version) {
+    return 'Version: $version';
+  }
+
+  @override
+  String userDiscoveryEnabledYourVersion(Object version) {
+    return 'Deine Version: $version';
+  }
+
+  @override
+  String get userDiscoveryEnabledStopSharing => 'Nicht mehr teilen';
 }

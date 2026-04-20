@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show Curve, IdentityKey;
@@ -45,7 +46,7 @@ class UserDiscoveryCallbacks {
   ) async {
     final storedPublicKey = await getPublicKeyFromContact(contactId);
     if (storedPublicKey != null) {
-      return storedPublicKey == pubKey;
+      return storedPublicKey.equals(pubKey);
     } else {
       return false;
     }

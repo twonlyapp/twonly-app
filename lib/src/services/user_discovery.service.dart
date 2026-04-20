@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -18,8 +20,14 @@ class UserDiscoveryService {
         announcedUser.announcedUserId,
       );
       if (userdata == null) continue;
-      if (userdata.publicIdentityKey !=
-          announcedUser.announcedPublicKey.toList()) {
+      if (!userdata.publicIdentityKey.equals(
+        announcedUser.announcedPublicKey.toList(),
+      )) {
+        if (kDebugMode) {
+          Log.warn(
+            '${userdata.publicIdentityKey} != ${announcedUser.announcedPublicKey.toList()}',
+          );
+        }
         Log.error(
           'Server delivered a different public key then received from the announcement.',
         );
@@ -72,6 +80,21 @@ class UserDiscoveryService {
     final version = await getCurrentVersion();
     if (version == null) return null;
     return UserDiscoveryVersion.fromBuffer(version);
+  }
+
+  static Future<UserDiscoveryVersion?> getContactVersionTyped(
+    int contactId,
+  ) async {
+    final contact = await twonlyDB.contactsDao.getContactById(contactId);
+    if (contact == null || contact.userDiscoveryVersion == null) return null;
+    return UserDiscoveryVersion.fromBuffer(contact.userDiscoveryVersion!);
+  }
+
+  static UserDiscoveryVersion? getContactVersionTypedFromContact(
+    Contact contact,
+  ) {
+    if (contact.userDiscoveryVersion == null) return null;
+    return UserDiscoveryVersion.fromBuffer(contact.userDiscoveryVersion!);
   }
 
   static Future<Uint8List?> shouldRequestNewMessages(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/themes/light.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 class UserDiscoverySettingsView extends StatefulWidget {
@@ -50,16 +51,16 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Freunde finden'),
+        title: Text(context.lang.userDiscoverySettingsTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.only(top: 10),
         child: ListView(
           children: [
             ListTile(
-              title: const Text('Anzahl an geteilten Bildern'),
-              subtitle: const Text(
-                'Wähle die Mindestanzahl an Bildern, die du mit einer Person ausgetauscht haben musst, bevor du ihr deine Freunde sicher teilst.',
+              title: Text(context.lang.userDiscoverySettingsMinImagesTitle),
+              subtitle: Text(
+                context.lang.userDiscoverySettingsMinImages,
               ),
               trailing: SizedBox(
                 width: 60,
@@ -83,9 +84,9 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
               ),
             ),
             ListTile(
-              title: const Text('Anzahl an gemeinsame Freunde'),
-              subtitle: const Text(
-                'Wähle aus, wie viele gemeinsame Freunde eine Person haben muss, damit du ihr vorgeschlagen wirst.',
+              title: Text(context.lang.userDiscoverySettingsMutualFriendsTitle),
+              subtitle: Text(
+                context.lang.userDiscoverySettingsMutualFriends,
               ),
               trailing: SizedBox(
                 width: 60,
@@ -120,13 +121,13 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
                   onPressed: _saveChanges,
                   style: primaryColorButtonStyle.merge(
                     FilledButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 32,
                         vertical: 24,
                       ),
                     ),
                   ),
-                  child: const Text('Änderungen übernehmen'),
+                  child: Text(context.lang.userDiscoverySettingsApply),
                 ),
               ),
           ],

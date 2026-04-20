@@ -347,10 +347,11 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   }
   encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
 
-  if (gUser.isUserDiscoveryEnabled) {
+  if (gUser.isUserDiscoveryEnabled && messageId != null) {
     final contact = await twonlyDB.contactsDao.getContactById(contactId);
     if (contact != null &&
-        contact.mediaSendCounter >= gUser.minimumRequiredImagesExchanged) {
+        contact.mediaSendCounter >= gUser.minimumRequiredImagesExchanged &&
+        !contact.userDiscoveryExcluded) {
       final version = await UserDiscoveryService.getCurrentVersion();
       if (version != null) {
         encryptedContent.senderUserDiscoveryVersion = version;

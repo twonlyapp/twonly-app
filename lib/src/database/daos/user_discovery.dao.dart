@@ -1,8 +1,12 @@
 import 'package:drift/drift.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 
 part 'user_discovery.dao.g.dart';
+
+typedef AnnouncedUsersWithRelations =
+    Map<UserDiscoveryAnnouncedUser, List<(Contact, DateTime?)>>;
 
 @DriftAccessor(
   tables: [
@@ -10,6 +14,7 @@ part 'user_discovery.dao.g.dart';
     UserDiscoveryUserRelations,
     UserDiscoveryOwnPromotions,
     UserDiscoveryShares,
+    Contacts,
   ],
 )
 class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
@@ -46,8 +51,7 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         .toList();
   }
 
-  Future<Map<UserDiscoveryAnnouncedUser, List<(int, DateTime?)>>>
-  getAnnouncedUsersWithRelations() async {
+  Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
     final query = select(userDiscoveryAnnouncedUsers).join([
       innerJoin(
         userDiscoveryUserRelations,
@@ -55,28 +59,89 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
           userDiscoveryAnnouncedUsers.announcedUserId,
         ),
       ),
-    ]);
+      innerJoin(
+        contacts,
+        contacts.userId.equalsExp(
+          userDiscoveryUserRelations.fromContactId,
+        ),
+      ),
+    ])..where(userDiscoveryAnnouncedUsers.username.isNotNull());
 
-    final rows = await query.get();
+    return query.watch().map((rows) {
+      // ignore: omit_local_variable_types
+      final AnnouncedUsersWithRelations results = {};
 
-    final results = <UserDiscoveryAnnouncedUser, List<(int, DateTime?)>>{};
+      for (final row in rows) {
+        final user = row.readTable(userDiscoveryAnnouncedUsers);
+        final relation = row.readTable(userDiscoveryUserRelations);
+        final contact = row.readTable(contacts);
 
-    for (final row in rows) {
-      final user = row.readTable(userDiscoveryAnnouncedUsers);
-      final relation = row.readTable(userDiscoveryUserRelations);
+        final relationData = (
+          contact,
+          relation.publicKeyVerifiedTimestamp,
+        );
 
-      final relationData = (
-        relation.fromContactId,
-        relation.publicKeyVerifiedTimestamp,
-      );
-
-      if (!results.containsKey(user)) {
-        results[user] = [];
+        if (!results.containsKey(user)) {
+          results[user] = [];
+        }
+        results[user]!.add(relationData);
       }
-      results[user]!.add(relationData);
-    }
 
-    return results;
+      return results;
+    });
+  }
+
+  Stream<AnnouncedUsersWithRelations> watchNewAnnouncedUsersWithRelations() {
+    final announcedContact = alias(contacts, 'announcedContact');
+    final query =
+        select(userDiscoveryAnnouncedUsers).join([
+          innerJoin(
+            userDiscoveryUserRelations,
+            userDiscoveryUserRelations.announcedUserId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(
+              userDiscoveryUserRelations.fromContactId,
+            ),
+          ),
+          leftOuterJoin(
+            announcedContact,
+            announcedContact.userId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+        ])..where(
+          userDiscoveryAnnouncedUsers.username.isNotNull() &
+              userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              (announcedContact.userId.isNull() |
+                  announcedContact.deletedByUser.equals(true)),
+        );
+
+    return query.watch().map((rows) {
+      // ignore: omit_local_variable_types
+      final AnnouncedUsersWithRelations results = {};
+
+      for (final row in rows) {
+        final user = row.readTable(userDiscoveryAnnouncedUsers);
+        final relation = row.readTable(userDiscoveryUserRelations);
+        final contact = row.readTable(contacts);
+
+        final relationData = (
+          contact,
+          relation.publicKeyVerifiedTimestamp,
+        );
+
+        if (!results.containsKey(user)) {
+          results[user] = [];
+        }
+        results[user]!.add(relationData);
+      }
+
+      return results;
+    });
   }
 
   Stream<int> watchNewAnnouncementsWithDataCount() {
@@ -92,6 +157,20 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
       );
 
     return query.watchSingle().map((row) => row.read(countExp) ?? 0);
+  }
+
+  Future<void> markAllValidAnnouncedUsersAsShown() async {
+    await (update(userDiscoveryAnnouncedUsers)..where(
+          (t) =>
+              t.username.isNotNull() &
+              t.wasShownToTheUser.equals(false) &
+              t.isHidden.equals(false),
+        ))
+        .write(
+          const UserDiscoveryAnnouncedUsersCompanion(
+            wasShownToTheUser: Value(true),
+          ),
+        );
   }
 
   Future<void> updateAnnouncedUser(

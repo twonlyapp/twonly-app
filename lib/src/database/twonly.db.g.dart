@@ -185,6 +185,21 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _userDiscoveryExcludedMeta =
+      const VerificationMeta('userDiscoveryExcluded');
+  @override
+  late final GeneratedColumn<bool> userDiscoveryExcluded =
+      GeneratedColumn<bool>(
+        'user_discovery_excluded',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("user_discovery_excluded" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -224,6 +239,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     accountDeleted,
     createdAt,
     userDiscoveryVersion,
+    userDiscoveryExcluded,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -343,6 +359,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('user_discovery_excluded')) {
+      context.handle(
+        _userDiscoveryExcludedMeta,
+        userDiscoveryExcluded.isAcceptableOrUnknown(
+          data['user_discovery_excluded']!,
+          _userDiscoveryExcludedMeta,
+        ),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -426,6 +451,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.blob,
         data['${effectivePrefix}user_discovery_version'],
       ),
+      userDiscoveryExcluded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}user_discovery_excluded'],
+      )!,
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -458,6 +487,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool accountDeleted;
   final DateTime createdAt;
   final Uint8List? userDiscoveryVersion;
+  final bool userDiscoveryExcluded;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -475,6 +505,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.accountDeleted,
     required this.createdAt,
     this.userDiscoveryVersion,
+    required this.userDiscoveryExcluded,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -503,6 +534,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || userDiscoveryVersion != null) {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
+    map['user_discovery_excluded'] = Variable<bool>(userDiscoveryExcluded);
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -532,6 +564,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryVersion: userDiscoveryVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(userDiscoveryVersion),
+      userDiscoveryExcluded: Value(userDiscoveryExcluded),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -563,6 +596,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryVersion: serializer.fromJson<Uint8List?>(
         json['userDiscoveryVersion'],
       ),
+      userDiscoveryExcluded: serializer.fromJson<bool>(
+        json['userDiscoveryExcluded'],
+      ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -589,6 +625,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'userDiscoveryVersion': serializer.toJson<Uint8List?>(
         userDiscoveryVersion,
       ),
+      'userDiscoveryExcluded': serializer.toJson<bool>(userDiscoveryExcluded),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -609,6 +646,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? accountDeleted,
     DateTime? createdAt,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
+    bool? userDiscoveryExcluded,
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -630,6 +668,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     userDiscoveryVersion: userDiscoveryVersion.present
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
+    userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -661,6 +700,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryVersion: data.userDiscoveryVersion.present
           ? data.userDiscoveryVersion.value
           : this.userDiscoveryVersion,
+      userDiscoveryExcluded: data.userDiscoveryExcluded.present
+          ? data.userDiscoveryExcluded.value
+          : this.userDiscoveryExcluded,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -687,6 +729,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
+          ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -709,6 +752,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     accountDeleted,
     createdAt,
     $driftBlobEquality.hash(userDiscoveryVersion),
+    userDiscoveryExcluded,
     mediaSendCounter,
     mediaReceivedCounter,
   );
@@ -736,6 +780,7 @@ class Contact extends DataClass implements Insertable<Contact> {
             other.userDiscoveryVersion,
             this.userDiscoveryVersion,
           ) &&
+          other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -755,6 +800,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> accountDeleted;
   final Value<DateTime> createdAt;
   final Value<Uint8List?> userDiscoveryVersion;
+  final Value<bool> userDiscoveryExcluded;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -772,6 +818,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
+    this.userDiscoveryExcluded = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -790,6 +837,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
+    this.userDiscoveryExcluded = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -808,6 +856,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? accountDeleted,
     Expression<DateTime>? createdAt,
     Expression<Uint8List>? userDiscoveryVersion,
+    Expression<bool>? userDiscoveryExcluded,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -829,6 +878,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (createdAt != null) 'created_at': createdAt,
       if (userDiscoveryVersion != null)
         'user_discovery_version': userDiscoveryVersion,
+      if (userDiscoveryExcluded != null)
+        'user_discovery_excluded': userDiscoveryExcluded,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -850,6 +901,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? accountDeleted,
     Value<DateTime>? createdAt,
     Value<Uint8List?>? userDiscoveryVersion,
+    Value<bool>? userDiscoveryExcluded,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -868,6 +920,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
+      userDiscoveryExcluded:
+          userDiscoveryExcluded ?? this.userDiscoveryExcluded,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -922,6 +976,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         userDiscoveryVersion.value,
       );
     }
+    if (userDiscoveryExcluded.present) {
+      map['user_discovery_excluded'] = Variable<bool>(
+        userDiscoveryExcluded.value,
+      );
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -948,6 +1007,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
+          ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -11497,6 +11557,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
+      Value<bool> userDiscoveryExcluded,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -11516,6 +11577,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
+      Value<bool> userDiscoveryExcluded,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -11889,6 +11951,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<Uint8List> get userDiscoveryVersion => $composableBuilder(
     column: $table.userDiscoveryVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get userDiscoveryExcluded => $composableBuilder(
+    column: $table.userDiscoveryExcluded,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12290,6 +12357,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get userDiscoveryExcluded => $composableBuilder(
+    column: $table.userDiscoveryExcluded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -12361,6 +12433,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get userDiscoveryVersion => $composableBuilder(
     column: $table.userDiscoveryVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get userDiscoveryExcluded => $composableBuilder(
+    column: $table.userDiscoveryExcluded,
     builder: (column) => column,
   );
 
@@ -12743,6 +12820,7 @@ class $$ContactsTableTableManager
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
+                Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -12760,6 +12838,7 @@ class $$ContactsTableTableManager
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
+                userDiscoveryExcluded: userDiscoveryExcluded,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -12779,6 +12858,7 @@ class $$ContactsTableTableManager
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
+                Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -12796,6 +12876,7 @@ class $$ContactsTableTableManager
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
+                userDiscoveryExcluded: userDiscoveryExcluded,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),

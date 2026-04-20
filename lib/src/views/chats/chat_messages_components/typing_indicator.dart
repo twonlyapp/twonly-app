@@ -41,8 +41,6 @@ class TypingIndicator extends StatefulWidget {
 }
 
 class _TypingIndicatorState extends State<TypingIndicator> {
-  late AnimationController _controller;
-
   List<GroupMember> _groupMembers = [];
 
   late StreamSubscription<List<(Contact, GroupMember)>> membersSub;
@@ -75,7 +73,6 @@ class _TypingIndicatorState extends State<TypingIndicator> {
 
   @override
   void dispose() {
-    _controller.dispose();
     membersSub.cancel();
     _periodicUpdate.cancel();
     super.dispose();
@@ -181,6 +178,12 @@ class _AnimatedTypingDotsState extends State<AnimatedTypingDots>
       );
     });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
