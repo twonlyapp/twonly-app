@@ -40,9 +40,11 @@ class _TypingIndicatorSubtitleState extends State<TypingIndicatorSubtitle> {
   }
 
   void filterOpenUsers(List<GroupMember> input) {
-    setState(() {
-      _groupMembers = input.where(isTyping).toList();
-    });
+    if (mounted) {
+      setState(() {
+        _groupMembers = input.where(isTyping).toList();
+      });
+    }
   }
 
   @override

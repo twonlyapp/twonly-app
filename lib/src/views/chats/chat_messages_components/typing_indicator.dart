@@ -66,9 +66,11 @@ class _TypingIndicatorState extends State<TypingIndicator> {
   }
 
   void filterOpenUsers(List<GroupMember> input) {
-    setState(() {
-      _groupMembers = input.where(hasChatOpen).toList();
-    });
+    if (mounted) {
+      setState(() {
+        _groupMembers = input.where(hasChatOpen).toList();
+      });
+    }
   }
 
   @override
