@@ -214,6 +214,8 @@ Future<void> showLocalPushNotification(
           pushNotification.kind == PushKind.REACTION_TO_TEXT ||
           pushNotification.kind == PushKind.REACTION_TO_VIDEO)) {
     payload = Routes.chatsMessages(groupId);
+  } else {
+    payload = Routes.chats;
   }
 
   await flutterLocalNotificationsPlugin.show(

@@ -70,11 +70,11 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     };
     final response = await iapConnection.queryProductDetails(ids);
     if (response.notFoundIDs.isNotEmpty) {
-      Log.error(response.notFoundIDs);
+      Log.warn(response.notFoundIDs);
     }
     products = response.productDetails.map(PurchasableProduct.new).toList();
     if (products.isEmpty) {
-      Log.error('Could not load any products from the store!');
+      Log.warn('Could not load any products from the store!');
     }
     storeState = StoreState.available;
     notifyListeners();

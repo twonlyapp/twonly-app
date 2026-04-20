@@ -57,14 +57,28 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> _updateUsername(String username) async {
-    final result = await apiService.changeUsername(username);
+    var filteredUsername = username.replaceAll(
+      RegExp('[^a-zA-Z0-9._]'),
+      '',
+    );
+
+    if (filteredUsername.length > 12) {
+      filteredUsername = filteredUsername.substring(0, 12);
+    }
+
+    final result = await apiService.changeUsername(filteredUsername);
     if (result.isError) {
       if (!mounted) return;
 
-      if (result.error == ErrorCode.UsernameAlreadyTaken) {
+      if (result.error == ErrorCode.UsernameAlreadyTaken ||
+          result.error == ErrorCode.UsernameNotValid) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.lang.errorUsernameAlreadyTaken),
+            content: Text(
+              result.error == ErrorCode.UsernameAlreadyTaken
+                  ? context.lang.errorUsernameAlreadyTaken
+                  : context.lang.errorUsernameNotValid,
+            ),
             duration: const Duration(seconds: 3),
           ),
         );

@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -51,7 +53,17 @@ void main() async {
 
   await initFCMService();
 
-  final user = await getUser();
+  var user = await getUser();
+
+  if (Platform.isIOS && user != null) {
+    final db = File('$globalApplicationSupportDirectory/twonly.sqlite');
+    if (!db.existsSync()) {
+      Log.error('[twonly] IOS: App was removed and then reinstalled again...');
+      await const FlutterSecureStorage().deleteAll();
+      user = await getUser();
+    }
+  }
+
   if (user != null) {
     gUser = user;
 

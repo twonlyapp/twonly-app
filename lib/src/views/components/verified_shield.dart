@@ -13,12 +13,14 @@ class VerifiedShield extends StatefulWidget {
     super.key,
     this.size = 15,
     this.showOnlyIfVerified = false,
+    this.clickable = true,
   });
   final Group? group;
   final Contact? contact;
   final double size;
 
   final bool showOnlyIfVerified;
+  final bool clickable;
 
   @override
   State<VerifiedShield> createState() => _VerifiedShieldState();
@@ -61,7 +63,7 @@ class _VerifiedShieldState extends State<VerifiedShield> {
   Widget build(BuildContext context) {
     if (!isVerified && widget.showOnlyIfVerified) return Container();
     return GestureDetector(
-      onTap: (contact == null)
+      onTap: (contact == null || !widget.clickable)
           ? null
           : () => context.push(Routes.settingsHelpFaqVerifyBadge),
       child: ColoredBox(
