@@ -228,6 +228,7 @@ class _UserListItem extends State<GroupListItem> {
             VerifiedShield(
               group: widget.group,
               showOnlyIfVerified: true,
+              clickable: false,
               size: 12,
             ),
           ],

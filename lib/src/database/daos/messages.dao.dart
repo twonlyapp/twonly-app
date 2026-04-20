@@ -77,7 +77,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 t.groupId.equals(groupId) &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
-                t.openedAt.isBiggerThanValue(deletionTime),
+                (t.openedAt.isBiggerThanValue(deletionTime) |
+                    t.openedAt.isNull()),
           )
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(1))
@@ -96,7 +97,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 t.groupId.equals(groupId) &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
-                t.openedAt.isBiggerThanValue(deletionTime) &
+                (t.openedAt.isBiggerThanValue(deletionTime) |
+                    t.openedAt.isNull()) &
                 (t.isDeletedFromSender.equals(true) |
                     (t.type.equals(MessageType.text.name).not() |
                         t.type.equals(MessageType.media.name).not()) |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+
+- Fix: Phantom push notification 
+- Fix: Smaller UI fixes
+
 ## 0.1.5
 
 - Fix: Reupload of media files was not working properly
