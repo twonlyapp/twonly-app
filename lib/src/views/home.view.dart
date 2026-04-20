@@ -49,11 +49,11 @@ class Shade extends StatelessWidget {
 }
 
 class HomeViewState extends State<HomeView> {
-  int activePageIdx = 0;
+  int _activePageIdx = 1;
 
   final MainCameraController _mainCameraController = MainCameraController();
 
-  final PageController homeViewPageController = PageController(initialPage: 1);
+  final PageController _homeViewPageController = PageController(initialPage: 1);
   late StreamSubscription<List<SharedFile>> _intentStreamSub;
   late StreamSubscription<Uri> _deepLinkSub;
 
@@ -67,10 +67,10 @@ class HomeViewState extends State<HomeView> {
   bool onPageView(ScrollNotification notification) {
     disableCameraTimer?.cancel();
     if (notification.depth == 0 && notification is ScrollUpdateNotification) {
-      final page = homeViewPageController.page ?? 0;
+      final page = _homeViewPageController.page ?? 0;
       lastChange = page;
       setState(() {
-        offsetFromOne = 1.0 - (homeViewPageController.page ?? 0);
+        offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
         offsetRatio = offsetFromOne.abs();
       });
     }
@@ -100,17 +100,17 @@ class HomeViewState extends State<HomeView> {
     _mainCameraController.setState = () {
       if (mounted) setState(() {});
     };
-    activePageIdx = widget.initialPage;
 
     globalUpdateOfHomeViewPageIndex = (index) {
-      homeViewPageController.jumpToPage(index);
+      _homeViewPageController.jumpToPage(index);
       setState(() {
-        activePageIdx = index;
+        _activePageIdx = index;
       });
     };
     selectNotificationStream.stream.listen((response) async {
       if (response.payload != null &&
-          response.payload!.startsWith(Routes.chats)) {
+          response.payload!.startsWith(Routes.chats) &&
+          response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
       globalUpdateOfHomeViewPageIndex(0);
@@ -134,6 +134,11 @@ class HomeViewState extends State<HomeView> {
       context,
       _mainCameraController.setSharedLinkForPreview,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialPage == 0) {
+        globalUpdateOfHomeViewPageIndex(0);
+      }
+    });
   }
 
   @override
@@ -196,10 +201,10 @@ class HomeViewState extends State<HomeView> {
               onNotification: onPageView,
               child: Positioned.fill(
                 child: PageView(
-                  controller: homeViewPageController,
+                  controller: _homeViewPageController,
                   onPageChanged: (index) {
                     setState(() {
-                      activePageIdx = index;
+                      _activePageIdx = index;
                     });
                   },
                   children: [
@@ -222,7 +227,7 @@ class HomeViewState extends State<HomeView> {
                 child: CameraPreviewControllerView(
                   mainController: _mainCameraController,
                   isVisible:
-                      ((1 - (offsetRatio * 4) % 1) == 1) && activePageIdx == 1,
+                      ((1 - (offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
                 ),
               ),
             ),
@@ -253,15 +258,15 @@ class HomeViewState extends State<HomeView> {
           ),
         ],
         onTap: (index) async {
-          activePageIdx = index;
-          await homeViewPageController.animateToPage(
+          _activePageIdx = index;
+          await _homeViewPageController.animateToPage(
             index,
             duration: const Duration(milliseconds: 100),
             curve: Curves.bounceIn,
           );
           if (mounted) setState(() {});
         },
-        currentIndex: activePageIdx,
+        currentIndex: _activePageIdx,
       ),
     );
   }

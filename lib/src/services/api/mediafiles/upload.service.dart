@@ -102,6 +102,12 @@ Future<void> reuploadMediaFiles() async {
             .getMessageById(messageId)
             .getSingleOrNull();
         if (message == null || message.mediaId == null) {
+          // The message or media file does not exists any more, so delete the receipt...
+          if (message != null) {
+            // The media file of the message does not exist anymore. Removing it...
+            await twonlyDB.messagesDao.deleteMessagesById(messageId);
+          }
+          await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
           Log.error(
             'Message not found for reupload of the receipt (${message == null} - ${message?.mediaId}).',
           );

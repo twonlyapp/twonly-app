@@ -107,7 +107,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       });
     });
 
-    final msgStream = twonlyDB.messagesDao.watchByGroupId(widget.groupId);
+    final msgStream = await twonlyDB.messagesDao.watchByGroupId(widget.groupId);
     messageSub = msgStream.listen((update) async {
       allMessages = update;
       await protectMessageUpdating.protect(() async {
