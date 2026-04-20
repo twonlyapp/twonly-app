@@ -63,9 +63,10 @@ class _UserListItem extends State<GroupListItem> {
   }
 
   Future<void> initStreams() async {
-    _lastMessageStream = twonlyDB.messagesDao
-        .watchLastMessage(widget.group.groupId)
-        .listen((update) {
+    _lastMessageStream =
+        (await twonlyDB.messagesDao.watchLastMessage(
+          widget.group.groupId,
+        )).listen((update) {
           protectUpdateState.protect(() async {
             await updateState(update, _messagesNotOpened);
           });

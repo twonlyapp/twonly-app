@@ -64,18 +64,39 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return query.map((row) => row.readTable(messages)).watch();
   }
 
-  Stream<Message?> watchLastMessage(String groupId) {
+  Future<Stream<Message?>> watchLastMessage(String groupId) async {
+    final group = await twonlyDB.groupsDao.getGroup(groupId);
+    final deletionTime = clock.now().subtract(
+      Duration(
+        milliseconds: group!.deleteMessagesAfterMilliseconds,
+      ),
+    );
     return (select(messages)
-          ..where((t) => t.groupId.equals(groupId))
+          ..where(
+            (t) =>
+                t.groupId.equals(groupId) &
+                // messages in groups will only be removed in case all members have received it...
+                // so ensuring that this message is not shown in the messages anymore
+                t.openedAt.isBiggerThanValue(deletionTime),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(1))
         .watchSingleOrNull();
   }
 
-  Stream<List<Message>> watchByGroupId(String groupId) {
+  Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
+    final group = await twonlyDB.groupsDao.getGroup(groupId);
+    final deletionTime = clock.now().subtract(
+      Duration(
+        milliseconds: group!.deleteMessagesAfterMilliseconds,
+      ),
+    );
     return ((select(messages)..where(
             (t) =>
                 t.groupId.equals(groupId) &
+                // messages in groups will only be removed in case all members have received it...
+                // so ensuring that this message is not shown in the messages anymore
+                t.openedAt.isBiggerThanValue(deletionTime) &
                 (t.isDeletedFromSender.equals(true) |
                     (t.type.equals(MessageType.text.name).not() |
                         t.type.equals(MessageType.media.name).not()) |
@@ -127,7 +148,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 (m.mediaStored.equals(true) &
                         m.isDeletedFromSender.equals(true) |
                     m.mediaStored.equals(false)) &
-                (m.openedAt.isSmallerThanValue(deletionTime) |
+                // Only remove the message when ALL members have seen it. Otherwise the receipt will also be deleted which could cause issues in case a member opens the image later..
+                (m.openedByAll.isSmallerThanValue(deletionTime) |
                     (m.isDeletedFromSender.equals(true) &
                         m.createdAt.isSmallerThanValue(deletionTime))),
           ))

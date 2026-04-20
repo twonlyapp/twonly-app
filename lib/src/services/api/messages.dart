@@ -102,21 +102,23 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       message.encryptedContent,
     );
 
-    final pushNotification = await getPushNotificationFromEncryptedContent(
-      receipt.contactId,
-      receipt.messageId,
-      encryptedContent,
-    );
-
-    Log.info('Uploading $receiptId. (${pushNotification?.kind})');
+    Log.info('Uploading $receiptId.');
 
     Uint8List? pushData;
-    if (pushNotification != null && receipt.retryCount <= 1) {
-      // Only show the push notification the first two time.
-      pushData = await encryptPushNotification(
+    if (receipt.retryCount == 0) {
+      final pushNotification = await getPushNotificationFromEncryptedContent(
         receipt.contactId,
-        pushNotification,
+        receipt.messageId,
+        encryptedContent,
       );
+
+      if (pushNotification != null) {
+        // Only show the push notification the first two time.
+        pushData = await encryptPushNotification(
+          receipt.contactId,
+          pushNotification,
+        );
+      }
     }
 
     if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
