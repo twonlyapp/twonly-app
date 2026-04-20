@@ -136,13 +136,11 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _isLoaded = false;
   bool _skipBackup = false;
   bool _isTwonlyLocked = true;
-  int _initialPage = 0;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
   void initState() {
-    _initialPage = widget.initialPage;
     initAsync();
     super.initState();
   }
@@ -157,9 +155,6 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       }
       if (gUser.appVersion < 62) {
         _showDatabaseMigration = true;
-      }
-      if (!gUser.startWithCameraOpen) {
-        _initialPage = 0;
       }
     }
 
@@ -210,7 +205,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         );
       } else {
         child = HomeView(
-          initialPage: _initialPage,
+          initialPage: widget.initialPage,
         );
       }
     } else if (_showOnboarding) {

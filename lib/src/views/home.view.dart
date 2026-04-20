@@ -135,7 +135,8 @@ class HomeViewState extends State<HomeView> {
       _mainCameraController.setSharedLinkForPreview,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialPage == 0) {
+      if (widget.initialPage == 1 && !gUser.startWithCameraOpen ||
+          widget.initialPage == 0) {
         globalUpdateOfHomeViewPageIndex(0);
       }
     });
@@ -161,8 +162,13 @@ class HomeViewState extends State<HomeView> {
       if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
         final payload =
             notificationAppLaunchDetails?.notificationResponse?.payload;
-        if (payload != null && payload.startsWith(Routes.chats)) {
+        if (payload != null &&
+            payload.startsWith(Routes.chats) &&
+            payload != Routes.chats) {
           await routerProvider.push(payload);
+          globalUpdateOfHomeViewPageIndex(0);
+        }
+        if (payload == Routes.chats) {
           globalUpdateOfHomeViewPageIndex(0);
         }
       }
