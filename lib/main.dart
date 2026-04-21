@@ -32,10 +32,10 @@ import 'package:twonly/src/utils/storage.dart';
 void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
 
-  await RustLib.init();
   await AppEnvironment.init();
+  Log.init();
 
-  initLogger();
+  await RustLib.init();
 
   await initFlutterCallbacksForRust();
 

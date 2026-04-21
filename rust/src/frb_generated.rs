@@ -132,7 +132,7 @@ fn wire__crate__bridge__callbacks__init_flutter_callbacks_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "init_flutter_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "init_flutter_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_logging_get_stream_sink = decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
@@ -148,10 +148,10 @@ let api_user_discovery_get_other_promotions_by_public_id = decode_DartFn_Inputs_
 let api_user_discovery_get_announced_user_by_public_id = decode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_user_discovery_get_contact_version = decode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_user_discovery_set_contact_version = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_user_discovery_push_new_user_relation = decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context| async move {
-                    transform_result_sse::<_, ()>((move || async move {
-                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_logging_get_stream_sink, api_user_discovery_sign_data, api_user_discovery_verify_signature, api_user_discovery_verify_stored_pubkey, api_user_discovery_set_shares, api_user_discovery_get_share_for_contact, api_user_discovery_push_own_promotion, api_user_discovery_get_own_promotions_after_version, api_user_discovery_store_other_promotion, api_user_discovery_get_other_promotions_by_public_id, api_user_discovery_get_announced_user_by_public_id, api_user_discovery_get_contact_version, api_user_discovery_set_contact_version, api_user_discovery_push_new_user_relation).await; })?;   Ok(output_ok)
-                    })().await)
+let api_user_discovery_push_new_user_relation = decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
+                    transform_result_sse::<_, ()>((move ||  {
+                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_logging_get_stream_sink, api_user_discovery_sign_data, api_user_discovery_verify_signature, api_user_discovery_verify_stored_pubkey, api_user_discovery_set_shares, api_user_discovery_get_share_for_contact, api_user_discovery_push_own_promotion, api_user_discovery_get_own_promotions_after_version, api_user_discovery_store_other_promotion, api_user_discovery_get_other_promotions_by_public_id, api_user_discovery_get_announced_user_by_public_id, api_user_discovery_get_contact_version, api_user_discovery_set_contact_version, api_user_discovery_push_new_user_relation); })?;   Ok(output_ok)
+                    })())
                 } })
 }
 fn wire__crate__bridge__initialize_twonly_flutter_impl(

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:mutex/mutex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -62,10 +61,8 @@ Future<bool> initBackgroundExecution() async {
   }
 
   SentryWidgetsFlutterBinding.ensureInitialized();
-  AppEnvironment.cacheDir = (await getApplicationCacheDirectory()).path;
-  AppEnvironment.supportDir = (await getApplicationSupportDirectory()).path;
-
-  initLogger();
+  await AppEnvironment.init();
+  Log.init();
 
   final user = await getUser();
   if (user == null) return false;

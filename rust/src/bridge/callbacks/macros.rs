@@ -29,7 +29,7 @@ macro_rules! callback_generator {
 
         // 3. Generate the Automated Init Function
         paste::paste! {
-            pub async fn init_flutter_callbacks(
+            pub fn init_flutter_callbacks(
                 $(
                     $(
                         // Parameters: sub-struct_field + _ + fn_name

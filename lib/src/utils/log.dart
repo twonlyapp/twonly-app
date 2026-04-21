@@ -8,25 +8,25 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/exclusive_access.dart';
 
-bool _isInitialized = false;
-
-void initLogger() {
-  if (_isInitialized) return;
-  _isInitialized = true;
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((record) async {
-    unawaited(_writeLogToFile(record));
-    if (!kReleaseMode) {
-      // ignore: avoid_print
-      print(
-        '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
-      );
-    }
-  });
-  cleanLogFile();
-}
-
 class Log {
+  static bool _isInitialized = false;
+
+  static void init() {
+    if (_isInitialized) return;
+    _isInitialized = true;
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((record) async {
+      unawaited(_writeLogToFile(record));
+      if (!kReleaseMode) {
+        // ignore: avoid_print
+        print(
+          '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
+        );
+      }
+    });
+    cleanLogFile();
+  }
+
   static String filterLogMessage(String msg) {
     if (msg.contains('SqliteException')) {
       // Do not log data which would be inserted into the DB.
