@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_disabled.comp.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_enabled.comp.dart';
 
@@ -16,7 +17,7 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Freunde finden'),
+        title: Text(context.lang.userDiscoverySettingsTitle),
       ),
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,

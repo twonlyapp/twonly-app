@@ -274,11 +274,16 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             };
 
             if let Some(uda) = message.user_discovery_announcement {
-                self.handle_user_discovery_announcement(contact_id, uda)
-                    .await?;
+                if let Err(err) = self
+                    .handle_user_discovery_announcement(contact_id, uda)
+                    .await
+                {
+                    tracing::warn!("Ignoring: {err}");
+                }
             } else if let Some(udp) = message.user_discovery_promotion {
-                self.handle_user_discovery_promotion(contact_id, udp)
-                    .await?;
+                if let Err(err) = self.handle_user_discovery_promotion(contact_id, udp).await {
+                    tracing::warn!("Ignoring: {err}");
+                }
             } else {
                 tracing::warn!("Got unknown user discovery messaging. Ignoring it.");
                 continue;
@@ -475,6 +480,11 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         udp: UserDiscoveryPromotion,
     ) -> Result<()> {
         tracing::debug!("Received a new UDP with public_id = {}.", &udp.public_id);
+
+        if udp.announcement_share.is_empty() {
+            tracing::info!("Got empty announcement share. Ignoring it..");
+            return Ok(());
+        }
 
         self.store
             .store_other_promotion(OtherPromotion {
