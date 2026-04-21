@@ -4,7 +4,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/subscription.service.dart';
 
 class AppEnvironment {
   static late final String cacheDir;
@@ -38,7 +37,6 @@ void Function({required bool isConnected}) globalCallbackConnectionState =
     }) {};
 void Function() globalCallbackAppIsOutdated = () {};
 void Function() globalCallbackNewDeviceRegistered = () {};
-void Function(SubscriptionPlan plan) globalCallbackUpdatePlan = (plan) {};
 
 Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 

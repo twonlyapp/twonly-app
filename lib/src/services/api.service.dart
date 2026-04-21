@@ -58,6 +58,9 @@ class ApiService {
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : '';
 
+  final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
+  Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
+
   bool appIsOutdated = false;
   bool isAuthenticated = false;
 
@@ -333,7 +336,7 @@ class ApiService {
           user.subscriptionPlan = authenticated.plan;
           return user;
         });
-        globalCallbackUpdatePlan(planFromString(authenticated.plan));
+        _planUpdateController.add(planFromString(authenticated.plan));
 
         // this was triggered by apiService.ipaPurchase, so call the onAuthenticated again
         if (isAuthenticated) {
