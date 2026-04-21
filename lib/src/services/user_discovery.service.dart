@@ -53,15 +53,14 @@ class UserDiscoveryService {
     try {
       await FlutterUserDiscovery.initializeOrUpdate(
         threshold: threshold,
-        userId: gUser.userId,
+        userId: AppSession.currentUser.userId,
         publicKey: await getUserPublicKey(),
       );
-      await updateUserdata((u) {
-        u
+      await updateUser(
+        (u) => u
           ..isUserDiscoveryEnabled = true
-          ..minimumRequiredImagesExchanged = minimumRequiredImagesExchanged;
-        return u;
-      });
+          ..minimumRequiredImagesExchanged = minimumRequiredImagesExchanged,
+      );
     } catch (e) {
       Log.error(e);
     }
@@ -142,9 +141,8 @@ class UserDiscoveryService {
   }
 
   static Future<void> disable() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.isUserDiscoveryEnabled = false;
-      return u;
     });
   }
 }

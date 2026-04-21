@@ -62,13 +62,15 @@ class ApiService {
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
 
   final _connectionStateController = StreamController<bool>.broadcast();
-  Stream<bool> get onConnectionStateUpdated => _connectionStateController.stream;
+  Stream<bool> get onConnectionStateUpdated =>
+      _connectionStateController.stream;
 
   final _appOutdatedController = StreamController<void>.broadcast();
   Stream<void> get onAppOutdated => _appOutdatedController.stream;
 
   final _newDeviceRegisteredController = StreamController<void>.broadcast();
-  Stream<void> get onNewDeviceRegistered => _newDeviceRegisteredController.stream;
+  Stream<void> get onNewDeviceRegistered =>
+      _newDeviceRegisteredController.stream;
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
@@ -124,7 +126,7 @@ class ApiService {
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 
-      if (gUser.userStudyParticipantsToken != null) {
+      if (AppSession.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
         unawaited(handleUserStudyUpload());
       }
@@ -341,9 +343,8 @@ class ApiService {
       final ok = res.value as server.Response_Ok;
       if (ok.hasAuthenticated()) {
         final authenticated = ok.authenticated;
-        await updateUserdata((user) {
+        await updateUser((user) {
           user.subscriptionPlan = authenticated.plan;
-          return user;
         });
         _planUpdateController.add(planFromString(authenticated.plan));
 
@@ -782,9 +783,8 @@ class ApiService {
   Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
     final ballance = await getPlanBallance();
     if (ballance != null) {
-      await updateUserdata((u) {
+      await updateUser((u) {
         u.lastPlanBallance = ballance.writeToJson();
-        return u;
       });
       return ballance;
     }

@@ -39,10 +39,7 @@ String localePrizing(BuildContext context, int cents) {
 Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
   final ballance = await apiService.getPlanBallance();
   if (ballance != null) {
-    await updateUserdata((u) {
-      u.lastPlanBallance = ballance.writeToJson();
-      return u;
-    });
+    await updateUser((u) => u.lastPlanBallance = ballance.writeToJson());
     return ballance;
   }
   final user = await getUser();

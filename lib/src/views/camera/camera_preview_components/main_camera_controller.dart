@@ -135,7 +135,7 @@ class MainCameraController {
       await cameraController?.initialize();
       await cameraController?.startImageStream(_processCameraImage);
       await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
-      if (gUser.videoStabilizationEnabled && !kDebugMode) {
+      if (AppSession.currentUser.videoStabilizationEnabled && !kDebugMode) {
         await cameraController?.setVideoStabilizationMode(
           VideoStabilizationMode.level1,
         );
@@ -395,7 +395,7 @@ class MainCameraController {
             }
           }
         } else {
-          if (profile.username != gUser.username) {
+          if (profile.username != AppSession.currentUser.username) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
               await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(

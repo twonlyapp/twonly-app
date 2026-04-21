@@ -113,7 +113,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     int contactId,
     GroupsCompanion group,
   ) async {
-    final groupIdDirectChat = getUUIDforDirectChat(contactId, gUser.userId);
+    final groupIdDirectChat = getUUIDforDirectChat(contactId, AppSession.currentUser.userId);
     final insertGroup = group.copyWith(
       groupId: Value(groupIdDirectChat),
       isDirectChat: const Value(true),
@@ -209,7 +209,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<Group?> watchDirectChat(int contactId) {
-    final groupId = getUUIDforDirectChat(contactId, gUser.userId);
+    final groupId = getUUIDforDirectChat(contactId, AppSession.currentUser.userId);
     return (select(
       groups,
     )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();

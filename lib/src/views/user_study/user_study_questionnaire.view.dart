@@ -50,12 +50,11 @@ class _UserStudyQuestionnaireViewState
   Future<void> _submitData() async {
     await KeyValueStore.put(userStudySurveyKey, _responses);
 
-    await updateUserdata((u) {
+    await updateUser((u) {
       // generate a random participants id to identify data send later while keeping the user anonym
       u
         ..userStudyParticipantsToken = getRandomString(25)
         ..askedForUserStudyPermission = true;
-      return u;
     });
 
     await handleUserStudyUpload();

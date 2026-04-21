@@ -4,9 +4,7 @@ import 'package:twonly/src/themes/light.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class UserDiscoveryDisabledComponent extends StatefulWidget {
-  const UserDiscoveryDisabledComponent({required this.onUpdate, super.key});
-
-  final VoidCallback onUpdate;
+  const UserDiscoveryDisabledComponent({super.key});
 
   @override
   State<UserDiscoveryDisabledComponent> createState() =>
@@ -20,7 +18,6 @@ class _UserDiscoveryDisabledComponentState
       threshold: 2,
       minimumRequiredImagesExchanged: 4,
     );
-    widget.onUpdate();
   }
 
   @override

@@ -15,9 +15,7 @@ import 'package:twonly/src/views/components/user_context_menu.component.dart';
 import 'package:twonly/src/views/settings/privacy/user_discovery/user_discovery_settings.view.dart';
 
 class UserDiscoveryEnabledComponent extends StatefulWidget {
-  const UserDiscoveryEnabledComponent({required this.onUpdate, super.key});
-
-  final VoidCallback onUpdate;
+  const UserDiscoveryEnabledComponent({super.key});
 
   @override
   State<UserDiscoveryEnabledComponent> createState() =>
@@ -69,9 +67,6 @@ class _UserDiscoveryEnabledComponentState
     if (ok) {
       await UserDiscoveryService.disable();
     }
-
-    // This will show the DisabledComponent as the gUser has been updated...
-    widget.onUpdate();
   }
 
   @override
@@ -119,7 +114,7 @@ class _UserDiscoveryEnabledComponentState
                         ),
                         subtitle:
                             (version != null &&
-                                (gUser.isDeveloper || !kReleaseMode))
+                                (AppSession.currentUser.isDeveloper || !kReleaseMode))
                             ? Text(
                                 context.lang.userDiscoveryEnabledVersion(
                                   '${version.announcement}.${version.promotion}',
@@ -171,7 +166,7 @@ class _UserDiscoveryEnabledComponentState
             title: Text(context.lang.userDiscoveryActionDisable),
             onTap: _disableUserDiscovery,
           ),
-          if (_version != null && (gUser.isDeveloper || !kReleaseMode))
+          if (_version != null && (AppSession.currentUser.isDeveloper || !kReleaseMode))
             ListTile(
               title: Text(
                 context.lang.userDiscoveryEnabledYourVersion(

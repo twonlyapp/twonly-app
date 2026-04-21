@@ -254,7 +254,7 @@ class _ShareImageView extends State<ShareImageView> {
             children: [
               if (widget.mediaFileService.mediaFile.type == MediaType.image &&
                   _screenshotImage?.image != null &&
-                  gUser.showShowImagePreviewWhenSending)
+                  AppSession.currentUser.showShowImagePreviewWhenSending)
                 SizedBox(
                   height: 100,
                   width: 100 * 9 / 16,

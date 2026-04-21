@@ -47,12 +47,12 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                substringBy(gUser.displayName, 27),
+                                substringBy(AppSession.currentUser.displayName, 27),
                                 style: const TextStyle(fontSize: 20),
                                 textAlign: TextAlign.left,
                               ),
                               Text(
-                                gUser.username,
+                                AppSession.currentUser.username,
                                 style: const TextStyle(
                                   fontSize: 14,
                                 ),
@@ -124,11 +124,11 @@ class _SettingsMainViewState extends State<SettingsMainView> {
             onTap: () async {
               await context.push(Routes.settingsHelp);
               setState(() {
-                // gUser could have been changed
+                // AppSession.currentUser could have been changed
               });
             },
           ),
-          if (gUser.isDeveloper)
+          if (AppSession.currentUser.isDeveloper)
             BetterListTile(
               icon: FontAwesomeIcons.code,
               text: 'Developer Settings',

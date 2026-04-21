@@ -20,11 +20,12 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
-  if (gUser.signalLastSignedPreKeyUpdated != null) {
+  if (AppSession.currentUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
-    final isYoungerThan48Hours = (gUser.signalLastSignedPreKeyUpdated!).isAfter(
-      fortyEightHoursAgo,
-    );
+    final isYoungerThan48Hours =
+        (AppSession.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
+          fortyEightHoursAgo,
+        );
     if (isYoungerThan48Hours) {
       // The key does live for 48 hours then it expires and a new key is generated.
       return;
@@ -35,9 +36,8 @@ Future<void> signalHandleNewServerConnection() async {
     Log.error('could not generate a new signed pre key!');
     return;
   }
-  await updateUserdata((user) {
+  await updateUser((user) {
     user.signalLastSignedPreKeyUpdated = clock.now();
-    return user;
   });
   final res = await apiService.updateSignedPreKey(
     signedPreKey.id,
@@ -46,9 +46,8 @@ Future<void> signalHandleNewServerConnection() async {
   );
   if (res.isError) {
     Log.error('could not update the signed pre key: ${res.error}');
-    await updateUserdata((user) {
+    await updateUser((user) {
       user.signalLastSignedPreKeyUpdated = null;
-      return user;
     });
   } else {
     Log.info('updated signed pre key');
@@ -60,10 +59,9 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
   if (user == null) return [];
 
   final start = user.currentPreKeyIndexStart;
-  await updateUserdata((user) {
+  await updateUser((user) {
     user.currentPreKeyIndexStart =
         (user.currentPreKeyIndexStart + 200) % maxValue;
-    return user;
   });
   final preKeys = generatePreKeys(start, 200);
   final signalStore = await getSignalStore();
@@ -138,9 +136,8 @@ Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
   }
 
   final signedPreKeyId = user.currentSignedPreKeyIndexStart;
-  await updateUserdata((user) {
+  await updateUser((user) {
     user.currentSignedPreKeyIndexStart += 1;
-    return user;
   });
 
   final signedPreKey = generateSignedPreKey(

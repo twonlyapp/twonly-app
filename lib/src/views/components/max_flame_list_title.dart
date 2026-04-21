@@ -38,7 +38,10 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
 
   @override
   void initState() {
-    _groupId = getUUIDforDirectChat(widget.contactId, gUser.userId);
+    _groupId = getUUIDforDirectChat(
+      widget.contactId,
+      AppSession.currentUser.userId,
+    );
     final stream = twonlyDB.groupsDao.watchGroup(_groupId);
     _groupSub = stream.listen((update) {
       if (mounted) setState(() => _group = update);
@@ -53,7 +56,8 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   }
 
   Future<void> _restoreFlames() async {
-    if (!isUserAllowed(getCurrentPlan(), PremiumFeatures.RestoreFlames) &&
+    final currentPlan = planFromString(AppSession.currentUser.subscriptionPlan);
+    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
         kReleaseMode) {
       await context.push(Routes.settingsSubscription);
       return;

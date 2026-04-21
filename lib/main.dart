@@ -60,7 +60,7 @@ void main() async {
   }
 
   if (user != null) {
-    gUser = user;
+    AppSession.currentUser = user;
 
     if (user.allowErrorTrackingViaSentry) {
       AppState.allowErrorTrackingViaSentry = true;
@@ -91,20 +91,18 @@ void main() async {
   twonlyDB = TwonlyDB();
 
   if (user != null) {
-    if (gUser.appVersion < 90) {
+    if (AppSession.currentUser.appVersion < 90) {
       // BUG: Requested media files for reupload where not reuploaded because the wrong state...
       await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
-      await updateUserdata((u) {
+      await updateUser((u) {
         u.appVersion = 90;
-        return u;
       });
     }
-    if (gUser.appVersion < 91) {
+    if (AppSession.currentUser.appVersion < 91) {
       // BUG: Requested media files for reupload where not reuploaded because the wrong state...
       await makeMigrationToVersion91();
-      await updateUserdata((u) {
+      await updateUser((u) {
         u.appVersion = 91;
-        return u;
       });
     }
   }

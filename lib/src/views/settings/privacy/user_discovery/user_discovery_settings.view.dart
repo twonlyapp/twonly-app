@@ -22,26 +22,28 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
 
   @override
   void initState() {
-    _minimumRequiredImagesExchanged = gUser.minimumRequiredImagesExchanged;
-    _userDiscoveryThreshold = gUser.userDiscoveryThreshold;
+    _minimumRequiredImagesExchanged =
+        AppSession.currentUser.minimumRequiredImagesExchanged;
+    _userDiscoveryThreshold = AppSession.currentUser.userDiscoveryThreshold;
     super.initState();
   }
 
   Future<void> _saveChanges() async {
     final requiresNewInitialization =
-        gUser.userDiscoveryThreshold != _userDiscoveryThreshold;
+        AppSession.currentUser.userDiscoveryThreshold !=
+        _userDiscoveryThreshold;
 
-    await updateUserdata((u) {
+    await updateUser((u) {
       u
         ..minimumRequiredImagesExchanged = _minimumRequiredImagesExchanged
         ..userDiscoveryThreshold = _userDiscoveryThreshold;
-      return u;
     });
 
     if (requiresNewInitialization) {
       await UserDiscoveryService.initializeOrUpdate(
-        threshold: gUser.userDiscoveryThreshold,
-        minimumRequiredImagesExchanged: gUser.minimumRequiredImagesExchanged,
+        threshold: AppSession.currentUser.userDiscoveryThreshold,
+        minimumRequiredImagesExchanged:
+            AppSession.currentUser.minimumRequiredImagesExchanged,
       );
     }
     if (mounted) Navigator.pop(context);
@@ -113,8 +115,9 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
               height: 30,
             ),
             if (_minimumRequiredImagesExchanged !=
-                    gUser.minimumRequiredImagesExchanged ||
-                _userDiscoveryThreshold != gUser.userDiscoveryThreshold)
+                    AppSession.currentUser.minimumRequiredImagesExchanged ||
+                _userDiscoveryThreshold !=
+                    AppSession.currentUser.userDiscoveryThreshold)
               Padding(
                 padding: const EdgeInsets.all(17),
                 child: FilledButton(

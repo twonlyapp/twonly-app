@@ -47,13 +47,11 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> updateUserDisplayName(String displayName) async {
-    await updateUserdata((user) {
-      user
+    await updateUser(
+      (u) => u
         ..displayName = displayName
-        ..avatarCounter = user.avatarCounter + 1;
-      return user;
-    });
-    if (mounted) setState(() {}); // gUser has updated
+        ..avatarCounter = u.avatarCounter + 1,
+    );
   }
 
   Future<void> _updateUsername(String username) async {
@@ -94,13 +92,11 @@ class _ProfileViewState extends State<ProfileView> {
     await removeTwonlySafeFromServer();
     unawaited(performTwonlySafeBackup(force: true));
 
-    await updateUserdata((user) {
-      user
+    await updateUser(
+      (u) => u
         ..username = username
-        ..avatarCounter = user.avatarCounter + 1;
-      return user;
-    });
-    setState(() {}); // gUser has updated
+        ..avatarCounter = u.avatarCounter + 1,
+    );
   }
 
   @override
@@ -109,99 +105,107 @@ class _ProfileViewState extends State<ProfileView> {
       appBar: AppBar(
         title: Text(context.lang.settingsProfile),
       ),
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        children: <Widget>[
-          const SizedBox(height: 25),
-          AvatarMakerAvatar(
-            backgroundColor: Colors.transparent,
-            radius: 80,
-            controller: _avatarMakerController,
-          ),
-          const SizedBox(height: 10),
-          Center(
-            child: SizedBox(
-              height: 35,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.edit),
-                label: Text(context.lang.settingsProfileCustomizeAvatar),
-                onPressed: () async {
-                  await context.push(Routes.settingsProfileModifyAvatar);
-                  await _avatarMakerController.performRestore();
-                  setState(() {});
+      body: StreamBuilder<void>(
+        stream: AppSession.onUserUpdated,
+        builder: (context, _) {
+          return ListView(
+            physics: const BouncingScrollPhysics(),
+            children: <Widget>[
+              const SizedBox(height: 25),
+              AvatarMakerAvatar(
+                backgroundColor: Colors.transparent,
+                radius: 80,
+                controller: _avatarMakerController,
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: SizedBox(
+                  height: 35,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit),
+                    label: Text(context.lang.settingsProfileCustomizeAvatar),
+                    onPressed: () async {
+                      await context.push(Routes.settingsProfileModifyAvatar);
+                      await _avatarMakerController.performRestore();
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Divider(),
+              BetterListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(right: 5, left: 1),
+                  child: FaIcon(
+                    FontAwesomeIcons.qrcode,
+                    size: 20,
+                  ),
+                ),
+                onTap: () => context.push(Routes.settingsPublicProfile),
+                text: context.lang.profileYourQrCode,
+              ),
+              BetterListTile(
+                leading: const Padding(
+                  padding: EdgeInsets.only(right: 5, left: 1),
+                  child: FaIcon(
+                    FontAwesomeIcons.at,
+                    size: 20,
+                  ),
+                ),
+                text: context.lang.registerUsernameDecoration,
+                subtitle: Text(AppSession.currentUser.username),
+                onTap: () async {
+                  final username = await showDisplayNameChangeDialog(
+                    context,
+                    AppSession.currentUser.username,
+                    context.lang.registerUsernameDecoration,
+                    context.lang.registerUsernameDecoration,
+                    maxLength: 12,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(12),
+                      FilteringTextInputFormatter.allow(
+                        RegExp('[a-z0-9A-Z._]'),
+                      ),
+                    ],
+                  );
+                  if (context.mounted && username != null && username != '') {
+                    await _updateUsername(username);
+                  }
                 },
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Divider(),
-          BetterListTile(
-            leading: const Padding(
-              padding: EdgeInsets.only(right: 5, left: 1),
-              child: FaIcon(
-                FontAwesomeIcons.qrcode,
-                size: 20,
+              BetterListTile(
+                icon: FontAwesomeIcons.userPen,
+                text: context.lang.settingsProfileEditDisplayName,
+                subtitle: Text(AppSession.currentUser.displayName),
+                onTap: () async {
+                  final displayName = await showDisplayNameChangeDialog(
+                    context,
+                    AppSession.currentUser.displayName,
+                    context.lang.settingsProfileEditDisplayName,
+                    context.lang.settingsProfileEditDisplayNameNew,
+                    maxLength: 30,
+                  );
+                  if (context.mounted &&
+                      displayName != null &&
+                      displayName != '') {
+                    await updateUserDisplayName(displayName);
+                  }
+                },
               ),
-            ),
-            onTap: () => context.push(Routes.settingsPublicProfile),
-            text: context.lang.profileYourQrCode,
-          ),
-          BetterListTile(
-            leading: const Padding(
-              padding: EdgeInsets.only(right: 5, left: 1),
-              child: FaIcon(
-                FontAwesomeIcons.at,
-                size: 20,
+              BetterListTile(
+                text: context.lang.yourTwonlyScore,
+                icon: FontAwesomeIcons.trophy,
+                trailing: Text(
+                  twonlyScore.toString(),
+                  style: TextStyle(
+                    color: context.color.primary,
+                    fontSize: 18,
+                  ),
+                ),
               ),
-            ),
-            text: context.lang.registerUsernameDecoration,
-            subtitle: Text(gUser.username),
-            onTap: () async {
-              final username = await showDisplayNameChangeDialog(
-                context,
-                gUser.username,
-                context.lang.registerUsernameDecoration,
-                context.lang.registerUsernameDecoration,
-                maxLength: 12,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(12),
-                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
-                ],
-              );
-              if (context.mounted && username != null && username != '') {
-                await _updateUsername(username);
-              }
-            },
-          ),
-          BetterListTile(
-            icon: FontAwesomeIcons.userPen,
-            text: context.lang.settingsProfileEditDisplayName,
-            subtitle: Text(gUser.displayName),
-            onTap: () async {
-              final displayName = await showDisplayNameChangeDialog(
-                context,
-                gUser.displayName,
-                context.lang.settingsProfileEditDisplayName,
-                context.lang.settingsProfileEditDisplayNameNew,
-                maxLength: 30,
-              );
-              if (context.mounted && displayName != null && displayName != '') {
-                await updateUserDisplayName(displayName);
-              }
-            },
-          ),
-          BetterListTile(
-            text: context.lang.yourTwonlyScore,
-            icon: FontAwesomeIcons.trophy,
-            trailing: Text(
-              twonlyScore.toString(),
-              style: TextStyle(
-                color: context.color.primary,
-                fontSize: 18,
-              ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

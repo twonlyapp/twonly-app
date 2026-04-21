@@ -345,12 +345,12 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
       return null;
     }
   }
-  encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
+  encryptedContent.senderProfileCounter = Int64(AppSession.currentUser.avatarCounter);
 
-  if (gUser.isUserDiscoveryEnabled && messageId != null) {
+  if (AppSession.currentUser.isUserDiscoveryEnabled && messageId != null) {
     final contact = await twonlyDB.contactsDao.getContactById(contactId);
     if (contact != null &&
-        contact.mediaSendCounter >= gUser.minimumRequiredImagesExchanged &&
+        contact.mediaSendCounter >= AppSession.currentUser.minimumRequiredImagesExchanged &&
         !contact.userDiscoveryExcluded) {
       final version = await UserDiscoveryService.getCurrentVersion();
       if (version != null) {
@@ -406,7 +406,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
 }
 
 Future<void> sendTypingIndication(String groupId, bool isTyping) async {
-  if (!gUser.typingIndicators) return;
+  if (!AppSession.currentUser.typingIndicators) return;
   await sendCipherTextToGroup(
     groupId,
     pb.EncryptedContent(
@@ -462,15 +462,15 @@ Future<void> notifyContactAboutOpeningMessage(
 
 Future<void> sendContactMyProfileData(int contactId) async {
   List<int>? avatarSvgCompressed;
-  if (gUser.avatarSvg != null) {
-    avatarSvgCompressed = gzip.encode(utf8.encode(gUser.avatarSvg!));
+  if (AppSession.currentUser.avatarSvg != null) {
+    avatarSvgCompressed = gzip.encode(utf8.encode(AppSession.currentUser.avatarSvg!));
   }
   final encryptedContent = pb.EncryptedContent(
     contactUpdate: pb.EncryptedContent_ContactUpdate(
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
       avatarSvgCompressed: avatarSvgCompressed,
-      displayName: gUser.displayName,
-      username: gUser.username,
+      displayName: AppSession.currentUser.displayName,
+      username: AppSession.currentUser.username,
     ),
   );
   await sendCipherText(contactId, encryptedContent);

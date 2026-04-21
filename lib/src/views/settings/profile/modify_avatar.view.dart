@@ -23,13 +23,12 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   }
 
   Future<void> updateUserAvatar(String json, String svg) async {
-    await updateUserdata((user) {
-      user
+    await updateUser(
+      (u) => u
         ..avatarJson = json
         ..avatarSvg = svg
-        ..avatarCounter = user.avatarCounter + 1;
-      return user;
-    });
+        ..avatarCounter = u.avatarCounter + 1,
+    );
   }
 
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
@@ -121,7 +120,8 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        if (_avatarMakerController.getJsonOptionsSync() != gUser.avatarJson) {
+        if (_avatarMakerController.getJsonOptionsSync() !=
+            AppSession.currentUser.avatarJson) {
           // there where changes
           final shouldPop = await _showBackDialog() ?? false;
           if (context.mounted && shouldPop) {

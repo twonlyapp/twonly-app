@@ -33,7 +33,7 @@ class _AvatarIconState extends State<AvatarIcon> {
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
   StreamSubscription<Contact?>? contactStream;
-  StreamSubscription<void>? _userDataSub;
+  StreamSubscription<void>? _userSub;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _AvatarIconState extends State<AvatarIcon> {
     groupStream?.cancel();
     contactStream?.cancel();
     contactsStream?.cancel();
-    _userDataSub?.cancel();
+    _userSub?.cancel();
     super.dispose();
   }
 
@@ -93,19 +93,19 @@ class _AvatarIconState extends State<AvatarIcon> {
             setState(() {});
           });
     } else if (widget.myAvatar) {
-      _userDataSub = userDataUpdateController.stream.listen((_) {
+      _userSub = AppSession.onUserUpdated.listen((_) {
         if (mounted) {
           setState(() {
-            if (gUser.avatarSvg != null) {
-              _avatarSvg = gUser.avatarSvg;
+            if (AppSession.currentUser.avatarSvg != null) {
+              _avatarSvg = AppSession.currentUser.avatarSvg;
             } else {
               _avatarContacts = [];
             }
           });
         }
       });
-      if (gUser.avatarSvg != null) {
-        _avatarSvg = gUser.avatarSvg;
+      if (AppSession.currentUser.avatarSvg != null) {
+        _avatarSvg = AppSession.currentUser.avatarSvg;
       }
     } else if (widget.contactId != null) {
       contactStream = twonlyDB.contactsDao

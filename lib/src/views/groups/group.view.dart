@@ -142,7 +142,7 @@ class _GroupViewState extends State<GroupView> {
       success = await removeMemberFromGroup(
         _group!,
         keyPair.getPublicKey().serialize(),
-        gUser.userId,
+        AppSession.currentUser.userId,
       );
     } else {
       success = await leaveAsNonAdminFromGroup(_group!);

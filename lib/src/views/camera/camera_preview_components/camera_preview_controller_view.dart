@@ -208,10 +208,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> initAsync() async {
     _hasAudioPermission = await Permission.microphone.isGranted;
 
-    if (!_hasAudioPermission && !gUser.requestedAudioPermission) {
-      await updateUserdata((u) {
+    if (!_hasAudioPermission &&
+        !AppSession.currentUser.requestedAudioPermission) {
+      await updateUser((u) {
         u.requestedAudioPermission = true;
-        return u;
       });
       await requestMicrophonePermission();
     }
@@ -321,7 +321,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         ((videoFilePath != null) ? MediaType.video : MediaType.image);
     final mediaFileService = await initializeMediaUpload(
       type,
-      gUser.defaultShowTime,
+      AppSession.currentUser.defaultShowTime,
       isDraftMedia: true,
     );
     if (!mounted) return true;

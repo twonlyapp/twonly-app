@@ -57,7 +57,7 @@ Future<bool> initBackgroundExecution() async {
     // stay alive for multiple hours between task executions
     final user = await getUser();
     if (user == null) return false;
-    gUser = user;
+    AppSession.currentUser = user;
     return true;
   }
 
@@ -69,7 +69,7 @@ Future<bool> initBackgroundExecution() async {
 
   final user = await getUser();
   if (user == null) return false;
-  gUser = user;
+  AppSession.currentUser = user;
 
   twonlyDB = TwonlyDB();
   apiService = ApiService();

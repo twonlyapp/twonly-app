@@ -72,7 +72,7 @@ class _MessageInputState extends State<MessageInput> {
       _textFieldController.text = widget.group.draftMessage!;
     }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
-    if (gUser.typingIndicators) {
+    if (AppSession.currentUser.typingIndicators) {
       _nextTypingIndicator = Timer.periodic(const Duration(seconds: 1), (
         _,
       ) async {

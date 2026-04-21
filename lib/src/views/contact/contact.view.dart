@@ -204,7 +204,7 @@ class _ContactViewState extends State<ContactView> {
             },
           ),
           SelectChatDeletionTimeListTitle(
-            groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
+            groupId: getUUIDforDirectChat(widget.userId, AppSession.currentUser.userId),
           ),
           const Divider(),
           MaxFlameListTitle(
@@ -222,17 +222,17 @@ class _ContactViewState extends State<ContactView> {
                 setState(() {});
               },
             ),
-          if (gUser.isUserDiscoveryEnabled)
+          if (AppSession.currentUser.isUserDiscoveryEnabled)
             BetterListTile(
               icon: FontAwesomeIcons.usersViewfinder,
               text: context.lang.userDiscoverySettingsTitle,
               subtitle:
                   !contact.userDiscoveryExcluded &&
                       contact.mediaSendCounter <
-                          gUser.minimumRequiredImagesExchanged
+                          AppSession.currentUser.minimumRequiredImagesExchanged
                   ? Text(
                       context.lang.contactUserDiscoveryImagesLeft(
-                        gUser.minimumRequiredImagesExchanged -
+                        AppSession.currentUser.minimumRequiredImagesExchanged -
                             contact.mediaSendCounter,
                         getContactDisplayName(contact),
                       ),

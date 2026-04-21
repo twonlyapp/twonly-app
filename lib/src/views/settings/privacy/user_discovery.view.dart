@@ -18,9 +18,14 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
       appBar: AppBar(
         title: const Text('Freunde finden'),
       ),
-      body: gUser.isUserDiscoveryEnabled
-          ? UserDiscoveryEnabledComponent(onUpdate: () => setState(() {}))
-          : UserDiscoveryDisabledComponent(onUpdate: () => setState(() {})),
+      body: StreamBuilder<void>(
+        stream: AppSession.onUserUpdated,
+        builder: (context, _) {
+          return AppSession.currentUser.isUserDiscoveryEnabled
+              ? const UserDiscoveryEnabledComponent()
+              : const UserDiscoveryDisabledComponent();
+        },
+      ),
     );
   }
 }

@@ -73,32 +73,20 @@ class _AppearanceViewState extends State<AppearanceView> {
   }
 
   Future<void> toggleShowFeedbackIcon() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.showFeedbackShortcut = !u.showFeedbackShortcut;
-      return u;
-    });
-    setState(() {
-      // gUser
     });
   }
 
   Future<void> toggleStartWithCameraOpen() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.startWithCameraOpen = !u.startWithCameraOpen;
-      return u;
-    });
-    setState(() {
-      // gUser
     });
   }
 
   Future<void> toggleShowImagePreviewWhenSending() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
-      return u;
-    });
-    setState(() {
-      // gUser
     });
   }
 
@@ -109,43 +97,48 @@ class _AppearanceViewState extends State<AppearanceView> {
       appBar: AppBar(
         title: Text(context.lang.settingsAppearance),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: Text(context.lang.settingsAppearanceTheme),
-            subtitle: Text(
-              selectedTheme.name,
-              style: const TextStyle(color: Colors.grey),
-            ),
-            onTap: () async {
-              await _showSelectThemeMode(context);
-            },
-          ),
-          ListTile(
-            title: Text(context.lang.contactUsShortcut),
-            onTap: toggleShowFeedbackIcon,
-            trailing: Switch(
-              value: !gUser.showFeedbackShortcut,
-              onChanged: (a) => toggleShowFeedbackIcon(),
-            ),
-          ),
-          ListTile(
-            title: Text(context.lang.startWithCameraOpen),
-            onTap: toggleStartWithCameraOpen,
-            trailing: Switch(
-              value: gUser.startWithCameraOpen,
-              onChanged: (a) => toggleStartWithCameraOpen(),
-            ),
-          ),
-          ListTile(
-            title: Text(context.lang.showImagePreviewWhenSending),
-            onTap: toggleShowImagePreviewWhenSending,
-            trailing: Switch(
-              value: gUser.showShowImagePreviewWhenSending,
-              onChanged: (a) => toggleShowImagePreviewWhenSending(),
-            ),
-          ),
-        ],
+      body: StreamBuilder<void>(
+        stream: AppSession.onUserUpdated,
+        builder: (context, snapshot) {
+          return ListView(
+            children: [
+              ListTile(
+                title: Text(context.lang.settingsAppearanceTheme),
+                subtitle: Text(
+                  selectedTheme.name,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                onTap: () async {
+                  await _showSelectThemeMode(context);
+                },
+              ),
+              ListTile(
+                title: Text(context.lang.contactUsShortcut),
+                onTap: toggleShowFeedbackIcon,
+                trailing: Switch(
+                  value: !AppSession.currentUser.showFeedbackShortcut,
+                  onChanged: (a) => toggleShowFeedbackIcon(),
+                ),
+              ),
+              ListTile(
+                title: Text(context.lang.startWithCameraOpen),
+                onTap: toggleStartWithCameraOpen,
+                trailing: Switch(
+                  value: AppSession.currentUser.startWithCameraOpen,
+                  onChanged: (a) => toggleStartWithCameraOpen(),
+                ),
+              ),
+              ListTile(
+                title: Text(context.lang.showImagePreviewWhenSending),
+                onTap: toggleShowImagePreviewWhenSending,
+                trailing: Switch(
+                  value: AppSession.currentUser.showShowImagePreviewWhenSending,
+                  onChanged: (a) => toggleShowImagePreviewWhenSending(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

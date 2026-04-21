@@ -237,7 +237,7 @@ class MediaFileService {
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
-      if (gUser.storeMediaFilesInGallery) {
+      if (AppSession.currentUser.storeMediaFilesInGallery) {
         if (mediaFile.type == MediaType.video) {
           await saveVideoToGallery(storedPath.path);
         } else {

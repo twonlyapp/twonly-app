@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -73,7 +74,6 @@ class ChangeLogView extends StatefulWidget {
 
 class _ChangeLogViewState extends State<ChangeLogView> {
   String changeLog = '';
-  bool hideChangeLog = false;
 
   @override
   void initState() {
@@ -87,49 +87,41 @@ class _ChangeLogViewState extends State<ChangeLogView> {
 
   Future<void> initAsync() async {
     changeLog = await rootBundle.loadString('CHANGELOG.md');
-    final user = await getUser();
-    if (user != null) {
-      hideChangeLog = user.hideChangeLog;
-    }
-    setState(() {});
-  }
-
-  Future<void> _toggleAutoOpen(bool value) async {
-    await updateUserdata((u) {
-      u.hideChangeLog = !hideChangeLog;
-      return u;
-    });
-    setState(() {
-      hideChangeLog = !value;
-    });
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Changelog'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ListView(
-            children: parseMarkdown(context, changeLog),
+    return StreamBuilder<void>(
+      stream: AppSession.onUserUpdated,
+      builder: (context, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Changelog'),
           ),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(context.lang.openChangeLog),
-            Switch(
-              value: !hideChangeLog,
-              onChanged: _toggleAutoOpen,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ListView(
+                children: parseMarkdown(context, changeLog),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+          bottomNavigationBar: BottomAppBar(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(context.lang.openChangeLog),
+                Switch(
+                  value: !AppSession.currentUser.hideChangeLog,
+                  onChanged: (_) =>
+                      updateUser((u) => u.hideChangeLog = !u.hideChangeLog),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

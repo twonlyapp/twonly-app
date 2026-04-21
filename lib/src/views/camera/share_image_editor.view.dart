@@ -158,9 +158,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (!mounted) return;
     setState(() {});
     if (storeAsDefault) {
-      await updateUserdata((user) {
+      await updateUser((user) {
         user.defaultShowTime = maxShowTime;
-        return user;
       });
     }
   }

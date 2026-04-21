@@ -290,7 +290,7 @@ class _PlanCardState extends State<PlanCard> {
                     var url = 'https://apps.apple.com/account/subscriptions';
                     if (Platform.isAndroid) {
                       url =
-                          'https://play.google.com/store/account/subscriptions?sku=${gUser.subscriptionPlanIdStore}&package=eu.twonly';
+                          'https://play.google.com/store/account/subscriptions?sku=${AppSession.currentUser.subscriptionPlanIdStore}&package=eu.twonly';
                     }
                     await launchUrl(
                       Uri.parse(url),

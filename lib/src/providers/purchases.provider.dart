@@ -174,9 +174,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     // an ok authenticated which is processed in the apiProvider...
     if (res.isSuccess) {
       if (Platform.isAndroid) {
-        await updateUserdata((u) {
+        await updateUser((u) {
           u.subscriptionPlanIdStore = purchaseDetails.productID;
-          return u;
         });
       }
     }

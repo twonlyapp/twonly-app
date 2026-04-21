@@ -135,7 +135,7 @@ class HomeViewState extends State<HomeView> {
       _mainCameraController.setSharedLinkForPreview,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialPage == 1 && !gUser.startWithCameraOpen ||
+      if (widget.initialPage == 1 && !AppSession.currentUser.startWithCameraOpen ||
           widget.initialPage == 0) {
         globalUpdateOfHomeViewPageIndex(0);
       }

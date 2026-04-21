@@ -27,110 +27,121 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
       builder: (context) {
         return AutoDownloadOptionsDialog(
           autoDownloadOptions:
-              gUser.autoDownloadOptions ?? defaultAutoDownloadOptions,
+              AppSession.currentUser.autoDownloadOptions ??
+              defaultAutoDownloadOptions,
           connectionMode: connectionMode,
-          onUpdate: () async {
-            setState(() {});
-          },
+          onUpdate: () {},
         );
       },
     );
   }
 
   Future<void> toggleStoreInGallery() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.storeMediaFilesInGallery = !u.storeMediaFilesInGallery;
-      return u;
     });
-    setState(() {});
   }
 
   Future<void> toggleAutoStoreMediaFiles() async {
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.autoStoreAllSendUnlimitedMediaFiles =
           !u.autoStoreAllSendUnlimitedMediaFiles;
-      return u;
     });
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final autoDownloadOptions =
-        gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsStorageData),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            title: Text(context.lang.settingsStorageDataStoreInGTitle),
-            subtitle: Text(context.lang.settingsStorageDataStoreInGSubtitle),
-            onTap: toggleStoreInGallery,
-            trailing: Switch(
-              value: gUser.storeMediaFilesInGallery,
-              onChanged: (a) => toggleStoreInGallery(),
-            ),
-          ),
-          ListTile(
-            title: Text(context.lang.autoStoreAllSendUnlimitedMediaFiles),
-            subtitle: Text(
-              context.lang.autoStoreAllSendUnlimitedMediaFilesSubtitle,
-              style: const TextStyle(fontSize: 9),
-            ),
-            onTap: toggleAutoStoreMediaFiles,
-            trailing: Switch(
-              value: gUser.autoStoreAllSendUnlimitedMediaFiles,
-              onChanged: (a) => toggleAutoStoreMediaFiles(),
-            ),
-          ),
-          if (Platform.isAndroid)
-            ListTile(
-              title: Text(
-                context.lang.exportMemories,
+      body: StreamBuilder<void>(
+        stream: AppSession.onUserUpdated,
+        builder: (context, _) {
+          final autoDownloadOptions =
+              AppSession.currentUser.autoDownloadOptions ??
+              defaultAutoDownloadOptions;
+          return ListView(
+            children: [
+              ListTile(
+                title: Text(context.lang.settingsStorageDataStoreInGTitle),
+                subtitle: Text(
+                  context.lang.settingsStorageDataStoreInGSubtitle,
+                ),
+                onTap: toggleStoreInGallery,
+                trailing: Switch(
+                  value: AppSession.currentUser.storeMediaFilesInGallery,
+                  onChanged: (a) => toggleStoreInGallery(),
+                ),
               ),
-              onTap: () => context.push(Routes.settingsStorageExport),
-            ),
-          if (Platform.isAndroid)
-            ListTile(
-              title: Text(
-                context.lang.importMemories,
+              ListTile(
+                title: Text(context.lang.autoStoreAllSendUnlimitedMediaFiles),
+                subtitle: Text(
+                  context.lang.autoStoreAllSendUnlimitedMediaFilesSubtitle,
+                  style: const TextStyle(fontSize: 9),
+                ),
+                onTap: toggleAutoStoreMediaFiles,
+                trailing: Switch(
+                  value: AppSession
+                      .currentUser
+                      .autoStoreAllSendUnlimitedMediaFiles,
+                  onChanged: (a) => toggleAutoStoreMediaFiles(),
+                ),
               ),
-              onTap: () => context.push(Routes.settingsStorageImport),
-            ),
-          const Divider(),
-          ListTile(
-            title: Text(
-              context.lang.settingsStorageDataMediaAutoDownload,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-          ListTile(
-            title: Text(context.lang.settingsStorageDataAutoDownMobile),
-            subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.mobile.name]!
-                  .where((e) => e != 'audio')
-                  .join(', '),
-              style: const TextStyle(color: Colors.grey),
-            ),
-            onTap: () async {
-              await showAutoDownloadOptions(context, ConnectivityResult.mobile);
-            },
-          ),
-          ListTile(
-            title: Text(context.lang.settingsStorageDataAutoDownWifi),
-            subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.wifi.name]!
-                  .where((e) => e != 'audio')
-                  .join(', '),
-              style: const TextStyle(color: Colors.grey),
-            ),
-            onTap: () async {
-              await showAutoDownloadOptions(context, ConnectivityResult.wifi);
-            },
-          ),
-        ],
+              if (Platform.isAndroid)
+                ListTile(
+                  title: Text(
+                    context.lang.exportMemories,
+                  ),
+                  onTap: () => context.push(Routes.settingsStorageExport),
+                ),
+              if (Platform.isAndroid)
+                ListTile(
+                  title: Text(
+                    context.lang.importMemories,
+                  ),
+                  onTap: () => context.push(Routes.settingsStorageImport),
+                ),
+              const Divider(),
+              ListTile(
+                title: Text(
+                  context.lang.settingsStorageDataMediaAutoDownload,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              ListTile(
+                title: Text(context.lang.settingsStorageDataAutoDownMobile),
+                subtitle: Text(
+                  autoDownloadOptions[ConnectivityResult.mobile.name]!
+                      .where((e) => e != 'audio')
+                      .join(', '),
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                onTap: () async {
+                  await showAutoDownloadOptions(
+                    context,
+                    ConnectivityResult.mobile,
+                  );
+                },
+              ),
+              ListTile(
+                title: Text(context.lang.settingsStorageDataAutoDownWifi),
+                subtitle: Text(
+                  autoDownloadOptions[ConnectivityResult.wifi.name]!
+                      .where((e) => e != 'audio')
+                      .join(', '),
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                onTap: () async {
+                  await showAutoDownloadOptions(
+                    context,
+                    ConnectivityResult.wifi,
+                  );
+                },
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -215,9 +226,8 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
 
     // Call the onUpdate callback to notify the parent widget
 
-    await updateUserdata((u) {
+    await updateUser((u) {
       u.autoDownloadOptions = autoDownloadOptions;
-      return u;
     });
 
     widget.onUpdate();

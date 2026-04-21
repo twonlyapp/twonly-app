@@ -34,17 +34,17 @@ Future<void> handleUserDiscoveryRequest(
 ) async {
   Log.info('Got a user discovery request');
 
-  if (!gUser.isUserDiscoveryEnabled) {
+  if (!AppSession.currentUser.isUserDiscoveryEnabled) {
     Log.warn('Got a user discovery request while it is disabled');
     return;
   }
   final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
   if (contact == null) return;
 
-  if (contact.mediaSendCounter < gUser.minimumRequiredImagesExchanged ||
+  if (contact.mediaSendCounter < AppSession.currentUser.minimumRequiredImagesExchanged ||
       contact.userDiscoveryExcluded) {
     Log.warn(
-      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${gUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
+      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${AppSession.currentUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
     );
     return;
   }
@@ -72,7 +72,7 @@ Future<void> handleUserDiscoveryUpdate(
   int fromUserId,
   EncryptedContent_UserDiscoveryUpdate update,
 ) async {
-  if (!gUser.isUserDiscoveryEnabled) {
+  if (!AppSession.currentUser.isUserDiscoveryEnabled) {
     Log.warn('Got a user discovery update while it is disabled');
     return;
   }

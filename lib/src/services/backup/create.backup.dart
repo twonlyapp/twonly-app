@@ -19,20 +19,20 @@ import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/backup/backup.view.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
-  if (gUser.twonlySafeBackup == null) {
+  if (AppSession.currentUser.twonlySafeBackup == null) {
     return;
   }
 
-  if (gUser.twonlySafeBackup!.backupUploadState ==
+  if (AppSession.currentUser.twonlySafeBackup!.backupUploadState ==
       LastBackupUploadState.pending) {
     Log.warn('Backup upload is already pending.');
     return;
   }
 
-  final lastUpdateTime = gUser.twonlySafeBackup!.lastBackupDone;
+  final lastUpdateTime =
+      AppSession.currentUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
     if (lastUpdateTime.isAfter(clock.now().subtract(const Duration(days: 1)))) {
       return;
@@ -120,8 +120,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
-  if (gUser.twonlySafeBackup!.lastBackupDone == null ||
-      gUser.twonlySafeBackup!.lastBackupDone!.isAfter(
+  if (AppSession.currentUser.twonlySafeBackup!.lastBackupDone == null ||
+      AppSession.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
         clock.now().subtract(const Duration(days: 90)),
       )) {
     force = true;
@@ -149,7 +149,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final secretBox = await chacha20.encrypt(
     backupBytes,
-    secretKey: SecretKey(gUser.twonlySafeBackup!.encryptionKey),
+    secretKey: SecretKey(
+      AppSession.currentUser.twonlySafeBackup!.encryptionKey,
+    ),
     nonce: nonce,
   );
 
@@ -171,12 +173,12 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     'Create twonly Backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
-  if (gUser.backupServer != null) {
-    if (encryptedBackupBytes.length > gUser.backupServer!.maxBackupBytes) {
+  if (AppSession.currentUser.backupServer != null) {
+    if (encryptedBackupBytes.length >
+        AppSession.currentUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
-      await updateUserdata((user) {
+      await updateUser((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
-        return user;
       });
       return;
     }
@@ -186,7 +188,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     taskId: 'backup',
     file: encryptedBackupBytesFile,
     httpRequestMethod: 'PUT',
-    url: (await getTwonlySafeBackupUrl())!,
+    url: getTwonlySafeBackupUrl()!,
     post: 'binary',
     retries: 2,
     headers: {
@@ -195,13 +197,11 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   );
   if (await FileDownloader().enqueue(task)) {
     Log.info('Starting upload from twonly Backup.');
-    await updateUserdata((user) {
+    await updateUser((user) {
       user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
       user.twonlySafeBackup!.lastBackupDone = clock.now();
       user.twonlySafeBackup!.lastBackupSize = encryptedBackupBytes.length;
-      return user;
     });
-    gUpdateBackupView();
   } else {
     Log.error('Error starting UploadTask for twonly Backup.');
   }
@@ -210,26 +210,23 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    await updateUserdata((user) {
+    await updateUser((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
       }
-      return user;
     });
   } else if (update.status == TaskStatus.complete) {
     Log.info(
       'twonly Backup uploaded with status code ${update.responseStatusCode}',
     );
-    await updateUserdata((user) {
+    await updateUser((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState =
             LastBackupUploadState.success;
       }
-      return user;
     });
   } else {
     Log.info('Backup is in state: ${update.status}');
     return;
   }
-  gUpdateBackupView();
 }

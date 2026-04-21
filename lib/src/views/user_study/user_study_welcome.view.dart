@@ -86,10 +86,9 @@ class _UserStudyWelcomeViewState extends State<UserStudyWelcomeView> {
               Center(
                 child: GestureDetector(
                   onTap: () async {
-                    await updateUserdata((u) {
-                      u.askedForUserStudyPermission = true;
-                      return u;
-                    });
+                    await updateUser(
+                      (u) => u.askedForUserStudyPermission = true,
+                    );
                     if (context.mounted) context.pop();
                   },
                   child: const Text(

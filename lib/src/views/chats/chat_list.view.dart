@@ -27,6 +27,7 @@ class ChatListView extends StatefulWidget {
 }
 
 class _ChatListViewState extends State<ChatListView> {
+  StreamSubscription<void>? _userSub;
   late StreamSubscription<List<Group>> _contactsSub;
   List<Group> _groupsNotPinned = [];
   List<Group> _groupsPinned = [];
@@ -43,6 +44,9 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   void initState() {
     initAsync();
+    _userSub = AppSession.onUserUpdated.listen((_) {
+      if (mounted) setState(() {});
+    });
     super.initState();
   }
 
@@ -85,11 +89,11 @@ class _ChatListViewState extends State<ChatListView> {
         Sha256().hash,
         changeLog.codeUnits,
       )).bytes;
-      if (!gUser.hideChangeLog &&
-          gUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
-        await updateUserdata((u) {
+      if (!AppSession.currentUser.hideChangeLog &&
+          AppSession.currentUser.lastChangeLogHash.toString() !=
+              changeLogHash.toString()) {
+        await updateUser((u) {
           u.lastChangeLogHash = changeLogHash;
-          return u;
         });
         if (!mounted) return;
         // only show changelog to people who already have contacts
@@ -109,6 +113,7 @@ class _ChatListViewState extends State<ChatListView> {
     _contactsSub.cancel();
     _countContactRequestStream.cancel();
     _countAnnouncedStream.cancel();
+    _userSub?.cancel();
     super.dispose();
   }
 
@@ -122,9 +127,7 @@ class _ChatListViewState extends State<ChatListView> {
             ConnectionStatusBadge(
               child: GestureDetector(
                 onTap: () async {
-                  await context.push(Routes.settingsProfile);
-                  if (!mounted) return;
-                  setState(() {}); // gUser has updated
+                  context.push(Routes.settingsProfile);
                 },
                 child: AvatarIcon(
                   myAvatar: true,
@@ -199,8 +202,7 @@ class _ChatListViewState extends State<ChatListView> {
 
           IconButton(
             onPressed: () async {
-              await context.push(Routes.settings);
-              if (mounted) setState(() {}); // gUser may has changed...
+              context.push(Routes.settings);
             },
             icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
           ),

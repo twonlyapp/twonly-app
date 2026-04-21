@@ -38,6 +38,13 @@ late TwonlyDB twonlyDB;
 
 // Cached UserData in the memory. Every time the user data is changed the `updateUserdata` function is called,
 // which will update this global variable. The variable is set in the main.dart and after the user has registered in the register.view.dart
-late UserData gUser;
+class AppSession {
+  static late UserData currentUser;
 
-final userDataUpdateController = StreamController<void>.broadcast();
+  static final _userDataUpdateController = StreamController<void>.broadcast();
+  static Stream<void> get onUserUpdated => _userDataUpdateController.stream;
+
+  static void triggerUserUpdate() {
+    _userDataUpdateController.add(null);
+  }
+}

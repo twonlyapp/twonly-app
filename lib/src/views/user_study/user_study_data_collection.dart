@@ -15,7 +15,7 @@ const surveyUrlBase = 'https://survey.twonly.org/upload.php';
 
 Future<void> handleUserStudyUpload() async {
   try {
-    final token = gUser.userStudyParticipantsToken;
+    final token = AppSession.currentUser.userStudyParticipantsToken;
     if (token == null) return;
 
     // in case the survey was taken offline try again
@@ -35,8 +35,8 @@ Future<void> handleUserStudyUpload() async {
       await KeyValueStore.delete(userStudySurveyKey);
     }
 
-    if (gUser.lastUserStudyDataUpload != null &&
-        isToday(gUser.lastUserStudyDataUpload!)) {
+    if (AppSession.currentUser.lastUserStudyDataUpload != null &&
+        isToday(AppSession.currentUser.lastUserStudyDataUpload!)) {
       // Only send updates once a day.
       // This enables to see if improvements to actually work.
       return;
@@ -56,18 +56,16 @@ Future<void> handleUserStudyUpload() async {
       headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
-      await updateUserdata((u) {
+      await updateUser((u) {
         u.lastUserStudyDataUpload = DateTime.now();
-        return u;
       });
     }
     if (response.statusCode == 404) {
       // Token is unknown to the server...
-      await updateUserdata((u) {
+      await updateUser((u) {
         u
           ..lastUserStudyDataUpload = null
           ..userStudyParticipantsToken = null;
-        return u;
       });
     }
   } catch (e) {

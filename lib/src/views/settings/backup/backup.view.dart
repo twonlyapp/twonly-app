@@ -8,8 +8,6 @@ import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-void Function() gUpdateBackupView = () {};
-
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
 
@@ -34,18 +32,9 @@ class _BackupViewState extends State<BackupView> {
   void initState() {
     super.initState();
     unawaited(initAsync());
-    gUpdateBackupView = initAsync;
   }
 
-  @override
-  void dispose() {
-    gUpdateBackupView = () {};
-    super.dispose();
-  }
-
-  Future<void> initAsync() async {
-    setState(() {});
-  }
+  Future<void> initAsync() async {}
 
   String backupStatus(LastBackupUploadState status) {
     switch (status) {
@@ -62,156 +51,170 @@ class _BackupViewState extends State<BackupView> {
 
   Future<void> changeTwonlySafePassword() async {
     await context.push(Routes.settingsBackupSetup, extra: true);
-    setState(() {
-      // gUser was updated
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final backupServer = gUser.backupServer ?? defaultBackupServer;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsBackup),
-      ),
-      body: PageView(
-        controller: pageController,
-        onPageChanged: (index) {
-          setState(() {
-            activePageIdx = index;
-          });
-        },
-        children: [
-          BackupOption(
-            title: 'twonly Backup',
-            description: context.lang.backupTwonlySafeDesc,
-            bottomButton: FilledButton(
-              onPressed: changeTwonlySafePassword,
-              child: Text(context.lang.backupChangePassword),
-            ),
-            child: (gUser.twonlySafeBackup == null)
-                ? null
-                : Column(
-                    children: [
-                      Table(
-                        defaultVerticalAlignment:
-                            TableCellVerticalAlignment.middle,
+    return StreamBuilder<void>(
+      stream: AppSession.onUserUpdated,
+      builder: (context, _) {
+        final backupServer =
+            AppSession.currentUser.backupServer ?? defaultBackupServer;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(context.lang.settingsBackup),
+          ),
+          body: PageView(
+            controller: pageController,
+            onPageChanged: (index) {
+              setState(() {
+                activePageIdx = index;
+              });
+            },
+            children: [
+              BackupOption(
+                title: 'twonly Backup',
+                description: context.lang.backupTwonlySafeDesc,
+                bottomButton: FilledButton(
+                  onPressed: changeTwonlySafePassword,
+                  child: Text(context.lang.backupChangePassword),
+                ),
+                child: (AppSession.currentUser.twonlySafeBackup == null)
+                    ? null
+                    : Column(
                         children: [
-                          ...[
-                            (
-                              context.lang.backupServer,
-                              (backupServer.serverUrl.contains('@'))
-                                  ? backupServer.serverUrl.split('@')[1]
-                                  : backupServer.serverUrl.replaceAll(
-                                      'https://',
-                                      '',
-                                    ),
-                            ),
-                            (
-                              context.lang.backupMaxBackupSize,
-                              formatBytes(backupServer.maxBackupBytes),
-                            ),
-                            (
-                              context.lang.backupStorageRetention,
-                              '${backupServer.retentionDays} Days',
-                            ),
-                            (
-                              context.lang.backupLastBackupDate,
-                              formatDateTime(
-                                context,
-                                gUser.twonlySafeBackup!.lastBackupDone,
-                              ),
-                            ),
-                            (
-                              context.lang.backupLastBackupSize,
-                              formatBytes(
-                                gUser.twonlySafeBackup!.lastBackupSize,
-                              ),
-                            ),
-                            (
-                              context.lang.backupLastBackupResult,
-                              backupStatus(
-                                gUser.twonlySafeBackup!.backupUploadState,
-                              ),
-                            ),
-                          ].map((pair) {
-                            return TableRow(
-                              children: [
-                                TableCell(
-                                  // padding: EdgeInsets.all(4),
-                                  child: Text(pair.$1),
+                          Table(
+                            defaultVerticalAlignment:
+                                TableCellVerticalAlignment.middle,
+                            children: [
+                              ...[
+                                (
+                                  context.lang.backupServer,
+                                  (backupServer.serverUrl.contains('@'))
+                                      ? backupServer.serverUrl.split('@')[1]
+                                      : backupServer.serverUrl.replaceAll(
+                                          'https://',
+                                          '',
+                                        ),
                                 ),
-                                TableCell(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 4,
-                                    ),
-                                    child: Text(
-                                      pair.$2,
-                                      textAlign: TextAlign.right,
-                                    ),
+                                (
+                                  context.lang.backupMaxBackupSize,
+                                  formatBytes(backupServer.maxBackupBytes),
+                                ),
+                                (
+                                  context.lang.backupStorageRetention,
+                                  '${backupServer.retentionDays} Days',
+                                ),
+                                (
+                                  context.lang.backupLastBackupDate,
+                                  formatDateTime(
+                                    context,
+                                    AppSession
+                                        .currentUser
+                                        .twonlySafeBackup!
+                                        .lastBackupDone,
                                   ),
                                 ),
-                              ],
-                            );
-                          }),
+                                (
+                                  context.lang.backupLastBackupSize,
+                                  formatBytes(
+                                    AppSession
+                                        .currentUser
+                                        .twonlySafeBackup!
+                                        .lastBackupSize,
+                                  ),
+                                ),
+                                (
+                                  context.lang.backupLastBackupResult,
+                                  backupStatus(
+                                    AppSession
+                                        .currentUser
+                                        .twonlySafeBackup!
+                                        .backupUploadState,
+                                  ),
+                                ),
+                              ].map((pair) {
+                                return TableRow(
+                                  children: [
+                                    TableCell(
+                                      // padding: EdgeInsets.all(4),
+                                      child: Text(pair.$1),
+                                    ),
+                                    TableCell(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: Text(
+                                          pair.$2,
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          OutlinedButton(
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    await performTwonlySafeBackup(force: true);
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  },
+                            child: Text(context.lang.backupTwonlySaveNow),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      OutlinedButton(
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                await performTwonlySafeBackup(force: true);
-                                setState(() {
-                                  isLoading = false;
-                                });
-                              },
-                        child: Text(context.lang.backupTwonlySaveNow),
-                      ),
-                    ],
-                  ),
+              ),
+              BackupOption(
+                title: '${context.lang.backupData} (Coming Soon)',
+                description: context.lang.backupDataDesc,
+              ),
+            ],
           ),
-          BackupOption(
-            title: '${context.lang.backupData} (Coming Soon)',
-            description: context.lang.backupDataDesc,
+          bottomNavigationBar: BottomNavigationBar(
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            unselectedIconTheme: IconThemeData(
+              color: Theme.of(
+                context,
+              ).colorScheme.inverseSurface.withAlpha(150),
+            ),
+            selectedIconTheme: IconThemeData(
+              color: Theme.of(context).colorScheme.inverseSurface,
+            ),
+            items: [
+              const BottomNavigationBarItem(
+                icon: FaIcon(FontAwesomeIcons.vault, size: 17),
+                label: 'twonly Backup',
+              ),
+              BottomNavigationBarItem(
+                icon: const FaIcon(Icons.archive_outlined, size: 17),
+                label: context.lang.backupData,
+              ),
+            ],
+            onTap: (index) async {
+              activePageIdx = index;
+              await pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.bounceIn,
+              );
+              if (mounted) setState(() {});
+            },
+            currentIndex: activePageIdx,
+            // ),
           ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        unselectedIconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
-        ),
-        selectedIconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.inverseSurface,
-        ),
-        items: [
-          const BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.vault, size: 17),
-            label: 'twonly Backup',
-          ),
-          BottomNavigationBarItem(
-            icon: const FaIcon(Icons.archive_outlined, size: 17),
-            label: context.lang.backupData,
-          ),
-        ],
-        onTap: (index) async {
-          activePageIdx = index;
-          await pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.bounceIn,
-          );
-          if (mounted) setState(() {});
-        },
-        currentIndex: activePageIdx,
-        // ),
-      ),
+        );
+      },
     );
   }
 }

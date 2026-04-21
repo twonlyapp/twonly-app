@@ -31,8 +31,8 @@ class _BackupServerViewState extends State<BackupServerView> {
   }
 
   Future<void> initAsync() async {
-    if (gUser.backupServer != null) {
-      final uri = Uri.parse(gUser.backupServer!.serverUrl);
+    if (AppSession.currentUser.backupServer != null) {
+      final uri = Uri.parse(AppSession.currentUser.backupServer!.serverUrl);
       // remove user auth data
       final serverUrl = Uri(
         scheme: uri.scheme,
@@ -79,9 +79,8 @@ class _BackupServerViewState extends State<BackupServerView> {
           retentionDays: data['retentionDays']! as int,
           maxBackupBytes: data['maxBackupBytes']! as int,
         );
-        await updateUserdata((user) {
+        await updateUser((user) {
           user.backupServer = backupServer;
-          return user;
         });
         if (mounted) Navigator.pop(context, backupServer);
       } else {
@@ -166,9 +165,8 @@ class _BackupServerViewState extends State<BackupServerView> {
             Center(
               child: OutlinedButton(
                 onPressed: () async {
-                  await updateUserdata((user) {
+                  await updateUser((user) {
                     user.backupServer = null;
-                    return user;
                   });
                   if (context.mounted) Navigator.pop(context);
                 },

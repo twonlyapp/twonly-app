@@ -48,9 +48,8 @@ Future<void> checkForTokenUpdates() async {
     if (storedToken == null || fcmToken != storedToken) {
       Log.info('Got new FCM TOKEN.');
       await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
-      await updateUserdata((u) {
+      await updateUser((u) {
         u.updateFCMToken = true;
-        return u;
       });
     }
 
@@ -61,9 +60,8 @@ Future<void> checkForTokenUpdates() async {
             key: SecureStorageKeys.googleFcm,
             value: fcmToken,
           );
-          await updateUserdata((u) {
+          await updateUser((u) {
             u.updateFCMToken = true;
-            return u;
           });
         })
         .onError((err) {
@@ -75,16 +73,15 @@ Future<void> checkForTokenUpdates() async {
 }
 
 Future<void> initFCMAfterAuthenticated({bool force = false}) async {
-  if (gUser.updateFCMToken || force) {
+  if (AppSession.currentUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {
       final res = await apiService.updateFCMToken(storedToken);
       if (res.isSuccess) {
         Log.info('Uploaded new FCM token!');
-        await updateUserdata((u) {
+        await updateUser((u) {
           u.updateFCMToken = false;
-          return u;
         });
       } else {
         Log.error('Could not update FCM token!');

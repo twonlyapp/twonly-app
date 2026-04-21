@@ -102,7 +102,7 @@ class _ContactRowState extends State<_ContactRow> {
   bool _isLoading = false;
 
   Future<void> _onContactClick(bool isAdded) async {
-    if (widget.contact.userId.toInt() == gUser.userId) {
+    if (widget.contact.userId.toInt() == AppSession.currentUser.userId) {
       await context.push(Routes.settingsProfile);
       return;
     }
@@ -162,7 +162,7 @@ class _ContactRowState extends State<_ContactRow> {
         final contactInDb = snapshot.data;
         final isAdded =
             contactInDb != null ||
-            widget.contact.userId.toInt() == gUser.userId;
+            widget.contact.userId.toInt() == AppSession.currentUser.userId;
 
         return GestureDetector(
           onTap: _isLoading ? null : () => _onContactClick(isAdded),
