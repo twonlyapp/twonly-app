@@ -28,12 +28,12 @@ class AvatarIcon extends StatefulWidget {
 
 class _AvatarIconState extends State<AvatarIcon> {
   List<Contact> _avatarContacts = [];
-  String? _globalUserDataCallBackId;
   String? _avatarSvg;
 
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
   StreamSubscription<Contact?>? contactStream;
+  StreamSubscription<void>? _userDataSub;
 
   @override
   void initState() {
@@ -46,9 +46,7 @@ class _AvatarIconState extends State<AvatarIcon> {
     groupStream?.cancel();
     contactStream?.cancel();
     contactsStream?.cancel();
-    if (_globalUserDataCallBackId != null) {
-      globalUserDataChangedCallBack.remove(_globalUserDataCallBackId);
-    }
+    _userDataSub?.cancel();
     super.dispose();
   }
 
@@ -95,16 +93,17 @@ class _AvatarIconState extends State<AvatarIcon> {
             setState(() {});
           });
     } else if (widget.myAvatar) {
-      _globalUserDataCallBackId = 'avatar_${getRandomString(10)}';
-      globalUserDataChangedCallBack[_globalUserDataCallBackId!] = () {
-        setState(() {
-          if (gUser.avatarSvg != null) {
-            _avatarSvg = gUser.avatarSvg;
-          } else {
-            _avatarContacts = [];
-          }
-        });
-      };
+      _userDataSub = userDataUpdateController.stream.listen((_) {
+        if (mounted) {
+          setState(() {
+            if (gUser.avatarSvg != null) {
+              _avatarSvg = gUser.avatarSvg;
+            } else {
+              _avatarContacts = [];
+            }
+          });
+        }
+      });
       if (gUser.avatarSvg != null) {
         _avatarSvg = gUser.avatarSvg;
       }

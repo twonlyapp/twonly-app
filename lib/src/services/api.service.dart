@@ -64,6 +64,12 @@ class ApiService {
   final _connectionStateController = StreamController<bool>.broadcast();
   Stream<bool> get onConnectionStateUpdated => _connectionStateController.stream;
 
+  final _appOutdatedController = StreamController<void>.broadcast();
+  Stream<void> get onAppOutdated => _appOutdatedController.stream;
+
+  final _newDeviceRegisteredController = StreamController<void>.broadcast();
+  Stream<void> get onNewDeviceRegistered => _newDeviceRegisteredController.stream;
+
   bool appIsOutdated = false;
   bool isAuthenticated = false;
 
@@ -97,12 +103,12 @@ class ApiService {
     await initFCMAfterAuthenticated();
     _connectionStateController.add(true);
 
-    if (globalIsInBackgroundTask) {
+    if (AppState.isInBackgroundTask) {
       await retransmitRawBytes();
       await retransmitAllMessages();
       await reuploadMediaFiles();
       await tryDownloadAllMediaFiles();
-    } else if (!globalIsAppInBackground) {
+    } else if (!AppState.isAppInBackground) {
       unawaited(retransmitRawBytes());
       unawaited(retransmitAllMessages());
       unawaited(tryDownloadAllMediaFiles());
@@ -140,7 +146,7 @@ class ApiService {
   }
 
   Future<void> startReconnectionTimer() async {
-    if (globalIsInBackgroundTask) return;
+    if (AppState.isInBackgroundTask) return;
     if (reconnectionTimer?.isActive ?? false) {
       return;
     }
@@ -148,7 +154,7 @@ class ApiService {
     reconnectionTimer = Timer(Duration(seconds: _reconnectionDelay), () async {
       reconnectionTimer = null;
       // only try to reconnect in case the app is in the foreground
-      if (!globalIsAppInBackground) {
+      if (!AppState.isAppInBackground) {
         await connect();
       }
     });
@@ -353,14 +359,14 @@ class ApiService {
         Log.warn('Got error from server: ${res.error}');
       }
       if (res.error == ErrorCode.AppVersionOutdated) {
-        globalCallbackAppIsOutdated();
+        _appOutdatedController.add(null);
         Log.warn('App Version is OUTDATED.');
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);
       }
       if (res.error == ErrorCode.NewDeviceRegistered) {
-        globalCallbackNewDeviceRegistered();
+        _newDeviceRegisteredController.add(null);
         Log.warn(
           'Device is disabled, as a newer device restore twonly Backup.',
         );
@@ -416,7 +422,7 @@ class ApiService {
         ..userId = Int64(userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
         ..deviceId = Int64(user.deviceId)
-        ..inBackground = globalIsInBackgroundTask
+        ..inBackground = AppState.isInBackgroundTask
         ..authToken = base64Decode(apiAuthToken);
 
       final handshake = Handshake()..authenticate = authenticate;
@@ -427,7 +433,7 @@ class ApiService {
       if (result.isSuccess) {
         Log.info('websocket is authenticated');
         isAuthenticated = true;
-        if (globalIsInBackgroundTask) {
+        if (AppState.isInBackgroundTask) {
           await onAuthenticated();
         } else {
           unawaited(onAuthenticated());

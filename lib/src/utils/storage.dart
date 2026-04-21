@@ -72,13 +72,8 @@ Future<UserData?> updateUserdata(
     gUser = updated;
     return updated;
   });
-  try {
-    for (final callBack in globalUserDataChangedCallBack.values) {
-      callBack();
-    }
-  } catch (e) {
-    Log.error(e);
-  }
+  userDataUpdateController.add(null);
+
   return userData;
 }
 

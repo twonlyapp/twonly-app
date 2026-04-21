@@ -379,10 +379,10 @@ class MainCameraController {
               }
               await HapticFeedback.heavyImpact();
               if (verificationOk) {
-                globalRootScaffoldMessengerKey.currentState?.showSnackBar(
+                AppGlobalKeys.scaffoldMessengerKey.currentState?.showSnackBar(
                   SnackBar(
                     content: Text(
-                      globalRootScaffoldMessengerKey.currentContext?.lang
+                      AppGlobalKeys.scaffoldMessengerKey.currentContext?.lang
                               .verifiedPublicKey(
                                 getContactDisplayName(contact),
                               ) ??

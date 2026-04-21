@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,6 +19,18 @@ class AppEnvironment {
   }
 }
 
+class AppState {
+  static bool isAppInBackground = true;
+  static bool isInBackgroundTask = false;
+  static bool allowErrorTrackingViaSentry = false;
+  static bool gotMessageFromServer = false;
+}
+
+class AppGlobalKeys {
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
+}
+
 late ApiService apiService;
 
 // uses for background notification
@@ -26,20 +40,4 @@ late TwonlyDB twonlyDB;
 // which will update this global variable. The variable is set in the main.dart and after the user has registered in the register.view.dart
 late UserData gUser;
 
-// The following global function can be called from anywhere to update
-// the UI when something changed. The callbacks will be set by
-// App widget.
-
-// This callback called by the apiProvider
-void Function() globalCallbackAppIsOutdated = () {};
-void Function() globalCallbackNewDeviceRegistered = () {};
-
-Map<String, VoidCallback> globalUserDataChangedCallBack = {};
-
-bool globalIsAppInBackground = true;
-bool globalIsInBackgroundTask = false;
-bool globalAllowErrorTrackingViaSentry = false;
-bool globalGotMessageFromServer = false;
-
-final GlobalKey<ScaffoldMessengerState> globalRootScaffoldMessengerKey =
-    GlobalKey<ScaffoldMessengerState>();
+final userDataUpdateController = StreamController<void>.broadcast();

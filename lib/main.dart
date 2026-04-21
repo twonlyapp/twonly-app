@@ -63,7 +63,7 @@ void main() async {
     gUser = user;
 
     if (user.allowErrorTrackingViaSentry) {
-      globalAllowErrorTrackingViaSentry = true;
+      AppState.allowErrorTrackingViaSentry = true;
       await SentryFlutter.init(
         (options) => options
           ..dsn =

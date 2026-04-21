@@ -41,7 +41,7 @@ class Log {
     StackTrace? stackTrace,
   ]) {
     final message = filterLogMessage('$messageInput');
-    if (globalAllowErrorTrackingViaSentry) {
+    if (AppState.allowErrorTrackingViaSentry) {
       try {
         throw Exception(message);
       } catch (exception, stackTrace) {

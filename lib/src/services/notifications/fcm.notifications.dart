@@ -139,7 +139,7 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
   if (!Platform.isAndroid) {
     Log.error('Got message in Dart while on iOS');
   }
-  if (message.notification != null && globalIsAppInBackground) {
+  if (message.notification != null && AppState.isAppInBackground) {
     Log.error(
       'Got notification but app is in background, so the SDK already have shown the message.',
     );

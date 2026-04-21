@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,29 +17,37 @@ class AppOutdated extends StatefulWidget {
 class _AppOutdatedState extends State<AppOutdated> {
   bool appIsOutdated = false;
   bool newDeviceRegistered = false;
+  
+  late StreamSubscription<void> _subOutdated;
+  late StreamSubscription<void> _subNewDevice;
 
   @override
   void dispose() {
-    globalCallbackAppIsOutdated = () {};
-    globalCallbackNewDeviceRegistered = () {};
+    _subOutdated.cancel();
+    _subNewDevice.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
-    globalCallbackAppIsOutdated = () async {
-      await context.read<CustomChangeProvider>().updateConnectionState(false);
-      setState(() {
-        appIsOutdated = true;
-      });
-    };
-    globalCallbackNewDeviceRegistered = () async {
-      await context.read<CustomChangeProvider>().updateConnectionState(false);
-      setState(() {
-        newDeviceRegistered = true;
-      });
-    };
     super.initState();
+    _subOutdated = apiService.onAppOutdated.listen((_) async {
+      if (mounted) {
+        await context.read<CustomChangeProvider>().updateConnectionState(false);
+        setState(() {
+          appIsOutdated = true;
+        });
+      }
+    });
+
+    _subNewDevice = apiService.onNewDeviceRegistered.listen((_) async {
+      if (mounted) {
+        await context.read<CustomChangeProvider>().updateConnectionState(false);
+        setState(() {
+          newDeviceRegistered = true;
+        });
+      }
+    });
   }
 
   @override

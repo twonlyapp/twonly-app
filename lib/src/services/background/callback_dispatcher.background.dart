@@ -73,7 +73,7 @@ Future<bool> initBackgroundExecution() async {
 
   twonlyDB = TwonlyDB();
   apiService = ApiService();
-  globalIsInBackgroundTask = true;
+  AppState.isInBackgroundTask = true;
 
   _isInitialized = true;
   return true;
@@ -124,7 +124,7 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     return;
   }
 
-  while (!globalGotMessageFromServer) {
+  while (!AppState.gotMessageFromServer) {
     if (stopwatch.elapsed.inSeconds >= 15) {
       Log.info('No new message from the server after 15 seconds.');
       break;
@@ -132,7 +132,7 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  if (globalGotMessageFromServer) {
+  if (AppState.gotMessageFromServer) {
     Log.info('Received a server message from the server.');
   }
 

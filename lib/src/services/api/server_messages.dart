@@ -66,7 +66,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
       ..response = response;
 
     await apiService.sendResponse(ClientToServer()..v0 = v0);
-    globalGotMessageFromServer = true;
+    AppState.gotMessageFromServer = true;
   });
 }
 

@@ -32,7 +32,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    globalIsAppInBackground = false;
+    AppState.isAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
 
     unawaited(initAsync());
@@ -54,13 +54,13 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       if (wasPaused) {
-        globalIsAppInBackground = false;
+        AppState.isAppInBackground = false;
         twonlyDB.markUpdated();
         unawaited(apiService.connect());
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
-      globalIsAppInBackground = true;
+      AppState.isAppInBackground = true;
     }
   }
 
@@ -77,7 +77,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       builder: (context, child) {
         return MaterialApp.router(
           routerConfig: routerProvider,
-          scaffoldMessengerKey: globalRootScaffoldMessengerKey,
+          scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,

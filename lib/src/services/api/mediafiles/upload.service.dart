@@ -593,9 +593,9 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
 
     final connectivityResult = await Connectivity().checkConnectivity();
 
-    if (globalIsInBackgroundTask ||
+    if (AppState.isInBackgroundTask ||
         !connectivityResult.contains(ConnectivityResult.mobile) &&
-            !connectivityResult.contains(ConnectivityResult.wifi)) {
+        !connectivityResult.contains(ConnectivityResult.wifi)) {
       // no internet, directly put it into the background...
       await FileDownloader().enqueue(task);
       await media.setUploadState(UploadState.backgroundUploadTaskStarted);
