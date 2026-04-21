@@ -104,9 +104,13 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
         let signature = self.utils.sign_data(&signed_data.encode_to_vec()).await?;
 
+        debug_assert_eq!(threshold, config.threshold);
+
         let verification_shares = self
             .setup_announcements(&config, signed_data, signature)
             .await?;
+
+        debug_assert_eq!(verification_shares.len(), threshold as usize - 1);
 
         config.public_id = public_id;
         config.announcement_version += 1;

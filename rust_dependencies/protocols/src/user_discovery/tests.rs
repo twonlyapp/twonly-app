@@ -33,7 +33,7 @@ impl<S: UserDiscoveryStore + Clone + Default> TestNetwork<S> {
         self.names.push(name);
         self.friends.push(vec![]);
         self.announced_users_expected.push(vec![]);
-        
+
         let store = S::default();
         self.uds.push(get_ud(id, threshold, store).await);
     }
@@ -52,7 +52,10 @@ impl<S: UserDiscoveryStore + Clone + Default> TestNetwork<S> {
     fn expect_announced_user(&mut self, user: &str, contact: &str, friends_of_contact: &[&str]) {
         let user_id = self.ids_by_name[user];
         let contact_id = self.ids_by_name[contact];
-        let f_ids: Vec<usize> = friends_of_contact.iter().map(|f| self.ids_by_name[*f]).collect();
+        let f_ids: Vec<usize> = friends_of_contact
+            .iter()
+            .map(|f| self.ids_by_name[*f])
+            .collect();
         self.announced_users_expected[user_id].push((contact_id, f_ids));
     }
 }
@@ -72,17 +75,17 @@ async fn get_with_five_users<S: UserDiscoveryStore + Default + Clone>() -> TestN
     network.set_friends("DAVID", &["BOB", "CHARLIE"]);
     network.set_friends("FRANK", &["CHARLIE"]);
 
-    network.add_message_flow("ALICE", 1);   // ALICE: own announcement sending to BOB and CHARLIE
-    network.add_message_flow("BOB", 2);     // BOB: own announcement + promotion for ALICE
-    network.add_message_flow("BOB", 0);     // BOBs version should not have any new messages for his friends
-    network.add_message_flow("ALICE", 1);   // ALICE: promotion for BOB
+    network.add_message_flow("ALICE", 1); // ALICE: own announcement sending to BOB and CHARLIE
+    network.add_message_flow("BOB", 2); // BOB: own announcement + promotion for ALICE
+    network.add_message_flow("BOB", 0); // BOBs version should not have any new messages for his friends
+    network.add_message_flow("ALICE", 1); // ALICE: promotion for BOB
     network.add_message_flow("CHARLIE", 3); // CHARLIE: own announcement + promotion for ALICE, BOB
-    network.add_message_flow("DAVID", 3);   // DAVID: own announcement + promotion for BOB, CHARLIE
-    network.add_message_flow("BOB", 2);     // BOB: promotion for CHARLIE, DAVID
+    network.add_message_flow("DAVID", 3); // DAVID: own announcement + promotion for BOB, CHARLIE
+    network.add_message_flow("BOB", 2); // BOB: promotion for CHARLIE, DAVID
     network.add_message_flow("CHARLIE", 1); // CHARLIE: promotion for DAVID
-    network.add_message_flow("FRANK", 2);   // FRANK: own announcement +  promotion for CHARLIE
+    network.add_message_flow("FRANK", 2); // FRANK: own announcement +  promotion for CHARLIE
     network.add_message_flow("CHARLIE", 1); // CHARLIE: promotion for FRANK
-    network.add_message_flow("ALICE", 1);   // ALICE: promotion for CHARLIE
+    network.add_message_flow("ALICE", 1); // ALICE: promotion for CHARLIE
 
     // ALICE should now know that BOB and CHARLIE, BOB and DAVID and CHARLIE and DAVID are friends.
     // Alice should also have one protected share from Frank.
@@ -106,6 +109,91 @@ async fn get_with_five_users<S: UserDiscoveryStore + Default + Clone>() -> TestN
     network.expect_announced_user("FRANK", "CHARLIE", &[]);
 
     network
+}
+
+#[tokio::test]
+async fn test_user_discovery_dynamic_threshold_in_memory_store() {
+    let _ = pretty_env_logger::try_init();
+
+    let mut network = TestNetwork::<InMemoryStore>::new();
+
+    // Start ALICE with a more strict threshold of 3.
+    // David only has 2 paths to Alice (via Bob and Charlie). Since 2 < 3, David cannot discover Alice.
+    network.add_user("ALICE", 3).await;
+    network.add_user("BOB", 2).await;
+    network.add_user("CHARLIE", 2).await;
+    network.add_user("DAVID", 2).await;
+    network.add_user("FRANK", 2).await;
+
+    // Same topology as the initial 5 users
+    network.set_friends("ALICE", &["BOB", "CHARLIE"]);
+    network.set_friends("BOB", &["ALICE", "CHARLIE", "DAVID"]);
+    network.set_friends("CHARLIE", &["ALICE", "BOB", "DAVID", "FRANK"]);
+    network.set_friends("DAVID", &["BOB", "CHARLIE"]);
+    network.set_friends("FRANK", &["CHARLIE"]);
+
+    let david_idx = network.ids_by_name["DAVID"];
+    let alice_idx = network.ids_by_name["ALICE"];
+    let charlie_idx = network.ids_by_name["CHARLIE"];
+
+    // Phase 1: Exchange with ALICE threshold = 3
+    step0_exchange_random::<InMemoryStore>(&network).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&network).await;
+
+    let version = network.uds[david_idx]
+        .get_contact_version(charlie_idx as UserID)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(version, get_version_bytes(1, 4));
+
+    // DAVID should NOT know ALICE yet because ALICE's threshold is 3, but David only has 2 shares.
+    let david_knows = network.uds[david_idx]
+        .get_all_announced_users()
+        .await
+        .unwrap();
+
+    let knows_alice = david_knows
+        .iter()
+        .any(|(u, _)| u.user_id == alice_idx as UserID);
+
+    assert!(!knows_alice, "David should not know Alice yet because Alice's threshold is 3 and David only receives 2 shares");
+
+    // Phase 2: Update ALICE's threshold to 2
+    network.uds[alice_idx]
+        .initialize_or_update(2, alice_idx as UserID, vec![alice_idx as u8; 32])
+        .await
+        .unwrap();
+
+    let version = network.uds[alice_idx].get_current_version().await.unwrap();
+    assert_eq!(version, get_version_bytes(2, 2));
+
+    // ALICE's new announcement with threshold 2 should propagate further.
+    step0_exchange_random::<InMemoryStore>(&network).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&network).await;
+
+    let version = network.uds[david_idx]
+        .get_contact_version(charlie_idx as UserID)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(version, get_version_bytes(1, 5));
+
+    let version = network.uds[alice_idx].get_current_version().await.unwrap();
+    assert_eq!(version, get_version_bytes(2, 2));
+
+    // Now DAVID SHOULD know ALICE
+    let david_knows = network.uds[david_idx]
+        .get_all_announced_users()
+        .await
+        .unwrap();
+    let knows_alice_now = david_knows
+        .iter()
+        .any(|(u, _)| u.user_id == alice_idx as UserID);
+    assert!(
+        knows_alice_now,
+        "David should know Alice now because her threshold was updated to 2"
+    );
 }
 
 #[tokio::test]

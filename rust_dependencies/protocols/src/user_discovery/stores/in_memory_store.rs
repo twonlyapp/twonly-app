@@ -40,6 +40,7 @@ impl UserDiscoveryStore for InMemoryStore {
     }
 
     async fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()> {
+        self.storage().used_shares.clear();
         self.storage().unused_shares = shares;
         Ok(())
     }

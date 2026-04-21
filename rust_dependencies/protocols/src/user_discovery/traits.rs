@@ -14,7 +14,7 @@ pub struct OtherPromotion {
     pub public_key_verified_timestamp: Option<i64>,
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct AnnouncedUser {
     pub user_id: UserID,
     pub public_key: Vec<u8>,
