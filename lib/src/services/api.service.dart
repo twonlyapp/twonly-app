@@ -55,9 +55,9 @@ final lockAuthentication = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
-  final String apiSecure = kReleaseMode ? 's' : '';
+  final String apiSecure = kReleaseMode ? 's' : 's';
 
   final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
