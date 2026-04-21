@@ -171,19 +171,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get selectSubscription => 'Select subscription';
 
   @override
-  String get searchUserNamePending => 'Pending';
-
-  @override
-  String get searchUserNameBlockUserTooltip =>
-      'Block the user without informing.';
-
-  @override
-  String get searchUserNameRejectUserTooltip =>
-      'Reject the request and let the requester know.';
-
-  @override
-  String get searchUserNameArchiveUserTooltip =>
-      'Archive the user. He will appear again as soon as he accepts your request.';
+  String get searchUserNamePending => 'Request pending';
 
   @override
   String get searchUsernameNotFound => 'Username not found';
@@ -194,7 +182,7 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get searchUsernameNewFollowerTitle => 'Follow requests';
+  String get searchUsernameNewFollowerTitle => 'Open requests';
 
   @override
   String get searchUsernameQrCodeBtn => 'Scan QR code';
@@ -209,7 +197,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatListDetailInput => 'Type a message';
 
   @override
-  String get userDeletedAccount => 'The user has deleted its account.';
+  String get userDeletedAccount => 'The user has deleted their account.';
 
   @override
   String get contextMenuUserProfile => 'User profile';
@@ -508,7 +496,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String deleteAllContactMessagesBody(Object username) {
-    return 'This will remove all messages, except stored media files, in your chat with $username. This will NOT delete the messages stored at ${username}s device!';
+    return 'This will remove all messages, except stored media files, in your chat with $username. This will NOT delete the messages stored at $username\'s device!';
   }
 
   @override
@@ -871,7 +859,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get autoRenewalLongDesc =>
-      'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.';
+      'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal. We will notify you in good time before the automatic renewal.';
 
   @override
   String get planSuccessUpgraded => 'Successfully upgraded your plan.';
@@ -883,10 +871,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get additionalUsersList => 'Your additional users';
 
   @override
-  String get additionalUsersPlusTokens => 'twonly-Codes für \"Plus\" user';
+  String get additionalUsersPlusTokens => 'twonly-codes for \"Plus\" user';
 
   @override
-  String get additionalUsersFreeTokens => 'twonly-Codes für \"Free\" user';
+  String get additionalUsersFreeTokens => 'twonly-codes for \"Free\" user';
 
   @override
   String get planLimitReached =>
@@ -894,7 +882,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get planNotAllowed =>
-      'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.';
+      'You cannot send media files with your current tariff. Upgrade your plan now to send the media file.';
 
   @override
   String get galleryDelete => 'Delete file';
@@ -1335,12 +1323,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String youRevokedAdminRights(Object affectedR) {
-    return 'You revoked $affectedR admin rights.';
+    return 'You revoked $affectedR\'s admin rights.';
   }
 
   @override
   String makerRevokedAdminRights(Object affectedR, Object maker) {
-    return '$maker revoked $affectedR admin rights.';
+    return '$maker revoked $affectedR\'s admin rights.';
   }
 
   @override
@@ -1749,4 +1737,124 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get settingsTypingIndicationSubtitle =>
       'When the typing indicator is turned off, you can\'t see when others are typing a message.';
+
+  @override
+  String get scanQrOrShow => 'Scan / Show QR';
+
+  @override
+  String get contactActionBlock => 'Block';
+
+  @override
+  String get contactActionAccept => 'Accept';
+
+  @override
+  String get userDiscoverySettingsMinImages =>
+      'Choose the minimum number of images you must have exchanged with a person before you securely share your friends with them.';
+
+  @override
+  String get userDiscoverySettingsMutualFriends =>
+      'Choose how many mutual friends a person must have for you to be suggested to them.';
+
+  @override
+  String get userDiscoverySettingsApply => 'Apply changes';
+
+  @override
+  String get userDiscoveryEnabledDisableWarning =>
+      'If you disable the \"Find friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.';
+
+  @override
+  String get userDiscoveryEnabledChangeSettings => 'Change settings';
+
+  @override
+  String get userDiscoveryEnabledFaq =>
+      'In our FAQ we explain how the \"Find friends\" feature works.';
+
+  @override
+  String get userDiscoveryDisabledIntro =>
+      'twonly doesn\'t use phone numbers, so we suggest friends based on mutual contacts instead – securely and privately.';
+
+  @override
+  String get userDiscoveryDisabledInvisible =>
+      'Your friend list is *completely invisible to strangers*. Only your friends can see parts of it – and only those people with whom they have *mutual friends* themselves.';
+
+  @override
+  String get userDiscoveryDisabledDecide =>
+      'Decide for yourself who can see your friends. You can change your mind at any time or hide specific people.';
+
+  @override
+  String get userDiscoverySettingsTitle => 'Find friends';
+
+  @override
+  String get userDiscoverySettingsMinImagesTitle => 'Number of shared images';
+
+  @override
+  String get userDiscoverySettingsMutualFriendsTitle =>
+      'Number of mutual friends';
+
+  @override
+  String get userDiscoveryDisabledYouHaveControl => 'You are in control';
+
+  @override
+  String get userDiscoveryDisabledEnableWithDefault =>
+      'Enable with default settings';
+
+  @override
+  String get userDiscoveryDisabledCustomizeSettings => 'Customize settings';
+
+  @override
+  String get userDiscoveryDisabledLearnMore => 'Learn more';
+
+  @override
+  String get userDiscoveryEnabledDialogTitle => 'Really disable?';
+
+  @override
+  String get userDiscoveryEnabledFriendsShared => 'Friends you share';
+
+  @override
+  String get userDiscoveryEnabledFriendsSharedDesc =>
+      'You only share friends who have also activated this feature and who have reached the threshold you set.';
+
+  @override
+  String get userDiscoveryEnabledNoFriendsShared =>
+      'You are not sharing anyone yet.';
+
+  @override
+  String get userDiscoveryActionDisable => 'Disable';
+
+  @override
+  String get friendSuggestionsTitle => 'Friend suggestions';
+
+  @override
+  String get andWord => 'and';
+
+  @override
+  String friendSuggestionsFriendsWith(Object friends) {
+    return 'Friends with $friends.';
+  }
+
+  @override
+  String friendSuggestionsGroupMemberIn(Object groups) {
+    return ' Group member in $groups.';
+  }
+
+  @override
+  String get friendSuggestionsRequest => 'Request';
+
+  @override
+  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
+    return '$imagesLeft more images are needed until your friends are shared with $username.';
+  }
+
+  @override
+  String userDiscoveryEnabledVersion(Object version) {
+    return 'Version: $version';
+  }
+
+  @override
+  String userDiscoveryEnabledYourVersion(Object version) {
+    return 'Your version: $version';
+  }
+
+  @override
+  String get userDiscoveryEnabledStopSharing => 'Stop sharing';
 }

@@ -211,15 +211,12 @@ class ContactsListView extends StatelessWidget {
 
   List<Widget> sendRequestActions(BuildContext context, Contact contact) {
     return [
-      Tooltip(
-        message: context.lang.searchUserNameArchiveUserTooltip,
-        child: IconButton(
-          icon: const FaIcon(Icons.archive_outlined, size: 15),
-          onPressed: () async {
-            const update = ContactsCompanion(deletedByUser: Value(true));
-            await twonlyDB.contactsDao.updateContact(contact.userId, update);
-          },
-        ),
+      IconButton(
+        icon: const FaIcon(Icons.archive_outlined, size: 15),
+        onPressed: () async {
+          const update = ContactsCompanion(deletedByUser: Value(true));
+          await twonlyDB.contactsDao.updateContact(contact.userId, update);
+        },
       ),
       Text(context.lang.searchUserNamePending),
     ];
@@ -227,42 +224,36 @@ class ContactsListView extends StatelessWidget {
 
   List<Widget> requestedActions(BuildContext context, Contact contact) {
     return [
-      Tooltip(
-        message: context.lang.searchUserNameBlockUserTooltip,
-        child: IconButton(
-          icon: const Icon(
-            Icons.person_off_rounded,
-            color: Color.fromARGB(164, 244, 67, 54),
-          ),
-          onPressed: () async {
-            const update = ContactsCompanion(blocked: Value(true));
-            await twonlyDB.contactsDao.updateContact(contact.userId, update);
-          },
+      IconButton(
+        icon: const Icon(
+          Icons.person_off_rounded,
+          color: Color.fromARGB(164, 244, 67, 54),
         ),
+        onPressed: () async {
+          const update = ContactsCompanion(blocked: Value(true));
+          await twonlyDB.contactsDao.updateContact(contact.userId, update);
+        },
       ),
-      Tooltip(
-        message: context.lang.searchUserNameRejectUserTooltip,
-        child: IconButton(
-          icon: const Icon(Icons.close, color: Colors.red),
-          onPressed: () async {
-            await sendCipherText(
-              contact.userId,
-              EncryptedContent(
-                contactRequest: EncryptedContent_ContactRequest(
-                  type: EncryptedContent_ContactRequest_Type.REJECT,
-                ),
+      IconButton(
+        icon: const Icon(Icons.close, color: Colors.red),
+        onPressed: () async {
+          await sendCipherText(
+            contact.userId,
+            EncryptedContent(
+              contactRequest: EncryptedContent_ContactRequest(
+                type: EncryptedContent_ContactRequest_Type.REJECT,
               ),
-            );
-            await twonlyDB.contactsDao.updateContact(
-              contact.userId,
-              const ContactsCompanion(
-                accepted: Value(false),
-                requested: Value(false),
-                deletedByUser: Value(true),
-              ),
-            );
-          },
-        ),
+            ),
+          );
+          await twonlyDB.contactsDao.updateContact(
+            contact.userId,
+            const ContactsCompanion(
+              accepted: Value(false),
+              requested: Value(false),
+              deletedByUser: Value(true),
+            ),
+          );
+        },
       ),
       IconButton(
         icon: const Icon(Icons.check, color: Colors.green),

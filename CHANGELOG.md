@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- Improved: Typos and grammar issues thanks to @AlbertUnruh
+- Fix: App becomes unresponsive when clicking notifications.
+
 ## 0.1.7
 
 - Improved: Show input indicator in the chat overview as well 
