@@ -39,6 +39,12 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     );
 
     _planSub = apiService.onPlanUpdated.listen(updatePlan);
+    _connSub = apiService.onConnectionStateUpdated.listen((_) async {
+      final user = await getUser();
+      if (user != null) {
+        updatePlan(planFromString(user.subscriptionPlan));
+      }
+    });
 
     loadPurchases();
   }
@@ -51,6 +57,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   final InAppPurchase iapConnection = IAPConnection.instance;
 
   late StreamSubscription<SubscriptionPlan> _planSub;
+  late StreamSubscription<bool> _connSub;
   bool _userTriggeredBuyButton = false;
 
   void updatePlan(SubscriptionPlan newPlan) {
@@ -229,6 +236,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   @override
   void dispose() {
     _planSub.cancel();
+    _connSub.cancel();
     _subscription.cancel();
     super.dispose();
   }

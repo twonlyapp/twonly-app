@@ -4,7 +4,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -36,29 +35,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
 
-    globalCallbackConnectionState = ({required isConnected}) async {
-      await context.read<CustomChangeProvider>().updateConnectionState(
-        isConnected,
-      );
-      await setUserPlan();
-    };
-
     unawaited(initAsync());
   }
 
-  Future<void> setUserPlan() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user != null && mounted) {
-      if (mounted) {
-        context.read<PurchasesProvider>().updatePlan(
-          planFromString(user.subscriptionPlan),
-        );
-      }
+      context.read<PurchasesProvider>().updatePlan(
+        planFromString(user.subscriptionPlan),
+      );
     }
-  }
-
-  Future<void> initAsync() async {
-    await setUserPlan();
     await apiService.connect();
     await apiService.listenToNetworkChanges();
   }
@@ -81,7 +67,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    globalCallbackConnectionState = ({required isConnected}) {};
     super.dispose();
   }
 

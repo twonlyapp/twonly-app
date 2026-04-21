@@ -31,10 +31,6 @@ late UserData gUser;
 // App widget.
 
 // This callback called by the apiProvider
-void Function({required bool isConnected}) globalCallbackConnectionState =
-    ({
-      required isConnected,
-    }) {};
 void Function() globalCallbackAppIsOutdated = () {};
 void Function() globalCallbackNewDeviceRegistered = () {};
 

@@ -61,6 +61,9 @@ class ApiService {
   final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
 
+  final _connectionStateController = StreamController<bool>.broadcast();
+  Stream<bool> get onConnectionStateUpdated => _connectionStateController.stream;
+
   bool appIsOutdated = false;
   bool isAuthenticated = false;
 
@@ -92,7 +95,7 @@ class ApiService {
   // Function is called after the user is authenticated at the server
   Future<void> onAuthenticated() async {
     await initFCMAfterAuthenticated();
-    globalCallbackConnectionState(isConnected: true);
+    _connectionStateController.add(true);
 
     if (globalIsInBackgroundTask) {
       await retransmitRawBytes();
@@ -125,13 +128,13 @@ class ApiService {
   Future<void> onConnected() async {
     await authenticate();
     _reconnectionDelay = 1;
-    globalCallbackConnectionState(isConnected: true);
+    _connectionStateController.add(true);
   }
 
   Future<void> onClosed() async {
     _channel = null;
     isAuthenticated = false;
-    globalCallbackConnectionState(isConnected: false);
+    _connectionStateController.add(false);
     await twonlyDB.mediaFilesDao.resetPendingDownloadState();
     await startReconnectionTimer();
   }
