@@ -97,6 +97,7 @@ pub trait UserDiscoveryUtils {
     ) -> impl Future<Output = Result<bool>> + Send;
 }
 
+#[cfg(test)]
 pub(crate) mod tests {
     use crate::user_discovery::traits::UserDiscoveryUtils;
 

@@ -1,5 +1,6 @@
 pub mod error;
 pub mod stores;
+#[cfg(test)]
 pub mod tests;
 pub mod traits;
 
@@ -256,6 +257,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         }
     }
 
+    #[cfg(test)]
     pub(crate) async fn get_contact_version(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
         self.store.get_contact_version(contact_id).await
     }
