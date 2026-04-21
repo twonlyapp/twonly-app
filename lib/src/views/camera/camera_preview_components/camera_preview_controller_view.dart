@@ -592,7 +592,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
-    if (mc.selectedCameraDetails.cameraId >= gCameras.length ||
+    if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
         mc.cameraController == null) {
       return Container();
     }

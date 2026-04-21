@@ -51,11 +51,11 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
 
-    var index = gCameras.indexWhere(
+    var index = AppEnvironment.cameras.indexWhere(
       (t) => t.lensType == CameraLensType.ultraWide,
     );
     if (index == -1) {
-      index = gCameras.indexWhere(
+      index = AppEnvironment.cameras.indexWhere(
         (t) => t.lensType == CameraLensType.wide,
       );
     }

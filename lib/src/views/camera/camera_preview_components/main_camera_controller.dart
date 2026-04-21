@@ -105,16 +105,17 @@ class MainCameraController {
     initCameraStarted = true;
 
     var cameraId = sCameraId;
-    if (cameraId >= gCameras.length) {
+    if (cameraId >= AppEnvironment.cameras.length) {
       Log.warn(
-        'Trying to select a non existing camera $cameraId >= ${gCameras.length}',
+        'Trying to select a non existing camera $cameraId >= ${AppEnvironment.cameras.length}',
       );
       return;
     }
 
     if (init) {
-      for (; cameraId < gCameras.length; cameraId++) {
-        if (gCameras[cameraId].lensDirection == CameraLensDirection.back) {
+      for (; cameraId < AppEnvironment.cameras.length; cameraId++) {
+        if (AppEnvironment.cameras[cameraId].lensDirection ==
+            CameraLensDirection.back) {
           break;
         }
       }
@@ -124,7 +125,7 @@ class MainCameraController {
 
     if (cameraController == null) {
       cameraController = CameraController(
-        gCameras[cameraId],
+        AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
         enableAudio: await Permission.microphone.isGranted,
         imageFormatGroup: Platform.isAndroid
@@ -150,7 +151,7 @@ class MainCameraController {
       selectedCameraDetails.scaleFactor = 1;
 
       await cameraController?.setZoomLevel(1);
-      await cameraController?.setDescription(gCameras[cameraId]);
+      await cameraController?.setDescription(AppEnvironment.cameras[cameraId]);
       try {
         if (!isVideoRecording) {
           await cameraController?.startImageStream(_processCameraImage);

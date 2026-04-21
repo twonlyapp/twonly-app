@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
@@ -35,10 +33,7 @@ void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
 
   await RustLib.init();
-
-  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
-  globalApplicationSupportDirectory =
-      (await getApplicationSupportDirectory()).path;
+  await AppEnvironment.init();
 
   initLogger();
 
@@ -46,8 +41,8 @@ void main() async {
 
   await bridge.initializeTwonlyFlutter(
     config: bridge.TwonlyConfig(
-      databasePath: '$globalApplicationSupportDirectory/twonly.sqlite',
-      dataDirectory: globalApplicationSupportDirectory,
+      databasePath: '${AppEnvironment.supportDir}/twonly.sqlite',
+      dataDirectory: AppEnvironment.supportDir,
     ),
   );
 
@@ -56,7 +51,7 @@ void main() async {
   var user = await getUser();
 
   if (Platform.isIOS && user != null) {
-    final db = File('$globalApplicationSupportDirectory/twonly.sqlite');
+    final db = File('${AppEnvironment.supportDir}/twonly.sqlite');
     if (!db.existsSync()) {
       Log.error('[twonly] IOS: App was removed and then reinstalled again...');
       await const FlutterSecureStorage().deleteAll();
@@ -91,8 +86,6 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   unawaited(setupPushNotification());
-
-  gCameras = await availableCameras();
 
   apiService = ApiService();
   twonlyDB = TwonlyDB();

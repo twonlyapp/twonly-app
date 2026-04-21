@@ -37,7 +37,7 @@ Future<void> createPushAvatars({int? forceForUserId}) async {
 
 File avatarPNGFile(int contactId) {
   final avatarsDirectory = Directory(
-    '$globalApplicationCacheDirectory/avatars',
+    '${AppEnvironment.cacheDir}/avatars',
   );
 
   if (!avatarsDirectory.existsSync()) {

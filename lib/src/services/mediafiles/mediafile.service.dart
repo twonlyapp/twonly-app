@@ -27,7 +27,7 @@ class MediaFileService {
     try {
       final tempDirectory = MediaFileService.buildDirectoryPath(
         'tmp',
-        globalApplicationSupportDirectory,
+        AppEnvironment.supportDir,
       );
 
       final files = tempDirectory.listSync();
@@ -307,7 +307,7 @@ class MediaFileService {
     }
     final mediaBaseDir = buildDirectoryPath(
       directory,
-      globalApplicationSupportDirectory,
+      AppEnvironment.supportDir,
     );
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),

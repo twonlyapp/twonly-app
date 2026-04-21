@@ -41,9 +41,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   Log.info('Starting new twonly Backup!');
 
-  final baseDir = globalApplicationSupportDirectory;
-
-  final backupDir = Directory(join(baseDir, 'backup_twonly_safe/'));
+  final backupDir = Directory(
+    join(AppEnvironment.supportDir, 'backup_twonly_safe/'),
+  );
   await backupDir.create(recursive: true);
 
   final backupDatabaseFile = File(join(backupDir.path, 'twonly.backup.sqlite'));
@@ -53,7 +53,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   );
 
   // copy database
-  final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
+  final originalDatabase = File(
+    join(AppEnvironment.supportDir, 'twonly.sqlite'),
+  );
   await originalDatabase.copy(backupDatabaseFile.path);
 
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;

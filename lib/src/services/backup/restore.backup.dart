@@ -90,7 +90,7 @@ Future<void> handleBackupData(
   );
 
   final originalDatabase = File(
-    join(globalApplicationSupportDirectory, 'twonly.sqlite'),
+    join(AppEnvironment.supportDir, 'twonly.sqlite'),
   );
   await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
 

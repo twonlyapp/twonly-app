@@ -5,7 +5,7 @@ import 'package:twonly/src/utils/log.dart';
 
 class KeyValueStore {
   static Future<File> _getFilePath(String key) async {
-    return File('$globalApplicationSupportDirectory/keyvalue/$key.json');
+    return File('${AppEnvironment.supportDir}/keyvalue/$key.json');
   }
 
   static Future<void> delete(String key) async {

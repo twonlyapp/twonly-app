@@ -8,7 +8,7 @@ Future<T> exclusiveAccess<T>({
   required Future<T> Function() action,
   required Mutex mutex,
 }) async {
-  final lockFile = File('$globalApplicationSupportDirectory/$lockName.lock');
+  final lockFile = File('${AppEnvironment.supportDir}/$lockName.lock');
   return mutex.protect(() async {
     var lockAcquired = false;
 

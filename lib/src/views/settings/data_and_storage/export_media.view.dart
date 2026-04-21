@@ -48,7 +48,7 @@ class _ExportMediaViewState extends State<ExportMediaView> {
   Directory _mediaFolder() {
     final dir = MediaFileService.buildDirectoryPath(
       'stored',
-      globalApplicationSupportDirectory,
+      AppEnvironment.supportDir,
     );
     if (!dir.existsSync()) dir.createSync(recursive: true);
     return dir;

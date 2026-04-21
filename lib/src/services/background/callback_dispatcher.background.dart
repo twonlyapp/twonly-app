@@ -62,9 +62,8 @@ Future<bool> initBackgroundExecution() async {
   }
 
   SentryWidgetsFlutterBinding.ensureInitialized();
-  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
-  globalApplicationSupportDirectory =
-      (await getApplicationSupportDirectory()).path;
+  AppEnvironment.cacheDir = (await getApplicationCacheDirectory()).path;
+  AppEnvironment.supportDir = (await getApplicationSupportDirectory()).path;
 
   initLogger();
 
