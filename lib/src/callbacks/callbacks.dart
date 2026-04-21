@@ -8,7 +8,8 @@ Future<void> initFlutterCallbacksForRust() async {
     userDiscoverySetShares: UserDiscoveryCallbacks.setShares,
     userDiscoveryGetShareForContact:
         UserDiscoveryCallbacks.userDiscoveryGetShareForContact,
-    userDiscoveryPushOwnPromotion: UserDiscoveryCallbacks.pushOwnPromotion,
+    userDiscoveryPushOwnPromotionAndClearOldVersion:
+        UserDiscoveryCallbacks.userDiscoveryPushOwnPromotionAndClearOldVersion,
     userDiscoveryPushNewUserRelation:
         UserDiscoveryCallbacks.pushNewUserRelation,
     userDiscoveryGetOwnPromotionsAfterVersion:

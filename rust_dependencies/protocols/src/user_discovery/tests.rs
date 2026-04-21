@@ -112,7 +112,7 @@ async fn get_with_five_users<S: UserDiscoveryStore + Default + Clone>() -> TestN
 }
 
 #[tokio::test]
-async fn test_user_discovery_dynamic_threshold_in_memory_store() {
+async fn test_user_discovery_decreased_threshold_in_memory_store() {
     let _ = pretty_env_logger::try_init();
 
     let mut network = TestNetwork::<InMemoryStore>::new();
@@ -194,6 +194,84 @@ async fn test_user_discovery_dynamic_threshold_in_memory_store() {
         knows_alice_now,
         "David should know Alice now because her threshold was updated to 2"
     );
+}
+
+#[tokio::test]
+async fn test_user_discovery_increased_threshold_in_memory_store() {
+    let _ = pretty_env_logger::try_init();
+
+    let mut network = TestNetwork::<InMemoryStore>::new();
+
+    // Start ALICE with a more strict threshold of 3.
+    // David only has 2 paths to Alice (via Bob and Charlie). Since 2 < 3, David cannot discover Alice.
+    network.add_user("ALICE", 2).await;
+    network.add_user("BOB", 2).await;
+    network.add_user("CHARLIE", 2).await;
+    network.add_user("DAVID", 2).await;
+    network.add_user("FRANK", 2).await;
+
+    // Same topology as the initial 5 users
+    network.set_friends("ALICE", &["BOB", "CHARLIE"]);
+    network.set_friends("BOB", &["ALICE", "CHARLIE", "DAVID"]);
+    // CHARLIE IS NOT YET A FRIEND OF DAVID -> DAVID SHOULD NOT BE ABLE TO BE DECODE ALICE
+    network.set_friends("CHARLIE", &["ALICE", "BOB", "FRANK"]);
+    network.set_friends("DAVID", &["BOB", "CHARLIE"]);
+    network.set_friends("FRANK", &["CHARLIE"]);
+
+    let david_idx = network.ids_by_name["DAVID"];
+    let alice_idx = network.ids_by_name["ALICE"];
+
+    // Phase 1: Exchange with ALICE threshold = 2
+    step0_exchange_random::<InMemoryStore>(&network).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&network).await;
+
+    // DAVID should NOT know ALICE yet because ALICE's threshold is 2, and David has only 1 shares.
+    {
+        let david_knows = network.uds[david_idx]
+            .get_all_announced_users()
+            .await
+            .unwrap();
+
+        let knows_alice = david_knows
+            .iter()
+            .any(|(u, _)| u.user_id == alice_idx as UserID);
+
+        assert!(!knows_alice, "David should not know Alice yet because Alice's threshold is 3 and David only receives 2 shares");
+    }
+
+    // Phase 2: Update ALICE's threshold to 3
+    network.uds[alice_idx]
+        .initialize_or_update(3, alice_idx as UserID, vec![alice_idx as u8; 32])
+        .await
+        .unwrap();
+
+    // ALICE's new announcement with threshold 3 should propagate further.
+    // This SHOULD REPLACE THE OLD VERSION...
+    step0_exchange_random::<InMemoryStore>(&network).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&network).await;
+
+    // Now Charlie is a friend of David, so he should exchange ALICE with him
+
+    network.set_friends("CHARLIE", &["ALICE", "BOB", "DAVID", "FRANK"]);
+
+    // ALICE's new announcement with threshold 3 should propagate further.
+    // This SHOULD REPLACE THE OLD VERSION...
+    step0_exchange_random::<InMemoryStore>(&network).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&network).await;
+
+    // DAVID should still NOT know ALICE yet because ALICE's new threshold is 3, and David has only 2 shares.
+    {
+        let david_knows = network.uds[david_idx]
+            .get_all_announced_users()
+            .await
+            .unwrap();
+
+        let knows_alice = david_knows
+            .iter()
+            .any(|(u, _)| u.user_id == alice_idx as UserID);
+
+        assert!(!knows_alice, "David should not know Alice yet because Alice's threshold is 3 and David only receives 2 shares");
+    }
 }
 
 #[tokio::test]

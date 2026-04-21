@@ -31,7 +31,7 @@ pub trait UserDiscoveryStore {
         contact_id: UserID,
     ) -> impl Future<Output = Result<Vec<u8>>> + Send;
 
-    fn push_own_promotion(
+    fn push_own_promotion_and_clear_old_version(
         &self,
         contact_id: UserID,
         version: u32,

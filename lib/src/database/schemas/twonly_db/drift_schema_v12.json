@@ -178,6 +178,40 @@
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
+          },
+          {
+            "name": "user_discovery_excluded",
+            "getter_name": "userDiscoveryExcluded",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"user_discovery_excluded\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"user_discovery_excluded\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "media_send_counter",
+            "getter_name": "mediaSendCounter",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "media_received_counter",
+            "getter_name": "mediaReceivedCounter",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -2126,6 +2160,44 @@
             "dsl_features": [
               "unique"
             ]
+          },
+          {
+            "name": "username",
+            "getter_name": "username",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "was_shown_to_the_user",
+            "getter_name": "wasShownToTheUser",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"was_shown_to_the_user\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"was_shown_to_the_user\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "is_hidden",
+            "getter_name": "isHidden",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"is_hidden\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"is_hidden\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -2311,7 +2383,7 @@
         "constraints": [],
         "explicit_pk": [
           "from_contact_id",
-          "promotion_id"
+          "public_id"
         ]
       }
     },
@@ -2458,7 +2530,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"contacts\" (\"user_id\" INTEGER NOT NULL, \"username\" TEXT NOT NULL, \"display_name\" TEXT NULL, \"nick_name\" TEXT NULL, \"avatar_svg_compressed\" BLOB NULL, \"sender_profile_counter\" INTEGER NOT NULL DEFAULT 0, \"accepted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"accepted\" IN (0, 1)), \"deleted_by_user\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted_by_user\" IN (0, 1)), \"requested\" INTEGER NOT NULL DEFAULT 0 CHECK (\"requested\" IN (0, 1)), \"blocked\" INTEGER NOT NULL DEFAULT 0 CHECK (\"blocked\" IN (0, 1)), \"verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"verified\" IN (0, 1)), \"account_deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"account_deleted\" IN (0, 1)), \"created_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"user_discovery_version\" BLOB NULL, PRIMARY KEY (\"user_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"contacts\" (\"user_id\" INTEGER NOT NULL, \"username\" TEXT NOT NULL, \"display_name\" TEXT NULL, \"nick_name\" TEXT NULL, \"avatar_svg_compressed\" BLOB NULL, \"sender_profile_counter\" INTEGER NOT NULL DEFAULT 0, \"accepted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"accepted\" IN (0, 1)), \"deleted_by_user\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted_by_user\" IN (0, 1)), \"requested\" INTEGER NOT NULL DEFAULT 0 CHECK (\"requested\" IN (0, 1)), \"blocked\" INTEGER NOT NULL DEFAULT 0 CHECK (\"blocked\" IN (0, 1)), \"verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"verified\" IN (0, 1)), \"account_deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"account_deleted\" IN (0, 1)), \"created_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"user_discovery_version\" BLOB NULL, \"user_discovery_excluded\" INTEGER NOT NULL DEFAULT 0 CHECK (\"user_discovery_excluded\" IN (0, 1)), \"media_send_counter\" INTEGER NOT NULL DEFAULT 0, \"media_received_counter\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"user_id\"));"
         }
       ]
     },
@@ -2611,7 +2683,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"user_discovery_announced_users\" (\"announced_user_id\" INTEGER NOT NULL, \"announced_public_key\" BLOB NOT NULL, \"public_id\" INTEGER NOT NULL UNIQUE, PRIMARY KEY (\"announced_user_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"user_discovery_announced_users\" (\"announced_user_id\" INTEGER NOT NULL, \"announced_public_key\" BLOB NOT NULL, \"public_id\" INTEGER NOT NULL UNIQUE, \"username\" TEXT NULL, \"was_shown_to_the_user\" INTEGER NOT NULL DEFAULT 0 CHECK (\"was_shown_to_the_user\" IN (0, 1)), \"is_hidden\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_hidden\" IN (0, 1)), PRIMARY KEY (\"announced_user_id\"));"
         }
       ]
     },
@@ -2629,7 +2701,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"user_discovery_other_promotions\" (\"from_contact_id\" INTEGER NOT NULL REFERENCES contacts (user_id) ON DELETE CASCADE, \"promotion_id\" INTEGER NOT NULL, \"public_id\" INTEGER NOT NULL, \"threshold\" INTEGER NOT NULL, \"announcement_share\" BLOB NOT NULL, \"public_key_verified_timestamp\" INTEGER NULL, PRIMARY KEY (\"from_contact_id\", \"promotion_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"user_discovery_other_promotions\" (\"from_contact_id\" INTEGER NOT NULL REFERENCES contacts (user_id) ON DELETE CASCADE, \"promotion_id\" INTEGER NOT NULL, \"public_id\" INTEGER NOT NULL, \"threshold\" INTEGER NOT NULL, \"announcement_share\" BLOB NOT NULL, \"public_key_verified_timestamp\" INTEGER NULL, PRIMARY KEY (\"from_contact_id\", \"public_id\"));"
         }
       ]
     },

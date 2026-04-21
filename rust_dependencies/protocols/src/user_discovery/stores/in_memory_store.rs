@@ -66,17 +66,24 @@ impl UserDiscoveryStore for InMemoryStore {
         Ok(())
     }
 
-    async fn push_own_promotion(
+    async fn push_own_promotion_and_clear_old_version(
         &self,
         contact_id: UserID,
         version: u32,
         promotion: Vec<u8>,
     ) -> Result<()> {
         let mut storage = self.storage();
-        // println!("{} != {}", version, storage.promotions.len());
+
         if version as usize != storage.own_promotions.len() + 1 {
             return Err(UserDiscoveryError::PushedInvalidVersion);
         }
+
+        for (old_contact_id, promotion) in storage.own_promotions.iter_mut() {
+            if *old_contact_id == contact_id {
+                promotion.clear();
+            }
+        }
+
         storage.own_promotions.push((contact_id, promotion));
         Ok(())
     }

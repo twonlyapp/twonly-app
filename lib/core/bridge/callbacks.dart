@@ -21,7 +21,7 @@ Future<void> initFlutterCallbacks({
   required FutureOr<Uint8List?> Function(PlatformInt64)
   userDiscoveryGetShareForContact,
   required FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
-  userDiscoveryPushOwnPromotion,
+  userDiscoveryPushOwnPromotionAndClearOldVersion,
   required FutureOr<List<Uint8List>?> Function(PlatformInt64)
   userDiscoveryGetOwnPromotionsAfterVersion,
   required FutureOr<bool> Function(OtherPromotion)
@@ -43,7 +43,8 @@ Future<void> initFlutterCallbacks({
   userDiscoveryVerifyStoredPubkey: userDiscoveryVerifyStoredPubkey,
   userDiscoverySetShares: userDiscoverySetShares,
   userDiscoveryGetShareForContact: userDiscoveryGetShareForContact,
-  userDiscoveryPushOwnPromotion: userDiscoveryPushOwnPromotion,
+  userDiscoveryPushOwnPromotionAndClearOldVersion:
+      userDiscoveryPushOwnPromotionAndClearOldVersion,
   userDiscoveryGetOwnPromotionsAfterVersion:
       userDiscoveryGetOwnPromotionsAfterVersion,
   userDiscoveryStoreOtherPromotion: userDiscoveryStoreOtherPromotion,

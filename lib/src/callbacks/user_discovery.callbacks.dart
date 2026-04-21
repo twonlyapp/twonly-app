@@ -110,12 +110,18 @@ class UserDiscoveryCallbacks {
     });
   }
 
-  static Future<bool> pushOwnPromotion(
+  static Future<bool> userDiscoveryPushOwnPromotionAndClearOldVersion(
     int contactId,
-    int version, // Maps to versionId or logic control
+    int version,
     Uint8List promotion,
   ) async {
     try {
+      // Old promotions from this users should be removed...
+      await (twonlyDB.update(
+        twonlyDB.userDiscoveryOwnPromotions,
+      )..where((t) => t.contactId.equals(contactId))).write(
+        UserDiscoveryOwnPromotionsCompanion(promotion: Value(Uint8List(0))),
+      );
       await twonlyDB
           .into(twonlyDB.userDiscoveryOwnPromotions)
           .insert(

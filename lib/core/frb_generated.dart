@@ -121,7 +121,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(PlatformInt64)
     userDiscoveryGetShareForContact,
     required FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
-    userDiscoveryPushOwnPromotion,
+    userDiscoveryPushOwnPromotionAndClearOldVersion,
     required FutureOr<List<Uint8List>?> Function(PlatformInt64)
     userDiscoveryGetOwnPromotionsAfterVersion,
     required FutureOr<bool> Function(OtherPromotion)
@@ -354,7 +354,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List?> Function(PlatformInt64)
     userDiscoveryGetShareForContact,
     required FutureOr<bool> Function(PlatformInt64, PlatformInt64, Uint8List)
-    userDiscoveryPushOwnPromotion,
+    userDiscoveryPushOwnPromotionAndClearOldVersion,
     required FutureOr<List<Uint8List>?> Function(PlatformInt64)
     userDiscoveryGetOwnPromotionsAfterVersion,
     required FutureOr<bool> Function(OtherPromotion)
@@ -403,7 +403,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_DartFn_Inputs_i_64_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(
-            userDiscoveryPushOwnPromotion,
+            userDiscoveryPushOwnPromotionAndClearOldVersion,
             serializer,
           );
           sse_encode_DartFn_Inputs_i_64_Output_opt_list_list_prim_u_8_strict_AnyhowException(
@@ -453,7 +453,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           userDiscoveryVerifyStoredPubkey,
           userDiscoverySetShares,
           userDiscoveryGetShareForContact,
-          userDiscoveryPushOwnPromotion,
+          userDiscoveryPushOwnPromotionAndClearOldVersion,
           userDiscoveryGetOwnPromotionsAfterVersion,
           userDiscoveryStoreOtherPromotion,
           userDiscoveryGetOtherPromotionsByPublicId,
@@ -477,7 +477,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "userDiscoveryVerifyStoredPubkey",
           "userDiscoverySetShares",
           "userDiscoveryGetShareForContact",
-          "userDiscoveryPushOwnPromotion",
+          "userDiscoveryPushOwnPromotionAndClearOldVersion",
           "userDiscoveryGetOwnPromotionsAfterVersion",
           "userDiscoveryStoreOtherPromotion",
           "userDiscoveryGetOtherPromotionsByPublicId",

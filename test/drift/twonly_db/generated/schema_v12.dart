@@ -135,6 +135,34 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
         requiredDuringInsert: false,
         $customConstraints: 'NULL',
       );
+  late final GeneratedColumn<int> userDiscoveryExcluded = GeneratedColumn<int>(
+    'user_discovery_excluded',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (user_discovery_excluded IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> mediaSendCounter = GeneratedColumn<int>(
+    'media_send_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> mediaReceivedCounter = GeneratedColumn<int>(
+    'media_received_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     userId,
@@ -151,6 +179,9 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
     accountDeleted,
     createdAt,
     userDiscoveryVersion,
+    userDiscoveryExcluded,
+    mediaSendCounter,
+    mediaReceivedCounter,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -219,6 +250,18 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
         DriftSqlType.blob,
         data['${effectivePrefix}user_discovery_version'],
       ),
+      userDiscoveryExcluded: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_discovery_excluded'],
+      )!,
+      mediaSendCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_send_counter'],
+      )!,
+      mediaReceivedCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_received_counter'],
+      )!,
     );
   }
 
@@ -248,6 +291,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
   final int accountDeleted;
   final int createdAt;
   final i2.Uint8List? userDiscoveryVersion;
+  final int userDiscoveryExcluded;
+  final int mediaSendCounter;
+  final int mediaReceivedCounter;
   const ContactsData({
     required this.userId,
     required this.username,
@@ -263,6 +309,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     required this.accountDeleted,
     required this.createdAt,
     this.userDiscoveryVersion,
+    required this.userDiscoveryExcluded,
+    required this.mediaSendCounter,
+    required this.mediaReceivedCounter,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -293,6 +342,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
         userDiscoveryVersion,
       );
     }
+    map['user_discovery_excluded'] = Variable<int>(userDiscoveryExcluded);
+    map['media_send_counter'] = Variable<int>(mediaSendCounter);
+    map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
   }
 
@@ -320,6 +372,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryVersion: userDiscoveryVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(userDiscoveryVersion),
+      userDiscoveryExcluded: Value(userDiscoveryExcluded),
+      mediaSendCounter: Value(mediaSendCounter),
+      mediaReceivedCounter: Value(mediaReceivedCounter),
     );
   }
 
@@ -349,6 +404,13 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryVersion: serializer.fromJson<i2.Uint8List?>(
         json['userDiscoveryVersion'],
       ),
+      userDiscoveryExcluded: serializer.fromJson<int>(
+        json['userDiscoveryExcluded'],
+      ),
+      mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
+      mediaReceivedCounter: serializer.fromJson<int>(
+        json['mediaReceivedCounter'],
+      ),
     );
   }
   @override
@@ -373,6 +435,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       'userDiscoveryVersion': serializer.toJson<i2.Uint8List?>(
         userDiscoveryVersion,
       ),
+      'userDiscoveryExcluded': serializer.toJson<int>(userDiscoveryExcluded),
+      'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
+      'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
   }
 
@@ -391,6 +456,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     int? accountDeleted,
     int? createdAt,
     Value<i2.Uint8List?> userDiscoveryVersion = const Value.absent(),
+    int? userDiscoveryExcluded,
+    int? mediaSendCounter,
+    int? mediaReceivedCounter,
   }) => ContactsData(
     userId: userId ?? this.userId,
     username: username ?? this.username,
@@ -410,6 +478,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     userDiscoveryVersion: userDiscoveryVersion.present
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
+    userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+    mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
+    mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
   ContactsData copyWithCompanion(ContactsCompanion data) {
     return ContactsData(
@@ -439,6 +510,15 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryVersion: data.userDiscoveryVersion.present
           ? data.userDiscoveryVersion.value
           : this.userDiscoveryVersion,
+      userDiscoveryExcluded: data.userDiscoveryExcluded.present
+          ? data.userDiscoveryExcluded.value
+          : this.userDiscoveryExcluded,
+      mediaSendCounter: data.mediaSendCounter.present
+          ? data.mediaSendCounter.value
+          : this.mediaSendCounter,
+      mediaReceivedCounter: data.mediaReceivedCounter.present
+          ? data.mediaReceivedCounter.value
+          : this.mediaReceivedCounter,
     );
   }
 
@@ -458,7 +538,10 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
-          ..write('userDiscoveryVersion: $userDiscoveryVersion')
+          ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
+          ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('mediaSendCounter: $mediaSendCounter, ')
+          ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
         .toString();
   }
@@ -479,6 +562,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     accountDeleted,
     createdAt,
     $driftBlobEquality.hash(userDiscoveryVersion),
+    userDiscoveryExcluded,
+    mediaSendCounter,
+    mediaReceivedCounter,
   );
   @override
   bool operator ==(Object other) =>
@@ -503,7 +589,10 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           $driftBlobEquality.equals(
             other.userDiscoveryVersion,
             this.userDiscoveryVersion,
-          ));
+          ) &&
+          other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
+          other.mediaSendCounter == this.mediaSendCounter &&
+          other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
 
 class ContactsCompanion extends UpdateCompanion<ContactsData> {
@@ -521,6 +610,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
   final Value<int> accountDeleted;
   final Value<int> createdAt;
   final Value<i2.Uint8List?> userDiscoveryVersion;
+  final Value<int> userDiscoveryExcluded;
+  final Value<int> mediaSendCounter;
+  final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
     this.userId = const Value.absent(),
     this.username = const Value.absent(),
@@ -536,6 +628,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
+    this.userDiscoveryExcluded = const Value.absent(),
+    this.mediaSendCounter = const Value.absent(),
+    this.mediaReceivedCounter = const Value.absent(),
   });
   ContactsCompanion.insert({
     this.userId = const Value.absent(),
@@ -552,6 +647,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
+    this.userDiscoveryExcluded = const Value.absent(),
+    this.mediaSendCounter = const Value.absent(),
+    this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
   static Insertable<ContactsData> custom({
     Expression<int>? userId,
@@ -568,6 +666,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     Expression<int>? accountDeleted,
     Expression<int>? createdAt,
     Expression<i2.Uint8List>? userDiscoveryVersion,
+    Expression<int>? userDiscoveryExcluded,
+    Expression<int>? mediaSendCounter,
+    Expression<int>? mediaReceivedCounter,
   }) {
     return RawValuesInsertable({
       if (userId != null) 'user_id': userId,
@@ -587,6 +688,11 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
       if (createdAt != null) 'created_at': createdAt,
       if (userDiscoveryVersion != null)
         'user_discovery_version': userDiscoveryVersion,
+      if (userDiscoveryExcluded != null)
+        'user_discovery_excluded': userDiscoveryExcluded,
+      if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
+      if (mediaReceivedCounter != null)
+        'media_received_counter': mediaReceivedCounter,
     });
   }
 
@@ -605,6 +711,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     Value<int>? accountDeleted,
     Value<int>? createdAt,
     Value<i2.Uint8List?>? userDiscoveryVersion,
+    Value<int>? userDiscoveryExcluded,
+    Value<int>? mediaSendCounter,
+    Value<int>? mediaReceivedCounter,
   }) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
@@ -621,6 +730,10 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
       accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
+      userDiscoveryExcluded:
+          userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+      mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
+      mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
   }
 
@@ -673,6 +786,17 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
         userDiscoveryVersion.value,
       );
     }
+    if (userDiscoveryExcluded.present) {
+      map['user_discovery_excluded'] = Variable<int>(
+        userDiscoveryExcluded.value,
+      );
+    }
+    if (mediaSendCounter.present) {
+      map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
+    }
+    if (mediaReceivedCounter.present) {
+      map['media_received_counter'] = Variable<int>(mediaReceivedCounter.value);
+    }
     return map;
   }
 
@@ -692,7 +816,10 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
-          ..write('userDiscoveryVersion: $userDiscoveryVersion')
+          ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
+          ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('mediaSendCounter: $mediaSendCounter, ')
+          ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
         .toString();
   }
@@ -7813,11 +7940,41 @@ class UserDiscoveryAnnouncedUsers extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL UNIQUE',
   );
+  late final GeneratedColumn<String> username = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> wasShownToTheUser = GeneratedColumn<int>(
+    'was_shown_to_the_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (was_shown_to_the_user IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> isHidden = GeneratedColumn<int>(
+    'is_hidden',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_hidden IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     announcedUserId,
     announcedPublicKey,
     publicId,
+    username,
+    wasShownToTheUser,
+    isHidden,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7845,6 +8002,18 @@ class UserDiscoveryAnnouncedUsers extends Table
         DriftSqlType.int,
         data['${effectivePrefix}public_id'],
       )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      ),
+      wasShownToTheUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}was_shown_to_the_user'],
+      )!,
+      isHidden: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_hidden'],
+      )!,
     );
   }
 
@@ -7866,10 +8035,16 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
   final int announcedUserId;
   final i2.Uint8List announcedPublicKey;
   final int publicId;
+  final String? username;
+  final int wasShownToTheUser;
+  final int isHidden;
   const UserDiscoveryAnnouncedUsersData({
     required this.announcedUserId,
     required this.announcedPublicKey,
     required this.publicId,
+    this.username,
+    required this.wasShownToTheUser,
+    required this.isHidden,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7877,6 +8052,11 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
     map['announced_user_id'] = Variable<int>(announcedUserId);
     map['announced_public_key'] = Variable<i2.Uint8List>(announcedPublicKey);
     map['public_id'] = Variable<int>(publicId);
+    if (!nullToAbsent || username != null) {
+      map['username'] = Variable<String>(username);
+    }
+    map['was_shown_to_the_user'] = Variable<int>(wasShownToTheUser);
+    map['is_hidden'] = Variable<int>(isHidden);
     return map;
   }
 
@@ -7885,6 +8065,11 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
       announcedUserId: Value(announcedUserId),
       announcedPublicKey: Value(announcedPublicKey),
       publicId: Value(publicId),
+      username: username == null && nullToAbsent
+          ? const Value.absent()
+          : Value(username),
+      wasShownToTheUser: Value(wasShownToTheUser),
+      isHidden: Value(isHidden),
     );
   }
 
@@ -7899,6 +8084,9 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
         json['announcedPublicKey'],
       ),
       publicId: serializer.fromJson<int>(json['publicId']),
+      username: serializer.fromJson<String?>(json['username']),
+      wasShownToTheUser: serializer.fromJson<int>(json['wasShownToTheUser']),
+      isHidden: serializer.fromJson<int>(json['isHidden']),
     );
   }
   @override
@@ -7908,6 +8096,9 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
       'announcedUserId': serializer.toJson<int>(announcedUserId),
       'announcedPublicKey': serializer.toJson<i2.Uint8List>(announcedPublicKey),
       'publicId': serializer.toJson<int>(publicId),
+      'username': serializer.toJson<String?>(username),
+      'wasShownToTheUser': serializer.toJson<int>(wasShownToTheUser),
+      'isHidden': serializer.toJson<int>(isHidden),
     };
   }
 
@@ -7915,10 +8106,16 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
     int? announcedUserId,
     i2.Uint8List? announcedPublicKey,
     int? publicId,
+    Value<String?> username = const Value.absent(),
+    int? wasShownToTheUser,
+    int? isHidden,
   }) => UserDiscoveryAnnouncedUsersData(
     announcedUserId: announcedUserId ?? this.announcedUserId,
     announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
     publicId: publicId ?? this.publicId,
+    username: username.present ? username.value : this.username,
+    wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
+    isHidden: isHidden ?? this.isHidden,
   );
   UserDiscoveryAnnouncedUsersData copyWithCompanion(
     UserDiscoveryAnnouncedUsersCompanion data,
@@ -7931,6 +8128,11 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
           ? data.announcedPublicKey.value
           : this.announcedPublicKey,
       publicId: data.publicId.present ? data.publicId.value : this.publicId,
+      username: data.username.present ? data.username.value : this.username,
+      wasShownToTheUser: data.wasShownToTheUser.present
+          ? data.wasShownToTheUser.value
+          : this.wasShownToTheUser,
+      isHidden: data.isHidden.present ? data.isHidden.value : this.isHidden,
     );
   }
 
@@ -7939,7 +8141,10 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
     return (StringBuffer('UserDiscoveryAnnouncedUsersData(')
           ..write('announcedUserId: $announcedUserId, ')
           ..write('announcedPublicKey: $announcedPublicKey, ')
-          ..write('publicId: $publicId')
+          ..write('publicId: $publicId, ')
+          ..write('username: $username, ')
+          ..write('wasShownToTheUser: $wasShownToTheUser, ')
+          ..write('isHidden: $isHidden')
           ..write(')'))
         .toString();
   }
@@ -7949,6 +8154,9 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
     announcedUserId,
     $driftBlobEquality.hash(announcedPublicKey),
     publicId,
+    username,
+    wasShownToTheUser,
+    isHidden,
   );
   @override
   bool operator ==(Object other) =>
@@ -7959,7 +8167,10 @@ class UserDiscoveryAnnouncedUsersData extends DataClass
             other.announcedPublicKey,
             this.announcedPublicKey,
           ) &&
-          other.publicId == this.publicId);
+          other.publicId == this.publicId &&
+          other.username == this.username &&
+          other.wasShownToTheUser == this.wasShownToTheUser &&
+          other.isHidden == this.isHidden);
 }
 
 class UserDiscoveryAnnouncedUsersCompanion
@@ -7967,27 +8178,42 @@ class UserDiscoveryAnnouncedUsersCompanion
   final Value<int> announcedUserId;
   final Value<i2.Uint8List> announcedPublicKey;
   final Value<int> publicId;
+  final Value<String?> username;
+  final Value<int> wasShownToTheUser;
+  final Value<int> isHidden;
   const UserDiscoveryAnnouncedUsersCompanion({
     this.announcedUserId = const Value.absent(),
     this.announcedPublicKey = const Value.absent(),
     this.publicId = const Value.absent(),
+    this.username = const Value.absent(),
+    this.wasShownToTheUser = const Value.absent(),
+    this.isHidden = const Value.absent(),
   });
   UserDiscoveryAnnouncedUsersCompanion.insert({
     this.announcedUserId = const Value.absent(),
     required i2.Uint8List announcedPublicKey,
     required int publicId,
+    this.username = const Value.absent(),
+    this.wasShownToTheUser = const Value.absent(),
+    this.isHidden = const Value.absent(),
   }) : announcedPublicKey = Value(announcedPublicKey),
        publicId = Value(publicId);
   static Insertable<UserDiscoveryAnnouncedUsersData> custom({
     Expression<int>? announcedUserId,
     Expression<i2.Uint8List>? announcedPublicKey,
     Expression<int>? publicId,
+    Expression<String>? username,
+    Expression<int>? wasShownToTheUser,
+    Expression<int>? isHidden,
   }) {
     return RawValuesInsertable({
       if (announcedUserId != null) 'announced_user_id': announcedUserId,
       if (announcedPublicKey != null)
         'announced_public_key': announcedPublicKey,
       if (publicId != null) 'public_id': publicId,
+      if (username != null) 'username': username,
+      if (wasShownToTheUser != null) 'was_shown_to_the_user': wasShownToTheUser,
+      if (isHidden != null) 'is_hidden': isHidden,
     });
   }
 
@@ -7995,11 +8221,17 @@ class UserDiscoveryAnnouncedUsersCompanion
     Value<int>? announcedUserId,
     Value<i2.Uint8List>? announcedPublicKey,
     Value<int>? publicId,
+    Value<String?>? username,
+    Value<int>? wasShownToTheUser,
+    Value<int>? isHidden,
   }) {
     return UserDiscoveryAnnouncedUsersCompanion(
       announcedUserId: announcedUserId ?? this.announcedUserId,
       announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
       publicId: publicId ?? this.publicId,
+      username: username ?? this.username,
+      wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
+      isHidden: isHidden ?? this.isHidden,
     );
   }
 
@@ -8017,6 +8249,15 @@ class UserDiscoveryAnnouncedUsersCompanion
     if (publicId.present) {
       map['public_id'] = Variable<int>(publicId.value);
     }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (wasShownToTheUser.present) {
+      map['was_shown_to_the_user'] = Variable<int>(wasShownToTheUser.value);
+    }
+    if (isHidden.present) {
+      map['is_hidden'] = Variable<int>(isHidden.value);
+    }
     return map;
   }
 
@@ -8025,7 +8266,10 @@ class UserDiscoveryAnnouncedUsersCompanion
     return (StringBuffer('UserDiscoveryAnnouncedUsersCompanion(')
           ..write('announcedUserId: $announcedUserId, ')
           ..write('announcedPublicKey: $announcedPublicKey, ')
-          ..write('publicId: $publicId')
+          ..write('publicId: $publicId, ')
+          ..write('username: $username, ')
+          ..write('wasShownToTheUser: $wasShownToTheUser, ')
+          ..write('isHidden: $isHidden')
           ..write(')'))
         .toString();
   }
@@ -8377,7 +8621,7 @@ class UserDiscoveryOtherPromotions extends Table
   String get actualTableName => $name;
   static const String $name = 'user_discovery_other_promotions';
   @override
-  Set<GeneratedColumn> get $primaryKey => {fromContactId, promotionId};
+  Set<GeneratedColumn> get $primaryKey => {fromContactId, publicId};
   @override
   UserDiscoveryOtherPromotionsData map(
     Map<String, dynamic> data, {
@@ -8419,7 +8663,7 @@ class UserDiscoveryOtherPromotions extends Table
 
   @override
   List<String> get customConstraints => const [
-    'PRIMARY KEY(from_contact_id, promotion_id)',
+    'PRIMARY KEY(from_contact_id, public_id)',
   ];
   @override
   bool get dontWriteConstraints => true;

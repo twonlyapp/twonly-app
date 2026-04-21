@@ -79,13 +79,13 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
         }
     }
 
-    async fn push_own_promotion(
+    async fn push_own_promotion_and_clear_old_version(
         &self,
         contact_id: i64,
         version: u32,
         promotion: Vec<u8>,
     ) -> Result<()> {
-        (get_callbacks()?.user_discovery.push_own_promotion)(contact_id, version as i64, promotion)
+        (get_callbacks()?.user_discovery.push_own_promotion_and_clear_old_version)(contact_id, version as i64, promotion)
             .await
             .then_some(())
             .ok_or(TwonlyError::DartError.into())

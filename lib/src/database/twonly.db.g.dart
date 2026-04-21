@@ -10478,7 +10478,7 @@ class $UserDiscoveryOtherPromotionsTable extends UserDiscoveryOtherPromotions
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {fromContactId, promotionId};
+  Set<GeneratedColumn> get $primaryKey => {fromContactId, publicId};
   @override
   UserDiscoveryOtherPromotion map(
     Map<String, dynamic> data, {

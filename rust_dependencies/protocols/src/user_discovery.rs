@@ -4,7 +4,7 @@ pub mod stores;
 pub mod tests;
 pub mod traits;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::u8;
 use blahaj::{Share, Sharks};
 use prost::Message;
@@ -447,7 +447,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 };
 
                 self.store
-                    .push_own_promotion(
+                    .push_own_promotion_and_clear_old_version(
                         contact_id,
                         config.promotion_version,
                         message.encode_to_vec(),
@@ -525,10 +525,21 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             .get_other_promotions_by_public_id(udp.public_id)
             .await?;
 
-        if promotions.len() < udp.threshold as usize {
+        // Deduplicate shares by their raw bytes to prevent invalid Shamir's Secret Sharing recoveries.
+        // Multiple identical shares (e.g. due to contact resending promotions, or DB duplicate writes)
+        // will cause `recover` to interpolate incorrectly and return garbage bytes.
+        let mut unique_shares_set = HashSet::new();
+        let mut unique_promotions = Vec::new();
+        for p in promotions {
+            if unique_shares_set.insert(p.announcement_share.clone()) {
+                unique_promotions.push(p);
+            }
+        }
+
+        if unique_promotions.len() < udp.threshold as usize {
             tracing::debug!(
-                "Not enough shares ({} < {}) to decrypt announcement. Waiting for next share.",
-                promotions.len(),
+                "Not enough unique shares ({} < {}) to decrypt announcement. Waiting for next share.",
+                unique_promotions.len(),
                 udp.threshold
             );
             return Ok(());
@@ -536,7 +547,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
         tracing::debug!("Enough shares decrypting announcement.");
 
-        let shares: Vec<_> = promotions
+        let shares: Vec<_> = unique_promotions
             .iter()
             .map(|x| x.announcement_share.to_owned())
             .filter_map(|x| Share::try_from(x.as_slice()).ok())
@@ -577,7 +588,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     };
 
                     let user_id = self.get_config().await?.user_id;
-                    for promotion in promotions {
+                    for promotion in unique_promotions {
                         // Do not store the announcement of the users itself.
                         // Or in case the promotion promotes myself
                         if promotion.from_contact_id == announced_user.user_id

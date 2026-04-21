@@ -70,7 +70,7 @@ class UserDiscoveryOtherPromotions extends Table {
   DateTimeColumn get publicKeyVerifiedTimestamp => dateTime().nullable()();
 
   @override
-  Set<Column> get primaryKey => {fromContactId, promotionId};
+  Set<Column> get primaryKey => {fromContactId, publicId};
 }
 
 // unused_shares: Vec<Vec<u8>>,

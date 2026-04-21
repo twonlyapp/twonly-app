@@ -28,7 +28,7 @@ callback_generator! {
             // UserDiscoveryStore
             set_shares: (Vec<Vec<u8>>) => bool,
             get_share_for_contact: (i64) => Option<Vec<u8>>,
-            push_own_promotion: (i64, i64, Vec<u8>) => bool,
+            push_own_promotion_and_clear_old_version: (i64, i64, Vec<u8>) => bool,
             get_own_promotions_after_version: (i64) => Option<Vec<Vec<u8>>>,
             store_other_promotion: (OtherPromotion) => bool,
             get_other_promotions_by_public_id: (i64) => Option<Vec<OtherPromotion>>,
