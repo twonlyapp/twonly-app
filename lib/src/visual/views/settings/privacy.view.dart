@@ -20,7 +20,7 @@ class _PrivacyViewState extends State<PrivacyView> {
 
   Future<void> toggleAuthRequirementOnStartup() async {
     final isAuth = await authenticateUser(
-      appSession.currentUser.screenLockEnabled
+      userService.currentUser.screenLockEnabled
           ? context.lang.settingsScreenLockAuthMessageDisable
           : context.lang.settingsScreenLockAuthMessageEnable,
     );
@@ -84,7 +84,7 @@ class _PrivacyViewState extends State<PrivacyView> {
             subtitle: Text(context.lang.settingsTypingIndicationSubtitle),
             onTap: toggleTypingIndicators,
             trailing: Switch(
-              value: appSession.currentUser.typingIndicators,
+              value: userService.currentUser.typingIndicators,
               onChanged: (a) => toggleTypingIndicators(),
             ),
           ),
@@ -94,7 +94,7 @@ class _PrivacyViewState extends State<PrivacyView> {
             subtitle: Text(context.lang.settingsScreenLockSubtitle),
             onTap: toggleAuthRequirementOnStartup,
             trailing: Switch(
-              value: appSession.currentUser.screenLockEnabled,
+              value: userService.currentUser.screenLockEnabled,
               onChanged: (a) => toggleAuthRequirementOnStartup(),
             ),
           ),

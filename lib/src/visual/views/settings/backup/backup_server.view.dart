@@ -32,8 +32,8 @@ class _BackupServerViewState extends State<BackupServerView> {
   }
 
   Future<void> initAsync() async {
-    if (appSession.currentUser.backupServer != null) {
-      final uri = Uri.parse(appSession.currentUser.backupServer!.serverUrl);
+    if (userService.currentUser.backupServer != null) {
+      final uri = Uri.parse(userService.currentUser.backupServer!.serverUrl);
       // remove user auth data
       final serverUrl = Uri(
         scheme: uri.scheme,

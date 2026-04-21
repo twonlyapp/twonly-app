@@ -143,7 +143,7 @@ class _RegisterViewState extends State<RegisterView> {
       value: jsonEncode(userData),
     );
 
-    appSession.currentUser = userData;
+    userService.currentUser = userData;
 
     await apiService.authenticate();
     widget.callbackOnSuccess();

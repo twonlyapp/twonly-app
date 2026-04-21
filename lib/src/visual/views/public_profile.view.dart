@@ -107,7 +107,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
             ),
           const SizedBox(height: 20),
           Text(
-            appSession.currentUser.username,
+            userService.currentUser.username,
             style: const TextStyle(fontSize: 24),
           ),
           const SizedBox(height: 20),
@@ -127,12 +127,12 @@ class _PublicProfileViewState extends State<PublicProfileView> {
             subtitle: (_publicKey == null)
                 ? null
                 : Text(
-                    'https://me.twonly.eu/${appSession.currentUser.username}',
+                    'https://me.twonly.eu/${userService.currentUser.username}',
                   ),
             onTap: () {
               final params = ShareParams(
                 text:
-                    'https://me.twonly.eu/${appSession.currentUser.username}#${base64Url.encode(_publicKey!)}',
+                    'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(_publicKey!)}',
               );
               SharePlus.instance.share(params);
             },

@@ -31,7 +31,7 @@ class _HelpViewState extends State<HelpView> {
         title: Text(context.lang.settingsHelp),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, _) {
           return ListView(
             children: [
@@ -52,7 +52,7 @@ class _HelpViewState extends State<HelpView> {
                 ),
                 onTap: toggleAllowErrorTrackingViaSentry,
                 trailing: Switch(
-                  value: appSession.currentUser.allowErrorTrackingViaSentry,
+                  value: userService.currentUser.allowErrorTrackingViaSentry,
                   onChanged: (a) => toggleAllowErrorTrackingViaSentry(),
                 ),
               ),
@@ -61,7 +61,7 @@ class _HelpViewState extends State<HelpView> {
                 onTap: () => context.push(Routes.settingsHelpDiagnostics),
               ),
               const Divider(),
-              if (appSession.currentUser.userStudyParticipantsToken == null ||
+              if (userService.currentUser.userStudyParticipantsToken == null ||
                   kDebugMode)
                 ListTile(
                   title: const Text('Teilnahme an Nutzerstudie'),

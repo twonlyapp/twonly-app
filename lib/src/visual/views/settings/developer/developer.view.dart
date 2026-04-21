@@ -44,7 +44,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
         title: const Text('Developer Settings'),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, _) {
           return ListView(
             children: [
@@ -52,7 +52,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Show Developer Settings'),
                 onTap: toggleDeveloperSettings,
                 trailing: Switch(
-                  value: appSession.currentUser.isDeveloper,
+                  value: userService.currentUser.isDeveloper,
                   onChanged: (_) => toggleDeveloperSettings(),
                 ),
               ),
@@ -66,7 +66,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Toggle Video Stabilization'),
                 onTap: toggleVideoStabilization,
                 trailing: Switch(
-                  value: appSession.currentUser.videoStabilizationEnabled,
+                  value: userService.currentUser.videoStabilizationEnabled,
                   onChanged: (a) => toggleVideoStabilization(),
                 ),
               ),

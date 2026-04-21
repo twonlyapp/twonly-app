@@ -18,6 +18,13 @@ class UserService {
   final _userDataUpdateController = StreamController<void>.broadcast();
   Stream<void> get onUserUpdated => _userDataUpdateController.stream;
 
+  Future<bool> tryInit() async {
+    final user = await getUser();
+    if (user == null) return false;
+    userService.currentUser = user;
+    return true;
+  }
+
   void triggerUserUpdate() {
     _userDataUpdateController.add(null);
   }
@@ -32,7 +39,7 @@ Future<bool> isUserCreated() async {
   if (user == null) {
     return false;
   }
-  appSession.currentUser = user;
+  userService.currentUser = user;
   return true;
 }
 
@@ -84,8 +91,8 @@ Future<void> updateUser(
       key: SecureStorageKeys.userData,
       value: jsonEncode(user),
     );
-    appSession.currentUser = user;
+    userService.currentUser = user;
   });
 
-  appSession.triggerUserUpdate();
+  userService.triggerUserUpdate();
 }

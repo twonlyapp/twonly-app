@@ -52,7 +52,7 @@ void main() {
       )
       ..registerSingleton<UserService>(UserService());
 
-    appSession.currentUser = UserData(
+    userService.currentUser = UserData(
       userId: 0x133337,
       username: 'test_user',
       displayName: 'Test User',

@@ -133,9 +133,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_isUserCreated) {
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
-        _isTwonlyLocked = appSession.currentUser.screenLockEnabled;
+        _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
-      if (appSession.currentUser.appVersion < 62) {
+      if (userService.currentUser.appVersion < 62) {
         _showDatabaseMigration = true;
       }
     }
@@ -178,7 +178,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (appSession.currentUser.twonlySafeBackup == null &&
+      } else if (userService.currentUser.twonlySafeBackup == null &&
           !_skipBackup) {
         child = SetupBackupView(
           callBack: () => setState(() {

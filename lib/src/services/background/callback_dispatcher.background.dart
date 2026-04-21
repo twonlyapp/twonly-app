@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:mutex/mutex.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/main.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/exclusive_access.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -54,21 +53,15 @@ Future<bool> initBackgroundExecution() async {
   if (_isInitialized) {
     // Reload the users, as on Android the background isolate can
     // stay alive for multiple hours between task executions
-    final user = await getUser();
-    if (user == null) return false;
-    appSession.currentUser = user;
-    return true;
+    return userService.tryInit();
   }
 
-  SentryWidgetsFlutterBinding.ensureInitialized();
-  await AppEnvironment.init();
-  Log.init();
+  await twonlyMinimumInitialization();
 
-  final user = await getUser();
-  if (user == null) return false;
-
-  setupLocator();
-  appSession.currentUser = user;
+  if (!await userService.tryInit()) {
+    Log.info('Early return as user is not registered yet.');
+    return false;
+  }
 
   AppState.isInBackgroundTask = true;
 

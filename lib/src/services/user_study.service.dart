@@ -15,7 +15,7 @@ const surveyUrlBase = 'https://survey.twonly.org/upload.php';
 
 Future<void> handleUserStudyUpload() async {
   try {
-    final token = appSession.currentUser.userStudyParticipantsToken;
+    final token = userService.currentUser.userStudyParticipantsToken;
     if (token == null) return;
 
     // in case the survey was taken offline try again
@@ -35,8 +35,8 @@ Future<void> handleUserStudyUpload() async {
       await KeyValueStore.delete(userStudySurveyKey);
     }
 
-    if (appSession.currentUser.lastUserStudyDataUpload != null &&
-        isToday(appSession.currentUser.lastUserStudyDataUpload!)) {
+    if (userService.currentUser.lastUserStudyDataUpload != null &&
+        isToday(userService.currentUser.lastUserStudyDataUpload!)) {
       // Only send updates once a day.
       // This enables to see if improvements to actually work.
       return;

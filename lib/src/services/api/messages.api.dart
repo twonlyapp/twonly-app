@@ -346,12 +346,15 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
       return null;
     }
   }
-  encryptedContent.senderProfileCounter = Int64(appSession.currentUser.avatarCounter);
+  encryptedContent.senderProfileCounter = Int64(
+    userService.currentUser.avatarCounter,
+  );
 
-  if (appSession.currentUser.isUserDiscoveryEnabled && messageId != null) {
+  if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
     final contact = await twonlyDB.contactsDao.getContactById(contactId);
     if (contact != null &&
-        contact.mediaSendCounter >= appSession.currentUser.minimumRequiredImagesExchanged &&
+        contact.mediaSendCounter >=
+            userService.currentUser.minimumRequiredImagesExchanged &&
         !contact.userDiscoveryExcluded) {
       final version = await UserDiscoveryService.getCurrentVersion();
       if (version != null) {
@@ -407,7 +410,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
 }
 
 Future<void> sendTypingIndication(String groupId, bool isTyping) async {
-  if (!appSession.currentUser.typingIndicators) return;
+  if (!userService.currentUser.typingIndicators) return;
   await sendCipherTextToGroup(
     groupId,
     pb.EncryptedContent(
@@ -463,15 +466,17 @@ Future<void> notifyContactAboutOpeningMessage(
 
 Future<void> sendContactMyProfileData(int contactId) async {
   List<int>? avatarSvgCompressed;
-  if (appSession.currentUser.avatarSvg != null) {
-    avatarSvgCompressed = gzip.encode(utf8.encode(appSession.currentUser.avatarSvg!));
+  if (userService.currentUser.avatarSvg != null) {
+    avatarSvgCompressed = gzip.encode(
+      utf8.encode(userService.currentUser.avatarSvg!),
+    );
   }
   final encryptedContent = pb.EncryptedContent(
     contactUpdate: pb.EncryptedContent_ContactUpdate(
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
       avatarSvgCompressed: avatarSvgCompressed,
-      displayName: appSession.currentUser.displayName,
-      username: appSession.currentUser.username,
+      displayName: userService.currentUser.displayName,
+      username: userService.currentUser.username,
     ),
   );
   await sendCipherText(contactId, encryptedContent);

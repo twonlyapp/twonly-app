@@ -98,7 +98,7 @@ Future<bool> isAllowedToDownload(MediaType type) async {
   final connectivityResult = await Connectivity().checkConnectivity();
 
   final options =
-      appSession.currentUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
+      userService.currentUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
 
   if (connectivityResult.contains(ConnectivityResult.mobile)) {
     if (type == MediaType.video) {

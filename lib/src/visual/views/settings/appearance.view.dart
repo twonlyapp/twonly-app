@@ -98,7 +98,7 @@ class _AppearanceViewState extends State<AppearanceView> {
         title: Text(context.lang.settingsAppearance),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, snapshot) {
           return ListView(
             children: [
@@ -116,7 +116,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 title: Text(context.lang.contactUsShortcut),
                 onTap: toggleShowFeedbackIcon,
                 trailing: Switch(
-                  value: !appSession.currentUser.showFeedbackShortcut,
+                  value: !userService.currentUser.showFeedbackShortcut,
                   onChanged: (a) => toggleShowFeedbackIcon(),
                 ),
               ),
@@ -124,7 +124,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 title: Text(context.lang.startWithCameraOpen),
                 onTap: toggleStartWithCameraOpen,
                 trailing: Switch(
-                  value: appSession.currentUser.startWithCameraOpen,
+                  value: userService.currentUser.startWithCameraOpen,
                   onChanged: (a) => toggleStartWithCameraOpen(),
                 ),
               ),
@@ -132,7 +132,8 @@ class _AppearanceViewState extends State<AppearanceView> {
                 title: Text(context.lang.showImagePreviewWhenSending),
                 onTap: toggleShowImagePreviewWhenSending,
                 trailing: Switch(
-                  value: appSession.currentUser.showShowImagePreviewWhenSending,
+                  value:
+                      userService.currentUser.showShowImagePreviewWhenSending,
                   onChanged: (a) => toggleShowImagePreviewWhenSending(),
                 ),
               ),

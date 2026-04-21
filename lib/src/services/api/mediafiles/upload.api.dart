@@ -359,7 +359,7 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
 
     // if the user has enabled auto storing and the file
     // was send with unlimited counter not in twonly-Mode then store the file
-    if (appSession.currentUser.autoStoreAllSendUnlimitedMediaFiles &&
+    if (userService.currentUser.autoStoreAllSendUnlimitedMediaFiles &&
         !mediaService.mediaFile.requiresAuthentication &&
         !mediaService.storedPath.existsSync() &&
         mediaService.mediaFile.displayLimitInMilliseconds == null) {

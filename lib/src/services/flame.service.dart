@@ -17,7 +17,7 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
     (x) => x.totalMediaCounter == maxMessageCounter,
   );
 
-  if (appSession.currentUser.myBestFriendGroupId != bestFriend.groupId) {
+  if (userService.currentUser.myBestFriendGroupId != bestFriend.groupId) {
     await updateUser((user) {
       user.myBestFriendGroupId = bestFriend.groupId;
     });

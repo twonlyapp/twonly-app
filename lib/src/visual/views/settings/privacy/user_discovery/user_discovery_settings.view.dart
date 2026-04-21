@@ -23,14 +23,14 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
   @override
   void initState() {
     _minimumRequiredImagesExchanged =
-        appSession.currentUser.minimumRequiredImagesExchanged;
-    _userDiscoveryThreshold = appSession.currentUser.userDiscoveryThreshold;
+        userService.currentUser.minimumRequiredImagesExchanged;
+    _userDiscoveryThreshold = userService.currentUser.userDiscoveryThreshold;
     super.initState();
   }
 
   Future<void> _saveChanges() async {
     final requiresNewInitialization =
-        appSession.currentUser.userDiscoveryThreshold !=
+        userService.currentUser.userDiscoveryThreshold !=
         _userDiscoveryThreshold;
 
     await updateUser((u) {
@@ -41,9 +41,9 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
 
     if (requiresNewInitialization) {
       await UserDiscoveryService.initializeOrUpdate(
-        threshold: appSession.currentUser.userDiscoveryThreshold,
+        threshold: userService.currentUser.userDiscoveryThreshold,
         minimumRequiredImagesExchanged:
-            appSession.currentUser.minimumRequiredImagesExchanged,
+            userService.currentUser.minimumRequiredImagesExchanged,
       );
     }
     if (mounted) Navigator.pop(context);
@@ -115,9 +115,9 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
               height: 30,
             ),
             if (_minimumRequiredImagesExchanged !=
-                    appSession.currentUser.minimumRequiredImagesExchanged ||
+                    userService.currentUser.minimumRequiredImagesExchanged ||
                 _userDiscoveryThreshold !=
-                    appSession.currentUser.userDiscoveryThreshold)
+                    userService.currentUser.userDiscoveryThreshold)
               Padding(
                 padding: const EdgeInsets.all(17),
                 child: FilledButton(

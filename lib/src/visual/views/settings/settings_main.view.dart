@@ -48,14 +48,14 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             children: [
                               Text(
                                 substringBy(
-                                  appSession.currentUser.displayName,
+                                  userService.currentUser.displayName,
                                   27,
                                 ),
                                 style: const TextStyle(fontSize: 20),
                                 textAlign: TextAlign.left,
                               ),
                               Text(
-                                appSession.currentUser.username,
+                                userService.currentUser.username,
                                 style: const TextStyle(
                                   fontSize: 14,
                                 ),
@@ -131,7 +131,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
               });
             },
           ),
-          if (appSession.currentUser.isDeveloper)
+          if (userService.currentUser.isDeveloper)
             BetterListTile(
               icon: FontAwesomeIcons.code,
               text: 'Developer Settings',

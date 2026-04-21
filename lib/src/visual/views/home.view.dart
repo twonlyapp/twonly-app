@@ -137,7 +137,7 @@ class HomeViewState extends State<HomeView> {
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.initialPage == 1 &&
-              !appSession.currentUser.startWithCameraOpen ||
+              !userService.currentUser.startWithCameraOpen ||
           widget.initialPage == 0) {
         globalUpdateOfHomeViewPageIndex(0);
       }

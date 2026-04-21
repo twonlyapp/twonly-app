@@ -74,7 +74,7 @@ Future<void> checkForTokenUpdates() async {
 }
 
 Future<void> initFCMAfterAuthenticated({bool force = false}) async {
-  if (appSession.currentUser.updateFCMToken || force) {
+  if (userService.currentUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {

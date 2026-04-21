@@ -16,7 +16,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   List<String> _selectedEmojis = [];
 
   List<String> _emojisFromSession() {
-    final user = appSession.currentUser;
+    final user = userService.currentUser;
     if (user.preSelectedEmojies != null) {
       return user.preSelectedEmojies!;
     }
@@ -53,7 +53,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<void>(
-      stream: appSession.onUserUpdated,
+      stream: userService.onUserUpdated,
       builder: (context, _) {
         _selectedEmojis = _emojisFromSession();
         return Scaffold(

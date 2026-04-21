@@ -43,8 +43,8 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
   final memberIds = members.map((x) => Int64(x.userId)).toList();
 
   final groupState = EncryptedGroupState(
-    memberIds: [Int64(appSession.currentUser.userId)] + memberIds,
-    adminIds: [Int64(appSession.currentUser.userId)],
+    memberIds: [Int64(userService.currentUser.userId)] + memberIds,
+    adminIds: [Int64(userService.currentUser.userId)],
     groupName: groupName,
     deleteMessagesAfterMilliseconds: Int64(
       defaultDeleteMessagesAfterMilliseconds,
@@ -284,9 +284,9 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
         final myPubKey = keyPair.getPublicKey().serialize().toList();
 
         if (listEquals(appendedPubKey, myPubKey)) {
-          adminIds.remove(Int64(appSession.currentUser.userId));
+          adminIds.remove(Int64(userService.currentUser.userId));
           memberIds.remove(
-            Int64(appSession.currentUser.userId),
+            Int64(userService.currentUser.userId),
           ); // -> Will remove the user later...
         } else {
           Log.info('A non admin left the group!!!');
@@ -304,7 +304,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       }
     }
 
-    if (!memberIds.contains(Int64(appSession.currentUser.userId))) {
+    if (!memberIds.contains(Int64(userService.currentUser.userId))) {
       // OH no, I am no longer a member of this group...
       // Return from the group...
       await twonlyDB.groupsDao.updateGroup(
@@ -318,7 +318,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
     final isGroupAdmin =
         adminIds.firstWhereOrNull(
-          (t) => t.toInt() == appSession.currentUser.userId,
+          (t) => t.toInt() == userService.currentUser.userId,
         ) !=
         null;
 
@@ -372,7 +372,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
     // First find and insert NEW members
     for (final memberId in memberIds) {
-      if (memberId == Int64(appSession.currentUser.userId)) {
+      if (memberId == Int64(userService.currentUser.userId)) {
         continue;
       }
       if (currentGroupMembers.any((t) => t.contactId == memberId.toInt())) {
@@ -842,7 +842,7 @@ Future<bool> removeMemberFromGroup(
       groupId: Value(group.groupId),
       type: const Value(GroupActionType.removedMember),
       affectedContactId: Value(
-        removeContactId == appSession.currentUser.userId
+        removeContactId == userService.currentUser.userId
             ? null
             : removeContactId,
       ),
@@ -951,7 +951,7 @@ Future<bool> leaveAsNonAdminFromGroup(Group group) async {
     EncryptedContent(
       groupUpdate: EncryptedContent_GroupUpdate(
         groupActionType: groupActionType.name,
-        affectedContactId: Int64(appSession.currentUser.userId),
+        affectedContactId: Int64(userService.currentUser.userId),
       ),
     ),
   );

@@ -127,7 +127,7 @@ class ApiService {
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 
-      if (appSession.currentUser.userStudyParticipantsToken != null) {
+      if (userService.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
         unawaited(handleUserStudyUpload());
       }

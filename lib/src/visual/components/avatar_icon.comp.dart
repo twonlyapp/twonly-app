@@ -93,19 +93,19 @@ class _AvatarIconState extends State<AvatarIcon> {
             setState(() {});
           });
     } else if (widget.myAvatar) {
-      _userSub = appSession.onUserUpdated.listen((_) {
+      _userSub = userService.onUserUpdated.listen((_) {
         if (mounted) {
           setState(() {
-            if (appSession.currentUser.avatarSvg != null) {
-              _avatarSvg = appSession.currentUser.avatarSvg;
+            if (userService.currentUser.avatarSvg != null) {
+              _avatarSvg = userService.currentUser.avatarSvg;
             } else {
               _avatarContacts = [];
             }
           });
         }
       });
-      if (appSession.currentUser.avatarSvg != null) {
-        _avatarSvg = appSession.currentUser.avatarSvg;
+      if (userService.currentUser.avatarSvg != null) {
+        _avatarSvg = userService.currentUser.avatarSvg;
       }
     } else if (widget.contactId != null) {
       contactStream = twonlyDB.contactsDao

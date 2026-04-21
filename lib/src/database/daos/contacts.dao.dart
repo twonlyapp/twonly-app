@@ -140,7 +140,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
               t.userDiscoveryVersion.isNotNull() &
               t.userDiscoveryExcluded.equals(false) &
               t.mediaSendCounter.isBiggerOrEqualValue(
-                appSession.currentUser.minimumRequiredImagesExchanged,
+                userService.currentUser.minimumRequiredImagesExchanged,
               ),
         ))
         .watch();

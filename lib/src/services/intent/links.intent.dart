@@ -33,7 +33,7 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
 
   if (!context.mounted) return false;
 
-  if (username == appSession.currentUser.username) {
+  if (username == userService.currentUser.username) {
     await context.push(Routes.settingsPublicProfile);
     return true;
   }
@@ -116,7 +116,7 @@ Future<void> handleIntentMediaFile(
 
   final newMediaService = await initializeMediaUpload(
     type,
-    appSession.currentUser.defaultShowTime,
+    userService.currentUser.defaultShowTime,
   );
   if (newMediaService == null) {
     Log.error('Could not create new media file for intent shared file');

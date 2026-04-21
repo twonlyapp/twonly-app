@@ -265,7 +265,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
   await twonlyDB.receiptsDao.markMessagesForRetry(fromUserId);
 
   final senderProfileCounter = await checkForProfileUpdate(fromUserId, content);
-  if (appSession.currentUser.isUserDiscoveryEnabled &&
+  if (userService.currentUser.isUserDiscoveryEnabled &&
       content.hasSenderUserDiscoveryVersion()) {
     await checkForUserDiscoveryChanges(
       fromUserId,
@@ -354,7 +354,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
 
   /// Verify that the user is (still) in that group...
   if (!await twonlyDB.groupsDao.isContactInGroup(fromUserId, content.groupId)) {
-    if (getUUIDforDirectChat(appSession.currentUser.userId, fromUserId) ==
+    if (getUUIDforDirectChat(userService.currentUser.userId, fromUserId) ==
         content.groupId) {
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(fromUserId)

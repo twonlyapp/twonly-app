@@ -211,7 +211,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                         )
                       : const Icon(Icons.lock_clock_rounded),
                   label: Text(
-                    appSession.currentUser.twonlySafeBackup == null
+                    userService.currentUser.twonlySafeBackup == null
                         ? context.lang.backupEnableBackup
                         : context.lang.backupChangePassword,
                   ),

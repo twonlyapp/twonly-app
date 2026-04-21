@@ -107,7 +107,7 @@ class _ProfileViewState extends State<ProfileView> {
         title: Text(context.lang.settingsProfile),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, _) {
           return ListView(
             physics: const BouncingScrollPhysics(),
@@ -154,11 +154,11 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 ),
                 text: context.lang.registerUsernameDecoration,
-                subtitle: Text(appSession.currentUser.username),
+                subtitle: Text(userService.currentUser.username),
                 onTap: () async {
                   final username = await showDisplayNameChangeDialog(
                     context,
-                    appSession.currentUser.username,
+                    userService.currentUser.username,
                     context.lang.registerUsernameDecoration,
                     context.lang.registerUsernameDecoration,
                     maxLength: 12,
@@ -177,11 +177,11 @@ class _ProfileViewState extends State<ProfileView> {
               BetterListTile(
                 icon: FontAwesomeIcons.userPen,
                 text: context.lang.settingsProfileEditDisplayName,
-                subtitle: Text(appSession.currentUser.displayName),
+                subtitle: Text(userService.currentUser.displayName),
                 onTap: () async {
                   final displayName = await showDisplayNameChangeDialog(
                     context,
-                    appSession.currentUser.displayName,
+                    userService.currentUser.displayName,
                     context.lang.settingsProfileEditDisplayName,
                     context.lang.settingsProfileEditDisplayNameNew,
                     maxLength: 30,

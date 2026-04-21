@@ -45,7 +45,7 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   void initState() {
     initAsync();
-    _userSub = appSession.onUserUpdated.listen((_) {
+    _userSub = userService.onUserUpdated.listen((_) {
       if (mounted) setState(() {});
     });
     super.initState();
@@ -90,8 +90,8 @@ class _ChatListViewState extends State<ChatListView> {
         Sha256().hash,
         changeLog.codeUnits,
       )).bytes;
-      if (!appSession.currentUser.hideChangeLog &&
-          appSession.currentUser.lastChangeLogHash.toString() !=
+      if (!userService.currentUser.hideChangeLog &&
+          userService.currentUser.lastChangeLogHash.toString() !=
               changeLogHash.toString()) {
         await updateUser((u) {
           u.lastChangeLogHash = changeLogHash;

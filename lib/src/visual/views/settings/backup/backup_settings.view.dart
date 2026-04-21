@@ -38,10 +38,10 @@ class _BackupViewState extends State<BackupView> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<void>(
-      stream: appSession.onUserUpdated,
+      stream: userService.onUserUpdated,
       builder: (context, _) {
         final backupServer =
-            appSession.currentUser.backupServer ?? _defaultBackupServer;
+            userService.currentUser.backupServer ?? _defaultBackupServer;
         return Scaffold(
           appBar: AppBar(
             title: Text(context.lang.settingsBackup),
@@ -57,7 +57,7 @@ class _BackupViewState extends State<BackupView> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                if (appSession.currentUser.twonlySafeBackup != null)
+                if (userService.currentUser.twonlySafeBackup != null)
                   Column(
                     children: [
                       const SizedBox(height: 32),
@@ -87,7 +87,7 @@ class _BackupViewState extends State<BackupView> {
                               context.lang.backupLastBackupDate,
                               formatDateTime(
                                 context,
-                                appSession
+                                userService
                                     .currentUser
                                     .twonlySafeBackup!
                                     .lastBackupDone,
@@ -96,7 +96,7 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupSize,
                               formatBytes(
-                                appSession
+                                userService
                                     .currentUser
                                     .twonlySafeBackup!
                                     .lastBackupSize,
@@ -105,7 +105,7 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupResult,
                               _backupStatus(
-                                appSession
+                                userService
                                     .currentUser
                                     .twonlySafeBackup!
                                     .backupUploadState,
@@ -156,7 +156,7 @@ class _BackupViewState extends State<BackupView> {
                     onPressed: () =>
                         context.push(Routes.settingsBackupSetup, extra: true),
                     child: Text(
-                      appSession.currentUser.twonlySafeBackup == null
+                      userService.currentUser.twonlySafeBackup == null
                           ? context.lang.backupEnableBackup
                           : context.lang.backupChangePassword,
                     ),

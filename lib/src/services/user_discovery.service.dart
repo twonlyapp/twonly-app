@@ -54,7 +54,7 @@ class UserDiscoveryService {
     try {
       await FlutterUserDiscovery.initializeOrUpdate(
         threshold: threshold,
-        userId: appSession.currentUser.userId,
+        userId: userService.currentUser.userId,
         publicKey: await getUserPublicKey(),
       );
       await updateUser(

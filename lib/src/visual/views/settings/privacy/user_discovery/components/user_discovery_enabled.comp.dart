@@ -114,7 +114,7 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
                         ),
                         subtitle:
                             (version != null &&
-                                (appSession.currentUser.isDeveloper ||
+                                (userService.currentUser.isDeveloper ||
                                     !kReleaseMode))
                             ? Text(
                                 context.lang.userDiscoveryEnabledVersion(
@@ -168,7 +168,7 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
             onTap: _disableUserDiscovery,
           ),
           if (_version != null &&
-              (appSession.currentUser.isDeveloper || !kReleaseMode))
+              (userService.currentUser.isDeveloper || !kReleaseMode))
             ListTile(
               title: Text(
                 context.lang.userDiscoveryEnabledYourVersion(

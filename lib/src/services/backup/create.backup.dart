@@ -23,18 +23,18 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
-  if (appSession.currentUser.twonlySafeBackup == null) {
+  if (userService.currentUser.twonlySafeBackup == null) {
     return;
   }
 
-  if (appSession.currentUser.twonlySafeBackup!.backupUploadState ==
+  if (userService.currentUser.twonlySafeBackup!.backupUploadState ==
       LastBackupUploadState.pending) {
     Log.warn('Backup upload is already pending.');
     return;
   }
 
   final lastUpdateTime =
-      appSession.currentUser.twonlySafeBackup!.lastBackupDone;
+      userService.currentUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
     if (lastUpdateTime.isAfter(clock.now().subtract(const Duration(days: 1)))) {
       return;
@@ -122,8 +122,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
-  if (appSession.currentUser.twonlySafeBackup!.lastBackupDone == null ||
-      appSession.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
+  if (userService.currentUser.twonlySafeBackup!.lastBackupDone == null ||
+      userService.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
         clock.now().subtract(const Duration(days: 90)),
       )) {
     force = true;
@@ -152,7 +152,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   final secretBox = await chacha20.encrypt(
     backupBytes,
     secretKey: SecretKey(
-      appSession.currentUser.twonlySafeBackup!.encryptionKey,
+      userService.currentUser.twonlySafeBackup!.encryptionKey,
     ),
     nonce: nonce,
   );
@@ -175,9 +175,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     'Create twonly Backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
-  if (appSession.currentUser.backupServer != null) {
+  if (userService.currentUser.backupServer != null) {
     if (encryptedBackupBytes.length >
-        appSession.currentUser.backupServer!.maxBackupBytes) {
+        userService.currentUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
       await updateUser((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;

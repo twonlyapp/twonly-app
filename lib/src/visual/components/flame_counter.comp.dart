@@ -49,7 +49,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
     }
     if (groupId != null && group != null) {
       isBestFriend =
-          appSession.currentUser.myBestFriendGroupId == groupId &&
+          userService.currentUser.myBestFriendGroupId == groupId &&
           group.alsoBestFriend;
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
       flameCounterSub = stream.listen((counter) {

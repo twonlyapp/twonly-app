@@ -28,7 +28,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
       builder: (context) {
         return AutoDownloadOptionsDialog(
           autoDownloadOptions:
-              appSession.currentUser.autoDownloadOptions ??
+              userService.currentUser.autoDownloadOptions ??
               defaultAutoDownloadOptions,
           connectionMode: connectionMode,
           onUpdate: () {},
@@ -57,10 +57,10 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
         title: Text(context.lang.settingsStorageData),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, _) {
           final autoDownloadOptions =
-              appSession.currentUser.autoDownloadOptions ??
+              userService.currentUser.autoDownloadOptions ??
               defaultAutoDownloadOptions;
           return ListView(
             children: [
@@ -71,7 +71,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                 ),
                 onTap: toggleStoreInGallery,
                 trailing: Switch(
-                  value: appSession.currentUser.storeMediaFilesInGallery,
+                  value: userService.currentUser.storeMediaFilesInGallery,
                   onChanged: (a) => toggleStoreInGallery(),
                 ),
               ),
@@ -83,7 +83,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                 ),
                 onTap: toggleAutoStoreMediaFiles,
                 trailing: Switch(
-                  value: appSession
+                  value: userService
                       .currentUser
                       .autoStoreAllSendUnlimitedMediaFiles,
                   onChanged: (a) => toggleAutoStoreMediaFiles(),

@@ -21,10 +21,10 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
-  if (appSession.currentUser.signalLastSignedPreKeyUpdated != null) {
+  if (userService.currentUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
     final isYoungerThan48Hours =
-        (appSession.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
+        (userService.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
           fortyEightHoursAgo,
         );
     if (isYoungerThan48Hours) {

@@ -98,7 +98,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
     final newMediaService = await initializeMediaUpload(
       orgMediaService.mediaFile.type,
-      appSession.currentUser.defaultShowTime,
+      userService.currentUser.defaultShowTime,
     );
     if (newMediaService == null) {
       Log.error('Could not create new mediaFIle');

@@ -93,7 +93,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   Future<void> _requestNewUserByUsername(String username) async {
-    if (appSession.currentUser.username == username) return;
+    if (userService.currentUser.username == username) return;
 
     setState(() {
       _isLoading = true;

@@ -50,8 +50,8 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   }
 
   Future<void> initAsync() async {
-    if (appSession.currentUser.preSelectedEmojies != null) {
-      selectedEmojis = appSession.currentUser.preSelectedEmojies!;
+    if (userService.currentUser.preSelectedEmojies != null) {
+      selectedEmojis = userService.currentUser.preSelectedEmojies!;
     }
     setState(() {});
   }

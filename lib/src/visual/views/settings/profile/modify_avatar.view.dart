@@ -122,7 +122,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         if (_avatarMakerController.getJsonOptionsSync() !=
-            appSession.currentUser.avatarJson) {
+            userService.currentUser.avatarJson) {
           // there where changes
           final shouldPop = await _showBackDialog() ?? false;
           if (context.mounted && shouldPop) {

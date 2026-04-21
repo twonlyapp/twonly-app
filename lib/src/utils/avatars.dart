@@ -53,13 +53,13 @@ File avatarPNGFile(int contactId) {
 }
 
 Future<Uint8List> getUserAvatar() async {
-  if (appSession.currentUser.avatarSvg == null) {
+  if (userService.currentUser.avatarSvg == null) {
     final data = await rootBundle.load('assets/images/default_avatar.png');
     return data.buffer.asUint8List();
   }
 
   final pictureInfo = await vg.loadPicture(
-    SvgStringLoader(appSession.currentUser.avatarSvg!),
+    SvgStringLoader(userService.currentUser.avatarSvg!),
     null,
   );
 
@@ -68,7 +68,7 @@ Future<Uint8List> getUserAvatar() async {
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
 
-  final file = avatarPNGFile(appSession.currentUser.userId)
+  final file = avatarPNGFile(userService.currentUser.userId)
     ..writeAsBytesSync(pngBytes);
   pictureInfo.picture.dispose();
 

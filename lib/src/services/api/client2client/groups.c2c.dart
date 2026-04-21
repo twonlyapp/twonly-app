@@ -162,7 +162,7 @@ Future<void> handleGroupUpdate(
     case GroupActionType.demoteToMember:
       int? affectedContactId = update.affectedContactId.toInt();
 
-      if (affectedContactId == appSession.currentUser.userId) {
+      if (affectedContactId == userService.currentUser.userId) {
         affectedContactId = null;
         if (actionType == GroupActionType.removedMember) {
           // Oh no, I just got removed from the group...

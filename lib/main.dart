@@ -29,7 +29,9 @@ import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-void main() async {
+/// This function is used to initialized the absolute minimum so it
+/// can also be used by the backend without the UI was loaded.
+Future<void> twonlyMinimumInitialization() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
 
   await AppEnvironment.init();
@@ -46,24 +48,25 @@ void main() async {
       dataDirectory: AppEnvironment.supportDir,
     ),
   );
+}
+
+void main() async {
+  await twonlyMinimumInitialization();
 
   await initFCMService();
 
-  var user = await getUser();
+  final userExists = await userService.tryInit();
 
-  if (Platform.isIOS && user != null) {
+  if (Platform.isIOS && userExists) {
     final db = File('${AppEnvironment.supportDir}/twonly.sqlite');
     if (!db.existsSync()) {
       Log.error('[twonly] IOS: App was removed and then reinstalled again...');
       await const FlutterSecureStorage().deleteAll();
-      user = await getUser();
     }
   }
 
-  if (user != null) {
-    appSession.currentUser = user;
-
-    if (user.allowErrorTrackingViaSentry) {
+  if (userExists) {
+    if (userService.currentUser.allowErrorTrackingViaSentry) {
       AppState.allowErrorTrackingViaSentry = true;
       await SentryFlutter.init(
         (options) => options
@@ -86,33 +89,20 @@ void main() async {
   await settingsController.loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  unawaited(setupPushNotification());
-
-  if (user != null) {
-    if (appSession.currentUser.appVersion < 90) {
-      // BUG: Requested media files for reupload where not reuploaded because the wrong state...
-      await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
-      await updateUser((u) {
-        u.appVersion = 90;
-      });
-    }
-    if (appSession.currentUser.appVersion < 91) {
-      // BUG: Requested media files for reupload where not reuploaded because the wrong state...
-      await makeMigrationToVersion91();
-      await updateUser((u) {
-        u.appVersion = 91;
-      });
-    }
-  }
-
-  await twonlyDB.messagesDao.purgeMessageTable();
-  await twonlyDB.receiptsDao.purgeReceivedReceipts();
-  unawaited(MediaFileService.purgeTempFolder());
-
   await initFileDownloader();
-  unawaited(finishStartedPreprocessing());
 
-  unawaited(createPushAvatars());
+  if (userExists) {
+    await runMigrations();
+
+    await twonlyDB.messagesDao.purgeMessageTable();
+    await twonlyDB.receiptsDao.purgeReceivedReceipts();
+
+    unawaited(MediaFileService.purgeTempFolder());
+
+    unawaited(setupPushNotification());
+    unawaited(finishStartedPreprocessing());
+    unawaited(createPushAvatars());
+  }
 
   runApp(
     MultiProvider(
@@ -125,4 +115,21 @@ void main() async {
       child: const App(),
     ),
   );
+}
+
+Future<void> runMigrations() async {
+  if (userService.currentUser.appVersion < 90) {
+    // BUG: Requested media files for reupload where not reuploaded because the wrong state...
+    await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
+    await updateUser((u) {
+      u.appVersion = 90;
+    });
+  }
+  if (userService.currentUser.appVersion < 91) {
+    // BUG: Requested media files for reupload where not reuploaded because the wrong state...
+    await makeMigrationToVersion91();
+    await updateUser((u) {
+      u.appVersion = 91;
+    });
+  }
 }

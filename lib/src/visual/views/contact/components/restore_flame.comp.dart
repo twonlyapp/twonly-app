@@ -41,7 +41,7 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
   void initState() {
     _groupId = getUUIDforDirectChat(
       widget.contactId,
-      appSession.currentUser.userId,
+      userService.currentUser.userId,
     );
     final stream = twonlyDB.groupsDao.watchGroup(_groupId);
     _groupSub = stream.listen((update) {
@@ -57,7 +57,9 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
   }
 
   Future<void> _restoreFlames() async {
-    final currentPlan = planFromString(appSession.currentUser.subscriptionPlan);
+    final currentPlan = planFromString(
+      userService.currentUser.subscriptionPlan,
+    );
     if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
         kReleaseMode) {
       await context.push(Routes.settingsSubscription);

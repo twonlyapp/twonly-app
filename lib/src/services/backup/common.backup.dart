@@ -14,7 +14,7 @@ import 'package:twonly/src/utils/misc.dart';
 Future<void> enableTwonlySafe(String password) async {
   final (backupId, encryptionKey) = await getMasterKey(
     password,
-    appSession.currentUser.username,
+    userService.currentUser.username,
   );
 
   await updateUser((user) {
@@ -66,10 +66,10 @@ Future<(Uint8List, Uint8List)> getMasterKey(
 }
 
 String? getTwonlySafeBackupUrl() {
-  if (appSession.currentUser.twonlySafeBackup == null) return null;
+  if (userService.currentUser.twonlySafeBackup == null) return null;
   return getTwonlySafeBackupUrlFromServer(
-    appSession.currentUser.twonlySafeBackup!.backupId,
-    appSession.currentUser.backupServer,
+    userService.currentUser.twonlySafeBackup!.backupId,
+    userService.currentUser.backupServer,
   );
 }
 

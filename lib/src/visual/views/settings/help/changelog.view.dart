@@ -93,7 +93,7 @@ class _ChangeLogViewState extends State<ChangeLogView> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<void>(
-      stream: appSession.onUserUpdated,
+      stream: userService.onUserUpdated,
       builder: (context, _) {
         return Scaffold(
           appBar: AppBar(
@@ -113,7 +113,7 @@ class _ChangeLogViewState extends State<ChangeLogView> {
               children: [
                 Text(context.lang.openChangeLog),
                 Switch(
-                  value: !appSession.currentUser.hideChangeLog,
+                  value: !userService.currentUser.hideChangeLog,
                   onChanged: (_) =>
                       updateUser((u) => u.hideChangeLog = !u.hideChangeLog),
                 ),

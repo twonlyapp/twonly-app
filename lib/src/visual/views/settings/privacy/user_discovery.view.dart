@@ -19,9 +19,9 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
         title: const Text('Freunde finden'),
       ),
       body: StreamBuilder<void>(
-        stream: appSession.onUserUpdated,
+        stream: userService.onUserUpdated,
         builder: (context, _) {
-          return appSession.currentUser.isUserDiscoveryEnabled
+          return userService.currentUser.isUserDiscoveryEnabled
               ? const UserDiscoveryEnabledComp()
               : const UserDiscoveryDisabledComp();
         },

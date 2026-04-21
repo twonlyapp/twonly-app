@@ -12,6 +12,6 @@ void setupLocator() {
     ..registerLazySingleton<TwonlyDB>(TwonlyDB.new);
 }
 
-UserService get appSession => locator<UserService>();
+UserService get userService => locator<UserService>();
 ApiService get apiService => locator<ApiService>();
 TwonlyDB get twonlyDB => locator<TwonlyDB>();

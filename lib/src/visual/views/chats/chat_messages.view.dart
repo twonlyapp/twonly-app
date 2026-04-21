@@ -122,7 +122,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       _receiverDeletedAccount = groupContacts.first.accountDeleted;
     }
 
-    if (appSession.currentUser.typingIndicators) {
+    if (userService.currentUser.typingIndicators) {
       unawaited(sendTypingIndication(widget.groupId, false));
       _nextTypingIndicator = Timer.periodic(const Duration(seconds: 4), (
         _,
@@ -290,7 +290,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   itemScrollController: itemScrollController,
                   itemBuilder: (context, i) {
                     if (i == 0) {
-                      return appSession.currentUser.typingIndicators
+                      return userService.currentUser.typingIndicators
                           ? TypingIndicator(group: group)
                           : Container();
                     }
