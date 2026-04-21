@@ -6,7 +6,8 @@ use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 use std::vec;
 
-struct TestUsers<S: UserDiscoveryStore> {
+struct TestNetwork<S: UserDiscoveryStore> {
+    ids_by_name: HashMap<&'static str, usize>,
     names: Vec<&'static str>,
     friends: Vec<Vec<usize>>,
     message_flows: Vec<(usize, usize)>,
@@ -14,71 +15,97 @@ struct TestUsers<S: UserDiscoveryStore> {
     uds: Vec<UserDiscovery<S, TestingUtils>>,
 }
 
-async fn get_with_five_users<S: UserDiscoveryStore + Default + Clone>() -> TestUsers<S> {
-    const ALICE: usize = 0;
-    const BOB: usize = 1;
-    const CHARLIE: usize = 2;
-    const DAVID: usize = 3;
-    const FRANK: usize = 4;
+impl<S: UserDiscoveryStore + Clone + Default> TestNetwork<S> {
+    fn new() -> Self {
+        Self {
+            ids_by_name: HashMap::new(),
+            names: vec![],
+            friends: vec![],
+            message_flows: vec![],
+            announced_users_expected: vec![],
+            uds: vec![],
+        }
+    }
 
-    let names = vec!["ALICE", "BOB", "CHARLIE", "DAVID", "FRANK"];
-    let mut uds = vec![];
-
-    for index in 0..names.len() {
+    async fn add_user(&mut self, name: &'static str, threshold: u8) {
+        let id = self.names.len();
+        self.ids_by_name.insert(name, id);
+        self.names.push(name);
+        self.friends.push(vec![]);
+        self.announced_users_expected.push(vec![]);
+        
         let store = S::default();
-        uds.push(get_ud(index, 2, store).await);
+        self.uds.push(get_ud(id, threshold, store).await);
     }
 
-    TestUsers {
-        names,
-        uds,
-        friends: vec![
-            vec![BOB, CHARLIE],
-            vec![ALICE, CHARLIE, DAVID],
-            vec![ALICE, BOB, DAVID, FRANK],
-            vec![BOB, CHARLIE],
-            vec![CHARLIE],
-        ],
-        message_flows: vec![
-            (ALICE, 1),   // ALICE: own announcement sending to BOB and CHARLIE
-            (BOB, 2),     // BOB: own announcement + promotion for ALICE
-            (BOB, 0),     // BOBs version should not have any new messages for his friends
-            (ALICE, 1),   // ALICE: promotion for BOB
-            (CHARLIE, 3), // CHARLIE: own announcement + promotion for ALICE, BOB
-            (DAVID, 3),   // DAVID: own announcement + promotion for BOB, CHARLIE
-            (BOB, 2),     // BOB: promotion for CHARLIE, DAVID
-            (CHARLIE, 1), // CHARLIE: promotion for DAVID
-            (FRANK, 2),   // FRANK: own announcement +  promotion for CHARLIE
-            (CHARLIE, 1), // CHARLIE: promotion for FRANK
-            (ALICE, 1),   // ALICE: promotion for CHARLIE
-        ],
-        announced_users_expected: vec![
-            // ALICE should now know that BOB and CHARLIE, BOB and DAVID and CHARLIE and DAVID are friends.
-            // Alice should also have one protected share from Frank.
-            vec![
-                (BOB, vec![CHARLIE]), // ALICE knows Bob and that CHARLIE is connected with BOB
-                (CHARLIE, vec![BOB]), // ALICE knows CHARLIE and that BOB is connected with CHARLIE
-                (DAVID, vec![BOB, CHARLIE]), // ALICE knows DAVID and that BOB and CHARLIE are connected with DAVID
-            ],
-            vec![
-                (ALICE, vec![CHARLIE]),
-                (CHARLIE, vec![ALICE, DAVID]),
-                (DAVID, vec![CHARLIE]),
-            ],
-            vec![
-                (ALICE, vec![BOB]),
-                (BOB, vec![ALICE, DAVID]),
-                (DAVID, vec![BOB]),
-                (FRANK, vec![]),
-            ],
-            vec![
-                (ALICE, vec![BOB, CHARLIE]),
-                (BOB, vec![CHARLIE]),
-                (CHARLIE, vec![BOB]),
-            ],
-            vec![(CHARLIE, vec![])],
-        ],
+    fn set_friends(&mut self, user: &str, friends: &[&str]) {
+        let id = self.ids_by_name[user];
+        let f_ids: Vec<usize> = friends.iter().map(|f| self.ids_by_name[*f]).collect();
+        self.friends[id] = f_ids;
     }
+
+    fn add_message_flow(&mut self, user: &str, count: usize) {
+        let id = self.ids_by_name[user];
+        self.message_flows.push((id, count));
+    }
+
+    fn expect_announced_user(&mut self, user: &str, contact: &str, friends_of_contact: &[&str]) {
+        let user_id = self.ids_by_name[user];
+        let contact_id = self.ids_by_name[contact];
+        let f_ids: Vec<usize> = friends_of_contact.iter().map(|f| self.ids_by_name[*f]).collect();
+        self.announced_users_expected[user_id].push((contact_id, f_ids));
+    }
+}
+
+async fn get_with_five_users<S: UserDiscoveryStore + Default + Clone>() -> TestNetwork<S> {
+    let mut network = TestNetwork::new();
+
+    network.add_user("ALICE", 2).await;
+    network.add_user("BOB", 2).await;
+    network.add_user("CHARLIE", 2).await;
+    network.add_user("DAVID", 2).await;
+    network.add_user("FRANK", 2).await;
+
+    network.set_friends("ALICE", &["BOB", "CHARLIE"]);
+    network.set_friends("BOB", &["ALICE", "CHARLIE", "DAVID"]);
+    network.set_friends("CHARLIE", &["ALICE", "BOB", "DAVID", "FRANK"]);
+    network.set_friends("DAVID", &["BOB", "CHARLIE"]);
+    network.set_friends("FRANK", &["CHARLIE"]);
+
+    network.add_message_flow("ALICE", 1);   // ALICE: own announcement sending to BOB and CHARLIE
+    network.add_message_flow("BOB", 2);     // BOB: own announcement + promotion for ALICE
+    network.add_message_flow("BOB", 0);     // BOBs version should not have any new messages for his friends
+    network.add_message_flow("ALICE", 1);   // ALICE: promotion for BOB
+    network.add_message_flow("CHARLIE", 3); // CHARLIE: own announcement + promotion for ALICE, BOB
+    network.add_message_flow("DAVID", 3);   // DAVID: own announcement + promotion for BOB, CHARLIE
+    network.add_message_flow("BOB", 2);     // BOB: promotion for CHARLIE, DAVID
+    network.add_message_flow("CHARLIE", 1); // CHARLIE: promotion for DAVID
+    network.add_message_flow("FRANK", 2);   // FRANK: own announcement +  promotion for CHARLIE
+    network.add_message_flow("CHARLIE", 1); // CHARLIE: promotion for FRANK
+    network.add_message_flow("ALICE", 1);   // ALICE: promotion for CHARLIE
+
+    // ALICE should now know that BOB and CHARLIE, BOB and DAVID and CHARLIE and DAVID are friends.
+    // Alice should also have one protected share from Frank.
+    network.expect_announced_user("ALICE", "BOB", &["CHARLIE"]); // ALICE knows Bob and that CHARLIE is connected with BOB
+    network.expect_announced_user("ALICE", "CHARLIE", &["BOB"]); // ALICE knows CHARLIE and that BOB is connected with CHARLIE
+    network.expect_announced_user("ALICE", "DAVID", &["BOB", "CHARLIE"]); // ALICE knows DAVID and that BOB and CHARLIE are connected with DAVID
+
+    network.expect_announced_user("BOB", "ALICE", &["CHARLIE"]);
+    network.expect_announced_user("BOB", "CHARLIE", &["ALICE", "DAVID"]);
+    network.expect_announced_user("BOB", "DAVID", &["CHARLIE"]);
+
+    network.expect_announced_user("CHARLIE", "ALICE", &["BOB"]);
+    network.expect_announced_user("CHARLIE", "BOB", &["ALICE", "DAVID"]);
+    network.expect_announced_user("CHARLIE", "DAVID", &["BOB"]);
+    network.expect_announced_user("CHARLIE", "FRANK", &[]);
+
+    network.expect_announced_user("DAVID", "ALICE", &["BOB", "CHARLIE"]);
+    network.expect_announced_user("DAVID", "BOB", &["CHARLIE"]);
+    network.expect_announced_user("DAVID", "CHARLIE", &["BOB"]);
+
+    network.expect_announced_user("FRANK", "CHARLIE", &[]);
+
+    network
 }
 
 #[tokio::test]
@@ -101,14 +128,14 @@ async fn test_user_discovery_random_order_in_memory_store() {
     step2_verify_announced_users_expected::<InMemoryStore>(&users).await;
 }
 
-async fn step0_exchange_in_order<S: UserDiscoveryStore + Clone + Default>(users: &TestUsers<S>) {
+async fn step0_exchange_in_order<S: UserDiscoveryStore + Clone + Default>(users: &TestNetwork<S>) {
     for (i, (from, count)) in users.message_flows.iter().enumerate() {
         tracing::debug!("MESSAGE FLOW: {i}");
         to_all_friends(*from, *count, &users).await;
     }
 }
 
-async fn step0_exchange_random<S: UserDiscoveryStore + Clone + Default>(users: &TestUsers<S>) {
+async fn step0_exchange_random<S: UserDiscoveryStore + Clone + Default>(users: &TestNetwork<S>) {
     let mut user_ids: Vec<usize> = (0..users.names.len()).collect();
 
     for _ in 0..100 {
@@ -128,7 +155,7 @@ async fn step0_exchange_random<S: UserDiscoveryStore + Clone + Default>(users: &
 }
 
 async fn step1_verify_no_new_messages<S: UserDiscoveryStore + Clone + Default>(
-    users: &TestUsers<S>,
+    users: &TestNetwork<S>,
 ) {
     tracing::debug!("Now all users should have the newest version.");
 
@@ -145,7 +172,7 @@ async fn step1_verify_no_new_messages<S: UserDiscoveryStore + Clone + Default>(
 }
 
 async fn step2_verify_announced_users_expected<S: UserDiscoveryStore + Clone + Default>(
-    users: &TestUsers<S>,
+    users: &TestNetwork<S>,
 ) {
     tracing::debug!("Test if all exchanges where successful.");
 
@@ -269,7 +296,7 @@ async fn request_and_handle_messages<S: UserDiscoveryStore>(
 async fn to_all_friends<S: UserDiscoveryStore + Clone>(
     from: usize,
     message_count: usize,
-    users: &TestUsers<S>,
+    users: &TestNetwork<S>,
 ) {
     for friend in &users.friends[from] {
         tracing::debug!("From {} to {}", users.names[from], users.names[*friend]);
