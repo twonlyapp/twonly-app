@@ -153,7 +153,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareImageUserNotVerifiedDesc =>
-      'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf sein Profil und auf „Sicherheitsnummer verifizieren“.';
+      'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf deren Profil und auf „Sicherheitsnummer verifizieren“.';
 
   @override
   String get shareImageShowArchived => 'Archivierte Benutzer anzeigen';
@@ -172,19 +172,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get selectSubscription => 'Abo auswählen';
 
   @override
-  String get searchUserNamePending => 'Ausstehend';
-
-  @override
-  String get searchUserNameBlockUserTooltip =>
-      'Benutzer ohne Benachrichtigung blockieren.';
-
-  @override
-  String get searchUserNameRejectUserTooltip =>
-      'Die Anfrage ablehnen und den Anfragenden informieren.';
-
-  @override
-  String get searchUserNameArchiveUserTooltip =>
-      'Benutzer archivieren. Du wirst informiert sobald er deine Anfrage akzeptiert.';
+  String get searchUserNamePending => 'Anfrage ausstehend';
 
   @override
   String get searchUsernameNotFound => 'Benutzername nicht gefunden';
@@ -195,7 +183,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get searchUsernameNewFollowerTitle => 'Folgeanfragen';
+  String get searchUsernameNewFollowerTitle => 'Offene Anfragen';
 
   @override
   String get searchUsernameQrCodeBtn => 'QR-Code scannen';
@@ -211,7 +199,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatListDetailInput => 'Nachricht eingeben';
 
   @override
-  String get userDeletedAccount => 'Der Nutzer hat sein Konto gelöscht.';
+  String get userDeletedAccount => 'Der Nutzer hat deren Konto gelöscht.';
 
   @override
   String get contextMenuUserProfile => 'Userprofil';
@@ -496,7 +484,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String contactVerifyNumberLongDesc(Object username) {
-    return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit ihrem Gerät. Die Person kann auch deinen Code mit ihrem Gerät scannen.';
+    return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit deren Gerät. Die Person kann auch deinen Code mit deren Gerät scannen.';
   }
 
   @override
@@ -526,7 +514,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactBlockBody =>
-      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
+      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und deren Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
 
   @override
   String get contactRemove => 'Benutzer löschen';
@@ -877,7 +865,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get autoRenewalLongDesc =>
-      'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
+      'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst. Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
 
   @override
   String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';
@@ -1276,7 +1264,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String makeAdminRightsBody(Object username) {
-    return '$username  wird diese Gruppe und ihre Mitglieder bearbeiten können.';
+    return '$username wird diese Gruppe und ihre Mitglieder bearbeiten können.';
   }
 
   @override
@@ -1707,7 +1695,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch sein öffentlicher Schlüssel überprüft.';
+      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch deren öffentlicher Schlüssel überprüft.';
 
   @override
   String get verificationBadgeYellowDesc =>
@@ -1761,4 +1749,125 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsTypingIndicationSubtitle =>
       'Bei deaktivierten Tipp-Indikatoren kannst du nicht sehen, wenn andere gerade eine Nachricht tippen.';
+
+  @override
+  String get scanQrOrShow => 'QR scannen / anzeigen';
+
+  @override
+  String get contactActionBlock => 'Blockieren';
+
+  @override
+  String get contactActionAccept => 'Annehmen';
+
+  @override
+  String get userDiscoverySettingsMinImages =>
+      'Wähle die Mindestanzahl an Bildern, die du mit einer Person ausgetauscht haben musst, bevor du ihr deine Freunde sicher teilst.';
+
+  @override
+  String get userDiscoverySettingsMutualFriends =>
+      'Wähle aus, wie viele gemeinsame Freunde eine Person haben muss, damit du ihr vorgeschlagen wirst.';
+
+  @override
+  String get userDiscoverySettingsApply => 'Änderungen übernehmen';
+
+  @override
+  String get userDiscoveryEnabledDisableWarning =>
+      'Wenn du das Feature „Freunde finden“ deaktivierst, werden dir keine Vorschläge mehr angezeigt. Du teilst neuen Kontakten dann auch nicht mehr deine Freunde.';
+
+  @override
+  String get userDiscoveryEnabledChangeSettings => 'Einstellungen ändern';
+
+  @override
+  String get userDiscoveryEnabledFaq =>
+      'In unserem FAQ erklären wir dir wie das Feature \"Freunde finden\" funktioniert.';
+
+  @override
+  String get userDiscoveryDisabledIntro =>
+      'twonly verzichten auf Telefonnummern, daher schlagen wir dir Freunde stattdessen über gemeinsame Kontakte vor – sicher und privat.';
+
+  @override
+  String get userDiscoveryDisabledInvisible =>
+      'Deine Freundesliste ist für *Fremde komplett unsichtbar*. Nur deine Freunde können Teile davon sehen – und zwar nur die Personen, mit denen sie selbst *gemeinsame Freunde* haben.';
+
+  @override
+  String get userDiscoveryDisabledDecide =>
+      'Entscheide selbst, wer deine Freunde sehen darf. Du kannst deine Meinung jederzeit ändern oder bestimmte Personen verstecken.';
+
+  @override
+  String get userDiscoverySettingsTitle => 'Freunde finden';
+
+  @override
+  String get userDiscoverySettingsMinImagesTitle =>
+      'Anzahl an geteilten Bildern';
+
+  @override
+  String get userDiscoverySettingsMutualFriendsTitle =>
+      'Anzahl an gemeinsame Freunde';
+
+  @override
+  String get userDiscoveryDisabledYouHaveControl => 'Du hast die Kontrolle';
+
+  @override
+  String get userDiscoveryDisabledEnableWithDefault =>
+      'Mit Standardeinstellungen aktivieren';
+
+  @override
+  String get userDiscoveryDisabledCustomizeSettings => 'Einstellungen anpassen';
+
+  @override
+  String get userDiscoveryDisabledLearnMore => 'Mehr erfahren';
+
+  @override
+  String get userDiscoveryEnabledDialogTitle => 'Wirklich deaktivieren?';
+
+  @override
+  String get userDiscoveryEnabledFriendsShared => 'Freunde die du teilst';
+
+  @override
+  String get userDiscoveryEnabledFriendsSharedDesc =>
+      'Du teilst nur Freunde, die diese Funktion ebenfalls aktiviert haben und die den von dir festgelegten Schwellenwert erreicht haben.';
+
+  @override
+  String get userDiscoveryEnabledNoFriendsShared =>
+      'Bisher teilst du noch niemanden.';
+
+  @override
+  String get userDiscoveryActionDisable => 'Deaktivieren';
+
+  @override
+  String get friendSuggestionsTitle => 'Freundschaftsvorschläge';
+
+  @override
+  String get andWord => 'und';
+
+  @override
+  String friendSuggestionsFriendsWith(Object friends) {
+    return 'Befreundet mit $friends.';
+  }
+
+  @override
+  String friendSuggestionsGroupMemberIn(Object groups) {
+    return ' Gruppenmitglied in $groups.';
+  }
+
+  @override
+  String get friendSuggestionsRequest => 'Anfragen';
+
+  @override
+  String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
+    return 'Es fehlen noch $imagesLeft Bilder bis deine Freunde mit $username geteilt werden.';
+  }
+
+  @override
+  String userDiscoveryEnabledVersion(Object version) {
+    return 'Version: $version';
+  }
+
+  @override
+  String userDiscoveryEnabledYourVersion(Object version) {
+    return 'Deine Version: $version';
+  }
+
+  @override
+  String get userDiscoveryEnabledStopSharing => 'Nicht mehr teilen';
 }
