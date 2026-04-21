@@ -197,7 +197,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatListDetailInput => 'Type a message';
 
   @override
-  String get userDeletedAccount => 'The user has deleted its account.';
+  String get userDeletedAccount => 'The user has deleted their account.';
 
   @override
   String get contextMenuUserProfile => 'User profile';
@@ -496,7 +496,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteAllContactMessagesBody(Object username) {
-    return 'This will remove all messages, except stored media files, in your chat with $username. This will NOT delete the messages stored at ${username}s device!';
+    return 'This will remove all messages, except stored media files, in your chat with $username. This will NOT delete the messages stored at $username\'s device!';
   }
 
   @override
@@ -859,7 +859,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoRenewalLongDesc =>
-      'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.';
+      'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal. We will notify you in good time before the automatic renewal.';
 
   @override
   String get planSuccessUpgraded => 'Successfully upgraded your plan.';
@@ -871,10 +871,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get additionalUsersList => 'Your additional users';
 
   @override
-  String get additionalUsersPlusTokens => 'twonly-Codes für \"Plus\" user';
+  String get additionalUsersPlusTokens => 'twonly-codes for \"Plus\" user';
 
   @override
-  String get additionalUsersFreeTokens => 'twonly-Codes für \"Free\" user';
+  String get additionalUsersFreeTokens => 'twonly-codes for \"Free\" user';
 
   @override
   String get planLimitReached =>
@@ -882,7 +882,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planNotAllowed =>
-      'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.';
+      'You cannot send media files with your current tariff. Upgrade your plan now to send the media file.';
 
   @override
   String get galleryDelete => 'Delete file';
@@ -1323,12 +1323,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String youRevokedAdminRights(Object affectedR) {
-    return 'You revoked $affectedR admin rights.';
+    return 'You revoked $affectedR\'s admin rights.';
   }
 
   @override
   String makerRevokedAdminRights(Object affectedR, Object maker) {
-    return '$maker revoked $affectedR admin rights.';
+    return '$maker revoked $affectedR\'s admin rights.';
   }
 
   @override

@@ -153,7 +153,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareImageUserNotVerifiedDesc =>
-      'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf sein Profil und auf „Sicherheitsnummer verifizieren“.';
+      'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf deren Profil und auf „Sicherheitsnummer verifizieren“.';
 
   @override
   String get shareImageShowArchived => 'Archivierte Benutzer anzeigen';
@@ -199,7 +199,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatListDetailInput => 'Nachricht eingeben';
 
   @override
-  String get userDeletedAccount => 'Der Nutzer hat sein Konto gelöscht.';
+  String get userDeletedAccount => 'Der Nutzer hat deren Konto gelöscht.';
 
   @override
   String get contextMenuUserProfile => 'Userprofil';
@@ -484,7 +484,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String contactVerifyNumberLongDesc(Object username) {
-    return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit ihrem Gerät. Die Person kann auch deinen Code mit ihrem Gerät scannen.';
+    return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit deren Gerät. Die Person kann auch deinen Code mit deren Gerät scannen.';
   }
 
   @override
@@ -514,7 +514,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactBlockBody =>
-      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
+      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und deren Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
 
   @override
   String get contactRemove => 'Benutzer löschen';
@@ -865,7 +865,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get autoRenewalLongDesc =>
-      'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
+      'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst. Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
 
   @override
   String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';
@@ -1264,7 +1264,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String makeAdminRightsBody(Object username) {
-    return '$username  wird diese Gruppe und ihre Mitglieder bearbeiten können.';
+    return '$username wird diese Gruppe und ihre Mitglieder bearbeiten können.';
   }
 
   @override
@@ -1695,7 +1695,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch sein öffentlicher Schlüssel überprüft.';
+      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch deren öffentlicher Schlüssel überprüft.';
 
   @override
   String get verificationBadgeYellowDesc =>

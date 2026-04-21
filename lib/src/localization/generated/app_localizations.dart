@@ -445,7 +445,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDeletedAccount.
   ///
   /// In en, this message translates to:
-  /// **'The user has deleted its account.'**
+  /// **'The user has deleted their account.'**
   String get userDeletedAccount;
 
   /// No description provided for @contextMenuUserProfile.
@@ -1003,7 +1003,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAllContactMessagesBody.
   ///
   /// In en, this message translates to:
-  /// **'This will remove all messages, except stored media files, in your chat with {username}. This will NOT delete the messages stored at {username}s device!'**
+  /// **'This will remove all messages, except stored media files, in your chat with {username}. This will NOT delete the messages stored at {username}\'s device!'**
   String deleteAllContactMessagesBody(Object username);
 
   /// No description provided for @contactBlock.
@@ -1657,7 +1657,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoRenewalLongDesc.
   ///
   /// In en, this message translates to:
-  /// **'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.'**
+  /// **'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal. We will notify you in good time before the automatic renewal.'**
   String get autoRenewalLongDesc;
 
   /// No description provided for @planSuccessUpgraded.
@@ -1681,13 +1681,13 @@ abstract class AppLocalizations {
   /// No description provided for @additionalUsersPlusTokens.
   ///
   /// In en, this message translates to:
-  /// **'twonly-Codes für \"Plus\" user'**
+  /// **'twonly-codes for \"Plus\" user'**
   String get additionalUsersPlusTokens;
 
   /// No description provided for @additionalUsersFreeTokens.
   ///
   /// In en, this message translates to:
-  /// **'twonly-Codes für \"Free\" user'**
+  /// **'twonly-codes for \"Free\" user'**
   String get additionalUsersFreeTokens;
 
   /// No description provided for @planLimitReached.
@@ -1699,7 +1699,7 @@ abstract class AppLocalizations {
   /// No description provided for @planNotAllowed.
   ///
   /// In en, this message translates to:
-  /// **'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.'**
+  /// **'You cannot send media files with your current tariff. Upgrade your plan now to send the media file.'**
   String get planNotAllowed;
 
   /// No description provided for @galleryDelete.
@@ -2455,13 +2455,13 @@ abstract class AppLocalizations {
   /// No description provided for @youRevokedAdminRights.
   ///
   /// In en, this message translates to:
-  /// **'You revoked {affectedR} admin rights.'**
+  /// **'You revoked {affectedR}\'s admin rights.'**
   String youRevokedAdminRights(Object affectedR);
 
   /// No description provided for @makerRevokedAdminRights.
   ///
   /// In en, this message translates to:
-  /// **'{maker} revoked {affectedR} admin rights.'**
+  /// **'{maker} revoked {affectedR}\'s admin rights.'**
   String makerRevokedAdminRights(Object affectedR, Object maker);
 
   /// No description provided for @youLeftGroup.
