@@ -27,17 +27,9 @@ class AppState {
 }
 
 class AppGlobalKeys {
-  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-      GlobalKey<ScaffoldMessengerState>();
+  static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 }
 
-late ApiService apiService;
-
-// uses for background notification
-late TwonlyDB twonlyDB;
-
-// Cached UserData in the memory. Every time the user data is changed the `updateUserdata` function is called,
-// which will update this global variable. The variable is set in the main.dart and after the user has registered in the register.view.dart
 class AppSession {
   static late UserData currentUser;
 
@@ -48,3 +40,6 @@ class AppSession {
     _userDataUpdateController.add(null);
   }
 }
+
+late ApiService apiService;
+late TwonlyDB twonlyDB;

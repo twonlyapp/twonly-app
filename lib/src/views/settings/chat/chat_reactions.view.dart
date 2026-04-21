@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -14,32 +13,30 @@ class ChatReactionSelectionView extends StatefulWidget {
 }
 
 class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
-  List<String> selectedEmojis = [];
+  List<String> _selectedEmojis = [];
+
+  List<String> _emojisFromSession() {
+    final user = AppSession.currentUser;
+    if (user.preSelectedEmojies != null) {
+      return user.preSelectedEmojies!;
+    }
+    return EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
+  }
 
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
-  }
-
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user != null && user.preSelectedEmojies != null) {
-      selectedEmojis = user.preSelectedEmojies!;
-    } else {
-      selectedEmojis = EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
-    }
-    setState(() {});
+    _selectedEmojis = _emojisFromSession();
   }
 
   Future<void> _onEmojiSelected(String emoji) async {
-    if (selectedEmojis.contains(emoji)) {
-      selectedEmojis.remove(emoji);
+    if (_selectedEmojis.contains(emoji)) {
+      _selectedEmojis.remove(emoji);
     } else {
-      if (selectedEmojis.length < 12) {
-        selectedEmojis.add(emoji);
+      if (_selectedEmojis.length < 12) {
+        _selectedEmojis.add(emoji);
         await updateUser((user) {
-          user.preSelectedEmojies = selectedEmojis;
+          user.preSelectedEmojies = _selectedEmojis;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,56 +52,52 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Reactions'),
-      ),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4, // Number of columns
-        ),
-        itemCount: EmojiAnimation.animatedIcons.keys.length,
-        itemBuilder: (context, index) {
-          final emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
-          return GestureDetector(
-            onTap: () async {
-              await _onEmojiSelected(emoji);
-            },
-            child: Card(
-              color: selectedEmojis.contains(emoji)
-                  ? context.color.primary.withAlpha(150)
-                  : context.color.surface,
-              child: Center(
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: EmojiAnimation(
-                    emoji: emoji,
-                    // repeat: selectedEmojis.contains(emoji),
+    return StreamBuilder<void>(
+      stream: AppSession.onUserUpdated,
+      builder: (context, _) {
+        _selectedEmojis = _emojisFromSession();
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Select Reactions'),
+          ),
+          body: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+            ),
+            itemCount: EmojiAnimation.animatedIcons.keys.length,
+            itemBuilder: (context, index) {
+              final emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
+              return GestureDetector(
+                onTap: () => _onEmojiSelected(emoji),
+                child: Card(
+                  color: _selectedEmojis.contains(emoji)
+                      ? context.color.primary.withAlpha(150)
+                      : context.color.surface,
+                  child: Center(
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: EmojiAnimation(emoji: emoji),
+                    ),
                   ),
                 ),
+              );
+            },
+          ),
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.only(bottom: 30),
+            child: FloatingActionButton(
+              foregroundColor: Colors.white,
+              onPressed: () => updateUser(
+                (u) => u.preSelectedEmojies = EmojiAnimation.animatedIcons.keys
+                    .toList()
+                    .sublist(0, 6),
               ),
+              child: const Icon(Icons.settings_backup_restore_rounded),
             ),
-          );
-        },
-      ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30),
-        child: FloatingActionButton(
-          foregroundColor: Colors.white,
-          onPressed: () async {
-            selectedEmojis = EmojiAnimation.animatedIcons.keys.toList().sublist(
-              0,
-              6,
-            );
-            setState(() {});
-            await updateUser((user) {
-              user.preSelectedEmojies = selectedEmojis;
-            });
-          },
-          child: const Icon(Icons.settings_backup_restore_rounded),
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

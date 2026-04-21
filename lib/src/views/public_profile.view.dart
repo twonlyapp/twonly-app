@@ -34,8 +34,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
     _qrCode = await getProfileQrCodeData();
     _userAvatar = await getUserAvatar();
     _publicKey = await getUserPublicKey();
-
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
@@ -126,7 +125,9 @@ class _PublicProfileViewState extends State<PublicProfileView> {
             text: context.lang.shareYourProfile,
             subtitle: (_publicKey == null)
                 ? null
-                : Text('https://me.twonly.eu/${AppSession.currentUser.username}'),
+                : Text(
+                    'https://me.twonly.eu/${AppSession.currentUser.username}',
+                  ),
             onTap: () {
               final params = ShareParams(
                 text:

@@ -176,12 +176,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (AppSession.currentUser.twonlySafeBackup == null && !_skipBackup) {
+      } else if (AppSession.currentUser.twonlySafeBackup == null &&
+          !_skipBackup) {
         child = SetupBackupView(
-          callBack: () {
+          callBack: () => setState(() {
             _skipBackup = true;
-            setState(() {});
-          },
+          }),
         );
       } else {
         child = HomeView(
