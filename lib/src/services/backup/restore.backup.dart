@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
@@ -9,12 +10,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> recoverBackup(
   String username,
@@ -23,10 +24,7 @@ Future<void> recoverBackup(
 ) async {
   final (backupId, encryptionKey) = await getMasterKey(password, username);
 
-  final backupServerUrl = await getTwonlySafeBackupUrlFromServer(
-    backupId,
-    server,
-  );
+  final backupServerUrl = getTwonlySafeBackupUrlFromServer(backupId, server);
 
   if (backupServerUrl == null) {
     Log.error('Could not create backup url');

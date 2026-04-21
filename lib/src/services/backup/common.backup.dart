@@ -1,19 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:http/http.dart' as http;
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/backup/create.backup.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> enableTwonlySafe(String password) async {
   final (backupId, encryptionKey) = await getMasterKey(
     password,
-    AppSession.currentUser.username,
+    appSession.currentUser.username,
   );
 
   await updateUser((user) {
@@ -65,10 +66,10 @@ Future<(Uint8List, Uint8List)> getMasterKey(
 }
 
 String? getTwonlySafeBackupUrl() {
-  if (AppSession.currentUser.twonlySafeBackup == null) return null;
+  if (appSession.currentUser.twonlySafeBackup == null) return null;
   return getTwonlySafeBackupUrlFromServer(
-    AppSession.currentUser.twonlySafeBackup!.backupId,
-    AppSession.currentUser.backupServer,
+    appSession.currentUser.twonlySafeBackup!.backupId,
+    appSession.currentUser.backupServer,
   );
 }
 

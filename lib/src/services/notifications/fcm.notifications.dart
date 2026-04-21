@@ -8,11 +8,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 import '../../../firebase_options.dart';
 
@@ -73,7 +74,7 @@ Future<void> checkForTokenUpdates() async {
 }
 
 Future<void> initFCMAfterAuthenticated({bool force = false}) async {
-  if (AppSession.currentUser.updateFCMToken || force) {
+  if (appSession.currentUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {

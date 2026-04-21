@@ -1,15 +1,16 @@
 import 'dart:convert';
+
 import 'package:clock/clock.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
-import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/signal/signal_protocol_store.dart';
+import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
   final signalIdentity = await getSignalIdentity();
@@ -20,10 +21,10 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
-  if (AppSession.currentUser.signalLastSignedPreKeyUpdated != null) {
+  if (appSession.currentUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
     final isYoungerThan48Hours =
-        (AppSession.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
+        (appSession.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
           fortyEightHoursAgo,
         );
     if (isYoungerThan48Hours) {
@@ -104,7 +105,7 @@ Future<void> createIfNotExistsSignalIdentity() async {
   final identityKeyPair = generateIdentityKeyPair();
   final registrationId = generateRegistrationId(true);
 
-  final signalStore = ConnectSignalProtocolStore(
+  final signalStore = SignalSignalProtocolStore(
     identityKeyPair,
     registrationId,
   );

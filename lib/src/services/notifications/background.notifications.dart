@@ -7,7 +7,7 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/localization/generated/app_localizations_de.dart';
 import 'package:twonly/src/localization/generated/app_localizations_en.dart';

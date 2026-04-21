@@ -2,12 +2,12 @@ import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> syncFlameCounters({String? forceForGroup}) async {
   final groups = await twonlyDB.groupsDao.getAllGroups();
@@ -17,7 +17,7 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
     (x) => x.totalMediaCounter == maxMessageCounter,
   );
 
-  if (AppSession.currentUser.myBestFriendGroupId != bestFriend.groupId) {
+  if (appSession.currentUser.myBestFriendGroupId != bestFriend.groupId) {
     await updateUser((user) {
       user.myBestFriendGroupId = bestFriend.groupId;
     });

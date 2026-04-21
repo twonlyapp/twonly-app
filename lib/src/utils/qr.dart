@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 
@@ -17,8 +17,8 @@ Future<Uint8List> getProfileQrCodeData() async {
   final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 
   final publicProfile = PublicProfile(
-    userId: Int64(AppSession.currentUser.userId),
-    username: AppSession.currentUser.username,
+    userId: Int64(appSession.currentUser.userId),
+    username: appSession.currentUser.username,
     publicIdentityKey: (await signalStore.getIdentityKeyPair())
         .getPublicKey()
         .serialize(),

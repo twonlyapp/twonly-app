@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/locator.dart';
+
+String getAvatarSvg(Uint8List avatarSvgCompressed) {
+  return utf8.decode(gzip.decode(avatarSvgCompressed));
+}
 
 Future<void> createPushAvatars({int? forceForUserId}) async {
   final contacts = await twonlyDB.contactsDao.getAllContacts();
@@ -47,13 +53,13 @@ File avatarPNGFile(int contactId) {
 }
 
 Future<Uint8List> getUserAvatar() async {
-  if (AppSession.currentUser.avatarSvg == null) {
+  if (appSession.currentUser.avatarSvg == null) {
     final data = await rootBundle.load('assets/images/default_avatar.png');
     return data.buffer.asUint8List();
   }
 
   final pictureInfo = await vg.loadPicture(
-    SvgStringLoader(AppSession.currentUser.avatarSvg!),
+    SvgStringLoader(appSession.currentUser.avatarSvg!),
     null,
   );
 
@@ -62,7 +68,8 @@ Future<Uint8List> getUserAvatar() async {
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
 
-  final file = avatarPNGFile(AppSession.currentUser.userId)..writeAsBytesSync(pngBytes);
+  final file = avatarPNGFile(appSession.currentUser.userId)
+    ..writeAsBytesSync(pngBytes);
   pictureInfo.picture.dispose();
 
   return file.readAsBytesSync();

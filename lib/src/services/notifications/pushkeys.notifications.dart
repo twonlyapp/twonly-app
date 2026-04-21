@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -9,14 +10,14 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 

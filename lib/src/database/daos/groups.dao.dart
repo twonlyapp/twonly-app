@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/flame.service.dart';
@@ -113,7 +113,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     int contactId,
     GroupsCompanion group,
   ) async {
-    final groupIdDirectChat = getUUIDforDirectChat(contactId, AppSession.currentUser.userId);
+    final groupIdDirectChat = getUUIDforDirectChat(contactId, appSession.currentUser.userId);
     final insertGroup = group.copyWith(
       groupId: Value(groupIdDirectChat),
       isDirectChat: const Value(true),
@@ -209,7 +209,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<Group?> watchDirectChat(int contactId) {
-    final groupId = getUUIDforDirectChat(contactId, AppSession.currentUser.userId);
+    final groupId = getUUIDforDirectChat(contactId, appSession.currentUser.userId);
     return (select(
       groups,
     )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();

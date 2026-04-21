@@ -3,11 +3,12 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mutex/mutex.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/flame.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 
 Future<void> expectFlame(DateTime time, String groupId, int counter) async {
   await withClock(
@@ -38,15 +39,20 @@ void main() {
   }
 
   setUp(() async {
-    twonlyDB = TwonlyDB.forTesting(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        // Recommended for widget tests to avoid test errors.
-        closeStreamsSynchronously: true,
-      ),
-    );
+    await locator.reset();
+    locator
+      ..registerSingleton<TwonlyDB>(
+        TwonlyDB.forTesting(
+          DatabaseConnection(
+            NativeDatabase.memory(),
+            // Recommended for widget tests to avoid test errors.
+            closeStreamsSynchronously: true,
+          ),
+        ),
+      )
+      ..registerSingleton<UserService>(UserService());
 
-    gUser = UserData(
+    appSession.currentUser = UserData(
       userId: 0x133337,
       username: 'test_user',
       displayName: 'Test User',

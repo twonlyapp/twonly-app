@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:pro_video_editor/pro_video_editor.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/channels/video_compression.channel.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';

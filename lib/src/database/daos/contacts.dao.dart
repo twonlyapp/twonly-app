@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
@@ -140,7 +140,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
               t.userDiscoveryVersion.isNotNull() &
               t.userDiscoveryExcluded.equals(false) &
               t.mediaSendCounter.isBiggerOrEqualValue(
-                AppSession.currentUser.minimumRequiredImagesExchanged,
+                appSession.currentUser.minimumRequiredImagesExchanged,
               ),
         ))
         .watch();

@@ -1,0 +1,313 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mutex/mutex.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
+import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/last_message_time.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/typing_indicator_subtitle.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
+
+class GroupListItemComp extends StatefulWidget {
+  const GroupListItemComp({
+    required this.group,
+    super.key,
+  });
+  final Group group;
+
+  @override
+  State<GroupListItemComp> createState() => _UserListItem();
+}
+
+class _UserListItem extends State<GroupListItemComp> {
+  Message? _currentMessage;
+
+  List<Message> _messagesNotOpened = [];
+  late StreamSubscription<List<Message>> _messagesNotOpenedStream;
+
+  Message? _lastMessage;
+  Reaction? _lastReaction;
+  late StreamSubscription<Message?> _lastMessageStream;
+  late StreamSubscription<Reaction?> _lastReactionStream;
+  late StreamSubscription<List<MediaFile>> _lastMediaFilesStream;
+
+  List<Message> _previewMessages = [];
+  final List<MediaFile> _previewMediaFiles = [];
+  bool _hasNonOpenedMediaFile = false;
+  bool _receiverDeletedAccount = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initStreams();
+  }
+
+  @override
+  void dispose() {
+    _messagesNotOpenedStream.cancel();
+    _lastReactionStream.cancel();
+    _lastMessageStream.cancel();
+    _lastMediaFilesStream.cancel();
+    super.dispose();
+  }
+
+  Future<void> initStreams() async {
+    _lastMessageStream =
+        (await twonlyDB.messagesDao.watchLastMessage(
+          widget.group.groupId,
+        )).listen((update) {
+          protectUpdateState.protect(() async {
+            await updateState(update, _messagesNotOpened);
+          });
+        });
+
+    _lastReactionStream = twonlyDB.reactionsDao
+        .watchLastReactions(widget.group.groupId)
+        .listen((update) {
+          setState(() {
+            _lastReaction = update;
+          });
+        });
+
+    _messagesNotOpenedStream = twonlyDB.messagesDao
+        .watchMessageNotOpened(widget.group.groupId)
+        .listen((update) {
+          protectUpdateState.protect(() async {
+            await updateState(_lastMessage, update);
+          });
+        });
+
+    _lastMediaFilesStream = twonlyDB.mediaFilesDao
+        .watchNewestMediaFiles()
+        .listen((mediaFiles) {
+          for (final mediaFile in mediaFiles) {
+            final index = _previewMediaFiles.indexWhere(
+              (t) => t.mediaId == mediaFile.mediaId,
+            );
+            if (index >= 0) {
+              _previewMediaFiles[index] = mediaFile;
+            }
+          }
+          setState(() {});
+        });
+
+    final groupContacts = await twonlyDB.groupsDao.getGroupContact(
+      widget.group.groupId,
+    );
+    if (groupContacts.length == 1) {
+      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    }
+  }
+
+  Mutex protectUpdateState = Mutex();
+
+  Future<void> updateState(
+    Message? newLastMessage,
+    List<Message> newMessagesNotOpened,
+  ) async {
+    if (newLastMessage == null) {
+      // there are no messages at all
+      _currentMessage = null;
+      _previewMessages = [];
+    } else if (newMessagesNotOpened.isNotEmpty) {
+      // Filter for the preview non opened messages. First messages which where send but not yet opened by the other side.
+      final receivedMessages = newMessagesNotOpened
+          .where((x) => x.senderId != null)
+          .toList();
+
+      if (receivedMessages.isNotEmpty) {
+        _previewMessages = receivedMessages;
+        _currentMessage = receivedMessages.first;
+      } else {
+        _previewMessages = newMessagesNotOpened;
+        _currentMessage = newMessagesNotOpened.first;
+      }
+    } else {
+      // there are no not opened messages show just the last message in the table
+      // only shows the last message in case there was no newer messages which already got deleted
+      // This prevents, that it will show that a images got stored 10 days ago...
+      if (newLastMessage.createdAt.isAfter(
+        widget.group.lastMessageExchange.subtract(const Duration(days: 2)),
+      )) {
+        _currentMessage = newLastMessage;
+        _previewMessages = [newLastMessage];
+      } else {
+        _currentMessage = null;
+        _previewMessages = [];
+      }
+    }
+
+    final msgs = _previewMessages
+        .where((x) => x.type == MessageType.media.name)
+        .toList();
+    if (msgs.isNotEmpty &&
+        msgs.first.type == MessageType.media.name &&
+        !msgs.first.isDeletedFromSender &&
+        msgs.first.senderId != null &&
+        msgs.first.openedAt == null) {
+      _hasNonOpenedMediaFile = true;
+    } else {
+      _hasNonOpenedMediaFile = false;
+    }
+
+    for (final message in _previewMessages) {
+      if (message.mediaId != null &&
+          !_previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
+        final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+          message.mediaId!,
+        );
+        if (mediaFile != null) {
+          _previewMediaFiles.add(mediaFile);
+        }
+      }
+    }
+
+    _lastMessage = newLastMessage;
+    _messagesNotOpened = newMessagesNotOpened;
+    if (mounted) setState(() {});
+  }
+
+  Future<void> onTap() async {
+    if (_currentMessage == null && widget.group.totalMediaCounter == 0) {
+      await context.push(
+        Routes.chatsCameraSendTo,
+        extra: widget.group,
+      );
+      return;
+    }
+
+    if (_hasNonOpenedMediaFile) {
+      final msgs = _previewMessages
+          .where((x) => x.type == MessageType.media.name)
+          .toList();
+      final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+        msgs.first.mediaId!,
+      );
+      if (mediaFile?.type != MediaType.audio) {
+        if (mediaFile?.downloadState == null) return;
+        if (mediaFile!.downloadState! == DownloadState.pending) {
+          await startDownloadMedia(mediaFile, true);
+          return;
+        }
+        if (mediaFile.downloadState! == DownloadState.ready) {
+          if (!mounted) return;
+          await context.push(
+            Routes.chatsMediaViewer,
+            extra: widget.group,
+          );
+          return;
+        }
+      }
+    }
+    if (!mounted) return;
+    await context.push(Routes.chatsMessages(widget.group.groupId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GroupContextMenu(
+      group: widget.group,
+      child: ListTile(
+        title: Row(
+          children: [
+            Text(
+              substringBy(widget.group.groupName, 30),
+            ),
+            const SizedBox(width: 3),
+            VerificationBadgeComp(
+              group: widget.group,
+              showOnlyIfVerified: true,
+              clickable: false,
+              size: 12,
+            ),
+          ],
+        ),
+        subtitle: _receiverDeletedAccount
+            ? Text(context.lang.userDeletedAccount)
+            : (_currentMessage == null)
+            ? (widget.group.totalMediaCounter == 0)
+                  ? Text(context.lang.chatsTapToSend)
+                  : Row(
+                      children: [
+                        LastMessageTimeComp(
+                          dateTime: widget.group.lastMessageExchange,
+                        ),
+                        FlameCounterWidget(
+                          groupId: widget.group.groupId,
+                          prefix: true,
+                        ),
+                      ],
+                    )
+            : Row(
+                children: [
+                  TypingIndicatorSubtitleComp(
+                    groupId: widget.group.groupId,
+                  ),
+                  MessageSendStateIcon(
+                    _previewMessages,
+                    _previewMediaFiles,
+                    lastReaction: _lastReaction,
+                    group: widget.group,
+                  ),
+                  const Text('•'),
+                  const SizedBox(width: 5),
+                  if (_currentMessage != null)
+                    LastMessageTimeComp(message: _currentMessage),
+                  FlameCounterWidget(
+                    groupId: widget.group.groupId,
+                    prefix: true,
+                  ),
+                ],
+              ),
+        leading: GestureDetector(
+          onTap: () async {
+            if (widget.group.isDirectChat) {
+              final contacts = await twonlyDB.groupsDao.getGroupContact(
+                widget.group.groupId,
+              );
+              if (!context.mounted) return;
+              await context.push(Routes.profileContact(contacts.first.userId));
+              return;
+            } else {
+              await context.push(Routes.profileGroup(widget.group.groupId));
+            }
+          },
+          child: AvatarIcon(group: widget.group),
+        ),
+        trailing: (widget.group.leftGroup || _receiverDeletedAccount)
+            ? null
+            : IconButton(
+                onPressed: () {
+                  if (_hasNonOpenedMediaFile) {
+                    context.push(Routes.chatsMessages(widget.group.groupId));
+                  } else {
+                    context.push(
+                      Routes.chatsCameraSendTo,
+                      extra: widget.group,
+                    );
+                  }
+                },
+                icon: FaIcon(
+                  _hasNonOpenedMediaFile
+                      ? FontAwesomeIcons.solidComments
+                      : FontAwesomeIcons.camera,
+                  color: context.color.outline.withAlpha(150),
+                ),
+              ),
+        onTap: onTap,
+      ),
+    );
+  }
+}

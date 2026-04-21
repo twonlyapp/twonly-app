@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/compression.service.dart';
@@ -237,7 +239,7 @@ class MediaFileService {
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
-      if (AppSession.currentUser.storeMediaFilesInGallery) {
+      if (appSession.currentUser.storeMediaFilesInGallery) {
         if (mediaFile.type == MediaType.video) {
           await saveVideoToGallery(storedPath.path);
         } else {

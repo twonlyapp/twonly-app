@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parse_link.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/base.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parse_link.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
 class LinkParserTest {
   LinkParserTest({

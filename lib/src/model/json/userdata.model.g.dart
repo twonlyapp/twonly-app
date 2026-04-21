@@ -1,0 +1,202 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'userdata.model.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+UserData _$UserDataFromJson(Map<String, dynamic> json) =>
+    UserData(
+        userId: (json['userId'] as num).toInt(),
+        username: json['username'] as String,
+        displayName: json['displayName'] as String,
+        subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
+      )
+      ..avatarSvg = json['avatarSvg'] as String?
+      ..avatarJson = json['avatarJson'] as String?
+      ..appVersion = (json['appVersion'] as num?)?.toInt() ?? 0
+      ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
+      ..isDeveloper = json['isDeveloper'] as bool? ?? false
+      ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
+      ..subscriptionPlanIdStore = json['subscriptionPlanIdStore'] as String?
+      ..lastImageSend = json['lastImageSend'] == null
+          ? null
+          : DateTime.parse(json['lastImageSend'] as String)
+      ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
+      ..lastPlanBallance = json['lastPlanBallance'] as String?
+      ..additionalUserInvites = json['additionalUserInvites'] as String?
+      ..themeMode =
+          $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
+          ThemeMode.system
+      ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
+      ..requestedAudioPermission =
+          json['requestedAudioPermission'] as bool? ?? false
+      ..videoStabilizationEnabled =
+          json['videoStabilizationEnabled'] as bool? ?? true
+      ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
+      ..showShowImagePreviewWhenSending =
+          json['showShowImagePreviewWhenSending'] as bool? ?? false
+      ..startWithCameraOpen = json['startWithCameraOpen'] as bool? ?? true
+      ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList()
+      ..autoDownloadOptions =
+          (json['autoDownloadOptions'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+              k,
+              (e as List<dynamic>).map((e) => e as String).toList(),
+            ),
+          )
+      ..storeMediaFilesInGallery =
+          json['storeMediaFilesInGallery'] as bool? ?? false
+      ..autoStoreAllSendUnlimitedMediaFiles =
+          json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
+      ..typingIndicators = json['typingIndicators'] as bool? ?? true
+      ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
+      ..signalLastSignedPreKeyUpdated =
+          json['signalLastSignedPreKeyUpdated'] == null
+          ? null
+          : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..allowErrorTrackingViaSentry =
+          json['allowErrorTrackingViaSentry'] as bool? ?? false
+      ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
+      ..isUserDiscoveryEnabled =
+          json['isUserDiscoveryEnabled'] as bool? ?? false
+      ..minimumRequiredImagesExchanged =
+          (json['minimumRequiredImagesExchanged'] as num?)?.toInt() ?? 4
+      ..userDiscoveryThreshold =
+          (json['userDiscoveryThreshold'] as num?)?.toInt() ?? 2
+      ..currentPreKeyIndexStart =
+          (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
+      ..currentSignedPreKeyIndexStart =
+          (json['currentSignedPreKeyIndexStart'] as num?)?.toInt() ?? 100000
+      ..lastChangeLogHash = (json['lastChangeLogHash'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList()
+      ..hideChangeLog = json['hideChangeLog'] as bool? ?? true
+      ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
+      ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
+          ? null
+          : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
+      ..backupServer = json['backupServer'] == null
+          ? null
+          : BackupServer.fromJson(json['backupServer'] as Map<String, dynamic>)
+      ..twonlySafeBackup = json['twonlySafeBackup'] == null
+          ? null
+          : TwonlySafeBackup.fromJson(
+              json['twonlySafeBackup'] as Map<String, dynamic>,
+            )
+      ..askedForUserStudyPermission =
+          json['askedForUserStudyPermission'] as bool? ?? false
+      ..userStudyParticipantsToken =
+          json['userStudyParticipantsToken'] as String?
+      ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
+          ? null
+          : DateTime.parse(json['lastUserStudyDataUpload'] as String);
+
+Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
+  'userId': instance.userId,
+  'username': instance.username,
+  'displayName': instance.displayName,
+  'avatarSvg': instance.avatarSvg,
+  'avatarJson': instance.avatarJson,
+  'appVersion': instance.appVersion,
+  'avatarCounter': instance.avatarCounter,
+  'isDeveloper': instance.isDeveloper,
+  'deviceId': instance.deviceId,
+  'subscriptionPlan': instance.subscriptionPlan,
+  'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
+  'lastImageSend': instance.lastImageSend?.toIso8601String(),
+  'todaysImageCounter': instance.todaysImageCounter,
+  'lastPlanBallance': instance.lastPlanBallance,
+  'additionalUserInvites': instance.additionalUserInvites,
+  'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+  'defaultShowTime': instance.defaultShowTime,
+  'requestedAudioPermission': instance.requestedAudioPermission,
+  'videoStabilizationEnabled': instance.videoStabilizationEnabled,
+  'showFeedbackShortcut': instance.showFeedbackShortcut,
+  'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
+  'startWithCameraOpen': instance.startWithCameraOpen,
+  'preSelectedEmojies': instance.preSelectedEmojies,
+  'autoDownloadOptions': instance.autoDownloadOptions,
+  'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
+  'autoStoreAllSendUnlimitedMediaFiles':
+      instance.autoStoreAllSendUnlimitedMediaFiles,
+  'typingIndicators': instance.typingIndicators,
+  'myBestFriendGroupId': instance.myBestFriendGroupId,
+  'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
+      ?.toIso8601String(),
+  'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
+  'screenLockEnabled': instance.screenLockEnabled,
+  'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
+  'minimumRequiredImagesExchanged': instance.minimumRequiredImagesExchanged,
+  'userDiscoveryThreshold': instance.userDiscoveryThreshold,
+  'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
+  'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
+  'lastChangeLogHash': instance.lastChangeLogHash,
+  'hideChangeLog': instance.hideChangeLog,
+  'updateFCMToken': instance.updateFCMToken,
+  'nextTimeToShowBackupNotice': instance.nextTimeToShowBackupNotice
+      ?.toIso8601String(),
+  'backupServer': instance.backupServer,
+  'twonlySafeBackup': instance.twonlySafeBackup,
+  'askedForUserStudyPermission': instance.askedForUserStudyPermission,
+  'userStudyParticipantsToken': instance.userStudyParticipantsToken,
+  'lastUserStudyDataUpload': instance.lastUserStudyDataUpload
+      ?.toIso8601String(),
+};
+
+const _$ThemeModeEnumMap = {
+  ThemeMode.system: 'system',
+  ThemeMode.light: 'light',
+  ThemeMode.dark: 'dark',
+};
+
+TwonlySafeBackup _$TwonlySafeBackupFromJson(Map<String, dynamic> json) =>
+    TwonlySafeBackup(
+        backupId: (json['backupId'] as List<dynamic>)
+            .map((e) => (e as num).toInt())
+            .toList(),
+        encryptionKey: (json['encryptionKey'] as List<dynamic>)
+            .map((e) => (e as num).toInt())
+            .toList(),
+      )
+      ..lastBackupSize = (json['lastBackupSize'] as num).toInt()
+      ..backupUploadState = $enumDecode(
+        _$LastBackupUploadStateEnumMap,
+        json['backupUploadState'],
+      )
+      ..lastBackupDone = json['lastBackupDone'] == null
+          ? null
+          : DateTime.parse(json['lastBackupDone'] as String);
+
+Map<String, dynamic> _$TwonlySafeBackupToJson(TwonlySafeBackup instance) =>
+    <String, dynamic>{
+      'lastBackupSize': instance.lastBackupSize,
+      'backupUploadState':
+          _$LastBackupUploadStateEnumMap[instance.backupUploadState]!,
+      'lastBackupDone': instance.lastBackupDone?.toIso8601String(),
+      'backupId': instance.backupId,
+      'encryptionKey': instance.encryptionKey,
+    };
+
+const _$LastBackupUploadStateEnumMap = {
+  LastBackupUploadState.none: 'none',
+  LastBackupUploadState.pending: 'pending',
+  LastBackupUploadState.failed: 'failed',
+  LastBackupUploadState.success: 'success',
+};
+
+BackupServer _$BackupServerFromJson(Map<String, dynamic> json) => BackupServer(
+  serverUrl: json['serverUrl'] as String,
+  retentionDays: (json['retentionDays'] as num).toInt(),
+  maxBackupBytes: (json['maxBackupBytes'] as num).toInt(),
+);
+
+Map<String, dynamic> _$BackupServerToJson(BackupServer instance) =>
+    <String, dynamic>{
+      'serverUrl': instance.serverUrl,
+      'retentionDays': instance.retentionDays,
+      'maxBackupBytes': instance.maxBackupBytes,
+    };

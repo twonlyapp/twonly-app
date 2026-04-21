@@ -1,0 +1,318 @@
+import 'dart:async';
+
+import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/connection_status.comp.dart';
+import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
+
+class ChatListView extends StatefulWidget {
+  const ChatListView({super.key});
+  @override
+  State<ChatListView> createState() => _ChatListViewState();
+}
+
+class _ChatListViewState extends State<ChatListView> {
+  StreamSubscription<void>? _userSub;
+  late StreamSubscription<List<Group>> _contactsSub;
+  List<Group> _groupsNotPinned = [];
+  List<Group> _groupsPinned = [];
+  List<Group> _groupsArchived = [];
+
+  GlobalKey searchForOtherUsers = GlobalKey();
+  bool showFeedbackShortcut = false;
+
+  int _countContactRequest = 0;
+  int _countAnnouncedUsers = 0;
+  late StreamSubscription<int?> _countContactRequestStream;
+  late StreamSubscription<int?> _countAnnouncedStream;
+
+  @override
+  void initState() {
+    initAsync();
+    _userSub = appSession.onUserUpdated.listen((_) {
+      if (mounted) setState(() {});
+    });
+    super.initState();
+  }
+
+  Future<void> initAsync() async {
+    final stream = twonlyDB.groupsDao.watchGroupsForChatList();
+    _contactsSub = stream.listen((groups) {
+      if (!mounted) return;
+      setState(() {
+        _groupsNotPinned = groups
+            .where((x) => !x.pinned && !x.archived)
+            .toList();
+        _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
+        _groupsArchived = groups.where((x) => x.archived).toList();
+      });
+    });
+
+    _countContactRequestStream = twonlyDB.contactsDao
+        .watchContactsRequestedCount()
+        .listen((update) {
+          if (update != null) {
+            if (!mounted) return;
+            setState(() {
+              _countContactRequest = update;
+            });
+          }
+        });
+
+    _countAnnouncedStream = twonlyDB.userDiscoveryDao
+        .watchNewAnnouncementsWithDataCount()
+        .listen((update) {
+          if (!mounted) return;
+          setState(() {
+            _countAnnouncedUsers = update;
+          });
+        });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final changeLog = await rootBundle.loadString('CHANGELOG.md');
+      final changeLogHash = (await compute(
+        Sha256().hash,
+        changeLog.codeUnits,
+      )).bytes;
+      if (!appSession.currentUser.hideChangeLog &&
+          appSession.currentUser.lastChangeLogHash.toString() !=
+              changeLogHash.toString()) {
+        await updateUser((u) {
+          u.lastChangeLogHash = changeLogHash;
+        });
+        if (!mounted) return;
+        // only show changelog to people who already have contacts
+        // this prevents that this is shown directly after the user registered
+        if (_groupsNotPinned.isNotEmpty) {
+          await context.push(
+            Routes.settingsHelpChangelog,
+            extra: changeLog,
+          );
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _contactsSub.cancel();
+    _countContactRequestStream.cancel();
+    _countAnnouncedStream.cancel();
+    _userSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final plan = context.watch<PurchasesProvider>().plan;
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            ConnectionStatusComp(
+              child: GestureDetector(
+                onTap: () => context.push(Routes.settingsProfile),
+                child: AvatarIcon(
+                  myAvatar: true,
+                  fontSize: 14,
+                  color: context.color.onSurface.withAlpha(20),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('twonly '),
+            if (plan != SubscriptionPlan.Free)
+              GestureDetector(
+                onTap: () => context.push(Routes.settingsSubscription),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.color.primary,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 3,
+                  ),
+                  child: Text(
+                    plan.name,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          const FeedbackIconButtonComp(),
+          Stack(
+            children: [
+              if (_countAnnouncedUsers + _countContactRequest > 0)
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              Center(
+                child: NotificationBadgeComp(
+                  backgroundColor: isDarkMode(context)
+                      ? Colors.white
+                      : Colors.black,
+                  textColor: isDarkMode(context) ? Colors.black : Colors.white,
+                  count: (_countAnnouncedUsers + _countContactRequest)
+                      .toString(),
+                  child: IconButton(
+                    color: (_countAnnouncedUsers + _countContactRequest > 0)
+                        ? Colors.black
+                        : null,
+                    key: searchForOtherUsers,
+                    icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
+                    onPressed: () => context.push(Routes.chatsAddNewUser),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          IconButton(
+            onPressed: () => context.push(Routes.settings),
+            icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await apiService.close(() {});
+          await apiService.connect();
+          await Future.delayed(const Duration(seconds: 1));
+        },
+        child:
+            (_groupsNotPinned.isEmpty &&
+                _groupsPinned.isEmpty &&
+                _groupsArchived.isEmpty)
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.person_add),
+                    onPressed: () => context.push(Routes.chatsAddNewUser),
+                    label: Text(
+                      context.lang.chatListViewSearchUserNameBtn,
+                    ),
+                  ),
+                ),
+              )
+            : ListView.builder(
+                itemCount:
+                    _groupsPinned.length +
+                    (_groupsPinned.isNotEmpty ? 1 : 0) +
+                    _groupsNotPinned.length +
+                    (_groupsArchived.isNotEmpty ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >=
+                      _groupsNotPinned.length +
+                          _groupsPinned.length +
+                          (_groupsPinned.isNotEmpty ? 1 : 0)) {
+                    if (_groupsArchived.isEmpty) return Container();
+                    return ListTile(
+                      title: Text(
+                        '${context.lang.archivedChats} (${_groupsArchived.length})',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onTap: () => context.push(Routes.chatsArchived),
+                    );
+                  }
+                  // Check if the index is for the pinned users
+                  if (index < _groupsPinned.length) {
+                    final group = _groupsPinned[index];
+                    return GroupListItemComp(
+                      key: ValueKey(group.groupId),
+                      group: group,
+                    );
+                  }
+
+                  // If there are pinned users, account for the Divider
+                  var adjustedIndex = index - _groupsPinned.length;
+                  if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
+                    return const Divider();
+                  }
+
+                  // Adjust the index for the contacts list
+                  adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
+
+                  // Get the contacts that are not pinned
+                  final group = _groupsNotPinned.elementAt(
+                    adjustedIndex,
+                  );
+                  return GroupListItemComp(
+                    key: ValueKey(group.groupId),
+                    group: group,
+                  );
+                },
+              ),
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Material(
+              elevation: 3,
+              shape: const CircleBorder(),
+              color: context.color.primary,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => context.push(Routes.settingsPublicProfile),
+                child: SizedBox(
+                  width: 45,
+                  height: 45,
+                  child: Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.qrcode,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FloatingActionButton(
+              backgroundColor: context.color.primary,
+              onPressed: () => context.push(Routes.chatsStartNewChat),
+              child: FaIcon(
+                FontAwesomeIcons.penToSquare,
+                color: isDarkMode(context) ? Colors.black : Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

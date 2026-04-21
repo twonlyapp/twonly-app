@@ -10,21 +10,21 @@ import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/api/mediafiles/download.service.dart';
-import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -34,6 +34,7 @@ void main() async {
 
   await AppEnvironment.init();
   Log.init();
+  setupLocator();
 
   await RustLib.init();
 
@@ -60,7 +61,7 @@ void main() async {
   }
 
   if (user != null) {
-    AppSession.currentUser = user;
+    appSession.currentUser = user;
 
     if (user.allowErrorTrackingViaSentry) {
       AppState.allowErrorTrackingViaSentry = true;
@@ -87,18 +88,15 @@ void main() async {
 
   unawaited(setupPushNotification());
 
-  apiService = ApiService();
-  twonlyDB = TwonlyDB();
-
   if (user != null) {
-    if (AppSession.currentUser.appVersion < 90) {
+    if (appSession.currentUser.appVersion < 90) {
       // BUG: Requested media files for reupload where not reuploaded because the wrong state...
       await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
       await updateUser((u) {
         u.appVersion = 90;
       });
     }
-    if (AppSession.currentUser.appVersion < 91) {
+    if (appSession.currentUser.appVersion < 91) {
       // BUG: Requested media files for reupload where not reuploaded because the wrong state...
       await makeMigrationToVersion91();
       await updateUser((u) {

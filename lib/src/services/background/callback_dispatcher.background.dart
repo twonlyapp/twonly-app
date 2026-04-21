@@ -1,15 +1,15 @@
 import 'dart:async';
+
 import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/exclusive_access.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:workmanager/workmanager.dart';
 
 // ignore: unreachable_from_main
@@ -56,7 +56,7 @@ Future<bool> initBackgroundExecution() async {
     // stay alive for multiple hours between task executions
     final user = await getUser();
     if (user == null) return false;
-    AppSession.currentUser = user;
+    appSession.currentUser = user;
     return true;
   }
 
@@ -66,10 +66,10 @@ Future<bool> initBackgroundExecution() async {
 
   final user = await getUser();
   if (user == null) return false;
-  AppSession.currentUser = user;
 
-  twonlyDB = TwonlyDB();
-  apiService = ApiService();
+  setupLocator();
+  appSession.currentUser = user;
+
   AppState.isInBackgroundTask = true;
 
   _isInitialized = true;

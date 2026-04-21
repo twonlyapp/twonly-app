@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -34,17 +34,18 @@ Future<void> handleUserDiscoveryRequest(
 ) async {
   Log.info('Got a user discovery request');
 
-  if (!AppSession.currentUser.isUserDiscoveryEnabled) {
+  if (!appSession.currentUser.isUserDiscoveryEnabled) {
     Log.warn('Got a user discovery request while it is disabled');
     return;
   }
   final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
   if (contact == null) return;
 
-  if (contact.mediaSendCounter < AppSession.currentUser.minimumRequiredImagesExchanged ||
+  if (contact.mediaSendCounter <
+          appSession.currentUser.minimumRequiredImagesExchanged ||
       contact.userDiscoveryExcluded) {
     Log.warn(
-      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${AppSession.currentUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
+      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${appSession.currentUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
     );
     return;
   }
@@ -72,7 +73,7 @@ Future<void> handleUserDiscoveryUpdate(
   int fromUserId,
   EncryptedContent_UserDiscoveryUpdate update,
 ) async {
-  if (!AppSession.currentUser.isUserDiscoveryEnabled) {
+  if (!appSession.currentUser.isUserDiscoveryEnabled) {
     Log.warn('Got a user discovery update while it is disabled');
     return;
   }

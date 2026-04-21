@@ -5,7 +5,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:twonly/core/bridge.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';

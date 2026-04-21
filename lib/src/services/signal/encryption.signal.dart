@@ -5,7 +5,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:libsignal_protocol_dart/src/invalid_message_exception.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';

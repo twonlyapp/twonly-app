@@ -2,23 +2,24 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_editor.view.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/visual/views/chats/add_new_user.view.dart';
 
 Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   if (!uri.scheme.startsWith('http')) return false;
@@ -32,7 +33,7 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
 
   if (!context.mounted) return false;
 
-  if (username == AppSession.currentUser.username) {
+  if (username == appSession.currentUser.username) {
     await context.push(Routes.settingsPublicProfile);
     return true;
   }
@@ -115,7 +116,7 @@ Future<void> handleIntentMediaFile(
 
   final newMediaService = await initializeMediaUpload(
     type,
-    AppSession.currentUser.defaultShowTime,
+    appSession.currentUser.defaultShowTime,
   );
   if (newMediaService == null) {
     Log.error('Could not create new media file for intent shared file');

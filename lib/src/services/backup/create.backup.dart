@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -11,28 +12,29 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
-  if (AppSession.currentUser.twonlySafeBackup == null) {
+  if (appSession.currentUser.twonlySafeBackup == null) {
     return;
   }
 
-  if (AppSession.currentUser.twonlySafeBackup!.backupUploadState ==
+  if (appSession.currentUser.twonlySafeBackup!.backupUploadState ==
       LastBackupUploadState.pending) {
     Log.warn('Backup upload is already pending.');
     return;
   }
 
   final lastUpdateTime =
-      AppSession.currentUser.twonlySafeBackup!.lastBackupDone;
+      appSession.currentUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
     if (lastUpdateTime.isAfter(clock.now().subtract(const Duration(days: 1)))) {
       return;
@@ -120,8 +122,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
-  if (AppSession.currentUser.twonlySafeBackup!.lastBackupDone == null ||
-      AppSession.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
+  if (appSession.currentUser.twonlySafeBackup!.lastBackupDone == null ||
+      appSession.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
         clock.now().subtract(const Duration(days: 90)),
       )) {
     force = true;
@@ -150,7 +152,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   final secretBox = await chacha20.encrypt(
     backupBytes,
     secretKey: SecretKey(
-      AppSession.currentUser.twonlySafeBackup!.encryptionKey,
+      appSession.currentUser.twonlySafeBackup!.encryptionKey,
     ),
     nonce: nonce,
   );
@@ -173,9 +175,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     'Create twonly Backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
-  if (AppSession.currentUser.backupServer != null) {
+  if (appSession.currentUser.backupServer != null) {
     if (encryptedBackupBytes.length >
-        AppSession.currentUser.backupServer!.maxBackupBytes) {
+        appSession.currentUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
       await updateUser((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;

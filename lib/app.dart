@@ -1,24 +1,26 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/themes/dark.dart';
-import 'package:twonly/src/themes/light.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/components/app_outdated.dart';
-import 'package:twonly/src/views/home.view.dart';
-import 'package:twonly/src/views/onboarding/onboarding.view.dart';
-import 'package:twonly/src/views/onboarding/register.view.dart';
-import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
-import 'package:twonly/src/views/unlock_twonly.view.dart';
+import 'package:twonly/src/visual/components/app_outdated.comp.dart';
+import 'package:twonly/src/visual/themes/dark.dart';
+import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/home.view.dart';
+import 'package:twonly/src/visual/views/onboarding/onboarding.view.dart';
+import 'package:twonly/src/visual/views/onboarding/register.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
+import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -131,9 +133,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_isUserCreated) {
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
-        _isTwonlyLocked = AppSession.currentUser.screenLockEnabled;
+        _isTwonlyLocked = appSession.currentUser.screenLockEnabled;
       }
-      if (AppSession.currentUser.appVersion < 62) {
+      if (appSession.currentUser.appVersion < 62) {
         _showDatabaseMigration = true;
       }
     }
@@ -176,7 +178,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (AppSession.currentUser.twonlySafeBackup == null &&
+      } else if (appSession.currentUser.twonlySafeBackup == null &&
           !_skipBackup) {
         child = SetupBackupView(
           callBack: () => setState(() {
@@ -204,7 +206,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     return Stack(
       children: [
         child,
-        const AppOutdated(),
+        const AppOutdatedComp(),
       ],
     );
   }

@@ -1,14 +1,15 @@
 import 'dart:async';
+
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     hide Message;
-import 'package:twonly/src/services/api/mediafiles/download.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';

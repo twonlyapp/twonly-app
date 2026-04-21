@@ -1,10 +1,10 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 
 part 'reactions.dao.g.dart';
 

@@ -1,6 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/utils/log.dart';

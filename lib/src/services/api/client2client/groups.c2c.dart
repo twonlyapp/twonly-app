@@ -1,12 +1,13 @@
 import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -161,7 +162,7 @@ Future<void> handleGroupUpdate(
     case GroupActionType.demoteToMember:
       int? affectedContactId = update.affectedContactId.toInt();
 
-      if (affectedContactId == AppSession.currentUser.userId) {
+      if (affectedContactId == appSession.currentUser.userId) {
         affectedContactId = null;
         if (actionType == GroupActionType.removedMember) {
           // Oh no, I just got removed from the group...

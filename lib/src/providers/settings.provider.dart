@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/services/user.service.dart';
 
 class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late ThemeMode _themeMode;

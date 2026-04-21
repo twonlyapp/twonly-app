@@ -18,18 +18,19 @@ import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/mediafiles/download.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/server_messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/api/server_messages.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
@@ -37,12 +38,12 @@ import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
+import 'package:twonly/src/services/user_study.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/user_study/user_study_data_collection.dart';
 import 'package:web_socket_channel/io.dart';
 
 final lockConnecting = Mutex();
@@ -126,7 +127,7 @@ class ApiService {
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 
-      if (AppSession.currentUser.userStudyParticipantsToken != null) {
+      if (appSession.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
         unawaited(handleUserStudyUpload());
       }
@@ -211,7 +212,7 @@ class ApiService {
     });
   }
 
-  bool get isConnected => _channel != null && _channel!.closeCode != null;
+  bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   Future<void> _onDone() async {
     _reconnectionDelay = 3;
