@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9
+
+- New: Feature to find friends without a phone number
+- New: The verification state is now transferred to the scanned user.
+- Improved: FAQ is now in the app rather than opening in the browser
+- Fix: Many smaller issues
+
 ## 0.1.8
 
 - Improved: Typos and grammar issues thanks to @AlbertUnruh
