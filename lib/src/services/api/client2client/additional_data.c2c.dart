@@ -14,6 +14,19 @@ Future<void> handleAdditionalDataMessage(
   Log.info(
     'Got a additional data message: ${message.senderMessageId} from $groupId',
   );
+
+  // Prevent message overwrite: reject if a message with this ID already
+  // exists from a different sender.
+  final existing = await twonlyDB.messagesDao
+      .getMessageById(message.senderMessageId)
+      .getSingleOrNull();
+  if (existing != null && existing.senderId != fromUserId) {
+    Log.warn(
+      '$fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
+    );
+    return;
+  }
+
   final msg = await twonlyDB.messagesDao.insertMessage(
     MessagesCompanion(
       messageId: Value(message.senderMessageId),
