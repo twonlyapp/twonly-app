@@ -53,7 +53,9 @@ class QrCodeUtils {
     final bytes = qrEnvelope.writeToBuffer();
     final urlSafeBase64 = base64Url.encode(bytes);
 
-    return '$linkPrefix$urlSafeBase64';
+    final link = '$linkPrefix$urlSafeBase64';
+    if (kDebugMode) Log.info(link);
+    return link;
   }
 
   // returns: profile, NEW_USER=true/VERIFIED_USER=false, VERIFICATION_OK
