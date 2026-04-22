@@ -83,6 +83,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
     userSub = groupStream.listen((newGroup) {
       if (newGroup == null) return;
+      if (!mounted) return;
       setState(() {
         _group = newGroup;
       });

@@ -139,7 +139,7 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
           DurationType.max,
         );
         _maxDuration = _displayDuration;
-        setState(() {});
+        if (mounted) setState(() {});
       }
     });
 

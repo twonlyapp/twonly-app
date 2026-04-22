@@ -39,6 +39,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
       _streamAllVerified = twonlyDB.keyVerificationDao
           .watchAllGroupMembersVerified(widget.group!.groupId)
           .listen((update) {
+            if (!mounted) return;
             setState(() {
               _isVerified = update;
             });
@@ -47,6 +48,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
       _streamContactVerification = twonlyDB.keyVerificationDao
           .watchContactVerification(widget.contact!.userId)
           .listen((update) {
+            if (!mounted) return;
             setState(() {
               _isVerified = update.isNotEmpty;
             });

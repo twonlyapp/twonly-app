@@ -74,6 +74,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
     subscriptionContacts = twonlyDB.contactsDao.watchAllContacts().listen((
       updated,
     ) {
+      if (!mounted) return;
       for (final contact in updated) {
         contacts[contact.userId] = contact;
       }
@@ -85,6 +86,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
     subscriptionRetransmission = twonlyDB.receiptsDao.watchAll().listen((
       updated,
     ) {
+      if (!mounted) return;
       retransmissions = updated.reversed.toList();
       if (contacts.isNotEmpty) {
         messages = RetransMsg.fromRaw(retransmissions, contacts);

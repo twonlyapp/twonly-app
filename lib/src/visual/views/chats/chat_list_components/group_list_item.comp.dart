@@ -76,6 +76,7 @@ class _UserListItem extends State<GroupListItemComp> {
     _lastReactionStream = twonlyDB.reactionsDao
         .watchLastReactions(widget.group.groupId)
         .listen((update) {
+          if (!mounted) return;
           setState(() {
             _lastReaction = update;
           });
@@ -92,6 +93,7 @@ class _UserListItem extends State<GroupListItemComp> {
     _lastMediaFilesStream = twonlyDB.mediaFilesDao
         .watchNewestMediaFiles()
         .listen((mediaFiles) {
+          if (!mounted) return;
           for (final mediaFile in mediaFiles) {
             final index = _previewMediaFiles.indexWhere(
               (t) => t.mediaId == mediaFile.mediaId,

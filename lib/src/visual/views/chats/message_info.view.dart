@@ -58,6 +58,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       widget.message.messageId,
     );
     actionsStream = streamActions.listen((update) {
+      if (!mounted) return;
       setState(() {
         messageActions = update;
       });
@@ -67,6 +68,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       widget.message.groupId,
     );
     groupMemberStream = streamGroup.listen((update) {
+      if (!mounted) return;
       setState(() {
         groupMembers = update;
       });
@@ -76,6 +78,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       widget.message.messageId,
     );
     historyStream = streamHistory.listen((update) {
+      if (!mounted) return;
       setState(() {
         messageHistory = update;
       });

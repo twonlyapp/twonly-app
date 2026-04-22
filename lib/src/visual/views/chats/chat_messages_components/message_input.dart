@@ -97,6 +97,7 @@ class _MessageInputState extends State<MessageInput> {
   void _initializeControllers() {
     recorderController = RecorderController();
     recorderController.onCurrentDuration.listen((duration) {
+      if (!mounted) return;
       setState(() {
         _currentDuration = duration.inMilliseconds;
       });

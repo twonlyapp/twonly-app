@@ -93,6 +93,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
     );
 
     reactionsSub = stream.listen((update) {
+      if (!mounted) return;
       setState(() {
         reactions = update;
       });

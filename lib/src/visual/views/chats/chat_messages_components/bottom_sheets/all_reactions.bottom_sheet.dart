@@ -42,6 +42,7 @@ class _AllReactionsViewState extends State<AllReactionsView> {
     );
 
     reactionsSub = stream.listen((update) {
+      if (!mounted) return;
       setState(() {
         reactionsUsers = update;
       });
