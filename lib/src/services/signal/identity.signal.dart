@@ -9,6 +9,7 @@ import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/signal/signal_protocol_store.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
+import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -57,21 +58,23 @@ Future<void> signalHandleNewServerConnection() async {
 }
 
 Future<List<PreKeyRecord>> signalGetPreKeys() async {
-  final user = await getUser();
-  if (user == null) return [];
+  return lockingSignalProtocol.protect(() async {
+    final user = await getUser();
+    if (user == null) return [];
 
-  final start = user.currentPreKeyIndexStart;
-  await updateUser((user) {
-    user.currentPreKeyIndexStart =
-        (user.currentPreKeyIndexStart + 200) % maxValue;
+    final start = user.currentPreKeyIndexStart;
+    await updateUser((user) {
+      user.currentPreKeyIndexStart =
+          (user.currentPreKeyIndexStart + 200) % maxValue;
+    });
+    final preKeys = generatePreKeys(start, 200);
+    final signalStore = await getSignalStore();
+    if (signalStore == null) return [];
+    for (final p in preKeys) {
+      await signalStore.preKeyStore.storePreKey(p.id, p);
+    }
+    return preKeys;
   });
-  final preKeys = generatePreKeys(start, 200);
-  final signalStore = await getSignalStore();
-  if (signalStore == null) return [];
-  for (final p in preKeys) {
-    await signalStore.preKeyStore.storePreKey(p.id, p);
-  }
-  return preKeys;
 }
 
 Future<SignalIdentity?> getSignalIdentity() async {
@@ -136,26 +139,28 @@ Future<void> createIfNotExistsSignalIdentity() async {
 }
 
 Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
-  var identityKeyPair = await getSignalIdentityKeyPair();
-  final user = await getUser();
-  final signalStore = await getSignalStore();
-  if (identityKeyPair == null || signalStore == null || user == null) {
-    return null;
-  }
+  return lockingSignalProtocol.protect(() async {
+    var identityKeyPair = await getSignalIdentityKeyPair();
+    final user = await getUser();
+    final signalStore = await getSignalStore();
+    if (identityKeyPair == null || signalStore == null || user == null) {
+      return null;
+    }
 
-  final signedPreKeyId = user.currentSignedPreKeyIndexStart;
-  await updateUser((user) {
-    user.currentSignedPreKeyIndexStart += 1;
+    final signedPreKeyId = user.currentSignedPreKeyIndexStart;
+    await updateUser((user) {
+      user.currentSignedPreKeyIndexStart += 1;
+    });
+
+    final signedPreKey = generateSignedPreKey(
+      identityKeyPair,
+      signedPreKeyId,
+    );
+
+    identityKeyPair = null;
+
+    await signalStore.storeSignedPreKey(signedPreKeyId, signedPreKey);
+
+    return signedPreKey;
   });
-
-  final signedPreKey = generateSignedPreKey(
-    identityKeyPair,
-    signedPreKeyId,
-  );
-
-  identityKeyPair = null;
-
-  await signalStore.storeSignedPreKey(signedPreKeyId, signedPreKey);
-
-  return signedPreKey;
 }

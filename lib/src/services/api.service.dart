@@ -35,6 +35,7 @@ import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -121,6 +122,7 @@ class ApiService {
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
+      resetResyncedUsers();
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());

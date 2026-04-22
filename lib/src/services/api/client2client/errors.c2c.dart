@@ -26,6 +26,8 @@ Future<void> handleErrorMessage(
           requested: Value(true),
         ),
       );
+    case EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC:
+      break; // The other user initiated a new signal session, so ignore the error in this case, as the new session works...
     // ignore: no_default_cases
     default:
       break;

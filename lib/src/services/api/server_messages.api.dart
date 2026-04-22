@@ -74,7 +74,6 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
-bool alreadyPerformedAnResync = false;
 
 Mutex protectReceiptCheck = Mutex();
 
