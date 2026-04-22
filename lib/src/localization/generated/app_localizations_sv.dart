@@ -478,6 +478,27 @@ class AppLocalizationsSv extends AppLocalizations {
   String get contactVerifyNumberClearVerification => 'Clear verification';
 
   @override
+  String get userVerifiedTitle => 'User verified';
+
+  @override
+  String get verificationTypeQrScanned => 'You scanned their QR code.';
+
+  @override
+  String get verificationTypeSecretQrToken =>
+      'The other person scanned your QR code.';
+
+  @override
+  String get verificationTypeLink => 'Verified via link.';
+
+  @override
+  String get verificationTypeContactSharedByVerified =>
+      'Contact received from a verified contact.';
+
+  @override
+  String get verificationTypeMigratedFromOldVersion =>
+      'Migrated from old version.';
+
+  @override
   String contactVerifyNumberLongDesc(Object username) {
     return 'To verify the end-to-end encryption with $username, compare the numbers with their device. The person can also scan your code with their device.';
   }

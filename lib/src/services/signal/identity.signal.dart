@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -89,6 +90,12 @@ Future<SignalIdentity?> getSignalIdentity() async {
     Log.error('could not load signal identity: $e');
     return null;
   }
+}
+
+Future<Uint8List> getUserPublicKey() async {
+  final signalIdentity = (await getSignalIdentity())!;
+  final signalStore = await getSignalStoreFromIdentity(signalIdentity);
+  return (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
 }
 
 Future<void> createIfNotExistsSignalIdentity() async {

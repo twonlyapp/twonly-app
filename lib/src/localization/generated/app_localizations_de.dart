@@ -483,6 +483,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactVerifyNumberClearVerification => 'Verifizierung aufheben';
 
   @override
+  String get userVerifiedTitle => 'Benutzer verifiziert';
+
+  @override
+  String get verificationTypeQrScanned => 'Du hast den QR-Code gescannt.';
+
+  @override
+  String get verificationTypeSecretQrToken =>
+      'Die andere Person hat deinen QR-Code gescannt.';
+
+  @override
+  String get verificationTypeLink => 'Per Link verifiziert.';
+
+  @override
+  String get verificationTypeContactSharedByVerified =>
+      'Von einem verifizierten Kontakt geteilt bekommen.';
+
+  @override
+  String get verificationTypeMigratedFromOldVersion =>
+      'Von alter Version migriert';
+
+  @override
   String contactVerifyNumberLongDesc(Object username) {
     return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit deren Gerät. Die Person kann auch deinen Code mit deren Gerät scannen.';
   }

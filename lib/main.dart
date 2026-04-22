@@ -12,6 +12,7 @@ import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -121,15 +122,25 @@ Future<void> runMigrations() async {
   if (userService.currentUser.appVersion < 90) {
     // BUG: Requested media files for reupload where not reuploaded because the wrong state...
     await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
-    await updateUser((u) {
-      u.appVersion = 90;
-    });
+    await updateUser((u) => u.appVersion = 90);
   }
+
   if (userService.currentUser.appVersion < 91) {
     // BUG: Requested media files for reupload where not reuploaded because the wrong state...
     await makeMigrationToVersion91();
-    await updateUser((u) {
-      u.appVersion = 91;
-    });
+    await updateUser((u) => u.appVersion = 91);
+  }
+
+  if (userService.currentUser.appVersion < 109) {
+    final contacts = await twonlyDB.contactsDao.getAllContacts();
+    for (final contact in contacts) {
+      if (contact.verified) {
+        await twonlyDB.keyVerificationDao.addKeyVerification(
+          contact.userId,
+          VerificationType.migratedFromOldVersion,
+        );
+      }
+    }
+    await updateUser((u) => u.appVersion = 109);
   }
 }

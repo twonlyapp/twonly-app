@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
-import 'package:collection/collection.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +14,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
@@ -48,6 +45,7 @@ class MainCameraController {
   bool initCameraStarted = true;
   Map<int, ScannedVerifiedContact> contactsVerified = {};
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
+  Set<String> _handledProfileLinks = {};
   String? scannedUrl;
   GlobalKey zoomButtonKey = GlobalKey();
   GlobalKey cameraPreviewKey = GlobalKey();
@@ -340,70 +338,56 @@ class MainCameraController {
       }
 
       for (final barcode in barcodes) {
-        if (barcode.displayValue != null) {
-          if (barcode.displayValue!.startsWith('http://') ||
-              barcode.displayValue!.startsWith('https://')) {
-            scannedUrl = barcode.displayValue;
-            if (sharedLinkForPreview == null) {
-              timeSharedLinkWasSetWithQr = clock.now();
-              setSharedLinkForPreview(Uri.parse(scannedUrl!));
-            }
-          }
-        }
-        if (barcode.rawBytes == null) continue;
+        if (barcode.displayValue == null) continue;
+        final link = barcode.displayValue!;
 
-        final profile = parseQrCodeData(barcode.rawBytes!);
+        if (link.startsWith(QrCodeUtils.linkPrefix)) {
+          if (_handledProfileLinks.contains(link)) continue;
+          _handledProfileLinks.add(link);
 
-        if (profile == null) continue;
+          final res = await QrCodeUtils.handleQrCodeLink(link);
+          if (res == null) continue;
+          final (profile, contact, verificationOk) = res;
 
-        final contact = await twonlyDB.contactsDao.getContactById(
-          profile.userId.toInt(),
-        );
-
-        if (contact != null && contact.accepted) {
-          if (contactsVerified[contact.userId] == null) {
-            final storedPublicKey = await getPublicKeyFromContact(
-              contact.userId,
-            );
-            if (storedPublicKey != null) {
-              final verificationOk = profile.publicIdentityKey.equals(
-                storedPublicKey.toList(),
-              );
-              contactsVerified[contact.userId] = ScannedVerifiedContact(
-                contact: contact,
-                verificationOk: verificationOk,
-              );
-              if (verificationOk) {
-                await twonlyDB.contactsDao.updateContact(
-                  contact.userId,
-                  const ContactsCompanion(verified: Value(true)),
-                );
-              }
-              await HapticFeedback.heavyImpact();
-              if (verificationOk) {
-                AppGlobalKeys.scaffoldMessengerKey.currentState?.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AppGlobalKeys.scaffoldMessengerKey.currentContext?.lang
-                              .verifiedPublicKey(
-                                getContactDisplayName(contact),
-                              ) ??
-                          '',
-                    ),
-                    duration: const Duration(seconds: 6),
-                  ),
-                );
-              }
-            }
-          }
-        } else {
-          if (profile.username != userService.currentUser.username) {
+          if (contact == null) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
               await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
                 profile: profile,
               );
             }
+            continue;
+          }
+
+          if (contactsVerified[contact.userId] == null) {
+            contactsVerified[contact.userId] = ScannedVerifiedContact(
+              contact: contact,
+              verificationOk: verificationOk,
+            );
+
+            await HapticFeedback.heavyImpact();
+            if (verificationOk) {
+              AppGlobalKeys.scaffoldMessengerKey.currentState?.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppGlobalKeys.scaffoldMessengerKey.currentContext?.lang
+                            .verifiedPublicKey(
+                              getContactDisplayName(contact),
+                            ) ??
+                        '',
+                  ),
+                  duration: const Duration(seconds: 6),
+                ),
+              );
+            }
+          }
+        }
+
+        if (link.startsWith('http://') || link.startsWith('https://')) {
+          scannedUrl = link;
+          if (sharedLinkForPreview == null) {
+            timeSharedLinkWasSetWithQr = clock.now();
+            setSharedLinkForPreview(Uri.parse(scannedUrl!));
           }
         }
       }

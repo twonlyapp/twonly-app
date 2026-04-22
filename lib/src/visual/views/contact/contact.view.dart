@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -30,23 +33,37 @@ class ContactView extends StatefulWidget {
 class _ContactViewState extends State<ContactView> {
   Contact? _contact;
   List<GroupMember> _memberOfGroups = [];
+  List<KeyVerification> _keyVerifications = [];
 
-  late StreamSubscription<Contact?> _contactSub;
+  late StreamSubscription<(Contact, bool)?> _contactSub;
   late StreamSubscription<List<GroupMember>> _groupMemberSub;
+  late StreamSubscription<List<KeyVerification>> _streamKeyVerifications;
 
   @override
   void initState() {
-    _contactSub = twonlyDB.contactsDao.watchContact(widget.userId).listen((
-      update,
-    ) {
-      setState(() {
-        _contact = update;
-      });
-    });
+    _contactSub = twonlyDB.contactsDao
+        .watchContactAndVerificationState(widget.userId)
+        .listen((
+          update,
+        ) {
+          if (update != null) {
+            setState(() {
+              _contact = update.$1;
+            });
+          }
+        });
     _groupMemberSub = twonlyDB.groupsDao
         .watchContactGroupMember(widget.userId)
         .listen((groups) async {
           _memberOfGroups = groups;
+        });
+    _streamKeyVerifications = twonlyDB.keyVerificationDao
+        .watchContactVerification(widget.userId)
+        .listen((update) {
+          setState(() {
+            Log.info('Verifications: ${update.length}');
+            _keyVerifications = update;
+          });
         });
     super.initState();
   }
@@ -55,6 +72,7 @@ class _ContactViewState extends State<ContactView> {
   void dispose() {
     _contactSub.cancel();
     _groupMemberSub.cancel();
+    _streamKeyVerifications.cancel();
     super.dispose();
   }
 
@@ -214,7 +232,7 @@ class _ContactViewState extends State<ContactView> {
           RestoreFlameComp(
             contactId: widget.userId,
           ),
-          if (!contact.verified)
+          if (_keyVerifications.isEmpty)
             BetterListTile(
               leading: VerificationBadgeComp(
                 contact: contact,
@@ -225,6 +243,37 @@ class _ContactViewState extends State<ContactView> {
                 await context.push(Routes.settingsHelpFaqVerifyBadge);
                 setState(() {});
               },
+            ),
+          if (_keyVerifications.isNotEmpty)
+            ExpansionTile(
+              shape: const RoundedRectangleBorder(),
+              backgroundColor: context.color.surfaceContainer,
+              collapsedShape: const RoundedRectangleBorder(),
+              leading: Padding(
+                padding: EdgeInsetsGeometry.only(left: 12, right: 12),
+                child: VerificationBadgeComp(
+                  contact: contact,
+                  size: 20,
+                ),
+              ),
+              title: Text(context.lang.userVerifiedTitle),
+              children: _keyVerifications
+                  .map(
+                    (kv) => ListTile(
+                      dense: true,
+                      title: Text(_verificationTypeLabel(context, kv.type)),
+                      trailing: Text(
+                        DateFormat.yMd(
+                          Localizations.localeOf(context).toString(),
+                        ).format(kv.createdAt),
+                        style: TextStyle(
+                          color: context.color.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           if (userService.currentUser.isUserDiscoveryEnabled)
             BetterListTile(
@@ -277,6 +326,19 @@ class _ContactViewState extends State<ContactView> {
       ),
     );
   }
+}
+
+String _verificationTypeLabel(BuildContext context, VerificationType type) {
+  return switch (type) {
+    VerificationType.qrScanned => context.lang.verificationTypeQrScanned,
+    VerificationType.secretQrToken =>
+      context.lang.verificationTypeSecretQrToken,
+    VerificationType.link => context.lang.verificationTypeLink,
+    VerificationType.contactSharedByVerified =>
+      context.lang.verificationTypeContactSharedByVerified,
+    VerificationType.migratedFromOldVersion =>
+      context.lang.verificationTypeMigratedFromOldVersion,
+  };
 }
 
 Future<String?> showNicknameChangeDialog(

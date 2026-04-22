@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:mutex/mutex.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:twonly/locator.dart';
@@ -103,43 +104,47 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     super.dispose();
   }
 
+  final Mutex _messageUpdateLock = Mutex();
+
   Future<void> asyncLoadNextMedia(bool firstRun) async {
     final messages = twonlyDB.messagesDao.watchMediaNotOpened(
       widget.group.groupId,
     );
 
     _subscription = messages.listen((messages) async {
-      for (final msg in messages) {
-        if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
-          continue;
-        }
-        if (msg.mediaId == null) {
-          continue;
-        }
+      await _messageUpdateLock.protect(() async {
+        for (final msg in messages) {
+          if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
+            continue;
+          }
+          if (msg.mediaId == null) {
+            continue;
+          }
 
-        if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
-          // The update of the current Media in case of a download is done in loadCurrentMediaFile
-          continue;
+          if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
+            // The update of the current Media in case of a download is done in loadCurrentMediaFile
+            continue;
+          }
+
+          /// If the messages was already there just replace it and go to the next...
+
+          final index = allMediaFiles.indexWhere(
+            (m) => m.messageId == msg.messageId,
+          );
+
+          if (index >= 1) {
+            allMediaFiles[index] = msg;
+          } else if (index == -1) {
+            // If the message does not exist, add it
+            allMediaFiles.add(msg);
+          }
         }
-
-        /// If the messages was already there just replace it and go to the next...
-
-        final index = allMediaFiles.indexWhere(
-          (m) => m.messageId == msg.messageId,
-        );
-
-        if (index >= 1) {
-          allMediaFiles[index] = msg;
-        } else if (index == -1) {
-          // If the message does not exist, add it
-          allMediaFiles.add(msg);
+        setState(() {});
+        if (firstRun) {
+          firstRun = false;
+          await loadCurrentMediaFile();
         }
-      }
-      setState(() {});
-      if (firstRun) {
-        firstRun = false;
-        await loadCurrentMediaFile();
-      }
+      });
     });
   }
 

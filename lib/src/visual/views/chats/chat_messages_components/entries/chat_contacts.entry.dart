@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
@@ -120,13 +122,18 @@ class _ContactRowState extends State<_ContactRow> {
       );
       if (userdata == null) return;
 
-      var verified = false;
-      if (userdata.publicIdentityKey == widget.contact.publicIdentityKey) {
-        final sender = await twonlyDB.contactsDao.getContactById(
+      if (userdata.publicIdentityKey.equals(widget.contact.publicIdentityKey)) {
+        final verified = await twonlyDB.keyVerificationDao.isContactVerified(
           widget.message.senderId!,
         );
-        // in case the sender is verified and the public keys are the same, this trust can be transferred
-        verified = sender != null && sender.verified;
+
+        if (verified) {
+          Log.info('Verified a user which was shared by a verified contact');
+          await twonlyDB.keyVerificationDao.addKeyVerification(
+            userdata.userId.toInt(),
+            VerificationType.contactSharedByVerified,
+          );
+        }
       }
 
       final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
@@ -136,9 +143,6 @@ class _ContactRowState extends State<_ContactRow> {
           requested: const Value(false),
           blocked: const Value(false),
           deletedByUser: const Value(false),
-          verified: Value(
-            verified,
-          ),
         ),
       );
 

@@ -4,15 +4,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -70,22 +69,19 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
         return true;
       }
       if (storedPublicKey.equals(receivedPublicKey)) {
-        if (!contact.verified) {
-          final markAsVerified = await showAlertDialog(
-            context,
-            context.lang.linkFromUsername(contact.username),
-            context.lang.linkFromUsernameLong,
-            customOk: context.lang.gotLinkFromFriend,
+        final markAsVerified = await showAlertDialog(
+          context,
+          context.lang.linkFromUsername(contact.username),
+          context.lang.linkFromUsernameLong,
+          customOk: context.lang.gotLinkFromFriend,
+        );
+        if (markAsVerified) {
+          await twonlyDB.keyVerificationDao.addKeyVerification(
+            contact.userId,
+            VerificationType.link,
           );
-          if (markAsVerified) {
-            await twonlyDB.contactsDao.updateContact(
-              contact.userId,
-              const ContactsCompanion(
-                verified: Value(true),
-              ),
-            );
-          }
-        } else {
+        }
+        if (context.mounted) {
           await context.push(Routes.profileContact(contact.userId));
         }
       } else {

@@ -11374,6 +11374,9 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final UserDiscoveryDao userDiscoveryDao = UserDiscoveryDao(
     this as TwonlyDB,
   );
+  late final KeyVerificationDao keyVerificationDao = KeyVerificationDao(
+    this as TwonlyDB,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();

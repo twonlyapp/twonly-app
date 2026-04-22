@@ -970,6 +970,42 @@ abstract class AppLocalizations {
   /// **'Clear verification'**
   String get contactVerifyNumberClearVerification;
 
+  /// No description provided for @userVerifiedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User verified'**
+  String get userVerifiedTitle;
+
+  /// No description provided for @verificationTypeQrScanned.
+  ///
+  /// In en, this message translates to:
+  /// **'You scanned their QR code.'**
+  String get verificationTypeQrScanned;
+
+  /// No description provided for @verificationTypeSecretQrToken.
+  ///
+  /// In en, this message translates to:
+  /// **'The other person scanned your QR code.'**
+  String get verificationTypeSecretQrToken;
+
+  /// No description provided for @verificationTypeLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified via link.'**
+  String get verificationTypeLink;
+
+  /// No description provided for @verificationTypeContactSharedByVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact received from a verified contact.'**
+  String get verificationTypeContactSharedByVerified;
+
+  /// No description provided for @verificationTypeMigratedFromOldVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Migrated from old version.'**
+  String get verificationTypeMigratedFromOldVersion;
+
   /// No description provided for @contactVerifyNumberLongDesc.
   ///
   /// In en, this message translates to:

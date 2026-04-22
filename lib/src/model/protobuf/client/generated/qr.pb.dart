@@ -99,6 +99,7 @@ class PublicProfile extends $pb.GeneratedMessage {
     $fixnum.Int64? registrationId,
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
+    $core.List<$core.int>? secretVerificationToken,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -109,6 +110,8 @@ class PublicProfile extends $pb.GeneratedMessage {
     if (signedPrekeySignature != null)
       result.signedPrekeySignature = signedPrekeySignature;
     if (signedPrekeyId != null) result.signedPrekeyId = signedPrekeyId;
+    if (secretVerificationToken != null)
+      result.secretVerificationToken = secretVerificationToken;
     return result;
   }
 
@@ -134,6 +137,8 @@ class PublicProfile extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         6, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(7, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        8, _omitFieldNames ? '' : 'secretVerificationToken', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -220,6 +225,16 @@ class PublicProfile extends $pb.GeneratedMessage {
   $core.bool hasSignedPrekeyId() => $_has(6);
   @$pb.TagNumber(7)
   void clearSignedPrekeyId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.List<$core.int> get secretVerificationToken => $_getN(7);
+  @$pb.TagNumber(8)
+  set secretVerificationToken($core.List<$core.int> value) =>
+      $_setBytes(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSecretVerificationToken() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSecretVerificationToken() => $_clearField(8);
 }
 
 const $core.bool _omitFieldNames =

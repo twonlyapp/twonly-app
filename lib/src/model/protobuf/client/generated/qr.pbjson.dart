@@ -67,6 +67,18 @@ const PublicProfile$json = {
       '10': 'signedPrekeySignature'
     },
     {'1': 'signed_prekey_id', '3': 7, '4': 1, '5': 3, '10': 'signedPrekeyId'},
+    {
+      '1': 'secret_verification_token',
+      '3': 8,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'secretVerificationToken',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_secret_verification_token'},
   ],
 };
 
@@ -77,4 +89,5 @@ final $typed_data.Uint8List publicProfileDescriptor = $convert.base64Decode(
     'dHlLZXkSIwoNc2lnbmVkX3ByZWtleRgEIAEoDFIMc2lnbmVkUHJla2V5EicKD3JlZ2lzdHJhdG'
     'lvbl9pZBgFIAEoA1IOcmVnaXN0cmF0aW9uSWQSNgoXc2lnbmVkX3ByZWtleV9zaWduYXR1cmUY'
     'BiABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRIoChBzaWduZWRfcHJla2V5X2lkGAcgASgDUg'
-    '5zaWduZWRQcmVrZXlJZA==');
+    '5zaWduZWRQcmVrZXlJZBI/ChlzZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2VuGAggASgMSABSF3Nl'
+    'Y3JldFZlcmlmaWNhdGlvblRva2VuiAEBQhwKGl9zZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2Vu');

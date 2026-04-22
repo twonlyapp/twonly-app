@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
@@ -21,7 +22,7 @@ class PublicProfileView extends StatefulWidget {
 }
 
 class _PublicProfileViewState extends State<PublicProfileView> {
-  Uint8List? _qrCode;
+  String? _qrCode;
   Uint8List? _userAvatar;
   Uint8List? _publicKey;
 
@@ -32,7 +33,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
   }
 
   Future<void> initAsync() async {
-    _qrCode = await getProfileQrCodeData();
+    _qrCode = await QrCodeUtils.publicProfileLink();
     _userAvatar = await getUserAvatar();
     _publicKey = await getUserPublicKey();
     if (mounted) setState(() {});
@@ -82,7 +83,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
                 ],
               ),
               child: QrImageView.withQr(
-                qr: QrCode.fromUint8List(
+                qr: QrCode.fromData(
                   data: _qrCode!,
                   errorCorrectLevel: QrErrorCorrectLevel.M,
                 ),

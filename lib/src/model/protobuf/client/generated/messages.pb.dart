@@ -1857,6 +1857,68 @@ class EncryptedContent_UserDiscoveryUpdate extends $pb.GeneratedMessage {
   $pb.PbList<$core.List<$core.int>> get messages => $_getList(0);
 }
 
+class EncryptedContent_KeyVerificationProof extends $pb.GeneratedMessage {
+  factory EncryptedContent_KeyVerificationProof({
+    $core.List<$core.int>? calculatedMac,
+  }) {
+    final result = create();
+    if (calculatedMac != null) result.calculatedMac = calculatedMac;
+    return result;
+  }
+
+  EncryptedContent_KeyVerificationProof._();
+
+  factory EncryptedContent_KeyVerificationProof.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_KeyVerificationProof.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.KeyVerificationProof',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'calculatedMac', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_KeyVerificationProof clone() =>
+      EncryptedContent_KeyVerificationProof()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_KeyVerificationProof copyWith(
+          void Function(EncryptedContent_KeyVerificationProof) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_KeyVerificationProof))
+          as EncryptedContent_KeyVerificationProof;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_KeyVerificationProof create() =>
+      EncryptedContent_KeyVerificationProof._();
+  @$core.override
+  EncryptedContent_KeyVerificationProof createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_KeyVerificationProof> createRepeated() =>
+      $pb.PbList<EncryptedContent_KeyVerificationProof>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_KeyVerificationProof getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_KeyVerificationProof>(create);
+  static EncryptedContent_KeyVerificationProof? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get calculatedMac => $_getN(0);
+  @$pb.TagNumber(1)
+  set calculatedMac($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCalculatedMac() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCalculatedMac() => $_clearField(1);
+}
+
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
@@ -1881,6 +1943,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     $core.List<$core.int>? senderUserDiscoveryVersion,
     EncryptedContent_UserDiscoveryRequest? userDiscoveryRequest,
     EncryptedContent_UserDiscoveryUpdate? userDiscoveryUpdate,
+    EncryptedContent_KeyVerificationProof? keyVerificationProof,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1911,6 +1974,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
       result.userDiscoveryRequest = userDiscoveryRequest;
     if (userDiscoveryUpdate != null)
       result.userDiscoveryUpdate = userDiscoveryUpdate;
+    if (keyVerificationProof != null)
+      result.keyVerificationProof = keyVerificationProof;
     return result;
   }
 
@@ -1979,6 +2044,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_UserDiscoveryUpdate>(
         23, _omitFieldNames ? '' : 'userDiscoveryUpdate',
         subBuilder: EncryptedContent_UserDiscoveryUpdate.create)
+    ..aOM<EncryptedContent_KeyVerificationProof>(
+        24, _omitFieldNames ? '' : 'keyVerificationProof',
+        subBuilder: EncryptedContent_KeyVerificationProof.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2251,6 +2319,19 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(23)
   EncryptedContent_UserDiscoveryUpdate ensureUserDiscoveryUpdate() =>
       $_ensure(21);
+
+  @$pb.TagNumber(24)
+  EncryptedContent_KeyVerificationProof get keyVerificationProof => $_getN(22);
+  @$pb.TagNumber(24)
+  set keyVerificationProof(EncryptedContent_KeyVerificationProof value) =>
+      $_setField(24, value);
+  @$pb.TagNumber(24)
+  $core.bool hasKeyVerificationProof() => $_has(22);
+  @$pb.TagNumber(24)
+  void clearKeyVerificationProof() => $_clearField(24);
+  @$pb.TagNumber(24)
+  EncryptedContent_KeyVerificationProof ensureKeyVerificationProof() =>
+      $_ensure(22);
 }
 
 const $core.bool _omitFieldNames =

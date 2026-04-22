@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -7,9 +6,9 @@ import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/qr.dart';
 
 class UserDiscoveryService {
   static Future<void> checkForNewAnnouncedUsers() async {

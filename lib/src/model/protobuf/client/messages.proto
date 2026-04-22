@@ -56,6 +56,7 @@ message EncryptedContent {
   optional TypingIndicator       typing_indicator        = 20;
   optional UserDiscoveryRequest  user_discovery_request  = 22;
   optional UserDiscoveryUpdate   user_discovery_update   = 23;
+  optional KeyVerificationProof  key_verification_proof  = 24;
 
   message ErrorMessages {
     enum Type {
@@ -207,6 +208,10 @@ message EncryptedContent {
 
   message UserDiscoveryUpdate {
     repeated bytes messages = 1;
+  }
+
+  message KeyVerificationProof {
+    bytes calculated_mac = 1;
   }
 
 }

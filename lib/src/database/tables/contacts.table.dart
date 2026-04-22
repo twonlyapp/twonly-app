@@ -38,8 +38,11 @@ class Contacts extends Table {
 }
 
 enum VerificationType {
-  qr,
+  migratedFromOldVersion,
+  qrScanned,
   link,
+  secretQrToken,
+  contactSharedByVerified,
 }
 
 @DataClassName('KeyVerification')

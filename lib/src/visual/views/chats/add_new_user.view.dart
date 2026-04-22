@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -130,12 +131,25 @@ class _SearchUsernameView extends State<AddNewUserView> {
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
-        verified: Value(
-          !(widget.publicKey == null) &&
-              userdata.publicIdentityKey.equals(widget.publicKey!),
-        ),
       ),
     );
+
+    if (widget.publicKey != null &&
+        mounted &&
+        widget.publicKey!.equals(userdata.publicIdentityKey)) {
+      final markAsVerified = await showAlertDialog(
+        context,
+        context.lang.linkFromUsername(username),
+        context.lang.linkFromUsernameLong,
+        customOk: context.lang.gotLinkFromFriend,
+      );
+      if (markAsVerified) {
+        await twonlyDB.keyVerificationDao.addKeyVerification(
+          userdata.userId.toInt(),
+          VerificationType.link,
+        );
+      }
+    }
 
     if (added > 0) await importSignalContactAndCreateRequest(userdata);
   }

@@ -7,7 +7,7 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'contacts.dao.g.dart';
 
-@DriftAccessor(tables: [Contacts])
+@DriftAccessor(tables: [Contacts, KeyVerifications])
 class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -97,6 +97,21 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return (select(
       contacts,
     )..where((t) => t.userId.equals(userid))).watchSingleOrNull();
+  }
+
+  Stream<(Contact, bool)?> watchContactAndVerificationState(int userid) {
+    final query = (select(contacts)..where((t) => t.userId.equals(userid))).join([
+      leftOuterJoin(
+        keyVerifications,
+        keyVerifications.contactId.equalsExp(contacts.userId),
+      ),
+    ]);
+    return query
+        .map((row) => (
+              row.readTable(contacts),
+              row.readTableOrNull(keyVerifications) != null,
+            ))
+        .watchSingleOrNull();
   }
 
   Future<List<Contact>> getAllContacts() {

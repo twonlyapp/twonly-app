@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -43,11 +44,28 @@ Future<void> handleUserStudyUpload() async {
     }
 
     final contacts = await twonlyDB.contactsDao.getAllContacts();
+    final verifications = await twonlyDB.keyVerificationDao
+        .getFirstVerificationTypeByContacts();
 
     final dataCollection = {
       'total_contacts': contacts.length,
       'accepted_contacts': contacts.where((c) => c.accepted).length,
-      'verified_contacts': contacts.where((c) => c.verified).length,
+      'verified_contacts': verifications.length,
+      'verified_contacts_via_migrated_from_old_version': verifications.values
+          .where((c) => c == VerificationType.migratedFromOldVersion)
+          .length,
+      'verified_contacts_via_qr_scanned': verifications.values
+          .where((c) => c == VerificationType.qrScanned)
+          .length,
+      'verified_contacts_via_link': verifications.values
+          .where((c) => c == VerificationType.link)
+          .length,
+      'verified_contacts_via_secret_qr_token': verifications.values
+          .where((c) => c == VerificationType.secretQrToken)
+          .length,
+      'verified_contacts_via_contact_shared_by_verified': verifications.values
+          .where((c) => c == VerificationType.contactSharedByVerified)
+          .length,
     };
 
     final response = await http.post(

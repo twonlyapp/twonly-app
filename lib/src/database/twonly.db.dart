@@ -5,6 +5,7 @@ import 'package:drift_flutter/drift_flutter.dart'
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
+import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
@@ -60,6 +61,7 @@ part 'twonly.db.g.dart';
     ReactionsDao,
     MediaFilesDao,
     UserDiscoveryDao,
+    KeyVerificationDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {

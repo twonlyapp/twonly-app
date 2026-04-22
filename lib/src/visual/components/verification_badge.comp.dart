@@ -28,27 +28,29 @@ class VerificationBadgeComp extends StatefulWidget {
 }
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
-  bool isVerified = false;
-  Contact? contact;
+  bool _isVerified = false;
 
-  StreamSubscription<List<Contact>>? stream;
+  StreamSubscription<bool>? _streamAllVerified;
+  StreamSubscription<List<KeyVerification>>? _streamContactVerification;
 
   @override
   void initState() {
     if (widget.group != null) {
-      stream = twonlyDB.groupsDao
-          .watchGroupContact(widget.group!.groupId)
-          .listen((contacts) {
-            if (contacts.length == 1) {
-              contact = contacts.first;
-            }
+      _streamAllVerified = twonlyDB.keyVerificationDao
+          .watchAllGroupMembersVerified(widget.group!.groupId)
+          .listen((update) {
             setState(() {
-              isVerified = contacts.every((t) => t.verified);
+              _isVerified = update;
             });
           });
     } else if (widget.contact != null) {
-      isVerified = widget.contact!.verified;
-      contact = widget.contact;
+      _streamContactVerification = twonlyDB.keyVerificationDao
+          .watchContactVerification(widget.contact!.userId)
+          .listen((update) {
+            setState(() {
+              _isVerified = update.isNotEmpty;
+            });
+          });
     }
 
     super.initState();
@@ -56,15 +58,16 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
 
   @override
   void dispose() {
-    stream?.cancel();
+    _streamAllVerified?.cancel();
+    _streamContactVerification?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!isVerified && widget.showOnlyIfVerified) return Container();
+    if (!_isVerified && widget.showOnlyIfVerified) return Container();
     return GestureDetector(
-      onTap: (contact == null || !widget.clickable)
+      onTap: (!widget.clickable)
           ? null
           : () => context.push(Routes.settingsHelpFaqVerifyBadge),
       child: ColoredBox(
@@ -77,7 +80,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             bottom: 3,
           ),
           child: SvgIcon(
-            assetPath: isVerified
+            assetPath: _isVerified
                 ? SvgIcons.verifiedGreen
                 : SvgIcons.verifiedRed,
             size: widget.size,
