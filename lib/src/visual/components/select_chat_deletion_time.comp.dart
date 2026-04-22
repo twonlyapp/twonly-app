@@ -38,6 +38,7 @@ class _SelectChatDeletionTimeListTitleState
 
   @override
   void initState() {
+    super.initState();
     groupSub = twonlyDB.groupsDao.watchGroup(widget.groupId).listen((update) {
       if (update == null) return;
       group = update;
@@ -49,7 +50,6 @@ class _SelectChatDeletionTimeListTitleState
         _selectedDeletionTime = selected % _getOptions().length;
       });
     });
-    super.initState();
   }
 
   @override

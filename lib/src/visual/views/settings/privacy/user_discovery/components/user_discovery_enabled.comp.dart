@@ -33,6 +33,7 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
 
   @override
   void initState() {
+    super.initState();
     _contactsGettingAnnouncedStream = twonlyDB.contactsDao
         .watchContactsAnnouncedViaUserDiscovery()
         .listen((contacts) {
@@ -41,7 +42,6 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
           });
         });
     _initAsync();
-    super.initState();
   }
 
   @override

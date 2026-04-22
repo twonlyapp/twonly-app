@@ -41,6 +41,7 @@ class _ContactViewState extends State<ContactView> {
 
   @override
   void initState() {
+    super.initState();
     _contactSub = twonlyDB.contactsDao.watchContact(widget.userId).listen((
       update,
     ) {
@@ -63,7 +64,6 @@ class _ContactViewState extends State<ContactView> {
             _keyVerifications = update;
           });
         });
-    super.initState();
   }
 
   @override

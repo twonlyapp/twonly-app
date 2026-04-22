@@ -26,8 +26,8 @@ class _LinkPreviewLayerState extends State<LinkPreviewLayer> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   Future<void> initAsync() async {

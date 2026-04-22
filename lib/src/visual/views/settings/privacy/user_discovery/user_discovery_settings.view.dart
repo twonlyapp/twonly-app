@@ -22,10 +22,10 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
 
   @override
   void initState() {
+    super.initState();
     _minimumRequiredImagesExchanged =
         userService.currentUser.minimumRequiredImagesExchanged;
     _userDiscoveryThreshold = userService.currentUser.userDiscoveryThreshold;
-    super.initState();
   }
 
   Future<void> _saveChanges() async {

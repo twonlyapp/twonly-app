@@ -137,9 +137,9 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
   @override
   void initState() {
+    super.initState();
     _message = widget.message;
     initAsync();
-    super.initState();
   }
 
   Future<void> initAsync() async {

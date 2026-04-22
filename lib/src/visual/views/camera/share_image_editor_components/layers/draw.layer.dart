@@ -28,6 +28,7 @@ class _DrawLayerState extends State<DrawLayer> {
 
   @override
   void initState() {
+    super.initState();
     widget.layerData.control.addListener(() {
       if (widget.layerData.control.hasActivePath) return;
 
@@ -40,8 +41,6 @@ class _DrawLayerState extends State<DrawLayer> {
       undoList = [];
       setState(() {});
     });
-
-    super.initState();
   }
 
   double _sliderValue = 0.125;

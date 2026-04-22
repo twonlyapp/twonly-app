@@ -35,6 +35,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
 
   @override
   void initState() {
+    super.initState();
     if (widget.group != null) {
       _streamAllVerified = twonlyDB.keyVerificationDao
           .watchAllGroupMembersVerified(widget.group!.groupId)
@@ -54,8 +55,6 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             });
           });
     }
-
-    super.initState();
   }
 
   @override

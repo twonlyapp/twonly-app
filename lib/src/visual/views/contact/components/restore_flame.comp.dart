@@ -39,6 +39,7 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
 
   @override
   void initState() {
+    super.initState();
     _groupId = getUUIDforDirectChat(
       widget.contactId,
       userService.currentUser.userId,
@@ -47,7 +48,6 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
     _groupSub = stream.listen((update) {
       if (mounted) setState(() => _group = update);
     });
-    super.initState();
   }
 
   @override

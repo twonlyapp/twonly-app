@@ -23,10 +23,10 @@ class BackgroundLayer extends StatefulWidget {
 class _BackgroundLayerState extends State<BackgroundLayer> {
   @override
   void initState() {
+    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.layerData.imageLoaded = true;
     });
-    super.initState();
   }
 
   @override

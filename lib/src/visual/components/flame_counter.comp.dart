@@ -28,8 +28,8 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

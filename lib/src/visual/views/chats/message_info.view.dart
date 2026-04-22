@@ -41,8 +41,8 @@ class _MessageInfoViewState extends State<MessageInfoView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

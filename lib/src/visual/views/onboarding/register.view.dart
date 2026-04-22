@@ -47,9 +47,9 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   void initState() {
+    super.initState();
     proofOfWork = widget.proofOfWork.$1;
     _registrationDisabled = widget.proofOfWork.$2;
-    super.initState();
   }
 
   Future<void> createNewUser() async {

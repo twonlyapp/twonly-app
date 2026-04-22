@@ -26,8 +26,8 @@ class _BackupServerViewState extends State<BackupServerView> {
 
   @override
   void initState() {
-    _urlController.text = 'https://';
     super.initState();
+    _urlController.text = 'https://';
     unawaited(initAsync());
   }
 

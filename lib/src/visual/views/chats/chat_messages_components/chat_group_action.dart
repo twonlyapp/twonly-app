@@ -24,8 +24,8 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   Future<void> initAsync() async {

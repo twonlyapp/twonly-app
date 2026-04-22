@@ -28,8 +28,8 @@ class _PublicProfileViewState extends State<PublicProfileView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   Future<void> initAsync() async {

@@ -19,8 +19,8 @@ class _ArchivedChatsViewState extends State<ArchivedChatsView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   Future<void> initAsync() async {

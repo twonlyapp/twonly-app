@@ -31,6 +31,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   void initState() {
+    super.initState();
     twonlyScoreSub = twonlyDB.groupsDao.watchSumTotalMediaCounter().listen((
       update,
     ) {
@@ -38,7 +39,6 @@ class _ProfileViewState extends State<ProfileView> {
         twonlyScore = update;
       });
     });
-    super.initState();
   }
 
   @override

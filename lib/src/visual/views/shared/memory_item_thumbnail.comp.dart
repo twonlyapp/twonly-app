@@ -21,8 +21,8 @@ class MemoriesItemThumbnailComp extends StatefulWidget {
 class _MemoriesItemThumbnailCompState extends State<MemoriesItemThumbnailComp> {
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   Future<void> initAsync() async {

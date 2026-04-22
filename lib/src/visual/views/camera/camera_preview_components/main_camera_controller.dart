@@ -209,8 +209,7 @@ class MainCameraController {
       await cameraController?.setFocusMode(FocusMode.auto);
     } catch (e) {
       if (e is CameraException &&
-          (e.code == 'setFocusPointFailed' ||
-              e.code == 'setFocusModeFailed')) {
+          (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
         Log.info('Focus point or mode not supported on this device');
       } else {
         Log.error(e);
@@ -283,10 +282,8 @@ class MainCameraController {
             (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
-      // print('rotationCompensation: $rotationCompensation');
     }
     if (rotation == null) return null;
-    // print('final rotation: $rotation');
 
     // get image format
     var format = InputImageFormatValue.fromRawValue(image.format.raw as int);

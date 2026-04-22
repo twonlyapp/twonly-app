@@ -131,7 +131,6 @@ class _EmojiLayerState extends State<EmojiLayer> {
                   setState(() {
                     twoPointerWhereDown = details.pointerCount >= 2;
                     widget.layerData.size = initialScale * details.scale;
-                    // print(widget.layerData.size);
                     widget.layerData.rotation =
                         initialRotation + details.rotation;
 

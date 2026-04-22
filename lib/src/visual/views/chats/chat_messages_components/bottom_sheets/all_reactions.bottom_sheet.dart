@@ -26,8 +26,8 @@ class _AllReactionsViewState extends State<AllReactionsView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

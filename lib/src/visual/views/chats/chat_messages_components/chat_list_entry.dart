@@ -61,8 +61,8 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

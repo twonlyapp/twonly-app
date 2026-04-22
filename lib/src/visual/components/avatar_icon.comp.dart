@@ -37,8 +37,8 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

@@ -39,8 +39,8 @@ class _GroupViewState extends State<GroupView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    initAsync();
   }
 
   @override

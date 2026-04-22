@@ -44,11 +44,11 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void initState() {
+    super.initState();
     initAsync();
     _userSub = userService.onUserUpdated.listen((_) {
       if (mounted) setState(() {});
     });
-    super.initState();
   }
 
   Future<void> initAsync() async {
