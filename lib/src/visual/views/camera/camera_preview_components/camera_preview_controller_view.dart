@@ -209,13 +209,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     if (!_hasAudioPermission &&
         !userService.currentUser.requestedAudioPermission) {
-      await updateUser((u) {
-        u.requestedAudioPermission = true;
-      });
+      await updateUser((u) => u.requestedAudioPermission = true);
       await requestMicrophonePermission();
     }
-    if (!mounted) return;
-    setState(() {});
   }
 
   Future<void> requestMicrophonePermission() async {
@@ -226,7 +222,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       await openAppSettings();
     } else {
       _hasAudioPermission = await Permission.microphone.isGranted;
-      setState(() {});
+      setState(() {
+        // _hasAudioPermission
+      });
     }
   }
 
@@ -401,18 +399,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    mc.selectedCameraDetails.scaleFactor =
-        (_baseScaleFactor +
-                // ignore: avoid_dynamic_calls
-                (_basePanY - (details.localPosition.dy as double)) / 30)
-            .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
-
+    setState(() {
+      mc.selectedCameraDetails.scaleFactor =
+          (_baseScaleFactor +
+                  // ignore: avoid_dynamic_calls
+                  (_basePanY - (details.localPosition.dy as double)) / 30)
+              .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
+    });
     await mc.cameraController!.setZoomLevel(
       mc.selectedCameraDetails.scaleFactor,
     );
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   Future<void> pickImageFromGallery() async {
@@ -597,132 +593,143 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         mc.cameraController == null) {
       return Container();
     }
-    // TODO: STREAM BUILDER FOR GlOBAL USER CHANGES
-    return MediaViewSizingHelper(
-      requiredHeight: 0,
-      additionalPadding: 59,
-      bottomNavigation: Container(),
-      child: GestureDetector(
-        onPanStart: (details) async {
-          setState(() {
-            _basePanY = details.localPosition.dy;
-            _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
-          });
-        },
-        onLongPressMoveUpdate: onPanUpdate,
-        onLongPressStart: (details) {
-          setState(() {
-            _basePanY = details.localPosition.dy;
-            _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
-          });
-          // Get the position of the pointer
-          final renderBox =
-              keyTriggerButton.currentContext!.findRenderObject()! as RenderBox;
-          final localPosition = renderBox.globalToLocal(details.globalPosition);
+    return StreamBuilder(
+      stream: userService.onUserUpdated,
+      builder: (context, asyncSnapshot) {
+        return MediaViewSizingHelper(
+          requiredHeight: 0,
+          additionalPadding: 59,
+          bottomNavigation: Container(),
+          child: GestureDetector(
+            onPanStart: (details) async {
+              setState(() {
+                _basePanY = details.localPosition.dy;
+                _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
+              });
+            },
+            onLongPressMoveUpdate: onPanUpdate,
+            onLongPressStart: (details) {
+              setState(() {
+                _basePanY = details.localPosition.dy;
+                _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
+              });
+              // Get the position of the pointer
+              final renderBox =
+                  keyTriggerButton.currentContext!.findRenderObject()!
+                      as RenderBox;
+              final localPosition = renderBox.globalToLocal(
+                details.globalPosition,
+              );
 
-          final containerRect = Rect.fromLTWH(
-            0,
-            0,
-            renderBox.size.width,
-            renderBox.size.height,
-          );
+              final containerRect = Rect.fromLTWH(
+                0,
+                0,
+                renderBox.size.width,
+                renderBox.size.height,
+              );
 
-          if (containerRect.contains(localPosition)) {
-            startVideoRecording();
-          }
-        },
-        onLongPressEnd: (a) {
-          stopVideoRecording();
-        },
-        onPanEnd: (a) {
-          stopVideoRecording();
-        },
-        onPanUpdate: onPanUpdate,
-        child: Stack(
-          children: [
-            if (_galleryLoadedImageIsShown)
-              Center(
-                child: SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: ThreeRotatingDots(
-                    size: 40,
-                    color: context.color.primary,
+              if (containerRect.contains(localPosition)) {
+                startVideoRecording();
+              }
+            },
+            onLongPressEnd: (a) {
+              stopVideoRecording();
+            },
+            onPanEnd: (a) {
+              stopVideoRecording();
+            },
+            onPanUpdate: onPanUpdate,
+            child: Stack(
+              children: [
+                if (_galleryLoadedImageIsShown)
+                  Center(
+                    child: SizedBox(
+                      height: 60,
+                      width: 60,
+                      child: ThreeRotatingDots(
+                        size: 40,
+                        color: context.color.primary,
+                      ),
+                    ),
                   ),
+                if (!mc.isSharePreviewIsShown &&
+                    widget.sendToGroup != null &&
+                    !mc.isVideoRecording)
+                  ShowTitleText(
+                    title: widget.sendToGroup!.groupName,
+                    desc: context.lang.cameraPreviewSendTo,
+                  ),
+                if (!mc.isSharePreviewIsShown &&
+                    mc.sharedLinkForPreview != null &&
+                    !mc.isVideoRecording)
+                  ShowTitleText(
+                    title: mc.sharedLinkForPreview?.host ?? '',
+                    desc: 'Link',
+                    isLink: true,
+                  ),
+                if (!mc.isSharePreviewIsShown &&
+                    !mc.isVideoRecording &&
+                    !widget.hideControllers)
+                  CameraTopActions(
+                    selectedCameraDetails: mc.selectedCameraDetails,
+                    hasAudioPermission: _hasAudioPermission,
+                    onSwitchCamera: () async {
+                      await mc.selectCamera(
+                        (mc.selectedCameraDetails.cameraId + 1) % 2,
+                        false,
+                      );
+                    },
+                    onToggleFlash: () async {
+                      if (mc.selectedCameraDetails.isFlashOn) {
+                        await mc.cameraController?.setFlashMode(FlashMode.off);
+                        mc.selectedCameraDetails.isFlashOn = false;
+                      } else {
+                        await mc.cameraController?.setFlashMode(
+                          FlashMode.always,
+                        );
+                        mc.selectedCameraDetails.isFlashOn = true;
+                      }
+                      setState(() {
+                        // mc.selectedCameraDetails.isFlashOn
+                      });
+                    },
+                    onRequestMicrophone: requestMicrophonePermission,
+                  ),
+                if (!mc.isSharePreviewIsShown && !widget.hideControllers)
+                  CameraBottomControls(
+                    mainController: mc,
+                    isVideoRecording: mc.isVideoRecording,
+                    isFront: isFront,
+                    keyTriggerButton: keyTriggerButton,
+                    onTakePicture: takePicture,
+                    onPressSideButtonLeft: pressSideButtonLeft,
+                    onPressSideButtonRight: pressSideButtonRight,
+                    updateScaleFactor: updateScaleFactor,
+                  ),
+                VideoRecordingTimer(
+                  videoRecordingStarted: _videoRecordingStarted,
+                  maxVideoRecordingTime: maxVideoRecordingTime,
                 ),
-              ),
-            if (!mc.isSharePreviewIsShown &&
-                widget.sendToGroup != null &&
-                !mc.isVideoRecording)
-              ShowTitleText(
-                title: widget.sendToGroup!.groupName,
-                desc: context.lang.cameraPreviewSendTo,
-              ),
-            if (!mc.isSharePreviewIsShown &&
-                mc.sharedLinkForPreview != null &&
-                !mc.isVideoRecording)
-              ShowTitleText(
-                title: mc.sharedLinkForPreview?.host ?? '',
-                desc: 'Link',
-                isLink: true,
-              ),
-            if (!mc.isSharePreviewIsShown &&
-                !mc.isVideoRecording &&
-                !widget.hideControllers)
-              CameraTopActions(
-                selectedCameraDetails: mc.selectedCameraDetails,
-                hasAudioPermission: _hasAudioPermission,
-                onSwitchCamera: () async {
-                  await mc.selectCamera(
-                    (mc.selectedCameraDetails.cameraId + 1) % 2,
-                    false,
-                  );
-                },
-                onToggleFlash: () async {
-                  if (mc.selectedCameraDetails.isFlashOn) {
-                    await mc.cameraController?.setFlashMode(FlashMode.off);
-                    mc.selectedCameraDetails.isFlashOn = false;
-                  } else {
-                    await mc.cameraController?.setFlashMode(FlashMode.always);
-                    mc.selectedCameraDetails.isFlashOn = true;
-                  }
-                  setState(() {});
-                },
-                onRequestMicrophone: requestMicrophonePermission,
-              ),
-            if (!mc.isSharePreviewIsShown && !widget.hideControllers)
-              CameraBottomControls(
-                mainController: mc,
-                isVideoRecording: mc.isVideoRecording,
-                isFront: isFront,
-                keyTriggerButton: keyTriggerButton,
-                onTakePicture: takePicture,
-                onPressSideButtonLeft: pressSideButtonLeft,
-                onPressSideButtonRight: pressSideButtonRight,
-                updateScaleFactor: updateScaleFactor,
-              ),
-            VideoRecordingTimer(
-              videoRecordingStarted: _videoRecordingStarted,
-              maxVideoRecordingTime: maxVideoRecordingTime,
+                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
+                    widget.hideControllers)
+                  Positioned(
+                    left: 5,
+                    top: 10,
+                    child: ActionButton(
+                      FontAwesomeIcons.xmark,
+                      tooltipText: context.lang.close,
+                      onPressed: () async {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                if (_showSelfieFlash) const CameraSelfieFlash(),
+                CameraScannedOverlay(mainController: mc),
+              ],
             ),
-            if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
-                widget.hideControllers)
-              Positioned(
-                left: 5,
-                top: 10,
-                child: ActionButton(
-                  FontAwesomeIcons.xmark,
-                  tooltipText: context.lang.close,
-                  onPressed: () async {
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
-            if (_showSelfieFlash) const CameraSelfieFlash(),
-            CameraScannedOverlay(mainController: mc),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
