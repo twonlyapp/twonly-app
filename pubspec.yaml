@@ -85,6 +85,7 @@ dependencies:
   hand_signature: ^3.0.3
   flutter_sharing_intent: ^2.0.4
   no_screenshot: ^0.3.1
+  flutter_markdown_plus: ^1.0.7
 
   # With high download. (But should be checked nonetheless.)
   app_links: ^7.0.0 # 1.6 mio
@@ -153,6 +154,8 @@ dependency_overrides:
     path: ./dependencies/qr_flutter
   no_screenshot:
     path: ./dependencies/no_screenshot
+  flutter_markdown_plus:
+    path: ./dependencies/flutter_markdown_plus
   camera_android_camerax: 
     # path: ../flutter-packages/packages/camera/camera_android_camerax
     git:

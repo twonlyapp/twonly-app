@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
@@ -160,7 +162,7 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
             subtitle: Text(
               context.lang.userDiscoveryEnabledFaq,
             ),
-            // onTap: _disableUserDiscovery,
+            onTap: () => context.push(Routes.settingsHelpFaq),
           ),
           const Divider(),
           ListTile(

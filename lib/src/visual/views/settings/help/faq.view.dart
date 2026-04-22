@@ -2,11 +2,13 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:twonly/src/visual/views/settings/help/faq/faq_markdown.view.dart';
 
 class FaqView extends StatefulWidget {
   const FaqView({super.key});
@@ -19,7 +21,7 @@ class _FaqViewState extends State<FaqView> {
   Map<String, dynamic>? _faqData;
   String? _locale;
   late String domain;
-  bool noInternet = false;
+  bool _noInternet = false;
 
   @override
   void initState() {
@@ -29,30 +31,40 @@ class _FaqViewState extends State<FaqView> {
   }
 
   Future<void> _fetchFAQData() async {
+    final cacheFile = File('${AppEnvironment.cacheDir}/faq.json');
     try {
       final response = await http.get(Uri.parse('$domain/faq.json'));
 
       if (response.statusCode == 200) {
+        final jsonData = utf8.decode(response.bodyBytes);
         setState(() {
-          _faqData =
-              json.decode(utf8.decode(response.bodyBytes))
-                  as Map<String, dynamic>?;
-          noInternet = false;
+          _faqData = json.decode(jsonData) as Map<String, dynamic>?;
+
+          _noInternet = false;
         });
+        cacheFile.writeAsStringSync(jsonData);
       } else {
         Log.error('FAQ got ${response.statusCode}');
       }
     } catch (e) {
       Log.error(e);
       setState(() {
-        noInternet = true;
+        _noInternet = true;
+      });
+    }
+    if (_noInternet && cacheFile.existsSync()) {
+      final jsonData = cacheFile.readAsStringSync();
+      setState(() {
+        _faqData = json.decode(jsonData) as Map<String, dynamic>?;
+
+        _noInternet = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (noInternet) {
+    if (_noInternet) {
       return Scaffold(
         appBar: AppBar(
           title: Text(context.lang.settingsHelpFAQ),
@@ -73,26 +85,39 @@ class _FaqViewState extends State<FaqView> {
     }
 
     final faq = _faqData![_locale ?? 'en'] as Map;
+    final sortedCategories = faq.entries.toList()
+      ..sort((a, b) {
+        final aPriority = (a.value['meta']['priority'] as num? ?? 0).toInt();
+        final bPriority = (b.value['meta']['priority'] as num? ?? 0).toInt();
+        return bPriority.compareTo(aPriority);
+      });
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsHelpFAQ),
       ),
       body: ListView.builder(
-        itemCount: faq.keys.length,
+        itemCount: sortedCategories.length,
         itemBuilder: (context, index) {
-          final category = faq.keys.elementAt(index);
-          final categoryData = faq[category];
+          final categoryData = sortedCategories[index].value;
 
           return Card(
             child: ExpansionTile(
               title: Text(categoryData['meta']['title'] as String),
               subtitle: Text(categoryData['meta']['desc'] as String),
+              shape: const RoundedRectangleBorder(),
+              backgroundColor: context.color.surfaceContainer,
+              collapsedShape: const RoundedRectangleBorder(),
               children:
                   categoryData['questions'].map<Widget>((question) {
                         return ListTile(
                           title: Text(question['title'] as String),
-                          onTap: () => _launchURL(question['path'] as String),
+                          onTap: () => context.navPush(
+                            FaqMarkdownView(
+                              markdown: question['body'] as String,
+                              title: question['title'] as String,
+                            ),
+                          ),
                         );
                       }).toList()
                       as List<Widget>,
@@ -101,13 +126,5 @@ class _FaqViewState extends State<FaqView> {
         },
       ),
     );
-  }
-
-  Future<void> _launchURL(String path) async {
-    try {
-      await launchUrl(Uri.parse('$domain$path'));
-    } catch (e) {
-      Log.error('Could not launch $e');
-    }
   }
 }
