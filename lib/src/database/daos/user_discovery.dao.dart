@@ -51,6 +51,46 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         .toList();
   }
 
+  Future<AnnouncedUsersWithRelations>
+  getAllAnnouncedUsersWithRelations() async {
+    final query = select(userDiscoveryAnnouncedUsers).join([
+      innerJoin(
+        userDiscoveryUserRelations,
+        userDiscoveryUserRelations.announcedUserId.equalsExp(
+          userDiscoveryAnnouncedUsers.announcedUserId,
+        ),
+      ),
+      innerJoin(
+        contacts,
+        contacts.userId.equalsExp(
+          userDiscoveryUserRelations.fromContactId,
+        ),
+      ),
+    ])..where(userDiscoveryAnnouncedUsers.username.isNotNull());
+
+    final rows = await query.get();
+    // ignore: omit_local_variable_types
+    final AnnouncedUsersWithRelations results = {};
+
+    for (final row in rows) {
+      final user = row.readTable(userDiscoveryAnnouncedUsers);
+      final relation = row.readTable(userDiscoveryUserRelations);
+      final contact = row.readTable(contacts);
+
+      final relationData = (
+        contact,
+        relation.publicKeyVerifiedTimestamp,
+      );
+
+      if (!results.containsKey(user)) {
+        results[user] = [];
+      }
+      results[user]!.add(relationData);
+    }
+
+    return results;
+  }
+
   Stream<AnnouncedUsersWithRelations> watchAllAnnouncedUsersWithRelations() {
     final query = select(userDiscoveryAnnouncedUsers).join([
       innerJoin(

@@ -10,7 +10,7 @@ import 'package:twonly/src/utils/misc.dart';
 
 const userStudySurveyKey = 'user_study_survey';
 
-// LEASE DO NOT SPAM OR TRY SENDING DIRECTLY TO THIS URL!
+// PLEASE DO NOT SPAM OR TRY SENDING DIRECTLY TO THIS URL!
 // You're just making my master's thesis more difficult and destroy scientific data. :/
 const surveyUrlBase = 'https://survey.twonly.org/upload.php';
 
@@ -47,8 +47,34 @@ Future<void> handleUserStudyUpload() async {
     final verifications = await twonlyDB.keyVerificationDao
         .getFirstVerificationTypeByContacts();
 
+    final udFriendsShared = await twonlyDB.contactsDao
+        .getContactsAnnouncedViaUserDiscovery();
+
+    final udAllAnnouncedUsers = await twonlyDB.userDiscoveryDao
+        .getAllAnnouncedUsersWithRelations();
+
+    var udUnknownAnnouncedUsers = 0;
+
+    for (final udUser in udAllAnnouncedUsers.keys) {
+      if (!contacts.any((c) => c.userId == udUser.announcedUserId)) {
+        udUnknownAnnouncedUsers += 1;
+      }
+    }
+
     final dataCollection = {
       'total_contacts': contacts.length,
+
+      'user_discovery_enabled': userService.currentUser.isUserDiscoveryEnabled,
+      'user_discovery_minimum_images':
+          userService.currentUser.minimumRequiredImagesExchanged,
+      'user_discovery_threshold':
+          userService.currentUser.userDiscoveryThreshold,
+
+      'user_discovery_count_friends_shared': udFriendsShared.length,
+
+      'user_discovery_count_announced_users': udAllAnnouncedUsers.length,
+      'user_discovery_count_unknown_announced_users': udUnknownAnnouncedUsers,
+
       'accepted_contacts': contacts.where((c) => c.accepted).length,
       'verified_contacts': verifications.length,
       'verified_contacts_via_migrated_from_old_version': verifications.values
