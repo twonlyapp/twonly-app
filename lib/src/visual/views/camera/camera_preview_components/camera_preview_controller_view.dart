@@ -21,7 +21,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
@@ -377,7 +377,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     // shouldReturn is null when the user used the back button
     if (shouldReturn != null && shouldReturn) {
       if (widget.sendToGroup == null) {
-        globalUpdateOfHomeViewPageIndex(0);
+        HomeViewState.streamHomeViewPageIndex.add(0);
       } else if (mounted) {
         Navigator.pop(context);
       }

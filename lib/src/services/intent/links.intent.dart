@@ -16,6 +16,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/chats/add_new_user.view.dart';
@@ -24,6 +25,41 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   if (!uri.scheme.startsWith('http')) return false;
   if (uri.host != 'me.twonly.eu') return false;
   if (uri.hasEmptyPath) return false;
+
+  // Check if this is the QR code link which was
+  // therefore scanned with the system camera
+
+  if (uri.toString().startsWith(QrCodeUtils.linkPrefix)) {
+    final result = await QrCodeUtils.handleQrCodeLink(uri.toString());
+
+    if (!context.mounted) return false;
+
+    if (result != null) {
+      final (profile, contact, verificationOk) = result;
+
+      if (profile.username == userService.currentUser.username) {
+        await context.push(Routes.settingsPublicProfile);
+        return true;
+      }
+
+      if (contact != null) {
+        if (verificationOk) {
+          await context.push(Routes.profileContact(contact.userId));
+        } else {
+          await _pubKeysDoNotMatch(context, contact.username);
+        }
+      } else {
+        await context.navPush(
+          AddNewUserView(
+            username: profile.username,
+            publicKey: Uint8List.fromList(profile.publicIdentityKey),
+          ),
+        );
+      }
+    }
+
+    return true;
+  }
 
   final publicKey = uri.hasFragment ? uri.fragment : null;
   final userPaths = uri.path.split('/');
@@ -40,25 +76,26 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   Log.info(
     'Opened via deep link!: username = $username public_key = ${uri.fragment}',
   );
+
   final contacts = await twonlyDB.contactsDao.getContactsByUsername(username);
+  if (!context.mounted) return true;
+
   if (contacts.isEmpty) {
-    if (!context.mounted) return true;
+    // User does not yet exists, making a request...
     Uint8List? publicKeyBytes;
     if (publicKey != null) {
       publicKeyBytes = base64Url.decode(publicKey);
     }
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return AddNewUserView(
-            username: username,
-            publicKey: publicKeyBytes,
-          );
-        },
+    await context.navPush(
+      AddNewUserView(
+        username: username,
+        publicKey: publicKeyBytes,
       ),
     );
-  } else if (publicKey != null) {
+    return true;
+  }
+
+  if (publicKey != null) {
     try {
       final contact = contacts.first;
       final storedPublicKey = await getPublicKeyFromContact(contact.userId);
@@ -85,18 +122,23 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
           await context.push(Routes.profileContact(contact.userId));
         }
       } else {
-        await showAlertDialog(
-          context,
-          context.lang.couldNotVerifyUsername(contact.username),
-          context.lang.linkPubkeyDoesNotMatch,
-          customCancel: '',
-        );
+        await _pubKeysDoNotMatch(context, contact.username);
       }
     } catch (e) {
       Log.warn(e);
     }
   }
+
   return true;
+}
+
+Future<void> _pubKeysDoNotMatch(BuildContext context, String username) async {
+  await showAlertDialog(
+    context,
+    context.lang.couldNotVerifyUsername(username),
+    context.lang.linkPubkeyDoesNotMatch,
+    customCancel: '',
+  );
 }
 
 Future<void> handleIntentMediaFile(

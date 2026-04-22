@@ -9041,6 +9041,21 @@ class $KeyVerificationsTable extends KeyVerifications
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $KeyVerificationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _verificationIdMeta = const VerificationMeta(
+    'verificationId',
+  );
+  @override
+  late final GeneratedColumn<int> verificationId = GeneratedColumn<int>(
+    'verification_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _contactIdMeta = const VerificationMeta(
     'contactId',
   );
@@ -9050,7 +9065,7 @@ class $KeyVerificationsTable extends KeyVerifications
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES contacts (user_id) ON DELETE CASCADE',
     ),
@@ -9077,7 +9092,12 @@ class $KeyVerificationsTable extends KeyVerifications
     defaultValue: currentDateAndTime,
   );
   @override
-  List<GeneratedColumn> get $columns => [contactId, type, createdAt];
+  List<GeneratedColumn> get $columns => [
+    verificationId,
+    contactId,
+    type,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -9090,11 +9110,22 @@ class $KeyVerificationsTable extends KeyVerifications
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('verification_id')) {
+      context.handle(
+        _verificationIdMeta,
+        verificationId.isAcceptableOrUnknown(
+          data['verification_id']!,
+          _verificationIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('contact_id')) {
       context.handle(
         _contactIdMeta,
         contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
       );
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -9106,11 +9137,15 @@ class $KeyVerificationsTable extends KeyVerifications
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {contactId};
+  Set<GeneratedColumn> get $primaryKey => {verificationId};
   @override
   KeyVerification map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return KeyVerification(
+      verificationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verification_id'],
+      )!,
       contactId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}contact_id'],
@@ -9138,10 +9173,12 @@ class $KeyVerificationsTable extends KeyVerifications
 }
 
 class KeyVerification extends DataClass implements Insertable<KeyVerification> {
+  final int verificationId;
   final int contactId;
   final VerificationType type;
   final DateTime createdAt;
   const KeyVerification({
+    required this.verificationId,
     required this.contactId,
     required this.type,
     required this.createdAt,
@@ -9149,6 +9186,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['verification_id'] = Variable<int>(verificationId);
     map['contact_id'] = Variable<int>(contactId);
     {
       map['type'] = Variable<String>(
@@ -9161,6 +9199,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
 
   KeyVerificationsCompanion toCompanion(bool nullToAbsent) {
     return KeyVerificationsCompanion(
+      verificationId: Value(verificationId),
       contactId: Value(contactId),
       type: Value(type),
       createdAt: Value(createdAt),
@@ -9173,6 +9212,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return KeyVerification(
+      verificationId: serializer.fromJson<int>(json['verificationId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       type: $KeyVerificationsTable.$convertertype.fromJson(
         serializer.fromJson<String>(json['type']),
@@ -9184,6 +9224,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'verificationId': serializer.toJson<int>(verificationId),
       'contactId': serializer.toJson<int>(contactId),
       'type': serializer.toJson<String>(
         $KeyVerificationsTable.$convertertype.toJson(type),
@@ -9193,16 +9234,21 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   }
 
   KeyVerification copyWith({
+    int? verificationId,
     int? contactId,
     VerificationType? type,
     DateTime? createdAt,
   }) => KeyVerification(
+    verificationId: verificationId ?? this.verificationId,
     contactId: contactId ?? this.contactId,
     type: type ?? this.type,
     createdAt: createdAt ?? this.createdAt,
   );
   KeyVerification copyWithCompanion(KeyVerificationsCompanion data) {
     return KeyVerification(
+      verificationId: data.verificationId.present
+          ? data.verificationId.value
+          : this.verificationId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       type: data.type.present ? data.type.value : this.type,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -9212,6 +9258,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   @override
   String toString() {
     return (StringBuffer('KeyVerification(')
+          ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
           ..write('createdAt: $createdAt')
@@ -9220,36 +9267,43 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   }
 
   @override
-  int get hashCode => Object.hash(contactId, type, createdAt);
+  int get hashCode => Object.hash(verificationId, contactId, type, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is KeyVerification &&
+          other.verificationId == this.verificationId &&
           other.contactId == this.contactId &&
           other.type == this.type &&
           other.createdAt == this.createdAt);
 }
 
 class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
+  final Value<int> verificationId;
   final Value<int> contactId;
   final Value<VerificationType> type;
   final Value<DateTime> createdAt;
   const KeyVerificationsCompanion({
+    this.verificationId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.type = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   KeyVerificationsCompanion.insert({
-    this.contactId = const Value.absent(),
+    this.verificationId = const Value.absent(),
+    required int contactId,
     required VerificationType type,
     this.createdAt = const Value.absent(),
-  }) : type = Value(type);
+  }) : contactId = Value(contactId),
+       type = Value(type);
   static Insertable<KeyVerification> custom({
+    Expression<int>? verificationId,
     Expression<int>? contactId,
     Expression<String>? type,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
+      if (verificationId != null) 'verification_id': verificationId,
       if (contactId != null) 'contact_id': contactId,
       if (type != null) 'type': type,
       if (createdAt != null) 'created_at': createdAt,
@@ -9257,11 +9311,13 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
   }
 
   KeyVerificationsCompanion copyWith({
+    Value<int>? verificationId,
     Value<int>? contactId,
     Value<VerificationType>? type,
     Value<DateTime>? createdAt,
   }) {
     return KeyVerificationsCompanion(
+      verificationId: verificationId ?? this.verificationId,
       contactId: contactId ?? this.contactId,
       type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
@@ -9271,6 +9327,9 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (verificationId.present) {
+      map['verification_id'] = Variable<int>(verificationId.value);
+    }
     if (contactId.present) {
       map['contact_id'] = Variable<int>(contactId.value);
     }
@@ -9288,6 +9347,7 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
   @override
   String toString() {
     return (StringBuffer('KeyVerificationsCompanion(')
+          ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
           ..write('createdAt: $createdAt')
@@ -19473,12 +19533,14 @@ typedef $$GroupHistoriesTableProcessedTableManager =
     >;
 typedef $$KeyVerificationsTableCreateCompanionBuilder =
     KeyVerificationsCompanion Function({
-      Value<int> contactId,
+      Value<int> verificationId,
+      required int contactId,
       required VerificationType type,
       Value<DateTime> createdAt,
     });
 typedef $$KeyVerificationsTableUpdateCompanionBuilder =
     KeyVerificationsCompanion Function({
+      Value<int> verificationId,
       Value<int> contactId,
       Value<VerificationType> type,
       Value<DateTime> createdAt,
@@ -19522,6 +19584,11 @@ class $$KeyVerificationsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<int> get verificationId => $composableBuilder(
+    column: $table.verificationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<VerificationType, VerificationType, String>
   get type => $composableBuilder(
     column: $table.type,
@@ -19566,6 +19633,11 @@ class $$KeyVerificationsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<int> get verificationId => $composableBuilder(
+    column: $table.verificationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
@@ -19609,6 +19681,11 @@ class $$KeyVerificationsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<int> get verificationId => $composableBuilder(
+    column: $table.verificationId,
+    builder: (column) => column,
+  );
+
   GeneratedColumnWithTypeConverter<VerificationType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
@@ -19669,20 +19746,24 @@ class $$KeyVerificationsTableTableManager
               $$KeyVerificationsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<int> verificationId = const Value.absent(),
                 Value<int> contactId = const Value.absent(),
                 Value<VerificationType> type = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion(
+                verificationId: verificationId,
                 contactId: contactId,
                 type: type,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
-                Value<int> contactId = const Value.absent(),
+                Value<int> verificationId = const Value.absent(),
+                required int contactId,
                 required VerificationType type,
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion.insert(
+                verificationId: verificationId,
                 contactId: contactId,
                 type: type,
                 createdAt: createdAt,

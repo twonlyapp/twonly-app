@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -35,23 +35,21 @@ class _ContactViewState extends State<ContactView> {
   List<GroupMember> _memberOfGroups = [];
   List<KeyVerification> _keyVerifications = [];
 
-  late StreamSubscription<(Contact, bool)?> _contactSub;
+  late StreamSubscription<Contact?> _contactSub;
   late StreamSubscription<List<GroupMember>> _groupMemberSub;
   late StreamSubscription<List<KeyVerification>> _streamKeyVerifications;
 
   @override
   void initState() {
-    _contactSub = twonlyDB.contactsDao
-        .watchContactAndVerificationState(widget.userId)
-        .listen((
-          update,
-        ) {
-          if (update != null) {
-            setState(() {
-              _contact = update.$1;
-            });
-          }
+    _contactSub = twonlyDB.contactsDao.watchContact(widget.userId).listen((
+      update,
+    ) {
+      if (update != null) {
+        setState(() {
+          _contact = update;
         });
+      }
+    });
     _groupMemberSub = twonlyDB.groupsDao
         .watchContactGroupMember(widget.userId)
         .listen((groups) async {
@@ -250,7 +248,7 @@ class _ContactViewState extends State<ContactView> {
               backgroundColor: context.color.surfaceContainer,
               collapsedShape: const RoundedRectangleBorder(),
               leading: Padding(
-                padding: EdgeInsetsGeometry.only(left: 12, right: 12),
+                padding: const EdgeInsetsGeometry.only(left: 12, right: 12),
                 child: VerificationBadgeComp(
                   contact: contact,
                   size: 20,

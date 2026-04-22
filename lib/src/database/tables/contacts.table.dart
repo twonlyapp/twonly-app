@@ -47,18 +47,14 @@ enum VerificationType {
 
 @DataClassName('KeyVerification')
 class KeyVerifications extends Table {
+  IntColumn get verificationId => integer().autoIncrement()();
   IntColumn get contactId => integer().references(
     Contacts,
     #userId,
     onDelete: KeyAction.cascade,
   )();
-
   TextColumn get type => textEnum<VerificationType>()();
-
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-
-  @override
-  Set<Column> get primaryKey => {contactId};
 }
 
 @DataClassName('VerificationToken')

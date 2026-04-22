@@ -19,8 +19,6 @@ import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_list.view.dart';
 import 'package:twonly/src/visual/views/memories/memories.view.dart';
 
-void Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
-
 class HomeView extends StatefulWidget {
   const HomeView({
     required this.initialPage,
@@ -32,68 +30,19 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => HomeViewState();
 }
 
-class Shade extends StatelessWidget {
-  const Shade({required this.opacity, super.key});
-  final double opacity;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: Opacity(
-        opacity: opacity,
-        child: Container(
-          color: context.color.surface,
-        ),
-      ),
-    );
-  }
-}
-
 class HomeViewState extends State<HomeView> {
   int _activePageIdx = 1;
+  double _offsetRatio = 0;
+  double _offsetFromOne = 0;
+  Timer? _disableCameraTimer;
 
   final MainCameraController _mainCameraController = MainCameraController();
-
   final PageController _homeViewPageController = PageController(initialPage: 1);
+
   late StreamSubscription<List<SharedFile>> _intentStreamSub;
   late StreamSubscription<Uri> _deepLinkSub;
 
-  double buttonDiameter = 100;
-  double offsetRatio = 0;
-  double offsetFromOne = 0;
-  double lastChange = 0;
-
-  Timer? disableCameraTimer;
-
-  bool onPageView(ScrollNotification notification) {
-    disableCameraTimer?.cancel();
-    if (notification.depth == 0 && notification is ScrollUpdateNotification) {
-      final page = _homeViewPageController.page ?? 0;
-      lastChange = page;
-      setState(() {
-        offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
-        offsetRatio = offsetFromOne.abs();
-      });
-    }
-    if (_mainCameraController.cameraController == null &&
-        !_mainCameraController.initCameraStarted &&
-        offsetRatio < 1) {
-      unawaited(
-        _mainCameraController.selectCamera(
-          _mainCameraController.selectedCameraDetails.cameraId,
-          false,
-        ),
-      );
-    }
-    if (offsetRatio == 1) {
-      disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
-        await _mainCameraController.closeCamera();
-        _mainCameraController.sharedLinkForPreview = null;
-        disableCameraTimer = null;
-      });
-    }
-    return false;
-  }
+  static final streamHomeViewPageIndex = StreamController<int>.broadcast();
 
   @override
   void initState() {
@@ -102,31 +51,32 @@ class HomeViewState extends State<HomeView> {
       if (mounted) setState(() {});
     };
 
-    globalUpdateOfHomeViewPageIndex = (index) {
+    streamHomeViewPageIndex.stream.listen((index) {
       _homeViewPageController.jumpToPage(index);
       setState(() {
         _activePageIdx = index;
       });
-    };
+    });
+
     selectNotificationStream.stream.listen((response) async {
       if (response.payload != null &&
           response.payload!.startsWith(Routes.chats) &&
           response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
-      globalUpdateOfHomeViewPageIndex(0);
+      streamHomeViewPageIndex.add(0);
     });
+
     unawaited(_mainCameraController.selectCamera(0, true));
-    unawaited(initAsync());
+    unawaited(_initAsync());
 
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
-      if (mounted) {
-        Log.info('Got link via app links: ${uri.scheme}');
-        if (!await handleIntentUrl(context, uri)) {
-          if (uri.scheme.startsWith('http')) {
-            _mainCameraController.setSharedLinkForPreview(uri);
-          }
+      if (!mounted) return;
+      Log.info('Got link via app links: ${uri.scheme}');
+      if (!await handleIntentUrl(context, uri)) {
+        if (uri.scheme.startsWith('http')) {
+          _mainCameraController.setSharedLinkForPreview(uri);
         }
       }
     });
@@ -135,26 +85,17 @@ class HomeViewState extends State<HomeView> {
       context,
       _mainCameraController.setSharedLinkForPreview,
     );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.initialPage == 1 &&
               !userService.currentUser.startWithCameraOpen ||
           widget.initialPage == 0) {
-        globalUpdateOfHomeViewPageIndex(0);
+        streamHomeViewPageIndex.add(0);
       }
     });
   }
 
-  @override
-  void dispose() {
-    unawaited(selectNotificationStream.close());
-    disableCameraTimer?.cancel();
-    _mainCameraController.closeCamera();
-    _intentStreamSub.cancel();
-    _deepLinkSub.cancel();
-    super.dispose();
-  }
-
-  Future<void> initAsync() async {
+  Future<void> _initAsync() async {
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
         .getNotificationAppLaunchDetails();
 
@@ -168,10 +109,10 @@ class HomeViewState extends State<HomeView> {
             payload.startsWith(Routes.chats) &&
             payload != Routes.chats) {
           await routerProvider.push(payload);
-          globalUpdateOfHomeViewPageIndex(0);
+          streamHomeViewPageIndex.add(0);
         }
         if (payload == Routes.chats) {
-          globalUpdateOfHomeViewPageIndex(0);
+          streamHomeViewPageIndex.add(0);
         }
       }
     }
@@ -192,21 +133,68 @@ class HomeViewState extends State<HomeView> {
   }
 
   @override
+  void dispose() {
+    selectNotificationStream.close();
+    streamHomeViewPageIndex.close();
+    _disableCameraTimer?.cancel();
+    _mainCameraController.closeCamera();
+    _intentStreamSub.cancel();
+    _deepLinkSub.cancel();
+    super.dispose();
+  }
+
+  bool _onPageView(ScrollNotification notification) {
+    _disableCameraTimer?.cancel();
+
+    if (notification.depth == 0 && notification is ScrollUpdateNotification) {
+      setState(() {
+        _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
+        _offsetRatio = _offsetFromOne.abs();
+      });
+    }
+
+    if (_mainCameraController.cameraController == null &&
+        !_mainCameraController.initCameraStarted &&
+        _offsetRatio < 1) {
+      unawaited(
+        _mainCameraController.selectCamera(
+          _mainCameraController.selectedCameraDetails.cameraId,
+          false,
+        ),
+      );
+    }
+
+    if (_offsetRatio == 1) {
+      _disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
+        await _mainCameraController.closeCamera();
+        _mainCameraController.sharedLinkForPreview = null;
+        _disableCameraTimer = null;
+      });
+    }
+    return false;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: offsetRatio == 0
+        onDoubleTap: _offsetRatio == 0
             ? _mainCameraController.onDoubleTap
             : null,
-        onTapDown: offsetRatio == 0 ? _mainCameraController.onTapDown : null,
+        onTapDown: _offsetRatio == 0 ? _mainCameraController.onTapDown : null,
         child: Stack(
           children: <Widget>[
             MainCameraPreview(mainCameraController: _mainCameraController),
-            Shade(
-              opacity: offsetRatio,
+            Positioned.fill(
+              child: Opacity(
+                opacity: _offsetRatio,
+                child: Container(
+                  color: context.color.surface,
+                ),
+              ),
             ),
             NotificationListener<ScrollNotification>(
-              onNotification: onPageView,
+              onNotification: _onPageView,
               child: Positioned.fill(
                 child: PageView(
                   controller: _homeViewPageController,
@@ -227,15 +215,16 @@ class HomeViewState extends State<HomeView> {
               left: 0,
               top: 0,
               right: 0,
-              bottom: (offsetRatio > 0.25)
+              bottom: (_offsetRatio > 0.25)
                   ? MediaQuery.sizeOf(context).height * 2
                   : 0,
               child: Opacity(
-                opacity: 1 - (offsetRatio * 4) % 1,
+                opacity: 1 - (_offsetRatio * 4) % 1,
                 child: CameraPreviewControllerView(
                   mainController: _mainCameraController,
                   isVisible:
-                      ((1 - (offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
+                      ((1 - (_offsetRatio * 4) % 1) == 1) &&
+                      _activePageIdx == 1,
                 ),
               ),
             ),

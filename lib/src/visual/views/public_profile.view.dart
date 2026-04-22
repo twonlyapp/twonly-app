@@ -11,7 +11,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 
 class PublicProfileView extends StatefulWidget {

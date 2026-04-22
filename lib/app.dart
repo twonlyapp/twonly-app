@@ -113,7 +113,6 @@ class AppMainWidget extends StatefulWidget {
 
 class _AppMainWidgetState extends State<AppMainWidget> {
   bool _isUserCreated = false;
-  bool _showDatabaseMigration = false;
   bool _showOnboarding = true;
   bool _isLoaded = false;
   bool _skipBackup = false;
@@ -135,18 +134,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
-      if (userService.currentUser.appVersion < 62) {
-        _showDatabaseMigration = true;
-      }
-    }
-
-    if (!_isUserCreated && !_showDatabaseMigration) {
+    } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
       final (proof, disabled) = await apiService.getProofOfWork();
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
-        // Starting with the proof of work.
         _proofOfWork = (
           calculatePoW(proof.prefix, proof.difficulty.toInt()),
           false,
@@ -169,9 +162,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
     late Widget child;
 
-    if (_showDatabaseMigration) {
-      child = const Center(child: Text('Please reinstall twonly.'));
-    } else if (_isUserCreated) {
+    if (_isUserCreated) {
       if (_isTwonlyLocked) {
         child = UnlockTwonlyView(
           callbackOnSuccess: () => setState(() {

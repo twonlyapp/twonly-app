@@ -99,21 +99,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     )..where((t) => t.userId.equals(userid))).watchSingleOrNull();
   }
 
-  Stream<(Contact, bool)?> watchContactAndVerificationState(int userid) {
-    final query = (select(contacts)..where((t) => t.userId.equals(userid))).join([
-      leftOuterJoin(
-        keyVerifications,
-        keyVerifications.contactId.equalsExp(contacts.userId),
-      ),
-    ]);
-    return query
-        .map((row) => (
-              row.readTable(contacts),
-              row.readTableOrNull(keyVerifications) != null,
-            ))
-        .watchSingleOrNull();
-  }
-
   Future<List<Contact>> getAllContacts() {
     return select(contacts).get();
   }

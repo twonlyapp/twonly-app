@@ -16,7 +16,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
@@ -45,7 +45,7 @@ class MainCameraController {
   bool initCameraStarted = true;
   Map<int, ScannedVerifiedContact> contactsVerified = {};
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
-  Set<String> _handledProfileLinks = {};
+  final Set<String> _handledProfileLinks = {};
   String? scannedUrl;
   GlobalKey zoomButtonKey = GlobalKey();
   GlobalKey cameraPreviewKey = GlobalKey();
@@ -381,6 +381,7 @@ class MainCameraController {
               );
             }
           }
+          continue;
         }
 
         if (link.startsWith('http://') || link.startsWith('https://')) {
