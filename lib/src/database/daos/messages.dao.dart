@@ -197,6 +197,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     await (delete(
       messageHistories,
     )..where((t) => t.messageId.equals(messageId))).go();
+    
+    await twonlyDB.receiptsDao.deleteReceiptsByMessageId(messageId);
 
     await (update(messages)..where(
           (t) => t.messageId.equals(messageId),
@@ -344,7 +346,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
-      final rowId = await into(messages).insertOnConflictUpdate(insertMessage);
+      await into(messages).insertOnConflictUpdate(insertMessage);
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
@@ -365,9 +367,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
+      final messageId = insertMessage.messageId.value;
+
       return await (select(
         messages,
-      )..where((t) => t.rowId.equals(rowId))).getSingle();
+      )..where((t) => t.messageId.equals(messageId))).getSingle();
     } catch (e) {
       Log.error('Could not insert message: $e');
       return null;

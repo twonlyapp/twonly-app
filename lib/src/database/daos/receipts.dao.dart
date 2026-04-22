@@ -53,6 +53,13 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         ))
         .go();
   }
+  
+  Future<void> deleteReceiptsByMessageId(String messageId) async {
+    await (delete(receipts)..where(
+          (t) => t.messageId.equals(messageId),
+        ))
+        .go();
+  }
 
   Future<void> deleteReceiptForUser(int contactId) async {
     await (delete(receipts)..where(
@@ -91,10 +98,11 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
           receiptId: Value(uuid.v4()),
         );
       }
-      final id = await into(receipts).insert(insertEntry);
+      await into(receipts).insert(insertEntry);
+      final receiptId = insertEntry.receiptId.value;
       return await (select(
         receipts,
-      )..where((t) => t.rowId.equals(id))).getSingle();
+      )..where((t) => t.receiptId.equals(receiptId))).getSingle();
     } catch (e) {
       // ignore error, receipts is already in the database...
       return null;

@@ -178,9 +178,15 @@ Future<void> handleMedia(
 
     unawaited(startDownloadMedia(mediaFile!, false));
   } else {
-    Log.error(
-      'Could not insert new message as both the message and mediaFile are empty.',
-    );
+    if (mediaFile == null && message == null) {
+      Log.error(
+        'Could not insert new message as both the message and mediaFile are empty.',
+      );
+    } else if (mediaFile == null) {
+      Log.error('Could not insert new message as the mediaFile is empty.');
+    } else {
+      Log.error('Could not insert new message as the message is empty.');
+    }
   }
 }
 

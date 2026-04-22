@@ -60,12 +60,23 @@ Future<void> reuploadMediaFiles() async {
           final content = EncryptedContent.fromBuffer(receipt.message);
           if (content.hasMedia()) {
             messageId = content.media.senderMessageId;
-            await twonlyDB.receiptsDao.updateReceipt(
-              receipt.receiptId,
-              ReceiptsCompanion(
-                messageId: Value(messageId),
-              ),
-            );
+            final messageExists = await twonlyDB.messagesDao
+                .getMessageById(messageId)
+                .getSingleOrNull();
+            if (messageExists != null) {
+              await twonlyDB.receiptsDao.updateReceipt(
+                receipt.receiptId,
+                ReceiptsCompanion(
+                  messageId: Value(messageId),
+                ),
+              );
+            } else {
+              Log.info(
+                'Message $messageId not found in DB for receipt recovery. Deleting stale receipt.',
+              );
+              await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
+              continue;
+            }
           }
         } catch (e) {
           Log.error(e);
@@ -110,8 +121,8 @@ Future<void> reuploadMediaFiles() async {
             await twonlyDB.messagesDao.deleteMessagesById(messageId);
           }
           await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-          Log.error(
-            'Message not found for reupload of the receipt (${message == null} - ${message?.mediaId}).',
+          Log.warn(
+            'Message not found for reupload of the receipt, likely deleted from sender (${message == null} - ${message?.mediaId}).',
           );
           continue;
         }

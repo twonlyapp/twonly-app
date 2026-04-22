@@ -198,8 +198,8 @@ class MainCameraController {
 
     focusPointOffset = Offset(localPosition.dx, localPosition.dy);
 
-    final dx = localPosition.dx / box.size.width;
-    final dy = localPosition.dy / box.size.height;
+    final dx = (localPosition.dx / box.size.width).clamp(0.0, 1.0);
+    final dy = (localPosition.dy / box.size.height).clamp(0.0, 1.0);
 
     setState();
 
@@ -208,7 +208,13 @@ class MainCameraController {
       await cameraController?.setFocusPoint(Offset(dx, dy));
       await cameraController?.setFocusMode(FocusMode.auto);
     } catch (e) {
-      Log.error(e);
+      if (e is CameraException &&
+          (e.code == 'setFocusPointFailed' ||
+              e.code == 'setFocusModeFailed')) {
+        Log.info('Focus point or mode not supported on this device');
+      } else {
+        Log.error(e);
+      }
     }
 
     // display the focus point at least 500ms
