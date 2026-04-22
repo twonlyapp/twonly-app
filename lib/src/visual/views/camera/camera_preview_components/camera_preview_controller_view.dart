@@ -10,32 +10,30 @@ import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.da
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/qr.utils.dart';
-import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_bottom_controls.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_scanned_overlay.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_selfie_flash.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/camera_top_actions.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_time.dart';
-import 'package:twonly/src/visual/views/camera/camera_preview_components/zoom_selector.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 int maxVideoRecordingTime = 60;
 
@@ -140,7 +138,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       if (widget.isVisible) {
         initVolumeControl();
       } else {
-        deInitVolumeControl();
+        _deInitVolumeControl();
       }
     }
   }
@@ -148,7 +146,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   @override
   void dispose() {
     _videoRecordingTimer?.cancel();
-    deInitVolumeControl();
+    _deInitVolumeControl();
     super.dispose();
   }
 
@@ -160,7 +158,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       FlutterVolumeController.addListener(
         (volume) async {
           if (!widget.isVisible) {
-            await deInitVolumeControl();
+            await _deInitVolumeControl();
             return;
           }
           if (startedVolume == null) {
@@ -188,7 +186,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           if (widget.isVisible) {
             takePicture();
           } else {
-            deInitVolumeControl();
+            _deInitVolumeControl();
             return;
           }
         });
@@ -196,7 +194,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
   }
 
-  Future<void> deInitVolumeControl() async {
+  Future<void> _deInitVolumeControl() async {
     if (Platform.isIOS) {
       await FlutterVolumeController.updateShowSystemUI(true);
       FlutterVolumeController.removeListener();
@@ -341,7 +339,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       // unawaited(mediaFileService.compressMedia());
     }
 
-    await deInitVolumeControl();
+    await _deInitVolumeControl();
     if (!mounted) return true;
 
     final shouldReturn =
@@ -599,6 +597,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         mc.cameraController == null) {
       return Container();
     }
+    // TODO: STREAM BUILDER FOR GlOBAL USER CHANGES
     return MediaViewSizingHelper(
       requiredHeight: 0,
       additionalPadding: 59,
@@ -670,169 +669,37 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             if (!mc.isSharePreviewIsShown &&
                 !mc.isVideoRecording &&
                 !widget.hideControllers)
-              Positioned(
-                right: 5,
-                top: 0,
-                child: Container(
-                  alignment: Alignment.bottomCenter,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: SafeArea(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        ActionButton(
-                          Icons.repeat_rounded,
-                          tooltipText: context.lang.switchFrontAndBackCamera,
-                          onPressed: () async {
-                            await mc.selectCamera(
-                              (mc.selectedCameraDetails.cameraId + 1) % 2,
-                              false,
-                            );
-                          },
-                        ),
-                        ActionButton(
-                          mc.selectedCameraDetails.isFlashOn
-                              ? Icons.flash_on_rounded
-                              : Icons.flash_off_rounded,
-                          tooltipText: context.lang.toggleFlashLight,
-                          color: mc.selectedCameraDetails.isFlashOn
-                              ? Colors.white
-                              : Colors.white.withAlpha(160),
-                          onPressed: () async {
-                            if (mc.selectedCameraDetails.isFlashOn) {
-                              await mc.cameraController?.setFlashMode(
-                                FlashMode.off,
-                              );
-                              mc.selectedCameraDetails.isFlashOn = false;
-                            } else {
-                              await mc.cameraController?.setFlashMode(
-                                FlashMode.always,
-                              );
-                              mc.selectedCameraDetails.isFlashOn = true;
-                            }
-                            setState(() {});
-                          },
-                        ),
-                        if (!_hasAudioPermission)
-                          ActionButton(
-                            Icons.mic_off_rounded,
-                            color: Colors.white.withAlpha(160),
-                            tooltipText:
-                                'Allow microphone access for video recording.',
-                            onPressed: requestMicrophonePermission,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
+              CameraTopActions(
+                selectedCameraDetails: mc.selectedCameraDetails,
+                hasAudioPermission: _hasAudioPermission,
+                onSwitchCamera: () async {
+                  await mc.selectCamera(
+                    (mc.selectedCameraDetails.cameraId + 1) % 2,
+                    false,
+                  );
+                },
+                onToggleFlash: () async {
+                  if (mc.selectedCameraDetails.isFlashOn) {
+                    await mc.cameraController?.setFlashMode(FlashMode.off);
+                    mc.selectedCameraDetails.isFlashOn = false;
+                  } else {
+                    await mc.cameraController?.setFlashMode(FlashMode.always);
+                    mc.selectedCameraDetails.isFlashOn = true;
+                  }
+                  setState(() {});
+                },
+                onRequestMicrophone: requestMicrophonePermission,
               ),
             if (!mc.isSharePreviewIsShown && !widget.hideControllers)
-              Positioned(
-                bottom: 30,
-                left: 0,
-                right: 0,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Column(
-                    children: [
-                      if (mc.cameraController!.value.isInitialized &&
-                          mc.selectedCameraDetails.isZoomAble &&
-                          !mc.isVideoRecording)
-                        SizedBox(
-                          width: 120,
-                          child: CameraZoomButtons(
-                            key: mc.zoomButtonKey,
-                            scaleFactor: mc.selectedCameraDetails.scaleFactor,
-                            updateScaleFactor: updateScaleFactor,
-                            selectCamera: mc.selectCamera,
-                            selectedCameraDetails: mc.selectedCameraDetails,
-                            controller: mc.cameraController!,
-                          ),
-                        ),
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (!mc.isVideoRecording)
-                            GestureDetector(
-                              onTap: pressSideButtonLeft,
-                              child: Align(
-                                child: Container(
-                                  height: 50,
-                                  width: 80,
-                                  padding: const EdgeInsets.all(2),
-                                  child: Center(
-                                    child: FaIcon(
-                                      mc.isSelectingFaceFilters
-                                          ? mc.currentFilterType.index == 1
-                                                ? FontAwesomeIcons.xmark
-                                                : FontAwesomeIcons.arrowLeft
-                                          : FontAwesomeIcons.photoFilm,
-                                      color: Colors.white,
-                                      size: 25,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          GestureDetector(
-                            onTap: takePicture,
-                            // onLongPress: startVideoRecording,
-                            key: keyTriggerButton,
-                            child: Align(
-                              child: Container(
-                                height: 100,
-                                width: 100,
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    width: 7,
-                                    color: mc.isVideoRecording
-                                        ? Colors.red
-                                        : Colors.white,
-                                  ),
-                                ),
-                                child: mc.currentFilterType.preview,
-                              ),
-                            ),
-                          ),
-                          if (!mc.isVideoRecording)
-                            if (isFront)
-                              GestureDetector(
-                                onTap: pressSideButtonRight,
-                                child: Align(
-                                  child: Container(
-                                    height: 50,
-                                    width: 80,
-                                    padding: const EdgeInsets.all(2),
-                                    child: Center(
-                                      child: FaIcon(
-                                        mc.isSelectingFaceFilters
-                                            ? mc.currentFilterType.index ==
-                                                      FaceFilterType
-                                                              .values
-                                                              .length -
-                                                          1
-                                                  ? FontAwesomeIcons.xmark
-                                                  : FontAwesomeIcons.arrowRight
-                                            : FontAwesomeIcons
-                                                  .faceGrinTongueSquint,
-                                        color: Colors.white,
-                                        size: 25,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              const SizedBox(width: 80),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              CameraBottomControls(
+                mainController: mc,
+                isVideoRecording: mc.isVideoRecording,
+                isFront: isFront,
+                keyTriggerButton: keyTriggerButton,
+                onTakePicture: takePicture,
+                onPressSideButtonLeft: pressSideButtonLeft,
+                onPressSideButtonRight: pressSideButtonRight,
+                updateScaleFactor: updateScaleFactor,
               ),
             VideoRecordingTimer(
               videoRecordingStarted: _videoRecordingStarted,
@@ -851,179 +718,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   },
                 ),
               ),
-            if (_showSelfieFlash)
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: Container(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            Positioned(
-              right: 8,
-              top: 170,
-              child: SizedBox(
-                height: 200,
-                width: 150,
-                child: ListView(
-                  children: [
-                    ...widget.mainCameraController.scannedNewProfiles.values
-                        .map(
-                          (c) {
-                            if (c.isLoading) return Container();
-                            return GestureDetector(
-                              onTap: () async {
-                                c.isLoading = true;
-                                widget.mainCameraController.setState();
-                                if (await addNewContactFromPublicProfile(
-                                      c.profile,
-                                    ) &&
-                                    context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        context.lang.requestedUserToastText(
-                                          c.profile.username,
-                                        ),
-                                      ),
-                                      duration: const Duration(seconds: 8),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.only(bottom: 10),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: context.color.surfaceContainer,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(c.profile.username),
-                                    Expanded(child: Container()),
-                                    if (c.isLoading)
-                                      const SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    else
-                                      ColoredBox(
-                                        color: Colors.transparent,
-                                        child: FaIcon(
-                                          FontAwesomeIcons.userPlus,
-                                          color: isDarkMode(context)
-                                              ? Colors.white
-                                              : Colors.black,
-                                          size: 17,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                    ...widget.mainCameraController.contactsVerified.values.map(
-                      (c) {
-                        return Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: context.color.surfaceContainer,
-                          ),
-                          child: Row(
-                            children: [
-                              AvatarIcon(
-                                contactId: c.contact.userId,
-                                fontSize: 14,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                getContactDisplayName(
-                                  c.contact,
-                                  maxLength: 13,
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(),
-                              ),
-                              ColoredBox(
-                                color: Colors.transparent,
-                                child: SizedBox(
-                                  width: 30,
-                                  child: Lottie.asset(
-                                    c.verificationOk
-                                        ? 'assets/animations/success.lottie'
-                                        : 'assets/animations/failed.lottie',
-                                    repeat: false,
-                                    onLoaded: (p0) {
-                                      Future.delayed(
-                                        const Duration(seconds: 4),
-                                        () {
-                                          widget.mainCameraController
-                                              .setState();
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                    if (widget.mainCameraController.scannedUrl != null)
-                      GestureDetector(
-                        onTap: () {
-                          launchUrlString(
-                            widget.mainCameraController.scannedUrl!,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: context.color.surfaceContainer,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                substringBy(
-                                  widget.mainCameraController.scannedUrl!,
-                                  25,
-                                ),
-                                style: const TextStyle(fontSize: 8),
-                              ),
-                              Expanded(
-                                child: Container(),
-                              ),
-                              Expanded(child: Container()),
-                              ColoredBox(
-                                color: Colors.transparent,
-                                child: FaIcon(
-                                  FontAwesomeIcons.shareFromSquare,
-                                  color: isDarkMode(context)
-                                      ? Colors.white
-                                      : Colors.black,
-                                  size: 17,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            if (_showSelfieFlash) const CameraSelfieFlash(),
+            CameraScannedOverlay(mainController: mc),
           ],
         ),
       ),
