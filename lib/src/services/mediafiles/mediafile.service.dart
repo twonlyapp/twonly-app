@@ -78,7 +78,7 @@ class MediaFileService {
                 final group = await twonlyDB.groupsDao.getGroup(
                   message.groupId,
                 );
-                if (group != null && !group.isDirectChat) {
+                if (group != null) {
                   delete = false;
                 }
               }

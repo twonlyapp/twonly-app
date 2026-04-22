@@ -184,14 +184,27 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       return;
     }
     if (msg.mediaId != null && contactId != null) {
-      // contactId -> When a image is send to multiple and one message is delete the image should be still available...
-      await (delete(
-        mediaFiles,
-      )..where((t) => t.mediaId.equals(msg.mediaId!))).go();
+      final otherMessagesWithSameMedia = await (select(messages)
+            ..where(
+              (t) =>
+                  t.mediaId.equals(msg.mediaId!) &
+                  t.messageId.equals(messageId).not(),
+            ))
+          .get();
 
-      final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
-      if (mediaService != null) {
-        mediaService.fullMediaRemoval();
+      if (otherMessagesWithSameMedia.isEmpty) {
+        await (delete(
+          mediaFiles,
+        )..where((t) => t.mediaId.equals(msg.mediaId!))).go();
+
+        final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
+        if (mediaService != null) {
+          mediaService.fullMediaRemoval();
+        }
+      } else {
+        Log.info(
+          'Media ${msg.mediaId} is still used by ${otherMessagesWithSameMedia.length} other messages. Skipping physical deletion.',
+        );
       }
     }
     await (delete(

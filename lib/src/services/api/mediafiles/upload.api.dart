@@ -204,11 +204,42 @@ Future<void> finishStartedPreprocessing() async {
           // media files was just stored..
           continue;
         }
-        Log.info(
-          'Deleted media files, as originalPath and uploadRequestPath both do not exists',
+        if (mediaFile.reuploadRequestedBy != null) {
+          Log.warn(
+            'Reupload requested for ${mediaFile.mediaId} but files are missing. Cancelling reupload but keeping record.',
+          );
+          await twonlyDB.mediaFilesDao.updateMedia(
+            mediaFile.mediaId,
+            const MediaFilesCompanion(
+              uploadState: Value(UploadState.uploaded),
+              reuploadRequestedBy: Value(null),
+            ),
+          );
+          continue;
+        }
+
+        final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+          mediaFile.mediaId,
         );
-        // the file does not exists anymore.
-        await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+
+        if (messages.isEmpty) {
+          Log.info(
+            'Deleted media files ${mediaFile.mediaId} as originalPath and uploadRequestPath both do not exists and no messages reference it.',
+          );
+          // the file does not exists anymore and no messages reference it.
+          await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+        } else {
+          Log.warn(
+            'Media files ${mediaFile.mediaId} missing but messages still reference it. Keeping record to avoid broken chat history.',
+          );
+          // Just mark as uploaded to stop preprocessing attempts
+          await twonlyDB.mediaFilesDao.updateMedia(
+            mediaFile.mediaId,
+            const MediaFilesCompanion(
+              uploadState: Value(UploadState.uploaded),
+            ),
+          );
+        }
         continue;
       }
       Log.info(
