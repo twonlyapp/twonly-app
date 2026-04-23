@@ -298,4 +298,16 @@ class UserDiscoveryCallbacks {
       return false;
     }
   }
+
+  static Future<Uint8List?> getContactPromotion(int contactId) async {
+    try {
+      final row = await (twonlyDB.select(
+        twonlyDB.userDiscoveryOwnPromotions,
+      )..where((tbl) => tbl.contactId.equals(contactId))).getSingleOrNull();
+      return row?.promotion;
+    } catch (e) {
+      Log.error(e);
+      return null;
+    }
+  }
 }

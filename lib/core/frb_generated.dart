@@ -70,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -630534473;
+  int get rustContentHash => 1680338106;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -94,6 +94,7 @@ abstract class RustLibApi extends BaseApi {
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
     required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
   });
 
@@ -108,6 +109,12 @@ abstract class RustLibApi extends BaseApi {
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
     required PlatformInt64 contactId,
     required List<int> version,
+  });
+
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser({
+    required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
   });
 
   Future<void> crateBridgeCallbacksInitFlutterCallbacks({
@@ -140,6 +147,8 @@ abstract class RustLibApi extends BaseApi {
       PlatformInt64?,
     )
     userDiscoveryPushNewUserRelation,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetContactPromotion,
   });
 
   Future<void> crateBridgeInitializeTwonlyFlutter({
@@ -230,6 +239,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
     required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
   }) {
     return handler.executeNormal(
@@ -237,6 +247,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_i_64(contactId, serializer);
+          sse_encode_opt_box_autoadd_i_64(
+            publicKeyVerifiedTimestamp,
+            serializer,
+          );
           sse_encode_list_list_prim_u_8_strict(messages, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
@@ -251,7 +265,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta,
-        argValues: [contactId, messages],
+        argValues: [contactId, publicKeyVerifiedTimestamp, messages],
         apiImpl: this,
       ),
     );
@@ -261,7 +275,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_handle_new_messages",
-        argNames: ["contactId", "messages"],
+        argNames: ["contactId", "publicKeyVerifiedTimestamp", "messages"],
       );
 
   @override
@@ -343,6 +357,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void>
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser({
+    required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_opt_box_autoadd_i_64(
+            publicKeyVerifiedTimestamp,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUserConstMeta,
+        argValues: [contactId, publicKeyVerifiedTimestamp],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUserConstMeta =>
+      const TaskConstMeta(
+        debugName: "flutter_user_discovery_update_verification_state_for_user",
+        argNames: ["contactId", "publicKeyVerifiedTimestamp"],
+      );
+
+  @override
   Future<void> crateBridgeCallbacksInitFlutterCallbacks({
     required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
     required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
@@ -373,6 +428,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       PlatformInt64?,
     )
     userDiscoveryPushNewUserRelation,
+    required FutureOr<Uint8List?> Function(PlatformInt64)
+    userDiscoveryGetContactPromotion,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -434,10 +491,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             userDiscoveryPushNewUserRelation,
             serializer,
           );
+          sse_encode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(
+            userDiscoveryGetContactPromotion,
+            serializer,
+          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -461,6 +522,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           userDiscoveryGetContactVersion,
           userDiscoverySetContactVersion,
           userDiscoveryPushNewUserRelation,
+          userDiscoveryGetContactPromotion,
         ],
         apiImpl: this,
       ),
@@ -485,6 +547,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "userDiscoveryGetContactVersion",
           "userDiscoverySetContactVersion",
           "userDiscoveryPushNewUserRelation",
+          "userDiscoveryGetContactPromotion",
         ],
       );
 
@@ -500,7 +563,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },

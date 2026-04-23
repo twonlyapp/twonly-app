@@ -25,5 +25,7 @@ Future<void> initFlutterCallbacksForRust() async {
     userDiscoverySignData: UserDiscoveryCallbacks.signData,
     userDiscoveryVerifySignature: UserDiscoveryCallbacks.verifySignature,
     userDiscoveryVerifyStoredPubkey: UserDiscoveryCallbacks.verifyStoredPubKey,
+    userDiscoveryGetContactPromotion:
+        UserDiscoveryCallbacks.getContactPromotion,
   );
 }

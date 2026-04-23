@@ -36,6 +36,8 @@ Future<void> initFlutterCallbacks({
   userDiscoverySetContactVersion,
   required FutureOr<bool> Function(PlatformInt64, AnnouncedUser, PlatformInt64?)
   userDiscoveryPushNewUserRelation,
+  required FutureOr<Uint8List?> Function(PlatformInt64)
+  userDiscoveryGetContactPromotion,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   loggingGetStreamSink: loggingGetStreamSink,
   userDiscoverySignData: userDiscoverySignData,
@@ -55,4 +57,5 @@ Future<void> initFlutterCallbacks({
   userDiscoveryGetContactVersion: userDiscoveryGetContactVersion,
   userDiscoverySetContactVersion: userDiscoverySetContactVersion,
   userDiscoveryPushNewUserRelation: userDiscoveryPushNewUserRelation,
+  userDiscoveryGetContactPromotion: userDiscoveryGetContactPromotion,
 );

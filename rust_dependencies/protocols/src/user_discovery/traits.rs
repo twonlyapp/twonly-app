@@ -47,6 +47,7 @@ pub trait UserDiscoveryStore {
         &self,
         promotion: OtherPromotion,
     ) -> impl Future<Output = Result<()>> + Send;
+
     fn get_other_promotions_by_public_id(
         &self,
         public_id: i64,
@@ -68,10 +69,16 @@ pub trait UserDiscoveryStore {
         &self,
     ) -> impl Future<Output = Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>>> + Send;
 
+    fn get_contact_promotion(
+        &self,
+        contact_id: UserID,
+    ) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send;
+
     fn get_contact_version(
         &self,
         contact_id: UserID,
     ) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send;
+
     fn set_contact_version(
         &self,
         contact_id: UserID,

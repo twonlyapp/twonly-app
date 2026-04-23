@@ -10,7 +10,6 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -34,15 +33,17 @@ class _ContactViewState extends State<ContactView> {
   Contact? _contact;
   List<GroupMember> _memberOfGroups = [];
   List<KeyVerification> _keyVerifications = [];
+  List<(Contact, DateTime)> _transferredTrust = [];
 
-  late StreamSubscription<Contact?> _contactSub;
-  late StreamSubscription<List<GroupMember>> _groupMemberSub;
+  late StreamSubscription<Contact?> _streamContact;
+  late StreamSubscription<List<GroupMember>> _streamMemberOfGroups;
   late StreamSubscription<List<KeyVerification>> _streamKeyVerifications;
+  late StreamSubscription<List<(Contact, DateTime)>> _streamTransferredTrust;
 
   @override
   void initState() {
     super.initState();
-    _contactSub = twonlyDB.contactsDao.watchContact(widget.userId).listen((
+    _streamContact = twonlyDB.contactsDao.watchContact(widget.userId).listen((
       update,
     ) {
       if (update != null) {
@@ -51,26 +52,38 @@ class _ContactViewState extends State<ContactView> {
         });
       }
     });
-    _groupMemberSub = twonlyDB.groupsDao
+    _streamMemberOfGroups = twonlyDB.groupsDao
         .watchContactGroupMember(widget.userId)
         .listen((groups) async {
-          _memberOfGroups = groups;
+          if (!mounted) return;
+          setState(() {
+            _memberOfGroups = groups;
+          });
         });
     _streamKeyVerifications = twonlyDB.keyVerificationDao
         .watchContactVerification(widget.userId)
         .listen((update) {
+          if (!mounted) return;
           setState(() {
-            Log.info('Verifications: ${update.length}');
             _keyVerifications = update;
+          });
+        });
+    _streamTransferredTrust = twonlyDB.keyVerificationDao
+        .watchTransferredTrustVerifications(widget.userId)
+        .listen((update) {
+          if (!mounted) return;
+          setState(() {
+            _transferredTrust = update;
           });
         });
   }
 
   @override
   void dispose() {
-    _contactSub.cancel();
-    _groupMemberSub.cancel();
+    _streamContact.cancel();
+    _streamMemberOfGroups.cancel();
     _streamKeyVerifications.cancel();
+    _streamTransferredTrust.cancel();
     super.dispose();
   }
 
@@ -175,7 +188,6 @@ class _ContactViewState extends State<ContactView> {
               Padding(
                 padding: const EdgeInsets.only(right: 10),
                 child: VerificationBadgeComp(
-                  key: GlobalKey(),
                   contact: contact,
                 ),
               ),
@@ -230,7 +242,7 @@ class _ContactViewState extends State<ContactView> {
           RestoreFlameComp(
             contactId: widget.userId,
           ),
-          if (_keyVerifications.isEmpty)
+          if (_keyVerifications.isEmpty && _transferredTrust.isEmpty)
             BetterListTile(
               leading: VerificationBadgeComp(
                 contact: contact,
@@ -242,7 +254,7 @@ class _ContactViewState extends State<ContactView> {
                 setState(() {});
               },
             ),
-          if (_keyVerifications.isNotEmpty)
+          if (_keyVerifications.isNotEmpty || _transferredTrust.isNotEmpty)
             ExpansionTile(
               shape: const RoundedRectangleBorder(),
               backgroundColor: context.color.surfaceContainer,
@@ -255,23 +267,40 @@ class _ContactViewState extends State<ContactView> {
                 ),
               ),
               title: Text(context.lang.userVerifiedTitle),
-              children: _keyVerifications
-                  .map(
-                    (kv) => ListTile(
-                      dense: true,
-                      title: Text(_verificationTypeLabel(context, kv.type)),
-                      trailing: Text(
-                        DateFormat.yMd(
-                          Localizations.localeOf(context).toString(),
-                        ).format(kv.createdAt),
-                        style: TextStyle(
-                          color: context.color.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
+              children: [
+                ..._keyVerifications.map(
+                  (kv) => ListTile(
+                    dense: true,
+                    title: Text(_verificationTypeLabel(context, kv.type)),
+                    trailing: Text(
+                      DateFormat.yMd(
+                        Localizations.localeOf(context).toString(),
+                      ).format(kv.createdAt),
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                        fontSize: 13,
                       ),
                     ),
-                  )
-                  .toList(),
+                  ),
+                ),
+                ..._transferredTrust.map(
+                  (tt) => ListTile(
+                    dense: true,
+                    title: Text(
+                      'Verifiziert von ${getContactDisplayName(tt.$1)}',
+                    ),
+                    trailing: Text(
+                      DateFormat.yMd(
+                        Localizations.localeOf(context).toString(),
+                      ).format(tt.$2),
+                      style: TextStyle(
+                        color: context.color.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           if (userService.currentUser.isUserDiscoveryEnabled)
             BetterListTile(

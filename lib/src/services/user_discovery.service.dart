@@ -131,9 +131,14 @@ class UserDiscoveryService {
     List<Uint8List> messages,
   ) async {
     try {
+      final verifications = await twonlyDB.keyVerificationDao
+          .getContactVerification(fromUserId);
+
       return await FlutterUserDiscovery.handleNewMessages(
         contactId: fromUserId,
         messages: messages,
+        publicKeyVerifiedTimestamp:
+            verifications.lastOrNull?.createdAt.millisecondsSinceEpoch,
       );
     } catch (e) {
       Log.error(e);

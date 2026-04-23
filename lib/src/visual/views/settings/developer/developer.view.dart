@@ -11,8 +11,10 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/views/settings/developer/user_discovery_developer.view.dart';
 
 class DeveloperSettingsView extends StatefulWidget {
   const DeveloperSettingsView({super.key});
@@ -57,10 +59,19 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 ),
               ),
               ListTile(
+                title: const Text('User ID'),
+                subtitle: Text(userService.currentUser.userId.toString()),
+              ),
+              ListTile(
                 title: const Text('Show Retransmission Database'),
                 onTap: () => context.push(
                   Routes.settingsDeveloperRetransmissionDatabase,
                 ),
+              ),
+              ListTile(
+                title: const Text('Show User Discovery Database'),
+                onTap: () =>
+                    context.navPush(const UserDiscoveryDeveloperView()),
               ),
               ListTile(
                 title: const Text('Toggle Video Stabilization'),

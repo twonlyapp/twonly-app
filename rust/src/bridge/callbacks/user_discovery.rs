@@ -85,10 +85,12 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
         version: u32,
         promotion: Vec<u8>,
     ) -> Result<()> {
-        (get_callbacks()?.user_discovery.push_own_promotion_and_clear_old_version)(contact_id, version as i64, promotion)
-            .await
-            .then_some(())
-            .ok_or(TwonlyError::DartError.into())
+        (get_callbacks()?
+            .user_discovery
+            .push_own_promotion_and_clear_old_version)(contact_id, version as i64, promotion)
+        .await
+        .then_some(())
+        .ok_or(TwonlyError::DartError.into())
     }
 
     async fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>> {
@@ -165,5 +167,9 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
             .await
             .then_some(())
             .ok_or(TwonlyError::DartError.into())
+    }
+
+    async fn get_contact_promotion(&self, contact_id: i64) -> Result<Option<Vec<u8>>> {
+        Ok((get_callbacks()?.user_discovery.get_contact_promotion)(contact_id).await)
     }
 }

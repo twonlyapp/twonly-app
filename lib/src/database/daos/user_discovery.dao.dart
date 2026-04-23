@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'user_discovery.dao.g.dart';
 
@@ -13,6 +14,7 @@ typedef AnnouncedUsersWithRelations =
     UserDiscoveryAnnouncedUsers,
     UserDiscoveryUserRelations,
     UserDiscoveryOwnPromotions,
+    UserDiscoveryOtherPromotions,
     UserDiscoveryShares,
     Contacts,
   ],
@@ -127,6 +129,8 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         results[user]!.add(relationData);
       }
 
+      Log.info('results = ${results.length}');
+
       return results;
     });
   }
@@ -223,4 +227,19 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
       updatedValues,
     );
   }
+
+  Stream<List<UserDiscoveryAnnouncedUser>> watchAllAnnouncedUsers() =>
+      select(userDiscoveryAnnouncedUsers).watch();
+
+  Stream<List<UserDiscoveryUserRelation>> watchAllUserRelations() =>
+      select(userDiscoveryUserRelations).watch();
+
+  Stream<List<UserDiscoveryOwnPromotion>> watchAllOwnPromotions() =>
+      select(userDiscoveryOwnPromotions).watch();
+
+  Stream<List<UserDiscoveryOtherPromotion>> watchAllOtherPromotions() =>
+      select(userDiscoveryOtherPromotions).watch();
+
+  Stream<List<UserDiscoveryShare>> watchAllShares() =>
+      select(userDiscoveryShares).watch();
 }

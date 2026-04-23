@@ -50,12 +50,28 @@ impl FlutterUserDiscovery {
             .await?)
     }
 
-    pub async fn handle_new_messages(contact_id: i64, messages: Vec<Vec<u8>>) -> Result<()> {
+    pub async fn handle_new_messages(
+        contact_id: i64,
+        public_key_verified_timestamp: Option<i64>,
+        messages: Vec<Vec<u8>>,
+    ) -> Result<()> {
         Ok(get_twonly_flutter()?
             .user_discovery
             .get()
             .await
-            .handle_new_messages(contact_id, messages)
+            .handle_new_messages(contact_id, public_key_verified_timestamp, messages)
+            .await?)
+    }
+
+    pub async fn update_verification_state_for_user(
+        contact_id: i64,
+        public_key_verified_timestamp: Option<i64>,
+    ) -> Result<()> {
+        Ok(get_twonly_flutter()?
+            .user_discovery
+            .get()
+            .await
+            .update_verification_state_for_user(contact_id, public_key_verified_timestamp)
             .await?)
     }
 }

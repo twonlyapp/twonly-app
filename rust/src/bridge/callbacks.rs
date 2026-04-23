@@ -36,6 +36,7 @@ callback_generator! {
             get_contact_version: (i64) => Option<Vec<u8>>,
             set_contact_version: (i64, Vec<u8>) => bool,
             push_new_user_relation: (i64, AnnouncedUser, Option<i64>) => bool,
+            get_contact_promotion: (i64) => Option<Vec<u8>>
         }
     }
 }

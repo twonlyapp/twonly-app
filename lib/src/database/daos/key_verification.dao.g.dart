@@ -11,6 +11,10 @@ mixin _$KeyVerificationDaoMixin on DatabaseAccessor<TwonlyDB> {
       attachedDatabase.keyVerifications;
   $GroupsTable get groups => attachedDatabase.groups;
   $GroupMembersTable get groupMembers => attachedDatabase.groupMembers;
+  $UserDiscoveryAnnouncedUsersTable get userDiscoveryAnnouncedUsers =>
+      attachedDatabase.userDiscoveryAnnouncedUsers;
+  $UserDiscoveryUserRelationsTable get userDiscoveryUserRelations =>
+      attachedDatabase.userDiscoveryUserRelations;
   KeyVerificationDaoManager get managers => KeyVerificationDaoManager(this);
 }
 
@@ -33,4 +37,16 @@ class KeyVerificationDaoManager {
       $$GroupsTableTableManager(_db.attachedDatabase, _db.groups);
   $$GroupMembersTableTableManager get groupMembers =>
       $$GroupMembersTableTableManager(_db.attachedDatabase, _db.groupMembers);
+  $$UserDiscoveryAnnouncedUsersTableTableManager
+  get userDiscoveryAnnouncedUsers =>
+      $$UserDiscoveryAnnouncedUsersTableTableManager(
+        _db.attachedDatabase,
+        _db.userDiscoveryAnnouncedUsers,
+      );
+  $$UserDiscoveryUserRelationsTableTableManager
+  get userDiscoveryUserRelations =>
+      $$UserDiscoveryUserRelationsTableTableManager(
+        _db.attachedDatabase,
+        _db.userDiscoveryUserRelations,
+      );
 }

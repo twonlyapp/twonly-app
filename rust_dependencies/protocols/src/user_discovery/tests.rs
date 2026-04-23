@@ -282,6 +282,40 @@ async fn test_user_discovery_in_memory_store() {
     step0_exchange_in_order::<InMemoryStore>(&users).await;
     step1_verify_no_new_messages::<InMemoryStore>(&users).await;
     step2_verify_announced_users_expected::<InMemoryStore>(&users).await;
+
+    let alice_idx = users.ids_by_name["ALICE"];
+    let bob_idx = users.ids_by_name["BOB"];
+    let david_idx = users.ids_by_name["DAVID"];
+
+    users.uds[bob_idx]
+        .update_verification_state_for_user(alice_idx as UserID, Some(10))
+        .await
+        .unwrap();
+
+    step0_exchange_random::<InMemoryStore>(&users).await;
+    step1_verify_no_new_messages::<InMemoryStore>(&users).await;
+
+    {
+        let david_knows = users.uds[david_idx]
+            .get_all_announced_users()
+            .await
+            .unwrap();
+
+        let knows_alice = david_knows
+            .iter()
+            .find(|(u, _)| u.user_id == alice_idx as UserID);
+
+        assert!(knows_alice.is_some(), "David should know Alice");
+
+        let bob_has_verified = knows_alice
+            .unwrap()
+            .1
+            .iter()
+            .find(|(user_id, _)| *user_id == bob_idx as UserID)
+            .unwrap();
+
+        assert_eq!(bob_has_verified.1, Some(10));
+    }
 }
 
 #[tokio::test]
@@ -441,7 +475,7 @@ async fn request_and_handle_messages<S: UserDiscoveryStore>(
         assert!(new_messages.len() <= messages_count);
     }
 
-    to.1.handle_new_messages(from.0 as UserID, new_messages)
+    to.1.handle_new_messages(from.0 as UserID, None, new_messages)
         .await
         .unwrap();
 

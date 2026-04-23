@@ -11,6 +11,8 @@ mixin _$UserDiscoveryDaoMixin on DatabaseAccessor<TwonlyDB> {
       attachedDatabase.userDiscoveryUserRelations;
   $UserDiscoveryOwnPromotionsTable get userDiscoveryOwnPromotions =>
       attachedDatabase.userDiscoveryOwnPromotions;
+  $UserDiscoveryOtherPromotionsTable get userDiscoveryOtherPromotions =>
+      attachedDatabase.userDiscoveryOtherPromotions;
   $UserDiscoverySharesTable get userDiscoveryShares =>
       attachedDatabase.userDiscoveryShares;
   UserDiscoveryDaoManager get managers => UserDiscoveryDaoManager(this);
@@ -38,6 +40,12 @@ class UserDiscoveryDaoManager {
       $$UserDiscoveryOwnPromotionsTableTableManager(
         _db.attachedDatabase,
         _db.userDiscoveryOwnPromotions,
+      );
+  $$UserDiscoveryOtherPromotionsTableTableManager
+  get userDiscoveryOtherPromotions =>
+      $$UserDiscoveryOtherPromotionsTableTableManager(
+        _db.attachedDatabase,
+        _db.userDiscoveryOtherPromotions,
       );
   $$UserDiscoverySharesTableTableManager get userDiscoveryShares =>
       $$UserDiscoverySharesTableTableManager(

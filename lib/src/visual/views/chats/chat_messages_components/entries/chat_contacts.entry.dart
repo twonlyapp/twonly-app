@@ -122,6 +122,16 @@ class _ContactRowState extends State<_ContactRow> {
       );
       if (userdata == null) return;
 
+      final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
+        ContactsCompanion(
+          username: Value(utf8.decode(userdata.username)),
+          userId: Value(userdata.userId.toInt()),
+          requested: const Value(false),
+          blocked: const Value(false),
+          deletedByUser: const Value(false),
+        ),
+      );
+
       if (userdata.publicIdentityKey.equals(widget.contact.publicIdentityKey)) {
         final verified = await twonlyDB.keyVerificationDao.isContactVerified(
           widget.message.senderId!,
@@ -135,16 +145,6 @@ class _ContactRowState extends State<_ContactRow> {
           );
         }
       }
-
-      final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion(
-          username: Value(utf8.decode(userdata.username)),
-          userId: Value(userdata.userId.toInt()),
-          requested: const Value(false),
-          blocked: const Value(false),
-          deletedByUser: const Value(false),
-        ),
-      );
 
       if (added > 0) await importSignalContactAndCreateRequest(userdata);
     } catch (e) {

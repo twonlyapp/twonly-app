@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
+import 'package:twonly/src/visual/views/settings/help/faq/verification_bade_faq.view.dart';
 
 class VerificationBadgeComp extends StatefulWidget {
   const VerificationBadgeComp({
@@ -29,9 +32,11 @@ class VerificationBadgeComp extends StatefulWidget {
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   bool _isVerified = false;
+  bool _isVerifiedByTransferredTrust = false;
 
-  StreamSubscription<bool>? _streamAllVerified;
+  StreamSubscription<VerificationStatus>? _streamAllVerified;
   StreamSubscription<List<KeyVerification>>? _streamContactVerification;
+  StreamSubscription<List<(Contact, DateTime)>>? _streamTransferredTrust;
 
   @override
   void initState() {
@@ -42,7 +47,14 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           .listen((update) {
             if (!mounted) return;
             setState(() {
-              _isVerified = update;
+              _isVerified = false;
+              _isVerifiedByTransferredTrust = false;
+              if (update == VerificationStatus.trusted) {
+                _isVerified = true;
+              }
+              if (update == VerificationStatus.partialTrusted) {
+                _isVerifiedByTransferredTrust = true;
+              }
             });
           });
     } else if (widget.contact != null) {
@@ -51,7 +63,17 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           .listen((update) {
             if (!mounted) return;
             setState(() {
+              Log.info('Update: ${update.length}');
               _isVerified = update.isNotEmpty;
+            });
+          });
+
+      _streamTransferredTrust = twonlyDB.keyVerificationDao
+          .watchTransferredTrustVerifications(widget.contact!.userId)
+          .listen((update) {
+            if (!mounted) return;
+            setState(() {
+              _isVerifiedByTransferredTrust = update.isNotEmpty;
             });
           });
     }
@@ -61,6 +83,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   void dispose() {
     _streamAllVerified?.cancel();
     _streamContactVerification?.cancel();
+    _streamTransferredTrust?.cancel();
     super.dispose();
   }
 
@@ -81,9 +104,12 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             bottom: 3,
           ),
           child: SvgIcon(
-            assetPath: _isVerified
+            assetPath: (_isVerified || _isVerifiedByTransferredTrust)
                 ? SvgIcons.verifiedGreen
                 : SvgIcons.verifiedRed,
+            color: (_isVerifiedByTransferredTrust && !_isVerified)
+                ? colorVerificationBadgeYellow
+                : null,
             size: widget.size,
           ),
         ),

@@ -23,10 +23,12 @@ class FlutterUserDiscovery {
 
   static Future<void> handleNewMessages({
     required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages(
         contactId: contactId,
+        publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
         messages: messages,
       );
 
@@ -48,6 +50,15 @@ class FlutterUserDiscovery {
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages(
         contactId: contactId,
         version: version,
+      );
+
+  static Future<void> updateVerificationStateForUser({
+    required PlatformInt64 contactId,
+    PlatformInt64? publicKeyVerifiedTimestamp,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser(
+        contactId: contactId,
+        publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
       );
 
   @override

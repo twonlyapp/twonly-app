@@ -5,10 +5,12 @@ pub mod tests;
 pub mod traits;
 
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 use std::u8;
 use blahaj::{Share, Sharks};
 use prost::Message;
 use serde::{Deserialize, Serialize};
+use tokio::sync::{Mutex, MutexGuard};
 use crate::user_discovery::error::{Result, UserDiscoveryError};
 use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryUtils};
 use crate::user_discovery::user_discovery_message::{UserDiscoveryAnnouncement, UserDiscoveryPromotion};
@@ -52,12 +54,17 @@ where
 {
     store: Store,
     utils: Utils,
+    config_lock: Arc<Mutex<bool>>,
 }
 
 impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, Utils> {
     /// Creates a new instance of the user discovery.
     pub fn new(store: Store, utils: Utils) -> Result<Self> {
-        Ok(Self { store, utils })
+        Ok(Self {
+            store,
+            utils,
+            config_lock: Arc::default(),
+        })
     }
 
     /// Initializes or updates the user discovery.
@@ -81,6 +88,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         user_id: UserID,
         public_key: Vec<u8>,
     ) -> Result<()> {
+        let config_lock = self.config_lock.lock().await;
         let mut config = match self.store.get_config().await {
             Ok(config) => {
                 let mut config: UserDiscoveryConfig = serde_json::from_str(&config)?;
@@ -116,9 +124,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         config.announcement_version += 1;
         config.verification_shares = verification_shares;
 
-        self.store
-            .update_config(serde_json::to_string_pretty(&config)?)
-            .await?;
+        self.update_config(config, config_lock).await?;
 
         Ok(())
     }
@@ -138,7 +144,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
     /// * `Err(UserDiscoveryError)` - If there where errors in the store.
     ///
     pub async fn get_current_version(&self) -> Result<Vec<u8>> {
-        let config = self.get_config().await?;
+        let (config, _) = self.get_config().await?;
         Ok(UserDiscoveryVersion {
             announcement: config.announcement_version,
             promotion: config.promotion_version,
@@ -181,7 +187,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         let mut messages = vec![];
         let received_version = UserDiscoveryVersion::decode(received_version)?;
 
-        let config = self.get_config().await?;
+        let (config, _) = self.get_config().await?;
         let version = Some(UserDiscoveryVersion {
             announcement: config.announcement_version,
             promotion: config.promotion_version,
@@ -271,6 +277,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
     pub async fn handle_new_messages(
         &self,
         contact_id: UserID,
+        public_key_verified_timestamp: Option<i64>,
         messages: Vec<Vec<u8>>,
     ) -> Result<()> {
         for message in messages {
@@ -281,7 +288,11 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
 
             if let Some(uda) = message.user_discovery_announcement {
                 if let Err(err) = self
-                    .handle_user_discovery_announcement(contact_id, uda)
+                    .handle_user_discovery_announcement(
+                        contact_id,
+                        public_key_verified_timestamp,
+                        uda,
+                    )
                     .await
                 {
                     tracing::warn!("Ignoring: {err}");
@@ -299,6 +310,54 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 .set_contact_version(contact_id, version.encode_to_vec())
                 .await?;
         }
+
+        Ok(())
+    }
+
+    pub async fn update_verification_state_for_user(
+        &self,
+        contact_id: UserID,
+        public_key_verified_timestamp: Option<i64>,
+    ) -> Result<()> {
+        let (mut config, config_lock) = self.get_config().await?;
+        config.promotion_version += 1;
+
+        let Some(current_promotion) = self.store.get_contact_promotion(contact_id).await? else {
+            // User does not participate...
+            return Ok(());
+        };
+
+        let old_message = UserDiscoveryMessage::decode(current_promotion.as_slice())?;
+
+        let Some(old_promotion) = old_message.user_discovery_promotion else {
+            tracing::error!("A contact should only have a promotion message...");
+            return Ok(());
+        };
+
+        let message = UserDiscoveryMessage {
+            version: Some(UserDiscoveryVersion {
+                announcement: config.announcement_version,
+                promotion: config.promotion_version,
+            }),
+            user_discovery_promotion: Some(UserDiscoveryPromotion {
+                promotion_id: rand::random(),
+                public_id: old_promotion.public_id,
+                threshold: old_promotion.threshold,
+                announcement_share: old_promotion.announcement_share,
+                public_key_verified_timestamp,
+            }),
+            ..Default::default()
+        };
+
+        self.store
+            .push_own_promotion_and_clear_old_version(
+                contact_id,
+                config.promotion_version,
+                message.encode_to_vec(),
+            )
+            .await?;
+
+        self.update_config(config, config_lock).await?;
 
         Ok(())
     }
@@ -354,13 +413,28 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         Ok(verification_shares)
     }
 
-    async fn get_config(&self) -> Result<UserDiscoveryConfig> {
-        Ok(serde_json::from_str(&self.store.get_config().await?)?)
+    async fn get_config(&self) -> Result<(UserDiscoveryConfig, MutexGuard<'_, bool>)> {
+        let mut lock = self.config_lock.lock().await;
+        *lock = true;
+        Ok((serde_json::from_str(&self.store.get_config().await?)?, lock))
+    }
+
+    async fn update_config(
+        &self,
+        config: UserDiscoveryConfig,
+        mut config_lock: MutexGuard<'_, bool>,
+    ) -> Result<()> {
+        self.store
+            .update_config(serde_json::to_string_pretty(&config)?)
+            .await?;
+        *config_lock = false;
+        Ok(())
     }
 
     async fn handle_user_discovery_announcement(
         &self,
         contact_id: UserID,
+        public_key_verified_timestamp: Option<i64>,
         uda: UserDiscoveryAnnouncement,
     ) -> Result<()> {
         tracing::info!("Got a user discovery announcement from {contact_id}.");
@@ -424,12 +498,8 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     )));
                 }
 
-                tracing::debug!("Increased promotion version id.");
-                let mut config = self.get_config().await?;
+                let (mut config, config_lock) = self.get_config().await?;
                 config.promotion_version += 1;
-                self.store
-                    .update_config(serde_json::to_string_pretty(&config)?)
-                    .await?;
 
                 let message = UserDiscoveryMessage {
                     version: Some(UserDiscoveryVersion {
@@ -441,7 +511,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         public_id: signed_data.public_id,
                         threshold: uda.threshold,
                         announcement_share: uda.announcement_share,
-                        public_key_verified_timestamp: None,
+                        public_key_verified_timestamp,
                     }),
                     ..Default::default()
                 };
@@ -453,6 +523,8 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         message.encode_to_vec(),
                     )
                     .await?;
+
+                self.update_config(config, config_lock).await?;
 
                 let announced_user = AnnouncedUser {
                     user_id: signed_data.user_id,
@@ -470,7 +542,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     .push_new_user_relation(
                         contact_id,
                         announced_user,
-                        None, // This flag mus be handled by the applications as this comes from an announcement.
+                        public_key_verified_timestamp,
                     )
                     .await?;
 
@@ -587,7 +659,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         public_id: udp.public_id,
                     };
 
-                    let user_id = self.get_config().await?.user_id;
+                    let (config, _) = self.get_config().await?;
+
+                    let user_id = config.user_id;
                     for promotion in unique_promotions {
                         // Do not store the announcement of the users itself.
                         // Or in case the promotion promotes myself

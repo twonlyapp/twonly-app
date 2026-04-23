@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -630534473;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1680338106;
 
 // Section: executor
 
@@ -87,9 +87,10 @@ fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_n
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_public_key_verified_timestamp = <Option<i64>>::sse_decode(&mut deserializer);
 let api_messages = <Vec<Vec<u8>>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
                     transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::handle_new_messages(api_contact_id, api_messages).await?;   Ok(output_ok)
+                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::handle_new_messages(api_contact_id, api_public_key_verified_timestamp, api_messages).await?;   Ok(output_ok)
                     })().await)
                 } })
 }
@@ -126,6 +127,22 @@ let api_version = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); m
                     })().await)
                 } })
 }
+fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_update_verification_state_for_user_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_update_verification_state_for_user", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_public_key_verified_timestamp = <Option<i64>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::update_verification_state_for_user(api_contact_id, api_public_key_verified_timestamp).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
 fn wire__crate__bridge__callbacks__init_flutter_callbacks_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -148,9 +165,10 @@ let api_user_discovery_get_other_promotions_by_public_id = decode_DartFn_Inputs_
 let api_user_discovery_get_announced_user_by_public_id = decode_DartFn_Inputs_i_64_Output_opt_box_autoadd_announced_user_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_user_discovery_get_contact_version = decode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_user_discovery_set_contact_version = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_user_discovery_push_new_user_relation = decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
+let api_user_discovery_push_new_user_relation = decode_DartFn_Inputs_i_64_announced_user_opt_box_autoadd_i_64_Output_bool_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
+let api_user_discovery_get_contact_promotion = decode_DartFn_Inputs_i_64_Output_opt_list_prim_u_8_strict_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
                     transform_result_sse::<_, ()>((move ||  {
-                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_logging_get_stream_sink, api_user_discovery_sign_data, api_user_discovery_verify_signature, api_user_discovery_verify_stored_pubkey, api_user_discovery_set_shares, api_user_discovery_get_share_for_contact, api_user_discovery_push_own_promotion_and_clear_old_version, api_user_discovery_get_own_promotions_after_version, api_user_discovery_store_other_promotion, api_user_discovery_get_other_promotions_by_public_id, api_user_discovery_get_announced_user_by_public_id, api_user_discovery_get_contact_version, api_user_discovery_set_contact_version, api_user_discovery_push_new_user_relation); })?;   Ok(output_ok)
+                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_logging_get_stream_sink, api_user_discovery_sign_data, api_user_discovery_verify_signature, api_user_discovery_verify_stored_pubkey, api_user_discovery_set_shares, api_user_discovery_get_share_for_contact, api_user_discovery_push_own_promotion_and_clear_old_version, api_user_discovery_get_own_promotions_after_version, api_user_discovery_store_other_promotion, api_user_discovery_get_other_promotions_by_public_id, api_user_discovery_get_announced_user_by_public_id, api_user_discovery_get_contact_version, api_user_discovery_set_contact_version, api_user_discovery_push_new_user_relation, api_user_discovery_get_contact_promotion); })?;   Ok(output_ok)
                     })())
                 } })
 }
@@ -903,8 +921,9 @@ fn pde_ffi_dispatcher_primary_impl(
 3 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_new_messages_impl(port, ptr, rust_vec_len, data_len),
 4 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_initialize_or_update_impl(port, ptr, rust_vec_len, data_len),
 5 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_should_request_new_messages_impl(port, ptr, rust_vec_len, data_len),
-6 => wire__crate__bridge__callbacks__init_flutter_callbacks_impl(port, ptr, rust_vec_len, data_len),
-7 => wire__crate__bridge__initialize_twonly_flutter_impl(port, ptr, rust_vec_len, data_len),
+6 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_update_verification_state_for_user_impl(port, ptr, rust_vec_len, data_len),
+7 => wire__crate__bridge__callbacks__init_flutter_callbacks_impl(port, ptr, rust_vec_len, data_len),
+8 => wire__crate__bridge__initialize_twonly_flutter_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }

@@ -10,7 +10,7 @@ pub(crate) struct Storage {
     unused_shares: Vec<Vec<u8>>,
     used_shares: HashMap<UserID, Vec<u8>>,
     contact_versions: HashMap<UserID, Vec<u8>>,
-    other_promotions: Vec<OtherPromotion>,
+    other_promotions: HashMap<(UserID, i64), OtherPromotion>,
     announced_users: HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>,
     own_promotions: Vec<(UserID, Vec<u8>)>,
 }
@@ -97,8 +97,23 @@ impl UserDiscoveryStore for InMemoryStore {
         Ok(elements)
     }
 
+    async fn get_contact_promotion(&self, contact_id: UserID) -> Result<Option<Vec<u8>>> {
+        let storage = self.storage();
+        let element = storage
+            .own_promotions
+            .iter()
+            .rev()
+            .find(|(c_id, _)| *c_id == contact_id);
+        if let Some(element) = element {
+            return Ok(Some(element.1.to_owned()));
+        }
+        return Ok(None);
+    }
+
     async fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()> {
-        self.storage().other_promotions.push(promotion);
+        self.storage()
+            .other_promotions
+            .insert((promotion.from_contact_id, promotion.public_id), promotion);
         Ok(())
     }
 
@@ -109,9 +124,9 @@ impl UserDiscoveryStore for InMemoryStore {
         Ok(self
             .storage()
             .other_promotions
-            .iter()
+            .clone()
+            .into_values()
             .filter(|other| other.public_id == public_id)
-            .map(OtherPromotion::to_owned)
             .collect())
     }
 
@@ -145,7 +160,11 @@ impl UserDiscoveryStore for InMemoryStore {
             .entry(announced_user.clone())
             .or_insert(vec![]);
         if announced_user.user_id != from_contact_id {
-            entry.push((from_contact_id, public_key_verified_timestamp));
+            if let Some(found) = entry.iter_mut().find(|x| x.0 == from_contact_id) {
+                found.1 = public_key_verified_timestamp;
+            } else {
+                entry.push((from_contact_id, public_key_verified_timestamp));
+            }
         }
         Ok(())
     }
