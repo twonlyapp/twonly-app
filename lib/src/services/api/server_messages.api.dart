@@ -226,11 +226,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   );
 
   if (encryptedContent == null) {
+    if (decryptionErrorType == null) {
+      // Duplicate message
+      return (null, null);
+    }
     return (
       null,
       PlaintextContent()
         ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
-          ..type = decryptionErrorType!),
+          ..type = decryptionErrorType),
     );
   }
 

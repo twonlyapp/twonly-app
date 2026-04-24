@@ -59,7 +59,13 @@ signalDecryptMessage(
       return (EncryptedContent.fromBuffer(plaintext), null);
     } on InvalidKeyIdException catch (e) {
       Log.warn(e);
-      return (null, PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN);
+      return (
+        null,
+        PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN,
+      );
+    } on DuplicateMessageException catch (e) {
+      Log.info(e.toString());
+      return (null, null);
     } on InvalidMessageException catch (e) {
       if (!resyncedUsers.contains(fromUserId)) {
         if (await handleSessionResync(fromUserId)) {
