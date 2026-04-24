@@ -107,45 +107,43 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   final Mutex _messageUpdateLock = Mutex();
 
   Future<void> asyncLoadNextMedia(bool firstRun) async {
-    final messages = twonlyDB.messagesDao.watchMediaNotOpened(
-      widget.group.groupId,
-    );
+    _subscription = twonlyDB.messagesDao
+        .watchMediaNotOpened(widget.group.groupId)
+        .listen((messages) async {
+          await _messageUpdateLock.protect(() async {
+            for (final msg in messages) {
+              if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
+                continue;
+              }
+              if (msg.mediaId == null) {
+                continue;
+              }
 
-    _subscription = messages.listen((messages) async {
-      await _messageUpdateLock.protect(() async {
-        for (final msg in messages) {
-          if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
-            continue;
-          }
-          if (msg.mediaId == null) {
-            continue;
-          }
+              if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
+                // The update of the current Media in case of a download is done in loadCurrentMediaFile
+                continue;
+              }
 
-          if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
-            // The update of the current Media in case of a download is done in loadCurrentMediaFile
-            continue;
-          }
+              /// If the messages was already there just replace it and go to the next...
 
-          /// If the messages was already there just replace it and go to the next...
+              final index = allMediaFiles.indexWhere(
+                (m) => m.messageId == msg.messageId,
+              );
 
-          final index = allMediaFiles.indexWhere(
-            (m) => m.messageId == msg.messageId,
-          );
-
-          if (index >= 1) {
-            allMediaFiles[index] = msg;
-          } else if (index == -1) {
-            // If the message does not exist, add it
-            allMediaFiles.add(msg);
-          }
-        }
-        setState(() {});
-        if (firstRun) {
-          firstRun = false;
-          await loadCurrentMediaFile();
-        }
-      });
-    });
+              if (index >= 1) {
+                allMediaFiles[index] = msg;
+              } else if (index == -1) {
+                // If the message does not exist, add it
+                allMediaFiles.add(msg);
+              }
+            }
+            setState(() {});
+            if (firstRun) {
+              firstRun = false;
+              await loadCurrentMediaFile();
+            }
+          });
+        });
   }
 
   Future<void> nextMediaOrExit() async {

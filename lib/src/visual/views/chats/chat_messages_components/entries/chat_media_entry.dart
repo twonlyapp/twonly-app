@@ -88,7 +88,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> onTap() async {
-    if (widget.mediaService.mediaFile.downloadState == DownloadState.ready &&
+    if ((widget.mediaService.mediaFile.downloadState == DownloadState.ready ||
+            widget.mediaService.mediaFile.downloadState ==
+                DownloadState.downloaded) &&
         widget.message.openedAt == null) {
       if (!mounted) return;
       await Navigator.push(
