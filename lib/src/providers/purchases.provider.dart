@@ -41,9 +41,13 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
     _planSub = apiService.onPlanUpdated.listen(updatePlan);
     _connSub = apiService.onConnectionStateUpdated.listen((_) async {
-      final user = await getUser();
-      if (user != null) {
-        updatePlan(planFromString(user.subscriptionPlan));
+      try {
+        final user = await getUser();
+        if (user != null) {
+          updatePlan(planFromString(user.subscriptionPlan));
+        }
+      } catch (e) {
+        Log.error(e);
       }
     });
 
@@ -90,16 +94,22 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     storeState = StoreState.available;
     notifyListeners();
 
-    final user = await getUser();
-    if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
-      Log.info('Started IPA timer for verification.');
-      globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
-        Log.info('Force Ipa check was not stopped. Requesting forced check...');
-        await apiService.forceIpaCheck();
-      });
-    }
+    try {
+      final user = await getUser();
+      if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
+        Log.info('Started IPA timer for verification.');
+        globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
+          Log.info(
+            'Force Ipa check was not stopped. Requesting forced check...',
+          );
+          await apiService.forceIpaCheck();
+        });
+      }
 
-    await iapConnection.restorePurchases();
+      await iapConnection.restorePurchases();
+    } catch (e) {
+      Log.error(e);
+    }
   }
 
   Future<void> buy(PurchasableProduct product) async {

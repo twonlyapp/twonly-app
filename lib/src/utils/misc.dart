@@ -10,7 +10,6 @@ import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -19,7 +18,6 @@ import 'package:twonly/src/utils/misc.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
-  TwonlyDB get db => Provider.of<TwonlyDB>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
   Future<dynamic> navPush(Widget route) async {
     return Navigator.push(

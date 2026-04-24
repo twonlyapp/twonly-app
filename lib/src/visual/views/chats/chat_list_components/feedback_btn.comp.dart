@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class FeedbackIconButtonComp extends StatefulWidget {
@@ -24,10 +24,9 @@ class _FeedbackIconButtonCompState extends State<FeedbackIconButtonComp> {
   }
 
   Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null || !mounted) return;
+    if (!mounted) return;
     setState(() {
-      showFeedbackShortcut = user.showFeedbackShortcut;
+      showFeedbackShortcut = userService.currentUser.showFeedbackShortcut;
     });
   }
 

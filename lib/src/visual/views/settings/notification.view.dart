@@ -9,7 +9,6 @@ import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -56,21 +55,18 @@ class _NotificationViewState extends State<NotificationView> {
       );
 
       if (run) {
-        final user = await getUser();
-        if (user != null) {
-          final pushData = await encryptPushNotification(
-            user.userId,
-            PushNotification(
-              messageId: uuid.v4(),
-              kind: PushKind.TEST_NOTIFICATION,
-            ),
-          );
-          await apiService.sendTextMessage(
-            user.userId,
-            Uint8List(0),
-            pushData,
-          );
-        }
+        final pushData = await encryptPushNotification(
+          userService.currentUser.userId,
+          PushNotification(
+            messageId: uuid.v4(),
+            kind: PushKind.TEST_NOTIFICATION,
+          ),
+        );
+        await apiService.sendTextMessage(
+          userService.currentUser.userId,
+          Uint8List(0),
+          pushData,
+        );
         _troubleshootingDidRun = true;
       }
     }

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/backup/restore.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_server.view.dart';
 
 class BackupRecoveryView extends StatefulWidget {
   const BackupRecoveryView({super.key});
@@ -140,9 +139,11 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
             Center(
               child: OutlinedButton(
                 onPressed: () async {
-                  backupServer = await context.push(
-                    Routes.settingsBackupServer,
-                  );
+                  backupServer =
+                      await context.navPush(
+                            const BackupServerView(),
+                          )
+                          as BackupServer?;
                   setState(() {});
                 },
                 child: Text(context.lang.backupExpertSettings),

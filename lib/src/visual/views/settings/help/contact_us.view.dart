@@ -264,15 +264,8 @@ $debugLogToken
                         final fullMessage = await _getFeedbackText();
                         if (!context.mounted || fullMessage == null) return;
 
-                        final feedbackSend = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return SubmitMessage(
-                                fullMessage: fullMessage,
-                              );
-                            },
-                          ),
+                        final feedbackSend = await context.navPush(
+                          SubmitMessage(fullMessage: fullMessage),
                         );
 
                         if (feedbackSend == true && context.mounted) {

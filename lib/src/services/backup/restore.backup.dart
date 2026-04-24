@@ -90,7 +90,11 @@ Future<void> handleBackupData(
   final originalDatabase = File(
     join(AppEnvironment.supportDir, 'twonly.sqlite'),
   );
-  await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
+
+  // in case there was only a secure storage error, do not replace the original database
+  if (!originalDatabase.existsSync()) {
+    await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
+  }
 
   const storage = SecureStorage.instance;
 

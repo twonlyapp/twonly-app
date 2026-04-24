@@ -416,23 +416,22 @@ class ApiService {
     return res;
   }
 
-  Future<bool> tryAuthenticateWithToken(int userId) async {
+  Future<bool> tryAuthenticateWithToken() async {
     final apiAuthToken = await SecureStorage.instance.read(
       key: SecureStorageKeys.apiAuthToken,
     );
-    final user = await getUser();
 
-    if (apiAuthToken != null && user != null) {
-      if (user.appVersion < 62) {
+    if (apiAuthToken != null) {
+      if (userService.currentUser.appVersion < 62) {
         Log.error(
           'DID NOT authenticate the user, as he still has the old version!',
         );
         return false;
       }
       final authenticate = Handshake_Authenticate()
-        ..userId = Int64(userId)
+        ..userId = Int64(userService.currentUser.userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
-        ..deviceId = Int64(user.deviceId)
+        ..deviceId = Int64(userService.currentUser.deviceId)
         ..inBackground = AppState.isInBackgroundTask
         ..authToken = base64Decode(apiAuthToken);
 
@@ -474,7 +473,7 @@ class ApiService {
       final userData = await getUser();
       if (userData == null) return;
 
-      if (await tryAuthenticateWithToken(userData.userId)) {
+      if (await tryAuthenticateWithToken()) {
         return;
       }
 
@@ -522,7 +521,7 @@ class ApiService {
         value: apiAuthTokenB64,
       );
 
-      await tryAuthenticateWithToken(userData.userId);
+      await tryAuthenticateWithToken();
     });
   }
 
@@ -797,11 +796,10 @@ class ApiService {
       });
       return ballance;
     }
-    final user = await getUser();
-    if (user != null && user.lastPlanBallance != null && useCache) {
+    if (userService.currentUser.lastPlanBallance != null && useCache) {
       try {
         return Response_PlanBallance.fromJson(
-          user.lastPlanBallance!,
+          userService.currentUser.lastPlanBallance!,
         );
       } catch (e) {
         Log.error('from json: $e');

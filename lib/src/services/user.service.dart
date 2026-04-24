@@ -79,18 +79,22 @@ Future<void> updateUser(
   void Function(UserData userData) updateUser,
 ) async {
   await updateProtection.protect(() async {
-    final user = await getUser();
-    if (user == null) return;
-    if (user.defaultShowTime == 999999) {
-      // This was the old version for infinity -> change it to null
-      user.defaultShowTime = null;
+    try {
+      final user = await getUser();
+      if (user == null) return;
+      if (user.defaultShowTime == 999999) {
+        // This was the old version for infinity -> change it to null
+        user.defaultShowTime = null;
+      }
+      updateUser(user);
+      await const FlutterSecureStorage().write(
+        key: SecureStorageKeys.userData,
+        value: jsonEncode(user),
+      );
+      userService.currentUser = user;
+    } catch (e) {
+      Log.error('Could not update the user: $e');
     }
-    updateUser(user);
-    await const FlutterSecureStorage().write(
-      key: SecureStorageKeys.userData,
-      value: jsonEncode(user),
-    );
-    userService.currentUser = user;
   });
 
   userService.triggerUserUpdate();
