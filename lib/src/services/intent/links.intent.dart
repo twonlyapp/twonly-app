@@ -19,7 +19,8 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
-import 'package:twonly/src/visual/views/chats/add_new_user.view.dart';
+import 'package:twonly/src/visual/views/contact/add_contact_via_qr_link.view.dart';
+import 'package:twonly/src/visual/views/contact/add_new_contact.view.dart';
 
 Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   if (!uri.scheme.startsWith('http')) return false;
@@ -50,9 +51,9 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
         }
       } else {
         await context.navPush(
-          AddNewUserView(
-            username: profile.username,
-            publicKey: Uint8List.fromList(profile.publicIdentityKey),
+          AddContactViaQrLinkView(
+            profile: profile,
+            qrCodeLink: uri.toString(),
           ),
         );
       }

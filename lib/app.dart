@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -115,7 +116,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _isUserCreated = false;
   bool _showOnboarding = true;
   bool _isLoaded = false;
-  bool _skipBackup = false;
+  bool _skipBackup = kDebugMode;
   bool _isTwonlyLocked = true;
 
   (Future<int>?, bool) _proofOfWork = (null, false);

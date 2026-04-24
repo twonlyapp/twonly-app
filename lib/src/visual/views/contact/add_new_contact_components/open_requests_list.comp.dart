@@ -11,7 +11,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
-import 'package:twonly/src/visual/views/chats/add_new_user_components/friend_suggestions.comp.dart';
+import 'package:twonly/src/visual/views/contact/add_new_contact_components/friend_suggestions.comp.dart';
 
 class OpenRequestsListComp extends StatelessWidget {
   const OpenRequestsListComp({

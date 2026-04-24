@@ -18,7 +18,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
-import 'package:twonly/src/visual/views/contact/components/restore_flame.comp.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
 class ContactView extends StatefulWidget {

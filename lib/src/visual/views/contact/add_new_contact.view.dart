@@ -14,8 +14,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
-import 'package:twonly/src/visual/views/chats/add_new_user_components/friend_suggestions.comp.dart';
-import 'package:twonly/src/visual/views/chats/add_new_user_components/open_requests_list.comp.dart';
+import 'package:twonly/src/visual/views/contact/add_new_contact_components/friend_suggestions.comp.dart';
+import 'package:twonly/src/visual/views/contact/add_new_contact_components/open_requests_list.comp.dart';
 
 class AddNewUserView extends StatefulWidget {
   const AddNewUserView({

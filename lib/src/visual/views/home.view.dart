@@ -70,6 +70,13 @@ class HomeViewState extends State<HomeView> {
     unawaited(_mainCameraController.selectCamera(0, true));
     unawaited(_initAsync());
 
+    handleIntentUrl(
+      context,
+      Uri.parse(
+        'https://me.twonly.eu/qr/#EAAauAEIgLDN0Nm7oKh0EghoYWhoaGhoaBohBRZQ8w_zpm1v7SRTdc8GEOMAxuf1caGDlBa-v0ZiTw9qIiEF05juEs1c3yw0STiSwQR7lowDX5hBaxN4YFR0HhkopGIoudTO5wIyQFQRtU1aO7P7O5s2ekB1ppAost3iQQizwhFObjOLgHQnpwcnwEONXZzSADYqCeEoNcvyE45w0v21z1Imhozk3Q44oI0GQhA9U_chIJwwZ7J9fpeXODZF',
+      ),
+    );
+
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
       if (!mounted) return;

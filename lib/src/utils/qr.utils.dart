@@ -78,7 +78,7 @@ class QrCodeUtils {
       profile.userId.toInt(),
     );
 
-    if (contact == null || !contact.accepted) {
+    if (contact == null) {
       if (profile.username == userService.currentUser.username) {
         return null;
       }
