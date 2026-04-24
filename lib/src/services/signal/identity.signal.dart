@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:clock/clock.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -13,6 +12,7 @@ import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
   final signalIdentity = await getSignalIdentity();
@@ -79,8 +79,7 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
-    const storage = FlutterSecureStorage();
-    var signalIdentityJson = await storage.read(
+    var signalIdentityJson = await SecureStorage.instance.read(
       key: SecureStorageKeys.signalIdentity,
     );
     if (signalIdentityJson == null) {
@@ -102,9 +101,7 @@ Future<Uint8List> getUserPublicKey() async {
 }
 
 Future<void> createIfNotExistsSignalIdentity() async {
-  const storage = FlutterSecureStorage();
-
-  final signalIdentity = await storage.read(
+  final signalIdentity = await SecureStorage.instance.read(
     key: SecureStorageKeys.signalIdentity,
   );
 
@@ -132,7 +129,7 @@ Future<void> createIfNotExistsSignalIdentity() async {
     registrationId: registrationId,
   );
 
-  await storage.write(
+  await SecureStorage.instance.write(
     key: SecureStorageKeys.signalIdentity,
     value: jsonEncode(storedSignalIdentity),
   );

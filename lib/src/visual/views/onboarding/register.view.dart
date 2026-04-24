@@ -5,7 +5,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
@@ -16,6 +15,7 @@ import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
@@ -138,7 +138,7 @@ class _RegisterViewState extends State<RegisterView> {
       subscriptionPlan: 'Preview',
     )..appVersion = 62;
 
-    await const FlutterSecureStorage().write(
+    await SecureStorage.instance.write(
       key: SecureStorageKeys.userData,
       value: jsonEncode(userData),
     );

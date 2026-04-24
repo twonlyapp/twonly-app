@@ -1,14 +1,14 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 class SignalSignedPreKeyStore extends SignedPreKeyStore {
   Future<HashMap<int, Uint8List>> getStore() async {
-    const storage = FlutterSecureStorage();
-    final storeSerialized = await storage.read(
+    final storeSerialized = await SecureStorage.instance.read(
       key: SecureStorageKeys.signalSignedPreKey,
     );
     final store = HashMap<int, Uint8List>();
@@ -24,13 +24,12 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
   }
 
   Future<void> safeStore(HashMap<int, Uint8List> store) async {
-    const storage = FlutterSecureStorage();
     final storeHashMap = <List<dynamic>>[];
     for (final item in store.entries) {
       storeHashMap.add([item.key, base64Encode(item.value)]);
     }
     final storeSerialized = json.encode(storeHashMap);
-    await storage.write(
+    await SecureStorage.instance.write(
       key: SecureStorageKeys.signalSignedPreKey,
       value: storeSerialized,
     );

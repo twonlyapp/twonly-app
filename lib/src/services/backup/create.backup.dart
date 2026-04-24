@@ -9,7 +9,6 @@ import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -21,6 +20,7 @@ import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
   if (userService.currentUser.twonlySafeBackup == null) {
@@ -84,12 +84,15 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   // ignore: inference_failure_on_collection_literal
   final secureStorageBackup = {};
-  const storage = FlutterSecureStorage();
-  secureStorageBackup[SecureStorageKeys.signalIdentity] = await storage.read(
-    key: SecureStorageKeys.signalIdentity,
-  );
-  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] = await storage
-      .read(key: SecureStorageKeys.signalSignedPreKey);
+  secureStorageBackup[SecureStorageKeys.signalIdentity] = await SecureStorage
+      .instance
+      .read(
+        key: SecureStorageKeys.signalIdentity,
+      );
+  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] =
+      await SecureStorage.instance.read(
+        key: SecureStorageKeys.signalSignedPreKey,
+      );
 
   final userBackup = await getUser();
   if (userBackup == null) return;
@@ -129,7 +132,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     force = true;
   }
 
-  final lastHash = await storage.read(
+  final lastHash = await SecureStorage.instance.read(
     key: SecureStorageKeys.twonlySafeLastBackupHash,
   );
 
@@ -139,7 +142,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
       return;
     }
   }
-  await storage.write(
+
+  await SecureStorage.instance.write(
     key: SecureStorageKeys.twonlySafeLastBackupHash,
     value: backupHash,
   );

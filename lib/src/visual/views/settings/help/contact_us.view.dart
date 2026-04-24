@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -12,6 +11,7 @@ import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,7 +48,7 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiAuthTokenRaw = await const FlutterSecureStorage().read(
+    final apiAuthTokenRaw = await SecureStorage.instance.read(
       key: SecureStorageKeys.apiAuthToken,
     );
     if (apiAuthTokenRaw == null) {

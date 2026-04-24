@@ -11,6 +11,7 @@ import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 class UserService {
   late UserData currentUser;
@@ -45,18 +46,16 @@ Future<bool> isUserCreated() async {
 
 Future<UserData?> getUser() async {
   try {
-    final userJson = await const FlutterSecureStorage().read(
+    final userDataJson = await SecureStorage.instance.read(
       key: SecureStorageKeys.userData,
     );
-    if (userJson == null) {
+    if (userDataJson == null) {
       return null;
     }
-    final userMap = jsonDecode(userJson) as Map<String, dynamic>;
-    final user = UserData.fromJson(userMap);
-    return user;
+    return UserData.fromJson(jsonDecode(userDataJson) as Map<String, dynamic>);
   } catch (e) {
-    Log.error('Error getting user: $e');
-    return null;
+    Log.error('could not load user: $e');
+    rethrow; // Rethrow instead of returning null to distinguish error from missing user
   }
 }
 

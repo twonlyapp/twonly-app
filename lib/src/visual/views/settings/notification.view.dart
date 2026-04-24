@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -12,6 +11,7 @@ import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 
 class NotificationView extends StatefulWidget {
@@ -33,9 +33,9 @@ class _NotificationViewState extends State<NotificationView> {
 
     await initFCMAfterAuthenticated(force: true);
 
-    final storedToken = await (const FlutterSecureStorage().read(
+    final storedToken = await SecureStorage.instance.read(
       key: SecureStorageKeys.googleFcm,
-    ));
+    );
 
     await setupNotificationWithUsers(force: true);
 

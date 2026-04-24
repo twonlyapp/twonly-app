@@ -8,7 +8,6 @@ import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
@@ -26,6 +25,7 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
 final lockRetransmission = Mutex();
@@ -607,7 +607,7 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
       return null;
     }
 
-    final apiAuthTokenRaw = await const FlutterSecureStorage().read(
+    final apiAuthTokenRaw = await SecureStorage.instance.read(
       key: SecureStorageKeys.apiAuthToken,
     );
 

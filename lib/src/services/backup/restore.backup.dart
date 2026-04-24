@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
@@ -16,6 +15,7 @@ import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<void> recoverBackup(
   String username,
@@ -92,7 +92,7 @@ Future<void> handleBackupData(
   );
   await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
 
-  const storage = FlutterSecureStorage();
+  const storage = SecureStorage.instance;
 
   final secureStorage = jsonDecode(backupContent.secureStorageJson);
 

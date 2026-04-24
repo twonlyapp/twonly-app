@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
@@ -28,6 +27,7 @@ import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 /// This function is used to initialized the absolute minimum so it
@@ -56,13 +56,23 @@ void main() async {
 
   await initFCMService();
 
-  final userExists = await userService.tryInit();
+  var userExists = false;
+  var storageError = false;
+  try {
+    userExists = await userService.tryInit();
+  } catch (e) {
+    Log.error('Failed to initialize user session due to storage error: $e');
+    storageError = true;
+  }
+
+  final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
+  final dbExists = dbFile.existsSync();
 
   if (Platform.isIOS && userExists) {
-    final db = File('${AppEnvironment.supportDir}/twonly.sqlite');
-    if (!db.existsSync()) {
+    if (!dbExists) {
       Log.error('[twonly] IOS: App was removed and then reinstalled again...');
-      await const FlutterSecureStorage().deleteAll();
+      await SecureStorage.instance.deleteAll();
+      userExists = false;
     }
   }
 
@@ -80,9 +90,21 @@ void main() async {
 
     unawaited(performTwonlySafeBackup());
     unawaited(initializeBackgroundTaskManager());
+  } else if (!storageError) {
+    if (!dbExists) {
+      Log.info(
+        'User is not yet registered and no database found. Ensuring clean state.',
+      );
+      await deleteLocalUserData();
+    } else {
+      Log.error(
+        'User not found in secure storage, but database exists. Skipping destructive wipe.',
+      );
+    }
   } else {
-    Log.info('User is not yet register. Ensure all local data is removed.');
-    await deleteLocalUserData();
+    Log.error(
+      'Storage error occurred and database exists. Skipping wipe to prevent data loss.',
+    );
   }
 
   final settingsController = SettingsChangeProvider();

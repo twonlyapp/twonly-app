@@ -11,7 +11,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
@@ -44,6 +43,7 @@ import 'package:twonly/src/services/user_study.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:web_socket_channel/io.dart';
 
 final lockConnecting = Mutex();
@@ -417,8 +417,7 @@ class ApiService {
   }
 
   Future<bool> tryAuthenticateWithToken(int userId) async {
-    const storage = FlutterSecureStorage();
-    final apiAuthToken = await storage.read(
+    final apiAuthToken = await SecureStorage.instance.read(
       key: SecureStorageKeys.apiAuthToken,
     );
     final user = await getUser();
@@ -518,8 +517,7 @@ class ApiService {
       final apiAuthToken = result2.value.authtoken as Uint8List;
       final apiAuthTokenB64 = base64Encode(apiAuthToken);
 
-      const storage = FlutterSecureStorage();
-      await storage.write(
+      await SecureStorage.instance.write(
         key: SecureStorageKeys.apiAuthToken,
         value: apiAuthTokenB64,
       );
