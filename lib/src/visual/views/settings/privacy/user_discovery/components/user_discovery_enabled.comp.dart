@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -135,14 +134,11 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
                               context.lang.userDiscoveryEnabledStopSharing,
                               style: const TextStyle(fontSize: 10),
                             ),
-                            onPressed: () async {
-                              await twonlyDB.contactsDao.updateContact(
-                                contact.userId,
-                                const ContactsCompanion(
-                                  userDiscoveryExcluded: Value(true),
+                            onPressed: () =>
+                                UserDiscoveryService.changeExclusionForContact(
+                                  contact.userId,
+                                  true,
                                 ),
-                              );
-                            },
                           ),
                         ),
                       ),

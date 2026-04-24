@@ -10,6 +10,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -324,9 +325,9 @@ class _ContactViewState extends State<ContactView> {
                 child: Switch(
                   value: !contact.userDiscoveryExcluded,
                   onChanged: (a) async {
-                    await twonlyDB.contactsDao.updateContact(
+                    await UserDiscoveryService.changeExclusionForContact(
                       contact.userId,
-                      ContactsCompanion(userDiscoveryExcluded: Value(!a)),
+                      !a,
                     );
                   },
                 ),

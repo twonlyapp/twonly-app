@@ -145,6 +145,28 @@ class UserDiscoveryService {
     }
   }
 
+  static Future<void> changeExclusionForContact(
+    int contactId,
+    bool exclude,
+  ) async {
+    // Remove old versions from the user...
+    await (twonlyDB.update(
+      twonlyDB.userDiscoveryOwnPromotions,
+    )..where((t) => t.contactId.equals(contactId))).write(
+      UserDiscoveryOwnPromotionsCompanion(promotion: Value(Uint8List(0))),
+    );
+
+    await twonlyDB.contactsDao.updateContact(
+      contactId,
+      ContactsCompanion(
+        userDiscoveryExcluded: Value(exclude),
+        userDiscoveryVersion: const Value(
+          null, // If the user is included again, this will trigger a new request of his original announcement
+        ),
+      ),
+    );
+  }
+
   static Future<void> disable() async {
     await updateUser((u) {
       u.isUserDiscoveryEnabled = false;

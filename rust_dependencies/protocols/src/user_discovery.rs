@@ -216,10 +216,13 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         }
         if received_version.promotion < config.promotion_version {
             tracing::info!("New promotion message available for user {}", contact_id);
-            let promoting_messages = self
+            let promoting_messages: Vec<Vec<u8>> = self
                 .store
                 .get_own_promotions_after_version(received_version.promotion)
-                .await?;
+                .await?
+                .into_iter()
+                .filter(|x| x.is_empty()) // filter ignored versions
+                .collect();
             messages.extend_from_slice(&promoting_messages);
         }
         Ok(messages)
@@ -281,7 +284,10 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         messages: Vec<Vec<u8>>,
     ) -> Result<()> {
         for message in messages {
-            let message = UserDiscoveryMessage::decode(message.as_slice())?;
+            let Ok(message) = UserDiscoveryMessage::decode(message.as_slice()) else {
+                tracing::error!("Could not parse the message. Continue to the next message...");
+                continue;
+            };
             let Some(version) = message.version else {
                 continue;
             };
@@ -302,7 +308,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     tracing::warn!("Ignoring: {err}");
                 }
             } else {
-                tracing::warn!("Got unknown user discovery messaging. Ignoring it.");
+                tracing::info!("Got unknown user discovery messaging. Ignoring it.");
                 continue;
             }
 
