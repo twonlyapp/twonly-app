@@ -6,7 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/utils/exclusive_access.dart';
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 
 class Log {
   static bool _isInitialized = false;

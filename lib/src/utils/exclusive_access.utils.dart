@@ -8,7 +8,7 @@ Future<T> exclusiveAccess<T>({
   required Future<T> Function() action,
   required Mutex mutex,
 }) async {
-  final lockFile = File('${AppEnvironment.supportDir}/$lockName.lock');
+  final lockFile = File('${AppEnvironment.cacheDir}/$lockName.lock');
   return mutex.protect(() async {
     var lockAcquired = false;
 
@@ -24,8 +24,8 @@ Future<T> exclusiveAccess<T>({
         try {
           final stat = lockFile.statSync();
           if (stat.type != FileSystemEntityType.notFound) {
-            final age = DateTime.now().difference(stat.modified).inMilliseconds;
-            if (age > 1000) {
+            final age = DateTime.now().difference(stat.modified).inSeconds;
+            if (age > 10) {
               lockFile.deleteSync();
               continue;
             }

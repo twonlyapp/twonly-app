@@ -6,7 +6,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/utils/exclusive_access.dart';
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:workmanager/workmanager.dart';

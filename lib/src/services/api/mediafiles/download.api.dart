@@ -15,6 +15,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -158,7 +159,8 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
   }
 }
 
-Mutex protectDownload = Mutex();
+Mutex _protectDownload = Mutex();
+Mutex _protectDecryption = Mutex();
 
 Future<void> startDownloadMedia(MediaFile media, bool force) async {
   final mediaService = MediaFileService(media);
@@ -175,7 +177,7 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
     return;
   }
 
-  final isBlocked = await protectDownload.protect<bool>(() async {
+  final isBlocked = await _protectDownload.protect<bool>(() async {
     final msg = await twonlyDB.mediaFilesDao.getMediaFileById(media.mediaId);
 
     if (msg == null || msg.downloadState != DownloadState.pending) {
@@ -285,66 +287,86 @@ Future<void> requestMediaReupload(String mediaId) async {
 }
 
 Future<void> handleEncryptedFile(String mediaId) async {
-  final mediaService = await MediaFileService.fromMediaId(mediaId);
-  if (mediaService == null) {
-    Log.error('Media file not found in database.');
-    return;
-  }
+  await exclusiveAccess(
+    lockName: 'decryption-$mediaId',
+    mutex: _protectDecryption,
+    action: () async {
+      final mediaService = await MediaFileService.fromMediaId(mediaId);
+      if (mediaService == null) {
+        Log.error('Media file not found in database.');
+        return;
+      }
 
-  await twonlyDB.mediaFilesDao.updateMedia(
-    mediaId,
-    const MediaFilesCompanion(
-      downloadState: Value(DownloadState.downloaded),
-    ),
+      if (mediaService.mediaFile.downloadState == DownloadState.ready) {
+        Log.info('Decryption of $mediaId already finished.');
+        return;
+      }
+
+      if (!mediaService.encryptedPath.existsSync()) {
+        Log.warn(
+          'Encrypted media file $mediaId does not exist anymore. Decryption probably already finished.',
+        );
+        return;
+      }
+
+      late Uint8List encryptedBytes;
+      try {
+        encryptedBytes = await mediaService.encryptedPath.readAsBytes();
+      } catch (e) {
+        Log.error('Could not read encrypted media file: $e');
+        await requestMediaReupload(mediaId);
+        return;
+      }
+
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaId,
+        const MediaFilesCompanion(
+          downloadState: Value(DownloadState.downloaded),
+        ),
+      );
+
+      try {
+        final chacha20 = FlutterChacha20.poly1305Aead();
+        final secretKeyData = SecretKeyData(
+          mediaService.mediaFile.encryptionKey!,
+        );
+
+        final secretBox = SecretBox(
+          encryptedBytes,
+          nonce: mediaService.mediaFile.encryptionNonce!,
+          mac: Mac(mediaService.mediaFile.encryptionMac!),
+        );
+
+        final plaintextBytes = await chacha20.decrypt(
+          secretBox,
+          secretKey: secretKeyData,
+        );
+
+        final rawMediaBytes = Uint8List.fromList(plaintextBytes);
+
+        await mediaService.tempPath.writeAsBytes(rawMediaBytes);
+      } catch (e) {
+        Log.error(
+          'Could not decrypt the media file. Requesting a new upload.',
+        );
+        await requestMediaReupload(mediaId);
+        return;
+      }
+
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaId,
+        const MediaFilesCompanion(
+          downloadState: Value(DownloadState.ready),
+        ),
+      );
+
+      Log.info('Decryption of $mediaId was successful');
+
+      mediaService.encryptedPath.deleteSync();
+
+      unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
+    },
   );
-
-  late Uint8List encryptedBytes;
-  try {
-    encryptedBytes = await mediaService.encryptedPath.readAsBytes();
-  } catch (e) {
-    Log.error('Could not read encrypted media file: $e');
-    await requestMediaReupload(mediaId);
-    return;
-  }
-
-  try {
-    final chacha20 = FlutterChacha20.poly1305Aead();
-    final secretKeyData = SecretKeyData(mediaService.mediaFile.encryptionKey!);
-
-    final secretBox = SecretBox(
-      encryptedBytes,
-      nonce: mediaService.mediaFile.encryptionNonce!,
-      mac: Mac(mediaService.mediaFile.encryptionMac!),
-    );
-
-    final plaintextBytes = await chacha20.decrypt(
-      secretBox,
-      secretKey: secretKeyData,
-    );
-
-    final rawMediaBytes = Uint8List.fromList(plaintextBytes);
-
-    await mediaService.tempPath.writeAsBytes(rawMediaBytes);
-  } catch (e) {
-    Log.error(
-      'Could not decrypt the media file. Requesting a new upload.',
-    );
-    await requestMediaReupload(mediaId);
-    return;
-  }
-
-  await twonlyDB.mediaFilesDao.updateMedia(
-    mediaId,
-    const MediaFilesCompanion(
-      downloadState: Value(DownloadState.ready),
-    ),
-  );
-
-  Log.info('Decryption of $mediaId was successful');
-
-  mediaService.encryptedPath.deleteSync();
-
-  unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
 }
 
 Future<void> makeMigrationToVersion91() async {
