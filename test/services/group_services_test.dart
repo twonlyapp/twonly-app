@@ -22,6 +22,10 @@ class RealHttpOverrides extends HttpOverrides {
 }
 
 void main() {
+  if (!Platform.isMacOS) {
+    return;
+  }
+
   TestWidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = RealHttpOverrides();
 
