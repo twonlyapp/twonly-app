@@ -140,11 +140,11 @@ class _GroupViewState extends State<GroupView> {
       final keyPair = IdentityKeyPair.fromSerialized(
         _group!.myGroupPrivateKey!,
       );
-      success = await removeMemberFromGroup(
+      success = !(await removeMemberFromGroup(
         _group!,
         keyPair.getPublicKey().serialize(),
         userService.currentUser.userId,
-      );
+      ));
     } else {
       success = await leaveAsNonAdminFromGroup(_group!);
     }

@@ -14,6 +14,12 @@ class AppEnvironment {
     supportDir = (await getApplicationSupportDirectory()).path;
     cameras = await availableCameras();
   }
+
+  static void initTesting() {
+    cacheDir = '/tmp/twonly_cache';
+    supportDir = '/tmp/twonly_support';
+    cameras = [];
+  }
 }
 
 class AppState {
