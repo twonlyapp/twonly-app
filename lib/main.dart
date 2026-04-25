@@ -107,9 +107,8 @@ void main() async {
     );
   }
 
-  final settingsController = SettingsChangeProvider();
+  final settingsController = SettingsChangeProvider()..loadSettings();
 
-  await settingsController.loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   await initFileDownloader();
@@ -144,13 +143,13 @@ Future<void> runMigrations() async {
   if (userService.currentUser.appVersion < 90) {
     // BUG: Requested media files for reupload where not reuploaded because the wrong state...
     await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
-    await updateUser((u) => u.appVersion = 90);
+    await UserService.update((u) => u.appVersion = 90);
   }
 
   if (userService.currentUser.appVersion < 91) {
     // BUG: Requested media files for reupload where not reuploaded because the wrong state...
     await makeMigrationToVersion91();
-    await updateUser((u) => u.appVersion = 91);
+    await UserService.update((u) => u.appVersion = 91);
   }
 
   if (userService.currentUser.appVersion < 109) {
@@ -163,6 +162,6 @@ Future<void> runMigrations() async {
         );
       }
     }
-    await updateUser((u) => u.appVersion = 109);
+    await UserService.update((u) => u.appVersion = 109);
   }
 }

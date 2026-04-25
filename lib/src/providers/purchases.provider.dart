@@ -42,9 +42,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     _planSub = apiService.onPlanUpdated.listen(updatePlan);
     _connSub = apiService.onConnectionStateUpdated.listen((_) async {
       try {
-        final user = await getUser();
-        if (user != null) {
-          updatePlan(planFromString(user.subscriptionPlan));
+        if (userService.isUserCreated) {
+          updatePlan(planFromString(userService.currentUser.subscriptionPlan));
         }
       } catch (e) {
         Log.error(e);
@@ -95,8 +94,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     notifyListeners();
 
     try {
-      final user = await getUser();
-      if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
+      if (userService.isUserCreated &&
+          isPayingUser(
+            planFromString(userService.currentUser.subscriptionPlan),
+          )) {
         Log.info('Started IPA timer for verification.');
         globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
           Log.info(
@@ -185,7 +186,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     // an ok authenticated which is processed in the apiProvider...
     if (res.isSuccess) {
       if (Platform.isAndroid) {
-        await updateUser((u) {
+        await UserService.update((u) {
           u.subscriptionPlanIdStore = purchaseDetails.productID;
         });
       }
@@ -216,11 +217,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
         purchaseDetails.error == null) {
       globalForceIpaCheck?.cancel();
 
-      final user = await getUser();
+      final currentPlan = userService.currentUser.subscriptionPlan;
 
-      if (user != null &&
-          (user.subscriptionPlan != SubscriptionPlan.Family.name &&
-              user.subscriptionPlan != SubscriptionPlan.Pro.name)) {
+      if (currentPlan != SubscriptionPlan.Family.name &&
+          currentPlan != SubscriptionPlan.Pro.name) {
         for (var i = 0; i < 100; i++) {
           if (apiService.isAuthenticated) {
             Log.info(

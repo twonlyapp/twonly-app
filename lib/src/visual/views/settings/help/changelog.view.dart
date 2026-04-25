@@ -114,8 +114,9 @@ class _ChangeLogViewState extends State<ChangeLogView> {
                 Text(context.lang.openChangeLog),
                 Switch(
                   value: !userService.currentUser.hideChangeLog,
-                  onChanged: (_) =>
-                      updateUser((u) => u.hideChangeLog = !u.hideChangeLog),
+                  onChanged: (_) => UserService.update(
+                    (u) => u.hideChangeLog = !u.hideChangeLog,
+                  ),
                 ),
               ],
             ),

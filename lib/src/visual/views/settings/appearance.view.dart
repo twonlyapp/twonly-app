@@ -73,19 +73,19 @@ class _AppearanceViewState extends State<AppearanceView> {
   }
 
   Future<void> toggleShowFeedbackIcon() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.showFeedbackShortcut = !u.showFeedbackShortcut;
     });
   }
 
   Future<void> toggleStartWithCameraOpen() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.startWithCameraOpen = !u.startWithCameraOpen;
     });
   }
 
   Future<void> toggleShowImagePreviewWhenSending() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
     });
   }

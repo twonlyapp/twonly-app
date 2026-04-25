@@ -18,7 +18,7 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
   );
 
   if (userService.currentUser.myBestFriendGroupId != bestFriend.groupId) {
-    await updateUser((user) {
+    await UserService.update((user) {
       user.myBestFriendGroupId = bestFriend.groupId;
     });
   }

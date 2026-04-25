@@ -11,7 +11,6 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
@@ -45,10 +44,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> initAsync() async {
     try {
-      final user = await getUser();
-      if (user != null && mounted) {
+      if (userService.isUserCreated && mounted) {
         context.read<PurchasesProvider>().updatePlan(
-          planFromString(user.subscriptionPlan),
+          planFromString(userService.currentUser.subscriptionPlan),
         );
       }
     } catch (e) {
@@ -142,7 +140,6 @@ class AppMainWidget extends StatefulWidget {
 }
 
 class _AppMainWidgetState extends State<AppMainWidget> {
-  bool _isUserCreated = false;
   bool _showOnboarding = true;
   bool _isLoaded = false;
   Object? _storageError;
@@ -159,9 +156,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   Future<void> initAsync() async {
     try {
-      _isUserCreated = await isUserCreated();
-
-      if (_isUserCreated) {
+      if (userService.isUserCreated) {
         if (_isTwonlyLocked) {
           // do not change in case twonly was already unlocked at some point
           _isTwonlyLocked = userService.currentUser.screenLockEnabled;
@@ -202,7 +197,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
     late Widget child;
 
-    if (_isUserCreated) {
+    if (userService.isUserCreated) {
       if (_isTwonlyLocked) {
         child = UnlockTwonlyView(
           callbackOnSuccess: () => setState(() {

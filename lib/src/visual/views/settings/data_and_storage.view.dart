@@ -38,13 +38,13 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   }
 
   Future<void> toggleStoreInGallery() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.storeMediaFilesInGallery = !u.storeMediaFilesInGallery;
     });
   }
 
   Future<void> toggleAutoStoreMediaFiles() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.autoStoreAllSendUnlimitedMediaFiles =
           !u.autoStoreAllSendUnlimitedMediaFiles;
     });
@@ -227,7 +227,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
 
     // Call the onUpdate callback to notify the parent widget
 
-    await updateUser((u) {
+    await UserService.update((u) {
       u.autoDownloadOptions = autoDownloadOptions;
     });
 

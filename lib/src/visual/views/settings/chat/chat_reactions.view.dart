@@ -35,7 +35,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
     } else {
       if (_selectedEmojis.length < 12) {
         _selectedEmojis.add(emoji);
-        await updateUser((user) {
+        await UserService.update((user) {
           user.preSelectedEmojies = _selectedEmojis;
         });
       } else {
@@ -90,7 +90,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
             padding: const EdgeInsets.only(bottom: 30),
             child: FloatingActionButton(
               foregroundColor: Colors.white,
-              onPressed: () => updateUser(
+              onPressed: () => UserService.update(
                 (u) => u.preSelectedEmojies = EmojiAnimationComp
                     .animatedIcons
                     .keys

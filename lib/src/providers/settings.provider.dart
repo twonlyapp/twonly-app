@@ -1,20 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
-import 'package:twonly/src/utils/log.dart';
 
 class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late ThemeMode _themeMode;
 
   ThemeMode get themeMode => _themeMode;
 
-  Future<void> loadSettings() async {
-    try {
-      _themeMode = (await getUser())?.themeMode ?? ThemeMode.system;
+  void loadSettings() {
+    if (userService.isUserCreated) {
+      _themeMode = userService.currentUser.themeMode;
       notifyListeners();
-    } catch (e) {
+    } else {
       _themeMode = ThemeMode.system;
-      Log.error(e);
     }
   }
 
@@ -27,6 +26,6 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
     notifyListeners();
 
-    await updateUser((u) => u.themeMode = newThemeMode);
+    await UserService.update((u) => u.themeMode = newThemeMode);
   }
 }

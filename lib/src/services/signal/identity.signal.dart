@@ -39,7 +39,7 @@ Future<void> signalHandleNewServerConnection() async {
     Log.error('could not generate a new signed pre key!');
     return;
   }
-  await updateUser((user) {
+  await UserService.update((user) {
     user.signalLastSignedPreKeyUpdated = clock.now();
   });
   final res = await apiService.updateSignedPreKey(
@@ -49,7 +49,7 @@ Future<void> signalHandleNewServerConnection() async {
   );
   if (res.isError) {
     Log.error('could not update the signed pre key: ${res.error}');
-    await updateUser((user) {
+    await UserService.update((user) {
       user.signalLastSignedPreKeyUpdated = null;
     });
   } else {
@@ -59,13 +59,9 @@ Future<void> signalHandleNewServerConnection() async {
 
 Future<List<PreKeyRecord>> signalGetPreKeys() async {
   return lockingSignalProtocol.protect(() async {
-    final user = await getUser();
-    if (user == null) return [];
-
-    final start = user.currentPreKeyIndexStart;
-    await updateUser((user) {
-      user.currentPreKeyIndexStart =
-          (user.currentPreKeyIndexStart + 200) % maxValue;
+    final start = userService.currentUser.currentPreKeyIndexStart;
+    await UserService.update((u) {
+      u.currentPreKeyIndexStart = (u.currentPreKeyIndexStart + 200) % maxValue;
     });
     final preKeys = generatePreKeys(start, 200);
     final signalStore = await getSignalStore();
@@ -138,14 +134,14 @@ Future<void> createIfNotExistsSignalIdentity() async {
 Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
   return lockingSignalProtocol.protect(() async {
     var identityKeyPair = await getSignalIdentityKeyPair();
-    final user = await getUser();
     final signalStore = await getSignalStore();
-    if (identityKeyPair == null || signalStore == null || user == null) {
+    if (identityKeyPair == null || signalStore == null) {
       return null;
     }
 
-    final signedPreKeyId = user.currentSignedPreKeyIndexStart;
-    await updateUser((user) {
+    final signedPreKeyId =
+        userService.currentUser.currentSignedPreKeyIndexStart;
+    await UserService.update((user) {
       user.currentSignedPreKeyIndexStart += 1;
     });
 

@@ -209,7 +209,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     if (!_hasAudioPermission &&
         !userService.currentUser.requestedAudioPermission) {
-      await updateUser((u) => u.requestedAudioPermission = true);
+      await UserService.update((u) => u.requestedAudioPermission = true);
       await requestMicrophonePermission();
     }
   }

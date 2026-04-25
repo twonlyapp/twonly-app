@@ -80,7 +80,7 @@ class _BackupServerViewState extends State<BackupServerView> {
           retentionDays: data['retentionDays']! as int,
           maxBackupBytes: data['maxBackupBytes']! as int,
         );
-        await updateUser((user) {
+        await UserService.update((user) {
           user.backupServer = backupServer;
         });
         if (mounted) Navigator.pop(context, backupServer);
@@ -166,7 +166,7 @@ class _BackupServerViewState extends State<BackupServerView> {
             Center(
               child: OutlinedButton(
                 onPressed: () async {
-                  await updateUser((user) {
+                  await UserService.update((user) {
                     user.backupServer = null;
                   });
                   if (context.mounted) Navigator.pop(context);

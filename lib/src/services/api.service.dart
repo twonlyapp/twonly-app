@@ -354,7 +354,7 @@ class ApiService {
       final ok = res.value as server.Response_Ok;
       if (ok.hasAuthenticated()) {
         final authenticated = ok.authenticated;
-        await updateUser((user) {
+        await UserService.update((user) {
           user.subscriptionPlan = authenticated.plan;
         });
         _planUpdateController.add(planFromString(authenticated.plan));
@@ -470,8 +470,7 @@ class ApiService {
         return;
       }
 
-      final userData = await getUser();
-      if (userData == null) return;
+      if (userService.isUserCreated) return;
 
       if (await tryAuthenticateWithToken()) {
         return;
@@ -501,7 +500,7 @@ class ApiService {
 
       final getAuthToken = Handshake_GetAuthToken()
         ..response = signature
-        ..userId = Int64(userData.userId);
+        ..userId = Int64(userService.currentUser.userId);
 
       final getauthtoken = Handshake()..getAuthToken = getAuthToken;
 
@@ -791,7 +790,7 @@ class ApiService {
   Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
     final ballance = await getPlanBallance();
     if (ballance != null) {
-      await updateUser((u) {
+      await UserService.update((u) {
         u.lastPlanBallance = ballance.writeToJson();
       });
       return ballance;

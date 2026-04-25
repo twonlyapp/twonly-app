@@ -24,7 +24,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   }
 
   Future<void> updateUserAvatar(String json, String svg) async {
-    await updateUser(
+    await UserService.update(
       (u) => u
         ..avatarJson = json
         ..avatarSvg = svg

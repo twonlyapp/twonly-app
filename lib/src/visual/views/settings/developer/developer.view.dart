@@ -30,11 +30,11 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
   }
 
   Future<void> toggleDeveloperSettings() async {
-    await updateUser((u) => u.isDeveloper = !u.isDeveloper);
+    await UserService.update((u) => u.isDeveloper = !u.isDeveloper);
   }
 
   Future<void> toggleVideoStabilization() async {
-    await updateUser(
+    await UserService.update(
       (u) => u.videoStabilizationEnabled = !u.videoStabilizationEnabled,
     );
   }

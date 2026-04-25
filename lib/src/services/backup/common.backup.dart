@@ -17,7 +17,7 @@ Future<void> enableTwonlySafe(String password) async {
     userService.currentUser.username,
   );
 
-  await updateUser((user) {
+  await UserService.update((user) {
     user.twonlySafeBackup = TwonlySafeBackup(
       encryptionKey: encryptionKey,
       backupId: backupId,

@@ -49,7 +49,7 @@ Future<void> checkForTokenUpdates() async {
     if (storedToken == null || fcmToken != storedToken) {
       Log.info('Got new FCM TOKEN.');
       await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
-      await updateUser((u) {
+      await UserService.update((u) {
         u.updateFCMToken = true;
       });
     }
@@ -61,7 +61,7 @@ Future<void> checkForTokenUpdates() async {
             key: SecureStorageKeys.googleFcm,
             value: fcmToken,
           );
-          await updateUser((u) {
+          await UserService.update((u) {
             u.updateFCMToken = true;
           });
         })
@@ -81,7 +81,7 @@ Future<void> initFCMAfterAuthenticated({bool force = false}) async {
       final res = await apiService.updateFCMToken(storedToken);
       if (res.isSuccess) {
         Log.info('Uploaded new FCM token!');
-        await updateUser((u) {
+        await UserService.update((u) {
           u.updateFCMToken = false;
         });
       } else {

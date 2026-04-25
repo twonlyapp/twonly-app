@@ -56,7 +56,7 @@ class UserDiscoveryService {
         userId: userService.currentUser.userId,
         publicKey: await getUserPublicKey(),
       );
-      await updateUser(
+      await UserService.update(
         (u) => u
           ..isUserDiscoveryEnabled = true
           ..minimumRequiredImagesExchanged = minimumRequiredImagesExchanged,
@@ -168,7 +168,7 @@ class UserDiscoveryService {
   }
 
   static Future<void> disable() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.isUserDiscoveryEnabled = false;
     });
   }

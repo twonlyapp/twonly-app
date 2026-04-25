@@ -48,7 +48,7 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> updateUserDisplayName(String displayName) async {
-    await updateUser(
+    await UserService.update(
       (u) => u
         ..displayName = displayName
         ..avatarCounter = u.avatarCounter + 1,
@@ -93,7 +93,7 @@ class _ProfileViewState extends State<ProfileView> {
     await removeTwonlySafeFromServer();
     unawaited(performTwonlySafeBackup(force: true));
 
-    await updateUser(
+    await UserService.update(
       (u) => u
         ..username = username
         ..avatarCounter = u.avatarCounter + 1,

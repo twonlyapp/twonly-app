@@ -33,7 +33,7 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
         userService.currentUser.userDiscoveryThreshold !=
         _userDiscoveryThreshold;
 
-    await updateUser((u) {
+    await UserService.update((u) {
       u
         ..minimumRequiredImagesExchanged = _minimumRequiredImagesExchanged
         ..userDiscoveryThreshold = _userDiscoveryThreshold;

@@ -19,7 +19,7 @@ class HelpView extends StatefulWidget {
 
 class _HelpViewState extends State<HelpView> {
   Future<void> toggleAllowErrorTrackingViaSentry() async {
-    await updateUser(
+    await UserService.update(
       (u) => u.allowErrorTrackingViaSentry = !u.allowErrorTrackingViaSentry,
     );
   }
@@ -128,7 +128,7 @@ class _HelpViewState extends State<HelpView> {
                     'Do you want to enable the developer settings?',
                   );
                   if (okay) {
-                    await updateUser((u) => u.isDeveloper = true);
+                    await UserService.update((u) => u.isDeveloper = true);
                   }
                 },
                 title: const Text(

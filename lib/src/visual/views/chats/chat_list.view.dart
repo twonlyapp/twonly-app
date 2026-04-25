@@ -93,7 +93,7 @@ class _ChatListViewState extends State<ChatListView> {
       if (!userService.currentUser.hideChangeLog &&
           userService.currentUser.lastChangeLogHash.toString() !=
               changeLogHash.toString()) {
-        await updateUser((u) {
+        await UserService.update((u) {
           u.lastChangeLogHash = changeLogHash;
         });
         if (!mounted) return;

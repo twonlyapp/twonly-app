@@ -94,7 +94,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
         key: SecureStorageKeys.signalSignedPreKey,
       );
 
-  final userBackup = await getUser();
+  final userBackup = await UserService.getUser();
   if (userBackup == null) return;
   // FILTER settings which should not be in the backup
   userBackup
@@ -183,7 +183,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     if (encryptedBackupBytes.length >
         userService.currentUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
-      await updateUser((user) {
+      await UserService.update((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
       });
       return;
@@ -203,7 +203,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   );
   if (await FileDownloader().enqueue(task)) {
     Log.info('Starting upload from twonly Backup.');
-    await updateUser((user) {
+    await UserService.update((user) {
       user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
       user.twonlySafeBackup!.lastBackupDone = clock.now();
       user.twonlySafeBackup!.lastBackupSize = encryptedBackupBytes.length;
@@ -216,7 +216,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    await updateUser((user) {
+    await UserService.update((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
       }
@@ -225,7 +225,7 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
     Log.info(
       'twonly Backup uploaded with status code ${update.responseStatusCode}',
     );
-    await updateUser((user) {
+    await UserService.update((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState =
             LastBackupUploadState.success;

@@ -112,7 +112,7 @@ Future<void> handleBackupData(
     key: SecureStorageKeys.userData,
     value: secureStorage[SecureStorageKeys.userData] as String,
   );
-  await updateUser((u) {
+  await UserService.update((u) {
     u.deviceId += 1;
   });
 }

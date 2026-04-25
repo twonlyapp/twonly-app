@@ -25,14 +25,14 @@ class _PrivacyViewState extends State<PrivacyView> {
           : context.lang.settingsScreenLockAuthMessageEnable,
     );
     if (!isAuth) return;
-    await updateUser((u) {
+    await UserService.update((u) {
       u.screenLockEnabled = !u.screenLockEnabled;
     });
     setState(() {});
   }
 
   Future<void> toggleTypingIndicators() async {
-    await updateUser((u) {
+    await UserService.update((u) {
       u.typingIndicators = !u.typingIndicators;
     });
     setState(() {});

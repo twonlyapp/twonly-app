@@ -100,13 +100,13 @@ Future<void> handleUserStudyUpload() async {
       headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
-      await updateUser((u) {
+      await UserService.update((u) {
         u.lastUserStudyDataUpload = DateTime.now();
       });
     }
     if (response.statusCode == 404) {
       // Token is unknown to the server...
-      await updateUser((u) {
+      await UserService.update((u) {
         u
           ..lastUserStudyDataUpload = null
           ..userStudyParticipantsToken = null;
