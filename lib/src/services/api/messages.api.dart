@@ -341,7 +341,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
       contactId,
     );
-    if (openReceipts > 2) {
+    if (openReceipts > 6) {
       // this prevents that these types of messages are send in case the receiver is offline
       return null;
     }

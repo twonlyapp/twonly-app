@@ -221,7 +221,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 .get_own_promotions_after_version(received_version.promotion)
                 .await?
                 .into_iter()
-                .filter(|x| x.is_empty()) // filter ignored versions
+                .filter(|x| !x.is_empty()) // filter ignored versions
                 .collect();
             messages.extend_from_slice(&promoting_messages);
         }

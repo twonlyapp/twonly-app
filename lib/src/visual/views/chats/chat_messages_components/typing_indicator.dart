@@ -28,7 +28,7 @@ bool hasChatOpen(GroupMember member) {
                 member.lastChatOpened!,
               )
               .inSeconds <=
-          6;
+          3;
 }
 
 class TypingIndicator extends StatefulWidget {
