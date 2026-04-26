@@ -28,7 +28,6 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 /// This function is used to initialized the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
@@ -58,6 +57,7 @@ void main() async {
 
   var userExists = false;
   var storageError = false;
+
   try {
     userExists = await userService.tryInit();
   } catch (e) {
@@ -65,8 +65,9 @@ void main() async {
     storageError = true;
   }
 
-  final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
-  final dbExists = dbFile.existsSync();
+  final dbExists = File(
+    '${AppEnvironment.supportDir}/twonly.sqlite',
+  ).existsSync();
 
   if (Platform.isIOS && userExists) {
     if (!dbExists) {
@@ -75,6 +76,10 @@ void main() async {
       userExists = false;
     }
   }
+
+  final settingsController = SettingsChangeProvider()..loadSettings();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await initFileDownloader();
 
   if (userExists) {
     if (userService.currentUser.allowErrorTrackingViaSentry) {
@@ -90,30 +95,7 @@ void main() async {
 
     unawaited(performTwonlySafeBackup());
     unawaited(initializeBackgroundTaskManager());
-  } else if (!storageError) {
-    if (!dbExists) {
-      Log.info(
-        'User is not yet registered and no database found. Ensuring clean state.',
-      );
-      await deleteLocalUserData();
-    } else {
-      Log.error(
-        'User not found in secure storage, but database exists. Skipping destructive wipe.',
-      );
-    }
-  } else {
-    Log.error(
-      'Storage error occurred and database exists. Skipping wipe to prevent data loss.',
-    );
-  }
 
-  final settingsController = SettingsChangeProvider()..loadSettings();
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  await initFileDownloader();
-
-  if (userExists) {
     await runMigrations();
 
     await twonlyDB.messagesDao.purgeMessageTable();
