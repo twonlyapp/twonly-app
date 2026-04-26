@@ -288,7 +288,9 @@ class _ContactViewState extends State<ContactView> {
                   (tt) => ListTile(
                     dense: true,
                     title: Text(
-                      'Verifiziert von ${getContactDisplayName(tt.$1)}',
+                      context.lang.contactVerifiedBy(
+                        getContactDisplayName(tt.$1),
+                      ),
                     ),
                     trailing: Text(
                       DateFormat.yMd(

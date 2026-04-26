@@ -976,6 +976,12 @@ abstract class AppLocalizations {
   /// **'User verified'**
   String get userVerifiedTitle;
 
+  /// No description provided for @contactVerifiedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified by {username}'**
+  String contactVerifiedBy(Object username);
+
   /// No description provided for @verificationTypeQrScanned.
   ///
   /// In en, this message translates to:
@@ -3067,25 +3073,25 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The green checkmark gives you the certainty that you are messaging the right person.'**
+  /// **'The checkmark gives you the certainty that you are messaging the right person. Scan the contact\'s QR code to verify it.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
   ///
   /// In en, this message translates to:
-  /// **'Contact that you have personally verified via QR code. This also verified their public key.'**
+  /// **'A contact you have personally verified.'**
   String get verificationBadgeGreenDesc;
 
   /// No description provided for @verificationBadgeYellowDesc.
   ///
   /// In en, this message translates to:
-  /// **'(Coming soon) Contact whose QR code was scanned by one of your personally verified contacts.'**
+  /// **'A contact who has been verified by at least one of your contacts.'**
   String get verificationBadgeYellowDesc;
 
   /// No description provided for @verificationBadgeRedDesc.
   ///
   /// In en, this message translates to:
-  /// **'Unknown contact whose identity has not yet been verified.'**
+  /// **'A contact whose identity has not yet been verified.'**
   String get verificationBadgeRedDesc;
 
   /// No description provided for @chatEntryFlameRestored.

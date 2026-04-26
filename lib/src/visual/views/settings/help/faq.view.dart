@@ -19,7 +19,6 @@ class FaqView extends StatefulWidget {
 
 class _FaqViewState extends State<FaqView> {
   Map<String, dynamic>? _faqData;
-  String? _locale;
   late String domain;
   bool _noInternet = false;
 
@@ -84,7 +83,12 @@ class _FaqViewState extends State<FaqView> {
       );
     }
 
-    final faq = _faqData![_locale ?? 'en'] as Map;
+    final locale = Localizations.localeOf(context).languageCode;
+    var faq = _faqData!['en'] as Map;
+    if (_faqData!.containsKey(locale)) {
+      faq = _faqData![locale] as Map;
+    }
+
     final sortedCategories = faq.entries.toList()
       ..sort((a, b) {
         final aPriority = (a.value['meta']['priority'] as num? ?? 0).toInt();

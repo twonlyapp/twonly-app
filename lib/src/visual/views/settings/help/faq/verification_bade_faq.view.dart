@@ -6,7 +6,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
-const colorVerificationBadgeYellow = Color(0xffffa500);
+const colorVerificationBadgeYellow = Color.fromARGB(255, 0, 182, 238);
 
 class VerificationBadeFaqView extends StatefulWidget {
   const VerificationBadeFaqView({super.key});
@@ -48,7 +48,6 @@ class _VerificationBadeFaqViewState extends State<VerificationBadeFaqView> {
             description: context.lang.verificationBadgeRedDesc,
           ),
           const SizedBox(height: 20),
-          const SizedBox(height: 20),
           BetterListTile(
             leading: const FaIcon(FontAwesomeIcons.camera),
             text: context.lang.scanOtherProfile,
@@ -66,7 +65,7 @@ class _VerificationBadeFaqViewState extends State<VerificationBadeFaqView> {
 
   Widget _buildItem({required Widget icon, required String description}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: const EdgeInsets.symmetric(vertical: 25),
       child: Row(
         children: [
           icon,

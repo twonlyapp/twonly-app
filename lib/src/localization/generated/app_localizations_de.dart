@@ -486,6 +486,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get userVerifiedTitle => 'Benutzer verifiziert';
 
   @override
+  String contactVerifiedBy(Object username) {
+    return 'Verifiziert von $username';
+  }
+
+  @override
   String get verificationTypeQrScanned => 'Du hast den QR-Code gescannt.';
 
   @override
@@ -1712,19 +1717,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der grüne Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst.';
+      'Der Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst. Scanne einen Kontakt, um diesen zu verifizieren.';
 
   @override
   String get verificationBadgeGreenDesc =>
-      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch deren öffentlicher Schlüssel überprüft.';
+      'Ein Kontakt, den du persönlich verifiziert hast.';
 
   @override
   String get verificationBadgeYellowDesc =>
-      '(Coming soon) Kontakt, dessen QR-Code von einem deiner persönlich verifizierten Kontakte gescannt wurde.';
+      'Ein Kontakt, der von mind. einem deiner Kontakte verifiziert wurde.';
 
   @override
   String get verificationBadgeRedDesc =>
-      'Unbekannter Kontakt, dessen Identität bisher nicht verifiziert wurde.';
+      'Ein Kontakt, dessen Identität noch nicht überprüft wurde.';
 
   @override
   String chatEntryFlameRestored(Object count) {

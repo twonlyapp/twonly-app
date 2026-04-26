@@ -89,7 +89,11 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isVerified && widget.showOnlyIfVerified) return Container();
+    if (!_isVerified &&
+        !_isVerifiedByTransferredTrust &&
+        widget.showOnlyIfVerified) {
+      return Container();
+    }
     return GestureDetector(
       onTap: (!widget.clickable)
           ? null
