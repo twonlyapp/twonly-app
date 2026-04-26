@@ -126,6 +126,9 @@ void main() async {
     unawaited(createPushAvatars());
   }
 
+  await apiService.listenToNetworkChanges();
+  unawaited(apiService.connect());
+
   runApp(
     MultiProvider(
       providers: [
@@ -134,7 +137,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
         ChangeNotifierProvider(create: (_) => PurchasesProvider()),
       ],
-      child: const App(),
+      child: App(storageError: storageError),
     ),
   );
 }

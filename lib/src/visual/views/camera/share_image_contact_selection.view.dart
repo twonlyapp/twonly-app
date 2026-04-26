@@ -3,7 +3,9 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -40,7 +42,7 @@ class ShareImageView extends StatefulWidget {
 }
 
 class _ShareImageView extends State<ShareImageView> {
-  List<Group> contacts = [];
+  List<Group> _allGroups = [];
   List<Group> _otherUsers = [];
   List<Group> _bestFriends = [];
   List<Group> _pinnedContacts = [];
@@ -61,9 +63,9 @@ class _ShareImageView extends State<ShareImageView> {
       allGroups,
     ) async {
       setState(() {
-        contacts = allGroups;
+        _allGroups = allGroups;
       });
-      await updateGroups(allGroups.where((x) => !x.archived).toList());
+      await updateGroups(_allGroups.where((x) => !x.archived).toList());
     });
 
     unawaited(initAsync());
@@ -128,7 +130,7 @@ class _ShareImageView extends State<ShareImageView> {
     lastQuery = query;
     if (query.isEmpty) {
       await updateGroups(
-        contacts
+        _allGroups
             .where(
               (x) =>
                   !x.archived ||
@@ -139,7 +141,7 @@ class _ShareImageView extends State<ShareImageView> {
       );
       return;
     }
-    final usersFiltered = contacts
+    final usersFiltered = _allGroups
         .where(
           (user) => user.groupName.toLowerCase().contains(query.toLowerCase()),
         )
@@ -168,16 +170,30 @@ class _ShareImageView extends State<ShareImageView> {
           ),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onChanged: _filterUsers,
-                  decoration: getInputDecoration(
-                    context,
-                    context.lang.shareImageSearchAllContacts,
+              if (_allGroups.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.person_add),
+                      onPressed: () => context.push(Routes.chatsAddNewUser),
+                      label: Text(
+                        context.lang.chatListViewSearchUserNameBtn,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+
+              if (_allGroups.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: TextField(
+                    onChanged: _filterUsers,
+                    decoration: getInputDecoration(
+                      context,
+                      context.lang.shareImageSearchAllContacts,
+                    ),
+                  ),
+                ),
               if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
               BestFriendsSelector(
                 groups: _pinnedContacts,
@@ -202,7 +218,7 @@ class _ShareImageView extends State<ShareImageView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     HeadLineComp(context.lang.shareImageAllUsers),
-                    if (contacts.any((x) => x.archived))
+                    if (_allGroups.any((x) => x.archived))
                       Row(
                         children: [
                           Text(
@@ -236,13 +252,14 @@ class _ShareImageView extends State<ShareImageView> {
                       ),
                   ],
                 ),
-              Expanded(
-                child: UserList(
-                  List.from(_otherUsers),
-                  selectedGroupIds: widget.selectedGroupIds,
-                  updateSelectedGroupIds: updateSelectedGroupIds,
+              if (_otherUsers.isNotEmpty)
+                Expanded(
+                  child: UserList(
+                    List.from(_otherUsers),
+                    selectedGroupIds: widget.selectedGroupIds,
+                    updateSelectedGroupIds: updateSelectedGroupIds,
+                  ),
                 ),
-              ),
             ],
           ),
         ),

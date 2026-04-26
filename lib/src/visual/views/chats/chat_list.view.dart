@@ -218,7 +218,7 @@ class _ChatListViewState extends State<ChatListView> {
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(10),
-                  child: OutlinedButton.icon(
+                  child: FilledButton.icon(
                     icon: const Icon(Icons.person_add),
                     onPressed: () => context.push(Routes.chatsAddNewUser),
                     label: Text(

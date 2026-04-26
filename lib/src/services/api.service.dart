@@ -84,7 +84,7 @@ class ApiService {
       HashMap();
   IOWebSocketChannel? _channel;
   // ignore: cancel_subscriptions
-  StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
     if (appIsOutdated) return false;
@@ -185,10 +185,10 @@ class ApiService {
   }
 
   Future<void> listenToNetworkChanges() async {
-    if (connectivitySubscription != null) {
+    if (_connectivitySubscription != null) {
       return;
     }
-    connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
       result,
     ) async {
       if (!result.contains(ConnectivityResult.none)) {
@@ -467,10 +467,11 @@ class ApiService {
     return lockAuthentication.protect(() async {
       if (isAuthenticated) return;
       if (await getSignalIdentity() == null) {
+        Log.error('Signal identity not found.');
         return;
       }
 
-      if (userService.isUserCreated) return;
+      if (!userService.isUserCreated) return;
 
       if (await tryAuthenticateWithToken()) {
         return;

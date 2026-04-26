@@ -32,8 +32,7 @@ Timer? globalForceIpaCheck;
 
 class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   PurchasesProvider() {
-    final purchaseUpdated = iapConnection.purchaseStream;
-    _subscription = purchaseUpdated.listen(
+    _subscription = iapConnection.purchaseStream.listen(
       _onPurchaseUpdate,
       onDone: _updateStreamOnDone,
       onError: _updateStreamOnError,
@@ -49,6 +48,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
         Log.error(e);
       }
     });
+
+    if (userService.isUserCreated) {
+      updatePlan(planFromString(userService.currentUser.subscriptionPlan));
+    }
 
     loadPurchases();
   }
@@ -73,7 +76,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     final available = await iapConnection.isAvailable();
     if (!available) {
       storeState = StoreState.notAvailable;
-      Log.error('Store is not available');
+      Log.warn('Store is not available');
       notifyListeners();
       return;
     }
@@ -98,7 +101,6 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
           isPayingUser(
             planFromString(userService.currentUser.subscriptionPlan),
           )) {
-        Log.info('Started IPA timer for verification.');
         globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
           Log.info(
             'Force Ipa check was not stopped. Requesting forced check...',

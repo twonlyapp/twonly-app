@@ -7,10 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
@@ -24,54 +22,33 @@ import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
 import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
-  const App({super.key});
+  const App({required this.storageError, super.key});
+  final bool storageError;
   @override
   State<App> createState() => _AppState();
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
-  bool wasPaused = false;
-  Object? _storageError;
+  bool _wasPaused = false;
 
   @override
   void initState() {
     super.initState();
     AppState.isAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
-
-    unawaited(initAsync());
-  }
-
-  Future<void> initAsync() async {
-    try {
-      if (userService.isUserCreated && mounted) {
-        context.read<PurchasesProvider>().updatePlan(
-          planFromString(userService.currentUser.subscriptionPlan),
-        );
-      }
-    } catch (e) {
-      Log.error('Storage error in App.initAsync: $e');
-      if (mounted) {
-        setState(() {
-          _storageError = e;
-        });
-      }
-    }
-    await apiService.connect();
-    await apiService.listenToNetworkChanges();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (wasPaused) {
+      if (_wasPaused) {
         AppState.isAppInBackground = false;
         twonlyDB.markUpdated();
         unawaited(apiService.connect());
       }
     } else if (state == AppLifecycleState.paused) {
-      wasPaused = true;
+      _wasPaused = true;
       AppState.isAppInBackground = true;
     }
   }
@@ -85,7 +62,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: context.watch<SettingsChangeProvider>(),
+      listenable: context.read<SettingsChangeProvider>(),
       builder: (context, child) {
         const localizationsDelegates = [
           AppLocalizations.delegate,
@@ -99,7 +76,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           Locale('de', ''),
         ];
 
-        if (_storageError != null) {
+        if (widget.storageError) {
           return MaterialApp(
             scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
             localizationsDelegates: localizationsDelegates,
@@ -108,7 +85,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             title: 'twonly',
             theme: lightTheme,
             darkTheme: darkTheme,
-            themeMode: context.watch<SettingsChangeProvider>().themeMode,
+            themeMode: context.read<SettingsChangeProvider>().themeMode,
             home: const CriticalErrorView(),
           );
         }
@@ -122,7 +99,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           title: 'twonly',
           theme: lightTheme,
           darkTheme: darkTheme,
-          themeMode: context.watch<SettingsChangeProvider>().themeMode,
+          themeMode: context.read<SettingsChangeProvider>().themeMode,
         );
       },
     );
@@ -142,7 +119,6 @@ class AppMainWidget extends StatefulWidget {
 class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
-  Object? _storageError;
   bool _skipBackup = kDebugMode;
   bool _isTwonlyLocked = true;
 
@@ -155,29 +131,24 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   }
 
   Future<void> initAsync() async {
-    try {
-      if (userService.isUserCreated) {
-        if (_isTwonlyLocked) {
-          // do not change in case twonly was already unlocked at some point
-          _isTwonlyLocked = userService.currentUser.screenLockEnabled;
-        }
-      } else {
-        // This means the user is in the onboarding screen, so start with the Proof of Work.
-
-        final (proof, disabled) = await apiService.getProofOfWork();
-        if (proof != null) {
-          Log.info('Starting with proof of work calculation.');
-          _proofOfWork = (
-            calculatePoW(proof.prefix, proof.difficulty.toInt()),
-            false,
-          );
-        } else {
-          _proofOfWork = (null, disabled);
-        }
+    if (userService.isUserCreated) {
+      if (_isTwonlyLocked) {
+        // do not change in case twonly was already unlocked at some point
+        _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
-    } catch (e) {
-      Log.error('Storage error in AppMainWidget.initAsync: $e');
-      _storageError = e;
+    } else {
+      // This means the user is in the onboarding screen, so start with the Proof of Work.
+
+      final (proof, disabled) = await apiService.getProofOfWork();
+      if (proof != null) {
+        Log.info('Starting with proof of work calculation.');
+        _proofOfWork = (
+          calculatePoW(proof.prefix, proof.difficulty.toInt()),
+          false,
+        );
+      } else {
+        _proofOfWork = (null, disabled);
+      }
     }
 
     setState(() {
@@ -189,10 +160,6 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   Widget build(BuildContext context) {
     if (!_isLoaded) {
       return Center(child: Container());
-    }
-
-    if (_storageError != null) {
-      return const CriticalErrorView();
     }
 
     late Widget child;

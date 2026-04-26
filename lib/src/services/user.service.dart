@@ -20,7 +20,7 @@ class UserService {
     final user = await getUser();
     if (user == null) return false;
     userService.currentUser = user;
-    isUserCreated = true;
+    userService.isUserCreated = true;
     return true;
   }
 
