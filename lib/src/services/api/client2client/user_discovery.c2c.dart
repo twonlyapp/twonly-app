@@ -6,6 +6,8 @@ import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
+final _requestedUpdates = <int>{};
+
 Future<void> checkForUserDiscoveryChanges(
   int fromUserId,
   List<int> receivedVersion,
@@ -16,7 +18,12 @@ Future<void> checkForUserDiscoveryChanges(
   );
 
   if (currentVersion != null) {
+    if (_requestedUpdates.contains(fromUserId)) {
+      /// Only request a new version once per app session
+      return;
+    }
     Log.info('Having old version from contact. Requesting new version.');
+    _requestedUpdates.add(fromUserId);
     await sendCipherText(
       fromUserId,
       EncryptedContent(

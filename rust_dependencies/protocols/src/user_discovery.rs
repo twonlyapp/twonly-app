@@ -216,14 +216,31 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         }
         if received_version.promotion < config.promotion_version {
             tracing::info!("New promotion message available for user {}", contact_id);
-            let promoting_messages: Vec<Vec<u8>> = self
+            let promoting_messages = self
                 .store
                 .get_own_promotions_after_version(received_version.promotion)
-                .await?
+                .await?;
+
+            let size = promoting_messages.len();
+            let mut filtered: Vec<Vec<u8>> = promoting_messages
                 .into_iter()
                 .filter(|x| !x.is_empty()) // filter ignored versions
                 .collect();
-            messages.extend_from_slice(&promoting_messages);
+
+            if filtered.len() != size {
+                // ensure the receiver will get the later version in case the last message was filtered out
+                filtered.push(
+                    UserDiscoveryMessage {
+                        version: Some(UserDiscoveryVersion {
+                            announcement: config.announcement_version,
+                            promotion: config.promotion_version,
+                        }),
+                        ..Default::default()
+                    }
+                    .encode_to_vec(),
+                );
+            }
+            messages.extend_from_slice(&filtered);
         }
         Ok(messages)
     }
@@ -307,11 +324,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 if let Err(err) = self.handle_user_discovery_promotion(contact_id, udp).await {
                     tracing::warn!("Ignoring: {err}");
                 }
-            } else {
-                tracing::info!("Got unknown user discovery messaging. Ignoring it.");
-                continue;
             }
 
+            // Always update the version...
             self.store
                 .set_contact_version(contact_id, version.encode_to_vec())
                 .await?;
