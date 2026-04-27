@@ -4,16 +4,18 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 
 class ContactUsView extends StatefulWidget {
   const ContactUsView({super.key});
@@ -237,9 +239,7 @@ $debugLogToken
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
-                onTap: () async {
-                  await launchUrl(Uri.parse('https://twonly.eu/en/faq/'));
-                },
+                onTap: () => context.push(Routes.settingsHelpFaq),
                 child: Text(
                   context.lang.contactUsFaq,
                   style: const TextStyle(
@@ -296,15 +296,6 @@ class IncludeDebugLog extends StatefulWidget {
 }
 
 class _IncludeDebugLogState extends State<IncludeDebugLog> {
-  Future<void> _launchURL() async {
-    const url = 'https://twonly.eu/en/faq/troubleshooting/debug-log.html';
-    if (await launchUrl(Uri.parse(url))) {
-    } else {
-      // ignore: only_throw_errors
-      throw 'Could not launch $url';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -321,7 +312,11 @@ class _IncludeDebugLogState extends State<IncludeDebugLog> {
         Text(context.lang.contactUsIncludeLog),
         const SizedBox(width: 20),
         GestureDetector(
-          onTap: _launchURL,
+          onTap: () => context.navPush(
+            const FaqView(
+              questionId: 'debug-log',
+            ),
+          ),
           child: Text(
             context.lang.contactUsWhatsThat,
             style: const TextStyle(

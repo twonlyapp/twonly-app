@@ -1,24 +1,26 @@
-// ignore_for_file: avoid_dynamic_calls, inference_failure_on_untyped_parameter
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/json/faq.model.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/settings/help/faq/faq_markdown.view.dart';
 
 class FaqView extends StatefulWidget {
-  const FaqView({super.key});
+  const FaqView({this.questionId, super.key});
+
+  final String? questionId;
 
   @override
   State<FaqView> createState() => _FaqViewState();
 }
 
 class _FaqViewState extends State<FaqView> {
-  Map<String, dynamic>? _faqData;
+  Map<String, FaqCategory>? _faqData;
   late String domain;
   bool _noInternet = false;
 
@@ -31,14 +33,16 @@ class _FaqViewState extends State<FaqView> {
 
   Future<void> _fetchFAQData() async {
     final cacheFile = File('${AppEnvironment.cacheDir}/faq.json');
+    FaqData? faqData;
     try {
       final response = await http.get(Uri.parse('$domain/faq.json'));
 
       if (response.statusCode == 200) {
         final jsonData = utf8.decode(response.bodyBytes);
         setState(() {
-          _faqData = json.decode(jsonData) as Map<String, dynamic>?;
-
+          faqData = FaqData.fromJson(
+            json.decode(jsonData) as Map<String, dynamic>,
+          );
           _noInternet = false;
         });
         cacheFile.writeAsStringSync(jsonData);
@@ -54,11 +58,45 @@ class _FaqViewState extends State<FaqView> {
     if (_noInternet && cacheFile.existsSync()) {
       final jsonData = cacheFile.readAsStringSync();
       setState(() {
-        _faqData = json.decode(jsonData) as Map<String, dynamic>?;
-
+        faqData = FaqData.fromJson(
+          json.decode(jsonData) as Map<String, dynamic>,
+        );
         _noInternet = false;
       });
     }
+
+    if (!mounted) return;
+
+    final locale = Localizations.localeOf(context).languageCode;
+    _faqData = faqData!.languages[locale] ?? faqData!.languages['en'];
+
+    if (widget.questionId != null && _faqData != null) {
+      if (!_navigateToQuestion(widget.questionId!, _faqData!)) {
+        final englishData = faqData!.languages['en'];
+        if (englishData != null && englishData != _faqData) {
+          _navigateToQuestion(widget.questionId!, englishData);
+        }
+      }
+    }
+  }
+
+  bool _navigateToQuestion(String questionId, Map<String, FaqCategory> data) {
+    for (final category in data.values) {
+      for (final question in category.questions) {
+        if (question.id == questionId) {
+          unawaited(
+            context.navPush(
+              FaqMarkdownView(
+                markdown: question.body,
+                title: question.title,
+              ),
+            ),
+          );
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @override
@@ -83,17 +121,9 @@ class _FaqViewState extends State<FaqView> {
       );
     }
 
-    final locale = Localizations.localeOf(context).languageCode;
-    var faq = _faqData!['en'] as Map;
-    if (_faqData!.containsKey(locale)) {
-      faq = _faqData![locale] as Map;
-    }
-
-    final sortedCategories = faq.entries.toList()
+    final sortedCategories = _faqData!.entries.toList()
       ..sort((a, b) {
-        final aPriority = (a.value['meta']['priority'] as num? ?? 0).toInt();
-        final bPriority = (b.value['meta']['priority'] as num? ?? 0).toInt();
-        return bPriority.compareTo(aPriority);
+        return b.value.meta.priority.compareTo(a.value.meta.priority);
       });
 
     return Scaffold(
@@ -107,24 +137,22 @@ class _FaqViewState extends State<FaqView> {
 
           return Card(
             child: ExpansionTile(
-              title: Text(categoryData['meta']['title'] as String),
-              subtitle: Text(categoryData['meta']['desc'] as String),
+              title: Text(categoryData.meta.title),
+              subtitle: Text(categoryData.meta.desc),
               shape: const RoundedRectangleBorder(),
               backgroundColor: context.color.surfaceContainer,
               collapsedShape: const RoundedRectangleBorder(),
-              children:
-                  categoryData['questions'].map<Widget>((question) {
-                        return ListTile(
-                          title: Text(question['title'] as String),
-                          onTap: () => context.navPush(
-                            FaqMarkdownView(
-                              markdown: question['body'] as String,
-                              title: question['title'] as String,
-                            ),
-                          ),
-                        );
-                      }).toList()
-                      as List<Widget>,
+              children: categoryData.questions.map<Widget>((question) {
+                return ListTile(
+                  title: Text(question.title),
+                  onTap: () => context.navPush(
+                    FaqMarkdownView(
+                      markdown: question.body,
+                      title: question.title,
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           );
         },

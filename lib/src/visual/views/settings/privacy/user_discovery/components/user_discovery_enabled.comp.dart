@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
@@ -14,6 +12,7 @@ import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/user_discovery_settings.view.dart';
 
 class UserDiscoveryEnabledComp extends StatefulWidget {
@@ -158,7 +157,9 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
             subtitle: Text(
               context.lang.userDiscoveryEnabledFaq,
             ),
-            onTap: () => context.push(Routes.settingsHelpFaq),
+            onTap: () => context.navPush(
+              const FaqView(questionId: 'user-discovery'),
+            ),
           ),
           const Divider(),
           ListTile(
