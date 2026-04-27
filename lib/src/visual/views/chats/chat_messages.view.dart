@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -36,7 +37,7 @@ class ChatMessagesView extends StatefulWidget {
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatMessagesViewState extends State<ChatMessagesView> {
+class _ChatMessagesViewState extends State<ChatMessagesView> with WidgetsBindingObserver {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
@@ -64,6 +65,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   void initState() {
     super.initState();
     textFieldFocus = FocusNode();
+    WidgetsBinding.instance.addObserver(this);
     initStreams();
   }
 
@@ -74,10 +76,25 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     contactSub?.cancel();
     groupActionsSub?.cancel();
     _nextTypingIndicator?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   Mutex protectMessageUpdating = Mutex();
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      protectMessageUpdating.protect(() async {
+        await setMessages(allMessages, groupActions);
+      });
+    }
+  }
+
+  bool _isViewActive() {
+    return !AppState.isAppInBackground &&
+        (ModalRoute.of(context)?.isCurrent ?? false);
+  }
 
   Future<void> initStreams() async {
     final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
@@ -137,7 +154,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     List<Message> newMessages,
     List<GroupHistory> groupActions,
   ) async {
-    await flutterLocalNotificationsPlugin.cancelAll();
+    if (_isViewActive()) {
+      await flutterLocalNotificationsPlugin.cancelAll();
+    }
 
     final chatItems = <ChatItem>[];
     final storedMediaFiles = <Message>[];
@@ -189,11 +208,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       }
     }
 
-    for (final contactId in openedMessages.keys) {
-      await notifyContactAboutOpeningMessage(
-        contactId,
-        openedMessages[contactId]!,
-      );
+    if (_isViewActive()) {
+      for (final contactId in openedMessages.keys) {
+        await notifyContactAboutOpeningMessage(
+          contactId,
+          openedMessages[contactId]!,
+        );
+      }
     }
 
     if (!mounted) return;

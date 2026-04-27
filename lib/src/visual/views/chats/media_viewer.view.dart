@@ -10,6 +10,7 @@ import 'package:lottie/lottie.dart';
 import 'package:mutex/mutex.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -46,7 +47,8 @@ class MediaViewerView extends StatefulWidget {
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
 
-class _MediaViewerViewState extends State<MediaViewerView> {
+class _MediaViewerViewState extends State<MediaViewerView>
+    with WidgetsBindingObserver {
   Timer? nextMediaTimer;
   Timer? progressTimer;
 
@@ -87,6 +89,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
     }
+    WidgetsBinding.instance.addObserver(this);
 
     asyncLoadNextMedia(true);
   }
@@ -101,10 +104,27 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     final tmp = videoController;
     videoController = null;
     tmp?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   final Mutex _messageUpdateLock = Mutex();
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _messageUpdateLock.protect(() async {
+        if (currentMedia == null && allMediaFiles.isNotEmpty) {
+          await loadCurrentMediaFile();
+        }
+      });
+    }
+  }
+
+  bool _isViewActive() {
+    return !AppState.isAppInBackground &&
+        (ModalRoute.of(context)?.isCurrent ?? false);
+  }
 
   Future<void> asyncLoadNextMedia(bool firstRun) async {
     _subscription = twonlyDB.messagesDao
@@ -195,7 +215,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
-    unawaited(flutterLocalNotificationsPlugin.cancelAll());
+    if (_isViewActive()) {
+      unawaited(flutterLocalNotificationsPlugin.cancelAll());
+    }
 
     final stream = twonlyDB.mediaFilesDao.watchMedia(
       allMediaFiles.first.mediaId!,

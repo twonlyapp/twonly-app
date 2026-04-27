@@ -161,18 +161,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
   }
 
-  Future<void> openedAllTextMessages(String groupId) {
-    final updates = MessagesCompanion(openedAt: Value(clock.now()));
-    return (update(messages)..where(
-          (t) =>
-              t.groupId.equals(groupId) &
-              t.senderId.isNotNull() &
-              t.openedAt.isNull() &
-              t.type.equals(MessageType.text.name),
-        ))
-        .write(updates);
-  }
-
   Future<void> handleMessageDeletion(
     int? contactId,
     String messageId,
@@ -184,13 +172,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       return;
     }
     if (msg.mediaId != null && contactId != null) {
-      final otherMessagesWithSameMedia = await (select(messages)
-            ..where(
-              (t) =>
-                  t.mediaId.equals(msg.mediaId!) &
-                  t.messageId.equals(messageId).not(),
-            ))
-          .get();
+      final otherMessagesWithSameMedia =
+          await (select(messages)..where(
+                (t) =>
+                    t.mediaId.equals(msg.mediaId!) &
+                    t.messageId.equals(messageId).not(),
+              ))
+              .get();
 
       if (otherMessagesWithSameMedia.isEmpty) {
         await (delete(
@@ -210,7 +198,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     await (delete(
       messageHistories,
     )..where((t) => t.messageId.equals(messageId))).go();
-    
+
     await twonlyDB.receiptsDao.deleteReceiptsByMessageId(messageId);
 
     await (update(messages)..where(
