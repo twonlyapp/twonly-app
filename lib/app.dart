@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +17,7 @@ import 'package:twonly/src/visual/views/critical_error.view.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
 import 'package:twonly/src/visual/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/visual/views/onboarding/register.view.dart';
-import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
@@ -119,7 +118,6 @@ class AppMainWidget extends StatefulWidget {
 class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
-  bool _skipBackup = kDebugMode;
   bool _isTwonlyLocked = true;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
@@ -171,11 +169,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (userService.currentUser.twonlySafeBackup == null &&
-          !_skipBackup) {
-        child = SetupBackupView(
-          callBack: () => setState(() {
-            _skipBackup = true;
+      } else if (true ||
+          !userService.currentUser.skipSetupPages &&
+              userService.currentUser.currentSetupPage ==
+                  SetupPages.profile.name) {
+        child = SetupView(
+          onUpdate: () => setState(() {
+            // userService.currentUser has updated...
           }),
         );
       } else {

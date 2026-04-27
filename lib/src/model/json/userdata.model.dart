@@ -9,6 +9,7 @@ class UserData {
     required this.username,
     required this.displayName,
     required this.subscriptionPlan,
+    required this.currentSetupPage,
   });
   factory UserData.fromJson(Map<String, dynamic> json) =>
       _$UserDataFromJson(json);
@@ -135,6 +136,11 @@ class UserData {
 
   // Once a day the anonymous data is collected and send to the server
   DateTime? lastUserStudyDataUpload;
+
+  String? currentSetupPage;
+
+  @JsonKey(defaultValue: false)
+  bool skipSetupPages = false;
 
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
 }

@@ -27,6 +27,8 @@ class AppState {
   static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
+  // initialized in runMigrations (main.dart)
+  static late int latestAppVersionId;
 }
 
 class AppGlobalKeys {

@@ -1,0 +1,130 @@
+import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/backup_setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/profile_setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/user_discovery_setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/verification_badge_setup.view.dart';
+
+enum SetupPages {
+  profile,
+  backup,
+  verificationBadge,
+  userDiscovery,
+}
+
+extension SetupPagesExtension on SetupPages {
+  int get pageNumber => index + 1;
+  int get totalPages => SetupPages.values.length;
+  int get progressPercentage => (pageNumber / totalPages * 100).round();
+  String get progressText => '$pageNumber / $totalPages';
+
+  SetupPages? next() {
+    final nextIndex = index + 1;
+    if (nextIndex < SetupPages.values.length) {
+      return SetupPages.values[nextIndex];
+    }
+    return null;
+  }
+}
+
+class SetupView extends StatefulWidget {
+  const SetupView({this.onUpdate, super.key});
+
+  final VoidCallback? onUpdate;
+
+  @override
+  State<SetupView> createState() => _SetupViewState();
+}
+
+class _SetupViewState extends State<SetupView> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<void>(
+      stream: userService.onUserUpdated,
+      builder: (context, snapshot) {
+        final user = userService.currentUser;
+        final currentPageString = user.currentSetupPage;
+
+        final currentPage = SetupPages.values.firstWhere(
+          (e) => e.name == currentPageString,
+          orElse: () => SetupPages.profile,
+        );
+
+        return Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: List.generate(currentPage.totalPages, (index) {
+                    final isFinished = index < currentPage.pageNumber;
+                    return Expanded(
+                      child: Container(
+                        height: 6,
+                        margin: EdgeInsets.only(
+                          right: index == currentPage.totalPages - 1 ? 0 : 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isFinished
+                              ? context.color.primary
+                              : context.color.surfaceContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+            toolbarHeight: 48,
+          ),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+            children: [
+              _buildPage(currentPage),
+              SizedBox(
+                height: 50,
+                child: Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      await UserService.update((u) {
+                        u
+                          ..skipSetupPages = false
+                          ..currentSetupPage = SetupPages.profile.name;
+                      });
+                      //await UserService.update((u) => u.skipSetupPages = true);
+                      widget.onUpdate?.call();
+                    },
+                    child: Text(
+                      context.lang.onboardingFinishLater,
+                      style: TextStyle(
+                        color: context.color.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPage(SetupPages page) {
+    switch (page) {
+      case SetupPages.profile:
+        return const ProfileSetupPage();
+      case SetupPages.backup:
+        return const BackupSetupPage();
+      case SetupPages.verificationBadge:
+        return const VerificationBadgeSetupPage();
+      case SetupPages.userDiscovery:
+        return const UserDiscoverySetupPage();
+    }
+  }
+}

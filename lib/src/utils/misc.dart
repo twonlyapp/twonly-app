@@ -290,9 +290,11 @@ Future<List<int>> sha256File(File file) async {
   return sha256Sink.events.single.bytes;
 }
 
-List<TextSpan> formattedText(BuildContext context, String input) {
-  // Access the current theme's text color
-  // Defaulting to bodyMedium color, but you can use labelLarge, displaySmall, etc.
+List<TextSpan> formattedText(
+  BuildContext context,
+  String input, {
+  Color? boldTextColor,
+}) {
   final defaultColor = Theme.of(context).colorScheme.onSurface;
 
   final regex = RegExp(r'\*(.*?)\*');
@@ -301,7 +303,6 @@ List<TextSpan> formattedText(BuildContext context, String input) {
   var lastMatchEnd = 0;
 
   for (final match in regex.allMatches(input)) {
-    // Add text before the match (Normal style)
     if (match.start > lastMatchEnd) {
       spans.add(
         TextSpan(
@@ -311,13 +312,12 @@ List<TextSpan> formattedText(BuildContext context, String input) {
       );
     }
 
-    // Add the matched text (Bold style)
     spans.add(
       TextSpan(
         text: match.group(1),
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: defaultColor, // Ensures bold text also uses the theme color
+          color: boldTextColor ?? defaultColor,
         ),
       ),
     );
@@ -325,7 +325,6 @@ List<TextSpan> formattedText(BuildContext context, String input) {
     lastMatchEnd = match.end;
   }
 
-  // Add any remaining text after the last match
   if (lastMatchEnd < input.length) {
     spans.add(
       TextSpan(

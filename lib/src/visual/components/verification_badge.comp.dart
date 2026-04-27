@@ -7,8 +7,8 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
-import 'package:twonly/src/visual/views/settings/help/faq/verification_bade_faq.view.dart';
 
 class VerificationBadgeComp extends StatefulWidget {
   const VerificationBadgeComp({

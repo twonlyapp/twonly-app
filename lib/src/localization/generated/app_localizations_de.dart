@@ -576,6 +576,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get enable => 'Aktivieren';
 
   @override
+  String get understood => 'Verstanden';
+
+  @override
   String get cancel => 'Abbrechen';
 
   @override
@@ -1589,6 +1592,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skipForNow => 'Vorerst überspringen';
 
   @override
+  String get onboardingFinishLater => 'Später abschließen';
+
+  @override
+  String get onboardingProfileTitle => 'Wähle deinen Look';
+
+  @override
+  String get onboardingProfileBody =>
+      'Wähle einen Avatar und einen Anzeigenamen, den deine Freunde sehen werden.';
+
+  @override
+  String get onboardingBackupTitle => 'Backup einrichten';
+
+  @override
+  String get onboardingBackupBody =>
+      'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
+
+  @override
+  String get onboardingVerificationBadgeTitle => 'Verifizierungs-Abzeichen';
+
+  @override
+  String get onboardingUserDiscoveryTitle => 'Freunde finden';
+
+  @override
+  String get onboardingResetSetup => 'Setup zurücksetzen';
+
+  @override
   String linkFromUsername(Object username) {
     return 'Ist der Link von $username?';
   }
@@ -1721,15 +1750,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'Ein Kontakt, den du persönlich verifiziert hast.';
+      'Ein Kontakt, den du *persönlich verifiziert* hast.';
 
   @override
   String get verificationBadgeYellowDesc =>
-      'Ein Kontakt, der von mind. einem deiner Kontakte verifiziert wurde.';
+      'Ein Kontakt, der von mind. einem *deiner Kontakte verifiziert* wurde.';
 
   @override
   String get verificationBadgeRedDesc =>
-      'Ein Kontakt, dessen Identität noch nicht überprüft wurde.';
+      'Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.';
 
   @override
   String chatEntryFlameRestored(Object count) {

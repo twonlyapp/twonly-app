@@ -4,6 +4,7 @@
 
 - New: Feature to find friends without a phone number
 - New: The verification state is now transferred to the scanned user.
+- New: Registration setup to configure the most important configurations
 - Improved: FAQ is now in the app rather than opening in the browser
 - Fix: Many smaller issues
 

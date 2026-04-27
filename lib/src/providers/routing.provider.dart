@@ -33,7 +33,7 @@ import 'package:twonly/src/visual/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/visual/views/settings/help/credits.view.dart';
 import 'package:twonly/src/visual/views/settings/help/diagnostics.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
-import 'package:twonly/src/visual/views/settings/help/faq/verification_bade_faq.view.dart';
+import 'package:twonly/src/visual/views/settings/help/faq/verification_badge_faq.view.dart';
 import 'package:twonly/src/visual/views/settings/help/help.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';

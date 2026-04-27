@@ -1126,6 +1126,12 @@ abstract class AppLocalizations {
   /// **'Enable'**
   String get enable;
 
+  /// No description provided for @understood.
+  ///
+  /// In en, this message translates to:
+  /// **'Understood'**
+  String get understood;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -2878,6 +2884,54 @@ abstract class AppLocalizations {
   /// **'Skip for now'**
   String get skipForNow;
 
+  /// No description provided for @onboardingFinishLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish later'**
+  String get onboardingFinishLater;
+
+  /// No description provided for @onboardingProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your look'**
+  String get onboardingProfileTitle;
+
+  /// No description provided for @onboardingProfileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an avatar and a display name that friends will see.'**
+  String get onboardingProfileBody;
+
+  /// No description provided for @onboardingBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Setup'**
+  String get onboardingBackupTitle;
+
+  /// No description provided for @onboardingBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
+  String get onboardingBackupBody;
+
+  /// No description provided for @onboardingVerificationBadgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification Badge'**
+  String get onboardingVerificationBadgeTitle;
+
+  /// No description provided for @onboardingUserDiscoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Discovery'**
+  String get onboardingUserDiscoveryTitle;
+
+  /// No description provided for @onboardingResetSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Setup'**
+  String get onboardingResetSetup;
+
   /// No description provided for @linkFromUsername.
   ///
   /// In en, this message translates to:
@@ -3079,19 +3133,19 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGreenDesc.
   ///
   /// In en, this message translates to:
-  /// **'A contact you have personally verified.'**
+  /// **'A contact you have *personally* verified.'**
   String get verificationBadgeGreenDesc;
 
   /// No description provided for @verificationBadgeYellowDesc.
   ///
   /// In en, this message translates to:
-  /// **'A contact who has been verified by at least one of your contacts.'**
+  /// **'A contact who has been verified by at least one of *your contacts*.'**
   String get verificationBadgeYellowDesc;
 
   /// No description provided for @verificationBadgeRedDesc.
   ///
   /// In en, this message translates to:
-  /// **'A contact whose identity has not yet been verified.'**
+  /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
 
   /// No description provided for @chatEntryFlameRestored.

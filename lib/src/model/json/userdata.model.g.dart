@@ -12,6 +12,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
         username: json['username'] as String,
         displayName: json['displayName'] as String,
         subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
+        currentSetupPage: json['currentSetupPage'] as String?,
       )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
@@ -93,7 +94,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['userStudyParticipantsToken'] as String?
       ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
           ? null
-          : DateTime.parse(json['lastUserStudyDataUpload'] as String);
+          : DateTime.parse(json['lastUserStudyDataUpload'] as String)
+      ..skipSetupPages = json['skipSetupPages'] as bool? ?? false;
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'userId': instance.userId,
@@ -145,6 +147,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'userStudyParticipantsToken': instance.userStudyParticipantsToken,
   'lastUserStudyDataUpload': instance.lastUserStudyDataUpload
       ?.toIso8601String(),
+  'currentSetupPage': instance.currentSetupPage,
+  'skipSetupPages': instance.skipSetupPages,
 };
 
 const _$ThemeModeEnumMap = {

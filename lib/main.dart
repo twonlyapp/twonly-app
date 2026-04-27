@@ -28,6 +28,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
+import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 /// This function is used to initialized the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
@@ -147,6 +148,13 @@ Future<void> runMigrations() async {
         );
       }
     }
-    await UserService.update((u) => u.appVersion = 109);
+    await UserService.update((u) {
+      u
+        ..appVersion = 109
+        ..skipSetupPages = true
+        ..currentSetupPage = SetupPages.userDiscovery.name;
+    });
   }
+
+  AppState.latestAppVersionId = 110;
 }

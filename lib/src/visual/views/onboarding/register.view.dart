@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -19,6 +20,7 @@ import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({
@@ -136,7 +138,8 @@ class _RegisterViewState extends State<RegisterView> {
       username: username,
       displayName: username,
       subscriptionPlan: 'Preview',
-    )..appVersion = 62;
+      currentSetupPage: SetupPages.profile.name,
+    )..appVersion = AppState.latestAppVersionId;
 
     await SecureStorage.instance.write(
       key: SecureStorageKeys.userData,

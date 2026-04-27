@@ -571,6 +571,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get enable => 'Enable';
 
   @override
+  String get understood => 'Understood';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -1579,6 +1582,32 @@ class AppLocalizationsSv extends AppLocalizations {
   String get skipForNow => 'Skip for now';
 
   @override
+  String get onboardingFinishLater => 'Finish later';
+
+  @override
+  String get onboardingProfileTitle => 'Choose your look';
+
+  @override
+  String get onboardingProfileBody =>
+      'Select an avatar and a display name that friends will see.';
+
+  @override
+  String get onboardingBackupTitle => 'Backup Setup';
+
+  @override
+  String get onboardingBackupBody =>
+      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
+
+  @override
+  String get onboardingVerificationBadgeTitle => 'Verification Badge';
+
+  @override
+  String get onboardingUserDiscoveryTitle => 'User Discovery';
+
+  @override
+  String get onboardingResetSetup => 'Reset Setup';
+
+  @override
   String linkFromUsername(Object username) {
     return 'Is the link from $username?';
   }
@@ -1709,15 +1738,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'A contact you have personally verified.';
+      'A contact you have *personally* verified.';
 
   @override
   String get verificationBadgeYellowDesc =>
-      'A contact who has been verified by at least one of your contacts.';
+      'A contact who has been verified by at least one of *your contacts*.';
 
   @override
   String get verificationBadgeRedDesc =>
-      'A contact whose identity has not yet been verified.';
+      'A contact whose identity has *not* yet been verified.';
 
   @override
   String chatEntryFlameRestored(Object count) {

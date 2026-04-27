@@ -57,6 +57,7 @@ void main() {
       username: 'test_user',
       displayName: 'Test User',
       subscriptionPlan: 'Free',
+      currentSetupPage: null,
     )..appVersion = 62;
   });
 
