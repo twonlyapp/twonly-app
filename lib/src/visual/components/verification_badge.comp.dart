@@ -17,6 +17,7 @@ class VerificationBadgeComp extends StatefulWidget {
     super.key,
     this.size = 15,
     this.showOnlyIfVerified = false,
+    this.isVerifiedByTransferredTrust,
     this.clickable = true,
   });
   final Group? group;
@@ -25,6 +26,7 @@ class VerificationBadgeComp extends StatefulWidget {
 
   final bool showOnlyIfVerified;
   final bool clickable;
+  final bool? isVerifiedByTransferredTrust;
 
   @override
   State<VerificationBadgeComp> createState() => _VerificationBadgeCompState();
@@ -76,6 +78,10 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
               _isVerifiedByTransferredTrust = update.isNotEmpty;
             });
           });
+    } else if (widget.isVerifiedByTransferredTrust != null) {
+      setState(() {
+        _isVerifiedByTransferredTrust = widget.isVerifiedByTransferredTrust!;
+      });
     }
   }
 

@@ -7,7 +7,6 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
-import 'app_localizations_sv.dart';
 
 // ignore_for_file: type=lint
 
@@ -97,7 +96,6 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
     Locale('en'),
-    Locale('sv'),
   ];
 
   /// No description provided for @registerTitle.
@@ -172,35 +170,11 @@ abstract class AppLocalizations {
   /// **'twonly is financed by donations and an optional subscription. Your data will never be sold.'**
   String get onboardingNotProductBody;
 
-  /// No description provided for @onboardingBuyOneGetTwoTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy one get two'**
-  String get onboardingBuyOneGetTwoTitle;
-
-  /// No description provided for @onboardingBuyOneGetTwoBody.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly always requires at least two people, which is why you receive a second free license for your twonly partner with your purchase.'**
-  String get onboardingBuyOneGetTwoBody;
-
   /// No description provided for @onboardingGetStartedTitle.
   ///
   /// In en, this message translates to:
   /// **'Let\'s go!'**
   String get onboardingGetStartedTitle;
-
-  /// No description provided for @onboardingGetStartedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'You can test twonly free of charge in preview mode. In this mode you can be found by others and receive pictures or videos but you cannot send any yourself.'**
-  String get onboardingGetStartedBody;
-
-  /// No description provided for @onboardingTryForFree.
-  ///
-  /// In en, this message translates to:
-  /// **'Try for free'**
-  String get onboardingTryForFree;
 
   /// No description provided for @registerUsernameSlogan.
   ///
@@ -231,24 +205,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register now!'**
   String get registerSubmitButton;
-
-  /// No description provided for @registerTwonlyCodeText.
-  ///
-  /// In en, this message translates to:
-  /// **'Have you received a twonly code? Then redeem it either directly here or later!'**
-  String get registerTwonlyCodeText;
-
-  /// No description provided for @registerTwonlyCodeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly-Code'**
-  String get registerTwonlyCodeLabel;
-
-  /// No description provided for @newMessageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'New message'**
-  String get newMessageTitle;
 
   /// No description provided for @chatsTapToSend.
   ///
@@ -334,35 +290,11 @@ abstract class AppLocalizations {
   /// **'New Contact'**
   String get startNewChatNewContact;
 
-  /// No description provided for @startNewChatYourContacts.
-  ///
-  /// In en, this message translates to:
-  /// **'Your Contacts'**
-  String get startNewChatYourContacts;
-
   /// No description provided for @shareImageAllUsers.
   ///
   /// In en, this message translates to:
   /// **'All contacts'**
   String get shareImageAllUsers;
-
-  /// No description provided for @shareImageAllTwonlyWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'twonlies can only be send to verified contacts!'**
-  String get shareImageAllTwonlyWarning;
-
-  /// No description provided for @shareImageUserNotVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'User is not verified'**
-  String get shareImageUserNotVerified;
-
-  /// No description provided for @shareImageUserNotVerifiedDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'twonlies can only be sent to verified users. To verify a user, go to their profile and to verify security number.'**
-  String get shareImageUserNotVerifiedDesc;
 
   /// No description provided for @shareImageShowArchived.
   ///
@@ -381,18 +313,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add friends'**
   String get addFriendTitle;
-
-  /// No description provided for @searchUserNamePreview.
-  ///
-  /// In en, this message translates to:
-  /// **'To protect you and other twonly users from spam and abuse, it is not possible to search for other people in preview mode. Other users can find you and their requests will be displayed here!'**
-  String get searchUserNamePreview;
-
-  /// No description provided for @selectSubscription.
-  ///
-  /// In en, this message translates to:
-  /// **'Select subscription'**
-  String get selectSubscription;
 
   /// No description provided for @searchUserNamePending.
   ///
@@ -418,23 +338,11 @@ abstract class AppLocalizations {
   /// **'Open requests'**
   String get searchUsernameNewFollowerTitle;
 
-  /// No description provided for @searchUsernameQrCodeBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan QR code'**
-  String get searchUsernameQrCodeBtn;
-
   /// No description provided for @chatListViewSearchUserNameBtn.
   ///
   /// In en, this message translates to:
   /// **'Add your first twonly contact!'**
   String get chatListViewSearchUserNameBtn;
-
-  /// No description provided for @chatListViewSendFirstTwonly.
-  ///
-  /// In en, this message translates to:
-  /// **'Send your first twonly!'**
-  String get chatListViewSendFirstTwonly;
 
   /// No description provided for @chatListDetailInput.
   ///
@@ -453,12 +361,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User profile'**
   String get contextMenuUserProfile;
-
-  /// No description provided for @contextMenuVerifyUser.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify'**
-  String get contextMenuVerifyUser;
 
   /// No description provided for @contextMenuArchiveUser.
   ///
@@ -916,23 +818,11 @@ abstract class AppLocalizations {
   /// **'Delete account'**
   String get settingsAccountDeleteAccount;
 
-  /// No description provided for @settingsAccountDeleteAccountWithBallance.
-  ///
-  /// In en, this message translates to:
-  /// **'In the next step, you can select what you want to to with the remaining credit ({credit}).'**
-  String settingsAccountDeleteAccountWithBallance(Object credit);
-
   /// No description provided for @settingsAccountDeleteAccountNoBallance.
   ///
   /// In en, this message translates to:
   /// **'Once you delete your account, there is no going back.'**
   String get settingsAccountDeleteAccountNoBallance;
-
-  /// No description provided for @settingsAccountDeleteAccountNoInternet.
-  ///
-  /// In en, this message translates to:
-  /// **'An Internet connection is required to delete your account.'**
-  String get settingsAccountDeleteAccountNoInternet;
 
   /// No description provided for @settingsAccountDeleteModalTitle.
   ///
@@ -951,24 +841,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verify contact'**
   String get contactVerifyNumberTitle;
-
-  /// No description provided for @contactVerifyNumberTapToScan.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to scan'**
-  String get contactVerifyNumberTapToScan;
-
-  /// No description provided for @contactVerifyNumberMarkAsVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Mark as verified'**
-  String get contactVerifyNumberMarkAsVerified;
-
-  /// No description provided for @contactVerifyNumberClearVerification.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear verification'**
-  String get contactVerifyNumberClearVerification;
 
   /// No description provided for @userVerifiedTitle.
   ///
@@ -1012,12 +884,6 @@ abstract class AppLocalizations {
   /// **'Migrated from old version.'**
   String get verificationTypeMigratedFromOldVersion;
 
-  /// No description provided for @contactVerifyNumberLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'To verify the end-to-end encryption with {username}, compare the numbers with their device. The person can also scan your code with their device.'**
-  String contactVerifyNumberLongDesc(Object username);
-
   /// No description provided for @contactViewMessage.
   ///
   /// In en, this message translates to:
@@ -1035,18 +901,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New nickname'**
   String get contactNicknameNew;
-
-  /// No description provided for @deleteAllContactMessages.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete all text-messages'**
-  String get deleteAllContactMessages;
-
-  /// No description provided for @deleteAllContactMessagesBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This will remove all messages, except stored media files, in your chat with {username}. This will NOT delete the messages stored at {username}\'s device!'**
-  String deleteAllContactMessagesBody(Object username);
 
   /// No description provided for @contactBlock.
   ///
@@ -1102,6 +956,12 @@ abstract class AppLocalizations {
   /// **'Next'**
   String get next;
 
+  /// No description provided for @finishSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete setup'**
+  String get finishSetup;
+
   /// No description provided for @submit.
   ///
   /// In en, this message translates to:
@@ -1125,12 +985,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable'**
   String get enable;
-
-  /// No description provided for @understood.
-  ///
-  /// In en, this message translates to:
-  /// **'Understood'**
-  String get understood;
 
   /// No description provided for @cancel.
   ///
@@ -1246,12 +1100,6 @@ abstract class AppLocalizations {
   /// **'Toggle the flash light'**
   String get toggleFlashLight;
 
-  /// No description provided for @toggleHighQuality.
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle better resolution'**
-  String get toggleHighQuality;
-
   /// No description provided for @userFound.
   ///
   /// In en, this message translates to:
@@ -1263,30 +1111,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Do you want to create a follow request?'**
   String get userFoundBody;
-
-  /// No description provided for @searchUsernameNotFoundLong.
-  ///
-  /// In en, this message translates to:
-  /// **'\"{username}\" is not a twonly user. Please check the username and try again.'**
-  String searchUsernameNotFoundLong(Object username);
-
-  /// No description provided for @errorUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'An unexpected error has occurred. Please try again later.'**
-  String get errorUnknown;
-
-  /// No description provided for @errorBadRequest.
-  ///
-  /// In en, this message translates to:
-  /// **'The request could not be understood by the server due to malformed syntax. Please check your input and try again.'**
-  String get errorBadRequest;
-
-  /// No description provided for @errorTooManyRequests.
-  ///
-  /// In en, this message translates to:
-  /// **'You have made too many requests in a short period. Please wait a moment before trying again.'**
-  String get errorTooManyRequests;
 
   /// No description provided for @errorInternalError.
   ///
@@ -1306,47 +1130,11 @@ abstract class AppLocalizations {
   /// **'The username is already taken.'**
   String get errorUsernameAlreadyTaken;
 
-  /// No description provided for @errorSignatureNotValid.
-  ///
-  /// In en, this message translates to:
-  /// **'The provided signature is not valid. Please check your credentials and try again.'**
-  String get errorSignatureNotValid;
-
-  /// No description provided for @errorUsernameNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'The username you entered does not exist. Please check the spelling or create a new account.'**
-  String get errorUsernameNotFound;
-
   /// No description provided for @errorUsernameNotValid.
   ///
   /// In en, this message translates to:
   /// **'The username you provided does not meet the required criteria. Please choose a valid username.'**
   String get errorUsernameNotValid;
-
-  /// No description provided for @errorInvalidPublicKey.
-  ///
-  /// In en, this message translates to:
-  /// **'The public key you provided is invalid. Please check the key and try again.'**
-  String get errorInvalidPublicKey;
-
-  /// No description provided for @errorSessionAlreadyAuthenticated.
-  ///
-  /// In en, this message translates to:
-  /// **'You are already logged in. Please log out if you want to log in with a different account.'**
-  String get errorSessionAlreadyAuthenticated;
-
-  /// No description provided for @errorSessionNotAuthenticated.
-  ///
-  /// In en, this message translates to:
-  /// **'Your session is not authenticated. Please log in to continue.'**
-  String get errorSessionNotAuthenticated;
-
-  /// No description provided for @errorOnlyOneSessionAllowed.
-  ///
-  /// In en, this message translates to:
-  /// **'Only one active session is allowed per user. Please log out from other devices to continue.'**
-  String get errorOnlyOneSessionAllowed;
 
   /// No description provided for @errorNotEnoughCredit.
   ///
@@ -1486,30 +1274,6 @@ abstract class AppLocalizations {
   /// **'✓ Additional features (coming-soon)'**
   String get plusFeature2;
 
-  /// No description provided for @transactionHistory.
-  ///
-  /// In en, this message translates to:
-  /// **'Your transaction history'**
-  String get transactionHistory;
-
-  /// No description provided for @manageSubscription.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage subscription'**
-  String get manageSubscription;
-
-  /// No description provided for @nextPayment.
-  ///
-  /// In en, this message translates to:
-  /// **'Next payment'**
-  String get nextPayment;
-
-  /// No description provided for @currentBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'Current balance'**
-  String get currentBalance;
-
   /// No description provided for @manageAdditionalUsers.
   ///
   /// In en, this message translates to:
@@ -1522,23 +1286,11 @@ abstract class AppLocalizations {
   /// **'Open'**
   String get open;
 
-  /// No description provided for @createOrRedeemVoucher.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy or redeem voucher'**
-  String get createOrRedeemVoucher;
-
   /// No description provided for @createVoucher.
   ///
   /// In en, this message translates to:
   /// **'Buy voucher'**
   String get createVoucher;
-
-  /// No description provided for @createVoucherDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose the value of the voucher. The value of the voucher will be deducted from your twonly balance.'**
-  String get createVoucherDesc;
 
   /// No description provided for @redeemVoucher.
   ///
@@ -1546,149 +1298,11 @@ abstract class AppLocalizations {
   /// **'Redeem voucher'**
   String get redeemVoucher;
 
-  /// No description provided for @openVouchers.
-  ///
-  /// In en, this message translates to:
-  /// **'Open vouchers'**
-  String get openVouchers;
-
-  /// No description provided for @voucherCreated.
-  ///
-  /// In en, this message translates to:
-  /// **'Voucher created'**
-  String get voucherCreated;
-
-  /// No description provided for @voucherRedeemed.
-  ///
-  /// In en, this message translates to:
-  /// **'Voucher redeemed'**
-  String get voucherRedeemed;
-
-  /// No description provided for @enterVoucherCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter Voucher Code'**
-  String get enterVoucherCode;
-
-  /// No description provided for @requestedVouchers.
-  ///
-  /// In en, this message translates to:
-  /// **'Requested vouchers'**
-  String get requestedVouchers;
-
-  /// No description provided for @redeemedVouchers.
-  ///
-  /// In en, this message translates to:
-  /// **'Redeemed vouchers'**
-  String get redeemedVouchers;
-
   /// No description provided for @buy.
   ///
   /// In en, this message translates to:
   /// **'Buy'**
   String get buy;
-
-  /// No description provided for @subscriptionRefund.
-  ///
-  /// In en, this message translates to:
-  /// **'When you upgrade, you will receive a refund of {refund} for your current subscription.'**
-  String subscriptionRefund(Object refund);
-
-  /// No description provided for @transactionCash.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash transaction'**
-  String get transactionCash;
-
-  /// No description provided for @transactionPlanUpgrade.
-  ///
-  /// In en, this message translates to:
-  /// **'Plan upgrade'**
-  String get transactionPlanUpgrade;
-
-  /// No description provided for @transactionRefund.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund transaction'**
-  String get transactionRefund;
-
-  /// No description provided for @transactionThanksForTesting.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you for testing'**
-  String get transactionThanksForTesting;
-
-  /// No description provided for @transactionUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown transaction'**
-  String get transactionUnknown;
-
-  /// No description provided for @transactionVoucherCreated.
-  ///
-  /// In en, this message translates to:
-  /// **'Voucher created'**
-  String get transactionVoucherCreated;
-
-  /// No description provided for @transactionVoucherRedeemed.
-  ///
-  /// In en, this message translates to:
-  /// **'Voucher redeemed'**
-  String get transactionVoucherRedeemed;
-
-  /// No description provided for @transactionAutoRenewal.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic renewal'**
-  String get transactionAutoRenewal;
-
-  /// No description provided for @checkoutOptions.
-  ///
-  /// In en, this message translates to:
-  /// **'Options'**
-  String get checkoutOptions;
-
-  /// No description provided for @refund.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund'**
-  String get refund;
-
-  /// No description provided for @checkoutPayYearly.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay yearly'**
-  String get checkoutPayYearly;
-
-  /// No description provided for @checkoutTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get checkoutTotal;
-
-  /// No description provided for @selectPaymentMethod.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Payment Method'**
-  String get selectPaymentMethod;
-
-  /// No description provided for @twonlyCredit.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly-Credit'**
-  String get twonlyCredit;
-
-  /// No description provided for @notEnoughCredit.
-  ///
-  /// In en, this message translates to:
-  /// **'You do not have enough credit!'**
-  String get notEnoughCredit;
-
-  /// No description provided for @chargeCredit.
-  ///
-  /// In en, this message translates to:
-  /// **'Charge credit'**
-  String get chargeCredit;
 
   /// No description provided for @autoRenewal.
   ///
@@ -1696,59 +1310,11 @@ abstract class AppLocalizations {
   /// **'Auto renewal'**
   String get autoRenewal;
 
-  /// No description provided for @autoRenewalDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'You can change this at any time.'**
-  String get autoRenewalDesc;
-
-  /// No description provided for @autoRenewalLongDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal. We will notify you in good time before the automatic renewal.'**
-  String get autoRenewalLongDesc;
-
-  /// No description provided for @planSuccessUpgraded.
-  ///
-  /// In en, this message translates to:
-  /// **'Successfully upgraded your plan.'**
-  String get planSuccessUpgraded;
-
-  /// No description provided for @checkoutSubmit.
-  ///
-  /// In en, this message translates to:
-  /// **'Order with a fee.'**
-  String get checkoutSubmit;
-
   /// No description provided for @additionalUsersList.
   ///
   /// In en, this message translates to:
   /// **'Your additional users'**
   String get additionalUsersList;
-
-  /// No description provided for @additionalUsersPlusTokens.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly-codes for \"Plus\" user'**
-  String get additionalUsersPlusTokens;
-
-  /// No description provided for @additionalUsersFreeTokens.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly-codes for \"Free\" user'**
-  String get additionalUsersFreeTokens;
-
-  /// No description provided for @planLimitReached.
-  ///
-  /// In en, this message translates to:
-  /// **'You have reached your plan limit for today. Upgrade your plan now to send the media file.'**
-  String get planLimitReached;
-
-  /// No description provided for @planNotAllowed.
-  ///
-  /// In en, this message translates to:
-  /// **'You cannot send media files with your current tariff. Upgrade your plan now to send the media file.'**
-  String get planNotAllowed;
 
   /// No description provided for @galleryDelete.
   ///
@@ -1773,72 +1339,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Successfully saved in the Gallery.'**
   String get galleryExportSuccess;
-
-  /// No description provided for @settingsResetTutorials.
-  ///
-  /// In en, this message translates to:
-  /// **'Show tutorials again'**
-  String get settingsResetTutorials;
-
-  /// No description provided for @settingsResetTutorialsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Click here to show already displayed tutorials again.'**
-  String get settingsResetTutorialsDesc;
-
-  /// No description provided for @settingsResetTutorialsSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Tutorials will be displayed again.'**
-  String get settingsResetTutorialsSuccess;
-
-  /// No description provided for @tutorialChatListSearchUsersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Find Friends and Manage Friend Requests'**
-  String get tutorialChatListSearchUsersTitle;
-
-  /// No description provided for @tutorialChatListSearchUsersDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'If you know your friends\' usernames, you can search for them here and send a friend request. You will also see all requests from other users that you can accept or block.'**
-  String get tutorialChatListSearchUsersDesc;
-
-  /// No description provided for @tutorialChatListContextMenuTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Long press on the contact to open the context menu.'**
-  String get tutorialChatListContextMenuTitle;
-
-  /// No description provided for @tutorialChatListContextMenuDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'With the context menu, you can pin, archive, and perform various actions on your contacts. Simply long press the contact and then move your finger to the desired option or tap directly on it.'**
-  String get tutorialChatListContextMenuDesc;
-
-  /// No description provided for @tutorialChatMessagesVerifyShieldTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify your contacts!'**
-  String get tutorialChatMessagesVerifyShieldTitle;
-
-  /// No description provided for @tutorialChatMessagesVerifyShieldDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly uses the Signal protocol for secure end-to-end encryption. When you first contact someone, their public identity key is downloaded. To ensure that this key has not been tampered with by third parties, you should compare it with your friend when you meet in person. Once you have verified the user, you can also enable the twonly mode when sending images and videos.'**
-  String get tutorialChatMessagesVerifyShieldDesc;
-
-  /// No description provided for @tutorialChatMessagesReopenMessageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reopen Images and Videos'**
-  String get tutorialChatMessagesReopenMessageTitle;
-
-  /// No description provided for @tutorialChatMessagesReopenMessageDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'If your friend has sent you a picture or video with infinite display time, you can open it again at any time until you restart the app. To do this, simply double-click on the message. Your friend will then receive a notification that you have viewed the picture again.'**
-  String get tutorialChatMessagesReopenMessageDesc;
 
   /// No description provided for @memoriesEmpty.
   ///
@@ -1881,30 +1381,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup'**
   String get settingsBackup;
-
-  /// No description provided for @backupNoticeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No backup configured'**
-  String get backupNoticeTitle;
-
-  /// No description provided for @backupNoticeDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'If you change or lose your device, no one can restore your account without a backup. Therefore, back up your data.'**
-  String get backupNoticeDesc;
-
-  /// No description provided for @backupNoticeLater.
-  ///
-  /// In en, this message translates to:
-  /// **'Remind later'**
-  String get backupNoticeLater;
-
-  /// No description provided for @backupNoticeOpenBackup.
-  ///
-  /// In en, this message translates to:
-  /// **'Create backup'**
-  String get backupNoticeOpenBackup;
 
   /// No description provided for @backupPending.
   ///
@@ -1972,29 +1448,11 @@ abstract class AppLocalizations {
   /// **'Result'**
   String get backupLastBackupResult;
 
-  /// No description provided for @deleteBackupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure?'**
-  String get deleteBackupTitle;
-
-  /// No description provided for @deleteBackupBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Without an backup, you can not restore your user account.'**
-  String get deleteBackupBody;
-
   /// No description provided for @backupData.
   ///
   /// In en, this message translates to:
   /// **'Data-Backup'**
   String get backupData;
-
-  /// No description provided for @backupDataDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'This backup contains besides of your twonly-Identity also all of your media files. This backup will is also encrypted but stored locally. You then have to ensure to manually copy it onto your laptop or device of your choice.'**
-  String get backupDataDesc;
 
   /// No description provided for @backupInsecurePassword.
   ///
@@ -2169,12 +1627,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retransmission requested'**
   String get retransmissionRequested;
-
-  /// No description provided for @testPaymentMethod.
-  ///
-  /// In en, this message translates to:
-  /// **'Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!'**
-  String get testPaymentMethod;
 
   /// No description provided for @openChangeLog.
   ///
@@ -2884,6 +2336,24 @@ abstract class AppLocalizations {
   /// **'Skip for now'**
   String get skipForNow;
 
+  /// No description provided for @finishSetupCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get finishSetupCardTitle;
+
+  /// No description provided for @finishSetupCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You are almost there! Finish setting up your account to get the most out of twonly.'**
+  String get finishSetupCardDesc;
+
+  /// No description provided for @finishSetupCardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Setup'**
+  String get finishSetupCardAction;
+
   /// No description provided for @onboardingFinishLater.
   ///
   /// In en, this message translates to:
@@ -2902,12 +2372,6 @@ abstract class AppLocalizations {
   /// **'Select an avatar and a display name that friends will see.'**
   String get onboardingProfileBody;
 
-  /// No description provided for @onboardingBackupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup Setup'**
-  String get onboardingBackupTitle;
-
   /// No description provided for @onboardingBackupBody.
   ///
   /// In en, this message translates to:
@@ -2920,17 +2384,119 @@ abstract class AppLocalizations {
   /// **'Verification Badge'**
   String get onboardingVerificationBadgeTitle;
 
-  /// No description provided for @onboardingUserDiscoveryTitle.
+  /// No description provided for @onboardingUserDiscoveryShareFriends.
   ///
   /// In en, this message translates to:
-  /// **'User Discovery'**
-  String get onboardingUserDiscoveryTitle;
+  /// **'Share your friends'**
+  String get onboardingUserDiscoveryShareFriends;
 
-  /// No description provided for @onboardingResetSetup.
+  /// No description provided for @onboardingUserDiscoveryIncreaseTrust.
   ///
   /// In en, this message translates to:
-  /// **'Reset Setup'**
-  String get onboardingResetSetup;
+  /// **'Increase trust'**
+  String get onboardingUserDiscoveryIncreaseTrust;
+
+  /// No description provided for @onboardingUserDiscoveryShareFriendsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list.'**
+  String get onboardingUserDiscoveryShareFriendsDesc;
+
+  /// No description provided for @onboardingUserDiscoveryContactsVerifiedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts verified by your friends get a badge'**
+  String get onboardingUserDiscoveryContactsVerifiedBadge;
+
+  /// No description provided for @onboardingUserDiscoveryWhoIsRequesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Be informed about who is requesting'**
+  String get onboardingUserDiscoveryWhoIsRequesting;
+
+  /// No description provided for @userDiscoverySettingsEnableAllContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled for all contacts'**
+  String get userDiscoverySettingsEnableAllContacts;
+
+  /// No description provided for @userDiscoverySettingsManualApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual approval'**
+  String get userDiscoverySettingsManualApproval;
+
+  /// No description provided for @userDiscoverySettingsManualApprovalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Before sharing someone, you will be asked every time someone reaches the number of send images.'**
+  String get userDiscoverySettingsManualApprovalDesc;
+
+  /// No description provided for @onboardingUserDiscoveryLetFriendsFindYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Let your friends find you'**
+  String get onboardingUserDiscoveryLetFriendsFindYou;
+
+  /// No description provided for @onboardingUserDiscoveryLetFriendsFindYouDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'To help your friends find you, *you can be suggested* to people with whom you have *mutual friends*.'**
+  String get onboardingUserDiscoveryLetFriendsFindYouDesc;
+
+  /// No description provided for @onboardingUserDiscoveryBeRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Be recommended to others'**
+  String get onboardingUserDiscoveryBeRecommended;
+
+  /// No description provided for @onboardingUserDiscoveryWhatOthersSee.
+  ///
+  /// In en, this message translates to:
+  /// **'What others will see'**
+  String get onboardingUserDiscoveryWhatOthersSee;
+
+  /// No description provided for @onboardingUserDiscoveryWhatYouSee.
+  ///
+  /// In en, this message translates to:
+  /// **'If requested, that\'s what you will see'**
+  String get onboardingUserDiscoveryWhatYouSee;
+
+  /// No description provided for @onboardingAddContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new contacts'**
+  String get onboardingAddContactsTitle;
+
+  /// No description provided for @onboardingAddContactsAcceptDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'In twonly, every contact must first be accepted before you can communicate.'**
+  String get onboardingAddContactsAcceptDesc;
+
+  /// No description provided for @onboardingAddContactsMethodHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contacts'**
+  String get onboardingAddContactsMethodHeading;
+
+  /// No description provided for @onboardingAddContactsMethodScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the contact\'s QR code.'**
+  String get onboardingAddContactsMethodScan;
+
+  /// No description provided for @onboardingAddContactsMethodSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for the username.'**
+  String get onboardingAddContactsMethodSearch;
+
+  /// No description provided for @onboardingAddContactsMethodShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a contact in chats.'**
+  String get onboardingAddContactsMethodShare;
 
   /// No description provided for @linkFromUsername.
   ///
@@ -3241,7 +2807,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsMinImages.
   ///
   /// In en, this message translates to:
-  /// **'Choose the minimum number of images you must have exchanged with a person before you securely share your friends with them.'**
+  /// **'Choose the minimum number of images you must have send to a person before you securely share your friends with them.'**
   String get userDiscoverySettingsMinImages;
 
   /// No description provided for @userDiscoverySettingsMutualFriends.
@@ -3259,7 +2825,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoveryEnabledDisableWarning.
   ///
   /// In en, this message translates to:
-  /// **'If you disable the \"Find friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.'**
+  /// **'If you disable the \"Share your friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.'**
   String get userDiscoveryEnabledDisableWarning;
 
   /// No description provided for @userDiscoveryEnabledChangeSettings.
@@ -3271,37 +2837,31 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoveryEnabledFaq.
   ///
   /// In en, this message translates to:
-  /// **'In our FAQ we explain how the \"Find friends\" feature works.'**
+  /// **'In our FAQ we explain how the \"Share your friends\" feature works.'**
   String get userDiscoveryEnabledFaq;
 
   /// No description provided for @userDiscoveryDisabledIntro.
   ///
   /// In en, this message translates to:
-  /// **'twonly doesn\'t use phone numbers, so we suggest friends based on mutual contacts instead – securely and privately.'**
+  /// **'twonly does *not* collect your phone number or needs access to your contacts. Instead, twonly can *find your friends through mutual friends*.'**
   String get userDiscoveryDisabledIntro;
-
-  /// No description provided for @userDiscoveryDisabledInvisible.
-  ///
-  /// In en, this message translates to:
-  /// **'Your friend list is *completely invisible to strangers*. Only your friends can see parts of it – and only those people with whom they have *mutual friends* themselves.'**
-  String get userDiscoveryDisabledInvisible;
 
   /// No description provided for @userDiscoveryDisabledDecide.
   ///
   /// In en, this message translates to:
-  /// **'Decide for yourself who can see your friends. You can change your mind at any time or hide specific people.'**
+  /// **'Decide for yourself who can see your friends. You can change your mind at *any time* or *hide specific people*.'**
   String get userDiscoveryDisabledDecide;
 
   /// No description provided for @userDiscoverySettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Find friends'**
+  /// **'Share your friends'**
   String get userDiscoverySettingsTitle;
 
   /// No description provided for @userDiscoverySettingsMinImagesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Number of shared images'**
+  /// **'Number of images send'**
   String get userDiscoverySettingsMinImagesTitle;
 
   /// No description provided for @userDiscoverySettingsMutualFriendsTitle.
@@ -3315,18 +2875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are in control'**
   String get userDiscoveryDisabledYouHaveControl;
-
-  /// No description provided for @userDiscoveryDisabledEnableWithDefault.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable with default settings'**
-  String get userDiscoveryDisabledEnableWithDefault;
-
-  /// No description provided for @userDiscoveryDisabledCustomizeSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Customize settings'**
-  String get userDiscoveryDisabledCustomizeSettings;
 
   /// No description provided for @userDiscoveryDisabledLearnMore.
   ///
@@ -3351,6 +2899,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You only share friends who have also activated this feature and who have reached the threshold you set.'**
   String get userDiscoveryEnabledFriendsSharedDesc;
+
+  /// No description provided for @userDiscoverySettingsCurrentlyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'The feature \"Share your friends\" is currently disabled.'**
+  String get userDiscoverySettingsCurrentlyDisabled;
 
   /// No description provided for @userDiscoveryEnabledNoFriendsShared.
   ///
@@ -3430,7 +2984,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['de', 'en', 'sv'].contains(locale.languageCode);
+      <String>['de', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3443,8 +2997,6 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
-    case 'sv':
-      return AppLocalizationsSv();
   }
 
   throw FlutterError(

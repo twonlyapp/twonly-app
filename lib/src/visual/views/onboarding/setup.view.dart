@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/add_new_contacts_setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/backup_setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile_setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/user_discovery_setup.view.dart';
@@ -10,15 +13,25 @@ import 'package:twonly/src/visual/views/onboarding/setup/verification_badge_setu
 enum SetupPages {
   profile,
   backup,
+  addNewContact,
   verificationBadge,
   userDiscovery,
 }
 
 extension SetupPagesExtension on SetupPages {
+  static SetupPages fromStr(String? name) {
+    return SetupPages.values.firstWhere(
+      (e) => e.name == name,
+      orElse: () => SetupPages.profile,
+    );
+  }
+
   int get pageNumber => index + 1;
   int get totalPages => SetupPages.values.length;
   int get progressPercentage => (pageNumber / totalPages * 100).round();
   String get progressText => '$pageNumber / $totalPages';
+
+  bool get isLast => index == SetupPages.values.length - 1;
 
   SetupPages? next() {
     final nextIndex = index + 1;
@@ -39,6 +52,26 @@ class SetupView extends StatefulWidget {
 }
 
 class _SetupViewState extends State<SetupView> {
+  StreamSubscription<void>? _userUpdateStream;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.onUpdate != null) {
+      _userUpdateStream = userService.onUserUpdated.listen((u) {
+        if (userService.currentUser.currentSetupPage == null) {
+          widget.onUpdate?.call();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _userUpdateStream?.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<void>(
@@ -46,11 +79,8 @@ class _SetupViewState extends State<SetupView> {
       builder: (context, snapshot) {
         final user = userService.currentUser;
         final currentPageString = user.currentSetupPage;
-
-        final currentPage = SetupPages.values.firstWhere(
-          (e) => e.name == currentPageString,
-          orElse: () => SetupPages.profile,
-        );
+        if (currentPageString == null) return const SizedBox.shrink();
+        final currentPage = SetupPagesExtension.fromStr(currentPageString);
 
         return Scaffold(
           appBar: AppBar(
@@ -82,32 +112,32 @@ class _SetupViewState extends State<SetupView> {
             toolbarHeight: 48,
           ),
           body: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+            key: ValueKey(currentPage.name),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             children: [
               _buildPage(currentPage),
-              SizedBox(
-                height: 50,
-                child: Center(
-                  child: TextButton(
-                    onPressed: () async {
-                      await UserService.update((u) {
-                        u
-                          ..skipSetupPages = false
-                          ..currentSetupPage = SetupPages.profile.name;
-                      });
-                      //await UserService.update((u) => u.skipSetupPages = true);
-                      widget.onUpdate?.call();
-                    },
-                    child: Text(
-                      context.lang.onboardingFinishLater,
-                      style: TextStyle(
-                        color: context.color.primary,
-                        fontWeight: FontWeight.bold,
+              if (!currentPage.isLast)
+                SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () async {
+                        await UserService.update(
+                          (u) => u.skipSetupPages = true,
+                        );
+                        widget.onUpdate?.call();
+                      },
+                      child: Text(
+                        context.lang.onboardingFinishLater,
+                        style: TextStyle(
+                          color: context.color.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              const SizedBox(height: 60),
             ],
           ),
         );
@@ -121,6 +151,8 @@ class _SetupViewState extends State<SetupView> {
         return const ProfileSetupPage();
       case SetupPages.backup:
         return const BackupSetupPage();
+      case SetupPages.addNewContact:
+        return const AddNewContactsPage();
       case SetupPages.verificationBadge:
         return const VerificationBadgeSetupPage();
       case SetupPages.userDiscovery:

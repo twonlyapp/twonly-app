@@ -29,6 +29,9 @@ class Contacts extends Table {
   BoolColumn get userDiscoveryExcluded =>
       boolean().withDefault(const Constant(false))();
 
+  BoolColumn get userDiscoveryManualApproved =>
+      boolean().withDefault(const Constant(false))();
+
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>
       integer().withDefault(const Constant(0))();

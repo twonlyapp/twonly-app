@@ -64,10 +64,13 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
       ..isUserDiscoveryEnabled =
           json['isUserDiscoveryEnabled'] as bool? ?? false
-      ..minimumRequiredImagesExchanged =
-          (json['minimumRequiredImagesExchanged'] as num?)?.toInt() ?? 4
+      ..requiredSendImages = (json['requiredSendImages'] as num?)?.toInt() ?? 4
       ..userDiscoveryThreshold =
           (json['userDiscoveryThreshold'] as num?)?.toInt() ?? 2
+      ..userDiscoveryRequiresManualApproval =
+          json['userDiscoveryRequiresManualApproval'] as bool? ?? false
+      ..userDiscoverySharePromotion =
+          json['userDiscoverySharePromotion'] as bool? ?? true
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -132,8 +135,11 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,
   'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
-  'minimumRequiredImagesExchanged': instance.minimumRequiredImagesExchanged,
+  'requiredSendImages': instance.requiredSendImages,
   'userDiscoveryThreshold': instance.userDiscoveryThreshold,
+  'userDiscoveryRequiresManualApproval':
+      instance.userDiscoveryRequiresManualApproval,
+  'userDiscoverySharePromotion': instance.userDiscoverySharePromotion,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,

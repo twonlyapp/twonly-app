@@ -65,8 +65,8 @@ Future<void> handleUserStudyUpload() async {
       'total_contacts': contacts.length,
 
       'user_discovery_enabled': userService.currentUser.isUserDiscoveryEnabled,
-      'user_discovery_minimum_images':
-          userService.currentUser.minimumRequiredImagesExchanged,
+      'user_discovery_required_send_images':
+          userService.currentUser.requiredSendImages,
       'user_discovery_threshold':
           userService.currentUser.userDiscoveryThreshold,
 

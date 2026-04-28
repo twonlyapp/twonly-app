@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
 class UserDiscoveryDisabledComp extends StatefulWidget {
   const UserDiscoveryDisabledComp({super.key});
@@ -12,11 +11,12 @@ class UserDiscoveryDisabledComp extends StatefulWidget {
 }
 
 class _UserDiscoveryDisabledCompState extends State<UserDiscoveryDisabledComp> {
-  Future<void> initializeUserDiscoveryWithDefaultSettings() async {
-    await UserDiscoveryService.initializeOrUpdate(
-      threshold: 2,
-      minimumRequiredImagesExchanged: 4,
-    );
+  late UserDiscoverySetupState state;
+
+  @override
+  void initState() {
+    super.initState();
+    state = UserDiscoverySetupState(setState: setState);
   }
 
   @override
@@ -25,67 +25,51 @@ class _UserDiscoveryDisabledCompState extends State<UserDiscoveryDisabledComp> {
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: ListView(
         children: [
-          const SizedBox(height: 45),
-          Text(
-            context.lang.userDiscoveryDisabledIntro,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 30),
-          RichText(
-            text: TextSpan(
-              children: formattedText(
-                context,
-                context.lang.userDiscoveryDisabledInvisible,
-              ),
+          const SizedBox(height: 60),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.color.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(16),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 35),
-          Text(
-            context.lang.userDiscoveryDisabledYouHaveControl,
-            style: const TextStyle(fontSize: 17),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            context.lang.userDiscoveryDisabledDecide,
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 50),
-
-          FilledButton(
-            onPressed: initializeUserDiscoveryWithDefaultSettings,
-            style: primaryColorButtonStyle.merge(
-              FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 24,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_rounded,
+                  color: context.color.onSurfaceVariant,
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    context.lang.userDiscoverySettingsCurrentlyDisabled,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 60),
+          UserDiscoverySetupComp(state: state),
+          const SizedBox(height: 60),
+          ElevatedButton(
+            onPressed: () {
+              state.initializeOrUpdate();
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 56),
+              backgroundColor: context.color.primary,
+              foregroundColor: context.color.onPrimary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: Text(context.lang.userDiscoveryDisabledEnableWithDefault),
+            child: Text(context.lang.userDiscoverySettingsApply),
           ),
-
-          const SizedBox(height: 20),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: FilledButton(
-              onPressed: () {},
-              style: secondaryGreyButtonStyle(context),
-              child: Text(context.lang.userDiscoveryDisabledCustomizeSettings),
-            ),
-          ),
-          const SizedBox(height: 15),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: FilledButton(
-              onPressed: () {},
-              style: secondaryGreyButtonStyle(context),
-              child: Text(context.lang.userDiscoveryDisabledLearnMore),
-            ),
-          ),
+          const SizedBox(height: 60),
         ],
       ),
     );

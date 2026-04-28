@@ -39,7 +39,7 @@ class CameraBottomControls extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         child: Column(
           children: [
-            if (mc.cameraController!.value.isInitialized &&
+            if (mc.cameraController?.value.isInitialized == true &&
                 mc.selectedCameraDetails.isZoomAble &&
                 !isVideoRecording)
               SizedBox(

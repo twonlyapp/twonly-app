@@ -98,10 +98,16 @@ class UserData {
   bool isUserDiscoveryEnabled = false;
 
   @JsonKey(defaultValue: 4)
-  int minimumRequiredImagesExchanged = 4;
+  int requiredSendImages = 4;
 
   @JsonKey(defaultValue: 2)
   int userDiscoveryThreshold = 2;
+
+  @JsonKey(defaultValue: false)
+  bool userDiscoveryRequiresManualApproval = false;
+
+  @JsonKey(defaultValue: true)
+  bool userDiscoverySharePromotion = true;
 
   //  -- Custom DATA --
 

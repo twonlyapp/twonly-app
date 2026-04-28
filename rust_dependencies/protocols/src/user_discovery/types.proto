@@ -17,8 +17,9 @@ message UserDiscoveryMessage {
   message UserDiscoveryAnnouncement {
     int64          public_id           = 1;
     uint32         threshold           = 2;
-    bytes          announcement_share  = 4;
-    repeated bytes verification_shares = 6;
+    bytes          announcement_share  = 3;
+    bool           share_promotion     = 4;
+    repeated bytes verification_shares = 5;
   }
 
   message UserDiscoveryPromotion {

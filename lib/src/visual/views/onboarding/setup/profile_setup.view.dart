@@ -6,8 +6,8 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:vector_graphics/vector_graphics.dart';
-import '../setup.view.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -24,9 +24,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   @override
   void initState() {
     super.initState();
-    _displayNameController = TextEditingController(
-      text: userService.currentUser.displayName,
-    );
+    _displayNameController = TextEditingController();
   }
 
   @override
@@ -55,32 +53,39 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           ),
         ),
         const SizedBox(height: 40),
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: context.color.primary.withValues(alpha: 0.2),
-              width: 4,
-            ),
-          ),
-          child: userService.currentUser.avatarSvg == null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(80),
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    color: context.color.surfaceContainer,
-                    child: const SvgPicture(
-                      AssetBytesLoader('assets/images/default_avatar.svg.vec'),
-                    ),
-                  ),
-                )
-              : AvatarMakerAvatar(
-                  backgroundColor: context.color.surfaceContainer,
-                  radius: 80,
-                  controller: _avatarMakerController,
+        StreamBuilder(
+          stream: userService.onUserUpdated,
+          builder: (context, asyncSnapshot) {
+            return Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: context.color.primary.withValues(alpha: 0.2),
+                  width: 4,
                 ),
+              ),
+              child: userService.currentUser.avatarSvg == null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(80),
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        color: context.color.surfaceContainer,
+                        child: const SvgPicture(
+                          AssetBytesLoader(
+                            'assets/images/default_avatar.svg.vec',
+                          ),
+                        ),
+                      ),
+                    )
+                  : AvatarMakerAvatar(
+                      backgroundColor: context.color.surfaceContainer,
+                      radius: 80,
+                      controller: _avatarMakerController,
+                    ),
+            );
+          },
         ),
         const SizedBox(height: 16),
         TextButton.icon(
@@ -108,31 +113,15 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
           ),
         ),
         const SizedBox(height: 40),
-        ElevatedButton(
+        NextButtonComp(
           onPressed: () async {
             await UserService.update((user) {
               if (_displayNameController.text.isNotEmpty) {
                 user.displayName = _displayNameController.text;
               }
-              user.currentSetupPage = SetupPages.profile.next()?.name;
             });
+            return false;
           },
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-            backgroundColor: context.color.primary,
-            foregroundColor: context.color.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: Text(
-            context.lang.next,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ),
       ],
     );

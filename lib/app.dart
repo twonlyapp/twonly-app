@@ -169,10 +169,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (true ||
-          !userService.currentUser.skipSetupPages &&
-              userService.currentUser.currentSetupPage ==
-                  SetupPages.profile.name) {
+      } else if (!userService.currentUser.skipSetupPages &&
+          userService.currentUser.currentSetupPage != null) {
+        // This will only be shown in case the user have not skipped
         child = SetupView(
           onUpdate: () => setState(() {
             // userService.currentUser has updated...

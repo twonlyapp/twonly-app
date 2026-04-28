@@ -36,11 +36,13 @@ class FlutterUserDiscovery {
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
+    required bool sharePromotion,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate(
         threshold: threshold,
         userId: userId,
         publicKey: publicKey,
+        sharePromotion: sharePromotion,
       );
 
   static Future<Uint8List?> shouldRequestNewMessages({

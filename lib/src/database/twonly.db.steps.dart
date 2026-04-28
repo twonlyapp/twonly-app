@@ -5875,6 +5875,7 @@ final class Schema12 extends i0.VersionedSchema {
         _column_212,
         _column_213,
         _column_214,
+        _column_215,
       ],
       attachedDatabase: database,
     ),
@@ -6140,8 +6141,8 @@ final class Schema12 extends i0.VersionedSchema {
       entityName: 'key_verifications',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: ['PRIMARY KEY(contact_id)'],
-      columns: [_column_183, _column_144, _column_118],
+      tableConstraints: [],
+      columns: [_column_216, _column_183, _column_144, _column_118],
       attachedDatabase: database,
     ),
     alias: null,
@@ -6152,7 +6153,7 @@ final class Schema12 extends i0.VersionedSchema {
       withoutRowId: false,
       isStrict: false,
       tableConstraints: [],
-      columns: [_column_215, _column_216, _column_118],
+      columns: [_column_217, _column_218, _column_118],
       attachedDatabase: database,
     ),
     alias: null,
@@ -6164,12 +6165,12 @@ final class Schema12 extends i0.VersionedSchema {
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(announced_user_id)'],
       columns: [
-        _column_217,
-        _column_218,
         _column_219,
         _column_220,
         _column_221,
         _column_222,
+        _column_223,
+        _column_224,
       ],
       attachedDatabase: database,
     ),
@@ -6181,7 +6182,7 @@ final class Schema12 extends i0.VersionedSchema {
       withoutRowId: false,
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(announced_user_id, from_contact_id)'],
-      columns: [_column_223, _column_224, _column_225],
+      columns: [_column_225, _column_226, _column_227],
       attachedDatabase: database,
     ),
     alias: null,
@@ -6193,12 +6194,12 @@ final class Schema12 extends i0.VersionedSchema {
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(from_contact_id, public_id)'],
       columns: [
-        _column_224,
         _column_226,
-        _column_227,
         _column_228,
         _column_229,
-        _column_225,
+        _column_230,
+        _column_231,
+        _column_227,
       ],
       attachedDatabase: database,
     ),
@@ -6210,7 +6211,7 @@ final class Schema12 extends i0.VersionedSchema {
       withoutRowId: false,
       isStrict: false,
       tableConstraints: [],
-      columns: [_column_230, _column_183, _column_231],
+      columns: [_column_232, _column_183, _column_233],
       attachedDatabase: database,
     ),
     alias: null,
@@ -6221,7 +6222,7 @@ final class Schema12 extends i0.VersionedSchema {
       withoutRowId: false,
       isStrict: false,
       tableConstraints: [],
-      columns: [_column_232, _column_233, _column_175],
+      columns: [_column_234, _column_235, _column_175],
       attachedDatabase: database,
     ),
     alias: null,
@@ -6262,6 +6263,9 @@ class Shape39 extends i0.VersionedTable {
           as i1.GeneratedColumn<i2.Uint8List>;
   i1.GeneratedColumn<int> get userDiscoveryExcluded =>
       columnsByName['user_discovery_excluded']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get userDiscoveryManualApproved =>
+      columnsByName['user_discovery_manual_approved']!
+          as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get mediaSendCounter =>
       columnsByName['media_send_counter']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get mediaReceivedCounter =>
@@ -6288,6 +6292,16 @@ i1.GeneratedColumn<int> _column_212(String aliasedName) =>
     );
 i1.GeneratedColumn<int> _column_213(String aliasedName) =>
     i1.GeneratedColumn<int>(
+      'user_discovery_manual_approved',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_214(String aliasedName) =>
+    i1.GeneratedColumn<int>(
       'media_send_counter',
       aliasedName,
       false,
@@ -6295,7 +6309,7 @@ i1.GeneratedColumn<int> _column_213(String aliasedName) =>
       $customConstraints: 'NOT NULL DEFAULT 0',
       defaultValue: const i1.CustomExpression('0'),
     );
-i1.GeneratedColumn<int> _column_214(String aliasedName) =>
+i1.GeneratedColumn<int> _column_215(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'media_received_counter',
       aliasedName,
@@ -6307,6 +6321,8 @@ i1.GeneratedColumn<int> _column_214(String aliasedName) =>
 
 class Shape40 extends i0.VersionedTable {
   Shape40({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get verificationId =>
+      columnsByName['verification_id']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get contactId =>
       columnsByName['contact_id']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<String> get type =>
@@ -6314,6 +6330,16 @@ class Shape40 extends i0.VersionedTable {
   i1.GeneratedColumn<int> get createdAt =>
       columnsByName['created_at']! as i1.GeneratedColumn<int>;
 }
+
+i1.GeneratedColumn<int> _column_216(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'verification_id',
+      aliasedName,
+      false,
+      hasAutoIncrement: true,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    );
 
 class Shape41 extends i0.VersionedTable {
   Shape41({required super.source, required super.alias}) : super.aliased();
@@ -6325,7 +6351,7 @@ class Shape41 extends i0.VersionedTable {
       columnsByName['created_at']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_215(String aliasedName) =>
+i1.GeneratedColumn<int> _column_217(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'token_id',
       aliasedName,
@@ -6334,7 +6360,7 @@ i1.GeneratedColumn<int> _column_215(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
     );
-i1.GeneratedColumn<i2.Uint8List> _column_216(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_218(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
       'token',
       aliasedName,
@@ -6360,7 +6386,7 @@ class Shape42 extends i0.VersionedTable {
       columnsByName['is_hidden']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_217(String aliasedName) =>
+i1.GeneratedColumn<int> _column_219(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'announced_user_id',
       aliasedName,
@@ -6368,7 +6394,7 @@ i1.GeneratedColumn<int> _column_217(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<i2.Uint8List> _column_218(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_220(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
       'announced_public_key',
       aliasedName,
@@ -6376,7 +6402,7 @@ i1.GeneratedColumn<i2.Uint8List> _column_218(String aliasedName) =>
       type: i1.DriftSqlType.blob,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<int> _column_219(String aliasedName) =>
+i1.GeneratedColumn<int> _column_221(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'public_id',
       aliasedName,
@@ -6384,7 +6410,7 @@ i1.GeneratedColumn<int> _column_219(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL UNIQUE',
     );
-i1.GeneratedColumn<String> _column_220(String aliasedName) =>
+i1.GeneratedColumn<String> _column_222(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'username',
       aliasedName,
@@ -6392,7 +6418,7 @@ i1.GeneratedColumn<String> _column_220(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_221(String aliasedName) =>
+i1.GeneratedColumn<int> _column_223(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'was_shown_to_the_user',
       aliasedName,
@@ -6402,7 +6428,7 @@ i1.GeneratedColumn<int> _column_221(String aliasedName) =>
           'NOT NULL DEFAULT 0 CHECK (was_shown_to_the_user IN (0, 1))',
       defaultValue: const i1.CustomExpression('0'),
     );
-i1.GeneratedColumn<int> _column_222(String aliasedName) =>
+i1.GeneratedColumn<int> _column_224(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'is_hidden',
       aliasedName,
@@ -6423,7 +6449,7 @@ class Shape43 extends i0.VersionedTable {
           as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_223(
+i1.GeneratedColumn<int> _column_225(
   String aliasedName,
 ) => i1.GeneratedColumn<int>(
   'announced_user_id',
@@ -6433,7 +6459,7 @@ i1.GeneratedColumn<int> _column_223(
   $customConstraints:
       'NOT NULL REFERENCES user_discovery_announced_users(announced_user_id)ON DELETE CASCADE',
 );
-i1.GeneratedColumn<int> _column_224(String aliasedName) =>
+i1.GeneratedColumn<int> _column_226(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'from_contact_id',
       aliasedName,
@@ -6442,7 +6468,7 @@ i1.GeneratedColumn<int> _column_224(String aliasedName) =>
       $customConstraints:
           'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
     );
-i1.GeneratedColumn<int> _column_225(String aliasedName) =>
+i1.GeneratedColumn<int> _column_227(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'public_key_verified_timestamp',
       aliasedName,
@@ -6468,7 +6494,7 @@ class Shape44 extends i0.VersionedTable {
           as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_226(String aliasedName) =>
+i1.GeneratedColumn<int> _column_228(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'promotion_id',
       aliasedName,
@@ -6476,7 +6502,7 @@ i1.GeneratedColumn<int> _column_226(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<int> _column_227(String aliasedName) =>
+i1.GeneratedColumn<int> _column_229(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'public_id',
       aliasedName,
@@ -6484,7 +6510,7 @@ i1.GeneratedColumn<int> _column_227(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<int> _column_228(String aliasedName) =>
+i1.GeneratedColumn<int> _column_230(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'threshold',
       aliasedName,
@@ -6492,7 +6518,7 @@ i1.GeneratedColumn<int> _column_228(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<i2.Uint8List> _column_229(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_231(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
       'announcement_share',
       aliasedName,
@@ -6511,7 +6537,7 @@ class Shape45 extends i0.VersionedTable {
       columnsByName['promotion']! as i1.GeneratedColumn<i2.Uint8List>;
 }
 
-i1.GeneratedColumn<int> _column_230(String aliasedName) =>
+i1.GeneratedColumn<int> _column_232(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'version_id',
       aliasedName,
@@ -6520,7 +6546,7 @@ i1.GeneratedColumn<int> _column_230(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
     );
-i1.GeneratedColumn<i2.Uint8List> _column_231(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_233(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
       'promotion',
       aliasedName,
@@ -6539,7 +6565,7 @@ class Shape46 extends i0.VersionedTable {
       columnsByName['contact_id']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<int> _column_232(String aliasedName) =>
+i1.GeneratedColumn<int> _column_234(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'share_id',
       aliasedName,
@@ -6548,7 +6574,7 @@ i1.GeneratedColumn<int> _column_232(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
     );
-i1.GeneratedColumn<i2.Uint8List> _column_233(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_235(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
       'share',
       aliasedName,

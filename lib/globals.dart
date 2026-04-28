@@ -7,18 +7,18 @@ import 'package:path_provider/path_provider.dart';
 class AppEnvironment {
   static late final String cacheDir;
   static late final String supportDir;
-  static late final List<CameraDescription> cameras;
+
+  // will be loaded in the main_camera_controller.dart
+  static List<CameraDescription> cameras = [];
 
   static Future<void> init() async {
     cacheDir = (await getApplicationCacheDirectory()).path;
     supportDir = (await getApplicationSupportDirectory()).path;
-    cameras = await availableCameras();
   }
 
   static void initTesting() {
     cacheDir = '/tmp/twonly_cache';
     supportDir = '/tmp/twonly_support';
-    cameras = [];
   }
 }
 
@@ -27,8 +27,7 @@ class AppState {
   static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
-  // initialized in runMigrations (main.dart)
-  static late int latestAppVersionId;
+  static int latestAppVersionId = 110;
 }
 
 class AppGlobalKeys {

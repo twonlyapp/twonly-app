@@ -1,12 +1,9 @@
 import 'dart:async';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/user.service.dart';
-import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
 class UserDiscoverySettingsView extends StatefulWidget {
   const UserDiscoverySettingsView({super.key});
@@ -17,123 +14,103 @@ class UserDiscoverySettingsView extends StatefulWidget {
 }
 
 class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
-  int _minimumRequiredImagesExchanged = 0;
-  int _userDiscoveryThreshold = 0;
+  late UserDiscoverySetupState state;
 
   @override
   void initState() {
     super.initState();
-    _minimumRequiredImagesExchanged =
-        userService.currentUser.minimumRequiredImagesExchanged;
-    _userDiscoveryThreshold = userService.currentUser.userDiscoveryThreshold;
+    final u = userService.currentUser;
+    state = UserDiscoverySetupState(
+      setState: setState,
+      requiredSendImages: u.requiredSendImages,
+      isUserDiscoveryEnabled: u.isUserDiscoveryEnabled,
+      sharePromotion: u.userDiscoverySharePromotion,
+      isShareAllContacts:
+          u.requiredSendImages == 0 && !u.userDiscoveryRequiresManualApproval,
+      isManualApprovalEnabled: u.userDiscoveryRequiresManualApproval,
+      threshold: u.userDiscoveryThreshold,
+    );
   }
 
   Future<void> _saveChanges() async {
-    final requiresNewInitialization =
-        userService.currentUser.userDiscoveryThreshold !=
-        _userDiscoveryThreshold;
+    await state.initializeOrUpdate();
+    if (!mounted) return;
+    Navigator.pop(context, true);
+  }
 
-    await UserService.update((u) {
-      u
-        ..minimumRequiredImagesExchanged = _minimumRequiredImagesExchanged
-        ..userDiscoveryThreshold = _userDiscoveryThreshold;
-    });
-
-    if (requiresNewInitialization) {
-      await UserDiscoveryService.initializeOrUpdate(
-        threshold: userService.currentUser.userDiscoveryThreshold,
-        minimumRequiredImagesExchanged:
-            userService.currentUser.minimumRequiredImagesExchanged,
-      );
-    }
-    if (mounted) Navigator.pop(context);
+  Future<bool?> _showBackDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            context.lang.avatarSaveChanges,
+          ),
+          actions: [
+            FilledButton(
+              child: Text(context.lang.avatarSaveChangesStore),
+              onPressed: () async {
+                await _saveChanges();
+              },
+            ),
+            TextButton(
+              child: Text(context.lang.avatarSaveChangesDiscard),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.userDiscoverySettingsTitle),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: ListView(
-          children: [
-            ListTile(
-              title: Text(context.lang.userDiscoverySettingsMinImagesTitle),
-              subtitle: Text(
-                context.lang.userDiscoverySettingsMinImages,
-              ),
-              trailing: SizedBox(
-                width: 60,
-                child: CupertinoPicker(
-                  magnification: 1.22,
-                  squeeze: 1.2,
-                  useMagnifier: true,
-                  itemExtent: 32,
-                  scrollController: FixedExtentScrollController(
-                    initialItem: _minimumRequiredImagesExchanged,
-                  ),
-                  onSelectedItemChanged: (selectedItem) {
-                    _minimumRequiredImagesExchanged = selectedItem;
-                    setState(() {});
-                  },
-                  children: List.generate(
-                    9,
-                    (index) => Center(child: Text('$index')),
-                  ),
-                ),
-              ),
-            ),
-            ListTile(
-              title: Text(context.lang.userDiscoverySettingsMutualFriendsTitle),
-              subtitle: Text(
-                context.lang.userDiscoverySettingsMutualFriends,
-              ),
-              trailing: SizedBox(
-                width: 60,
-                child: CupertinoPicker(
-                  magnification: 1.22,
-                  squeeze: 1.2,
-                  useMagnifier: true,
-                  itemExtent: 32,
-                  scrollController: FixedExtentScrollController(
-                    initialItem: _userDiscoveryThreshold - 2,
-                  ),
-                  onSelectedItemChanged: (selectedItem) {
-                    _userDiscoveryThreshold = selectedItem + 2;
-                    setState(() {});
-                  },
-                  children: List.generate(
-                    9,
-                    (index) => Center(child: Text('${index + 2}')),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(
-              height: 30,
-            ),
-            if (_minimumRequiredImagesExchanged !=
-                    userService.currentUser.minimumRequiredImagesExchanged ||
-                _userDiscoveryThreshold !=
-                    userService.currentUser.userDiscoveryThreshold)
-              Padding(
-                padding: const EdgeInsets.all(17),
-                child: FilledButton(
-                  onPressed: _saveChanges,
-                  style: primaryColorButtonStyle.merge(
-                    FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 24,
+    return PopScope<bool?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (state.wasChanged) {
+          // there where changes
+          final shouldPop = await _showBackDialog() ?? false;
+          if (context.mounted && shouldPop) {
+            Navigator.pop(context);
+          }
+        } else {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.lang.userDiscoverySettingsTitle),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.only(top: 10, left: 24, right: 24),
+          child: ListView(
+            children: [
+              const SizedBox(height: 30),
+              UserDiscoverySetupComp(state: state),
+              const SizedBox(height: 30),
+              if (state.wasChanged)
+                Padding(
+                  padding: const EdgeInsets.all(17),
+                  child: FilledButton(
+                    onPressed: _saveChanges,
+                    style: primaryColorButtonStyle.merge(
+                      FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 24,
+                        ),
                       ),
                     ),
+                    child: Text(context.lang.userDiscoverySettingsApply),
                   ),
-                  child: Text(context.lang.userDiscoverySettingsApply),
                 ),
-              ),
-          ],
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );

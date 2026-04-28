@@ -312,10 +312,10 @@ class _ContactViewState extends State<ContactView> {
               subtitle:
                   !contact.userDiscoveryExcluded &&
                       contact.mediaSendCounter <
-                          userService.currentUser.minimumRequiredImagesExchanged
+                          userService.currentUser.requiredSendImages
                   ? Text(
                       context.lang.contactUserDiscoveryImagesLeft(
-                        userService.currentUser.minimumRequiredImagesExchanged -
+                        userService.currentUser.requiredSendImages -
                             contact.mediaSendCounter,
                         getContactDisplayName(contact),
                       ),

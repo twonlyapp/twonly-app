@@ -8,12 +8,13 @@ impl FlutterUserDiscovery {
         threshold: u8,
         user_id: i64,
         public_key: Vec<u8>,
+        share_promotion: bool,
     ) -> Result<()> {
         Ok(get_twonly_flutter()?
             .user_discovery
             .get()
             .await
-            .initialize_or_update(threshold, user_id, public_key)
+            .initialize_or_update(threshold, user_id, public_key, share_promotion)
             .await?)
     }
 

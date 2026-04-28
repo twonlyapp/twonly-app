@@ -104,6 +104,10 @@ class MainCameraController {
   Future<void> selectCamera(int sCameraId, bool init) async {
     initCameraStarted = true;
 
+    if (AppEnvironment.cameras.isEmpty) {
+      AppEnvironment.cameras = await availableCameras();
+    }
+
     var cameraId = sCameraId;
     if (cameraId >= AppEnvironment.cameras.length) {
       Log.warn(

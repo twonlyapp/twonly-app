@@ -105,9 +105,10 @@ fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_initiali
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_threshold = <u8>::sse_decode(&mut deserializer);
 let api_user_id = <i64>::sse_decode(&mut deserializer);
-let api_public_key = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+let api_public_key = <Vec<u8>>::sse_decode(&mut deserializer);
+let api_share_promotion = <bool>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
                     transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::initialize_or_update(api_threshold, api_user_id, api_public_key).await?;   Ok(output_ok)
+                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::initialize_or_update(api_threshold, api_user_id, api_public_key, api_share_promotion).await?;   Ok(output_ok)
                     })().await)
                 } })
 }

@@ -161,7 +161,7 @@ async fn test_user_discovery_decreased_threshold_in_memory_store() {
 
     // Phase 2: Update ALICE's threshold to 2
     network.uds[alice_idx]
-        .initialize_or_update(2, alice_idx as UserID, vec![alice_idx as u8; 32])
+        .initialize_or_update(2, alice_idx as UserID, vec![alice_idx as u8; 32], true)
         .await
         .unwrap();
 
@@ -241,7 +241,7 @@ async fn test_user_discovery_increased_threshold_in_memory_store() {
 
     // Phase 2: Update ALICE's threshold to 3
     network.uds[alice_idx]
-        .initialize_or_update(3, alice_idx as UserID, vec![alice_idx as u8; 32])
+        .initialize_or_update(3, alice_idx as UserID, vec![alice_idx as u8; 32], true)
         .await
         .unwrap();
 
@@ -414,7 +414,7 @@ async fn get_ud<S: UserDiscoveryStore + Clone + Default>(
 ) -> UserDiscovery<S, TestingUtils> {
     let ud = UserDiscovery::new(store.to_owned(), TestingUtils::default()).unwrap();
 
-    ud.initialize_or_update(threshold, user_id as UserID, vec![user_id as u8; 32])
+    ud.initialize_or_update(threshold, user_id as UserID, vec![user_id as u8; 32], true)
         .await
         .unwrap();
 

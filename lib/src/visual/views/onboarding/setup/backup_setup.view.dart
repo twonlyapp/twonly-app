@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
 class BackupSetupPage extends StatefulWidget {
@@ -22,13 +24,26 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
 
-  Future<void> onPressedEnableTwonlySafe() async {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (userService.currentUser.twonlySafeBackup != null) {
+        // twonly safe is already configured...
+        UserService.update((user) {
+          user.currentSetupPage = SetupPages.backup.next()?.name;
+        });
+      }
+    });
+  }
+
+  Future<bool> onPressedEnableTwonlySafe() async {
     setState(() {
       isLoading = true;
     });
 
     if (!await isSecurePassword(passwordCtrl.text)) {
-      if (!mounted) return;
+      if (!mounted) return true;
       final ignore = await showAlertDialog(
         context,
         context.lang.backupInsecurePassword,
@@ -36,12 +51,12 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
         customCancel: context.lang.backupInsecurePasswordOk,
         customOk: context.lang.backupInsecurePasswordCancel,
       );
-      if (!mounted) return;
+      if (!mounted) return true;
       if (ignore) {
         setState(() {
           isLoading = false;
         });
-        return;
+        return true;
       }
     }
 
@@ -52,10 +67,11 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
       user.currentSetupPage = SetupPages.backup.next()?.name;
     });
 
-    if (!mounted) return;
+    if (!mounted) return true;
     setState(() {
       isLoading = false;
     });
+    return false;
   }
 
   @override
@@ -77,7 +93,6 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 20),
         Text(
           'twonly Backup',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -137,34 +152,11 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
             child: Text(context.lang.backupExpertSettings),
           ),
         ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: canSubmit ? onPressedEnableTwonlySafe : null,
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-            backgroundColor: context.color.primary,
-            foregroundColor: context.color.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: isLoading
-              ? const SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  context.lang.next,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+        const SizedBox(height: 40),
+        NextButtonComp(
+          isLoading: isLoading,
+          canSubmit: canSubmit,
+          onPressed: onPressedEnableTwonlySafe,
         ),
       ],
     );

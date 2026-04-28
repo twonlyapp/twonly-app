@@ -48,11 +48,10 @@ Future<void> handleUserDiscoveryRequest(
   final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
   if (contact == null) return;
 
-  if (contact.mediaSendCounter <
-          userService.currentUser.minimumRequiredImagesExchanged ||
+  if (contact.mediaSendCounter < userService.currentUser.requiredSendImages ||
       contact.userDiscoveryExcluded) {
     Log.warn(
-      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${userService.currentUser.minimumRequiredImagesExchanged} or user is excluded ${contact.userDiscoveryExcluded}',
+      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${userService.currentUser.requiredSendImages} or user is excluded ${contact.userDiscoveryExcluded}',
     );
     return;
   }

@@ -200,6 +200,21 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
         defaultValue: const Constant(false),
       );
+  static const VerificationMeta _userDiscoveryManualApprovedMeta =
+      const VerificationMeta('userDiscoveryManualApproved');
+  @override
+  late final GeneratedColumn<bool> userDiscoveryManualApproved =
+      GeneratedColumn<bool>(
+        'user_discovery_manual_approved',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("user_discovery_manual_approved" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -240,6 +255,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     createdAt,
     userDiscoveryVersion,
     userDiscoveryExcluded,
+    userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -368,6 +384,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('user_discovery_manual_approved')) {
+      context.handle(
+        _userDiscoveryManualApprovedMeta,
+        userDiscoveryManualApproved.isAcceptableOrUnknown(
+          data['user_discovery_manual_approved']!,
+          _userDiscoveryManualApprovedMeta,
+        ),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -455,6 +480,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.bool,
         data['${effectivePrefix}user_discovery_excluded'],
       )!,
+      userDiscoveryManualApproved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}user_discovery_manual_approved'],
+      )!,
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -488,6 +517,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime createdAt;
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
+  final bool userDiscoveryManualApproved;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -506,6 +536,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.createdAt,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
+    required this.userDiscoveryManualApproved,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -535,6 +566,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
     map['user_discovery_excluded'] = Variable<bool>(userDiscoveryExcluded);
+    map['user_discovery_manual_approved'] = Variable<bool>(
+      userDiscoveryManualApproved,
+    );
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -565,6 +599,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? const Value.absent()
           : Value(userDiscoveryVersion),
       userDiscoveryExcluded: Value(userDiscoveryExcluded),
+      userDiscoveryManualApproved: Value(userDiscoveryManualApproved),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -599,6 +634,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryExcluded: serializer.fromJson<bool>(
         json['userDiscoveryExcluded'],
       ),
+      userDiscoveryManualApproved: serializer.fromJson<bool>(
+        json['userDiscoveryManualApproved'],
+      ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -626,6 +664,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         userDiscoveryVersion,
       ),
       'userDiscoveryExcluded': serializer.toJson<bool>(userDiscoveryExcluded),
+      'userDiscoveryManualApproved': serializer.toJson<bool>(
+        userDiscoveryManualApproved,
+      ),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -647,6 +688,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     DateTime? createdAt,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
+    bool? userDiscoveryManualApproved,
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -669,6 +711,8 @@ class Contact extends DataClass implements Insertable<Contact> {
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
     userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+    userDiscoveryManualApproved:
+        userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -703,6 +747,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryExcluded: data.userDiscoveryExcluded.present
           ? data.userDiscoveryExcluded.value
           : this.userDiscoveryExcluded,
+      userDiscoveryManualApproved: data.userDiscoveryManualApproved.present
+          ? data.userDiscoveryManualApproved.value
+          : this.userDiscoveryManualApproved,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -730,6 +777,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -753,6 +801,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     createdAt,
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
+    userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
   );
@@ -781,6 +830,8 @@ class Contact extends DataClass implements Insertable<Contact> {
             this.userDiscoveryVersion,
           ) &&
           other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
+          other.userDiscoveryManualApproved ==
+              this.userDiscoveryManualApproved &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -801,6 +852,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime> createdAt;
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
+  final Value<bool> userDiscoveryManualApproved;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -819,6 +871,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -838,6 +891,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -857,6 +911,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<DateTime>? createdAt,
     Expression<Uint8List>? userDiscoveryVersion,
     Expression<bool>? userDiscoveryExcluded,
+    Expression<bool>? userDiscoveryManualApproved,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -880,6 +935,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'user_discovery_version': userDiscoveryVersion,
       if (userDiscoveryExcluded != null)
         'user_discovery_excluded': userDiscoveryExcluded,
+      if (userDiscoveryManualApproved != null)
+        'user_discovery_manual_approved': userDiscoveryManualApproved,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -902,6 +959,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<DateTime>? createdAt,
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
+    Value<bool>? userDiscoveryManualApproved,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -922,6 +980,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
       userDiscoveryExcluded:
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+      userDiscoveryManualApproved:
+          userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -981,6 +1041,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         userDiscoveryExcluded.value,
       );
     }
+    if (userDiscoveryManualApproved.present) {
+      map['user_discovery_manual_approved'] = Variable<bool>(
+        userDiscoveryManualApproved.value,
+      );
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -1008,6 +1073,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -11621,6 +11687,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
+      Value<bool> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -11641,6 +11708,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
+      Value<bool> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -12019,6 +12087,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get userDiscoveryExcluded => $composableBuilder(
     column: $table.userDiscoveryExcluded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get userDiscoveryManualApproved => $composableBuilder(
+    column: $table.userDiscoveryManualApproved,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12425,6 +12498,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get userDiscoveryManualApproved => $composableBuilder(
+    column: $table.userDiscoveryManualApproved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -12501,6 +12579,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get userDiscoveryExcluded => $composableBuilder(
     column: $table.userDiscoveryExcluded,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get userDiscoveryManualApproved => $composableBuilder(
+    column: $table.userDiscoveryManualApproved,
     builder: (column) => column,
   );
 
@@ -12884,6 +12967,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
+                Value<bool> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -12902,6 +12986,7 @@ class $$ContactsTableTableManager
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
+                userDiscoveryManualApproved: userDiscoveryManualApproved,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -12922,6 +13007,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
+                Value<bool> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -12940,6 +13026,7 @@ class $$ContactsTableTableManager
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
+                userDiscoveryManualApproved: userDiscoveryManualApproved,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),

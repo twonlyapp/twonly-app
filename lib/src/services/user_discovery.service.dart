@@ -48,18 +48,20 @@ class UserDiscoveryService {
 
   static Future<void> initializeOrUpdate({
     required int threshold,
-    required int minimumRequiredImagesExchanged,
+    required bool sharePromotion,
   }) async {
     try {
       await FlutterUserDiscovery.initializeOrUpdate(
         threshold: threshold,
         userId: userService.currentUser.userId,
         publicKey: await getUserPublicKey(),
+        sharePromotion: sharePromotion,
       );
       await UserService.update(
         (u) => u
           ..isUserDiscoveryEnabled = true
-          ..minimumRequiredImagesExchanged = minimumRequiredImagesExchanged,
+          ..userDiscoverySharePromotion = sharePromotion
+          ..userDiscoveryThreshold = threshold,
       );
     } catch (e) {
       Log.error(e);

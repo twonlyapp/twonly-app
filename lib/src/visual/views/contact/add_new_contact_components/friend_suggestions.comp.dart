@@ -17,7 +17,15 @@ List<TextSpan> buildFriendsListText(
   BuildContext context,
   List<(Contact, DateTime?)> friends,
 ) {
-  final names = friends.map((f) => '*${getContactDisplayName(f.$1)}*').toList();
+  final names = friends.map((f) => getContactDisplayName(f.$1)).toList();
+  return buildFriendsListTextString(context, names);
+}
+
+List<TextSpan> buildFriendsListTextString(
+  BuildContext context,
+  List<String> friends,
+) {
+  final names = friends.map((f) => '*$f*').toList();
 
   return formattedText(
     context,

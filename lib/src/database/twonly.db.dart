@@ -175,22 +175,16 @@ class TwonlyDB extends _$TwonlyDB {
             await m.createTable(schema.userDiscoveryOtherPromotions);
             await m.createTable(schema.userDiscoveryShares);
             await m.createTable(schema.userDiscoveryUserRelations);
-            await m.addColumn(
-              schema.contacts,
+            final columns = [
               schema.contacts.userDiscoveryVersion,
-            );
-            await m.addColumn(
-              schema.contacts,
               schema.contacts.mediaReceivedCounter,
-            );
-            await m.addColumn(
-              schema.contacts,
               schema.contacts.mediaSendCounter,
-            );
-            await m.addColumn(
-              schema.contacts,
               schema.contacts.userDiscoveryExcluded,
-            );
+              schema.contacts.userDiscoveryManualApproved,
+            ];
+            for (final column in columns) {
+              await m.addColumn(schema.contacts, column);
+            }
           },
         )(m, from, to);
       },

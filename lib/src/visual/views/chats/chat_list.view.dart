@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -211,71 +212,80 @@ class _ChatListViewState extends State<ChatListView> {
           await apiService.connect();
           await Future.delayed(const Duration(seconds: 1));
         },
-        child:
-            (_groupsNotPinned.isEmpty &&
+        child: Column(
+          children: [
+            const FinishSetupComp(),
+            if (_groupsNotPinned.isEmpty &&
                 _groupsPinned.isEmpty &&
                 _groupsArchived.isEmpty)
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.person_add),
-                    onPressed: () => context.push(Routes.chatsAddNewUser),
-                    label: Text(
-                      context.lang.chatListViewSearchUserNameBtn,
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.person_add),
+                      onPressed: () => context.push(Routes.chatsAddNewUser),
+                      label: Text(
+                        context.lang.chatListViewSearchUserNameBtn,
+                      ),
                     ),
                   ),
                 ),
               )
-            : ListView.builder(
-                itemCount:
-                    _groupsPinned.length +
-                    (_groupsPinned.isNotEmpty ? 1 : 0) +
-                    _groupsNotPinned.length +
-                    (_groupsArchived.isNotEmpty ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index >=
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount:
+                      _groupsPinned.length +
+                      (_groupsPinned.isNotEmpty ? 1 : 0) +
                       _groupsNotPinned.length +
-                          _groupsPinned.length +
-                          (_groupsPinned.isNotEmpty ? 1 : 0)) {
-                    if (_groupsArchived.isEmpty) return Container();
-                    return ListTile(
-                      title: Text(
-                        '${context.lang.archivedChats} (${_groupsArchived.length})',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      onTap: () => context.push(Routes.chatsArchived),
+                      (_groupsArchived.isNotEmpty ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index >=
+                        _groupsNotPinned.length +
+                            _groupsPinned.length +
+                            (_groupsPinned.isNotEmpty ? 1 : 0)) {
+                      if (_groupsArchived.isEmpty) return Container();
+                      return ListTile(
+                        title: Text(
+                          '${context.lang.archivedChats} (${_groupsArchived.length})',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        onTap: () => context.push(Routes.chatsArchived),
+                      );
+                    }
+                    // Check if the index is for the pinned users
+                    if (index < _groupsPinned.length) {
+                      final group = _groupsPinned[index];
+                      return GroupListItemComp(
+                        key: ValueKey(group.groupId),
+                        group: group,
+                      );
+                    }
+
+                    // If there are pinned users, account for the Divider
+                    var adjustedIndex = index - _groupsPinned.length;
+                    if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
+                      return const Divider();
+                    }
+
+                    // Adjust the index for the contacts list
+                    adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
+
+                    // Get the contacts that are not pinned
+                    final group = _groupsNotPinned.elementAt(
+                      adjustedIndex,
                     );
-                  }
-                  // Check if the index is for the pinned users
-                  if (index < _groupsPinned.length) {
-                    final group = _groupsPinned[index];
                     return GroupListItemComp(
                       key: ValueKey(group.groupId),
                       group: group,
                     );
-                  }
-
-                  // If there are pinned users, account for the Divider
-                  var adjustedIndex = index - _groupsPinned.length;
-                  if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
-                    return const Divider();
-                  }
-
-                  // Adjust the index for the contacts list
-                  adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
-
-                  // Get the contacts that are not pinned
-                  final group = _groupsNotPinned.elementAt(
-                    adjustedIndex,
-                  );
-                  return GroupListItemComp(
-                    key: ValueKey(group.groupId),
-                    group: group,
-                  );
-                },
+                  },
+                ),
               ),
+          ],
+        ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),

@@ -354,7 +354,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     final contact = await twonlyDB.contactsDao.getContactById(contactId);
     if (contact != null &&
         contact.mediaSendCounter >=
-            userService.currentUser.minimumRequiredImagesExchanged &&
+            userService.currentUser.requiredSendImages &&
         !contact.userDiscoveryExcluded) {
       final version = await UserDiscoveryService.getCurrentVersion();
       if (version != null) {

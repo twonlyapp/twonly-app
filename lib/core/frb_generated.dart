@@ -103,6 +103,7 @@ abstract class RustLibApi extends BaseApi {
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
+    required bool sharePromotion,
   });
 
   Future<Uint8List?>
@@ -284,6 +285,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
+    required bool sharePromotion,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -292,6 +294,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_u_8(threshold, serializer);
           sse_encode_i_64(userId, serializer);
           sse_encode_list_prim_u_8_loose(publicKey, serializer);
+          sse_encode_bool(sharePromotion, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -305,7 +308,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta,
-        argValues: [threshold, userId, publicKey],
+        argValues: [threshold, userId, publicKey, sharePromotion],
         apiImpl: this,
       ),
     );
@@ -315,7 +318,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_initialize_or_update",
-        argNames: ["threshold", "userId", "publicKey"],
+        argNames: ["threshold", "userId", "publicKey", "sharePromotion"],
       );
 
   @override

@@ -151,10 +151,12 @@ Future<void> runMigrations() async {
     await UserService.update((u) {
       u
         ..appVersion = 109
-        ..skipSetupPages = true
-        ..currentSetupPage = SetupPages.userDiscovery.name;
+        ..skipSetupPages = true;
+      if (u.avatarSvg == null) {
+        u.currentSetupPage = SetupPages.profile.name;
+      } else {
+        u.currentSetupPage = SetupPages.userDiscovery.name;
+      }
     });
   }
-
-  AppState.latestAppVersionId = 110;
 }

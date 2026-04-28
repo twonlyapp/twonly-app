@@ -145,6 +145,17 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
         'NOT NULL DEFAULT 0 CHECK (user_discovery_excluded IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<int>
+  userDiscoveryManualApproved = GeneratedColumn<int>(
+    'user_discovery_manual_approved',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> mediaSendCounter = GeneratedColumn<int>(
     'media_send_counter',
     aliasedName,
@@ -180,6 +191,7 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
     createdAt,
     userDiscoveryVersion,
     userDiscoveryExcluded,
+    userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -254,6 +266,10 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
         DriftSqlType.int,
         data['${effectivePrefix}user_discovery_excluded'],
       )!,
+      userDiscoveryManualApproved: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_discovery_manual_approved'],
+      )!,
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -292,6 +308,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
   final int createdAt;
   final i2.Uint8List? userDiscoveryVersion;
   final int userDiscoveryExcluded;
+  final int userDiscoveryManualApproved;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const ContactsData({
@@ -310,6 +327,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     required this.createdAt,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
+    required this.userDiscoveryManualApproved,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -343,6 +361,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       );
     }
     map['user_discovery_excluded'] = Variable<int>(userDiscoveryExcluded);
+    map['user_discovery_manual_approved'] = Variable<int>(
+      userDiscoveryManualApproved,
+    );
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -373,6 +394,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           ? const Value.absent()
           : Value(userDiscoveryVersion),
       userDiscoveryExcluded: Value(userDiscoveryExcluded),
+      userDiscoveryManualApproved: Value(userDiscoveryManualApproved),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -407,6 +429,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryExcluded: serializer.fromJson<int>(
         json['userDiscoveryExcluded'],
       ),
+      userDiscoveryManualApproved: serializer.fromJson<int>(
+        json['userDiscoveryManualApproved'],
+      ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -436,6 +461,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
         userDiscoveryVersion,
       ),
       'userDiscoveryExcluded': serializer.toJson<int>(userDiscoveryExcluded),
+      'userDiscoveryManualApproved': serializer.toJson<int>(
+        userDiscoveryManualApproved,
+      ),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -457,6 +485,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     int? createdAt,
     Value<i2.Uint8List?> userDiscoveryVersion = const Value.absent(),
     int? userDiscoveryExcluded,
+    int? userDiscoveryManualApproved,
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => ContactsData(
@@ -479,6 +508,8 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
     userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+    userDiscoveryManualApproved:
+        userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -513,6 +544,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryExcluded: data.userDiscoveryExcluded.present
           ? data.userDiscoveryExcluded.value
           : this.userDiscoveryExcluded,
+      userDiscoveryManualApproved: data.userDiscoveryManualApproved.present
+          ? data.userDiscoveryManualApproved.value
+          : this.userDiscoveryManualApproved,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -540,6 +574,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -563,6 +598,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     createdAt,
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
+    userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
   );
@@ -591,6 +627,8 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
             this.userDiscoveryVersion,
           ) &&
           other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
+          other.userDiscoveryManualApproved ==
+              this.userDiscoveryManualApproved &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -611,6 +649,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
   final Value<int> createdAt;
   final Value<i2.Uint8List?> userDiscoveryVersion;
   final Value<int> userDiscoveryExcluded;
+  final Value<int> userDiscoveryManualApproved;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -629,6 +668,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -648,6 +688,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -667,6 +708,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     Expression<int>? createdAt,
     Expression<i2.Uint8List>? userDiscoveryVersion,
     Expression<int>? userDiscoveryExcluded,
+    Expression<int>? userDiscoveryManualApproved,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -690,6 +732,8 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
         'user_discovery_version': userDiscoveryVersion,
       if (userDiscoveryExcluded != null)
         'user_discovery_excluded': userDiscoveryExcluded,
+      if (userDiscoveryManualApproved != null)
+        'user_discovery_manual_approved': userDiscoveryManualApproved,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -712,6 +756,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     Value<int>? createdAt,
     Value<i2.Uint8List?>? userDiscoveryVersion,
     Value<int>? userDiscoveryExcluded,
+    Value<int>? userDiscoveryManualApproved,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -732,6 +777,8 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
       userDiscoveryExcluded:
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+      userDiscoveryManualApproved:
+          userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -791,6 +838,11 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
         userDiscoveryExcluded.value,
       );
     }
+    if (userDiscoveryManualApproved.present) {
+      map['user_discovery_manual_approved'] = Variable<int>(
+        userDiscoveryManualApproved.value,
+      );
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -818,6 +870,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -7462,12 +7515,21 @@ class KeyVerifications extends Table
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   KeyVerifications(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<int> verificationId = GeneratedColumn<int>(
+    'verification_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
     'contact_id',
     aliasedName,
     false,
     type: DriftSqlType.int,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
     $customConstraints:
         'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
   );
@@ -7492,18 +7554,27 @@ class KeyVerifications extends Table
     ),
   );
   @override
-  List<GeneratedColumn> get $columns => [contactId, type, createdAt];
+  List<GeneratedColumn> get $columns => [
+    verificationId,
+    contactId,
+    type,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'key_verifications';
   @override
-  Set<GeneratedColumn> get $primaryKey => {contactId};
+  Set<GeneratedColumn> get $primaryKey => {verificationId};
   @override
   KeyVerificationsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return KeyVerificationsData(
+      verificationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verification_id'],
+      )!,
       contactId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}contact_id'],
@@ -7525,17 +7596,17 @@ class KeyVerifications extends Table
   }
 
   @override
-  List<String> get customConstraints => const ['PRIMARY KEY(contact_id)'];
-  @override
   bool get dontWriteConstraints => true;
 }
 
 class KeyVerificationsData extends DataClass
     implements Insertable<KeyVerificationsData> {
+  final int verificationId;
   final int contactId;
   final String type;
   final int createdAt;
   const KeyVerificationsData({
+    required this.verificationId,
     required this.contactId,
     required this.type,
     required this.createdAt,
@@ -7543,6 +7614,7 @@ class KeyVerificationsData extends DataClass
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['verification_id'] = Variable<int>(verificationId);
     map['contact_id'] = Variable<int>(contactId);
     map['type'] = Variable<String>(type);
     map['created_at'] = Variable<int>(createdAt);
@@ -7551,6 +7623,7 @@ class KeyVerificationsData extends DataClass
 
   KeyVerificationsCompanion toCompanion(bool nullToAbsent) {
     return KeyVerificationsCompanion(
+      verificationId: Value(verificationId),
       contactId: Value(contactId),
       type: Value(type),
       createdAt: Value(createdAt),
@@ -7563,6 +7636,7 @@ class KeyVerificationsData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return KeyVerificationsData(
+      verificationId: serializer.fromJson<int>(json['verificationId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       type: serializer.fromJson<String>(json['type']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
@@ -7572,6 +7646,7 @@ class KeyVerificationsData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'verificationId': serializer.toJson<int>(verificationId),
       'contactId': serializer.toJson<int>(contactId),
       'type': serializer.toJson<String>(type),
       'createdAt': serializer.toJson<int>(createdAt),
@@ -7579,16 +7654,21 @@ class KeyVerificationsData extends DataClass
   }
 
   KeyVerificationsData copyWith({
+    int? verificationId,
     int? contactId,
     String? type,
     int? createdAt,
   }) => KeyVerificationsData(
+    verificationId: verificationId ?? this.verificationId,
     contactId: contactId ?? this.contactId,
     type: type ?? this.type,
     createdAt: createdAt ?? this.createdAt,
   );
   KeyVerificationsData copyWithCompanion(KeyVerificationsCompanion data) {
     return KeyVerificationsData(
+      verificationId: data.verificationId.present
+          ? data.verificationId.value
+          : this.verificationId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       type: data.type.present ? data.type.value : this.type,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -7598,6 +7678,7 @@ class KeyVerificationsData extends DataClass
   @override
   String toString() {
     return (StringBuffer('KeyVerificationsData(')
+          ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
           ..write('createdAt: $createdAt')
@@ -7606,36 +7687,43 @@ class KeyVerificationsData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(contactId, type, createdAt);
+  int get hashCode => Object.hash(verificationId, contactId, type, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is KeyVerificationsData &&
+          other.verificationId == this.verificationId &&
           other.contactId == this.contactId &&
           other.type == this.type &&
           other.createdAt == this.createdAt);
 }
 
 class KeyVerificationsCompanion extends UpdateCompanion<KeyVerificationsData> {
+  final Value<int> verificationId;
   final Value<int> contactId;
   final Value<String> type;
   final Value<int> createdAt;
   const KeyVerificationsCompanion({
+    this.verificationId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.type = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   KeyVerificationsCompanion.insert({
-    this.contactId = const Value.absent(),
+    this.verificationId = const Value.absent(),
+    required int contactId,
     required String type,
     this.createdAt = const Value.absent(),
-  }) : type = Value(type);
+  }) : contactId = Value(contactId),
+       type = Value(type);
   static Insertable<KeyVerificationsData> custom({
+    Expression<int>? verificationId,
     Expression<int>? contactId,
     Expression<String>? type,
     Expression<int>? createdAt,
   }) {
     return RawValuesInsertable({
+      if (verificationId != null) 'verification_id': verificationId,
       if (contactId != null) 'contact_id': contactId,
       if (type != null) 'type': type,
       if (createdAt != null) 'created_at': createdAt,
@@ -7643,11 +7731,13 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerificationsData> {
   }
 
   KeyVerificationsCompanion copyWith({
+    Value<int>? verificationId,
     Value<int>? contactId,
     Value<String>? type,
     Value<int>? createdAt,
   }) {
     return KeyVerificationsCompanion(
+      verificationId: verificationId ?? this.verificationId,
       contactId: contactId ?? this.contactId,
       type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
@@ -7657,6 +7747,9 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerificationsData> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (verificationId.present) {
+      map['verification_id'] = Variable<int>(verificationId.value);
+    }
     if (contactId.present) {
       map['contact_id'] = Variable<int>(contactId.value);
     }
@@ -7672,6 +7765,7 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerificationsData> {
   @override
   String toString() {
     return (StringBuffer('KeyVerificationsCompanion(')
+          ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
           ..write('createdAt: $createdAt')

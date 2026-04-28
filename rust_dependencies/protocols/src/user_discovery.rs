@@ -40,6 +40,8 @@ struct UserDiscoveryConfig {
     verification_shares: Vec<Vec<u8>>,
     // The users' id:
     user_id: UserID,
+    // If others user should promote the promotion to other users
+    share_promotion: bool,
 }
 
 ///
@@ -87,6 +89,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         threshold: u8,
         user_id: UserID,
         public_key: Vec<u8>,
+        share_promotion: bool,
     ) -> Result<()> {
         let config_lock = self.config_lock.lock().await;
         let mut config = match self.store.get_config().await {
@@ -123,6 +126,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         config.public_id = public_id;
         config.announcement_version += 1;
         config.verification_shares = verification_shares;
+        config.share_promotion = share_promotion;
 
         self.update_config(config, config_lock).await?;
 
@@ -203,6 +207,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                 threshold: config.threshold as u32,
                 announcement_share,
                 verification_shares: config.verification_shares,
+                share_promotion: config.share_promotion,
             });
 
             messages.push(
@@ -519,33 +524,36 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     )));
                 }
 
-                let (mut config, config_lock) = self.get_config().await?;
-                config.promotion_version += 1;
+                // Only add this user to the promotions if the users enabled this feature
+                if uda.share_promotion {
+                    let (mut config, config_lock) = self.get_config().await?;
+                    config.promotion_version += 1;
 
-                let message = UserDiscoveryMessage {
-                    version: Some(UserDiscoveryVersion {
-                        announcement: config.announcement_version,
-                        promotion: config.promotion_version,
-                    }),
-                    user_discovery_promotion: Some(UserDiscoveryPromotion {
-                        promotion_id: rand::random(),
-                        public_id: signed_data.public_id,
-                        threshold: uda.threshold,
-                        announcement_share: uda.announcement_share,
-                        public_key_verified_timestamp,
-                    }),
-                    ..Default::default()
-                };
+                    let message = UserDiscoveryMessage {
+                        version: Some(UserDiscoveryVersion {
+                            announcement: config.announcement_version,
+                            promotion: config.promotion_version,
+                        }),
+                        user_discovery_promotion: Some(UserDiscoveryPromotion {
+                            promotion_id: rand::random(),
+                            public_id: signed_data.public_id,
+                            threshold: uda.threshold,
+                            announcement_share: uda.announcement_share,
+                            public_key_verified_timestamp,
+                        }),
+                        ..Default::default()
+                    };
 
-                self.store
-                    .push_own_promotion_and_clear_old_version(
-                        contact_id,
-                        config.promotion_version,
-                        message.encode_to_vec(),
-                    )
-                    .await?;
+                    self.store
+                        .push_own_promotion_and_clear_old_version(
+                            contact_id,
+                            config.promotion_version,
+                            message.encode_to_vec(),
+                        )
+                        .await?;
 
-                self.update_config(config, config_lock).await?;
+                    self.update_config(config, config_lock).await?;
+                }
 
                 let announced_user = AnnouncedUser {
                     user_id: signed_data.user_id,
@@ -721,6 +729,7 @@ impl Default for UserDiscoveryConfig {
             promotion_version: 0,
             verification_shares: vec![],
             public_id: 0,
+            share_promotion: true,
             user_id: 0,
         }
     }
