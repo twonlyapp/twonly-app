@@ -14,6 +14,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/user_discovery_developer.view.dart';
 
 class DeveloperSettingsView extends StatefulWidget {
@@ -131,6 +132,16 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                   onTap: () =>
                       context.push(Routes.settingsDeveloperAutomatedTesting),
                 ),
+              ListTile(
+                title: const Text('Reopen Setup'),
+                onTap: () async {
+                  await UserService.update((u) {
+                    u
+                      ..currentSetupPage = SetupPages.profile.name
+                      ..isUserDiscoveryEnabled = false;
+                  });
+                },
+              ),
             ],
           );
         },

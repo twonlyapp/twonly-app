@@ -1300,7 +1300,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingUserDiscoveryShareFriendsDesc =>
-      'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list.';
+      'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.';
 
   @override
   String get onboardingUserDiscoveryContactsVerifiedBadge =>
@@ -1319,7 +1319,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
-      'Before sharing someone, you will be asked every time someone reaches the number of send images.';
+      'Before someone is shared, you\'ll be asked first.';
 
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
@@ -1667,4 +1667,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoveryManualApprovalShareContact => 'Share contact';
+
+  @override
+  String onboardingSetupCompleteTitle(Object username) {
+    return 'You\'re all set, $username!';
+  }
+
+  @override
+  String get onboardingSetupCompleteDesc =>
+      'You can now share your moments with your friends securely without distractions like ads.';
 }

@@ -1328,7 +1328,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
-      'Bevor du jemanden teilst, wirst du jedes Mal gefragt, sobald jemand die Anzahl der gesendeten Bilder erreicht hat.';
+      'Bevor jemand geteilt wird, wirst du zuerst gefragt.';
 
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
@@ -1683,4 +1683,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoveryManualApprovalShareContact => 'Kontakt teilen';
+
+  @override
+  String onboardingSetupCompleteTitle(Object username) {
+    return 'Du bist startklar, $username!';
+  }
+
+  @override
+  String get onboardingSetupCompleteDesc =>
+      'Du kannst jetzt deine Momente sicher mit deinen Freunden teilen, ohne Ablenkungen wie Werbung.';
 }

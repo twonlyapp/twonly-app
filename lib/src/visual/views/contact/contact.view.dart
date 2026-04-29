@@ -286,10 +286,17 @@ class _ContactViewState extends State<ContactView> {
                 ..._transferredTrust.map(
                   (tt) => ListTile(
                     dense: true,
-                    title: Text(
-                      context.lang.contactVerifiedBy(
-                        getContactDisplayName(tt.$1),
-                      ),
+                    title: Row(
+                      children: [
+                        Text(
+                          context.lang.contactVerifiedBy(
+                            getContactDisplayName(tt.$1),
+                          ),
+                        ),
+                        VerificationBadgeComp(
+                          contact: tt.$1,
+                        ),
+                      ],
                     ),
                     trailing: Text(
                       DateFormat.yMd(

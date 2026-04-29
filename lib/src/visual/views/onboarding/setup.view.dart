@@ -4,18 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/add_new_contacts_setup.view.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/backup_setup.view.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/profile_setup.view.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/user_discovery_setup.view.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/verification_badge_setup.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/add_new_contacts.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/share_your_friends.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/verification_badge.setup.dart';
+import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
 enum SetupPages {
   profile,
   backup,
   addNewContact,
   verificationBadge,
-  userDiscovery,
+  shareYourFriends,
+  letYourFriendsFindYou,
 }
 
 extension SetupPagesExtension on SetupPages {
@@ -28,7 +31,7 @@ extension SetupPagesExtension on SetupPages {
 
   int get pageNumber => index + 1;
   int get totalPages => SetupPages.values.length;
-  int get progressPercentage => (pageNumber / totalPages * 100).round();
+  int get progressPercentage => ((pageNumber - 1) / totalPages * 100).round();
   String get progressText => '$pageNumber / $totalPages';
 
   bool get isLast => index == SetupPages.values.length - 1;
@@ -53,10 +56,13 @@ class SetupView extends StatefulWidget {
 
 class _SetupViewState extends State<SetupView> {
   StreamSubscription<void>? _userUpdateStream;
+  late UserDiscoverySetupState state;
 
   @override
   void initState() {
     super.initState();
+    state = UserDiscoverySetupState(setState: setState);
+
     if (widget.onUpdate != null) {
       _userUpdateStream = userService.onUserUpdated.listen((u) {
         if (userService.currentUser.currentSetupPage == null) {
@@ -115,7 +121,7 @@ class _SetupViewState extends State<SetupView> {
             key: ValueKey(currentPage.name),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             children: [
-              _buildPage(currentPage),
+              _buildPage(currentPage, state),
               if (!currentPage.isLast)
                 SizedBox(
                   height: 50,
@@ -145,7 +151,7 @@ class _SetupViewState extends State<SetupView> {
     );
   }
 
-  Widget _buildPage(SetupPages page) {
+  Widget _buildPage(SetupPages page, UserDiscoverySetupState state) {
     switch (page) {
       case SetupPages.profile:
         return const ProfileSetupPage();
@@ -155,8 +161,10 @@ class _SetupViewState extends State<SetupView> {
         return const AddNewContactsPage();
       case SetupPages.verificationBadge:
         return const VerificationBadgeSetupPage();
-      case SetupPages.userDiscovery:
-        return const UserDiscoverySetupPage();
+      case SetupPages.shareYourFriends:
+        return ShareYourFriendsSetupPage(state: state);
+      case SetupPages.letYourFriendsFindYou:
+        return LetYourFriendsFindYou(state: state);
     }
   }
 }

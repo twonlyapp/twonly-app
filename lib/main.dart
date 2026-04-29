@@ -155,7 +155,7 @@ Future<void> runMigrations() async {
       if (u.avatarSvg == null) {
         u.currentSetupPage = SetupPages.profile.name;
       } else {
-        u.currentSetupPage = SetupPages.userDiscovery.name;
+        u.currentSetupPage = SetupPages.shareYourFriends.name;
       }
     });
   }

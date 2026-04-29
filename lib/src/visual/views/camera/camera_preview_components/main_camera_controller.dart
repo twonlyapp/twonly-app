@@ -76,7 +76,7 @@ class MainCameraController {
   );
   bool _isBusy = false;
   bool _isBusyFaces = false;
-  CustomPaint? customPaint;
+  CustomPaint? qrCodePain;
   CustomPaint? facePaint;
   Offset? focusPointOffset;
 
@@ -183,7 +183,7 @@ class MainCameraController {
       ..cameraId = cameraId;
 
     facePaint = null;
-    customPaint = null;
+    qrCodePain = null;
     isSelectingFaceFilters = false;
     setFilter(FaceFilterType.none);
     zoomButtonKey = GlobalKey();
@@ -334,7 +334,7 @@ class MainCameraController {
         inputImage.metadata!.rotation,
         cameraController!.description.lensDirection,
       );
-      customPaint = CustomPaint(painter: painter);
+      qrCodePain = CustomPaint(painter: painter);
 
       if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
         if (timeSharedLinkWasSetWithQr!.isAfter(

@@ -2399,7 +2399,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingUserDiscoveryShareFriendsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list.'**
+  /// **'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.'**
   String get onboardingUserDiscoveryShareFriendsDesc;
 
   /// No description provided for @onboardingUserDiscoveryContactsVerifiedBadge.
@@ -2429,7 +2429,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsManualApprovalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Before sharing someone, you will be asked every time someone reaches the number of send images.'**
+  /// **'Before someone is shared, you\'ll be asked first.'**
   String get userDiscoverySettingsManualApprovalDesc;
 
   /// No description provided for @onboardingUserDiscoveryLetFriendsFindYou.
@@ -2989,6 +2989,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share contact'**
   String get userDiscoveryManualApprovalShareContact;
+
+  /// No description provided for @onboardingSetupCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set, {username}!'**
+  String onboardingSetupCompleteTitle(Object username);
+
+  /// No description provided for @onboardingSetupCompleteDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can now share your moments with your friends securely without distractions like ads.'**
+  String get onboardingSetupCompleteDesc;
 }
 
 class _AppLocalizationsDelegate

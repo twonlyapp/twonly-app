@@ -25,8 +25,6 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
       requiredSendImages: u.requiredSendImages,
       isUserDiscoveryEnabled: u.isUserDiscoveryEnabled,
       sharePromotion: u.userDiscoverySharePromotion,
-      isShareAllContacts:
-          u.requiredSendImages == 0 && !u.userDiscoveryRequiresManualApproval,
       isManualApprovalEnabled: u.userDiscoveryRequiresManualApproval,
       threshold: u.userDiscoveryThreshold,
     );

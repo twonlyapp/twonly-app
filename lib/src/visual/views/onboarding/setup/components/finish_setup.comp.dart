@@ -15,7 +15,9 @@ class _FinishSetupCompState extends State<FinishSetupComp> {
     await context.navPush(
       SetupView(
         onUpdate: () {
-          Navigator.pop(context);
+          if (mounted) {
+            Navigator.pop(context);
+          }
         },
       ),
     );

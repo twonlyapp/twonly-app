@@ -48,10 +48,6 @@ class MainCameraPreview extends StatelessWidget {
                         mainCameraController.cameraController!,
                         child: Stack(
                           children: [
-                            if (mainCameraController.customPaint != null)
-                              Positioned.fill(
-                                child: mainCameraController.customPaint!,
-                              ),
                             if (mainCameraController.facePaint != null)
                               Positioned.fill(
                                 child: mainCameraController.facePaint!,
@@ -64,8 +60,7 @@ class MainCameraPreview extends StatelessWidget {
                 ),
               ),
             ),
-            if (mainCameraController.focusPointOffset != null &&
-                !mainCameraController.isSharePreviewIsShown)
+            if (!mainCameraController.isSharePreviewIsShown)
               AspectRatio(
                 aspectRatio: 9 / 16,
                 child: ClipRect(
@@ -84,22 +79,30 @@ class MainCameraPreview extends StatelessWidget {
                           .width,
                       child: Stack(
                         children: [
-                          Positioned(
-                            top: mainCameraController.focusPointOffset!.dy - 40,
-                            left:
-                                mainCameraController.focusPointOffset!.dx - 40,
-                            child: Container(
-                              height: 80,
-                              width: 80,
-                              clipBehavior: Clip.antiAliasWithSaveLayer,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withAlpha(150),
+                          if (mainCameraController.qrCodePain != null)
+                            Positioned.fill(
+                              child: mainCameraController.qrCodePain!,
+                            ),
+                          if (mainCameraController.focusPointOffset != null)
+                            Positioned(
+                              top:
+                                  mainCameraController.focusPointOffset!.dy -
+                                  40,
+                              left:
+                                  mainCameraController.focusPointOffset!.dx -
+                                  40,
+                              child: Container(
+                                height: 80,
+                                width: 80,
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white.withAlpha(150),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),
