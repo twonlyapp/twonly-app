@@ -1305,9 +1305,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingUserDiscoveryShareFriends => 'Freunde teilen';
 
   @override
-  String get onboardingUserDiscoveryIncreaseTrust => 'Erhöhe Vertrauen';
-
-  @override
   String get onboardingUserDiscoveryShareFriendsDesc =>
       'Teile deinen Freunden mit, wen du kennst und wen du verifiziert hast. Freunde können von deiner Freundesliste *nur gemeinsame Freunde sehen*.';
 
@@ -1320,10 +1317,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Erfahre, wer dich anfragt';
 
   @override
-  String get userDiscoverySettingsEnableAllContacts =>
-      'Für alle Kontakte aktivieren';
-
-  @override
   String get userDiscoverySettingsManualApproval => 'Manuelle Zustimmung';
 
   @override
@@ -1333,10 +1326,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
       'Lass dich von deinen Freunden finden';
-
-  @override
-  String get onboardingUserDiscoveryLetFriendsFindYouDesc =>
-      'Damit deine Freunde dich finden können, kannst du Personen vorgeschlagen werden, die gemeinsame Freunde mit dir haben.';
 
   @override
   String get onboardingUserDiscoveryBeRecommended =>
@@ -1569,10 +1558,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactActionAccept => 'Annehmen';
 
   @override
-  String get userDiscoverySettingsMinImages =>
-      'Wähle die Mindestanzahl an Bildern, die du an eine Person gesendet haben musst, bevor du ihr deine Freunde sicher teilst.';
-
-  @override
   String get userDiscoverySettingsMutualFriends =>
       'Wähle aus, wie viele gemeinsame Freunde eine Person haben muss, damit du ihr vorgeschlagen wirst.';
 
@@ -1581,36 +1566,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoveryEnabledDisableWarning =>
-      'Wenn du das Feature „Freunde teilen“ deaktivierst, werden dir keine Vorschläge mehr angezeigt. Du teilst neuen Kontakten dann auch nicht mehr deine Freunde.';
+      'Wenn du das Feature „Gemeinsame Freunde“ deaktivierst, werden dir keine Vorschläge mehr angezeigt. Du teilst neuen Kontakten dann auch nicht mehr deine Freunde.';
 
   @override
   String get userDiscoveryEnabledChangeSettings => 'Einstellungen ändern';
 
   @override
   String get userDiscoveryEnabledFaq =>
-      'In unserem FAQ erklären wir dir wie das Feature \"Freunde teilen\" funktioniert.';
+      'In unserem FAQ erklären wir dir wie das Feature \"Gemeinsame Freunde\" funktioniert.';
 
   @override
   String get userDiscoveryDisabledIntro =>
       'twonly kann *ohne Telefonnummer* oder den Zugriff auf dein Adressbuch verwendet werden. Stattdessen kannst du *deine Freunde über gemeinsame Freunde* finden.';
 
   @override
-  String get userDiscoveryDisabledDecide =>
-      'Entscheide selbst, wer deine Freunde sehen darf. Du kannst deine Meinung *jederzeit ändern* oder *bestimmte Personen verstecken*.';
-
-  @override
-  String get userDiscoverySettingsTitle => 'Freunde teilen';
-
-  @override
-  String get userDiscoverySettingsMinImagesTitle =>
-      'Anzahl an gesendeten Bildern';
-
-  @override
-  String get userDiscoverySettingsMutualFriendsTitle =>
-      'Anzahl an gemeinsame Freunde';
-
-  @override
-  String get userDiscoveryDisabledYouHaveControl => 'Du hast die Kontrolle';
+  String get userDiscoverySettingsTitle => 'Gemeinsame Freunde';
 
   @override
   String get userDiscoveryDisabledLearnMore => 'Mehr erfahren';
@@ -1627,7 +1597,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsCurrentlyDisabled =>
-      'Das Feature \"Freunde teilen\" ist derzeit deaktiviert.';
+      'Das Feature \"Gemeinsame Freunde\" ist derzeit deaktiviert.';
 
   @override
   String get userDiscoveryEnabledNoFriendsShared =>

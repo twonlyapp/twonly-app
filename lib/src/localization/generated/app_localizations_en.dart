@@ -1296,9 +1296,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
 
   @override
-  String get onboardingUserDiscoveryIncreaseTrust => 'Increase trust';
-
-  @override
   String get onboardingUserDiscoveryShareFriendsDesc =>
       'Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.';
 
@@ -1311,10 +1308,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Be informed about who is requesting';
 
   @override
-  String get userDiscoverySettingsEnableAllContacts =>
-      'Enabled for all contacts';
-
-  @override
   String get userDiscoverySettingsManualApproval => 'Manual approval';
 
   @override
@@ -1324,10 +1317,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
       'Let your friends find you';
-
-  @override
-  String get onboardingUserDiscoveryLetFriendsFindYouDesc =>
-      'To help your friends find you, *you can be suggested* to people with whom you have *mutual friends*.';
 
   @override
   String get onboardingUserDiscoveryBeRecommended => 'Be recommended to others';
@@ -1554,10 +1543,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactActionAccept => 'Accept';
 
   @override
-  String get userDiscoverySettingsMinImages =>
-      'Choose the minimum number of images you must have send to a person before you securely share your friends with them.';
-
-  @override
   String get userDiscoverySettingsMutualFriends =>
       'Choose how many mutual friends a person must have for you to be suggested to them.';
 
@@ -1566,35 +1551,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoveryEnabledDisableWarning =>
-      'If you disable the \"Share your friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.';
+      'If you disable the \"Mutual Friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.';
 
   @override
   String get userDiscoveryEnabledChangeSettings => 'Change settings';
 
   @override
   String get userDiscoveryEnabledFaq =>
-      'In our FAQ we explain how the \"Share your friends\" feature works.';
+      'In our FAQ we explain how the \"Mutual Friends\" feature works.';
 
   @override
   String get userDiscoveryDisabledIntro =>
       'twonly does *not* collect your phone number or needs access to your contacts. Instead, twonly can *find your friends through mutual friends*.';
 
   @override
-  String get userDiscoveryDisabledDecide =>
-      'Decide for yourself who can see your friends. You can change your mind at *any time* or *hide specific people*.';
-
-  @override
-  String get userDiscoverySettingsTitle => 'Share your friends';
-
-  @override
-  String get userDiscoverySettingsMinImagesTitle => 'Number of images send';
-
-  @override
-  String get userDiscoverySettingsMutualFriendsTitle =>
-      'Number of mutual friends';
-
-  @override
-  String get userDiscoveryDisabledYouHaveControl => 'You are in control';
+  String get userDiscoverySettingsTitle => 'Mutual Friends';
 
   @override
   String get userDiscoveryDisabledLearnMore => 'Learn more';
@@ -1611,7 +1582,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsCurrentlyDisabled =>
-      'The feature \"Share your friends\" is currently disabled.';
+      'The feature \"Mutual Friends\" is currently disabled.';
 
   @override
   String get userDiscoveryEnabledNoFriendsShared =>

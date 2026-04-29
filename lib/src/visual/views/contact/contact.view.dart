@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -337,6 +338,7 @@ class _ContactViewState extends State<ContactView> {
               BetterListTile(
                 icon: FontAwesomeIcons.usersViewfinder,
                 text: context.lang.userDiscoverySettingsTitle,
+                onTap: () => context.navPush(const UserDiscoverySettingsView()),
                 subtitle:
                     !contact.userDiscoveryExcluded &&
                         contact.mediaSendCounter <

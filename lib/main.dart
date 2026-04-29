@@ -25,6 +25,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
@@ -94,19 +95,19 @@ void main() async {
       );
     }
 
-    unawaited(performTwonlySafeBackup());
-    unawaited(initializeBackgroundTaskManager());
-
     await runMigrations();
 
     await twonlyDB.messagesDao.purgeMessageTable();
     await twonlyDB.receiptsDao.purgeReceivedReceipts();
+    await UserDiscoveryService.removeDeletedContacts();
 
     unawaited(MediaFileService.purgeTempFolder());
 
     unawaited(setupPushNotification());
     unawaited(finishStartedPreprocessing());
     unawaited(createPushAvatars());
+    unawaited(performTwonlySafeBackup());
+    unawaited(initializeBackgroundTaskManager());
   }
 
   await apiService.listenToNetworkChanges();

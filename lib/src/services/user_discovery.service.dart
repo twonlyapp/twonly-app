@@ -172,6 +172,18 @@ class UserDiscoveryService {
     }
   }
 
+  static Future<void> removeDeletedContacts() async {
+    final subquery = twonlyDB.selectOnly(twonlyDB.contacts)
+      ..addColumns([twonlyDB.contacts.userId])
+      ..where(twonlyDB.contacts.accountDeleted.equals(true));
+
+    await (twonlyDB.update(
+      twonlyDB.userDiscoveryOwnPromotions,
+    )..where((t) => t.contactId.isInQuery(subquery))).write(
+      UserDiscoveryOwnPromotionsCompanion(promotion: Value(Uint8List(0))),
+    );
+  }
+
   static Future<void> changeExclusionForContact(
     int contactId,
     bool exclude,

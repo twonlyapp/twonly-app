@@ -2390,12 +2390,6 @@ abstract class AppLocalizations {
   /// **'Share your friends'**
   String get onboardingUserDiscoveryShareFriends;
 
-  /// No description provided for @onboardingUserDiscoveryIncreaseTrust.
-  ///
-  /// In en, this message translates to:
-  /// **'Increase trust'**
-  String get onboardingUserDiscoveryIncreaseTrust;
-
   /// No description provided for @onboardingUserDiscoveryShareFriendsDesc.
   ///
   /// In en, this message translates to:
@@ -2414,12 +2408,6 @@ abstract class AppLocalizations {
   /// **'Be informed about who is requesting'**
   String get onboardingUserDiscoveryWhoIsRequesting;
 
-  /// No description provided for @userDiscoverySettingsEnableAllContacts.
-  ///
-  /// In en, this message translates to:
-  /// **'Enabled for all contacts'**
-  String get userDiscoverySettingsEnableAllContacts;
-
   /// No description provided for @userDiscoverySettingsManualApproval.
   ///
   /// In en, this message translates to:
@@ -2437,12 +2425,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let your friends find you'**
   String get onboardingUserDiscoveryLetFriendsFindYou;
-
-  /// No description provided for @onboardingUserDiscoveryLetFriendsFindYouDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'To help your friends find you, *you can be suggested* to people with whom you have *mutual friends*.'**
-  String get onboardingUserDiscoveryLetFriendsFindYouDesc;
 
   /// No description provided for @onboardingUserDiscoveryBeRecommended.
   ///
@@ -2804,12 +2786,6 @@ abstract class AppLocalizations {
   /// **'Accept'**
   String get contactActionAccept;
 
-  /// No description provided for @userDiscoverySettingsMinImages.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose the minimum number of images you must have send to a person before you securely share your friends with them.'**
-  String get userDiscoverySettingsMinImages;
-
   /// No description provided for @userDiscoverySettingsMutualFriends.
   ///
   /// In en, this message translates to:
@@ -2825,7 +2801,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoveryEnabledDisableWarning.
   ///
   /// In en, this message translates to:
-  /// **'If you disable the \"Share your friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.'**
+  /// **'If you disable the \"Mutual Friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.'**
   String get userDiscoveryEnabledDisableWarning;
 
   /// No description provided for @userDiscoveryEnabledChangeSettings.
@@ -2837,7 +2813,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoveryEnabledFaq.
   ///
   /// In en, this message translates to:
-  /// **'In our FAQ we explain how the \"Share your friends\" feature works.'**
+  /// **'In our FAQ we explain how the \"Mutual Friends\" feature works.'**
   String get userDiscoveryEnabledFaq;
 
   /// No description provided for @userDiscoveryDisabledIntro.
@@ -2846,35 +2822,11 @@ abstract class AppLocalizations {
   /// **'twonly does *not* collect your phone number or needs access to your contacts. Instead, twonly can *find your friends through mutual friends*.'**
   String get userDiscoveryDisabledIntro;
 
-  /// No description provided for @userDiscoveryDisabledDecide.
-  ///
-  /// In en, this message translates to:
-  /// **'Decide for yourself who can see your friends. You can change your mind at *any time* or *hide specific people*.'**
-  String get userDiscoveryDisabledDecide;
-
   /// No description provided for @userDiscoverySettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Share your friends'**
+  /// **'Mutual Friends'**
   String get userDiscoverySettingsTitle;
-
-  /// No description provided for @userDiscoverySettingsMinImagesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Number of images send'**
-  String get userDiscoverySettingsMinImagesTitle;
-
-  /// No description provided for @userDiscoverySettingsMutualFriendsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Number of mutual friends'**
-  String get userDiscoverySettingsMutualFriendsTitle;
-
-  /// No description provided for @userDiscoveryDisabledYouHaveControl.
-  ///
-  /// In en, this message translates to:
-  /// **'You are in control'**
-  String get userDiscoveryDisabledYouHaveControl;
 
   /// No description provided for @userDiscoveryDisabledLearnMore.
   ///
@@ -2903,7 +2855,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsCurrentlyDisabled.
   ///
   /// In en, this message translates to:
-  /// **'The feature \"Share your friends\" is currently disabled.'**
+  /// **'The feature \"Mutual Friends\" is currently disabled.'**
   String get userDiscoverySettingsCurrentlyDisabled;
 
   /// No description provided for @userDiscoveryEnabledNoFriendsShared.

@@ -158,7 +158,7 @@ class _UserDiscoveryEnabledCompState extends State<UserDiscoveryEnabledComp> {
               context.lang.userDiscoveryEnabledFaq,
             ),
             onTap: () => context.navPush(
-              const FaqView(questionId: 'user-discovery'),
+              const FaqView(questionId: 'mutual-friends'),
             ),
           ),
           const Divider(),
