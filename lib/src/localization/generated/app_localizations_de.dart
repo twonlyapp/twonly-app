@@ -1672,4 +1672,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoveryEnabledStopSharing => 'Nicht mehr teilen';
+
+  @override
+  String userDiscoveryManualApprovalReachedThreshold(Object username) {
+    return '$username hat deinen Schwellenwert erreicht und benötigt nur noch eine manuelle Zustimmung, um mit deinen Freunden geteilt zu werden.';
+  }
+
+  @override
+  String get userDiscoveryManualApprovalHideContact => 'Kontakt verbergen';
+
+  @override
+  String get userDiscoveryManualApprovalShareContact => 'Kontakt teilen';
 }

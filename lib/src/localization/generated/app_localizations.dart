@@ -2971,6 +2971,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop sharing'**
   String get userDiscoveryEnabledStopSharing;
+
+  /// No description provided for @userDiscoveryManualApprovalReachedThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} has reached your threshold and now needs your manual approval to be shared with your friends.'**
+  String userDiscoveryManualApprovalReachedThreshold(Object username);
+
+  /// No description provided for @userDiscoveryManualApprovalHideContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide contact'**
+  String get userDiscoveryManualApprovalHideContact;
+
+  /// No description provided for @userDiscoveryManualApprovalShareContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Share contact'**
+  String get userDiscoveryManualApprovalShareContact;
 }
 
 class _AppLocalizationsDelegate

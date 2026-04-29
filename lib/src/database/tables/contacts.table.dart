@@ -30,7 +30,7 @@ class Contacts extends Table {
       boolean().withDefault(const Constant(false))();
 
   BoolColumn get userDiscoveryManualApproved =>
-      boolean().withDefault(const Constant(false))();
+      boolean().nullable().withDefault(const Constant(false))();
 
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>

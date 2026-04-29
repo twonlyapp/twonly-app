@@ -566,14 +566,32 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     contact_id,
                     announced_user.user_id
                 );
+
                 // User is known, so add him to thr users relations
                 self.store
                     .push_new_user_relation(
                         contact_id,
-                        announced_user,
+                        announced_user.clone(),
                         public_key_verified_timestamp,
                     )
                     .await?;
+
+                // As we no now the public_id from the user, all promotions up to this point are also known, so add these to the relations database as well
+                let promotions = self
+                    .store
+                    .get_other_promotions_by_public_id(uda.public_id)
+                    .await?;
+
+                for promotion in promotions {
+                    self.store
+                        .push_new_user_relation(
+                            promotion.from_contact_id,
+                            announced_user,
+                            promotion.public_key_verified_timestamp,
+                        )
+                        .await?;
+                    return Ok(());
+                }
 
                 Ok(())
             }

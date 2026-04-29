@@ -46,6 +46,31 @@ class UserDiscoveryService {
     }
   }
 
+  static bool isContactAllowed(Contact? c) {
+    if (c == null) return false;
+    final u = userService.currentUser;
+    // Only accepted users are allowed.
+    if (!c.accepted || c.blocked) return false;
+    if (c.mediaSendCounter < u.requiredSendImages) return false;
+    if (c.userDiscoveryExcluded) return false;
+    if (u.userDiscoveryRequiresManualApproval &&
+        (c.userDiscoveryManualApproved == null ||
+            !c.userDiscoveryManualApproved!)) {
+      return false;
+    }
+    return true;
+  }
+
+  static bool shouldRequestManualApproval(Contact c) {
+    final u = userService.currentUser;
+    if (!u.isUserDiscoveryEnabled) return false;
+    if (c.mediaSendCounter < u.requiredSendImages) return false;
+    if (c.userDiscoveryExcluded) return false;
+    if (!u.userDiscoveryRequiresManualApproval) return false;
+    if (c.userDiscoveryManualApproved == true) return false;
+    return true;
+  }
+
   static Future<void> initializeOrUpdate({
     required int threshold,
     required bool sharePromotion,

@@ -207,7 +207,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       GeneratedColumn<bool>(
         'user_discovery_manual_approved',
         aliasedName,
-        false,
+        true,
         type: DriftSqlType.bool,
         requiredDuringInsert: false,
         defaultConstraints: GeneratedColumn.constraintIsAlways(
@@ -483,7 +483,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       userDiscoveryManualApproved: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}user_discovery_manual_approved'],
-      )!,
+      ),
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -517,7 +517,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime createdAt;
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
-  final bool userDiscoveryManualApproved;
+  final bool? userDiscoveryManualApproved;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -536,7 +536,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.createdAt,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
-    required this.userDiscoveryManualApproved,
+    this.userDiscoveryManualApproved,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -566,9 +566,11 @@ class Contact extends DataClass implements Insertable<Contact> {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
     map['user_discovery_excluded'] = Variable<bool>(userDiscoveryExcluded);
-    map['user_discovery_manual_approved'] = Variable<bool>(
-      userDiscoveryManualApproved,
-    );
+    if (!nullToAbsent || userDiscoveryManualApproved != null) {
+      map['user_discovery_manual_approved'] = Variable<bool>(
+        userDiscoveryManualApproved,
+      );
+    }
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -599,7 +601,10 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? const Value.absent()
           : Value(userDiscoveryVersion),
       userDiscoveryExcluded: Value(userDiscoveryExcluded),
-      userDiscoveryManualApproved: Value(userDiscoveryManualApproved),
+      userDiscoveryManualApproved:
+          userDiscoveryManualApproved == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userDiscoveryManualApproved),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -634,7 +639,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryExcluded: serializer.fromJson<bool>(
         json['userDiscoveryExcluded'],
       ),
-      userDiscoveryManualApproved: serializer.fromJson<bool>(
+      userDiscoveryManualApproved: serializer.fromJson<bool?>(
         json['userDiscoveryManualApproved'],
       ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
@@ -664,7 +669,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         userDiscoveryVersion,
       ),
       'userDiscoveryExcluded': serializer.toJson<bool>(userDiscoveryExcluded),
-      'userDiscoveryManualApproved': serializer.toJson<bool>(
+      'userDiscoveryManualApproved': serializer.toJson<bool?>(
         userDiscoveryManualApproved,
       ),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
@@ -688,7 +693,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     DateTime? createdAt,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
-    bool? userDiscoveryManualApproved,
+    Value<bool?> userDiscoveryManualApproved = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -711,8 +716,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
     userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
-    userDiscoveryManualApproved:
-        userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
+    userDiscoveryManualApproved: userDiscoveryManualApproved.present
+        ? userDiscoveryManualApproved.value
+        : this.userDiscoveryManualApproved,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -852,7 +858,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime> createdAt;
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
-  final Value<bool> userDiscoveryManualApproved;
+  final Value<bool?> userDiscoveryManualApproved;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -959,7 +965,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<DateTime>? createdAt,
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
-    Value<bool>? userDiscoveryManualApproved,
+    Value<bool?>? userDiscoveryManualApproved,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -11687,7 +11693,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
-      Value<bool> userDiscoveryManualApproved,
+      Value<bool?> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -11708,7 +11714,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
-      Value<bool> userDiscoveryManualApproved,
+      Value<bool?> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -12967,7 +12973,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
-                Value<bool> userDiscoveryManualApproved = const Value.absent(),
+                Value<bool?> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -13007,7 +13013,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
-                Value<bool> userDiscoveryManualApproved = const Value.absent(),
+                Value<bool?> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(

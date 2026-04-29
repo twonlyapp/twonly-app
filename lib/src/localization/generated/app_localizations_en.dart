@@ -1656,4 +1656,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoveryEnabledStopSharing => 'Stop sharing';
+
+  @override
+  String userDiscoveryManualApprovalReachedThreshold(Object username) {
+    return '$username has reached your threshold and now needs your manual approval to be shared with your friends.';
+  }
+
+  @override
+  String get userDiscoveryManualApprovalHideContact => 'Hide contact';
+
+  @override
+  String get userDiscoveryManualApprovalShareContact => 'Share contact';
 }

@@ -145,17 +145,17 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
         'NOT NULL DEFAULT 0 CHECK (user_discovery_excluded IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<int>
-  userDiscoveryManualApproved = GeneratedColumn<int>(
-    'user_discovery_manual_approved',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints:
-        'NOT NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
-    defaultValue: const CustomExpression('0'),
-  );
+  late final GeneratedColumn<int> userDiscoveryManualApproved =
+      GeneratedColumn<int>(
+        'user_discovery_manual_approved',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints:
+            'NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
+        defaultValue: const CustomExpression('0'),
+      );
   late final GeneratedColumn<int> mediaSendCounter = GeneratedColumn<int>(
     'media_send_counter',
     aliasedName,
@@ -269,7 +269,7 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
       userDiscoveryManualApproved: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}user_discovery_manual_approved'],
-      )!,
+      ),
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -308,7 +308,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
   final int createdAt;
   final i2.Uint8List? userDiscoveryVersion;
   final int userDiscoveryExcluded;
-  final int userDiscoveryManualApproved;
+  final int? userDiscoveryManualApproved;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const ContactsData({
@@ -327,7 +327,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     required this.createdAt,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
-    required this.userDiscoveryManualApproved,
+    this.userDiscoveryManualApproved,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -361,9 +361,11 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       );
     }
     map['user_discovery_excluded'] = Variable<int>(userDiscoveryExcluded);
-    map['user_discovery_manual_approved'] = Variable<int>(
-      userDiscoveryManualApproved,
-    );
+    if (!nullToAbsent || userDiscoveryManualApproved != null) {
+      map['user_discovery_manual_approved'] = Variable<int>(
+        userDiscoveryManualApproved,
+      );
+    }
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -394,7 +396,10 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           ? const Value.absent()
           : Value(userDiscoveryVersion),
       userDiscoveryExcluded: Value(userDiscoveryExcluded),
-      userDiscoveryManualApproved: Value(userDiscoveryManualApproved),
+      userDiscoveryManualApproved:
+          userDiscoveryManualApproved == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userDiscoveryManualApproved),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -429,7 +434,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       userDiscoveryExcluded: serializer.fromJson<int>(
         json['userDiscoveryExcluded'],
       ),
-      userDiscoveryManualApproved: serializer.fromJson<int>(
+      userDiscoveryManualApproved: serializer.fromJson<int?>(
         json['userDiscoveryManualApproved'],
       ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
@@ -461,7 +466,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
         userDiscoveryVersion,
       ),
       'userDiscoveryExcluded': serializer.toJson<int>(userDiscoveryExcluded),
-      'userDiscoveryManualApproved': serializer.toJson<int>(
+      'userDiscoveryManualApproved': serializer.toJson<int?>(
         userDiscoveryManualApproved,
       ),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
@@ -485,7 +490,7 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     int? createdAt,
     Value<i2.Uint8List?> userDiscoveryVersion = const Value.absent(),
     int? userDiscoveryExcluded,
-    int? userDiscoveryManualApproved,
+    Value<int?> userDiscoveryManualApproved = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => ContactsData(
@@ -508,8 +513,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
     userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
-    userDiscoveryManualApproved:
-        userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
+    userDiscoveryManualApproved: userDiscoveryManualApproved.present
+        ? userDiscoveryManualApproved.value
+        : this.userDiscoveryManualApproved,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -649,7 +655,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
   final Value<int> createdAt;
   final Value<i2.Uint8List?> userDiscoveryVersion;
   final Value<int> userDiscoveryExcluded;
-  final Value<int> userDiscoveryManualApproved;
+  final Value<int?> userDiscoveryManualApproved;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -756,7 +762,7 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     Value<int>? createdAt,
     Value<i2.Uint8List?>? userDiscoveryVersion,
     Value<int>? userDiscoveryExcluded,
-    Value<int>? userDiscoveryManualApproved,
+    Value<int?>? userDiscoveryManualApproved,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {

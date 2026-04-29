@@ -135,27 +135,35 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 
   Stream<List<Contact>> watchContactsAnnouncedViaUserDiscovery() {
-    return (select(contacts)..where(
-          (t) =>
-              t.userDiscoveryVersion.isNotNull() &
-              t.userDiscoveryExcluded.equals(false) &
-              t.mediaSendCounter.isBiggerOrEqualValue(
-                userService.currentUser.requiredSendImages,
-              ),
-        ))
-        .watch();
+    return (select(contacts)..where((t) {
+      var expr = t.userDiscoveryVersion.isNotNull() &
+          t.userDiscoveryExcluded.equals(false) &
+          t.mediaSendCounter.isBiggerOrEqualValue(
+            userService.currentUser.requiredSendImages,
+          );
+
+      if (userService.currentUser.userDiscoveryRequiresManualApproval) {
+        expr = expr & t.userDiscoveryManualApproved.equals(true);
+      }
+
+      return expr;
+    })).watch();
   }
 
   Future<List<Contact>> getContactsAnnouncedViaUserDiscovery() async {
-    return (select(contacts)..where(
-          (t) =>
-              t.userDiscoveryVersion.isNotNull() &
-              t.userDiscoveryExcluded.equals(false) &
-              t.mediaSendCounter.isBiggerOrEqualValue(
-                userService.currentUser.requiredSendImages,
-              ),
-        ))
-        .get();
+    return (select(contacts)..where((t) {
+      var expr = t.userDiscoveryVersion.isNotNull() &
+          t.userDiscoveryExcluded.equals(false) &
+          t.mediaSendCounter.isBiggerOrEqualValue(
+            userService.currentUser.requiredSendImages,
+          );
+
+      if (userService.currentUser.userDiscoveryRequiresManualApproval) {
+        expr = expr & t.userDiscoveryManualApproved.equals(true);
+      }
+
+      return expr;
+    })).get();
   }
 
   Stream<List<Contact>> watchAllContacts() {

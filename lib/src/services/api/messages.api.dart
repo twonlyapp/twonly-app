@@ -352,10 +352,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
 
   if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
     final contact = await twonlyDB.contactsDao.getContactById(contactId);
-    if (contact != null &&
-        contact.mediaSendCounter >=
-            userService.currentUser.requiredSendImages &&
-        !contact.userDiscoveryExcluded) {
+    if (UserDiscoveryService.isContactAllowed(contact)) {
       final version = await UserDiscoveryService.getCurrentVersion();
       if (version != null) {
         encryptedContent.senderUserDiscoveryVersion = version;

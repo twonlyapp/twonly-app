@@ -306,35 +306,58 @@ class _ContactViewState extends State<ContactView> {
               ],
             ),
           if (userService.currentUser.isUserDiscoveryEnabled)
-            BetterListTile(
-              icon: FontAwesomeIcons.usersViewfinder,
-              text: context.lang.userDiscoverySettingsTitle,
-              subtitle:
-                  !contact.userDiscoveryExcluded &&
-                      contact.mediaSendCounter <
-                          userService.currentUser.requiredSendImages
-                  ? Text(
-                      context.lang.contactUserDiscoveryImagesLeft(
-                        userService.currentUser.requiredSendImages -
-                            contact.mediaSendCounter,
-                        getContactDisplayName(contact),
-                      ),
-                      style: const TextStyle(fontSize: 9),
-                    )
-                  : null,
-              trailing: Transform.scale(
-                scale: 0.8,
-                child: Switch(
-                  value: !contact.userDiscoveryExcluded,
-                  onChanged: (a) async {
-                    await UserDiscoveryService.changeExclusionForContact(
+            if (userService.currentUser.userDiscoveryRequiresManualApproval &&
+                contact.userDiscoveryManualApproved != true)
+              BetterListTile(
+                icon: FontAwesomeIcons.usersViewfinder,
+                text: context.lang.userDiscoverySettingsTitle,
+                subtitle: const Text(
+                  'Contact was not yet manual approved.',
+                  style: TextStyle(fontSize: 10),
+                ),
+                trailing: TextButton(
+                  onPressed: () async {
+                    await twonlyDB.contactsDao.updateContact(
                       contact.userId,
-                      !a,
+                      const ContactsCompanion(
+                        userDiscoveryManualApproved: Value(true),
+                      ),
                     );
                   },
+                  child: const Text('Approve'),
+                ),
+              )
+            else
+              BetterListTile(
+                icon: FontAwesomeIcons.usersViewfinder,
+                text: context.lang.userDiscoverySettingsTitle,
+                subtitle:
+                    !contact.userDiscoveryExcluded &&
+                        contact.mediaSendCounter <
+                            userService.currentUser.requiredSendImages
+                    ? Text(
+                        context.lang.contactUserDiscoveryImagesLeft(
+                          userService.currentUser.requiredSendImages -
+                              contact.mediaSendCounter,
+                          getContactDisplayName(contact),
+                        ),
+                        style: const TextStyle(fontSize: 9),
+                      )
+                    : null,
+                trailing: Transform.scale(
+                  scale: 0.8,
+                  child: Switch(
+                    value: !contact.userDiscoveryExcluded,
+                    onChanged: (a) async {
+                      await UserDiscoveryService.changeExclusionForContact(
+                        contact.userId,
+                        !a,
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
+
           BetterListTile(
             icon: FontAwesomeIcons.flag,
             text: context.lang.reportUser,

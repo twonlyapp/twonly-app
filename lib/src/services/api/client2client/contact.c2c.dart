@@ -185,7 +185,6 @@ Future<int?> checkForProfileUpdate(
           .getSingleOrNull();
       if (contact != null) {
         if (contact.senderProfileCounter < senderProfileCounter) {
-          Log.info('${contact.senderProfileCounter} < $senderProfileCounter');
           await sendCipherText(
             fromUserId,
             EncryptedContent(

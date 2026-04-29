@@ -6,9 +6,9 @@ import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/contact/add_new_contact_components/friend_suggestions.comp.dart';
@@ -150,9 +150,6 @@ class OpenRequestsListComp extends StatelessWidget {
         ),
         ...contacts.map((contact) {
           Widget? subtitle;
-
-          Log.info('Relations count: ${relations.entries.length}');
-
           for (final relation in relations.entries) {
             if (relation.key.announcedUserId == contact.userId) {
               subtitle = RichText(
@@ -165,11 +162,16 @@ class OpenRequestsListComp extends StatelessWidget {
               break;
             }
           }
-
           return ListTile(
             key: ValueKey(contact.userId),
             contentPadding: EdgeInsets.zero,
-            title: Text(substringBy(contact.username, 25)),
+            title: Row(
+              children: [
+                Text(substringBy(contact.username, 25)),
+                const SizedBox(width: 3),
+                VerificationBadgeComp(contact: contact),
+              ],
+            ),
             subtitle: subtitle,
             leading: AvatarIcon(
               contactId: contact.userId,

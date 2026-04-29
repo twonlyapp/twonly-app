@@ -18,6 +18,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/user_discovery_manual_approval.comp.dart';
 
 class MessageInput extends StatefulWidget {
   const MessageInput({
@@ -198,6 +199,7 @@ class _MessageInputState extends State<MessageInput> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        UserDiscoveryManualApprovalComp(group: widget.group),
         Padding(
           padding: const EdgeInsets.only(
             bottom: 10,

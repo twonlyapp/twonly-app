@@ -197,7 +197,7 @@
             "name": "user_discovery_manual_approved",
             "getter_name": "userDiscoveryManualApproved",
             "moor_type": "bool",
-            "nullable": false,
+            "nullable": true,
             "customConstraints": null,
             "defaultConstraints": "CHECK (\"user_discovery_manual_approved\" IN (0, 1))",
             "dialectAwareDefaultConstraints": {
@@ -2557,7 +2557,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"contacts\" (\"user_id\" INTEGER NOT NULL, \"username\" TEXT NOT NULL, \"display_name\" TEXT NULL, \"nick_name\" TEXT NULL, \"avatar_svg_compressed\" BLOB NULL, \"sender_profile_counter\" INTEGER NOT NULL DEFAULT 0, \"accepted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"accepted\" IN (0, 1)), \"deleted_by_user\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted_by_user\" IN (0, 1)), \"requested\" INTEGER NOT NULL DEFAULT 0 CHECK (\"requested\" IN (0, 1)), \"blocked\" INTEGER NOT NULL DEFAULT 0 CHECK (\"blocked\" IN (0, 1)), \"verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"verified\" IN (0, 1)), \"account_deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"account_deleted\" IN (0, 1)), \"created_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"user_discovery_version\" BLOB NULL, \"user_discovery_excluded\" INTEGER NOT NULL DEFAULT 0 CHECK (\"user_discovery_excluded\" IN (0, 1)), \"user_discovery_manual_approved\" INTEGER NOT NULL DEFAULT 0 CHECK (\"user_discovery_manual_approved\" IN (0, 1)), \"media_send_counter\" INTEGER NOT NULL DEFAULT 0, \"media_received_counter\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"user_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"contacts\" (\"user_id\" INTEGER NOT NULL, \"username\" TEXT NOT NULL, \"display_name\" TEXT NULL, \"nick_name\" TEXT NULL, \"avatar_svg_compressed\" BLOB NULL, \"sender_profile_counter\" INTEGER NOT NULL DEFAULT 0, \"accepted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"accepted\" IN (0, 1)), \"deleted_by_user\" INTEGER NOT NULL DEFAULT 0 CHECK (\"deleted_by_user\" IN (0, 1)), \"requested\" INTEGER NOT NULL DEFAULT 0 CHECK (\"requested\" IN (0, 1)), \"blocked\" INTEGER NOT NULL DEFAULT 0 CHECK (\"blocked\" IN (0, 1)), \"verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"verified\" IN (0, 1)), \"account_deleted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"account_deleted\" IN (0, 1)), \"created_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"user_discovery_version\" BLOB NULL, \"user_discovery_excluded\" INTEGER NOT NULL DEFAULT 0 CHECK (\"user_discovery_excluded\" IN (0, 1)), \"user_discovery_manual_approved\" INTEGER NULL DEFAULT 0 CHECK (\"user_discovery_manual_approved\" IN (0, 1)), \"media_send_counter\" INTEGER NOT NULL DEFAULT 0, \"media_received_counter\" INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (\"user_id\"));"
         }
       ]
     },

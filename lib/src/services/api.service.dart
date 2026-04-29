@@ -24,6 +24,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
+import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
@@ -123,6 +124,7 @@ class ApiService {
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
       resetResyncedUsers();
+      resetUserDiscoveryRequestUpdates();
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());

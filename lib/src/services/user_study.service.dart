@@ -69,6 +69,10 @@ Future<void> handleUserStudyUpload() async {
           userService.currentUser.requiredSendImages,
       'user_discovery_threshold':
           userService.currentUser.userDiscoveryThreshold,
+      'user_discovery_requires_manual_approval':
+          userService.currentUser.userDiscoveryRequiresManualApproval,
+      'user_discovery_share_promotion':
+          userService.currentUser.userDiscoverySharePromotion,
 
       'user_discovery_count_friends_shared': udFriendsShared.length,
 

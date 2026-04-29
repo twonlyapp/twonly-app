@@ -6294,10 +6294,10 @@ i1.GeneratedColumn<int> _column_213(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'user_discovery_manual_approved',
       aliasedName,
-      false,
+      true,
       type: i1.DriftSqlType.int,
       $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
+          'NULL DEFAULT 0 CHECK (user_discovery_manual_approved IN (0, 1))',
       defaultValue: const i1.CustomExpression('0'),
     );
 i1.GeneratedColumn<int> _column_214(String aliasedName) =>

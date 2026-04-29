@@ -8,6 +8,10 @@ import 'package:twonly/src/utils/log.dart';
 
 final _requestedUpdates = <int>{};
 
+void resetUserDiscoveryRequestUpdates() {
+  _requestedUpdates.clear();
+}
+
 Future<void> checkForUserDiscoveryChanges(
   int fromUserId,
   List<int> receivedVersion,
@@ -19,7 +23,7 @@ Future<void> checkForUserDiscoveryChanges(
 
   if (currentVersion != null) {
     if (_requestedUpdates.contains(fromUserId)) {
-      /// Only request a new version once per app session
+      // Only request a new version once per app session
       return;
     }
     Log.info('Having old version from contact. Requesting new version.');
@@ -46,12 +50,10 @@ Future<void> handleUserDiscoveryRequest(
     return;
   }
   final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
-  if (contact == null) return;
 
-  if (contact.mediaSendCounter < userService.currentUser.requiredSendImages ||
-      contact.userDiscoveryExcluded) {
+  if (!UserDiscoveryService.isContactAllowed(contact)) {
     Log.warn(
-      'Got a request to update user discovery, but mediaSendCounter (${contact.mediaSendCounter}) < ${userService.currentUser.requiredSendImages} or user is excluded ${contact.userDiscoveryExcluded}',
+      'Got a request to update user discovery, but mediaSendCounter (${contact?.mediaSendCounter}) < ${userService.currentUser.requiredSendImages} or user is excluded ${contact?.userDiscoveryExcluded}',
     );
     return;
   }
