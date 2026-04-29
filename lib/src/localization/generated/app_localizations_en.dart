@@ -1630,7 +1630,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String userDiscoveryManualApprovalReachedThreshold(Object username) {
-    return '$username has reached your threshold and now needs your manual approval to be shared with your friends.';
+    return 'Would you like to share $username with your friends?';
   }
 
   @override
@@ -1647,4 +1647,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingSetupCompleteDesc =>
       'You can now share your moments with your friends securely without distractions like ads.';
+
+  @override
+  String get contactUserDiscoveryManualApprovalPending =>
+      'Contact was not yet manually approved.';
+
+  @override
+  String get contactUserDiscoveryManualApprovalApprove => 'Approve';
 }

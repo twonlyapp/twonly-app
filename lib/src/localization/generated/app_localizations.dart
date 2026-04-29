@@ -2927,7 +2927,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoveryManualApprovalReachedThreshold.
   ///
   /// In en, this message translates to:
-  /// **'{username} has reached your threshold and now needs your manual approval to be shared with your friends.'**
+  /// **'Would you like to share {username} with your friends?'**
   String userDiscoveryManualApprovalReachedThreshold(Object username);
 
   /// No description provided for @userDiscoveryManualApprovalHideContact.
@@ -2953,6 +2953,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can now share your moments with your friends securely without distractions like ads.'**
   String get onboardingSetupCompleteDesc;
+
+  /// No description provided for @contactUserDiscoveryManualApprovalPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact was not yet manually approved.'**
+  String get contactUserDiscoveryManualApprovalPending;
+
+  /// No description provided for @contactUserDiscoveryManualApprovalApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get contactUserDiscoveryManualApprovalApprove;
 }
 
 class _AppLocalizationsDelegate

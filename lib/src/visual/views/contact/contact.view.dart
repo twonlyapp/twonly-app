@@ -318,9 +318,9 @@ class _ContactViewState extends State<ContactView> {
               BetterListTile(
                 icon: FontAwesomeIcons.usersViewfinder,
                 text: context.lang.userDiscoverySettingsTitle,
-                subtitle: const Text(
-                  'Contact was not yet manual approved.',
-                  style: TextStyle(fontSize: 10),
+                subtitle: Text(
+                  context.lang.contactUserDiscoveryManualApprovalPending,
+                  style: const TextStyle(fontSize: 10),
                 ),
                 trailing: TextButton(
                   onPressed: () async {
@@ -331,7 +331,7 @@ class _ContactViewState extends State<ContactView> {
                       ),
                     );
                   },
-                  child: const Text('Approve'),
+                  child: Text(context.lang.contactUserDiscoveryManualApprovalApprove),
                 ),
               )
             else

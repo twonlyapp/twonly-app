@@ -1645,7 +1645,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String userDiscoveryManualApprovalReachedThreshold(Object username) {
-    return '$username hat deinen Schwellenwert erreicht und benötigt nur noch eine manuelle Zustimmung, um mit deinen Freunden geteilt zu werden.';
+    return 'Möchtes du $username mit deinen Freunden teilen?';
   }
 
   @override
@@ -1662,4 +1662,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingSetupCompleteDesc =>
       'Du kannst jetzt deine Momente sicher mit deinen Freunden teilen, ohne Ablenkungen wie Werbung.';
+
+  @override
+  String get contactUserDiscoveryManualApprovalPending =>
+      'Der Kontakt wurde noch nicht manuell freigegeben.';
+
+  @override
+  String get contactUserDiscoveryManualApprovalApprove => 'Freigeben';
 }
