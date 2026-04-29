@@ -115,9 +115,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   bool _hasAudioPermission = true;
   DateTime? _videoRecordingStarted;
   Timer? _videoRecordingTimer;
+  bool _videoRecordingLocked = false;
 
   DateTime _currentTime = clock.now();
   final GlobalKey keyTriggerButton = GlobalKey();
+  final GlobalKey keyLockButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   MainCameraController get mc => widget.mainCameraController;
@@ -399,6 +401,32 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
+    // Check if the finger moved over the lock button during video recording
+    if (mc.isVideoRecording && !_videoRecordingLocked) {
+      final lockContext = keyLockButton.currentContext;
+      if (lockContext != null) {
+        final lockRenderBox = lockContext.findRenderObject() as RenderBox?;
+        if (lockRenderBox != null) {
+          final lockLocalPosition = lockRenderBox.globalToLocal(
+            // ignore: avoid_dynamic_calls
+            details.globalPosition as Offset,
+          );
+          final lockRect = Rect.fromLTWH(
+            0,
+            0,
+            lockRenderBox.size.width,
+            lockRenderBox.size.height,
+          );
+          if (lockRect.contains(lockLocalPosition)) {
+            setState(() {
+              _videoRecordingLocked = true;
+            });
+            await HapticFeedback.heavyImpact();
+          }
+        }
+      }
+    }
+
     setState(() {
       mc.selectedCameraDetails.scaleFactor =
           (_baseScaleFactor +
@@ -537,7 +565,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
   }
 
-  Future<void> stopVideoRecording() async {
+  Future<void> stopVideoRecording({bool force = false}) async {
+    // If recording is locked, only stop when explicitly forced (e.g. stop button tap)
+    if (_videoRecordingLocked && !force) return;
+
     if (_videoRecordingTimer != null) {
       _videoRecordingTimer?.cancel();
       _videoRecordingTimer = null;
@@ -548,6 +579,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     setState(() {
       _videoRecordingStarted = null;
       mc.isVideoRecording = false;
+      _videoRecordingLocked = false;
     });
 
     if (mc.cameraController == null ||
@@ -699,12 +731,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   CameraBottomControls(
                     mainController: mc,
                     isVideoRecording: mc.isVideoRecording,
+                    videoRecordingLocked: _videoRecordingLocked,
                     isFront: isFront,
                     keyTriggerButton: keyTriggerButton,
+                    keyLockButton: keyLockButton,
                     onTakePicture: takePicture,
                     onPressSideButtonLeft: pressSideButtonLeft,
                     onPressSideButtonRight: pressSideButtonRight,
                     updateScaleFactor: updateScaleFactor,
+                    onStopVideoRecording: () => stopVideoRecording(force: true),
                   ),
                 VideoRecordingTimer(
                   videoRecordingStarted: _videoRecordingStarted,
