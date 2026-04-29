@@ -23,8 +23,9 @@ class FlameCounterWidget extends StatefulWidget {
 class _FlameCounterWidgetState extends State<FlameCounterWidget> {
   int flameCounter = 0;
   bool isBestFriend = false;
+  bool isExpiring = false;
 
-  StreamSubscription<int>? flameCounterSub;
+  StreamSubscription<({int counter, bool isExpiring})>? flameCounterSub;
 
   @override
   void initState() {
@@ -52,10 +53,11 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
           userService.currentUser.myBestFriendGroupId == groupId &&
           group.alsoBestFriend;
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
-      flameCounterSub = stream.listen((counter) {
+      flameCounterSub = stream.listen((result) {
         if (mounted) {
           setState(() {
-            flameCounter = counter;
+            flameCounter = result.counter;
+            isExpiring = result.isExpiring;
           });
         }
       });
@@ -74,6 +76,9 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
     if (flameCounter >= 365 && flameCounter % 365 == 0) {
       flameEmoji = '🎂';
     }
+
+    // Override with hourglass when the flame is about to expire
+    if (isExpiring) flameEmoji = '⌛';
 
     return Row(
       children: [

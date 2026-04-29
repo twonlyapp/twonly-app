@@ -93,7 +93,7 @@ class _ShareImageView extends State<ShareImageView> {
 
       final flameComparison = getFlameCounterFromGroup(
         b,
-      ).compareTo(getFlameCounterFromGroup(a));
+      ).counter.compareTo(getFlameCounterFromGroup(a).counter);
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -111,7 +111,7 @@ class _ShareImageView extends State<ShareImageView> {
     for (final group in groups) {
       if (group.pinned) continue;
       if (!group.archived &&
-          (getFlameCounterFromGroup(group)) > 0 &&
+          getFlameCounterFromGroup(group).counter > 0 &&
           bestFriends.length < 6) {
         bestFriends.add(group);
       } else {

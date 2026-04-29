@@ -241,7 +241,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     )..where((t) => t.groupId.equals(groupId))).getSingleOrNull();
   }
 
-  Stream<int> watchFlameCounter(String groupId) {
+  Stream<({int counter, bool isExpiring})> watchFlameCounter(String groupId) {
     return (select(groups)..where(
           (u) =>
               u.groupId.equals(groupId) &
@@ -249,7 +249,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               u.lastMessageSend.isNotNull(),
         ))
         .watchSingleOrNull()
-        .asyncMap(getFlameCounterFromGroup);
+        .map(getFlameCounterFromGroup);
   }
 
   Future<List<Group>> getAllDirectChats() {
