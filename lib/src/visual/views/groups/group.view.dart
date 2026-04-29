@@ -178,20 +178,19 @@ class _GroupViewState extends State<GroupView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Text(
+                substringBy(_group!.groupName, 25),
+                style: const TextStyle(fontSize: 20),
+              ),
               Padding(
-                padding: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.only(right: 8, left: 1),
                 child: VerificationBadgeComp(
                   key: Key(_group!.groupId),
                   group: _group,
                 ),
               ),
-              Text(
-                substringBy(_group!.groupName, 25),
-                style: const TextStyle(fontSize: 20),
-              ),
               FlameCounterWidget(
                 groupId: _group?.groupId,
-                prefix: true,
               ),
             ],
           ),

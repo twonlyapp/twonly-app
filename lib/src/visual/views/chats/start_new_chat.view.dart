@@ -13,6 +13,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
@@ -222,9 +223,17 @@ class _StartNewChatView extends State<StartNewChatView> {
                           title: Row(
                             children: [
                               Text(getContactDisplayName(filteredContacts[i])),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 8,
+                                  left: 1,
+                                ),
+                                child: VerificationBadgeComp(
+                                  contact: filteredContacts[i],
+                                ),
+                              ),
                               FlameCounterWidget(
                                 contactId: filteredContacts[i].userId,
-                                prefix: true,
                               ),
                             ],
                           ),

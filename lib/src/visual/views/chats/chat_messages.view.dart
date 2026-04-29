@@ -37,7 +37,8 @@ class ChatMessagesView extends StatefulWidget {
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatMessagesViewState extends State<ChatMessagesView> with WidgetsBindingObserver {
+class _ChatMessagesViewState extends State<ChatMessagesView>
+    with WidgetsBindingObserver {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
@@ -287,7 +288,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> with WidgetsBinding
                         Text(
                           substringBy(group.groupName, 20),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 5),
                         VerificationBadgeComp(
                           key: verifyShieldKey,
                           group: group,

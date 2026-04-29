@@ -186,19 +186,18 @@ class _ContactViewState extends State<ContactView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: VerificationBadgeComp(
-                  contact: contact,
-                ),
-              ),
               Text(
                 getContactDisplayName(contact, maxLength: 20),
                 style: const TextStyle(fontSize: 20),
               ),
+              Padding(
+                padding: const EdgeInsets.only(left: 1, right: 8),
+                child: VerificationBadgeComp(
+                  contact: contact,
+                ),
+              ),
               FlameCounterWidget(
                 contactId: contact.userId,
-                prefix: true,
               ),
             ],
           ),
