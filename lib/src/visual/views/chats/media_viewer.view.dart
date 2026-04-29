@@ -29,6 +29,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
+import 'package:twonly/src/visual/helpers/video_player.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/additional_message_content.dart';
@@ -565,6 +566,17 @@ class _MediaViewerViewState extends State<MediaViewerView>
     );
   }
 
+  void onTap() {
+    if (showSendTextMessageInput) {
+      setState(() {
+        showShortReactions = false;
+        showSendTextMessageInput = false;
+      });
+      return;
+    }
+    nextMediaOrExit();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -575,16 +587,8 @@ class _MediaViewerViewState extends State<MediaViewerView>
           if ((currentMedia != null || videoController != null) &&
               (canBeSeenUntil == null || progress >= 0))
             GestureDetector(
-              onTap: () {
-                if (showSendTextMessageInput) {
-                  setState(() {
-                    showShortReactions = false;
-                    showSendTextMessageInput = false;
-                  });
-                  return;
-                }
-                nextMediaOrExit();
-              },
+              onTap: onTap,
+              onDoubleTap: (videoController == null) ? null : onTap,
               child: MediaViewSizingHelper(
                 bottomNavigation: bottomNavigation(),
                 requiredHeight: 55,
@@ -595,7 +599,10 @@ class _MediaViewerViewState extends State<MediaViewerView>
                         child: PhotoView.customChild(
                           initialScale: PhotoViewComputedScale.contained,
                           minScale: PhotoViewComputedScale.contained,
-                          child: VideoPlayer(videoController!),
+                          child: VideoPlayerHelper(
+                            controller: videoController!,
+                            onDoubleTap: onTap,
+                          ),
                         ),
                       )
                     else if (currentMedia != null &&

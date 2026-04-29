@@ -7,6 +7,7 @@
 - New: Registration setup to configure the most important configurations
 - Improved: Show ⌛ instead of the flame icon when it is about to expire
 - Improved: FAQ is now in the app rather than opening in the browser
+- Improved: Videos can now be paused
 - Fix: Many smaller issues
 
 ## 0.1.8

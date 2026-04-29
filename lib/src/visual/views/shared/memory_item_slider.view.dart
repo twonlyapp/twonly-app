@@ -10,7 +10,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
-import 'package:twonly/src/visual/helpers/video_player.helper.dart';
+import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 
@@ -239,7 +239,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
     return item.mediaService.mediaFile.type == MediaType.video
         ? PhotoViewGalleryPageOptions.customChild(
-            child: VideoPlayerHelper(
+            child: VideoPlayerFileHelper(
               videoPath: filePath,
             ),
             initialScale: PhotoViewComputedScale.contained,

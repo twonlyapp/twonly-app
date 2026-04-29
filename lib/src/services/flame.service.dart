@@ -35,8 +35,9 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
     final flameResult = getFlameCounterFromGroup(group);
 
     // only sync when flame counter is higher three or when they are bestFriends
-    if (flameResult.counter <= 2 && bestFriend.groupId != group.groupId)
+    if (flameResult.counter <= 2 && bestFriend.groupId != group.groupId) {
       continue;
+    }
 
     await sendCipherTextToGroup(
       group.groupId,
