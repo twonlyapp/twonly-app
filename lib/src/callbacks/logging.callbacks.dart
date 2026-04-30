@@ -19,7 +19,7 @@ class LoggingCallbacks {
               print(log);
             }
           },
-          onDone: () => Log.error('Log stream closed'),
+          onDone: () => Log.info('Log stream closed'),
         );
         timer.cancel();
       } catch (e) {

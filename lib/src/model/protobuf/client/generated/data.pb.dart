@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -53,7 +53,7 @@ class SharedContact extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SharedContact clone() => SharedContact()..mergeFromMessage(this);
+  SharedContact clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   SharedContact copyWith(void Function(SharedContact) updates) =>
       super.copyWith((message) => updates(message as SharedContact))
@@ -66,8 +66,6 @@ class SharedContact extends $pb.GeneratedMessage {
   static SharedContact create() => SharedContact._();
   @$core.override
   SharedContact createEmptyInstance() => create();
-  static $pb.PbList<SharedContact> createRepeated() =>
-      $pb.PbList<SharedContact>();
   @$core.pragma('dart2js:noInline')
   static SharedContact getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<SharedContact>(create);
@@ -129,21 +127,16 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'AdditionalMessageData',
       createEmptyInstance: create)
-    ..e<AdditionalMessageData_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: AdditionalMessageData_Type.LINK,
-        valueOf: AdditionalMessageData_Type.valueOf,
+    ..aE<AdditionalMessageData_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: AdditionalMessageData_Type.values)
     ..aOS(2, _omitFieldNames ? '' : 'link')
-    ..pc<SharedContact>(
-        3, _omitFieldNames ? '' : 'contacts', $pb.PbFieldType.PM,
+    ..pPM<SharedContact>(3, _omitFieldNames ? '' : 'contacts',
         subBuilder: SharedContact.create)
     ..aInt64(4, _omitFieldNames ? '' : 'restoredFlameCounter')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AdditionalMessageData clone() =>
-      AdditionalMessageData()..mergeFromMessage(this);
+  AdditionalMessageData clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   AdditionalMessageData copyWith(
           void Function(AdditionalMessageData) updates) =>
@@ -157,8 +150,6 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   static AdditionalMessageData create() => AdditionalMessageData._();
   @$core.override
   AdditionalMessageData createEmptyInstance() => create();
-  static $pb.PbList<AdditionalMessageData> createRepeated() =>
-      $pb.PbList<AdditionalMessageData>();
   @$core.pragma('dart2js:noInline')
   static AdditionalMessageData getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<AdditionalMessageData>(create);

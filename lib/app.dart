@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -130,6 +131,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   Future<void> initAsync() async {
     if (userService.isUserCreated) {
+      await FirebaseMessaging.instance.requestPermission();
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;

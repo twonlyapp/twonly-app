@@ -276,8 +276,6 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - no_screenshot (0.10.0):
-    - Flutter
   - package_info_plus (0.4.5):
     - Flutter
   - permission_handler_apple (9.3.0):
@@ -289,6 +287,10 @@ PODS:
     - Flutter
   - rust_lib_twonly (0.0.1):
     - Flutter
+  - screen_protector (1.5.1):
+    - Flutter
+    - ScreenProtectorKit (= 1.5.1)
+  - ScreenProtectorKit (1.5.1)
   - SDWebImage (5.21.7):
     - SDWebImage/Core (= 5.21.7)
   - SDWebImage/Core (5.21.7)
@@ -351,12 +353,12 @@ DEPENDENCIES:
   - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
-  - no_screenshot (from `.symlinks/plugins/no_screenshot/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - pro_video_editor (from `.symlinks/plugins/pro_video_editor/ios`)
   - restart_app (from `.symlinks/plugins/restart_app/ios`)
   - rust_lib_twonly (from `.symlinks/plugins/rust_lib_twonly/ios`)
+  - screen_protector (from `.symlinks/plugins/screen_protector/ios`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -392,6 +394,7 @@ SPEC REPOS:
     - MLKitVision
     - nanopb
     - PromisesObjC
+    - ScreenProtectorKit
     - SDWebImage
     - SDWebImageWebPCoder
     - Sentry
@@ -453,8 +456,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/integration_test/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
-  no_screenshot:
-    :path: ".symlinks/plugins/no_screenshot/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
@@ -465,6 +466,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/restart_app/ios"
   rust_lib_twonly:
     :path: ".symlinks/plugins/rust_lib_twonly/ios"
+  screen_protector:
+    :path: ".symlinks/plugins/screen_protector/ios"
   sentry_flutter:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   share_plus:
@@ -531,13 +534,14 @@ SPEC CHECKSUMS:
   MLKitFaceDetection: 32549f1e70e6e7731261bf9cea2b74095e2531cb
   MLKitVision: 39a5a812db83c4a0794445088e567f3631c11961
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  no_screenshot: 03c8ac6586f9652cd45e3d12d74e5992256403ac
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   pro_video_editor: 44ef9a6d48dbd757ed428cf35396dd05f35c7830
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   restart_app: 0714144901e260eae68f7afc2fc4aacc1a323ad2
   rust_lib_twonly: 73165b05d0cda50db45852db63f49caa7f319520
+  screen_protector: 18c6aca2dc5d2a832f6787a5318f97f03e9d3150
+  ScreenProtectorKit: 6ceb3e0808341a9bc15d175bff40dfdd4b32da71
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   Sentry: d587a8fe91ca13503ecd69a1905f3e8a0fcf61be

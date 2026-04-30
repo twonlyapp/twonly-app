@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -54,7 +54,7 @@ class ClientToServer extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ClientToServer clone() => ClientToServer()..mergeFromMessage(this);
+  ClientToServer clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ClientToServer copyWith(void Function(ClientToServer) updates) =>
       super.copyWith((message) => updates(message as ClientToServer))
@@ -67,14 +67,14 @@ class ClientToServer extends $pb.GeneratedMessage {
   static ClientToServer create() => ClientToServer._();
   @$core.override
   ClientToServer createEmptyInstance() => create();
-  static $pb.PbList<ClientToServer> createRepeated() =>
-      $pb.PbList<ClientToServer>();
   @$core.pragma('dart2js:noInline')
   static ClientToServer getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ClientToServer>(create);
   static ClientToServer? _defaultInstance;
 
+  @$pb.TagNumber(1)
   ClientToServer_V whichV() => _ClientToServer_VByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
   void clearV() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -138,7 +138,7 @@ class V0 extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  V0 clone() => V0()..mergeFromMessage(this);
+  V0 clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   V0 copyWith(void Function(V0) updates) =>
       super.copyWith((message) => updates(message as V0)) as V0;
@@ -150,13 +150,18 @@ class V0 extends $pb.GeneratedMessage {
   static V0 create() => V0._();
   @$core.override
   V0 createEmptyInstance() => create();
-  static $pb.PbList<V0> createRepeated() => $pb.PbList<V0>();
   @$core.pragma('dart2js:noInline')
   static V0 getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<V0>(create);
   static V0? _defaultInstance;
 
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   V0_Kind whichKind() => _V0_KindByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
   void clearKind() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -222,8 +227,7 @@ class Handshake_RequestPOW extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake_RequestPOW clone() =>
-      Handshake_RequestPOW()..mergeFromMessage(this);
+  Handshake_RequestPOW clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake_RequestPOW copyWith(void Function(Handshake_RequestPOW) updates) =>
       super.copyWith((message) => updates(message as Handshake_RequestPOW))
@@ -236,8 +240,6 @@ class Handshake_RequestPOW extends $pb.GeneratedMessage {
   static Handshake_RequestPOW create() => Handshake_RequestPOW._();
   @$core.override
   Handshake_RequestPOW createEmptyInstance() => create();
-  static $pb.PbList<Handshake_RequestPOW> createRepeated() =>
-      $pb.PbList<Handshake_RequestPOW>();
   @$core.pragma('dart2js:noInline')
   static Handshake_RequestPOW getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_RequestPOW>(create);
@@ -302,7 +304,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake_Register clone() => Handshake_Register()..mergeFromMessage(this);
+  Handshake_Register clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake_Register copyWith(void Function(Handshake_Register) updates) =>
       super.copyWith((message) => updates(message as Handshake_Register))
@@ -315,8 +317,6 @@ class Handshake_Register extends $pb.GeneratedMessage {
   static Handshake_Register create() => Handshake_Register._();
   @$core.override
   Handshake_Register createEmptyInstance() => create();
-  static $pb.PbList<Handshake_Register> createRepeated() =>
-      $pb.PbList<Handshake_Register>();
   @$core.pragma('dart2js:noInline')
   static Handshake_Register getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_Register>(create);
@@ -434,8 +434,7 @@ class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake_GetAuthChallenge clone() =>
-      Handshake_GetAuthChallenge()..mergeFromMessage(this);
+  Handshake_GetAuthChallenge clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake_GetAuthChallenge copyWith(
           void Function(Handshake_GetAuthChallenge) updates) =>
@@ -450,8 +449,6 @@ class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
   static Handshake_GetAuthChallenge create() => Handshake_GetAuthChallenge._();
   @$core.override
   Handshake_GetAuthChallenge createEmptyInstance() => create();
-  static $pb.PbList<Handshake_GetAuthChallenge> createRepeated() =>
-      $pb.PbList<Handshake_GetAuthChallenge>();
   @$core.pragma('dart2js:noInline')
   static Handshake_GetAuthChallenge getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthChallenge>(create);
@@ -489,8 +486,7 @@ class Handshake_GetAuthToken extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake_GetAuthToken clone() =>
-      Handshake_GetAuthToken()..mergeFromMessage(this);
+  Handshake_GetAuthToken clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake_GetAuthToken copyWith(
           void Function(Handshake_GetAuthToken) updates) =>
@@ -504,8 +500,6 @@ class Handshake_GetAuthToken extends $pb.GeneratedMessage {
   static Handshake_GetAuthToken create() => Handshake_GetAuthToken._();
   @$core.override
   Handshake_GetAuthToken createEmptyInstance() => create();
-  static $pb.PbList<Handshake_GetAuthToken> createRepeated() =>
-      $pb.PbList<Handshake_GetAuthToken>();
   @$core.pragma('dart2js:noInline')
   static Handshake_GetAuthToken getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthToken>(create);
@@ -570,8 +564,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake_Authenticate clone() =>
-      Handshake_Authenticate()..mergeFromMessage(this);
+  Handshake_Authenticate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake_Authenticate copyWith(
           void Function(Handshake_Authenticate) updates) =>
@@ -585,8 +578,6 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   static Handshake_Authenticate create() => Handshake_Authenticate._();
   @$core.override
   Handshake_Authenticate createEmptyInstance() => create();
-  static $pb.PbList<Handshake_Authenticate> createRepeated() =>
-      $pb.PbList<Handshake_Authenticate>();
   @$core.pragma('dart2js:noInline')
   static Handshake_Authenticate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_Authenticate>(create);
@@ -703,7 +694,7 @@ class Handshake extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Handshake clone() => Handshake()..mergeFromMessage(this);
+  Handshake clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Handshake copyWith(void Function(Handshake) updates) =>
       super.copyWith((message) => updates(message as Handshake)) as Handshake;
@@ -715,14 +706,23 @@ class Handshake extends $pb.GeneratedMessage {
   static Handshake create() => Handshake._();
   @$core.override
   Handshake createEmptyInstance() => create();
-  static $pb.PbList<Handshake> createRepeated() => $pb.PbList<Handshake>();
   @$core.pragma('dart2js:noInline')
   static Handshake getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake>(create);
   static Handshake? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
   Handshake_Handshake whichHandshake() =>
       _Handshake_HandshakeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
   void clearHandshake() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -817,8 +817,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_TextMessage clone() =>
-      ApplicationData_TextMessage()..mergeFromMessage(this);
+  ApplicationData_TextMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_TextMessage copyWith(
           void Function(ApplicationData_TextMessage) updates) =>
@@ -834,8 +833,6 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
       ApplicationData_TextMessage._();
   @$core.override
   ApplicationData_TextMessage createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_TextMessage> createRepeated() =>
-      $pb.PbList<ApplicationData_TextMessage>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_TextMessage getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_TextMessage>(create);
@@ -897,8 +894,7 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetUserByUsername clone() =>
-      ApplicationData_GetUserByUsername()..mergeFromMessage(this);
+  ApplicationData_GetUserByUsername clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetUserByUsername copyWith(
           void Function(ApplicationData_GetUserByUsername) updates) =>
@@ -914,8 +910,6 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
       ApplicationData_GetUserByUsername._();
   @$core.override
   ApplicationData_GetUserByUsername createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetUserByUsername> createRepeated() =>
-      $pb.PbList<ApplicationData_GetUserByUsername>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetUserByUsername getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserByUsername>(
@@ -959,8 +953,7 @@ class ApplicationData_ChangeUsername extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_ChangeUsername clone() =>
-      ApplicationData_ChangeUsername()..mergeFromMessage(this);
+  ApplicationData_ChangeUsername clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_ChangeUsername copyWith(
           void Function(ApplicationData_ChangeUsername) updates) =>
@@ -976,8 +969,6 @@ class ApplicationData_ChangeUsername extends $pb.GeneratedMessage {
       ApplicationData_ChangeUsername._();
   @$core.override
   ApplicationData_ChangeUsername createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_ChangeUsername> createRepeated() =>
-      $pb.PbList<ApplicationData_ChangeUsername>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_ChangeUsername getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_ChangeUsername>(create);
@@ -1021,8 +1012,7 @@ class ApplicationData_UpdateGoogleFcmToken extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdateGoogleFcmToken clone() =>
-      ApplicationData_UpdateGoogleFcmToken()..mergeFromMessage(this);
+  ApplicationData_UpdateGoogleFcmToken clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_UpdateGoogleFcmToken copyWith(
           void Function(ApplicationData_UpdateGoogleFcmToken) updates) =>
@@ -1038,8 +1028,6 @@ class ApplicationData_UpdateGoogleFcmToken extends $pb.GeneratedMessage {
       ApplicationData_UpdateGoogleFcmToken._();
   @$core.override
   ApplicationData_UpdateGoogleFcmToken createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdateGoogleFcmToken> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdateGoogleFcmToken>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_UpdateGoogleFcmToken getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1083,8 +1071,7 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetUserById clone() =>
-      ApplicationData_GetUserById()..mergeFromMessage(this);
+  ApplicationData_GetUserById clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetUserById copyWith(
           void Function(ApplicationData_GetUserById) updates) =>
@@ -1100,8 +1087,6 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
       ApplicationData_GetUserById._();
   @$core.override
   ApplicationData_GetUserById createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetUserById> createRepeated() =>
-      $pb.PbList<ApplicationData_GetUserById>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetUserById getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserById>(create);
@@ -1144,8 +1129,7 @@ class ApplicationData_RedeemVoucher extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemVoucher clone() =>
-      ApplicationData_RedeemVoucher()..mergeFromMessage(this);
+  ApplicationData_RedeemVoucher clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_RedeemVoucher copyWith(
           void Function(ApplicationData_RedeemVoucher) updates) =>
@@ -1161,8 +1145,6 @@ class ApplicationData_RedeemVoucher extends $pb.GeneratedMessage {
       ApplicationData_RedeemVoucher._();
   @$core.override
   ApplicationData_RedeemVoucher createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RedeemVoucher> createRepeated() =>
-      $pb.PbList<ApplicationData_RedeemVoucher>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_RedeemVoucher getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_RedeemVoucher>(create);
@@ -1212,8 +1194,7 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_SwitchToPayedPlan clone() =>
-      ApplicationData_SwitchToPayedPlan()..mergeFromMessage(this);
+  ApplicationData_SwitchToPayedPlan clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_SwitchToPayedPlan copyWith(
           void Function(ApplicationData_SwitchToPayedPlan) updates) =>
@@ -1229,8 +1210,6 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
       ApplicationData_SwitchToPayedPlan._();
   @$core.override
   ApplicationData_SwitchToPayedPlan createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_SwitchToPayedPlan> createRepeated() =>
-      $pb.PbList<ApplicationData_SwitchToPayedPlan>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_SwitchToPayedPlan getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_SwitchToPayedPlan>(
@@ -1293,8 +1272,7 @@ class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdatePlanOptions clone() =>
-      ApplicationData_UpdatePlanOptions()..mergeFromMessage(this);
+  ApplicationData_UpdatePlanOptions clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_UpdatePlanOptions copyWith(
           void Function(ApplicationData_UpdatePlanOptions) updates) =>
@@ -1310,8 +1288,6 @@ class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
       ApplicationData_UpdatePlanOptions._();
   @$core.override
   ApplicationData_UpdatePlanOptions createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdatePlanOptions> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdatePlanOptions>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(
@@ -1351,12 +1327,11 @@ class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'valueCents', $pb.PbFieldType.OU3)
+    ..aI(1, _omitFieldNames ? '' : 'valueCents', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_CreateVoucher clone() =>
-      ApplicationData_CreateVoucher()..mergeFromMessage(this);
+  ApplicationData_CreateVoucher clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_CreateVoucher copyWith(
           void Function(ApplicationData_CreateVoucher) updates) =>
@@ -1372,8 +1347,6 @@ class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
       ApplicationData_CreateVoucher._();
   @$core.override
   ApplicationData_CreateVoucher createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_CreateVoucher> createRepeated() =>
-      $pb.PbList<ApplicationData_CreateVoucher>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_CreateVoucher getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_CreateVoucher>(create);
@@ -1409,8 +1382,7 @@ class ApplicationData_GetLocation extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetLocation clone() =>
-      ApplicationData_GetLocation()..mergeFromMessage(this);
+  ApplicationData_GetLocation clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetLocation copyWith(
           void Function(ApplicationData_GetLocation) updates) =>
@@ -1426,8 +1398,6 @@ class ApplicationData_GetLocation extends $pb.GeneratedMessage {
       ApplicationData_GetLocation._();
   @$core.override
   ApplicationData_GetLocation createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetLocation> createRepeated() =>
-      $pb.PbList<ApplicationData_GetLocation>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetLocation getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetLocation>(create);
@@ -1454,8 +1424,7 @@ class ApplicationData_GetVouchers extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetVouchers clone() =>
-      ApplicationData_GetVouchers()..mergeFromMessage(this);
+  ApplicationData_GetVouchers clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetVouchers copyWith(
           void Function(ApplicationData_GetVouchers) updates) =>
@@ -1471,8 +1440,6 @@ class ApplicationData_GetVouchers extends $pb.GeneratedMessage {
       ApplicationData_GetVouchers._();
   @$core.override
   ApplicationData_GetVouchers createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetVouchers> createRepeated() =>
-      $pb.PbList<ApplicationData_GetVouchers>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetVouchers getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetVouchers>(create);
@@ -1500,8 +1467,7 @@ class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetAvailablePlans clone() =>
-      ApplicationData_GetAvailablePlans()..mergeFromMessage(this);
+  ApplicationData_GetAvailablePlans clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetAvailablePlans copyWith(
           void Function(ApplicationData_GetAvailablePlans) updates) =>
@@ -1517,8 +1483,6 @@ class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
       ApplicationData_GetAvailablePlans._();
   @$core.override
   ApplicationData_GetAvailablePlans createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetAvailablePlans> createRepeated() =>
-      $pb.PbList<ApplicationData_GetAvailablePlans>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetAvailablePlans getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetAvailablePlans>(
@@ -1547,8 +1511,7 @@ class ApplicationData_GetAddAccountsInvites extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetAddAccountsInvites clone() =>
-      ApplicationData_GetAddAccountsInvites()..mergeFromMessage(this);
+  ApplicationData_GetAddAccountsInvites clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetAddAccountsInvites copyWith(
           void Function(ApplicationData_GetAddAccountsInvites) updates) =>
@@ -1564,8 +1527,6 @@ class ApplicationData_GetAddAccountsInvites extends $pb.GeneratedMessage {
       ApplicationData_GetAddAccountsInvites._();
   @$core.override
   ApplicationData_GetAddAccountsInvites createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetAddAccountsInvites> createRepeated() =>
-      $pb.PbList<ApplicationData_GetAddAccountsInvites>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetAddAccountsInvites getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1594,8 +1555,7 @@ class ApplicationData_GetCurrentPlanInfos extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetCurrentPlanInfos clone() =>
-      ApplicationData_GetCurrentPlanInfos()..mergeFromMessage(this);
+  ApplicationData_GetCurrentPlanInfos clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetCurrentPlanInfos copyWith(
           void Function(ApplicationData_GetCurrentPlanInfos) updates) =>
@@ -1611,8 +1571,6 @@ class ApplicationData_GetCurrentPlanInfos extends $pb.GeneratedMessage {
       ApplicationData_GetCurrentPlanInfos._();
   @$core.override
   ApplicationData_GetCurrentPlanInfos createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetCurrentPlanInfos> createRepeated() =>
-      $pb.PbList<ApplicationData_GetCurrentPlanInfos>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetCurrentPlanInfos getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1648,8 +1606,7 @@ class ApplicationData_RedeemAdditionalCode extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemAdditionalCode clone() =>
-      ApplicationData_RedeemAdditionalCode()..mergeFromMessage(this);
+  ApplicationData_RedeemAdditionalCode clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_RedeemAdditionalCode copyWith(
           void Function(ApplicationData_RedeemAdditionalCode) updates) =>
@@ -1665,8 +1622,6 @@ class ApplicationData_RedeemAdditionalCode extends $pb.GeneratedMessage {
       ApplicationData_RedeemAdditionalCode._();
   @$core.override
   ApplicationData_RedeemAdditionalCode createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RedeemAdditionalCode> createRepeated() =>
-      $pb.PbList<ApplicationData_RedeemAdditionalCode>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_RedeemAdditionalCode getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1711,8 +1666,7 @@ class ApplicationData_RemoveAdditionalUser extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RemoveAdditionalUser clone() =>
-      ApplicationData_RemoveAdditionalUser()..mergeFromMessage(this);
+  ApplicationData_RemoveAdditionalUser clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_RemoveAdditionalUser copyWith(
           void Function(ApplicationData_RemoveAdditionalUser) updates) =>
@@ -1728,8 +1682,6 @@ class ApplicationData_RemoveAdditionalUser extends $pb.GeneratedMessage {
       ApplicationData_RemoveAdditionalUser._();
   @$core.override
   ApplicationData_RemoveAdditionalUser createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RemoveAdditionalUser> createRepeated() =>
-      $pb.PbList<ApplicationData_RemoveAdditionalUser>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_RemoveAdditionalUser getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1774,8 +1726,7 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetPrekeysByUserId clone() =>
-      ApplicationData_GetPrekeysByUserId()..mergeFromMessage(this);
+  ApplicationData_GetPrekeysByUserId clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetPrekeysByUserId copyWith(
           void Function(ApplicationData_GetPrekeysByUserId) updates) =>
@@ -1791,8 +1742,6 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
       ApplicationData_GetPrekeysByUserId._();
   @$core.override
   ApplicationData_GetPrekeysByUserId createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetPrekeysByUserId> createRepeated() =>
-      $pb.PbList<ApplicationData_GetPrekeysByUserId>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetPrekeysByUserId getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetPrekeysByUserId>(
@@ -1837,8 +1786,7 @@ class ApplicationData_GetSignedPreKeyByUserId extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetSignedPreKeyByUserId clone() =>
-      ApplicationData_GetSignedPreKeyByUserId()..mergeFromMessage(this);
+  ApplicationData_GetSignedPreKeyByUserId clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_GetSignedPreKeyByUserId copyWith(
           void Function(ApplicationData_GetSignedPreKeyByUserId) updates) =>
@@ -1854,8 +1802,6 @@ class ApplicationData_GetSignedPreKeyByUserId extends $pb.GeneratedMessage {
       ApplicationData_GetSignedPreKeyByUserId._();
   @$core.override
   ApplicationData_GetSignedPreKeyByUserId createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetSignedPreKeyByUserId> createRepeated() =>
-      $pb.PbList<ApplicationData_GetSignedPreKeyByUserId>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetSignedPreKeyByUserId getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -1909,8 +1855,7 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdateSignedPreKey clone() =>
-      ApplicationData_UpdateSignedPreKey()..mergeFromMessage(this);
+  ApplicationData_UpdateSignedPreKey clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_UpdateSignedPreKey copyWith(
           void Function(ApplicationData_UpdateSignedPreKey) updates) =>
@@ -1926,8 +1871,6 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
       ApplicationData_UpdateSignedPreKey._();
   @$core.override
   ApplicationData_UpdateSignedPreKey createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdateSignedPreKey> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdateSignedPreKey>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_UpdateSignedPreKey getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateSignedPreKey>(
@@ -1991,8 +1934,7 @@ class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_DownloadDone clone() =>
-      ApplicationData_DownloadDone()..mergeFromMessage(this);
+  ApplicationData_DownloadDone clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_DownloadDone copyWith(
           void Function(ApplicationData_DownloadDone) updates) =>
@@ -2008,8 +1950,6 @@ class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
       ApplicationData_DownloadDone._();
   @$core.override
   ApplicationData_DownloadDone createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_DownloadDone> createRepeated() =>
-      $pb.PbList<ApplicationData_DownloadDone>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_DownloadDone getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadDone>(create);
@@ -2055,8 +1995,7 @@ class ApplicationData_ReportUser extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_ReportUser clone() =>
-      ApplicationData_ReportUser()..mergeFromMessage(this);
+  ApplicationData_ReportUser clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_ReportUser copyWith(
           void Function(ApplicationData_ReportUser) updates) =>
@@ -2071,8 +2010,6 @@ class ApplicationData_ReportUser extends $pb.GeneratedMessage {
   static ApplicationData_ReportUser create() => ApplicationData_ReportUser._();
   @$core.override
   ApplicationData_ReportUser createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_ReportUser> createRepeated() =>
-      $pb.PbList<ApplicationData_ReportUser>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_ReportUser getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_ReportUser>(create);
@@ -2130,8 +2067,7 @@ class ApplicationData_IPAPurchase extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_IPAPurchase clone() =>
-      ApplicationData_IPAPurchase()..mergeFromMessage(this);
+  ApplicationData_IPAPurchase clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_IPAPurchase copyWith(
           void Function(ApplicationData_IPAPurchase) updates) =>
@@ -2147,8 +2083,6 @@ class ApplicationData_IPAPurchase extends $pb.GeneratedMessage {
       ApplicationData_IPAPurchase._();
   @$core.override
   ApplicationData_IPAPurchase createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_IPAPurchase> createRepeated() =>
-      $pb.PbList<ApplicationData_IPAPurchase>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_IPAPurchase getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_IPAPurchase>(create);
@@ -2202,8 +2136,7 @@ class ApplicationData_IPAForceCheck extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_IPAForceCheck clone() =>
-      ApplicationData_IPAForceCheck()..mergeFromMessage(this);
+  ApplicationData_IPAForceCheck clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_IPAForceCheck copyWith(
           void Function(ApplicationData_IPAForceCheck) updates) =>
@@ -2219,8 +2152,6 @@ class ApplicationData_IPAForceCheck extends $pb.GeneratedMessage {
       ApplicationData_IPAForceCheck._();
   @$core.override
   ApplicationData_IPAForceCheck createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_IPAForceCheck> createRepeated() =>
-      $pb.PbList<ApplicationData_IPAForceCheck>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_IPAForceCheck getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_IPAForceCheck>(create);
@@ -2247,8 +2178,7 @@ class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_DeleteAccount clone() =>
-      ApplicationData_DeleteAccount()..mergeFromMessage(this);
+  ApplicationData_DeleteAccount clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_DeleteAccount copyWith(
           void Function(ApplicationData_DeleteAccount) updates) =>
@@ -2264,8 +2194,6 @@ class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
       ApplicationData_DeleteAccount._();
   @$core.override
   ApplicationData_DeleteAccount createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_DeleteAccount> createRepeated() =>
-      $pb.PbList<ApplicationData_DeleteAccount>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_DeleteAccount getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_DeleteAccount>(create);
@@ -2300,8 +2228,7 @@ class ApplicationData_AddAdditionalUser extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_AddAdditionalUser clone() =>
-      ApplicationData_AddAdditionalUser()..mergeFromMessage(this);
+  ApplicationData_AddAdditionalUser clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData_AddAdditionalUser copyWith(
           void Function(ApplicationData_AddAdditionalUser) updates) =>
@@ -2317,8 +2244,6 @@ class ApplicationData_AddAdditionalUser extends $pb.GeneratedMessage {
       ApplicationData_AddAdditionalUser._();
   @$core.override
   ApplicationData_AddAdditionalUser createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_AddAdditionalUser> createRepeated() =>
-      $pb.PbList<ApplicationData_AddAdditionalUser>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData_AddAdditionalUser getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_AddAdditionalUser>(
@@ -2595,7 +2520,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData clone() => ApplicationData()..mergeFromMessage(this);
+  ApplicationData clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   ApplicationData copyWith(void Function(ApplicationData) updates) =>
       super.copyWith((message) => updates(message as ApplicationData))
@@ -2608,15 +2533,63 @@ class ApplicationData extends $pb.GeneratedMessage {
   static ApplicationData create() => ApplicationData._();
   @$core.override
   ApplicationData createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData> createRepeated() =>
-      $pb.PbList<ApplicationData>();
   @$core.pragma('dart2js:noInline')
   static ApplicationData getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ApplicationData>(create);
   static ApplicationData? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
+  @$pb.TagNumber(22)
+  @$pb.TagNumber(23)
+  @$pb.TagNumber(24)
+  @$pb.TagNumber(25)
+  @$pb.TagNumber(26)
+  @$pb.TagNumber(27)
+  @$pb.TagNumber(28)
+  @$pb.TagNumber(29)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
+  @$pb.TagNumber(22)
+  @$pb.TagNumber(23)
+  @$pb.TagNumber(24)
+  @$pb.TagNumber(25)
+  @$pb.TagNumber(26)
+  @$pb.TagNumber(27)
+  @$pb.TagNumber(28)
+  @$pb.TagNumber(29)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2951,7 +2924,7 @@ class Response_PreKey extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_PreKey clone() => Response_PreKey()..mergeFromMessage(this);
+  Response_PreKey clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Response_PreKey copyWith(void Function(Response_PreKey) updates) =>
       super.copyWith((message) => updates(message as Response_PreKey))
@@ -2964,8 +2937,6 @@ class Response_PreKey extends $pb.GeneratedMessage {
   static Response_PreKey create() => Response_PreKey._();
   @$core.override
   Response_PreKey createEmptyInstance() => create();
-  static $pb.PbList<Response_PreKey> createRepeated() =>
-      $pb.PbList<Response_PreKey>();
   @$core.pragma('dart2js:noInline')
   static Response_PreKey getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Response_PreKey>(create);
@@ -3013,13 +2984,12 @@ class Response_Prekeys extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..pc<Response_PreKey>(
-        1, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM,
+    ..pPM<Response_PreKey>(1, _omitFieldNames ? '' : 'prekeys',
         subBuilder: Response_PreKey.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Prekeys clone() => Response_Prekeys()..mergeFromMessage(this);
+  Response_Prekeys clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Response_Prekeys copyWith(void Function(Response_Prekeys) updates) =>
       super.copyWith((message) => updates(message as Response_Prekeys))
@@ -3032,8 +3002,6 @@ class Response_Prekeys extends $pb.GeneratedMessage {
   static Response_Prekeys create() => Response_Prekeys._();
   @$core.override
   Response_Prekeys createEmptyInstance() => create();
-  static $pb.PbList<Response_Prekeys> createRepeated() =>
-      $pb.PbList<Response_Prekeys>();
   @$core.pragma('dart2js:noInline')
   static Response_Prekeys getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Response_Prekeys>(create);
@@ -3082,7 +3050,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Ok clone() => Response_Ok()..mergeFromMessage(this);
+  Response_Ok clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Response_Ok copyWith(void Function(Response_Ok) updates) =>
       super.copyWith((message) => updates(message as Response_Ok))
@@ -3095,13 +3063,16 @@ class Response_Ok extends $pb.GeneratedMessage {
   static Response_Ok create() => Response_Ok._();
   @$core.override
   Response_Ok createEmptyInstance() => create();
-  static $pb.PbList<Response_Ok> createRepeated() => $pb.PbList<Response_Ok>();
   @$core.pragma('dart2js:noInline')
   static Response_Ok getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Response_Ok>(create);
   static Response_Ok? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3161,14 +3132,12 @@ class Response extends $pb.GeneratedMessage {
     ..oo(0, [1, 2])
     ..aOM<Response_Ok>(1, _omitFieldNames ? '' : 'ok',
         subBuilder: Response_Ok.create)
-    ..e<$0.ErrorCode>(2, _omitFieldNames ? '' : 'error', $pb.PbFieldType.OE,
-        defaultOrMaker: $0.ErrorCode.Unknown,
-        valueOf: $0.ErrorCode.valueOf,
+    ..aE<$0.ErrorCode>(2, _omitFieldNames ? '' : 'error',
         enumValues: $0.ErrorCode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response clone() => Response()..mergeFromMessage(this);
+  Response clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Response copyWith(void Function(Response) updates) =>
       super.copyWith((message) => updates(message as Response)) as Response;
@@ -3180,14 +3149,17 @@ class Response extends $pb.GeneratedMessage {
   static Response create() => Response._();
   @$core.override
   Response createEmptyInstance() => create();
-  static $pb.PbList<Response> createRepeated() => $pb.PbList<Response>();
   @$core.pragma('dart2js:noInline')
   static Response getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response>(create);
   static Response? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   Response_Response whichResponse() =>
       _Response_ResponseByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
   void clearResponse() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)

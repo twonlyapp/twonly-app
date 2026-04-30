@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -44,16 +44,14 @@ class QREnvelope extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'QREnvelope',
       createEmptyInstance: create)
-    ..e<QREnvelope_Type>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: QREnvelope_Type.PUBLIC_PROFILE,
-        valueOf: QREnvelope_Type.valueOf,
+    ..aE<QREnvelope_Type>(2, _omitFieldNames ? '' : 'type',
         enumValues: QREnvelope_Type.values)
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  QREnvelope clone() => QREnvelope()..mergeFromMessage(this);
+  QREnvelope clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   QREnvelope copyWith(void Function(QREnvelope) updates) =>
       super.copyWith((message) => updates(message as QREnvelope)) as QREnvelope;
@@ -65,7 +63,6 @@ class QREnvelope extends $pb.GeneratedMessage {
   static QREnvelope create() => QREnvelope._();
   @$core.override
   QREnvelope createEmptyInstance() => create();
-  static $pb.PbList<QREnvelope> createRepeated() => $pb.PbList<QREnvelope>();
   @$core.pragma('dart2js:noInline')
   static QREnvelope getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<QREnvelope>(create);
@@ -142,7 +139,7 @@ class PublicProfile extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PublicProfile clone() => PublicProfile()..mergeFromMessage(this);
+  PublicProfile clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PublicProfile copyWith(void Function(PublicProfile) updates) =>
       super.copyWith((message) => updates(message as PublicProfile))
@@ -155,8 +152,6 @@ class PublicProfile extends $pb.GeneratedMessage {
   static PublicProfile create() => PublicProfile._();
   @$core.override
   PublicProfile createEmptyInstance() => create();
-  static $pb.PbList<PublicProfile> createRepeated() =>
-      $pb.PbList<PublicProfile>();
   @$core.pragma('dart2js:noInline')
   static PublicProfile getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PublicProfile>(create);

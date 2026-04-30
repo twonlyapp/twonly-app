@@ -83,14 +83,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   Mutex protectMessageUpdating = Mutex();
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      protectMessageUpdating.protect(() async {
-        await setMessages(allMessages, groupActions);
-      });
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     protectMessageUpdating.protect(() async {
+  //       await setMessages(allMessages, groupActions);
+  //     });
+  //   }
+  // }
 
   bool _isViewActive() {
     return !AppState.isAppInBackground &&

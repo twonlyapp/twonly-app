@@ -55,7 +55,7 @@ Future<void> twonlyMinimumInitialization() async {
 void main() async {
   await twonlyMinimumInitialization();
 
-  await initFCMService();
+  unawaited(initFCMService());
 
   var userExists = false;
   var storageError = false;

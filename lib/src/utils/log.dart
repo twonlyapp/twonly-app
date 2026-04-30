@@ -20,7 +20,7 @@ class Log {
       if (!kReleaseMode) {
         // ignore: avoid_print
         print(
-          '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
+          '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
         );
       }
     });

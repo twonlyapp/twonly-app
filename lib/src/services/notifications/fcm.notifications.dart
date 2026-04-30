@@ -108,11 +108,9 @@ Future<void> initFCMService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await checkForTokenUpdates();
+  unawaited(checkForTokenUpdates());
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  await FirebaseMessaging.instance.requestPermission();
 
   FirebaseMessaging.onMessage.listen(handleRemoteMessage);
 }

@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.2.1+110
+version: 0.2.2+111
 
 environment:
   sdk: ^3.11.0
@@ -56,7 +56,7 @@ dependencies:
   firebase_messaging: ^16.1.0  # firebase.google.com
   firebase_app_installations: ^0.4.1 # firebase.google.com
   json_annotation: ^4.9.0 # google.dev
-  protobuf: ^4.0.0 # google.dev
+  protobuf: ^6.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
   drift: ^2.32.0
   drift_flutter: ^0.3.0
@@ -84,7 +84,7 @@ dependencies:
   qr_flutter: ^4.1.0
   hand_signature: ^3.0.3
   flutter_sharing_intent: ^2.0.4
-  no_screenshot: ^0.3.1
+  screen_protector: ^1.5.1
   flutter_markdown_plus: ^1.0.7
 
   # With high download. (But should be checked nonetheless.)
@@ -152,8 +152,8 @@ dependency_overrides:
     path: ./dependencies/x25519
   qr_flutter:
     path: ./dependencies/qr_flutter
-  no_screenshot:
-    path: ./dependencies/no_screenshot
+  screen_protector:
+    path: ./dependencies/screen_protector
   flutter_markdown_plus:
     path: ./dependencies/flutter_markdown_plus
   camera_android_camerax: 

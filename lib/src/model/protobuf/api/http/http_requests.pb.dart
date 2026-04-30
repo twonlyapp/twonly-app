@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -51,7 +51,7 @@ class TextMessage extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  TextMessage clone() => TextMessage()..mergeFromMessage(this);
+  TextMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   TextMessage copyWith(void Function(TextMessage) updates) =>
       super.copyWith((message) => updates(message as TextMessage))
@@ -64,7 +64,6 @@ class TextMessage extends $pb.GeneratedMessage {
   static TextMessage create() => TextMessage._();
   @$core.override
   TextMessage createEmptyInstance() => create();
-  static $pb.PbList<TextMessage> createRepeated() => $pb.PbList<TextMessage>();
   @$core.pragma('dart2js:noInline')
   static TextMessage getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<TextMessage>(create);
@@ -129,13 +128,12 @@ class UploadRequest extends $pb.GeneratedMessage {
         1, _omitFieldNames ? '' : 'encryptedData', $pb.PbFieldType.OY)
     ..p<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'downloadTokens', $pb.PbFieldType.PY)
-    ..pc<TextMessage>(
-        3, _omitFieldNames ? '' : 'messagesOnSuccess', $pb.PbFieldType.PM,
+    ..pPM<TextMessage>(3, _omitFieldNames ? '' : 'messagesOnSuccess',
         subBuilder: TextMessage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UploadRequest clone() => UploadRequest()..mergeFromMessage(this);
+  UploadRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UploadRequest copyWith(void Function(UploadRequest) updates) =>
       super.copyWith((message) => updates(message as UploadRequest))
@@ -148,8 +146,6 @@ class UploadRequest extends $pb.GeneratedMessage {
   static UploadRequest create() => UploadRequest._();
   @$core.override
   UploadRequest createEmptyInstance() => create();
-  static $pb.PbList<UploadRequest> createRepeated() =>
-      $pb.PbList<UploadRequest>();
   @$core.pragma('dart2js:noInline')
   static UploadRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UploadRequest>(create);
@@ -220,8 +216,7 @@ class UpdateGroupState_UpdateTBS extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateGroupState_UpdateTBS clone() =>
-      UpdateGroupState_UpdateTBS()..mergeFromMessage(this);
+  UpdateGroupState_UpdateTBS clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UpdateGroupState_UpdateTBS copyWith(
           void Function(UpdateGroupState_UpdateTBS) updates) =>
@@ -236,8 +231,6 @@ class UpdateGroupState_UpdateTBS extends $pb.GeneratedMessage {
   static UpdateGroupState_UpdateTBS create() => UpdateGroupState_UpdateTBS._();
   @$core.override
   UpdateGroupState_UpdateTBS createEmptyInstance() => create();
-  static $pb.PbList<UpdateGroupState_UpdateTBS> createRepeated() =>
-      $pb.PbList<UpdateGroupState_UpdateTBS>();
   @$core.pragma('dart2js:noInline')
   static UpdateGroupState_UpdateTBS getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdateGroupState_UpdateTBS>(create);
@@ -331,7 +324,7 @@ class UpdateGroupState extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateGroupState clone() => UpdateGroupState()..mergeFromMessage(this);
+  UpdateGroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UpdateGroupState copyWith(void Function(UpdateGroupState) updates) =>
       super.copyWith((message) => updates(message as UpdateGroupState))
@@ -344,8 +337,6 @@ class UpdateGroupState extends $pb.GeneratedMessage {
   static UpdateGroupState create() => UpdateGroupState._();
   @$core.override
   UpdateGroupState createEmptyInstance() => create();
-  static $pb.PbList<UpdateGroupState> createRepeated() =>
-      $pb.PbList<UpdateGroupState>();
   @$core.pragma('dart2js:noInline')
   static UpdateGroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdateGroupState>(create);
@@ -412,7 +403,7 @@ class NewGroupState extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  NewGroupState clone() => NewGroupState()..mergeFromMessage(this);
+  NewGroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   NewGroupState copyWith(void Function(NewGroupState) updates) =>
       super.copyWith((message) => updates(message as NewGroupState))
@@ -425,8 +416,6 @@ class NewGroupState extends $pb.GeneratedMessage {
   static NewGroupState create() => NewGroupState._();
   @$core.override
   NewGroupState createEmptyInstance() => create();
-  static $pb.PbList<NewGroupState> createRepeated() =>
-      $pb.PbList<NewGroupState>();
   @$core.pragma('dart2js:noInline')
   static NewGroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<NewGroupState>(create);
@@ -508,8 +497,7 @@ class AppendGroupState_AppendTBS extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AppendGroupState_AppendTBS clone() =>
-      AppendGroupState_AppendTBS()..mergeFromMessage(this);
+  AppendGroupState_AppendTBS clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   AppendGroupState_AppendTBS copyWith(
           void Function(AppendGroupState_AppendTBS) updates) =>
@@ -524,8 +512,6 @@ class AppendGroupState_AppendTBS extends $pb.GeneratedMessage {
   static AppendGroupState_AppendTBS create() => AppendGroupState_AppendTBS._();
   @$core.override
   AppendGroupState_AppendTBS createEmptyInstance() => create();
-  static $pb.PbList<AppendGroupState_AppendTBS> createRepeated() =>
-      $pb.PbList<AppendGroupState_AppendTBS>();
   @$core.pragma('dart2js:noInline')
   static AppendGroupState_AppendTBS getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<AppendGroupState_AppendTBS>(create);
@@ -605,7 +591,7 @@ class AppendGroupState extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AppendGroupState clone() => AppendGroupState()..mergeFromMessage(this);
+  AppendGroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   AppendGroupState copyWith(void Function(AppendGroupState) updates) =>
       super.copyWith((message) => updates(message as AppendGroupState))
@@ -618,8 +604,6 @@ class AppendGroupState extends $pb.GeneratedMessage {
   static AppendGroupState create() => AppendGroupState._();
   @$core.override
   AppendGroupState createEmptyInstance() => create();
-  static $pb.PbList<AppendGroupState> createRepeated() =>
-      $pb.PbList<AppendGroupState>();
   @$core.pragma('dart2js:noInline')
   static AppendGroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<AppendGroupState>(create);
@@ -688,13 +672,12 @@ class GroupState extends $pb.GeneratedMessage {
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
-    ..pc<AppendGroupState>(
-        3, _omitFieldNames ? '' : 'appendedGroupStates', $pb.PbFieldType.PM,
+    ..pPM<AppendGroupState>(3, _omitFieldNames ? '' : 'appendedGroupStates',
         subBuilder: AppendGroupState.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GroupState clone() => GroupState()..mergeFromMessage(this);
+  GroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   GroupState copyWith(void Function(GroupState) updates) =>
       super.copyWith((message) => updates(message as GroupState)) as GroupState;
@@ -706,7 +689,6 @@ class GroupState extends $pb.GeneratedMessage {
   static GroupState create() => GroupState._();
   @$core.override
   GroupState createEmptyInstance() => create();
-  static $pb.PbList<GroupState> createRepeated() => $pb.PbList<GroupState>();
   @$core.pragma('dart2js:noInline')
   static GroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GroupState>(create);
@@ -758,14 +740,12 @@ class AppendGroupStateHelper extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'AppendGroupStateHelper',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'),
       createEmptyInstance: create)
-    ..pc<AppendGroupState>(
-        1, _omitFieldNames ? '' : 'appendedGroupStates', $pb.PbFieldType.PM,
+    ..pPM<AppendGroupState>(1, _omitFieldNames ? '' : 'appendedGroupStates',
         subBuilder: AppendGroupState.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AppendGroupStateHelper clone() =>
-      AppendGroupStateHelper()..mergeFromMessage(this);
+  AppendGroupStateHelper clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   AppendGroupStateHelper copyWith(
           void Function(AppendGroupStateHelper) updates) =>
@@ -779,8 +759,6 @@ class AppendGroupStateHelper extends $pb.GeneratedMessage {
   static AppendGroupStateHelper create() => AppendGroupStateHelper._();
   @$core.override
   AppendGroupStateHelper createEmptyInstance() => create();
-  static $pb.PbList<AppendGroupStateHelper> createRepeated() =>
-      $pb.PbList<AppendGroupStateHelper>();
   @$core.pragma('dart2js:noInline')
   static AppendGroupStateHelper getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<AppendGroupStateHelper>(create);

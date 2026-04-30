@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -41,14 +41,13 @@ class UserDiscoveryVersion extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UserDiscoveryVersion',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'user_discovery'),
       createEmptyInstance: create)
-    ..a<$core.int>(
-        1, _omitFieldNames ? '' : 'announcement', $pb.PbFieldType.OU3)
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'promotion', $pb.PbFieldType.OU3)
+    ..aI(1, _omitFieldNames ? '' : 'announcement',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'promotion', fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserDiscoveryVersion clone() =>
-      UserDiscoveryVersion()..mergeFromMessage(this);
+  UserDiscoveryVersion clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryVersion copyWith(void Function(UserDiscoveryVersion) updates) =>
       super.copyWith((message) => updates(message as UserDiscoveryVersion))
@@ -61,8 +60,6 @@ class UserDiscoveryVersion extends $pb.GeneratedMessage {
   static UserDiscoveryVersion create() => UserDiscoveryVersion._();
   @$core.override
   UserDiscoveryVersion createEmptyInstance() => create();
-  static $pb.PbList<UserDiscoveryVersion> createRepeated() =>
-      $pb.PbList<UserDiscoveryVersion>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryVersion getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UserDiscoveryVersion>(create);
@@ -93,12 +90,14 @@ class UserDiscoveryMessage_UserDiscoveryAnnouncement
     $fixnum.Int64? publicId,
     $core.int? threshold,
     $core.List<$core.int>? announcementShare,
+    $core.bool? sharePromotion,
     $core.Iterable<$core.List<$core.int>>? verificationShares,
   }) {
     final result = create();
     if (publicId != null) result.publicId = publicId;
     if (threshold != null) result.threshold = threshold;
     if (announcementShare != null) result.announcementShare = announcementShare;
+    if (sharePromotion != null) result.sharePromotion = sharePromotion;
     if (verificationShares != null)
       result.verificationShares.addAll(verificationShares);
     return result;
@@ -120,16 +119,16 @@ class UserDiscoveryMessage_UserDiscoveryAnnouncement
       package: const $pb.PackageName(_omitMessageNames ? '' : 'user_discovery'),
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'publicId')
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'threshold', $pb.PbFieldType.OU3)
+    ..aI(2, _omitFieldNames ? '' : 'threshold', fieldType: $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'announcementShare', $pb.PbFieldType.OY)
+        3, _omitFieldNames ? '' : 'announcementShare', $pb.PbFieldType.OY)
+    ..aOB(4, _omitFieldNames ? '' : 'sharePromotion')
     ..p<$core.List<$core.int>>(
-        6, _omitFieldNames ? '' : 'verificationShares', $pb.PbFieldType.PY)
+        5, _omitFieldNames ? '' : 'verificationShares', $pb.PbFieldType.PY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserDiscoveryMessage_UserDiscoveryAnnouncement clone() =>
-      UserDiscoveryMessage_UserDiscoveryAnnouncement()..mergeFromMessage(this);
+  UserDiscoveryMessage_UserDiscoveryAnnouncement clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryAnnouncement copyWith(
           void Function(UserDiscoveryMessage_UserDiscoveryAnnouncement)
@@ -147,9 +146,6 @@ class UserDiscoveryMessage_UserDiscoveryAnnouncement
   @$core.override
   UserDiscoveryMessage_UserDiscoveryAnnouncement createEmptyInstance() =>
       create();
-  static $pb.PbList<UserDiscoveryMessage_UserDiscoveryAnnouncement>
-      createRepeated() =>
-          $pb.PbList<UserDiscoveryMessage_UserDiscoveryAnnouncement>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage_UserDiscoveryAnnouncement getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -174,17 +170,26 @@ class UserDiscoveryMessage_UserDiscoveryAnnouncement
   @$pb.TagNumber(2)
   void clearThreshold() => $_clearField(2);
 
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   $core.List<$core.int> get announcementShare => $_getN(2);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   set announcementShare($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   $core.bool hasAnnouncementShare() => $_has(2);
-  @$pb.TagNumber(4)
-  void clearAnnouncementShare() => $_clearField(4);
+  @$pb.TagNumber(3)
+  void clearAnnouncementShare() => $_clearField(3);
 
-  @$pb.TagNumber(6)
-  $pb.PbList<$core.List<$core.int>> get verificationShares => $_getList(3);
+  @$pb.TagNumber(4)
+  $core.bool get sharePromotion => $_getBF(3);
+  @$pb.TagNumber(4)
+  set sharePromotion($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSharePromotion() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSharePromotion() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $pb.PbList<$core.List<$core.int>> get verificationShares => $_getList(4);
 }
 
 class UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData
@@ -226,9 +231,7 @@ class UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_Sig
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData
-      clone() =>
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData()
-            ..mergeFromMessage(this);
+      clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData copyWith(
           void Function(
@@ -249,10 +252,6 @@ class UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_Sig
   @$core.override
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData
       createEmptyInstance() => create();
-  static $pb.PbList<
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData>
-      createRepeated() => $pb.PbList<
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted_SignedData
       getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -330,9 +329,7 @@ class UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted
-      clone() =>
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted()
-            ..mergeFromMessage(this);
+      clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted copyWith(
           void Function(
@@ -353,10 +350,6 @@ class UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted
   @$core.override
   UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted
       createEmptyInstance() => create();
-  static $pb.PbList<
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted>
-      createRepeated() => $pb.PbList<
-          UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage_UserDiscoveryPromotion_AnnouncementShareDecrypted
       getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -424,17 +417,17 @@ class UserDiscoveryMessage_UserDiscoveryPromotion extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UserDiscoveryMessage.UserDiscoveryPromotion',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'user_discovery'),
       createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'promotionId', $pb.PbFieldType.OU3)
+    ..aI(1, _omitFieldNames ? '' : 'promotionId',
+        fieldType: $pb.PbFieldType.OU3)
     ..aInt64(2, _omitFieldNames ? '' : 'publicId')
-    ..a<$core.int>(3, _omitFieldNames ? '' : 'threshold', $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'threshold', fieldType: $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'announcementShare', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'publicKeyVerifiedTimestamp')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserDiscoveryMessage_UserDiscoveryPromotion clone() =>
-      UserDiscoveryMessage_UserDiscoveryPromotion()..mergeFromMessage(this);
+  UserDiscoveryMessage_UserDiscoveryPromotion clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryPromotion copyWith(
           void Function(UserDiscoveryMessage_UserDiscoveryPromotion) updates) =>
@@ -450,9 +443,6 @@ class UserDiscoveryMessage_UserDiscoveryPromotion extends $pb.GeneratedMessage {
       UserDiscoveryMessage_UserDiscoveryPromotion._();
   @$core.override
   UserDiscoveryMessage_UserDiscoveryPromotion createEmptyInstance() => create();
-  static $pb.PbList<UserDiscoveryMessage_UserDiscoveryPromotion>
-      createRepeated() =>
-          $pb.PbList<UserDiscoveryMessage_UserDiscoveryPromotion>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage_UserDiscoveryPromotion getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -532,8 +522,7 @@ class UserDiscoveryMessage_UserDiscoveryRecall extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserDiscoveryMessage_UserDiscoveryRecall clone() =>
-      UserDiscoveryMessage_UserDiscoveryRecall()..mergeFromMessage(this);
+  UserDiscoveryMessage_UserDiscoveryRecall clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage_UserDiscoveryRecall copyWith(
           void Function(UserDiscoveryMessage_UserDiscoveryRecall) updates) =>
@@ -549,9 +538,6 @@ class UserDiscoveryMessage_UserDiscoveryRecall extends $pb.GeneratedMessage {
       UserDiscoveryMessage_UserDiscoveryRecall._();
   @$core.override
   UserDiscoveryMessage_UserDiscoveryRecall createEmptyInstance() => create();
-  static $pb.PbList<UserDiscoveryMessage_UserDiscoveryRecall>
-      createRepeated() =>
-          $pb.PbList<UserDiscoveryMessage_UserDiscoveryRecall>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage_UserDiscoveryRecall getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -613,8 +599,7 @@ class UserDiscoveryMessage extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserDiscoveryMessage clone() =>
-      UserDiscoveryMessage()..mergeFromMessage(this);
+  UserDiscoveryMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   UserDiscoveryMessage copyWith(void Function(UserDiscoveryMessage) updates) =>
       super.copyWith((message) => updates(message as UserDiscoveryMessage))
@@ -627,8 +612,6 @@ class UserDiscoveryMessage extends $pb.GeneratedMessage {
   static UserDiscoveryMessage create() => UserDiscoveryMessage._();
   @$core.override
   UserDiscoveryMessage createEmptyInstance() => create();
-  static $pb.PbList<UserDiscoveryMessage> createRepeated() =>
-      $pb.PbList<UserDiscoveryMessage>();
   @$core.pragma('dart2js:noInline')
   static UserDiscoveryMessage getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UserDiscoveryMessage>(create);
