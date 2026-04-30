@@ -79,6 +79,9 @@ Future<void> handleUserStudyUpload() async {
       'user_discovery_count_announced_users': udAllAnnouncedUsers.length,
       'user_discovery_count_unknown_announced_users': udUnknownAnnouncedUsers,
 
+      'user_study_count_new_friends_via_suggestion':
+          userService.currentUser.userStudyCountNewFriendsViaSuggestion,
+
       'accepted_contacts': contacts.where((c) => c.accepted).length,
       'verified_contacts': verifications.length,
       'verified_contacts_via_migrated_from_old_version': verifications.values

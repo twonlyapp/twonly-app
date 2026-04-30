@@ -93,6 +93,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
             Text(
               context.lang.onboardingUserDiscoveryShareFriends,
               style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
 
@@ -255,6 +256,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
             Text(
               context.lang.onboardingUserDiscoveryLetFriendsFindYou,
               style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
 

@@ -95,6 +95,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['askedForUserStudyPermission'] as bool? ?? false
       ..userStudyParticipantsToken =
           json['userStudyParticipantsToken'] as String?
+      ..userStudyCountNewFriendsViaSuggestion =
+          (json['userStudyCountNewFriendsViaSuggestion'] as num?)?.toInt() ?? 0
       ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
           ? null
           : DateTime.parse(json['lastUserStudyDataUpload'] as String)
@@ -151,6 +153,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'twonlySafeBackup': instance.twonlySafeBackup,
   'askedForUserStudyPermission': instance.askedForUserStudyPermission,
   'userStudyParticipantsToken': instance.userStudyParticipantsToken,
+  'userStudyCountNewFriendsViaSuggestion':
+      instance.userStudyCountNewFriendsViaSuggestion,
   'lastUserStudyDataUpload': instance.lastUserStudyDataUpload
       ?.toIso8601String(),
   'currentSetupPage': instance.currentSetupPage,

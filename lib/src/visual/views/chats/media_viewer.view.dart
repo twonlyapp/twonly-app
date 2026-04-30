@@ -48,8 +48,7 @@ class MediaViewerView extends StatefulWidget {
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
 
-class _MediaViewerViewState extends State<MediaViewerView>
-    with WidgetsBindingObserver {
+class _MediaViewerViewState extends State<MediaViewerView> {
   Timer? nextMediaTimer;
   Timer? progressTimer;
 
@@ -90,7 +89,6 @@ class _MediaViewerViewState extends State<MediaViewerView>
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
     }
-    WidgetsBinding.instance.addObserver(this);
 
     asyncLoadNextMedia(true);
   }
@@ -105,22 +103,10 @@ class _MediaViewerViewState extends State<MediaViewerView>
     final tmp = videoController;
     videoController = null;
     tmp?.dispose();
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   final Mutex _messageUpdateLock = Mutex();
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _messageUpdateLock.protect(() async {
-        if (currentMedia == null && allMediaFiles.isNotEmpty) {
-          await loadCurrentMediaFile();
-        }
-      });
-    }
-  }
 
   bool _isViewActive() {
     return !AppState.isAppInBackground &&
@@ -158,7 +144,7 @@ class _MediaViewerViewState extends State<MediaViewerView>
                 allMediaFiles.add(msg);
               }
             }
-            setState(() {});
+            if (mounted) setState(() {});
             if (firstRun) {
               firstRun = false;
               await loadCurrentMediaFile();
@@ -228,7 +214,13 @@ class _MediaViewerViewState extends State<MediaViewerView>
 
     await downloadStateListener?.cancel();
     downloadStateListener = stream.listen((updated) async {
-      if (updated == null) return;
+      if (updated == null) {
+        // Media file record no longer exists — skip to next or exit rather
+        // than leaving the screen permanently black with no content/loader.
+        await downloadStateListener?.cancel();
+        await nextMediaOrExit();
+        return;
+      }
       if (updated.downloadState != DownloadState.ready) {
         setState(() {
           _showDownloadingLoader = true;
@@ -238,7 +230,12 @@ class _MediaViewerViewState extends State<MediaViewerView>
           final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
             allMediaFiles.first.mediaId!,
           );
-          if (mediaFile == null) return;
+          if (mediaFile == null) {
+            // DB record gone — skip to next or exit.
+            await downloadStateListener?.cancel();
+            await nextMediaOrExit();
+            return;
+          }
           await startDownloadMedia(mediaFile, true);
           unawaited(tryDownloadAllMediaFiles(force: true));
         }
@@ -246,7 +243,12 @@ class _MediaViewerViewState extends State<MediaViewerView>
       }
 
       await downloadStateListener?.cancel();
-      await handleNextDownloadedMedia(showTwonly);
+      try {
+        await handleNextDownloadedMedia(showTwonly);
+      } catch (e, st) {
+        Log.error('handleNextDownloadedMedia failed: $e\n$st');
+        await nextMediaOrExit();
+      }
       // start downloading all the other possible missing media files.
     });
   }
@@ -580,210 +582,213 @@ class _MediaViewerViewState extends State<MediaViewerView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_showDownloadingLoader) _loader(),
-          if ((currentMedia != null || videoController != null) &&
-              (canBeSeenUntil == null || progress >= 0))
-            GestureDetector(
-              onTap: onTap,
-              onDoubleTap: (videoController == null) ? null : onTap,
-              child: MediaViewSizingHelper(
-                bottomNavigation: bottomNavigation(),
-                requiredHeight: 55,
-                child: Stack(
-                  children: [
-                    if (videoController != null)
-                      Positioned.fill(
-                        child: PhotoView.customChild(
-                          initialScale: PhotoViewComputedScale.contained,
-                          minScale: PhotoViewComputedScale.contained,
-                          child: VideoPlayerHelper(
-                            controller: videoController!,
-                            onDoubleTap: onTap,
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_showDownloadingLoader) _loader(),
+            if ((currentMedia != null || videoController != null) &&
+                (canBeSeenUntil == null || progress >= 0))
+              GestureDetector(
+                onTap: onTap,
+                onDoubleTap: (videoController == null) ? null : onTap,
+                child: MediaViewSizingHelper(
+                  bottomNavigation: bottomNavigation(),
+                  requiredHeight: 55,
+                  child: Stack(
+                    children: [
+                      if (videoController != null)
+                        Positioned.fill(
+                          child: PhotoView.customChild(
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
+                            child: VideoPlayerHelper(
+                              controller: videoController!,
+                              onDoubleTap: onTap,
+                            ),
+                          ),
+                        )
+                      else if (currentMedia != null &&
+                          (currentMedia!.mediaFile.type == MediaType.image ||
+                              currentMedia!.mediaFile.type == MediaType.gif))
+                        Positioned.fill(
+                          child: PhotoView(
+                            imageProvider: FileImage(
+                              currentMedia!.tempPath,
+                            ),
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
                           ),
                         ),
-                      )
-                    else if (currentMedia != null &&
-                            currentMedia!.mediaFile.type == MediaType.image ||
-                        currentMedia!.mediaFile.type == MediaType.gif)
-                      Positioned.fill(
-                        child: PhotoView(
-                          imageProvider: FileImage(
-                            currentMedia!.tempPath,
-                          ),
-                          initialScale: PhotoViewComputedScale.contained,
-                          minScale: PhotoViewComputedScale.contained,
+                    ],
+                  ),
+                ),
+              ),
+            if (displayTwonlyPresent)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => loadCurrentMediaFile(showTwonly: true),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Lottie.asset(
+                          'assets/animations/present.lottie.lottie',
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ),
-          if (displayTwonlyPresent)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => loadCurrentMediaFile(showTwonly: true),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Lottie.asset(
-                        'assets/animations/present.lottie.lottie',
+                      Container(
+                        padding: const EdgeInsets.only(bottom: 200),
+                        child: Text(context.lang.mediaViewerTwonlyTapToOpen),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 200),
-                      child: Text(context.lang.mediaViewerTwonlyTapToOpen),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          Positioned(
-            left: 10,
-            top: 10,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, size: 30),
-                  color: Colors.white,
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          if (currentMedia != null &&
-              currentMedia?.mediaFile.downloadState != DownloadState.ready)
-            Positioned.fill(child: _loader()),
-          if (canBeSeenUntil != null || progress >= 0)
             Positioned(
-              right: 20,
-              top: 27,
+              left: 10,
+              top: 10,
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 2,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 30),
+                    color: Colors.white,
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
-          Positioned(
-            top: 10,
-            left: showSendTextMessageInput ? 0 : null,
-            right: showSendTextMessageInput ? 0 : 15,
-            child: Text(
-              _currentMediaSender,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: showSendTextMessageInput ? 24 : 14,
-                fontWeight: FontWeight.bold,
-                color: showSendTextMessageInput
-                    ? null
-                    : const Color.fromARGB(255, 126, 126, 126),
-                shadows: const [
-                  Shadow(
-                    color: Color.fromARGB(122, 0, 0, 0),
-                    blurRadius: 5,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (showSendTextMessageInput)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: context.color.surface,
-                padding: const EdgeInsets.only(
-                  bottom: 10,
-                  left: 20,
-                  right: 20,
-                  top: 10,
-                ),
+            if (currentMedia != null &&
+                currentMedia?.mediaFile.downloadState != DownloadState.ready)
+              Positioned.fill(child: _loader()),
+            if (canBeSeenUntil != null || progress >= 0)
+              Positioned(
+                right: 20,
+                top: 27,
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.xmark),
-                      onPressed: () {
-                        setState(() {
-                          showShortReactions = false;
-                          showSendTextMessageInput = false;
-                        });
-                      },
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 2,
+                      ),
                     ),
-                    Expanded(
-                      child: TextField(
-                        autofocus: true,
-                        controller: textMessageController,
-                        onChanged: (value) async {
-                          await twonlyDB.groupsDao.updateGroup(
-                            widget.group.groupId,
-                            GroupsCompanion(
-                              draftMessage: Value(textMessageController.text),
-                            ),
-                          );
+                  ],
+                ),
+              ),
+            Positioned(
+              top: 10,
+              left: showSendTextMessageInput ? 0 : null,
+              right: showSendTextMessageInput ? 0 : 15,
+              child: Text(
+                _currentMediaSender,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: showSendTextMessageInput ? 24 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: showSendTextMessageInput
+                      ? null
+                      : const Color.fromARGB(255, 126, 126, 126),
+                  shadows: const [
+                    Shadow(
+                      color: Color.fromARGB(122, 0, 0, 0),
+                      blurRadius: 5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (showSendTextMessageInput)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: context.color.surface,
+                  padding: const EdgeInsets.only(
+                    bottom: 10,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.xmark),
+                        onPressed: () {
+                          setState(() {
+                            showShortReactions = false;
+                            showSendTextMessageInput = false;
+                          });
                         },
-                        onEditingComplete: () {
+                      ),
+                      Expanded(
+                        child: TextField(
+                          autofocus: true,
+                          controller: textMessageController,
+                          onChanged: (value) async {
+                            await twonlyDB.groupsDao.updateGroup(
+                              widget.group.groupId,
+                              GroupsCompanion(
+                                draftMessage: Value(textMessageController.text),
+                              ),
+                            );
+                          },
+                          onEditingComplete: () {
+                            setState(() {
+                              showSendTextMessageInput = false;
+                              showShortReactions = false;
+                            });
+                          },
+                          decoration: inputTextMessageDeco(
+                            context,
+                            context.lang.chatListDetailInput,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        onPressed: () async {
+                          if (textMessageController.text.isNotEmpty) {
+                            await insertAndSendTextMessage(
+                              widget.group.groupId,
+                              textMessageController.text,
+                              currentMessage!.messageId,
+                            );
+                            textMessageController.clear();
+                          }
                           setState(() {
                             showSendTextMessageInput = false;
                             showShortReactions = false;
                           });
                         },
-                        decoration: inputTextMessageDeco(
-                          context,
-                          context.lang.chatListDetailInput,
-                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                      onPressed: () async {
-                        if (textMessageController.text.isNotEmpty) {
-                          await insertAndSendTextMessage(
-                            widget.group.groupId,
-                            textMessageController.text,
-                            currentMessage!.messageId,
-                          );
-                          textMessageController.clear();
-                        }
-                        setState(() {
-                          showSendTextMessageInput = false;
-                          showShortReactions = false;
-                        });
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+            if (currentMessage != null)
+              AdditionalMessageContent(currentMessage!),
+            if (currentMedia != null)
+              ReactionButtons(
+                show: showShortReactions,
+                textInputFocused: showSendTextMessageInput,
+                mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
+                groupId: widget.group.groupId,
+                messageId: currentMessage!.messageId,
+                emojiKey: emojiKey,
+                hide: () {
+                  setState(() {
+                    showShortReactions = false;
+                    showSendTextMessageInput = false;
+                  });
+                },
+              ),
+            Positioned.fill(
+              child: EmojiFloatWidget(key: emojiKey),
             ),
-          if (currentMessage != null) AdditionalMessageContent(currentMessage!),
-          if (currentMedia != null)
-            ReactionButtons(
-              show: showShortReactions,
-              textInputFocused: showSendTextMessageInput,
-              mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
-              groupId: widget.group.groupId,
-              messageId: currentMessage!.messageId,
-              emojiKey: emojiKey,
-              hide: () {
-                setState(() {
-                  showShortReactions = false;
-                  showSendTextMessageInput = false;
-                });
-              },
-            ),
-          Positioned.fill(
-            child: EmojiFloatWidget(key: emojiKey),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

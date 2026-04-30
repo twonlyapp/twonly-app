@@ -140,6 +140,9 @@ class UserData {
   // So update data can be assigned. If set the user choose to participate.
   String? userStudyParticipantsToken;
 
+  @JsonKey(defaultValue: 0)
+  int userStudyCountNewFriendsViaSuggestion = 0;
+
   // Once a day the anonymous data is collected and send to the server
   DateTime? lastUserStudyDataUpload;
 

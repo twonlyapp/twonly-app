@@ -77,9 +77,6 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
       flameEmoji = '🎂';
     }
 
-    // Override with hourglass when the flame is about to expire
-    if (isExpiring) flameEmoji = '⌛';
-
     return Row(
       children: [
         if (widget.prefix) const SizedBox(width: 5),
@@ -96,6 +93,13 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
             emoji: flameEmoji,
           ),
         ),
+        if (isExpiring)
+          const SizedBox(
+            height: 11,
+            child: EmojiAnimationComp(
+              emoji: '⌛',
+            ),
+          ),
       ],
     );
   }

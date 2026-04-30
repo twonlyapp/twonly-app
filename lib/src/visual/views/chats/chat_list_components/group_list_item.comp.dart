@@ -203,8 +203,7 @@ class _UserListItem extends State<GroupListItemComp> {
           await startDownloadMedia(mediaFile, true);
           return;
         }
-        if (mediaFile.downloadState! == DownloadState.ready ||
-            mediaFile.downloadState! == DownloadState.downloaded) {
+        if (mediaFile.downloadState! == DownloadState.ready) {
           if (!mounted) return;
           await context.push(
             Routes.chatsMediaViewer,

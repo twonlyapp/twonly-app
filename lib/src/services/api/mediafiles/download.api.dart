@@ -318,13 +318,6 @@ Future<void> handleEncryptedFile(String mediaId) async {
         return;
       }
 
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaId,
-        const MediaFilesCompanion(
-          downloadState: Value(DownloadState.downloaded),
-        ),
-      );
-
       try {
         final chacha20 = FlutterChacha20.poly1305Aead();
         final secretKeyData = SecretKeyData(
