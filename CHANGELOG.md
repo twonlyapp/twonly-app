@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.9
+## 0.2.0
 
 - New: Feature to find friends without a phone number
 - New: The verification state is now transferred to the scanned user
