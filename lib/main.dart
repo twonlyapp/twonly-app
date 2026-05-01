@@ -53,6 +53,7 @@ Future<void> twonlyMinimumInitialization() async {
 }
 
 void main() async {
+  final stopwatch = Stopwatch()..start();
   await twonlyMinimumInitialization();
 
   unawaited(initFCMService());
@@ -67,12 +68,9 @@ void main() async {
     storageError = true;
   }
 
-  final dbExists = File(
-    '${AppEnvironment.supportDir}/twonly.sqlite',
-  ).existsSync();
-
   if (Platform.isIOS && userExists) {
-    if (!dbExists) {
+    final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
+    if (!dbFile.existsSync()) {
       Log.error('[twonly] IOS: App was removed and then reinstalled again...');
       await SecureStorage.instance.deleteAll();
       userExists = false;
@@ -81,7 +79,7 @@ void main() async {
 
   final settingsController = SettingsChangeProvider()..loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await initFileDownloader();
+  unawaited(initFileDownloader());
 
   if (userExists) {
     if (userService.currentUser.allowErrorTrackingViaSentry) {
@@ -96,22 +94,15 @@ void main() async {
     }
 
     await runMigrations();
-
-    await twonlyDB.messagesDao.purgeMessageTable();
-    await twonlyDB.receiptsDao.purgeReceivedReceipts();
-    await UserDiscoveryService.removeDeletedContacts();
-
-    unawaited(MediaFileService.purgeTempFolder());
-
-    unawaited(setupPushNotification());
-    unawaited(finishStartedPreprocessing());
-    unawaited(createPushAvatars());
-    unawaited(performTwonlySafeBackup());
-    unawaited(initializeBackgroundTaskManager());
+    unawaited(postStartupTasks());
   }
 
   await apiService.listenToNetworkChanges();
   unawaited(apiService.connect());
+
+  stopwatch.stop();
+
+  Log.info('Initialization finished after ${stopwatch.elapsed}.');
 
   runApp(
     MultiProvider(
@@ -160,4 +151,22 @@ Future<void> runMigrations() async {
       }
     });
   }
+}
+
+Future<void> postStartupTasks() async {
+  // 1. Immediate background cleanup (Non-blocking for UI)
+  await twonlyDB.messagesDao.purgeMessageTable();
+  unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
+  unawaited(UserDiscoveryService.removeDeletedContacts());
+  unawaited(MediaFileService.purgeTempFolder());
+
+  // 2. Service initializations
+  unawaited(setupPushNotification());
+  unawaited(finishStartedPreprocessing());
+  unawaited(createPushAvatars());
+  unawaited(initializeBackgroundTaskManager());
+
+  // 3. Delayed tasks (Wait for app to settle)
+  await Future.delayed(const Duration(minutes: 2));
+  unawaited(performTwonlySafeBackup());
 }

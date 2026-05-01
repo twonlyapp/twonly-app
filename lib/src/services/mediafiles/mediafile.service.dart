@@ -33,39 +33,58 @@ class MediaFileService {
       );
 
       final files = tempDirectory.listSync();
+      if (files.isEmpty) return;
+
+      final mediaIdToFile = <String, List<FileSystemEntity>>{};
       for (final file in files) {
         final mediaId = basename(file.path).split('.').first;
+        mediaIdToFile.putIfAbsent(mediaId, () => []).add(file);
+      }
 
+      final mediaIds = mediaIdToFile.keys.toList();
+
+      // Bulk fetch media files and messages
+      final allMediaFiles = await twonlyDB.mediaFilesDao.getMediaFilesByIds(
+        mediaIds,
+      );
+      final allMessages = await twonlyDB.messagesDao.getMessagesByMediaIds(
+        mediaIds,
+      );
+
+      final mediaFileMap = {for (final m in allMediaFiles) m.mediaId: m};
+      final messageMap = <String, List<Message>>{};
+      for (final msg in allMessages) {
+        if (msg.mediaId != null) {
+          messageMap.putIfAbsent(msg.mediaId!, () => []).add(msg);
+        }
+      }
+
+      for (final mediaId in mediaIds) {
         // in case the mediaID is unknown the file will be deleted
         var delete = true;
 
-        final service = await MediaFileService.fromMediaId(mediaId);
+        final mediaFile = mediaFileMap[mediaId];
 
-        if (service != null) {
-          if (service.mediaFile.isDraftMedia) {
+        if (mediaFile != null) {
+          if (mediaFile.isDraftMedia) {
             delete = false;
           }
 
-          final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
-            mediaId,
-          );
+          final messages = messageMap[mediaId] ?? [];
 
           // in case messages in empty the file will be deleted, as delete is true by default
 
           for (final message in messages) {
-            if (service.mediaFile.type == MediaType.audio) {
+            if (mediaFile.type == MediaType.audio) {
               delete = false; // do not delete voice messages
             }
 
             if (message.openedAt == null) {
               // Message was not yet opened from all persons, so wait...
               delete = false;
-            } else if (service.mediaFile.requiresAuthentication ||
-                service.mediaFile.displayLimitInMilliseconds != null) {
+            } else if (mediaFile.requiresAuthentication ||
+                mediaFile.displayLimitInMilliseconds != null) {
               // Message was opened by all persons, and they can not reopen the image.
-              // This branch will prevent to reach the next if condition, with would otherwise store the image for two days
-              // delete = true; // do not overwrite a previous delete = false
-              // this is just to make it easier to understand :)
             } else if (message.openedAt!.isAfter(
               clock.now().subtract(const Duration(days: 2)),
             )) {
@@ -89,11 +108,20 @@ class MediaFileService {
 
         if (delete) {
           Log.info('Purging media file $mediaId');
-          file.deleteSync();
+          final filesToPurge = mediaIdToFile[mediaId] ?? [];
+          for (final file in filesToPurge) {
+            try {
+              if (file.existsSync()) {
+                file.deleteSync();
+              }
+            } catch (e) {
+              Log.error('Error deleting file ${file.path}: $e');
+            }
+          }
         }
       }
     } catch (e) {
-      Log.error(e);
+      Log.error('Error in purgeTempFolder: $e');
     }
   }
 

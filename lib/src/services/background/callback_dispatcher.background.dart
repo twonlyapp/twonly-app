@@ -31,6 +31,7 @@ Future<void> initializeBackgroundTaskManager() async {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    AppState.isInBackgroundTask = true;
     switch (task) {
       case 'eu.twonly.periodic_task':
         if (await initBackgroundExecution()) {
@@ -62,8 +63,6 @@ Future<bool> initBackgroundExecution() async {
     Log.info('Early return as user is not registered yet.');
     return false;
   }
-
-  AppState.isInBackgroundTask = true;
 
   _isInitialized = true;
   return true;

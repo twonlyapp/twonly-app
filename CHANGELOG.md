@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Fix: App did not launch sometimes on Android
+
 ## 0.2.0
 
 - New: Feature to find friends without a phone number

@@ -18,6 +18,7 @@ analyzer:
     - "lib/generated/**"
     - "lib/core/**"
     - "lib/src/localization/**"
+    - "rust_builder/"
     - "dependencies/**"
     - "pubspec.yaml"
     - "**.arb"

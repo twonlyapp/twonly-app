@@ -6,7 +6,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
@@ -65,7 +64,6 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           .listen((update) {
             if (!mounted) return;
             setState(() {
-              Log.info('Update: ${update.length}');
               _isVerified = update.isNotEmpty;
             });
           });
