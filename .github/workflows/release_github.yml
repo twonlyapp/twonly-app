@@ -25,6 +25,9 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install requirements
+        run: sudo apt-get install protobuf-compiler
+
       - name: Cloning sub-repos
         run: git submodule update --init --recursive
 
