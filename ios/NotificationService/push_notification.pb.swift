@@ -230,12 +230,12 @@ struct PushKey: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension PushKind: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0reaction\0\u{1}response\0\u{1}text\0\u{1}video\0\u{1}twonly\0\u{1}image\0\u{1}contactRequest\0\u{1}acceptRequest\0\u{1}storedMediaFile\0\u{1}testNotification\0\u{1}reopenedMedia\0\u{1}reactionToVideo\0\u{1}reactionToText\0\u{1}reactionToImage\0\u{1}reactionToAudio\0\u{1}addedToGroup\0\u{1}audio\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REACTION\0\u{1}RESPONSE\0\u{1}TEXT\0\u{1}VIDEO\0\u{1}TWONLY\0\u{1}IMAGE\0\u{1}CONTACT_REQUEST\0\u{1}ACCEPT_REQUEST\0\u{1}STORED_MEDIA_FILE\0\u{1}TEST_NOTIFICATION\0\u{1}REOPENED_MEDIA\0\u{1}REACTION_TO_VIDEO\0\u{1}REACTION_TO_TEXT\0\u{1}REACTION_TO_IMAGE\0\u{1}REACTION_TO_AUDIO\0\u{1}ADDED_TO_GROUP\0\u{1}AUDIO\0")
 }
 
 extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "EncryptedPushNotification"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}keyId\0\u{1}nonce\0\u{1}ciphertext\0\u{1}mac\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}key_id\0\u{1}nonce\0\u{1}ciphertext\0\u{1}mac\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -280,7 +280,7 @@ extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushNotification"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}kind\0\u{1}messageId\0\u{1}additionalContent\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}kind\0\u{3}message_id\0\u{3}additional_content\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -354,7 +354,7 @@ extension PushUsers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
 
 extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushUser"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}userId\0\u{1}displayName\0\u{1}blocked\0\u{1}lastMessageId\0\u{1}pushKeys\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_id\0\u{3}display_name\0\u{1}blocked\0\u{3}last_message_id\0\u{3}push_keys\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -408,7 +408,7 @@ extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
 
 extension PushKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushKey"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}key\0\u{1}createdAtUnixTimestamp\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}key\0\u{3}created_at_unix_timestamp\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

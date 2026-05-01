@@ -1,0 +1,86 @@
+syntax = "proto3";
+package passwordless_recovery;
+
+// Recovery Process
+// - Generating: TempID and a new assymetric key pair
+// - Uploading to the server TempID + Push Tokens so the server can notify the user that someone helped him 
+
+
+// Send from the person who tries to recover their account.
+// This can be done via a link, which will then be opend in the app of the contact.
+// The contact than has to manualy select from which user he got the request.
+// -> Using this phishing is harder, as the user has to manualy select the user to recovery
+// -> The user who wants to recover his account does not need to remember her old username
+message RecoveryRequest {
+  int64 temp_id = 1;
+  bytes public_key = 2;
+}
+
+// Used as envelope for TrustedFriendShare and RecoveryData
+message EncryptedEnvelope {
+  bytes encrypted_data = 1;
+  bytes iv = 2;
+  bytes mac = 3;
+}
+
+// Send from the trusted friend to 
+// This is encrypted with the received public key.
+message TrustedFriendShare {
+
+  // This allows to display the user which user has send him his recovery data.
+  User trusted_friend = 1;
+
+  // This allows to display the userdata, showing that he is recovering the correct person.
+  User share_user = 2;
+
+  // The minimum threshold required to decrypte the shares.
+  int32 threshold = 3;
+
+  // The actual share which will become: SecretSharedDate
+  bytes share = 4;
+
+  message User {
+    int64 user_id = 1;
+    string display_name = 2;
+    bytes avatar = 3;
+  }
+}
+
+// After received all shares this is decrypted by the user restoring its own 
+message SecretSharedDate {
+
+  // No second factor was selected
+  optional RecoveryData recovery_data = 1;
+
+
+  // Server has  
+  optional SecondFactorMail second_factor_mail = 2;
+  optional SecondFactorPin second_factor_pin = 3;
+
+  // The recovery data in case a second factor was used
+  // The decryption key is loaded from the server either using the PIN or the MAIL
+  optional bytes recovery_data_encrypted = 4;
+
+
+  message SecondFactorPin {
+    // Required to try the PIN to get the share from the server.
+    // This prevents that someone else can lock the pin, as the server only 
+    // allows 3 tries then after 1 day again 3 tries until the key is deleted.
+    bytes unlock_token = 1;
+    // This never is send to the server but used to hash the pin before sending it to the server.
+    // This prevents that the server every knows the shot 4-diget PIN.
+    bytes pin_seed = 2;
+  }
+
+  message SecondFactorMail {}
+
+}
+
+// The data which is recovered at the end.
+// The backup_master_key allows to recover the actual backup uploaded in the background to the server.
+// In case the backup is not available any more the user can use its user_id and his private_key to requister as a new user.
+message RecoveryData {
+  int64 user_id = 1;
+  bytes private_key = 2;
+  bytes backup_master_key = 3;
+}

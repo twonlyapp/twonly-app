@@ -1,21 +1,21 @@
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
-import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/src/database/signal/signal_protocol_store.dart';
+import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 
-Future<ConnectSignalProtocolStore?> getSignalStore() async {
+Future<SignalSignalProtocolStore?> getSignalStore() async {
   return getSignalStoreFromIdentity((await getSignalIdentity())!);
 }
 
-Future<ConnectSignalProtocolStore> getSignalStoreFromIdentity(
+Future<SignalSignalProtocolStore> getSignalStoreFromIdentity(
   SignalIdentity signalIdentity,
 ) async {
   final identityKeyPair = IdentityKeyPair.fromSerialized(
     signalIdentity.identityKeyPairU8List,
   );
 
-  return ConnectSignalProtocolStore(
+  return SignalSignalProtocolStore(
     identityKeyPair,
     signalIdentity.registrationId,
   );

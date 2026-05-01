@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -13,13 +14,13 @@ import 'package:http/http.dart' as http;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/groups.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -42,8 +43,8 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
   final memberIds = members.map((x) => Int64(x.userId)).toList();
 
   final groupState = EncryptedGroupState(
-    memberIds: [Int64(gUser.userId)] + memberIds,
-    adminIds: [Int64(gUser.userId)],
+    memberIds: [Int64(userService.currentUser.userId)] + memberIds,
+    adminIds: [Int64(userService.currentUser.userId)],
     groupName: groupName,
     deleteMessagesAfterMilliseconds: Int64(
       defaultDeleteMessagesAfterMilliseconds,
@@ -283,9 +284,9 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
         final myPubKey = keyPair.getPublicKey().serialize().toList();
 
         if (listEquals(appendedPubKey, myPubKey)) {
-          adminIds.remove(Int64(gUser.userId));
+          adminIds.remove(Int64(userService.currentUser.userId));
           memberIds.remove(
-            Int64(gUser.userId),
+            Int64(userService.currentUser.userId),
           ); // -> Will remove the user later...
         } else {
           Log.info('A non admin left the group!!!');
@@ -303,7 +304,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       }
     }
 
-    if (!memberIds.contains(Int64(gUser.userId))) {
+    if (!memberIds.contains(Int64(userService.currentUser.userId))) {
       // OH no, I am no longer a member of this group...
       // Return from the group...
       await twonlyDB.groupsDao.updateGroup(
@@ -316,7 +317,10 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
     }
 
     final isGroupAdmin =
-        adminIds.firstWhereOrNull((t) => t.toInt() == gUser.userId) != null;
+        adminIds.firstWhereOrNull(
+          (t) => t.toInt() == userService.currentUser.userId,
+        ) !=
+        null;
 
     if (!listEquals(memberIds, encryptedGroupState.memberIds)) {
       if (isGroupAdmin) {
@@ -368,7 +372,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
     // First find and insert NEW members
     for (final memberId in memberIds) {
-      if (memberId == Int64(gUser.userId)) {
+      if (memberId == Int64(userService.currentUser.userId)) {
         continue;
       }
       if (currentGroupMembers.any((t) => t.contactId == memberId.toInt())) {
@@ -838,7 +842,9 @@ Future<bool> removeMemberFromGroup(
       groupId: Value(group.groupId),
       type: const Value(GroupActionType.removedMember),
       affectedContactId: Value(
-        removeContactId == gUser.userId ? null : removeContactId,
+        removeContactId == userService.currentUser.userId
+            ? null
+            : removeContactId,
       ),
     ),
   );
@@ -945,7 +951,7 @@ Future<bool> leaveAsNonAdminFromGroup(Group group) async {
     EncryptedContent(
       groupUpdate: EncryptedContent_GroupUpdate(
         groupActionType: groupActionType.name,
-        affectedContactId: Int64(gUser.userId),
+        affectedContactId: Int64(userService.currentUser.userId),
       ),
     ),
   );

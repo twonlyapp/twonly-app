@@ -8,11 +8,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 import '../../../firebase_options.dart';
 
@@ -48,9 +49,8 @@ Future<void> checkForTokenUpdates() async {
     if (storedToken == null || fcmToken != storedToken) {
       Log.info('Got new FCM TOKEN.');
       await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
-      await updateUserdata((u) {
+      await UserService.update((u) {
         u.updateFCMToken = true;
-        return u;
       });
     }
 
@@ -61,9 +61,8 @@ Future<void> checkForTokenUpdates() async {
             key: SecureStorageKeys.googleFcm,
             value: fcmToken,
           );
-          await updateUserdata((u) {
+          await UserService.update((u) {
             u.updateFCMToken = true;
-            return u;
           });
         })
         .onError((err) {
@@ -75,16 +74,15 @@ Future<void> checkForTokenUpdates() async {
 }
 
 Future<void> initFCMAfterAuthenticated({bool force = false}) async {
-  if (gUser.updateFCMToken || force) {
+  if (userService.currentUser.updateFCMToken || force) {
     const storage = FlutterSecureStorage();
     final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
     if (storedToken != null) {
       final res = await apiService.updateFCMToken(storedToken);
       if (res.isSuccess) {
         Log.info('Uploaded new FCM token!');
-        await updateUserdata((u) {
+        await UserService.update((u) {
           u.updateFCMToken = false;
-          return u;
         });
       } else {
         Log.error('Could not update FCM token!');
@@ -110,11 +108,9 @@ Future<void> initFCMService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await checkForTokenUpdates();
+  unawaited(checkForTokenUpdates());
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  await FirebaseMessaging.instance.requestPermission();
 
   FirebaseMessaging.onMessage.listen(handleRemoteMessage);
 }
@@ -139,7 +135,7 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
   if (!Platform.isAndroid) {
     Log.error('Got message in Dart while on iOS');
   }
-  if (message.notification != null && globalIsAppInBackground) {
+  if (message.notification != null && AppState.isAppInBackground) {
     Log.error(
       'Got notification but app is in background, so the SDK already have shown the message.',
     );

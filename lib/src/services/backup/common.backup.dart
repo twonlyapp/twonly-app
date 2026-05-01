@@ -1,46 +1,48 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:http/http.dart' as http;
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/backup/create.backup.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> enableTwonlySafe(String password) async {
   final (backupId, encryptionKey) = await getMasterKey(
     password,
-    gUser.username,
+    userService.currentUser.username,
   );
 
-  await updateUserdata((user) {
+  await UserService.update((user) {
     user.twonlySafeBackup = TwonlySafeBackup(
       encryptionKey: encryptionKey,
       backupId: backupId,
     );
-    return user;
   });
   unawaited(performTwonlySafeBackup(force: true));
 }
 
 Future<void> removeTwonlySafeFromServer() async {
-  final serverUrl = await getTwonlySafeBackupUrl();
-  if (serverUrl != null) {
-    try {
-      final response = await http.delete(
-        Uri.parse(serverUrl),
-        headers: {
-          'Content-Type': 'application/json', // Set the content type if needed
-          // Add any other headers if required
-        },
-      );
-      Log.info('Download deleted with: ${response.statusCode}');
-    } catch (e) {
-      Log.error('Could not connect upload the backup.');
-    }
+  final serverUrl = getTwonlySafeBackupUrl();
+  if (serverUrl == null) {
+    Log.error('Could not remove twonly safe as serverUrl is null');
+    return;
+  }
+  try {
+    final response = await http.delete(
+      Uri.parse(serverUrl),
+      headers: {
+        'Content-Type': 'application/json', // Set the content type if needed
+        // Add any other headers if required
+      },
+    );
+    Log.info('Download deleted with: ${response.statusCode}');
+  } catch (e) {
+    Log.error('Could not connect upload the backup.');
   }
 }
 
@@ -63,19 +65,18 @@ Future<(Uint8List, Uint8List)> getMasterKey(
   return (key.sublist(0, 32), key.sublist(32, 64));
 }
 
-Future<String?> getTwonlySafeBackupUrl() async {
-  final user = await getUser();
-  if (user == null || user.twonlySafeBackup == null) return null;
+String? getTwonlySafeBackupUrl() {
+  if (userService.currentUser.twonlySafeBackup == null) return null;
   return getTwonlySafeBackupUrlFromServer(
-    user.twonlySafeBackup!.backupId,
-    user.backupServer,
+    userService.currentUser.twonlySafeBackup!.backupId,
+    userService.currentUser.backupServer,
   );
 }
 
-Future<String?> getTwonlySafeBackupUrlFromServer(
+String? getTwonlySafeBackupUrlFromServer(
   List<int> backupId,
   BackupServer? backupServer,
-) async {
+) {
   var backupServerUrl = 'https://safe.twonly.eu/';
 
   if (backupServer != null) {

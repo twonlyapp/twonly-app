@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -117,15 +117,20 @@ Future<void> handleContactUpdate(
 
     case EncryptedContent_ContactUpdate_Type.UPDATE:
       Log.info('Got a contact update $fromUserId');
-      if (contactUpdate.hasAvatarSvgCompressed() &&
-          contactUpdate.hasDisplayName() &&
+      Uint8List? avatarSvgCompressed;
+      if (contactUpdate.hasAvatarSvgCompressed()) {
+        avatarSvgCompressed = Uint8List.fromList(
+          contactUpdate.avatarSvgCompressed,
+        );
+      }
+      if (contactUpdate.hasDisplayName() &&
           contactUpdate.hasUsername() &&
           senderProfileCounter != null) {
         await twonlyDB.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(
             avatarSvgCompressed: Value(
-              Uint8List.fromList(contactUpdate.avatarSvgCompressed),
+              avatarSvgCompressed,
             ),
             displayName: Value(contactUpdate.displayName),
             username: Value(contactUpdate.username),

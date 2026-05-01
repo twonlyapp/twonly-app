@@ -47,3 +47,5 @@ app.*.map.json
 /android/app/.cxx/
 android/.kotlin/
 devtools_options.yaml
+rust/target
+rust_dependencies/target

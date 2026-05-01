@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -53,19 +53,16 @@ class EncryptedGroupState extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedGroupState',
       createEmptyInstance: create)
     ..p<$fixnum.Int64>(
-        1, _omitFieldNames ? '' : 'memberIds', $pb.PbFieldType.K6,
-        protoName: 'memberIds')
-    ..p<$fixnum.Int64>(2, _omitFieldNames ? '' : 'adminIds', $pb.PbFieldType.K6,
-        protoName: 'adminIds')
-    ..aOS(3, _omitFieldNames ? '' : 'groupName', protoName: 'groupName')
-    ..aInt64(4, _omitFieldNames ? '' : 'deleteMessagesAfterMilliseconds',
-        protoName: 'deleteMessagesAfterMilliseconds')
+        1, _omitFieldNames ? '' : 'memberIds', $pb.PbFieldType.K6)
+    ..p<$fixnum.Int64>(2, _omitFieldNames ? '' : 'adminIds', $pb.PbFieldType.K6)
+    ..aOS(3, _omitFieldNames ? '' : 'groupName')
+    ..aInt64(4, _omitFieldNames ? '' : 'deleteMessagesAfterMilliseconds')
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'padding', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedGroupState clone() => EncryptedGroupState()..mergeFromMessage(this);
+  EncryptedGroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedGroupState copyWith(void Function(EncryptedGroupState) updates) =>
       super.copyWith((message) => updates(message as EncryptedGroupState))
@@ -78,8 +75,6 @@ class EncryptedGroupState extends $pb.GeneratedMessage {
   static EncryptedGroupState create() => EncryptedGroupState._();
   @$core.override
   EncryptedGroupState createEmptyInstance() => create();
-  static $pb.PbList<EncryptedGroupState> createRepeated() =>
-      $pb.PbList<EncryptedGroupState>();
   @$core.pragma('dart2js:noInline')
   static EncryptedGroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedGroupState>(create);
@@ -141,16 +136,12 @@ class EncryptedAppendedGroupState extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedAppendedGroupState',
       createEmptyInstance: create)
-    ..e<EncryptedAppendedGroupState_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedAppendedGroupState_Type.LEFT_GROUP,
-        valueOf: EncryptedAppendedGroupState_Type.valueOf,
+    ..aE<EncryptedAppendedGroupState_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedAppendedGroupState_Type.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedAppendedGroupState clone() =>
-      EncryptedAppendedGroupState()..mergeFromMessage(this);
+  EncryptedAppendedGroupState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedAppendedGroupState copyWith(
           void Function(EncryptedAppendedGroupState) updates) =>
@@ -166,8 +157,6 @@ class EncryptedAppendedGroupState extends $pb.GeneratedMessage {
       EncryptedAppendedGroupState._();
   @$core.override
   EncryptedAppendedGroupState createEmptyInstance() => create();
-  static $pb.PbList<EncryptedAppendedGroupState> createRepeated() =>
-      $pb.PbList<EncryptedAppendedGroupState>();
   @$core.pragma('dart2js:noInline')
   static EncryptedAppendedGroupState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedAppendedGroupState>(create);
@@ -212,15 +201,13 @@ class EncryptedGroupStateEnvelop extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         1, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY,
-        protoName: 'encryptedGroupState')
+        2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'mac', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedGroupStateEnvelop clone() =>
-      EncryptedGroupStateEnvelop()..mergeFromMessage(this);
+  EncryptedGroupStateEnvelop clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedGroupStateEnvelop copyWith(
           void Function(EncryptedGroupStateEnvelop) updates) =>
@@ -235,8 +222,6 @@ class EncryptedGroupStateEnvelop extends $pb.GeneratedMessage {
   static EncryptedGroupStateEnvelop create() => EncryptedGroupStateEnvelop._();
   @$core.override
   EncryptedGroupStateEnvelop createEmptyInstance() => create();
-  static $pb.PbList<EncryptedGroupStateEnvelop> createRepeated() =>
-      $pb.PbList<EncryptedGroupStateEnvelop>();
   @$core.pragma('dart2js:noInline')
   static EncryptedGroupStateEnvelop getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedGroupStateEnvelop>(create);

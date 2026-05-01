@@ -20,6 +20,10 @@ import workmanager_apple
 
     WorkmanagerDebug.setCurrent(LoggingDebugHandler())
 
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+
     WorkmanagerPlugin.registerPeriodicTask(
       withIdentifier: "eu.twonly.periodic_task",
       frequency: NSNumber(value: 20 * 60)

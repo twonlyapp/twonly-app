@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:clock/clock.dart';
@@ -11,9 +10,6 @@ import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -22,7 +18,6 @@ import 'package:twonly/src/utils/misc.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
-  TwonlyDB get db => Provider.of<TwonlyDB>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
   Future<dynamic> navPush(Widget route) async {
     return Navigator.push(
@@ -131,30 +126,6 @@ String formatDuration(BuildContext context, int seconds) {
   }
 }
 
-InputDecoration getInputDecoration(BuildContext context, String hintText) {
-  final primaryColor = Theme.of(context).colorScheme.primary;
-  return InputDecoration(
-    hintText: hintText,
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(9),
-      borderSide: BorderSide(color: primaryColor),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
-    ),
-    contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-  );
-}
-
-Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
-  final result = await FlutterImageCompress.compressWithList(
-    imageBytes,
-    quality: 90,
-  );
-  return result;
-}
-
 Future<bool> authenticateUser(
   String localizedReason, {
   bool force = true,
@@ -180,27 +151,6 @@ Future<bool> authenticateUser(
   return false;
 }
 
-Uint8List intToBytes(int value) {
-  final byteData = ByteData(4)..setInt32(0, value);
-  return byteData.buffer.asUint8List();
-}
-
-int bytesToInt(Uint8List bytes) {
-  final byteData = ByteData.sublistView(bytes);
-  return byteData.getInt32(0);
-}
-
-List<Uint8List>? removeLastXBytes(Uint8List original, int count) {
-  if (original.length < count) {
-    return null;
-  }
-  final newList = Uint8List(original.length - count)
-    ..setAll(0, original.sublist(0, original.length - count));
-
-  final lastXBytes = original.sublist(original.length - count);
-  return [newList, lastXBytes];
-}
-
 bool isDarkMode(BuildContext context) {
   final selectedTheme = context.read<SettingsChangeProvider>().themeMode;
 
@@ -216,31 +166,6 @@ bool isToday(DateTime lastImageSend) {
   return lastImageSend.year == now.year &&
       lastImageSend.month == now.month &&
       lastImageSend.day == now.day;
-}
-
-InputDecoration inputTextMessageDeco(BuildContext context) {
-  return InputDecoration(
-    hintText: context.lang.chatListDetailInput,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
-      borderSide: BorderSide(
-        color: Theme.of(context).colorScheme.primary,
-        width: 2,
-      ),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
-      borderSide: BorderSide(
-        color: Theme.of(context).colorScheme.primary,
-        width: 2,
-      ),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
-      borderSide: const BorderSide(color: Colors.grey, width: 2),
-    ),
-  );
 }
 
 String truncateString(String input, {int maxLength = 20}) {
@@ -301,35 +226,6 @@ Uint8List hexToUint8List(String hex) => Uint8List.fromList(
   ),
 );
 
-Color getMessageColorFromType(
-  Message message,
-  MediaFile? mediaFile,
-  BuildContext context,
-) {
-  Color color;
-
-  if (message.type == MessageType.restoreFlameCounter.name) {
-    color = Colors.orange;
-  } else if (message.type == MessageType.text.name) {
-    color = Colors.blueAccent;
-  } else if (mediaFile != null) {
-    if (mediaFile.requiresAuthentication) {
-      color = context.color.primary;
-    } else {
-      if (mediaFile.type == MediaType.video) {
-        color = const Color.fromARGB(255, 243, 33, 208);
-      } else if (mediaFile.type == MediaType.audio) {
-        color = const Color.fromARGB(255, 252, 149, 85);
-      } else {
-        color = Colors.redAccent;
-      }
-    }
-  } else {
-    return (isDarkMode(context)) ? Colors.white : Colors.black;
-  }
-  return color;
-}
-
 String getUUIDforDirectChat(int a, int b) {
   if (a < 0 || b < 0) {
     throw ArgumentError('Inputs must be non-negative integers.');
@@ -385,17 +281,6 @@ String friendlyDateTime(
   return '$timePart $datePart';
 }
 
-String getAvatarSvg(Uint8List avatarSvgCompressed) {
-  final raw = gzip.decode(avatarSvgCompressed);
-  return utf8.decode(raw);
-}
-
-void printWrapped(String text) {
-  final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-  // ignore: avoid_print
-  pattern.allMatches(text).forEach((match) => print(match.group(0)));
-}
-
 Future<List<int>> sha256File(File file) async {
   final input = file.openRead();
   final sha256Sink = AccumulatorSink<Digest>();
@@ -403,4 +288,57 @@ Future<List<int>> sha256File(File file) async {
   await input.forEach(converter.add);
   converter.close();
   return sha256Sink.events.single.bytes;
+}
+
+List<TextSpan> formattedText(
+  BuildContext context,
+  String input, {
+  Color? boldTextColor,
+}) {
+  final defaultColor = Theme.of(context).colorScheme.onSurface;
+
+  final regex = RegExp(r'\*(.*?)\*');
+  final spans = <TextSpan>[];
+
+  var lastMatchEnd = 0;
+
+  for (final match in regex.allMatches(input)) {
+    if (match.start > lastMatchEnd) {
+      spans.add(
+        TextSpan(
+          text: input.substring(lastMatchEnd, match.start),
+          style: TextStyle(color: defaultColor),
+        ),
+      );
+    }
+
+    spans.add(
+      TextSpan(
+        text: match.group(1),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: boldTextColor ?? defaultColor,
+        ),
+      ),
+    );
+
+    lastMatchEnd = match.end;
+  }
+
+  if (lastMatchEnd < input.length) {
+    spans.add(
+      TextSpan(
+        text: input.substring(lastMatchEnd),
+        style: TextStyle(color: defaultColor),
+      ),
+    );
+  }
+
+  return spans;
+}
+
+String joinWithAnd(List<String> items, String andWord) {
+  if (items.isEmpty) return '';
+  if (items.length == 1) return items.first;
+  return '${items.sublist(0, items.length - 1).join(', ')} $andWord ${items.last}';
 }

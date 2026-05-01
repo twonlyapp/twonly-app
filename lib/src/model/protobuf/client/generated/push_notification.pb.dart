@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -48,7 +48,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedPushNotification',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
+    ..aInt64(1, _omitFieldNames ? '' : 'keyId')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
@@ -58,8 +58,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedPushNotification clone() =>
-      EncryptedPushNotification()..mergeFromMessage(this);
+  EncryptedPushNotification clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedPushNotification copyWith(
           void Function(EncryptedPushNotification) updates) =>
@@ -73,8 +72,6 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   static EncryptedPushNotification create() => EncryptedPushNotification._();
   @$core.override
   EncryptedPushNotification createEmptyInstance() => create();
-  static $pb.PbList<EncryptedPushNotification> createRepeated() =>
-      $pb.PbList<EncryptedPushNotification>();
   @$core.pragma('dart2js:noInline')
   static EncryptedPushNotification getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedPushNotification>(create);
@@ -142,17 +139,14 @@ class PushNotification extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PushNotification',
       createEmptyInstance: create)
-    ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE,
-        defaultOrMaker: PushKind.reaction,
-        valueOf: PushKind.valueOf,
+    ..aE<PushKind>(1, _omitFieldNames ? '' : 'kind',
         enumValues: PushKind.values)
-    ..aOS(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
-    ..aOS(3, _omitFieldNames ? '' : 'additionalContent',
-        protoName: 'additionalContent')
+    ..aOS(2, _omitFieldNames ? '' : 'messageId')
+    ..aOS(3, _omitFieldNames ? '' : 'additionalContent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PushNotification clone() => PushNotification()..mergeFromMessage(this);
+  PushNotification clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PushNotification copyWith(void Function(PushNotification) updates) =>
       super.copyWith((message) => updates(message as PushNotification))
@@ -165,8 +159,6 @@ class PushNotification extends $pb.GeneratedMessage {
   static PushNotification create() => PushNotification._();
   @$core.override
   PushNotification createEmptyInstance() => create();
-  static $pb.PbList<PushNotification> createRepeated() =>
-      $pb.PbList<PushNotification>();
   @$core.pragma('dart2js:noInline')
   static PushNotification getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PushNotification>(create);
@@ -221,12 +213,12 @@ class PushUsers extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PushUsers',
       createEmptyInstance: create)
-    ..pc<PushUser>(1, _omitFieldNames ? '' : 'users', $pb.PbFieldType.PM,
+    ..pPM<PushUser>(1, _omitFieldNames ? '' : 'users',
         subBuilder: PushUser.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PushUsers clone() => PushUsers()..mergeFromMessage(this);
+  PushUsers clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PushUsers copyWith(void Function(PushUsers) updates) =>
       super.copyWith((message) => updates(message as PushUsers)) as PushUsers;
@@ -238,7 +230,6 @@ class PushUsers extends $pb.GeneratedMessage {
   static PushUsers create() => PushUsers._();
   @$core.override
   PushUsers createEmptyInstance() => create();
-  static $pb.PbList<PushUsers> createRepeated() => $pb.PbList<PushUsers>();
   @$core.pragma('dart2js:noInline')
   static PushUsers getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUsers>(create);
@@ -277,16 +268,16 @@ class PushUser extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PushUser',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'userId', protoName: 'userId')
-    ..aOS(2, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'displayName')
     ..aOB(3, _omitFieldNames ? '' : 'blocked')
-    ..aOS(4, _omitFieldNames ? '' : 'lastMessageId', protoName: 'lastMessageId')
-    ..pc<PushKey>(5, _omitFieldNames ? '' : 'pushKeys', $pb.PbFieldType.PM,
-        protoName: 'pushKeys', subBuilder: PushKey.create)
+    ..aOS(4, _omitFieldNames ? '' : 'lastMessageId')
+    ..pPM<PushKey>(5, _omitFieldNames ? '' : 'pushKeys',
+        subBuilder: PushKey.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PushUser clone() => PushUser()..mergeFromMessage(this);
+  PushUser clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PushUser copyWith(void Function(PushUser) updates) =>
       super.copyWith((message) => updates(message as PushUser)) as PushUser;
@@ -298,7 +289,6 @@ class PushUser extends $pb.GeneratedMessage {
   static PushUser create() => PushUser._();
   @$core.override
   PushUser createEmptyInstance() => create();
-  static $pb.PbList<PushUser> createRepeated() => $pb.PbList<PushUser>();
   @$core.pragma('dart2js:noInline')
   static PushUser getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUser>(create);
@@ -373,12 +363,11 @@ class PushKey extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'id')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp',
-        protoName: 'createdAtUnixTimestamp')
+    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PushKey clone() => PushKey()..mergeFromMessage(this);
+  PushKey clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PushKey copyWith(void Function(PushKey) updates) =>
       super.copyWith((message) => updates(message as PushKey)) as PushKey;
@@ -390,7 +379,6 @@ class PushKey extends $pb.GeneratedMessage {
   static PushKey create() => PushKey._();
   @$core.override
   PushKey createEmptyInstance() => create();
-  static $pb.PbList<PushKey> createRepeated() => $pb.PbList<PushKey>();
   @$core.pragma('dart2js:noInline')
   static PushKey getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushKey>(create);

@@ -1,15 +1,18 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:clock/clock.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
-import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/signal/signal_protocol_store.dart';
+import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
+import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
   final signalIdentity = await getSignalIdentity();
@@ -20,11 +23,12 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
-  if (gUser.signalLastSignedPreKeyUpdated != null) {
+  if (userService.currentUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
-    final isYoungerThan48Hours = (gUser.signalLastSignedPreKeyUpdated!).isAfter(
-      fortyEightHoursAgo,
-    );
+    final isYoungerThan48Hours =
+        (userService.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
+          fortyEightHoursAgo,
+        );
     if (isYoungerThan48Hours) {
       // The key does live for 48 hours then it expires and a new key is generated.
       return;
@@ -35,9 +39,8 @@ Future<void> signalHandleNewServerConnection() async {
     Log.error('could not generate a new signed pre key!');
     return;
   }
-  await updateUserdata((user) {
+  await UserService.update((user) {
     user.signalLastSignedPreKeyUpdated = clock.now();
-    return user;
   });
   final res = await apiService.updateSignedPreKey(
     signedPreKey.id,
@@ -46,9 +49,8 @@ Future<void> signalHandleNewServerConnection() async {
   );
   if (res.isError) {
     Log.error('could not update the signed pre key: ${res.error}');
-    await updateUserdata((user) {
+    await UserService.update((user) {
       user.signalLastSignedPreKeyUpdated = null;
-      return user;
     });
   } else {
     Log.info('updated signed pre key');
@@ -56,28 +58,24 @@ Future<void> signalHandleNewServerConnection() async {
 }
 
 Future<List<PreKeyRecord>> signalGetPreKeys() async {
-  final user = await getUser();
-  if (user == null) return [];
-
-  final start = user.currentPreKeyIndexStart;
-  await updateUserdata((user) {
-    user.currentPreKeyIndexStart =
-        (user.currentPreKeyIndexStart + 200) % maxValue;
-    return user;
+  return lockingSignalProtocol.protect(() async {
+    final start = userService.currentUser.currentPreKeyIndexStart;
+    await UserService.update((u) {
+      u.currentPreKeyIndexStart = (u.currentPreKeyIndexStart + 200) % maxValue;
+    });
+    final preKeys = generatePreKeys(start, 200);
+    final signalStore = await getSignalStore();
+    if (signalStore == null) return [];
+    for (final p in preKeys) {
+      await signalStore.preKeyStore.storePreKey(p.id, p);
+    }
+    return preKeys;
   });
-  final preKeys = generatePreKeys(start, 200);
-  final signalStore = await getSignalStore();
-  if (signalStore == null) return [];
-  for (final p in preKeys) {
-    await signalStore.preKeyStore.storePreKey(p.id, p);
-  }
-  return preKeys;
 }
 
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
-    const storage = FlutterSecureStorage();
-    var signalIdentityJson = await storage.read(
+    var signalIdentityJson = await SecureStorage.instance.read(
       key: SecureStorageKeys.signalIdentity,
     );
     if (signalIdentityJson == null) {
@@ -92,10 +90,14 @@ Future<SignalIdentity?> getSignalIdentity() async {
   }
 }
 
-Future<void> createIfNotExistsSignalIdentity() async {
-  const storage = FlutterSecureStorage();
+Future<Uint8List> getUserPublicKey() async {
+  final signalIdentity = (await getSignalIdentity())!;
+  final signalStore = await getSignalStoreFromIdentity(signalIdentity);
+  return (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
+}
 
-  final signalIdentity = await storage.read(
+Future<void> createIfNotExistsSignalIdentity() async {
+  final signalIdentity = await SecureStorage.instance.read(
     key: SecureStorageKeys.signalIdentity,
   );
 
@@ -106,7 +108,7 @@ Future<void> createIfNotExistsSignalIdentity() async {
   final identityKeyPair = generateIdentityKeyPair();
   final registrationId = generateRegistrationId(true);
 
-  final signalStore = ConnectSignalProtocolStore(
+  final signalStore = SignalSignalProtocolStore(
     identityKeyPair,
     registrationId,
   );
@@ -123,34 +125,35 @@ Future<void> createIfNotExistsSignalIdentity() async {
     registrationId: registrationId,
   );
 
-  await storage.write(
+  await SecureStorage.instance.write(
     key: SecureStorageKeys.signalIdentity,
     value: jsonEncode(storedSignalIdentity),
   );
 }
 
 Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
-  var identityKeyPair = await getSignalIdentityKeyPair();
-  final user = await getUser();
-  final signalStore = await getSignalStore();
-  if (identityKeyPair == null || signalStore == null || user == null) {
-    return null;
-  }
+  return lockingSignalProtocol.protect(() async {
+    var identityKeyPair = await getSignalIdentityKeyPair();
+    final signalStore = await getSignalStore();
+    if (identityKeyPair == null || signalStore == null) {
+      return null;
+    }
 
-  final signedPreKeyId = user.currentSignedPreKeyIndexStart;
-  await updateUserdata((user) {
-    user.currentSignedPreKeyIndexStart += 1;
-    return user;
+    final signedPreKeyId =
+        userService.currentUser.currentSignedPreKeyIndexStart;
+    await UserService.update((user) {
+      user.currentSignedPreKeyIndexStart += 1;
+    });
+
+    final signedPreKey = generateSignedPreKey(
+      identityKeyPair,
+      signedPreKeyId,
+    );
+
+    identityKeyPair = null;
+
+    await signalStore.storeSignedPreKey(signedPreKeyId, signedPreKey);
+
+    return signedPreKey;
   });
-
-  final signedPreKey = generateSignedPreKey(
-    identityKeyPair,
-    signedPreKeyId,
-  );
-
-  identityKeyPair = null;
-
-  await signalStore.storeSignedPreKey(signedPreKeyId, signedPreKey);
-
-  return signedPreKey;
 }

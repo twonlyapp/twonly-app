@@ -6,27 +6,27 @@ import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/utils/exclusive_access.dart';
-
-bool _isInitialized = false;
-
-void initLogger() {
-  if (_isInitialized) return;
-  _isInitialized = true;
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((record) async {
-    unawaited(_writeLogToFile(record));
-    if (!kReleaseMode) {
-      // ignore: avoid_print
-      print(
-        '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
-      );
-    }
-  });
-  cleanLogFile();
-}
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 
 class Log {
+  static bool _isInitialized = false;
+
+  static void init() {
+    if (_isInitialized) return;
+    _isInitialized = true;
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((record) async {
+      unawaited(_writeLogToFile(record));
+      if (!kReleaseMode) {
+        // ignore: avoid_print
+        print(
+          '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
+        );
+      }
+    });
+    cleanLogFile();
+  }
+
   static String filterLogMessage(String msg) {
     if (msg.contains('SqliteException')) {
       // Do not log data which would be inserted into the DB.
@@ -41,7 +41,7 @@ class Log {
     StackTrace? stackTrace,
   ]) {
     final message = filterLogMessage('$messageInput');
-    if (globalAllowErrorTrackingViaSentry) {
+    if (AppState.allowErrorTrackingViaSentry) {
       try {
         throw Exception(message);
       } catch (exception, stackTrace) {
@@ -72,7 +72,7 @@ class Log {
 
 Future<String> loadLogFile() async {
   return _protectFileAccess(() async {
-    final logFile = File('$globalApplicationSupportDirectory/app.log');
+    final logFile = File('${AppEnvironment.supportDir}/app.log');
 
     if (logFile.existsSync()) {
       return logFile.readAsString();
@@ -84,7 +84,7 @@ Future<String> loadLogFile() async {
 
 Future<String> readLast1000Lines() async {
   return _protectFileAccess(() async {
-    final file = File('$globalApplicationSupportDirectory/app.log');
+    final file = File('${AppEnvironment.supportDir}/app.log');
     if (!file.existsSync()) return '';
     final all = await file.readAsLines();
     final start = all.length > 1000 ? all.length - 1000 : 0;
@@ -103,7 +103,7 @@ Future<T> _protectFileAccess<T>(Future<T> Function() action) async {
 }
 
 Future<void> _writeLogToFile(LogRecord record) async {
-  final logFile = File('$globalApplicationSupportDirectory/app.log');
+  final logFile = File('${AppEnvironment.supportDir}/app.log');
 
   final logMessage =
       '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
@@ -127,7 +127,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
 
 Future<void> cleanLogFile() async {
   return _protectFileAccess(() async {
-    final logFile = File('$globalApplicationSupportDirectory/app.log');
+    final logFile = File('${AppEnvironment.supportDir}/app.log');
 
     if (!logFile.existsSync()) {
       return;
@@ -162,7 +162,7 @@ Future<void> cleanLogFile() async {
 
 Future<bool> deleteLogFile() async {
   return _protectFileAccess(() async {
-    final logFile = File('$globalApplicationSupportDirectory/app.log');
+    final logFile = File('${AppEnvironment.supportDir}/app.log');
 
     if (logFile.existsSync()) {
       await logFile.delete();

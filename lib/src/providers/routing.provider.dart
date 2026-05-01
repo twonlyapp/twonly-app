@@ -2,49 +2,50 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/views/camera/camera_qr_scanner.view.dart';
-import 'package:twonly/src/views/camera/camera_send_to.view.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
-import 'package:twonly/src/views/chats/archived_chats.view.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
-import 'package:twonly/src/views/chats/media_viewer.view.dart';
-import 'package:twonly/src/views/chats/start_new_chat.view.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/views/groups/group.view.dart';
-import 'package:twonly/src/views/groups/group_create_select_members.view.dart';
-import 'package:twonly/src/views/onboarding/recover.view.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
-import 'package:twonly/src/views/settings/account.view.dart';
-import 'package:twonly/src/views/settings/appearance.view.dart';
-import 'package:twonly/src/views/settings/backup/backup.view.dart';
-import 'package:twonly/src/views/settings/backup/backup_server.view.dart';
-import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
-import 'package:twonly/src/views/settings/chat/chat_reactions.view.dart';
-import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
-import 'package:twonly/src/views/settings/data_and_storage.view.dart';
-import 'package:twonly/src/views/settings/data_and_storage/export_media.view.dart';
-import 'package:twonly/src/views/settings/data_and_storage/import_media.view.dart';
-import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
-import 'package:twonly/src/views/settings/developer/developer.view.dart';
-import 'package:twonly/src/views/settings/developer/reduce_flames.view.dart';
-import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
-import 'package:twonly/src/views/settings/help/changelog.view.dart';
-import 'package:twonly/src/views/settings/help/contact_us.view.dart';
-import 'package:twonly/src/views/settings/help/credits.view.dart';
-import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
-import 'package:twonly/src/views/settings/help/faq.view.dart';
-import 'package:twonly/src/views/settings/help/faq/verifybadge.dart';
-import 'package:twonly/src/views/settings/help/help.view.dart';
-import 'package:twonly/src/views/settings/notification.view.dart';
-import 'package:twonly/src/views/settings/privacy.view.dart';
-import 'package:twonly/src/views/settings/privacy_view_block.view.dart';
-import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
-import 'package:twonly/src/views/settings/profile/profile.view.dart';
-import 'package:twonly/src/views/settings/settings_main.view.dart';
-import 'package:twonly/src/views/settings/share_with_friends.view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/views/user_study/user_study_questionnaire.view.dart';
-import 'package:twonly/src/views/user_study/user_study_welcome.view.dart';
+import 'package:twonly/src/visual/views/camera/camera_qr_scanner.view.dart';
+import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
+import 'package:twonly/src/visual/views/chats/archived_chats.view.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer.view.dart';
+import 'package:twonly/src/visual/views/chats/start_new_chat.view.dart';
+import 'package:twonly/src/visual/views/contact/add_new_contact.view.dart';
+import 'package:twonly/src/visual/views/contact/contact.view.dart';
+import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover.view.dart';
+import 'package:twonly/src/visual/views/public_profile.view.dart';
+import 'package:twonly/src/visual/views/settings/account.view.dart';
+import 'package:twonly/src/visual/views/settings/appearance.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_server.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
+import 'package:twonly/src/visual/views/settings/chat/chat_reactions.view.dart';
+import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/export_media.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/import_media.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/automated_testing.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/developer.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/reduce_flames.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/retransmission_data.view.dart';
+import 'package:twonly/src/visual/views/settings/help/changelog.view.dart';
+import 'package:twonly/src/visual/views/settings/help/contact_us.view.dart';
+import 'package:twonly/src/visual/views/settings/help/credits.view.dart';
+import 'package:twonly/src/visual/views/settings/help/diagnostics.view.dart';
+import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
+import 'package:twonly/src/visual/views/settings/help/faq/verification_badge_faq.view.dart';
+import 'package:twonly/src/visual/views/settings/help/help.view.dart';
+import 'package:twonly/src/visual/views/settings/notification.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
+import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
+import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
+import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
+import 'package:twonly/src/visual/views/settings/share_with_friends.view.dart';
+import 'package:twonly/src/visual/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/visual/views/user_study/user_study_questionnaire.view.dart';
+import 'package:twonly/src/visual/views/user_study/user_study_welcome.view.dart';
 
 final routerProvider = GoRouter(
   routes: [
@@ -174,9 +175,7 @@ final routerProvider = GoRouter(
             ),
             GoRoute(
               path: 'setup',
-              builder: (context, state) => SetupBackupView(
-                isPasswordChangeOnly: state.extra as bool? ?? false,
-              ),
+              builder: (context, state) => const SetupBackupView(),
             ),
           ],
         ),
@@ -200,7 +199,11 @@ final routerProvider = GoRouter(
           routes: [
             GoRoute(
               path: 'block_users',
-              builder: (context, state) => const PrivacyViewBlockUsersView(),
+              builder: (context, state) => const BlockUsersView(),
+            ),
+            GoRoute(
+              path: 'user_discovery',
+              builder: (context, state) => const UserDiscoverySettingsView(),
             ),
           ],
         ),

@@ -1,7 +1,5 @@
 // ignore_for_file: constant_identifier_names
 
-import 'package:twonly/globals.dart';
-
 enum SubscriptionPlan {
   Free,
   Tester,
@@ -40,8 +38,4 @@ SubscriptionPlan planFromString(String value) {
     if (compareName == input) return v;
   }
   return SubscriptionPlan.Free;
-}
-
-SubscriptionPlan getCurrentPlan() {
-  return planFromString(gUser.subscriptionPlan);
 }

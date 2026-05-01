@@ -8,7 +8,8 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,20 +20,21 @@ const TwonlySafeBackupContent$json = {
   '1': 'TwonlySafeBackupContent',
   '2': [
     {
-      '1': 'secureStorageJson',
+      '1': 'secure_storage_json',
       '3': 1,
       '4': 1,
       '5': 9,
       '10': 'secureStorageJson'
     },
-    {'1': 'twonlyDatabase', '3': 2, '4': 1, '5': 12, '10': 'twonlyDatabase'},
+    {'1': 'twonly_database', '3': 2, '4': 1, '5': 12, '10': 'twonlyDatabase'},
   ],
 };
 
 /// Descriptor for `TwonlySafeBackupContent`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List twonlySafeBackupContentDescriptor = $convert.base64Decode(
-    'ChdUd29ubHlTYWZlQmFja3VwQ29udGVudBIsChFzZWN1cmVTdG9yYWdlSnNvbhgBIAEoCVIRc2'
-    'VjdXJlU3RvcmFnZUpzb24SJgoOdHdvbmx5RGF0YWJhc2UYAiABKAxSDnR3b25seURhdGFiYXNl');
+    'ChdUd29ubHlTYWZlQmFja3VwQ29udGVudBIuChNzZWN1cmVfc3RvcmFnZV9qc29uGAEgASgJUh'
+    'FzZWN1cmVTdG9yYWdlSnNvbhInCg90d29ubHlfZGF0YWJhc2UYAiABKAxSDnR3b25seURhdGFi'
+    'YXNl');
 
 @$core.Deprecated('Use twonlySafeBackupEncryptedDescriptor instead')
 const TwonlySafeBackupEncrypted$json = {
@@ -40,7 +42,7 @@ const TwonlySafeBackupEncrypted$json = {
   '2': [
     {'1': 'mac', '3': 1, '4': 1, '5': 12, '10': 'mac'},
     {'1': 'nonce', '3': 2, '4': 1, '5': 12, '10': 'nonce'},
-    {'1': 'cipherText', '3': 3, '4': 1, '5': 12, '10': 'cipherText'},
+    {'1': 'cipher_text', '3': 3, '4': 1, '5': 12, '10': 'cipherText'},
   ],
 };
 
@@ -48,4 +50,4 @@ const TwonlySafeBackupEncrypted$json = {
 final $typed_data.Uint8List twonlySafeBackupEncryptedDescriptor =
     $convert.base64Decode(
         'ChlUd29ubHlTYWZlQmFja3VwRW5jcnlwdGVkEhAKA21hYxgBIAEoDFIDbWFjEhQKBW5vbmNlGA'
-        'IgASgMUgVub25jZRIeCgpjaXBoZXJUZXh0GAMgASgMUgpjaXBoZXJUZXh0');
+        'IgASgMUgVub25jZRIfCgtjaXBoZXJfdGV4dBgDIAEoDFIKY2lwaGVyVGV4dA==');

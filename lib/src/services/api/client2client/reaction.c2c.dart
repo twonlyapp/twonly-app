@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleReaction(

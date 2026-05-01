@@ -1,16 +1,14 @@
 import 'dart:async';
+
 import 'package:mutex/mutex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/main.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
-import 'package:twonly/src/utils/exclusive_access.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:workmanager/workmanager.dart';
 
 // ignore: unreachable_from_main
@@ -55,26 +53,17 @@ Future<bool> initBackgroundExecution() async {
   if (_isInitialized) {
     // Reload the users, as on Android the background isolate can
     // stay alive for multiple hours between task executions
-    final user = await getUser();
-    if (user == null) return false;
-    gUser = user;
-    return true;
+    return userService.tryInit();
   }
 
-  SentryWidgetsFlutterBinding.ensureInitialized();
-  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
-  globalApplicationSupportDirectory =
-      (await getApplicationSupportDirectory()).path;
+  await twonlyMinimumInitialization();
 
-  initLogger();
+  if (!await userService.tryInit()) {
+    Log.info('Early return as user is not registered yet.');
+    return false;
+  }
 
-  final user = await getUser();
-  if (user == null) return false;
-  gUser = user;
-
-  twonlyDB = TwonlyDB();
-  apiService = ApiService();
-  globalIsInBackgroundTask = true;
+  AppState.isInBackgroundTask = true;
 
   _isInitialized = true;
   return true;
@@ -125,7 +114,7 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     return;
   }
 
-  while (!globalGotMessageFromServer) {
+  while (!AppState.gotMessageFromServer) {
     if (stopwatch.elapsed.inSeconds >= 15) {
       Log.info('No new message from the server after 15 seconds.');
       break;
@@ -133,7 +122,7 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  if (globalGotMessageFromServer) {
+  if (AppState.gotMessageFromServer) {
     Log.info('Received a server message from the server.');
   }
 

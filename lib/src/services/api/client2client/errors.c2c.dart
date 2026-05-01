@@ -1,6 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -26,6 +26,8 @@ Future<void> handleErrorMessage(
           requested: Value(true),
         ),
       );
+    case EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC:
+      break; // The other user initiated a new signal session, so ignore the error in this case, as the new session works...
     // ignore: no_default_cases
     default:
       break;

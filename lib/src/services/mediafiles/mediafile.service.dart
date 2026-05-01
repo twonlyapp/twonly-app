@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/compression.service.dart';
@@ -27,7 +29,7 @@ class MediaFileService {
     try {
       final tempDirectory = MediaFileService.buildDirectoryPath(
         'tmp',
-        globalApplicationSupportDirectory,
+        AppEnvironment.supportDir,
       );
 
       final files = tempDirectory.listSync();
@@ -76,7 +78,7 @@ class MediaFileService {
                 final group = await twonlyDB.groupsDao.getGroup(
                   message.groupId,
                 );
-                if (group != null && !group.isDirectChat) {
+                if (group != null) {
                   delete = false;
                 }
               }
@@ -237,7 +239,7 @@ class MediaFileService {
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
-      if (gUser.storeMediaFilesInGallery) {
+      if (userService.currentUser.storeMediaFilesInGallery) {
         if (mediaFile.type == MediaType.video) {
           await saveVideoToGallery(storedPath.path);
         } else {
@@ -307,7 +309,7 @@ class MediaFileService {
     }
     final mediaBaseDir = buildDirectoryPath(
       directory,
-      globalApplicationSupportDirectory,
+      AppEnvironment.supportDir,
     );
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),

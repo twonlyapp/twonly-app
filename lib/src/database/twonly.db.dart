@@ -5,10 +5,12 @@ import 'package:drift_flutter/drift_flutter.dart'
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
+import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
+import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -19,6 +21,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_session_store.table.dart';
+import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -42,6 +45,13 @@ part 'twonly.db.g.dart';
     SignalSessionStores,
     MessageActions,
     GroupHistories,
+    KeyVerifications,
+    VerificationTokens,
+    UserDiscoveryAnnouncedUsers,
+    UserDiscoveryUserRelations,
+    UserDiscoveryOtherPromotions,
+    UserDiscoveryOwnPromotions,
+    UserDiscoveryShares,
   ],
   daos: [
     MessagesDao,
@@ -50,6 +60,8 @@ part 'twonly.db.g.dart';
     GroupsDao,
     ReactionsDao,
     MediaFilesDao,
+    UserDiscoveryDao,
+    KeyVerificationDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
@@ -62,14 +74,19 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
       name: 'twonly',
-      native: const DriftNativeOptions(
+      native: DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
         shareAcrossIsolates: true,
+        setup: (rawDb) {
+          rawDb
+            ..execute('PRAGMA journal_mode=WAL;')
+            ..execute('PRAGMA busy_timeout=5000;');
+        },
       ),
     );
   }
@@ -93,7 +110,6 @@ class TwonlyDB extends _$TwonlyDB {
           },
           from3To4: (m, schema) async {
             await m.alterTable(
-              // ignore: experimental_member_use
               TableMigration(
                 schema.groupHistories,
                 columnTransformer: {
@@ -126,9 +142,7 @@ class TwonlyDB extends _$TwonlyDB {
             await m.deleteTable('signal_contact_pre_keys');
             await m.deleteTable('signal_contact_signed_pre_keys');
             // For message_actions
-            // ignore: experimental_member_use
             await m.alterTable(TableMigration(schema.messageHistories));
-            // ignore: experimental_member_use
             await m.alterTable(TableMigration(schema.messageActions));
           },
           from8To9: (m, schema) async {
@@ -152,6 +166,25 @@ class TwonlyDB extends _$TwonlyDB {
               schema.groupMembers,
               schema.groupMembers.lastTypeIndicator,
             );
+          },
+          from11To12: (m, schema) async {
+            await m.createTable(schema.verificationTokens);
+            await m.createTable(schema.keyVerifications);
+            await m.createTable(schema.userDiscoveryAnnouncedUsers);
+            await m.createTable(schema.userDiscoveryOwnPromotions);
+            await m.createTable(schema.userDiscoveryOtherPromotions);
+            await m.createTable(schema.userDiscoveryShares);
+            await m.createTable(schema.userDiscoveryUserRelations);
+            final columns = [
+              schema.contacts.userDiscoveryVersion,
+              schema.contacts.mediaReceivedCounter,
+              schema.contacts.mediaSendCounter,
+              schema.contacts.userDiscoveryExcluded,
+              schema.contacts.userDiscoveryManualApproved,
+            ];
+            for (final column in columns) {
+              await m.addColumn(schema.contacts, column);
+            }
           },
         )(m, from, to);
       },

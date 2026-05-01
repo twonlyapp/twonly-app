@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/subscription.keys.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/purchases/purchasable_product.dart';
+import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Gives the option to override in tests.
@@ -31,12 +32,26 @@ Timer? globalForceIpaCheck;
 
 class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   PurchasesProvider() {
-    final purchaseUpdated = iapConnection.purchaseStream;
-    _subscription = purchaseUpdated.listen(
+    _subscription = iapConnection.purchaseStream.listen(
       _onPurchaseUpdate,
       onDone: _updateStreamOnDone,
       onError: _updateStreamOnError,
     );
+
+    _planSub = apiService.onPlanUpdated.listen(updatePlan);
+    _connSub = apiService.onConnectionStateUpdated.listen((_) async {
+      try {
+        if (userService.isUserCreated) {
+          updatePlan(planFromString(userService.currentUser.subscriptionPlan));
+        }
+      } catch (e) {
+        Log.error(e);
+      }
+    });
+
+    if (userService.isUserCreated) {
+      updatePlan(planFromString(userService.currentUser.subscriptionPlan));
+    }
 
     loadPurchases();
   }
@@ -48,6 +63,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late StreamSubscription<List<PurchaseDetails>> _subscription;
   final InAppPurchase iapConnection = IAPConnection.instance;
 
+  late StreamSubscription<SubscriptionPlan> _planSub;
+  late StreamSubscription<bool> _connSub;
   bool _userTriggeredBuyButton = false;
 
   void updatePlan(SubscriptionPlan newPlan) {
@@ -59,7 +76,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     final available = await iapConnection.isAvailable();
     if (!available) {
       storeState = StoreState.notAvailable;
-      Log.error('Store is not available');
+      Log.warn('Store is not available');
       notifyListeners();
       return;
     }
@@ -79,16 +96,23 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     storeState = StoreState.available;
     notifyListeners();
 
-    final user = await getUser();
-    if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
-      Log.info('Started IPA timer for verification.');
-      globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
-        Log.info('Force Ipa check was not stopped. Requesting forced check...');
-        await apiService.forceIpaCheck();
-      });
-    }
+    try {
+      if (userService.isUserCreated &&
+          isPayingUser(
+            planFromString(userService.currentUser.subscriptionPlan),
+          )) {
+        globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
+          Log.info(
+            'Force Ipa check was not stopped. Requesting forced check...',
+          );
+          await apiService.forceIpaCheck();
+        });
+      }
 
-    await iapConnection.restorePurchases();
+      await iapConnection.restorePurchases();
+    } catch (e) {
+      Log.error(e);
+    }
   }
 
   Future<void> buy(PurchasableProduct product) async {
@@ -164,9 +188,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     // an ok authenticated which is processed in the apiProvider...
     if (res.isSuccess) {
       if (Platform.isAndroid) {
-        await updateUserdata((u) {
+        await UserService.update((u) {
           u.subscriptionPlanIdStore = purchaseDetails.productID;
-          return u;
         });
       }
     }
@@ -196,11 +219,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
         purchaseDetails.error == null) {
       globalForceIpaCheck?.cancel();
 
-      final user = await getUser();
+      final currentPlan = userService.currentUser.subscriptionPlan;
 
-      if (user != null &&
-          (user.subscriptionPlan != SubscriptionPlan.Family.name &&
-              user.subscriptionPlan != SubscriptionPlan.Pro.name)) {
+      if (currentPlan != SubscriptionPlan.Family.name &&
+          currentPlan != SubscriptionPlan.Pro.name) {
         for (var i = 0; i < 100; i++) {
           if (apiService.isAuthenticated) {
             Log.info(
@@ -225,6 +247,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   @override
   void dispose() {
+    _planSub.cancel();
+    _connSub.cancel();
     _subscription.cancel();
     super.dispose();
   }

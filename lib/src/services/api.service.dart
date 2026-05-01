@@ -7,41 +7,44 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/mediafiles/download.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/server_messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
+import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/api/server_messages.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
+import 'package:twonly/src/services/user_study.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/user_study/user_study_data_collection.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:web_socket_channel/io.dart';
 
 final lockConnecting = Mutex();
@@ -53,9 +56,23 @@ final lockAuthentication = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
-  final String apiSecure = kReleaseMode ? 's' : '';
+  final String apiSecure = kReleaseMode ? 's' : 's';
+
+  final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
+  Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
+
+  final _connectionStateController = StreamController<bool>.broadcast();
+  Stream<bool> get onConnectionStateUpdated =>
+      _connectionStateController.stream;
+
+  final _appOutdatedController = StreamController<void>.broadcast();
+  Stream<void> get onAppOutdated => _appOutdatedController.stream;
+
+  final _newDeviceRegisteredController = StreamController<void>.broadcast();
+  Stream<void> get onNewDeviceRegistered =>
+      _newDeviceRegisteredController.stream;
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
@@ -64,10 +81,11 @@ class ApiService {
   Timer? reconnectionTimer;
   int _reconnectionDelay = 5;
 
-  final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
+  final HashMap<Int64, Completer<server.ServerToClient?>> _pendingRequests =
+      HashMap();
   IOWebSocketChannel? _channel;
   // ignore: cancel_subscriptions
-  StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
     if (appIsOutdated) return false;
@@ -88,27 +106,32 @@ class ApiService {
   // Function is called after the user is authenticated at the server
   Future<void> onAuthenticated() async {
     await initFCMAfterAuthenticated();
-    globalCallbackConnectionState(isConnected: true);
+    _connectionStateController.add(true);
 
-    if (globalIsInBackgroundTask) {
+    if (AppState.isInBackgroundTask) {
       await retransmitRawBytes();
       await retransmitAllMessages();
       await reuploadMediaFiles();
       await tryDownloadAllMediaFiles();
-    } else if (!globalIsAppInBackground) {
+    } else if (!AppState.isAppInBackground) {
       unawaited(retransmitRawBytes());
       unawaited(retransmitAllMessages());
       unawaited(tryDownloadAllMediaFiles());
       unawaited(reuploadMediaFiles());
+
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
+      resetResyncedUsers();
+      resetUserDiscoveryRequestUpdates();
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());
 
-      if (gUser.userStudyParticipantsToken != null) {
+      unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
+
+      if (userService.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
         unawaited(handleUserStudyUpload());
       }
@@ -118,19 +141,26 @@ class ApiService {
   Future<void> onConnected() async {
     await authenticate();
     _reconnectionDelay = 1;
-    globalCallbackConnectionState(isConnected: true);
+    _connectionStateController.add(true);
   }
 
   Future<void> onClosed() async {
     _channel = null;
     isAuthenticated = false;
-    globalCallbackConnectionState(isConnected: false);
+    _connectionStateController.add(false);
+    // Complete all pending requests with null on disconnect
+    for (final completer in _pendingRequests.values) {
+      if (!completer.isCompleted) {
+        completer.complete(null);
+      }
+    }
+    _pendingRequests.clear();
     await twonlyDB.mediaFilesDao.resetPendingDownloadState();
     await startReconnectionTimer();
   }
 
   Future<void> startReconnectionTimer() async {
-    if (globalIsInBackgroundTask) return;
+    if (AppState.isInBackgroundTask) return;
     if (reconnectionTimer?.isActive ?? false) {
       return;
     }
@@ -138,7 +168,7 @@ class ApiService {
     reconnectionTimer = Timer(Duration(seconds: _reconnectionDelay), () async {
       reconnectionTimer = null;
       // only try to reconnect in case the app is in the foreground
-      if (!globalIsAppInBackground) {
+      if (!AppState.isAppInBackground) {
         await connect();
       }
     });
@@ -157,10 +187,10 @@ class ApiService {
   }
 
   Future<void> listenToNetworkChanges() async {
-    if (connectivitySubscription != null) {
+    if (_connectivitySubscription != null) {
       return;
     }
-    connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
       result,
     ) async {
       if (!result.contains(ConnectivityResult.none)) {
@@ -193,7 +223,7 @@ class ApiService {
     });
   }
 
-  bool get isConnected => _channel != null && _channel!.closeCode != null;
+  bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   Future<void> _onDone() async {
     _reconnectionDelay = 3;
@@ -214,7 +244,10 @@ class ApiService {
       final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
       if (msg.v0.hasResponse()) {
         await removeFromRetransmissionBuffer(msg.v0.seq);
-        messagesV0[msg.v0.seq] = msg;
+        final completer = _pendingRequests.remove(msg.v0.seq);
+        if (completer != null && !completer.isCompleted) {
+          completer.complete(msg);
+        }
       } else {
         await handleServerMessage(msg);
       }
@@ -224,22 +257,20 @@ class ApiService {
   }
 
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
-    final startTime = clock.now();
+    final completer = Completer<server.ServerToClient?>();
+    _pendingRequests[seq] = completer;
 
-    const timeout = Duration(seconds: 60);
-
-    while (true) {
-      if (messagesV0[seq] != null) {
-        final tmp = messagesV0[seq];
-        messagesV0.remove(seq);
-        return tmp;
-      }
-      if (clock.now().difference(startTime) > timeout) {
+    final timer = Timer(const Duration(seconds: 60), () {
+      if (!completer.isCompleted) {
         Log.warn('Timeout for message $seq');
-        return null;
+        _pendingRequests.remove(seq);
+        completer.complete(null);
       }
-      await Future.delayed(const Duration(milliseconds: 10));
-    }
+    });
+
+    final result = await completer.future;
+    timer.cancel();
+    return result;
   }
 
   Future<void> sendResponse(ClientToServer response) async {
@@ -296,7 +327,7 @@ class ApiService {
     int? contactId,
   }) async {
     var seq = Int64(Random().nextInt(4294967296));
-    while (messagesV0.containsKey(seq)) {
+    while (_pendingRequests.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
     }
 
@@ -325,11 +356,10 @@ class ApiService {
       final ok = res.value as server.Response_Ok;
       if (ok.hasAuthenticated()) {
         final authenticated = ok.authenticated;
-        await updateUserdata((user) {
+        await UserService.update((user) {
           user.subscriptionPlan = authenticated.plan;
-          return user;
         });
-        globalCallbackUpdatePlan(planFromString(authenticated.plan));
+        _planUpdateController.add(planFromString(authenticated.plan));
 
         // this was triggered by apiService.ipaPurchase, so call the onAuthenticated again
         if (isAuthenticated) {
@@ -343,14 +373,14 @@ class ApiService {
         Log.warn('Got error from server: ${res.error}');
       }
       if (res.error == ErrorCode.AppVersionOutdated) {
-        globalCallbackAppIsOutdated();
+        _appOutdatedController.add(null);
         Log.warn('App Version is OUTDATED.');
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);
       }
       if (res.error == ErrorCode.NewDeviceRegistered) {
-        globalCallbackNewDeviceRegistered();
+        _newDeviceRegisteredController.add(null);
         Log.warn(
           'Device is disabled, as a newer device restore twonly Backup.',
         );
@@ -388,25 +418,23 @@ class ApiService {
     return res;
   }
 
-  Future<bool> tryAuthenticateWithToken(int userId) async {
-    const storage = FlutterSecureStorage();
-    final apiAuthToken = await storage.read(
+  Future<bool> tryAuthenticateWithToken() async {
+    final apiAuthToken = await SecureStorage.instance.read(
       key: SecureStorageKeys.apiAuthToken,
     );
-    final user = await getUser();
 
-    if (apiAuthToken != null && user != null) {
-      if (user.appVersion < 62) {
+    if (apiAuthToken != null) {
+      if (userService.currentUser.appVersion < 62) {
         Log.error(
           'DID NOT authenticate the user, as he still has the old version!',
         );
         return false;
       }
       final authenticate = Handshake_Authenticate()
-        ..userId = Int64(userId)
+        ..userId = Int64(userService.currentUser.userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
-        ..deviceId = Int64(user.deviceId)
-        ..inBackground = globalIsInBackgroundTask
+        ..deviceId = Int64(userService.currentUser.deviceId)
+        ..inBackground = AppState.isInBackgroundTask
         ..authToken = base64Decode(apiAuthToken);
 
       final handshake = Handshake()..authenticate = authenticate;
@@ -417,7 +445,7 @@ class ApiService {
       if (result.isSuccess) {
         Log.info('websocket is authenticated');
         isAuthenticated = true;
-        if (globalIsInBackgroundTask) {
+        if (AppState.isInBackgroundTask) {
           await onAuthenticated();
         } else {
           unawaited(onAuthenticated());
@@ -441,13 +469,13 @@ class ApiService {
     return lockAuthentication.protect(() async {
       if (isAuthenticated) return;
       if (await getSignalIdentity() == null) {
+        Log.error('Signal identity not found.');
         return;
       }
 
-      final userData = await getUser();
-      if (userData == null) return;
+      if (!userService.isUserCreated) return;
 
-      if (await tryAuthenticateWithToken(userData.userId)) {
+      if (await tryAuthenticateWithToken()) {
         return;
       }
 
@@ -475,7 +503,7 @@ class ApiService {
 
       final getAuthToken = Handshake_GetAuthToken()
         ..response = signature
-        ..userId = Int64(userData.userId);
+        ..userId = Int64(userService.currentUser.userId);
 
       final getauthtoken = Handshake()..getAuthToken = getAuthToken;
 
@@ -490,13 +518,12 @@ class ApiService {
       final apiAuthToken = result2.value.authtoken as Uint8List;
       final apiAuthTokenB64 = base64Encode(apiAuthToken);
 
-      const storage = FlutterSecureStorage();
-      await storage.write(
+      await SecureStorage.instance.write(
         key: SecureStorageKeys.apiAuthToken,
         value: apiAuthTokenB64,
       );
 
-      await tryAuthenticateWithToken(userData.userId);
+      await tryAuthenticateWithToken();
     });
   }
 
@@ -766,17 +793,15 @@ class ApiService {
   Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
     final ballance = await getPlanBallance();
     if (ballance != null) {
-      await updateUserdata((u) {
+      await UserService.update((u) {
         u.lastPlanBallance = ballance.writeToJson();
-        return u;
       });
       return ballance;
     }
-    final user = await getUser();
-    if (user != null && user.lastPlanBallance != null && useCache) {
+    if (userService.currentUser.lastPlanBallance != null && useCache) {
       try {
         return Response_PlanBallance.fromJson(
-          user.lastPlanBallance!,
+          userService.currentUser.lastPlanBallance!,
         );
       } catch (e) {
         Log.error('from json: $e');

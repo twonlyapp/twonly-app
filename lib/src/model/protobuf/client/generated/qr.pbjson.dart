@@ -8,7 +8,8 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names, unused_import
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -35,14 +36,14 @@ const QREnvelope$json = {
 const QREnvelope_Type$json = {
   '1': 'Type',
   '2': [
-    {'1': 'PublicProfile', '2': 0},
+    {'1': 'PUBLIC_PROFILE', '2': 0},
   ],
 };
 
 /// Descriptor for `QREnvelope`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List qREnvelopeDescriptor = $convert.base64Decode(
     'CgpRUkVudmVsb3BlEiQKBHR5cGUYAiABKA4yEC5RUkVudmVsb3BlLlR5cGVSBHR5cGUSEgoEZG'
-    'F0YRgDIAEoDFIEZGF0YSIZCgRUeXBlEhEKDVB1YmxpY1Byb2ZpbGUQAA==');
+    'F0YRgDIAEoDFIEZGF0YSIaCgRUeXBlEhIKDlBVQkxJQ19QUk9GSUxFEAA=');
 
 @$core.Deprecated('Use publicProfileDescriptor instead')
 const PublicProfile$json = {
@@ -67,6 +68,18 @@ const PublicProfile$json = {
       '10': 'signedPrekeySignature'
     },
     {'1': 'signed_prekey_id', '3': 7, '4': 1, '5': 3, '10': 'signedPrekeyId'},
+    {
+      '1': 'secret_verification_token',
+      '3': 8,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'secretVerificationToken',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_secret_verification_token'},
   ],
 };
 
@@ -77,4 +90,5 @@ final $typed_data.Uint8List publicProfileDescriptor = $convert.base64Decode(
     'dHlLZXkSIwoNc2lnbmVkX3ByZWtleRgEIAEoDFIMc2lnbmVkUHJla2V5EicKD3JlZ2lzdHJhdG'
     'lvbl9pZBgFIAEoA1IOcmVnaXN0cmF0aW9uSWQSNgoXc2lnbmVkX3ByZWtleV9zaWduYXR1cmUY'
     'BiABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRIoChBzaWduZWRfcHJla2V5X2lkGAcgASgDUg'
-    '5zaWduZWRQcmVrZXlJZA==');
+    '5zaWduZWRQcmVrZXlJZBI/ChlzZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2VuGAggASgMSABSF3Nl'
+    'Y3JldFZlcmlmaWNhdGlvblRva2VuiAEBQhwKGl9zZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2Vu');

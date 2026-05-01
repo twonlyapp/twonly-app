@@ -16,9 +16,11 @@ analyzer:
     - "lib/src/model/protobuf/**"
     - "lib/src/model/protobuf/api/websocket/**"
     - "lib/generated/**"
+    - "lib/core/**"
+    - "lib/src/localization/**"
     - "dependencies/**"
     - "pubspec.yaml"
-    - "*.arb"
+    - "**.arb"
     - "test/drift/**"
     - "**.g.dart"
 

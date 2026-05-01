@@ -1,43 +1,35 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/subscription.service.dart';
+import 'package:path_provider/path_provider.dart';
 
-late ApiService apiService;
+class AppEnvironment {
+  static late final String cacheDir;
+  static late final String supportDir;
 
-// uses for background notification
-late TwonlyDB twonlyDB;
+  // will be loaded in the main_camera_controller.dart
+  static List<CameraDescription> cameras = [];
 
-List<CameraDescription> gCameras = <CameraDescription>[];
+  static Future<void> init() async {
+    cacheDir = (await getApplicationCacheDirectory()).path;
+    supportDir = (await getApplicationSupportDirectory()).path;
+  }
 
-// Cached UserData in the memory. Every time the user data is changed the `updateUserdata` function is called,
-// which will update this global variable. The variable is set in the main.dart and after the user has registered in the register.view.dart
-late UserData gUser;
+  static void initTesting() {
+    cacheDir = '/tmp/twonly_cache';
+    supportDir = '/tmp/twonly_support';
+  }
+}
 
-// The following global function can be called from anywhere to update
-// the UI when something changed. The callbacks will be set by
-// App widget.
+class AppState {
+  static bool isAppInBackground = true;
+  static bool isInBackgroundTask = false;
+  static bool allowErrorTrackingViaSentry = false;
+  static bool gotMessageFromServer = false;
+  static int latestAppVersionId = 110;
+}
 
-// This callback called by the apiProvider
-void Function({required bool isConnected}) globalCallbackConnectionState =
-    ({
-      required isConnected,
-    }) {};
-void Function() globalCallbackAppIsOutdated = () {};
-void Function() globalCallbackNewDeviceRegistered = () {};
-void Function(SubscriptionPlan plan) globalCallbackUpdatePlan = (plan) {};
-
-Map<String, VoidCallback> globalUserDataChangedCallBack = {};
-
-bool globalIsAppInBackground = true;
-bool globalIsInBackgroundTask = false;
-bool globalAllowErrorTrackingViaSentry = false;
-bool globalGotMessageFromServer = false;
-
-late String globalApplicationCacheDirectory;
-late String globalApplicationSupportDirectory;
-
-final GlobalKey<ScaffoldMessengerState> globalRootScaffoldMessengerKey =
-    GlobalKey<ScaffoldMessengerState>();
+class AppGlobalKeys {
+  static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+}

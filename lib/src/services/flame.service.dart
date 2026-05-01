@@ -2,12 +2,12 @@ import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> syncFlameCounters({String? forceForGroup}) async {
   final groups = await twonlyDB.groupsDao.getAllGroups();
@@ -17,10 +17,9 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
     (x) => x.totalMediaCounter == maxMessageCounter,
   );
 
-  if (gUser.myBestFriendGroupId != bestFriend.groupId) {
-    await updateUserdata((user) {
+  if (userService.currentUser.myBestFriendGroupId != bestFriend.groupId) {
+    await UserService.update((user) {
       user.myBestFriendGroupId = bestFriend.groupId;
-      return user;
     });
   }
 
@@ -33,16 +32,18 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
       }
     }
 
-    final flameCounter = getFlameCounterFromGroup(group);
+    final flameResult = getFlameCounterFromGroup(group);
 
     // only sync when flame counter is higher three or when they are bestFriends
-    if (flameCounter <= 2 && bestFriend.groupId != group.groupId) continue;
+    if (flameResult.counter <= 2 && bestFriend.groupId != group.groupId) {
+      continue;
+    }
 
     await sendCipherTextToGroup(
       group.groupId,
       EncryptedContent(
         flameSync: EncryptedContent_FlameSync(
-          flameCounter: Int64(flameCounter),
+          flameCounter: Int64(flameResult.counter),
           lastFlameCounterChange: Int64(
             group.lastFlameCounterChange!.millisecondsSinceEpoch,
           ),
@@ -61,12 +62,13 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
   }
 }
 
-int getFlameCounterFromGroup(Group? group) {
-  if (group == null) return 0;
+({int counter, bool isExpiring}) getFlameCounterFromGroup(Group? group) {
+  const zero = (counter: 0, isExpiring: false);
+  if (group == null) return zero;
   if (group.lastMessageSend == null ||
       group.lastMessageReceived == null ||
       group.lastFlameCounterChange == null) {
-    return 0;
+    return zero;
   }
   final now = clock.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
@@ -75,9 +77,14 @@ int getFlameCounterFromGroup(Group? group) {
   if (group.lastMessageSend!.isAfter(twoDaysAgo) &&
           group.lastMessageReceived!.isAfter(twoDaysAgo) ||
       group.lastFlameCounterChange!.isAfter(oneDayAgo)) {
-    return group.flameCounter;
+    // Flame is expiring when today no exchange has happened yet:
+    // both lastMessageSend and lastMessageReceived are before startOfToday.
+    final isExpiring =
+        group.lastMessageSend!.isBefore(oneDayAgo) ||
+        group.lastMessageReceived!.isBefore(oneDayAgo);
+    return (counter: group.flameCounter, isExpiring: isExpiring);
   } else {
-    return 0;
+    return zero;
   }
 }
 
@@ -88,6 +95,25 @@ Future<void> incFlameCounter(
 ) async {
   final group = await twonlyDB.groupsDao.getGroup(groupId);
   if (group == null) return;
+
+  if (group.isDirectChat) {
+    final contacts = await twonlyDB.groupsDao.getGroupContact(
+      group.groupId,
+    );
+    if (contacts.length == 1) {
+      await twonlyDB.contactsDao.updateContact(
+        contacts.first.userId,
+        ContactsCompanion(
+          mediaReceivedCounter: Value(
+            contacts.first.mediaReceivedCounter + (received ? 1 : 0),
+          ),
+          mediaSendCounter: Value(
+            contacts.first.mediaSendCounter + (received ? 0 : 1),
+          ),
+        ),
+      );
+    }
+  }
 
   final totalMediaCounter = group.totalMediaCounter + 1;
   var flameCounter = group.flameCounter;
@@ -172,9 +198,9 @@ Future<void> incFlameCounter(
 }
 
 bool isItPossibleToRestoreFlames(Group group) {
-  final flameCounter = getFlameCounterFromGroup(group);
+  final flameResult = getFlameCounterFromGroup(group);
   return group.maxFlameCounter > 2 &&
-      flameCounter < group.maxFlameCounter &&
+      flameResult.counter < group.maxFlameCounter &&
       group.maxFlameCounterFrom!.isAfter(
         clock.now().subtract(const Duration(days: 7)),
       );

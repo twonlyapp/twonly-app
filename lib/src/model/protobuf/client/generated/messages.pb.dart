@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -48,20 +48,17 @@ class Message extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Message',
       createEmptyInstance: create)
-    ..e<Message_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: Message_Type.SENDER_DELIVERY_RECEIPT,
-        valueOf: Message_Type.valueOf,
+    ..aE<Message_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: Message_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'receiptId', protoName: 'receiptId')
+    ..aOS(2, _omitFieldNames ? '' : 'receiptId')
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'encryptedContent', $pb.PbFieldType.OY,
-        protoName: 'encryptedContent')
+        3, _omitFieldNames ? '' : 'encryptedContent', $pb.PbFieldType.OY)
     ..aOM<PlaintextContent>(4, _omitFieldNames ? '' : 'plaintextContent',
-        protoName: 'plaintextContent', subBuilder: PlaintextContent.create)
+        subBuilder: PlaintextContent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Message clone() => Message()..mergeFromMessage(this);
+  Message clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   Message copyWith(void Function(Message) updates) =>
       super.copyWith((message) => updates(message as Message)) as Message;
@@ -73,7 +70,6 @@ class Message extends $pb.GeneratedMessage {
   static Message create() => Message._();
   @$core.override
   Message createEmptyInstance() => create();
-  static $pb.PbList<Message> createRepeated() => $pb.PbList<Message>();
   @$core.pragma('dart2js:noInline')
   static Message getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Message>(create);
@@ -137,8 +133,7 @@ class PlaintextContent_RetryErrorMessage extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaintextContent_RetryErrorMessage clone() =>
-      PlaintextContent_RetryErrorMessage()..mergeFromMessage(this);
+  PlaintextContent_RetryErrorMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PlaintextContent_RetryErrorMessage copyWith(
           void Function(PlaintextContent_RetryErrorMessage) updates) =>
@@ -154,8 +149,6 @@ class PlaintextContent_RetryErrorMessage extends $pb.GeneratedMessage {
       PlaintextContent_RetryErrorMessage._();
   @$core.override
   PlaintextContent_RetryErrorMessage createEmptyInstance() => create();
-  static $pb.PbList<PlaintextContent_RetryErrorMessage> createRepeated() =>
-      $pb.PbList<PlaintextContent_RetryErrorMessage>();
   @$core.pragma('dart2js:noInline')
   static PlaintextContent_RetryErrorMessage getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PlaintextContent_RetryErrorMessage>(
@@ -185,16 +178,13 @@ class PlaintextContent_DecryptionErrorMessage extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PlaintextContent.DecryptionErrorMessage',
       createEmptyInstance: create)
-    ..e<PlaintextContent_DecryptionErrorMessage_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN,
-        valueOf: PlaintextContent_DecryptionErrorMessage_Type.valueOf,
+    ..aE<PlaintextContent_DecryptionErrorMessage_Type>(
+        1, _omitFieldNames ? '' : 'type',
         enumValues: PlaintextContent_DecryptionErrorMessage_Type.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaintextContent_DecryptionErrorMessage clone() =>
-      PlaintextContent_DecryptionErrorMessage()..mergeFromMessage(this);
+  PlaintextContent_DecryptionErrorMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PlaintextContent_DecryptionErrorMessage copyWith(
           void Function(PlaintextContent_DecryptionErrorMessage) updates) =>
@@ -210,8 +200,6 @@ class PlaintextContent_DecryptionErrorMessage extends $pb.GeneratedMessage {
       PlaintextContent_DecryptionErrorMessage._();
   @$core.override
   PlaintextContent_DecryptionErrorMessage createEmptyInstance() => create();
-  static $pb.PbList<PlaintextContent_DecryptionErrorMessage> createRepeated() =>
-      $pb.PbList<PlaintextContent_DecryptionErrorMessage>();
   @$core.pragma('dart2js:noInline')
   static PlaintextContent_DecryptionErrorMessage getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -255,16 +243,14 @@ class PlaintextContent extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<PlaintextContent_DecryptionErrorMessage>(
         1, _omitFieldNames ? '' : 'decryptionErrorMessage',
-        protoName: 'decryptionErrorMessage',
         subBuilder: PlaintextContent_DecryptionErrorMessage.create)
     ..aOM<PlaintextContent_RetryErrorMessage>(
         2, _omitFieldNames ? '' : 'retryControlError',
-        protoName: 'retryControlError',
         subBuilder: PlaintextContent_RetryErrorMessage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaintextContent clone() => PlaintextContent()..mergeFromMessage(this);
+  PlaintextContent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   PlaintextContent copyWith(void Function(PlaintextContent) updates) =>
       super.copyWith((message) => updates(message as PlaintextContent))
@@ -277,8 +263,6 @@ class PlaintextContent extends $pb.GeneratedMessage {
   static PlaintextContent create() => PlaintextContent._();
   @$core.override
   PlaintextContent createEmptyInstance() => create();
-  static $pb.PbList<PlaintextContent> createRepeated() =>
-      $pb.PbList<PlaintextContent>();
   @$core.pragma('dart2js:noInline')
   static PlaintextContent getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PlaintextContent>(create);
@@ -334,18 +318,13 @@ class EncryptedContent_ErrorMessages extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.ErrorMessages',
       createEmptyInstance: create)
-    ..e<EncryptedContent_ErrorMessages_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_ErrorMessages_Type
-            .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
-        valueOf: EncryptedContent_ErrorMessages_Type.valueOf,
+    ..aE<EncryptedContent_ErrorMessages_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_ErrorMessages_Type.values)
     ..aOS(2, _omitFieldNames ? '' : 'relatedReceiptId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_ErrorMessages clone() =>
-      EncryptedContent_ErrorMessages()..mergeFromMessage(this);
+  EncryptedContent_ErrorMessages clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_ErrorMessages copyWith(
           void Function(EncryptedContent_ErrorMessages) updates) =>
@@ -361,8 +340,6 @@ class EncryptedContent_ErrorMessages extends $pb.GeneratedMessage {
       EncryptedContent_ErrorMessages._();
   @$core.override
   EncryptedContent_ErrorMessages createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_ErrorMessages> createRepeated() =>
-      $pb.PbList<EncryptedContent_ErrorMessages>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_ErrorMessages getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_ErrorMessages>(create);
@@ -411,16 +388,13 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedContent.GroupCreate',
       createEmptyInstance: create)
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY,
-        protoName: 'stateKey')
+        3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY,
-        protoName: 'groupPublicKey')
+        4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_GroupCreate clone() =>
-      EncryptedContent_GroupCreate()..mergeFromMessage(this);
+  EncryptedContent_GroupCreate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_GroupCreate copyWith(
           void Function(EncryptedContent_GroupCreate) updates) =>
@@ -436,8 +410,6 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
       EncryptedContent_GroupCreate._();
   @$core.override
   EncryptedContent_GroupCreate createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_GroupCreate> createRepeated() =>
-      $pb.PbList<EncryptedContent_GroupCreate>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_GroupCreate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupCreate>(create);
@@ -485,13 +457,11 @@ class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'EncryptedContent.GroupJoin',
       createEmptyInstance: create)
     ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY,
-        protoName: 'groupPublicKey')
+        1, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_GroupJoin clone() =>
-      EncryptedContent_GroupJoin()..mergeFromMessage(this);
+  EncryptedContent_GroupJoin clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_GroupJoin copyWith(
           void Function(EncryptedContent_GroupJoin) updates) =>
@@ -506,8 +476,6 @@ class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
   static EncryptedContent_GroupJoin create() => EncryptedContent_GroupJoin._();
   @$core.override
   EncryptedContent_GroupJoin createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_GroupJoin> createRepeated() =>
-      $pb.PbList<EncryptedContent_GroupJoin>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_GroupJoin getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupJoin>(create);
@@ -543,8 +511,7 @@ class EncryptedContent_ResendGroupPublicKey extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_ResendGroupPublicKey clone() =>
-      EncryptedContent_ResendGroupPublicKey()..mergeFromMessage(this);
+  EncryptedContent_ResendGroupPublicKey clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_ResendGroupPublicKey copyWith(
           void Function(EncryptedContent_ResendGroupPublicKey) updates) =>
@@ -560,8 +527,6 @@ class EncryptedContent_ResendGroupPublicKey extends $pb.GeneratedMessage {
       EncryptedContent_ResendGroupPublicKey._();
   @$core.override
   EncryptedContent_ResendGroupPublicKey createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_ResendGroupPublicKey> createRepeated() =>
-      $pb.PbList<EncryptedContent_ResendGroupPublicKey>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_ResendGroupPublicKey getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -598,18 +563,14 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.GroupUpdate',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'groupActionType',
-        protoName: 'groupActionType')
-    ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId',
-        protoName: 'affectedContactId')
-    ..aOS(3, _omitFieldNames ? '' : 'newGroupName', protoName: 'newGroupName')
-    ..aInt64(4, _omitFieldNames ? '' : 'newDeleteMessagesAfterMilliseconds',
-        protoName: 'newDeleteMessagesAfterMilliseconds')
+    ..aOS(1, _omitFieldNames ? '' : 'groupActionType')
+    ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId')
+    ..aOS(3, _omitFieldNames ? '' : 'newGroupName')
+    ..aInt64(4, _omitFieldNames ? '' : 'newDeleteMessagesAfterMilliseconds')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_GroupUpdate clone() =>
-      EncryptedContent_GroupUpdate()..mergeFromMessage(this);
+  EncryptedContent_GroupUpdate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_GroupUpdate copyWith(
           void Function(EncryptedContent_GroupUpdate) updates) =>
@@ -625,8 +586,6 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
       EncryptedContent_GroupUpdate._();
   @$core.override
   EncryptedContent_GroupUpdate createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_GroupUpdate> createRepeated() =>
-      $pb.PbList<EncryptedContent_GroupUpdate>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_GroupUpdate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupUpdate>(create);
@@ -697,17 +656,14 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.TextMessage',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
+    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId')
     ..aOS(2, _omitFieldNames ? '' : 'text')
     ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
-    ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId',
-        protoName: 'quoteMessageId')
+    ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_TextMessage clone() =>
-      EncryptedContent_TextMessage()..mergeFromMessage(this);
+  EncryptedContent_TextMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_TextMessage copyWith(
           void Function(EncryptedContent_TextMessage) updates) =>
@@ -723,8 +679,6 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
       EncryptedContent_TextMessage._();
   @$core.override
   EncryptedContent_TextMessage createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_TextMessage> createRepeated() =>
-      $pb.PbList<EncryptedContent_TextMessage>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_TextMessage getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_TextMessage>(create);
@@ -804,8 +758,7 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_AdditionalDataMessage clone() =>
-      EncryptedContent_AdditionalDataMessage()..mergeFromMessage(this);
+  EncryptedContent_AdditionalDataMessage clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_AdditionalDataMessage copyWith(
           void Function(EncryptedContent_AdditionalDataMessage) updates) =>
@@ -821,8 +774,6 @@ class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
       EncryptedContent_AdditionalDataMessage._();
   @$core.override
   EncryptedContent_AdditionalDataMessage createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_AdditionalDataMessage> createRepeated() =>
-      $pb.PbList<EncryptedContent_AdditionalDataMessage>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_AdditionalDataMessage getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
@@ -892,15 +843,13 @@ class EncryptedContent_Reaction extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.Reaction',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'targetMessageId',
-        protoName: 'targetMessageId')
+    ..aOS(1, _omitFieldNames ? '' : 'targetMessageId')
     ..aOS(2, _omitFieldNames ? '' : 'emoji')
     ..aOB(3, _omitFieldNames ? '' : 'remove')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_Reaction clone() =>
-      EncryptedContent_Reaction()..mergeFromMessage(this);
+  EncryptedContent_Reaction clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_Reaction copyWith(
           void Function(EncryptedContent_Reaction) updates) =>
@@ -914,8 +863,6 @@ class EncryptedContent_Reaction extends $pb.GeneratedMessage {
   static EncryptedContent_Reaction create() => EncryptedContent_Reaction._();
   @$core.override
   EncryptedContent_Reaction createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_Reaction> createRepeated() =>
-      $pb.PbList<EncryptedContent_Reaction>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_Reaction getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_Reaction>(create);
@@ -979,22 +926,16 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.MessageUpdate',
       createEmptyInstance: create)
-    ..e<EncryptedContent_MessageUpdate_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_MessageUpdate_Type.DELETE,
-        valueOf: EncryptedContent_MessageUpdate_Type.valueOf,
+    ..aE<EncryptedContent_MessageUpdate_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_MessageUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
-    ..pPS(3, _omitFieldNames ? '' : 'multipleTargetMessageIds',
-        protoName: 'multipleTargetMessageIds')
+    ..aOS(2, _omitFieldNames ? '' : 'senderMessageId')
+    ..pPS(3, _omitFieldNames ? '' : 'multipleTargetMessageIds')
     ..aOS(4, _omitFieldNames ? '' : 'text')
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_MessageUpdate clone() =>
-      EncryptedContent_MessageUpdate()..mergeFromMessage(this);
+  EncryptedContent_MessageUpdate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_MessageUpdate copyWith(
           void Function(EncryptedContent_MessageUpdate) updates) =>
@@ -1010,8 +951,6 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
       EncryptedContent_MessageUpdate._();
   @$core.override
   EncryptedContent_MessageUpdate createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_MessageUpdate> createRepeated() =>
-      $pb.PbList<EncryptedContent_MessageUpdate>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_MessageUpdate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_MessageUpdate>(create);
@@ -1101,39 +1040,27 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.Media',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId',
-        protoName: 'senderMessageId')
-    ..e<EncryptedContent_Media_Type>(
-        2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_Media_Type.REUPLOAD,
-        valueOf: EncryptedContent_Media_Type.valueOf,
+    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId')
+    ..aE<EncryptedContent_Media_Type>(2, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_Media_Type.values)
-    ..aInt64(3, _omitFieldNames ? '' : 'displayLimitInMilliseconds',
-        protoName: 'displayLimitInMilliseconds')
-    ..aOB(4, _omitFieldNames ? '' : 'requiresAuthentication',
-        protoName: 'requiresAuthentication')
+    ..aInt64(3, _omitFieldNames ? '' : 'displayLimitInMilliseconds')
+    ..aOB(4, _omitFieldNames ? '' : 'requiresAuthentication')
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
-    ..aOS(6, _omitFieldNames ? '' : 'quoteMessageId',
-        protoName: 'quoteMessageId')
+    ..aOS(6, _omitFieldNames ? '' : 'quoteMessageId')
     ..a<$core.List<$core.int>>(
-        7, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY,
-        protoName: 'downloadToken')
+        7, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        8, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY,
-        protoName: 'encryptionKey')
+        8, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        9, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY,
-        protoName: 'encryptionMac')
+        9, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY,
-        protoName: 'encryptionNonce')
+        10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         11, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_Media clone() =>
-      EncryptedContent_Media()..mergeFromMessage(this);
+  EncryptedContent_Media clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_Media copyWith(
           void Function(EncryptedContent_Media) updates) =>
@@ -1147,8 +1074,6 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   static EncryptedContent_Media create() => EncryptedContent_Media._();
   @$core.override
   EncryptedContent_Media createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_Media> createRepeated() =>
-      $pb.PbList<EncryptedContent_Media>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_Media getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_Media>(create);
@@ -1278,18 +1203,13 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.MediaUpdate',
       createEmptyInstance: create)
-    ..e<EncryptedContent_MediaUpdate_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_MediaUpdate_Type.REOPENED,
-        valueOf: EncryptedContent_MediaUpdate_Type.valueOf,
+    ..aE<EncryptedContent_MediaUpdate_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_MediaUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId',
-        protoName: 'targetMessageId')
+    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_MediaUpdate clone() =>
-      EncryptedContent_MediaUpdate()..mergeFromMessage(this);
+  EncryptedContent_MediaUpdate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_MediaUpdate copyWith(
           void Function(EncryptedContent_MediaUpdate) updates) =>
@@ -1305,8 +1225,6 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
       EncryptedContent_MediaUpdate._();
   @$core.override
   EncryptedContent_MediaUpdate createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_MediaUpdate> createRepeated() =>
-      $pb.PbList<EncryptedContent_MediaUpdate>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_MediaUpdate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_MediaUpdate>(create);
@@ -1352,16 +1270,12 @@ class EncryptedContent_ContactRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.ContactRequest',
       createEmptyInstance: create)
-    ..e<EncryptedContent_ContactRequest_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_ContactRequest_Type.REQUEST,
-        valueOf: EncryptedContent_ContactRequest_Type.valueOf,
+    ..aE<EncryptedContent_ContactRequest_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_ContactRequest_Type.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_ContactRequest clone() =>
-      EncryptedContent_ContactRequest()..mergeFromMessage(this);
+  EncryptedContent_ContactRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_ContactRequest copyWith(
           void Function(EncryptedContent_ContactRequest) updates) =>
@@ -1377,8 +1291,6 @@ class EncryptedContent_ContactRequest extends $pb.GeneratedMessage {
       EncryptedContent_ContactRequest._();
   @$core.override
   EncryptedContent_ContactRequest createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_ContactRequest> createRepeated() =>
-      $pb.PbList<EncryptedContent_ContactRequest>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_ContactRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_ContactRequest>(
@@ -1423,21 +1335,16 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.ContactUpdate',
       createEmptyInstance: create)
-    ..e<EncryptedContent_ContactUpdate_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_ContactUpdate_Type.REQUEST,
-        valueOf: EncryptedContent_ContactUpdate_Type.valueOf,
+    ..aE<EncryptedContent_ContactUpdate_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_ContactUpdate_Type.values)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY,
-        protoName: 'avatarSvgCompressed')
+        2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'username')
-    ..aOS(4, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
+    ..aOS(4, _omitFieldNames ? '' : 'displayName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_ContactUpdate clone() =>
-      EncryptedContent_ContactUpdate()..mergeFromMessage(this);
+  EncryptedContent_ContactUpdate clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_ContactUpdate copyWith(
           void Function(EncryptedContent_ContactUpdate) updates) =>
@@ -1453,8 +1360,6 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
       EncryptedContent_ContactUpdate._();
   @$core.override
   EncryptedContent_ContactUpdate createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_ContactUpdate> createRepeated() =>
-      $pb.PbList<EncryptedContent_ContactUpdate>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_ContactUpdate getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_ContactUpdate>(create);
@@ -1524,20 +1429,16 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.PushKeys',
       createEmptyInstance: create)
-    ..e<EncryptedContent_PushKeys_Type>(
-        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
-        defaultOrMaker: EncryptedContent_PushKeys_Type.REQUEST,
-        valueOf: EncryptedContent_PushKeys_Type.valueOf,
+    ..aE<EncryptedContent_PushKeys_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: EncryptedContent_PushKeys_Type.values)
-    ..aInt64(2, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
+    ..aInt64(2, _omitFieldNames ? '' : 'keyId')
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(4, _omitFieldNames ? '' : 'createdAt', protoName: 'createdAt')
+    ..aInt64(4, _omitFieldNames ? '' : 'createdAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_PushKeys clone() =>
-      EncryptedContent_PushKeys()..mergeFromMessage(this);
+  EncryptedContent_PushKeys clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_PushKeys copyWith(
           void Function(EncryptedContent_PushKeys) updates) =>
@@ -1551,8 +1452,6 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
   static EncryptedContent_PushKeys create() => EncryptedContent_PushKeys._();
   @$core.override
   EncryptedContent_PushKeys createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_PushKeys> createRepeated() =>
-      $pb.PbList<EncryptedContent_PushKeys>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_PushKeys getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_PushKeys>(create);
@@ -1623,17 +1522,14 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent.FlameSync',
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'flameCounter',
-        protoName: 'flameCounter')
-    ..aInt64(2, _omitFieldNames ? '' : 'lastFlameCounterChange',
-        protoName: 'lastFlameCounterChange')
-    ..aOB(3, _omitFieldNames ? '' : 'bestFriend', protoName: 'bestFriend')
-    ..aOB(4, _omitFieldNames ? '' : 'forceUpdate', protoName: 'forceUpdate')
+    ..aInt64(1, _omitFieldNames ? '' : 'flameCounter')
+    ..aInt64(2, _omitFieldNames ? '' : 'lastFlameCounterChange')
+    ..aOB(3, _omitFieldNames ? '' : 'bestFriend')
+    ..aOB(4, _omitFieldNames ? '' : 'forceUpdate')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_FlameSync clone() =>
-      EncryptedContent_FlameSync()..mergeFromMessage(this);
+  EncryptedContent_FlameSync clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_FlameSync copyWith(
           void Function(EncryptedContent_FlameSync) updates) =>
@@ -1648,8 +1544,6 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   static EncryptedContent_FlameSync create() => EncryptedContent_FlameSync._();
   @$core.override
   EncryptedContent_FlameSync createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_FlameSync> createRepeated() =>
-      $pb.PbList<EncryptedContent_FlameSync>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_FlameSync getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_FlameSync>(create);
@@ -1721,8 +1615,7 @@ class EncryptedContent_TypingIndicator extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_TypingIndicator clone() =>
-      EncryptedContent_TypingIndicator()..mergeFromMessage(this);
+  EncryptedContent_TypingIndicator clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent_TypingIndicator copyWith(
           void Function(EncryptedContent_TypingIndicator) updates) =>
@@ -1738,8 +1631,6 @@ class EncryptedContent_TypingIndicator extends $pb.GeneratedMessage {
       EncryptedContent_TypingIndicator._();
   @$core.override
   EncryptedContent_TypingIndicator createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent_TypingIndicator> createRepeated() =>
-      $pb.PbList<EncryptedContent_TypingIndicator>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent_TypingIndicator getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent_TypingIndicator>(
@@ -1765,6 +1656,177 @@ class EncryptedContent_TypingIndicator extends $pb.GeneratedMessage {
   void clearCreatedAt() => $_clearField(2);
 }
 
+class EncryptedContent_UserDiscoveryRequest extends $pb.GeneratedMessage {
+  factory EncryptedContent_UserDiscoveryRequest({
+    $core.List<$core.int>? currentVersion,
+  }) {
+    final result = create();
+    if (currentVersion != null) result.currentVersion = currentVersion;
+    return result;
+  }
+
+  EncryptedContent_UserDiscoveryRequest._();
+
+  factory EncryptedContent_UserDiscoveryRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_UserDiscoveryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.UserDiscoveryRequest',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'currentVersion', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryRequest copyWith(
+          void Function(EncryptedContent_UserDiscoveryRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_UserDiscoveryRequest))
+          as EncryptedContent_UserDiscoveryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryRequest create() =>
+      EncryptedContent_UserDiscoveryRequest._();
+  @$core.override
+  EncryptedContent_UserDiscoveryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_UserDiscoveryRequest>(create);
+  static EncryptedContent_UserDiscoveryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get currentVersion => $_getN(0);
+  @$pb.TagNumber(1)
+  set currentVersion($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCurrentVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCurrentVersion() => $_clearField(1);
+}
+
+class EncryptedContent_UserDiscoveryUpdate extends $pb.GeneratedMessage {
+  factory EncryptedContent_UserDiscoveryUpdate({
+    $core.Iterable<$core.List<$core.int>>? messages,
+  }) {
+    final result = create();
+    if (messages != null) result.messages.addAll(messages);
+    return result;
+  }
+
+  EncryptedContent_UserDiscoveryUpdate._();
+
+  factory EncryptedContent_UserDiscoveryUpdate.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_UserDiscoveryUpdate.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.UserDiscoveryUpdate',
+      createEmptyInstance: create)
+    ..p<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'messages', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryUpdate clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_UserDiscoveryUpdate copyWith(
+          void Function(EncryptedContent_UserDiscoveryUpdate) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_UserDiscoveryUpdate))
+          as EncryptedContent_UserDiscoveryUpdate;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryUpdate create() =>
+      EncryptedContent_UserDiscoveryUpdate._();
+  @$core.override
+  EncryptedContent_UserDiscoveryUpdate createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_UserDiscoveryUpdate getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_UserDiscoveryUpdate>(create);
+  static EncryptedContent_UserDiscoveryUpdate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.List<$core.int>> get messages => $_getList(0);
+}
+
+class EncryptedContent_KeyVerificationProof extends $pb.GeneratedMessage {
+  factory EncryptedContent_KeyVerificationProof({
+    $core.List<$core.int>? calculatedMac,
+  }) {
+    final result = create();
+    if (calculatedMac != null) result.calculatedMac = calculatedMac;
+    return result;
+  }
+
+  EncryptedContent_KeyVerificationProof._();
+
+  factory EncryptedContent_KeyVerificationProof.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_KeyVerificationProof.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.KeyVerificationProof',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'calculatedMac', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_KeyVerificationProof clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_KeyVerificationProof copyWith(
+          void Function(EncryptedContent_KeyVerificationProof) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_KeyVerificationProof))
+          as EncryptedContent_KeyVerificationProof;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_KeyVerificationProof create() =>
+      EncryptedContent_KeyVerificationProof._();
+  @$core.override
+  EncryptedContent_KeyVerificationProof createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_KeyVerificationProof getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_KeyVerificationProof>(create);
+  static EncryptedContent_KeyVerificationProof? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get calculatedMac => $_getN(0);
+  @$pb.TagNumber(1)
+  set calculatedMac($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCalculatedMac() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCalculatedMac() => $_clearField(1);
+}
+
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
@@ -1786,6 +1848,10 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_ErrorMessages? errorMessages,
     EncryptedContent_AdditionalDataMessage? additionalDataMessage,
     EncryptedContent_TypingIndicator? typingIndicator,
+    $core.List<$core.int>? senderUserDiscoveryVersion,
+    EncryptedContent_UserDiscoveryRequest? userDiscoveryRequest,
+    EncryptedContent_UserDiscoveryUpdate? userDiscoveryUpdate,
+    EncryptedContent_KeyVerificationProof? keyVerificationProof,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1810,6 +1876,14 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (additionalDataMessage != null)
       result.additionalDataMessage = additionalDataMessage;
     if (typingIndicator != null) result.typingIndicator = typingIndicator;
+    if (senderUserDiscoveryVersion != null)
+      result.senderUserDiscoveryVersion = senderUserDiscoveryVersion;
+    if (userDiscoveryRequest != null)
+      result.userDiscoveryRequest = userDiscoveryRequest;
+    if (userDiscoveryUpdate != null)
+      result.userDiscoveryUpdate = userDiscoveryUpdate;
+    if (keyVerificationProof != null)
+      result.keyVerificationProof = keyVerificationProof;
     return result;
   }
 
@@ -1825,50 +1899,41 @@ class EncryptedContent extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EncryptedContent',
       createEmptyInstance: create)
-    ..aOS(2, _omitFieldNames ? '' : 'groupId', protoName: 'groupId')
-    ..aOB(3, _omitFieldNames ? '' : 'isDirectChat', protoName: 'isDirectChat')
-    ..aInt64(4, _omitFieldNames ? '' : 'senderProfileCounter',
-        protoName: 'senderProfileCounter')
+    ..aOS(2, _omitFieldNames ? '' : 'groupId')
+    ..aOB(3, _omitFieldNames ? '' : 'isDirectChat')
+    ..aInt64(4, _omitFieldNames ? '' : 'senderProfileCounter')
     ..aOM<EncryptedContent_MessageUpdate>(
         5, _omitFieldNames ? '' : 'messageUpdate',
-        protoName: 'messageUpdate',
         subBuilder: EncryptedContent_MessageUpdate.create)
     ..aOM<EncryptedContent_Media>(6, _omitFieldNames ? '' : 'media',
         subBuilder: EncryptedContent_Media.create)
     ..aOM<EncryptedContent_MediaUpdate>(7, _omitFieldNames ? '' : 'mediaUpdate',
-        protoName: 'mediaUpdate',
         subBuilder: EncryptedContent_MediaUpdate.create)
     ..aOM<EncryptedContent_ContactUpdate>(
         8, _omitFieldNames ? '' : 'contactUpdate',
-        protoName: 'contactUpdate',
         subBuilder: EncryptedContent_ContactUpdate.create)
     ..aOM<EncryptedContent_ContactRequest>(
         9, _omitFieldNames ? '' : 'contactRequest',
-        protoName: 'contactRequest',
         subBuilder: EncryptedContent_ContactRequest.create)
     ..aOM<EncryptedContent_FlameSync>(10, _omitFieldNames ? '' : 'flameSync',
-        protoName: 'flameSync', subBuilder: EncryptedContent_FlameSync.create)
+        subBuilder: EncryptedContent_FlameSync.create)
     ..aOM<EncryptedContent_PushKeys>(11, _omitFieldNames ? '' : 'pushKeys',
-        protoName: 'pushKeys', subBuilder: EncryptedContent_PushKeys.create)
+        subBuilder: EncryptedContent_PushKeys.create)
     ..aOM<EncryptedContent_Reaction>(12, _omitFieldNames ? '' : 'reaction',
         subBuilder: EncryptedContent_Reaction.create)
     ..aOM<EncryptedContent_TextMessage>(
         13, _omitFieldNames ? '' : 'textMessage',
-        protoName: 'textMessage',
         subBuilder: EncryptedContent_TextMessage.create)
     ..aOM<EncryptedContent_GroupCreate>(
         14, _omitFieldNames ? '' : 'groupCreate',
-        protoName: 'groupCreate',
         subBuilder: EncryptedContent_GroupCreate.create)
     ..aOM<EncryptedContent_GroupJoin>(15, _omitFieldNames ? '' : 'groupJoin',
-        protoName: 'groupJoin', subBuilder: EncryptedContent_GroupJoin.create)
+        subBuilder: EncryptedContent_GroupJoin.create)
     ..aOM<EncryptedContent_GroupUpdate>(
         16, _omitFieldNames ? '' : 'groupUpdate',
-        protoName: 'groupUpdate',
         subBuilder: EncryptedContent_GroupUpdate.create)
     ..aOM<EncryptedContent_ResendGroupPublicKey>(
         17, _omitFieldNames ? '' : 'resendGroupPublicKey',
-        protoName: 'resendGroupPublicKey',
         subBuilder: EncryptedContent_ResendGroupPublicKey.create)
     ..aOM<EncryptedContent_ErrorMessages>(
         18, _omitFieldNames ? '' : 'errorMessages',
@@ -1879,10 +1944,21 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_TypingIndicator>(
         20, _omitFieldNames ? '' : 'typingIndicator',
         subBuilder: EncryptedContent_TypingIndicator.create)
+    ..a<$core.List<$core.int>>(21,
+        _omitFieldNames ? '' : 'senderUserDiscoveryVersion', $pb.PbFieldType.OY)
+    ..aOM<EncryptedContent_UserDiscoveryRequest>(
+        22, _omitFieldNames ? '' : 'userDiscoveryRequest',
+        subBuilder: EncryptedContent_UserDiscoveryRequest.create)
+    ..aOM<EncryptedContent_UserDiscoveryUpdate>(
+        23, _omitFieldNames ? '' : 'userDiscoveryUpdate',
+        subBuilder: EncryptedContent_UserDiscoveryUpdate.create)
+    ..aOM<EncryptedContent_KeyVerificationProof>(
+        24, _omitFieldNames ? '' : 'keyVerificationProof',
+        subBuilder: EncryptedContent_KeyVerificationProof.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent clone() => EncryptedContent()..mergeFromMessage(this);
+  EncryptedContent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   EncryptedContent copyWith(void Function(EncryptedContent) updates) =>
       super.copyWith((message) => updates(message as EncryptedContent))
@@ -1895,8 +1971,6 @@ class EncryptedContent extends $pb.GeneratedMessage {
   static EncryptedContent create() => EncryptedContent._();
   @$core.override
   EncryptedContent createEmptyInstance() => create();
-  static $pb.PbList<EncryptedContent> createRepeated() =>
-      $pb.PbList<EncryptedContent>();
   @$core.pragma('dart2js:noInline')
   static EncryptedContent getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<EncryptedContent>(create);
@@ -2115,6 +2189,55 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearTypingIndicator() => $_clearField(20);
   @$pb.TagNumber(20)
   EncryptedContent_TypingIndicator ensureTypingIndicator() => $_ensure(18);
+
+  @$pb.TagNumber(21)
+  $core.List<$core.int> get senderUserDiscoveryVersion => $_getN(19);
+  @$pb.TagNumber(21)
+  set senderUserDiscoveryVersion($core.List<$core.int> value) =>
+      $_setBytes(19, value);
+  @$pb.TagNumber(21)
+  $core.bool hasSenderUserDiscoveryVersion() => $_has(19);
+  @$pb.TagNumber(21)
+  void clearSenderUserDiscoveryVersion() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  EncryptedContent_UserDiscoveryRequest get userDiscoveryRequest => $_getN(20);
+  @$pb.TagNumber(22)
+  set userDiscoveryRequest(EncryptedContent_UserDiscoveryRequest value) =>
+      $_setField(22, value);
+  @$pb.TagNumber(22)
+  $core.bool hasUserDiscoveryRequest() => $_has(20);
+  @$pb.TagNumber(22)
+  void clearUserDiscoveryRequest() => $_clearField(22);
+  @$pb.TagNumber(22)
+  EncryptedContent_UserDiscoveryRequest ensureUserDiscoveryRequest() =>
+      $_ensure(20);
+
+  @$pb.TagNumber(23)
+  EncryptedContent_UserDiscoveryUpdate get userDiscoveryUpdate => $_getN(21);
+  @$pb.TagNumber(23)
+  set userDiscoveryUpdate(EncryptedContent_UserDiscoveryUpdate value) =>
+      $_setField(23, value);
+  @$pb.TagNumber(23)
+  $core.bool hasUserDiscoveryUpdate() => $_has(21);
+  @$pb.TagNumber(23)
+  void clearUserDiscoveryUpdate() => $_clearField(23);
+  @$pb.TagNumber(23)
+  EncryptedContent_UserDiscoveryUpdate ensureUserDiscoveryUpdate() =>
+      $_ensure(21);
+
+  @$pb.TagNumber(24)
+  EncryptedContent_KeyVerificationProof get keyVerificationProof => $_getN(22);
+  @$pb.TagNumber(24)
+  set keyVerificationProof(EncryptedContent_KeyVerificationProof value) =>
+      $_setField(24, value);
+  @$pb.TagNumber(24)
+  $core.bool hasKeyVerificationProof() => $_has(22);
+  @$pb.TagNumber(24)
+  void clearKeyVerificationProof() => $_clearField(24);
+  @$pb.TagNumber(24)
+  EncryptedContent_KeyVerificationProof ensureKeyVerificationProof() =>
+      $_ensure(22);
 }
 
 const $core.bool _omitFieldNames =

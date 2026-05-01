@@ -8,7 +8,7 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
@@ -39,16 +39,13 @@ class TwonlySafeBackupContent extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'TwonlySafeBackupContent',
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'secureStorageJson',
-        protoName: 'secureStorageJson')
+    ..aOS(1, _omitFieldNames ? '' : 'secureStorageJson')
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'twonlyDatabase', $pb.PbFieldType.OY,
-        protoName: 'twonlyDatabase')
+        2, _omitFieldNames ? '' : 'twonlyDatabase', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  TwonlySafeBackupContent clone() =>
-      TwonlySafeBackupContent()..mergeFromMessage(this);
+  TwonlySafeBackupContent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   TwonlySafeBackupContent copyWith(
           void Function(TwonlySafeBackupContent) updates) =>
@@ -62,8 +59,6 @@ class TwonlySafeBackupContent extends $pb.GeneratedMessage {
   static TwonlySafeBackupContent create() => TwonlySafeBackupContent._();
   @$core.override
   TwonlySafeBackupContent createEmptyInstance() => create();
-  static $pb.PbList<TwonlySafeBackupContent> createRepeated() =>
-      $pb.PbList<TwonlySafeBackupContent>();
   @$core.pragma('dart2js:noInline')
   static TwonlySafeBackupContent getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<TwonlySafeBackupContent>(create);
@@ -118,13 +113,11 @@ class TwonlySafeBackupEncrypted extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'cipherText', $pb.PbFieldType.OY,
-        protoName: 'cipherText')
+        3, _omitFieldNames ? '' : 'cipherText', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  TwonlySafeBackupEncrypted clone() =>
-      TwonlySafeBackupEncrypted()..mergeFromMessage(this);
+  TwonlySafeBackupEncrypted clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   TwonlySafeBackupEncrypted copyWith(
           void Function(TwonlySafeBackupEncrypted) updates) =>
@@ -138,8 +131,6 @@ class TwonlySafeBackupEncrypted extends $pb.GeneratedMessage {
   static TwonlySafeBackupEncrypted create() => TwonlySafeBackupEncrypted._();
   @$core.override
   TwonlySafeBackupEncrypted createEmptyInstance() => create();
-  static $pb.PbList<TwonlySafeBackupEncrypted> createRepeated() =>
-      $pb.PbList<TwonlySafeBackupEncrypted>();
   @$core.pragma('dart2js:noInline')
   static TwonlySafeBackupEncrypted getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<TwonlySafeBackupEncrypted>(create);

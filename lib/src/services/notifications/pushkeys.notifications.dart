@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -9,14 +10,14 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -216,28 +217,28 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
       return null;
     }
     if (msg.content != null) {
-      kind = PushKind.reactionToText;
+      kind = PushKind.REACTION_TO_TEXT;
     } else if (msg.mediaId != null) {
       final media = await twonlyDB.mediaFilesDao.getMediaFileById(msg.mediaId!);
       if (media == null) return null;
       switch (media.type) {
         case MediaType.image:
-          kind = PushKind.reactionToImage;
+          kind = PushKind.REACTION_TO_IMAGE;
         case MediaType.audio:
-          kind = PushKind.reactionToAudio;
+          kind = PushKind.REACTION_TO_AUDIO;
         case MediaType.video:
-          kind = PushKind.reactionToVideo;
+          kind = PushKind.REACTION_TO_VIDEO;
         case MediaType.gif:
-          kind = PushKind.reaction;
+          kind = PushKind.REACTION;
       }
     }
     additionalContent = content.reaction.emoji;
   }
 
   if (content.hasTextMessage()) {
-    kind = PushKind.text;
+    kind = PushKind.TEXT;
     if (content.textMessage.hasQuoteMessageId()) {
-      kind = PushKind.response;
+      kind = PushKind.RESPONSE;
     }
     final group = await twonlyDB.groupsDao.getGroup(content.groupId);
     if (group != null && !group.isDirectChat) {
@@ -246,7 +247,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   }
 
   if (content.hasAdditionalDataMessage()) {
-    kind = PushKind.text;
+    kind = PushKind.TEXT;
   }
 
   if (content.hasMedia()) {
@@ -254,16 +255,16 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
       case EncryptedContent_Media_Type.REUPLOAD:
         return null;
       case EncryptedContent_Media_Type.IMAGE:
-        kind = PushKind.image;
+        kind = PushKind.IMAGE;
       case EncryptedContent_Media_Type.VIDEO:
-        kind = PushKind.video;
+        kind = PushKind.VIDEO;
       case EncryptedContent_Media_Type.GIF:
-        kind = PushKind.image;
+        kind = PushKind.IMAGE;
       case EncryptedContent_Media_Type.AUDIO:
-        kind = PushKind.audio;
+        kind = PushKind.AUDIO;
     }
     if (content.media.requiresAuthentication) {
-      kind = PushKind.twonly;
+      kind = PushKind.TWONLY;
     }
     final group = await twonlyDB.groupsDao.getGroup(content.groupId);
     if (group != null && !group.isDirectChat) {
@@ -274,9 +275,9 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   if (content.hasContactRequest()) {
     switch (content.contactRequest.type) {
       case EncryptedContent_ContactRequest_Type.REQUEST:
-        kind = PushKind.contactRequest;
+        kind = PushKind.CONTACT_REQUEST;
       case EncryptedContent_ContactRequest_Type.ACCEPT:
-        kind = PushKind.acceptRequest;
+        kind = PushKind.ACCEPT_REQUEST;
       case EncryptedContent_ContactRequest_Type.REJECT:
         return null;
     }
@@ -292,16 +293,16 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     }
     switch (content.mediaUpdate.type) {
       case EncryptedContent_MediaUpdate_Type.REOPENED:
-        kind = PushKind.reopenedMedia;
+        kind = PushKind.REOPENED_MEDIA;
       case EncryptedContent_MediaUpdate_Type.STORED:
-        kind = PushKind.storedMediaFile;
+        kind = PushKind.STORED_MEDIA_FILE;
       case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
         return null;
     }
   }
 
   if (content.hasGroupCreate()) {
-    kind = PushKind.addedToGroup;
+    kind = PushKind.ADDED_TO_GROUP;
     final group = await twonlyDB.groupsDao.getGroup(content.groupId);
     additionalContent = group!.groupName;
   }
@@ -344,9 +345,9 @@ Future<Uint8List?> encryptPushNotification(
     // user does not have send any push keys
     // only allow accept request and contact request to be send in an insecure way :/
     // In future find a better way, e.g. use the signal protocol in a native way..
-    if (content.kind != PushKind.acceptRequest &&
-        content.kind != PushKind.contactRequest &&
-        content.kind != PushKind.testNotification) {
+    if (content.kind != PushKind.ACCEPT_REQUEST &&
+        content.kind != PushKind.CONTACT_REQUEST &&
+        content.kind != PushKind.TEST_NOTIFICATION) {
       // this will be enforced after every app uses this system... :/
       // return null;
       Log.warn('Using insecure key as the receiver does not send a push key!');

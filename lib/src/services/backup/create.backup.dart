@@ -2,37 +2,39 @@
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/backup/backup.view.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
-  if (gUser.twonlySafeBackup == null) {
+  if (userService.currentUser.twonlySafeBackup == null) {
     return;
   }
 
-  if (gUser.twonlySafeBackup!.backupUploadState ==
+  if (userService.currentUser.twonlySafeBackup!.backupUploadState ==
       LastBackupUploadState.pending) {
     Log.warn('Backup upload is already pending.');
     return;
   }
 
-  final lastUpdateTime = gUser.twonlySafeBackup!.lastBackupDone;
+  final lastUpdateTime =
+      userService.currentUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
     if (lastUpdateTime.isAfter(clock.now().subtract(const Duration(days: 1)))) {
       return;
@@ -41,9 +43,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   Log.info('Starting new twonly Backup!');
 
-  final baseDir = globalApplicationSupportDirectory;
-
-  final backupDir = Directory(join(baseDir, 'backup_twonly_safe/'));
+  final backupDir = Directory(
+    join(AppEnvironment.supportDir, 'backup_twonly_safe/'),
+  );
   await backupDir.create(recursive: true);
 
   final backupDatabaseFile = File(join(backupDir.path, 'twonly.backup.sqlite'));
@@ -53,7 +55,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   );
 
   // copy database
-  final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
+  final originalDatabase = File(
+    join(AppEnvironment.supportDir, 'twonly.sqlite'),
+  );
   await originalDatabase.copy(backupDatabaseFile.path);
 
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -80,14 +84,17 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   // ignore: inference_failure_on_collection_literal
   final secureStorageBackup = {};
-  const storage = FlutterSecureStorage();
-  secureStorageBackup[SecureStorageKeys.signalIdentity] = await storage.read(
-    key: SecureStorageKeys.signalIdentity,
-  );
-  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] = await storage
-      .read(key: SecureStorageKeys.signalSignedPreKey);
+  secureStorageBackup[SecureStorageKeys.signalIdentity] = await SecureStorage
+      .instance
+      .read(
+        key: SecureStorageKeys.signalIdentity,
+      );
+  secureStorageBackup[SecureStorageKeys.signalSignedPreKey] =
+      await SecureStorage.instance.read(
+        key: SecureStorageKeys.signalSignedPreKey,
+      );
 
-  final userBackup = await getUser();
+  final userBackup = await UserService.getUser();
   if (userBackup == null) return;
   // FILTER settings which should not be in the backup
   userBackup
@@ -118,14 +125,14 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
-  if (gUser.twonlySafeBackup!.lastBackupDone == null ||
-      gUser.twonlySafeBackup!.lastBackupDone!.isAfter(
+  if (userService.currentUser.twonlySafeBackup!.lastBackupDone == null ||
+      userService.currentUser.twonlySafeBackup!.lastBackupDone!.isAfter(
         clock.now().subtract(const Duration(days: 90)),
       )) {
     force = true;
   }
 
-  final lastHash = await storage.read(
+  final lastHash = await SecureStorage.instance.read(
     key: SecureStorageKeys.twonlySafeLastBackupHash,
   );
 
@@ -135,7 +142,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
       return;
     }
   }
-  await storage.write(
+
+  await SecureStorage.instance.write(
     key: SecureStorageKeys.twonlySafeLastBackupHash,
     value: backupHash,
   );
@@ -147,7 +155,9 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final secretBox = await chacha20.encrypt(
     backupBytes,
-    secretKey: SecretKey(gUser.twonlySafeBackup!.encryptionKey),
+    secretKey: SecretKey(
+      userService.currentUser.twonlySafeBackup!.encryptionKey,
+    ),
     nonce: nonce,
   );
 
@@ -169,12 +179,12 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     'Create twonly Backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
-  if (gUser.backupServer != null) {
-    if (encryptedBackupBytes.length > gUser.backupServer!.maxBackupBytes) {
+  if (userService.currentUser.backupServer != null) {
+    if (encryptedBackupBytes.length >
+        userService.currentUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
-      await updateUserdata((user) {
+      await UserService.update((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
-        return user;
       });
       return;
     }
@@ -184,7 +194,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     taskId: 'backup',
     file: encryptedBackupBytesFile,
     httpRequestMethod: 'PUT',
-    url: (await getTwonlySafeBackupUrl())!,
+    url: getTwonlySafeBackupUrl()!,
     post: 'binary',
     retries: 2,
     headers: {
@@ -193,13 +203,11 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   );
   if (await FileDownloader().enqueue(task)) {
     Log.info('Starting upload from twonly Backup.');
-    await updateUserdata((user) {
+    await UserService.update((user) {
       user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
       user.twonlySafeBackup!.lastBackupDone = clock.now();
       user.twonlySafeBackup!.lastBackupSize = encryptedBackupBytes.length;
-      return user;
     });
-    gUpdateBackupView();
   } else {
     Log.error('Error starting UploadTask for twonly Backup.');
   }
@@ -208,26 +216,23 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    await updateUserdata((user) {
+    await UserService.update((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
       }
-      return user;
     });
   } else if (update.status == TaskStatus.complete) {
     Log.info(
       'twonly Backup uploaded with status code ${update.responseStatusCode}',
     );
-    await updateUserdata((user) {
+    await UserService.update((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState =
             LastBackupUploadState.success;
       }
-      return user;
     });
   } else {
     Log.info('Backup is in state: ${update.status}');
     return;
   }
-  gUpdateBackupView();
 }

@@ -1,0 +1,95 @@
+import 'package:drift/drift.dart' hide Column;
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
+
+class GroupContextMenu extends StatelessWidget {
+  const GroupContextMenu({
+    required this.group,
+    required this.child,
+    super.key,
+  });
+  final Widget child;
+  final Group group;
+
+  @override
+  Widget build(BuildContext context) {
+    return ContextMenu(
+      items: [
+        if (!group.archived)
+          ContextMenuItem(
+            title: context.lang.contextMenuArchiveUser,
+            onTap: () async {
+              const update = GroupsCompanion(archived: Value(true));
+              if (context.mounted) {
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              }
+            },
+            icon: Icons.archive_outlined,
+          ),
+        if (group.archived)
+          ContextMenuItem(
+            title: context.lang.contextMenuUndoArchiveUser,
+            onTap: () async {
+              const update = GroupsCompanion(archived: Value(false));
+              if (context.mounted) {
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              }
+            },
+            icon: Icons.unarchive_outlined,
+          ),
+        ContextMenuItem(
+          title: context.lang.contextMenuOpenChat,
+          onTap: () => context.push(Routes.chatsMessages(group.groupId)),
+          icon: FontAwesomeIcons.comments,
+        ),
+        if (!group.archived)
+          ContextMenuItem(
+            title: group.pinned
+                ? context.lang.contextMenuUnpin
+                : context.lang.contextMenuPin,
+            onTap: () async {
+              final update = GroupsCompanion(pinned: Value(!group.pinned));
+              if (context.mounted) {
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              }
+            },
+            icon: group.pinned
+                ? FontAwesomeIcons.thumbtackSlash
+                : FontAwesomeIcons.thumbtack,
+          ),
+        ContextMenuItem(
+          title: context.lang.delete,
+          icon: FontAwesomeIcons.trashCan,
+          onTap: () async {
+            final ok = await showAlertDialog(
+              context,
+              context.lang.deleteTitle,
+              context.lang.groupContextMenuDeleteGroup,
+            );
+            if (ok) {
+              await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
+              if (group.isDirectChat) {
+                await twonlyDB.groupsDao.deleteGroup(group.groupId);
+              } else {
+                await twonlyDB.groupsDao.updateGroup(
+                  group.groupId,
+                  const GroupsCompanion(
+                    deletedContent: Value(true),
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ],
+      child: child,
+    );
+  }
+}

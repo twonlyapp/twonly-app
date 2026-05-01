@@ -1,118 +1,105 @@
 import 'dart:async';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
-import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/themes/dark.dart';
-import 'package:twonly/src/themes/light.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/components/app_outdated.dart';
-import 'package:twonly/src/views/home.view.dart';
-import 'package:twonly/src/views/onboarding/onboarding.view.dart';
-import 'package:twonly/src/views/onboarding/register.view.dart';
-import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
-import 'package:twonly/src/views/unlock_twonly.view.dart';
+import 'package:twonly/src/visual/components/app_outdated.comp.dart';
+import 'package:twonly/src/visual/themes/dark.dart';
+import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/critical_error.view.dart';
+import 'package:twonly/src/visual/views/home.view.dart';
+import 'package:twonly/src/visual/views/onboarding/onboarding.view.dart';
+import 'package:twonly/src/visual/views/onboarding/register.view.dart';
+import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
-  const App({super.key});
+  const App({required this.storageError, super.key});
+  final bool storageError;
   @override
   State<App> createState() => _AppState();
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
-  bool wasPaused = false;
+  bool _wasPaused = false;
 
   @override
   void initState() {
     super.initState();
-    globalIsAppInBackground = false;
+    AppState.isAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
-
-    globalCallbackConnectionState = ({required isConnected}) async {
-      await context.read<CustomChangeProvider>().updateConnectionState(
-        isConnected,
-      );
-      await setUserPlan();
-    };
-
-    globalCallbackUpdatePlan = (plan) {
-      context.read<PurchasesProvider>().updatePlan(plan);
-    };
-
-    unawaited(initAsync());
-  }
-
-  Future<void> setUserPlan() async {
-    final user = await getUser();
-    if (user != null && mounted) {
-      if (mounted) {
-        context.read<PurchasesProvider>().updatePlan(
-          planFromString(user.subscriptionPlan),
-        );
-      }
-    }
-  }
-
-  Future<void> initAsync() async {
-    await setUserPlan();
-    await apiService.connect();
-    await apiService.listenToNetworkChanges();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (wasPaused) {
-        globalIsAppInBackground = false;
+      if (_wasPaused) {
+        AppState.isAppInBackground = false;
         twonlyDB.markUpdated();
         unawaited(apiService.connect());
       }
     } else if (state == AppLifecycleState.paused) {
-      wasPaused = true;
-      globalIsAppInBackground = true;
+      _wasPaused = true;
+      AppState.isAppInBackground = true;
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    globalCallbackConnectionState = ({required isConnected}) {};
-    globalCallbackUpdatePlan = (planId) {};
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: context.watch<SettingsChangeProvider>(),
+      listenable: context.read<SettingsChangeProvider>(),
       builder: (context, child) {
+        const localizationsDelegates = [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ];
+
+        const supportedLocales = [
+          Locale('en', ''),
+          Locale('de', ''),
+        ];
+
+        if (widget.storageError) {
+          return MaterialApp(
+            scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
+            localizationsDelegates: localizationsDelegates,
+            debugShowCheckedModeBanner: false,
+            supportedLocales: supportedLocales,
+            title: 'twonly',
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: context.read<SettingsChangeProvider>().themeMode,
+            home: const CriticalErrorView(),
+          );
+        }
+
         return MaterialApp.router(
           routerConfig: routerProvider,
-          scaffoldMessengerKey: globalRootScaffoldMessengerKey,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+          scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
+          localizationsDelegates: localizationsDelegates,
           debugShowCheckedModeBanner: false,
-          supportedLocales: const [
-            Locale('en', ''),
-            Locale('de', ''),
-          ],
+          supportedLocales: supportedLocales,
           title: 'twonly',
           theme: lightTheme,
           darkTheme: darkTheme,
-          themeMode: context.watch<SettingsChangeProvider>().themeMode,
+          themeMode: context.read<SettingsChangeProvider>().themeMode,
         );
       },
     );
@@ -130,11 +117,8 @@ class AppMainWidget extends StatefulWidget {
 }
 
 class _AppMainWidgetState extends State<AppMainWidget> {
-  bool _isUserCreated = false;
-  bool _showDatabaseMigration = false;
   bool _showOnboarding = true;
   bool _isLoaded = false;
-  bool _skipBackup = false;
   bool _isTwonlyLocked = true;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
@@ -146,25 +130,18 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   }
 
   Future<void> initAsync() async {
-    _isUserCreated = await isUserCreated();
-
-    if (_isUserCreated) {
+    if (userService.isUserCreated) {
+      await FirebaseMessaging.instance.requestPermission();
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
-        _isTwonlyLocked = gUser.screenLockEnabled;
+        _isTwonlyLocked = userService.currentUser.screenLockEnabled;
       }
-      if (gUser.appVersion < 62) {
-        _showDatabaseMigration = true;
-      }
-    }
-
-    if (!_isUserCreated && !_showDatabaseMigration) {
+    } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
       final (proof, disabled) = await apiService.getProofOfWork();
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
-        // Starting with the proof of work.
         _proofOfWork = (
           calculatePoW(proof.prefix, proof.difficulty.toInt()),
           false,
@@ -187,21 +164,20 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
     late Widget child;
 
-    if (_showDatabaseMigration) {
-      child = const Center(child: Text('Please reinstall twonly.'));
-    } else if (_isUserCreated) {
+    if (userService.isUserCreated) {
       if (_isTwonlyLocked) {
         child = UnlockTwonlyView(
           callbackOnSuccess: () => setState(() {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (gUser.twonlySafeBackup == null && !_skipBackup) {
-        child = SetupBackupView(
-          callBack: () {
-            _skipBackup = true;
-            setState(() {});
-          },
+      } else if (!userService.currentUser.skipSetupPages &&
+          userService.currentUser.currentSetupPage != null) {
+        // This will only be shown in case the user have not skipped
+        child = SetupView(
+          onUpdate: () => setState(() {
+            // userService.currentUser has updated...
+          }),
         );
       } else {
         child = HomeView(
@@ -224,7 +200,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     return Stack(
       children: [
         child,
-        const AppOutdated(),
+        const AppOutdatedComp(),
       ],
     );
   }

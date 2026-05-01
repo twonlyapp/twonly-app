@@ -1,0 +1,292 @@
+// ignore_for_file: parameter_assignments
+
+import 'dart:async';
+
+import 'package:drift/drift.dart' hide Column;
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
+import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
+import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
+import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
+
+class StartNewChatView extends StatefulWidget {
+  const StartNewChatView({super.key});
+  @override
+  State<StartNewChatView> createState() => _StartNewChatView();
+}
+
+class _StartNewChatView extends State<StartNewChatView> {
+  List<Contact> filteredContacts = [];
+  List<Group> filteredGroups = [];
+  List<Contact> allContacts = [];
+  List<Group> allNonDirectGroups = [];
+  final TextEditingController searchUserName = TextEditingController();
+  late StreamSubscription<List<Contact>> contactSub;
+  late StreamSubscription<List<Group>> allNonDirectGroupsSub;
+
+  @override
+  void initState() {
+    super.initState();
+
+    contactSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
+      update,
+    ) async {
+      update.sort(
+        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
+      );
+      setState(() {
+        allContacts = update;
+      });
+      await filterUsers();
+    });
+
+    allNonDirectGroupsSub = twonlyDB.groupsDao
+        .watchGroupsForStartNewChat()
+        .listen((update) async {
+          setState(() {
+            allNonDirectGroups = update;
+          });
+          await filterUsers();
+        });
+  }
+
+  @override
+  void dispose() {
+    allNonDirectGroupsSub.cancel();
+    contactSub.cancel();
+    super.dispose();
+  }
+
+  Future<void> filterUsers() async {
+    if (searchUserName.value.text.isEmpty) {
+      setState(() {
+        filteredContacts = allContacts;
+        filteredGroups = [];
+      });
+      return;
+    }
+    final usersFiltered = allContacts
+        .where(
+          (user) => getContactDisplayName(
+            user,
+          ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
+        )
+        .toList();
+    final groupsFiltered = allNonDirectGroups
+        .where(
+          (g) => g.groupName.toLowerCase().contains(
+            searchUserName.value.text.toLowerCase(),
+          ),
+        )
+        .toList();
+    setState(() {
+      filteredContacts = usersFiltered;
+      filteredGroups = groupsFiltered;
+    });
+  }
+
+  Future<void> _onTapUser(Contact user) async {
+    var directChat = await twonlyDB.groupsDao.getDirectChat(user.userId);
+    if (directChat == null) {
+      await twonlyDB.groupsDao.createNewDirectChat(
+        user.userId,
+        GroupsCompanion(
+          groupName: Value(
+            getContactDisplayName(user),
+          ),
+        ),
+      );
+      directChat = await twonlyDB.groupsDao.getDirectChat(user.userId);
+    }
+    if (!mounted) return;
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return ChatMessagesView(directChat!.groupId);
+        },
+      ),
+    );
+  }
+
+  Future<void> _onTapGroup(Group group) async {
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return ChatMessagesView(group.groupId);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.lang.startNewChatTitle),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(
+            bottom: 40,
+            left: 10,
+            top: 20,
+            right: 10,
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  onChanged: (_) async {
+                    await filterUsers();
+                  },
+                  controller: searchUserName,
+                  decoration: getInputDecoration(
+                    context,
+                    context.lang.startNewChatSearchHint,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  restorationId: 'new_message_users_list',
+                  itemCount:
+                      filteredContacts.length + 3 + filteredGroups.length,
+                  itemBuilder: (context, i) {
+                    if (searchUserName.text.isEmpty) {
+                      if (i == 0) {
+                        return ListTile(
+                          title: Text(context.lang.newGroup),
+                          leading: const CircleAvatar(
+                            child: FaIcon(
+                              FontAwesomeIcons.userGroup,
+                              size: 13,
+                            ),
+                          ),
+                          onTap: () => context.push(
+                            Routes.groupCreateSelectMember(null),
+                          ),
+                        );
+                      }
+                      if (i == 1) {
+                        return ListTile(
+                          title: Text(context.lang.startNewChatNewContact),
+                          leading: const CircleAvatar(
+                            child: FaIcon(
+                              FontAwesomeIcons.userPlus,
+                              size: 13,
+                            ),
+                          ),
+                          onTap: () => context.push(Routes.chatsAddNewUser),
+                        );
+                      }
+                      if (i == 2) {
+                        return const Divider();
+                      }
+                      i = i - 3;
+                    } else {
+                      if (i == 0) {
+                        return filteredContacts.isNotEmpty
+                            ? ListTile(
+                                title: Text(
+                                  context.lang.contacts,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            : Container();
+                      } else {
+                        i -= 1;
+                      }
+                    }
+
+                    if (i < filteredContacts.length) {
+                      return UserContextMenu(
+                        key: ValueKey(filteredContacts[i].userId),
+                        contact: filteredContacts[i],
+                        child: ListTile(
+                          title: Row(
+                            children: [
+                              Text(getContactDisplayName(filteredContacts[i])),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 8,
+                                  left: 1,
+                                ),
+                                child: VerificationBadgeComp(
+                                  contact: filteredContacts[i],
+                                ),
+                              ),
+                              FlameCounterWidget(
+                                contactId: filteredContacts[i].userId,
+                              ),
+                            ],
+                          ),
+                          leading: AvatarIcon(
+                            contactId: filteredContacts[i].userId,
+                            fontSize: 13,
+                          ),
+                          onTap: () => _onTapUser(filteredContacts[i]),
+                        ),
+                      );
+                    }
+                    i -= filteredContacts.length;
+
+                    if (i == 0) {
+                      return filteredGroups.isNotEmpty
+                          ? ListTile(
+                              title: Text(
+                                context.lang.groups,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : Container();
+                    }
+
+                    i -= 1;
+
+                    if (i < filteredGroups.length) {
+                      return GroupContextMenu(
+                        key: ValueKey(filteredGroups[i].groupId),
+                        group: filteredGroups[i],
+                        child: ListTile(
+                          title: Text(
+                            filteredGroups[i].groupName,
+                          ),
+                          leading: AvatarIcon(
+                            group: filteredGroups[i],
+                            fontSize: 13,
+                          ),
+                          onTap: () => _onTapGroup(filteredGroups[i]),
+                        ),
+                      );
+                    }
+                    return Container();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

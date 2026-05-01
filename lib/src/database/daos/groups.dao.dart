@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/flame.service.dart';
@@ -113,7 +113,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     int contactId,
     GroupsCompanion group,
   ) async {
-    final groupIdDirectChat = getUUIDforDirectChat(contactId, gUser.userId);
+    final groupIdDirectChat = getUUIDforDirectChat(
+      contactId,
+      userService.currentUser.userId,
+    );
     final insertGroup = group.copyWith(
       groupId: Value(groupIdDirectChat),
       isDirectChat: const Value(true),
@@ -209,7 +212,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<Group?> watchDirectChat(int contactId) {
-    final groupId = getUUIDforDirectChat(contactId, gUser.userId);
+    final groupId = getUUIDforDirectChat(
+      contactId,
+      userService.currentUser.userId,
+    );
     return (select(
       groups,
     )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();
@@ -235,7 +241,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     )..where((t) => t.groupId.equals(groupId))).getSingleOrNull();
   }
 
-  Stream<int> watchFlameCounter(String groupId) {
+  Stream<({int counter, bool isExpiring})> watchFlameCounter(String groupId) {
     return (select(groups)..where(
           (u) =>
               u.groupId.equals(groupId) &
@@ -243,7 +249,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               u.lastMessageSend.isNotNull(),
         ))
         .watchSingleOrNull()
-        .asyncMap(getFlameCounterFromGroup);
+        .map(getFlameCounterFromGroup);
   }
 
   Future<List<Group>> getAllDirectChats() {
@@ -310,5 +316,20 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               (t.lastMessageExchange.isSmallerThanValue(newLastMessage)),
         ))
         .write(GroupsCompanion(lastMessageExchange: Value(newLastMessage)));
+  }
+
+  Stream<List<Group>> watchNonDirectGroupsForMember(int contactId) {
+    final query =
+        select(groups).join([
+          innerJoin(
+            groupMembers,
+            groupMembers.groupId.equalsExp(groups.groupId),
+          ),
+        ])..where(
+          groups.isDirectChat.equals(false) &
+              groupMembers.contactId.equals(contactId),
+        );
+
+    return query.map((row) => row.readTable(groups)).watch();
   }
 }

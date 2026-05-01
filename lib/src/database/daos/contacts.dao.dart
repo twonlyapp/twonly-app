@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
@@ -7,7 +7,7 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'contacts.dao.g.dart';
 
-@DriftAccessor(tables: [Contacts])
+@DriftAccessor(tables: [Contacts, KeyVerifications])
 class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -132,6 +132,44 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
               t.accountDeleted.equals(false),
         ))
         .watch();
+  }
+
+  Stream<List<Contact>> watchContactsAnnouncedViaUserDiscovery() {
+    return (select(contacts)..where((t) {
+          var expr =
+              t.userDiscoveryVersion.isNotNull() &
+              t.userDiscoveryExcluded.equals(false) &
+              t.accountDeleted.equals(false) &
+              t.mediaSendCounter.isBiggerOrEqualValue(
+                userService.currentUser.requiredSendImages,
+              );
+
+          if (userService.currentUser.userDiscoveryRequiresManualApproval) {
+            expr = expr & t.userDiscoveryManualApproved.equals(true);
+          }
+
+          return expr;
+        }))
+        .watch();
+  }
+
+  Future<List<Contact>> getContactsAnnouncedViaUserDiscovery() async {
+    return (select(contacts)..where((t) {
+          var expr =
+              t.userDiscoveryVersion.isNotNull() &
+              t.userDiscoveryExcluded.equals(false) &
+              t.accountDeleted.equals(false) &
+              t.mediaSendCounter.isBiggerOrEqualValue(
+                userService.currentUser.requiredSendImages,
+              );
+
+          if (userService.currentUser.userDiscoveryRequiresManualApproval) {
+            expr = expr & t.userDiscoveryManualApproved.equals(true);
+          }
+
+          return expr;
+        }))
+        .get();
   }
 
   Stream<List<Contact>> watchAllContacts() {

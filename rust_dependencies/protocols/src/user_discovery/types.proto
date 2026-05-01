@@ -1,0 +1,49 @@
+syntax = "proto3";
+package user_discovery;
+
+message UserDiscoveryVersion {
+  uint32 announcement = 1;
+  uint32 promotion    = 2;
+}
+
+message UserDiscoveryMessage {
+
+  UserDiscoveryVersion version = 1;
+
+  optional UserDiscoveryAnnouncement user_discovery_announcement = 2;
+  optional UserDiscoveryPromotion    user_discovery_promotion    = 3;
+  optional UserDiscoveryRecall       user_discovery_recall       = 4;
+
+  message UserDiscoveryAnnouncement {
+    int64          public_id           = 1;
+    uint32         threshold           = 2;
+    bytes          announcement_share  = 3;
+    bool           share_promotion     = 4;
+    repeated bytes verification_shares = 5;
+  }
+
+  message UserDiscoveryPromotion {
+    uint32 promotion_id       = 1;
+    int64  public_id          = 2;
+    uint32 threshold          = 3;
+    bytes  announcement_share = 5;
+
+    optional int64 public_key_verified_timestamp = 6;
+
+    message AnnouncementShareDecrypted {
+      message SignedData {
+        int64 public_id  = 1;
+        int64 user_id    = 2;
+        bytes public_key = 3;
+      }
+      SignedData signed_data = 1;
+      bytes      signature   = 2;
+    }
+
+  }
+
+  message UserDiscoveryRecall {
+    int64 promotion_id = 1;
+  }
+
+}

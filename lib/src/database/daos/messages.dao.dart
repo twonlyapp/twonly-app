@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -161,18 +161,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
   }
 
-  Future<void> openedAllTextMessages(String groupId) {
-    final updates = MessagesCompanion(openedAt: Value(clock.now()));
-    return (update(messages)..where(
-          (t) =>
-              t.groupId.equals(groupId) &
-              t.senderId.isNotNull() &
-              t.openedAt.isNull() &
-              t.type.equals(MessageType.text.name),
-        ))
-        .write(updates);
-  }
-
   Future<void> handleMessageDeletion(
     int? contactId,
     String messageId,
@@ -184,19 +172,34 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       return;
     }
     if (msg.mediaId != null && contactId != null) {
-      // contactId -> When a image is send to multiple and one message is delete the image should be still available...
-      await (delete(
-        mediaFiles,
-      )..where((t) => t.mediaId.equals(msg.mediaId!))).go();
+      final otherMessagesWithSameMedia =
+          await (select(messages)..where(
+                (t) =>
+                    t.mediaId.equals(msg.mediaId!) &
+                    t.messageId.equals(messageId).not(),
+              ))
+              .get();
 
-      final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
-      if (mediaService != null) {
-        mediaService.fullMediaRemoval();
+      if (otherMessagesWithSameMedia.isEmpty) {
+        await (delete(
+          mediaFiles,
+        )..where((t) => t.mediaId.equals(msg.mediaId!))).go();
+
+        final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
+        if (mediaService != null) {
+          mediaService.fullMediaRemoval();
+        }
+      } else {
+        Log.info(
+          'Media ${msg.mediaId} is still used by ${otherMessagesWithSameMedia.length} other messages. Skipping physical deletion.',
+        );
       }
     }
     await (delete(
       messageHistories,
     )..where((t) => t.messageId.equals(messageId))).go();
+
+    await twonlyDB.receiptsDao.deleteReceiptsByMessageId(messageId);
 
     await (update(messages)..where(
           (t) => t.messageId.equals(messageId),
@@ -344,7 +347,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
-      final rowId = await into(messages).insertOnConflictUpdate(insertMessage);
+      await into(messages).insertOnConflictUpdate(insertMessage);
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
@@ -365,9 +368,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         );
       }
 
+      final messageId = insertMessage.messageId.value;
+
       return await (select(
         messages,
-      )..where((t) => t.rowId.equals(rowId))).getSingle();
+      )..where((t) => t.messageId.equals(messageId))).getSingle();
     } catch (e) {
       Log.error('Could not insert message: $e');
       return null;

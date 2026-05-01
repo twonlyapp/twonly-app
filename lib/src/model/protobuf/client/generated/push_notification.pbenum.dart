@@ -8,61 +8,61 @@
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
 class PushKind extends $pb.ProtobufEnum {
-  static const PushKind reaction =
-      PushKind._(0, _omitEnumNames ? '' : 'reaction');
-  static const PushKind response =
-      PushKind._(1, _omitEnumNames ? '' : 'response');
-  static const PushKind text = PushKind._(2, _omitEnumNames ? '' : 'text');
-  static const PushKind video = PushKind._(3, _omitEnumNames ? '' : 'video');
-  static const PushKind twonly = PushKind._(4, _omitEnumNames ? '' : 'twonly');
-  static const PushKind image = PushKind._(5, _omitEnumNames ? '' : 'image');
-  static const PushKind contactRequest =
-      PushKind._(6, _omitEnumNames ? '' : 'contactRequest');
-  static const PushKind acceptRequest =
-      PushKind._(7, _omitEnumNames ? '' : 'acceptRequest');
-  static const PushKind storedMediaFile =
-      PushKind._(8, _omitEnumNames ? '' : 'storedMediaFile');
-  static const PushKind testNotification =
-      PushKind._(9, _omitEnumNames ? '' : 'testNotification');
-  static const PushKind reopenedMedia =
-      PushKind._(10, _omitEnumNames ? '' : 'reopenedMedia');
-  static const PushKind reactionToVideo =
-      PushKind._(11, _omitEnumNames ? '' : 'reactionToVideo');
-  static const PushKind reactionToText =
-      PushKind._(12, _omitEnumNames ? '' : 'reactionToText');
-  static const PushKind reactionToImage =
-      PushKind._(13, _omitEnumNames ? '' : 'reactionToImage');
-  static const PushKind reactionToAudio =
-      PushKind._(14, _omitEnumNames ? '' : 'reactionToAudio');
-  static const PushKind addedToGroup =
-      PushKind._(15, _omitEnumNames ? '' : 'addedToGroup');
-  static const PushKind audio = PushKind._(16, _omitEnumNames ? '' : 'audio');
+  static const PushKind REACTION =
+      PushKind._(0, _omitEnumNames ? '' : 'REACTION');
+  static const PushKind RESPONSE =
+      PushKind._(1, _omitEnumNames ? '' : 'RESPONSE');
+  static const PushKind TEXT = PushKind._(2, _omitEnumNames ? '' : 'TEXT');
+  static const PushKind VIDEO = PushKind._(3, _omitEnumNames ? '' : 'VIDEO');
+  static const PushKind TWONLY = PushKind._(4, _omitEnumNames ? '' : 'TWONLY');
+  static const PushKind IMAGE = PushKind._(5, _omitEnumNames ? '' : 'IMAGE');
+  static const PushKind CONTACT_REQUEST =
+      PushKind._(6, _omitEnumNames ? '' : 'CONTACT_REQUEST');
+  static const PushKind ACCEPT_REQUEST =
+      PushKind._(7, _omitEnumNames ? '' : 'ACCEPT_REQUEST');
+  static const PushKind STORED_MEDIA_FILE =
+      PushKind._(8, _omitEnumNames ? '' : 'STORED_MEDIA_FILE');
+  static const PushKind TEST_NOTIFICATION =
+      PushKind._(9, _omitEnumNames ? '' : 'TEST_NOTIFICATION');
+  static const PushKind REOPENED_MEDIA =
+      PushKind._(10, _omitEnumNames ? '' : 'REOPENED_MEDIA');
+  static const PushKind REACTION_TO_VIDEO =
+      PushKind._(11, _omitEnumNames ? '' : 'REACTION_TO_VIDEO');
+  static const PushKind REACTION_TO_TEXT =
+      PushKind._(12, _omitEnumNames ? '' : 'REACTION_TO_TEXT');
+  static const PushKind REACTION_TO_IMAGE =
+      PushKind._(13, _omitEnumNames ? '' : 'REACTION_TO_IMAGE');
+  static const PushKind REACTION_TO_AUDIO =
+      PushKind._(14, _omitEnumNames ? '' : 'REACTION_TO_AUDIO');
+  static const PushKind ADDED_TO_GROUP =
+      PushKind._(15, _omitEnumNames ? '' : 'ADDED_TO_GROUP');
+  static const PushKind AUDIO = PushKind._(16, _omitEnumNames ? '' : 'AUDIO');
 
   static const $core.List<PushKind> values = <PushKind>[
-    reaction,
-    response,
-    text,
-    video,
-    twonly,
-    image,
-    contactRequest,
-    acceptRequest,
-    storedMediaFile,
-    testNotification,
-    reopenedMedia,
-    reactionToVideo,
-    reactionToText,
-    reactionToImage,
-    reactionToAudio,
-    addedToGroup,
-    audio,
+    REACTION,
+    RESPONSE,
+    TEXT,
+    VIDEO,
+    TWONLY,
+    IMAGE,
+    CONTACT_REQUEST,
+    ACCEPT_REQUEST,
+    STORED_MEDIA_FILE,
+    TEST_NOTIFICATION,
+    REOPENED_MEDIA,
+    REACTION_TO_VIDEO,
+    REACTION_TO_TEXT,
+    REACTION_TO_IMAGE,
+    REACTION_TO_AUDIO,
+    ADDED_TO_GROUP,
+    AUDIO,
   ];
 
   static final $core.List<PushKind?> _byValue =

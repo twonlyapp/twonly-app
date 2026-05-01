@@ -1,9 +1,9 @@
 import 'package:clock/clock.dart' show clock;
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleAdditionalDataMessage(
@@ -14,6 +14,19 @@ Future<void> handleAdditionalDataMessage(
   Log.info(
     'Got a additional data message: ${message.senderMessageId} from $groupId',
   );
+
+  // Prevent message overwrite: reject if a message with this ID already
+  // exists from a different sender.
+  final existing = await twonlyDB.messagesDao
+      .getMessageById(message.senderMessageId)
+      .getSingleOrNull();
+  if (existing != null && existing.senderId != fromUserId) {
+    Log.warn(
+      '$fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
+    );
+    return;
+  }
+
   final msg = await twonlyDB.messagesDao.insertMessage(
     MessagesCompanion(
       messageId: Value(message.senderMessageId),
