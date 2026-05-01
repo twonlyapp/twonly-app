@@ -318,7 +318,12 @@ class _LogEntry {
       }
     }
 
-    msg = msg.trim().replaceAll('[twonly] ', '');
+    msg = msg
+        .trim()
+        .replaceAll('[twonly] ', '')
+        .replaceAll('[f] ', '')
+        .replaceAll('[b] ', '');
+
     final fileNameS = msg.split(' > ');
     final fileName = fileNameS[0];
 
