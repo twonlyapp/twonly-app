@@ -22,6 +22,9 @@ jobs:
         with:
           channel: stable
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Cloning sub-repos
         run: git submodule update --init --recursive
 
