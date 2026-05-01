@@ -40,8 +40,8 @@ class ChatMessagesView extends StatefulWidget {
 class _ChatMessagesViewState extends State<ChatMessagesView>
     with WidgetsBindingObserver {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  late StreamSubscription<Group?> userSub;
-  late StreamSubscription<List<Message>> messageSub;
+  StreamSubscription<Group?>? userSub;
+  StreamSubscription<List<Message>>? messageSub;
   StreamSubscription<List<GroupHistory>>? groupActionsSub;
   StreamSubscription<List<Contact>>? contactSub;
 
@@ -55,7 +55,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   List<MemoryItem> galleryItems = [];
   Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
-  late FocusNode textFieldFocus;
+  FocusNode? textFieldFocus;
   final ItemScrollController itemScrollController = ItemScrollController();
   int? focusedScrollItem;
   bool _receiverDeletedAccount = false;
@@ -72,11 +72,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   @override
   void dispose() {
-    userSub.cancel();
-    messageSub.cancel();
+    userSub?.cancel();
+    messageSub?.cancel();
     contactSub?.cancel();
     groupActionsSub?.cancel();
     _nextTypingIndicator?.cancel();
+    textFieldFocus?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -351,7 +352,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                             setState(() {
                               quotesMessage = chatMessage;
                             });
-                            textFieldFocus.requestFocus();
+                            textFieldFocus?.requestFocus();
                           },
                         ),
                       );
@@ -394,7 +395,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                 MessageInput(
                   group: group,
                   quotesMessage: quotesMessage,
-                  textFieldFocus: textFieldFocus,
+                  textFieldFocus: textFieldFocus!,
                   onMessageSend: () {
                     setState(() {
                       quotesMessage = null;

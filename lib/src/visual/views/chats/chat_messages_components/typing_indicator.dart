@@ -43,9 +43,8 @@ class TypingIndicator extends StatefulWidget {
 class _TypingIndicatorState extends State<TypingIndicator> {
   List<GroupMember> _groupMembers = [];
 
-  late StreamSubscription<List<(Contact, GroupMember)>> membersSub;
-
-  late Timer _periodicUpdate;
+  StreamSubscription<List<(Contact, GroupMember)>>? membersSub;
+  Timer? _periodicUpdate;
 
   @override
   void initState() {
@@ -73,8 +72,8 @@ class _TypingIndicatorState extends State<TypingIndicator> {
 
   @override
   void dispose() {
-    membersSub.cancel();
-    _periodicUpdate.cancel();
+    membersSub?.cancel();
+    _periodicUpdate?.cancel();
     super.dispose();
   }
 
@@ -138,12 +137,12 @@ class AnimatedTypingDots extends StatefulWidget {
 
 class _AnimatedTypingDotsState extends State<AnimatedTypingDots>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  late List<Animation<double>> _animations;
+  AnimationController? _controller;
+  List<Animation<double>>? _animations;
 
   @override
   void initState() {
+    super.initState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -172,29 +171,30 @@ class _AnimatedTypingDotsState extends State<AnimatedTypingDots>
         ),
       ]).animate(
         CurvedAnimation(
-          parent: _controller,
+          parent: _controller!,
           curve: Interval(start, end),
         ),
       );
     });
-    super.initState();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_animations == null) return const SizedBox.shrink();
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(
         3,
         (index) => _AnimatedDot(
           isTyping: widget.isTyping,
-          animation: _animations[index],
+          animation: _animations![index],
         ),
       ),
     );
