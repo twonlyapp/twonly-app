@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:mutex/mutex.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/main.dart';
@@ -9,6 +10,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/startup_guard.dart';
 import 'package:workmanager/workmanager.dart';
 
 // ignore: unreachable_from_main
@@ -16,27 +18,27 @@ Future<void> initializeBackgroundTaskManager() async {
   await Workmanager().initialize(callbackDispatcher);
   await Workmanager().cancelByUniqueName('fetch_data_from_server');
 
-  await Workmanager().registerPeriodicTask(
-    'fetch_data_from_server',
-    'eu.twonly.periodic_task',
-    frequency: const Duration(minutes: 20),
-    initialDelay: const Duration(minutes: 5),
-    existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
-  );
+  // await Workmanager().registerPeriodicTask(
+  //   'fetch_data_from_server',
+  //   'eu.twonly.periodic_task',
+  //   frequency: const Duration(minutes: 20),
+  //   initialDelay: const Duration(minutes: 5),
+  //   existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+  //   constraints: Constraints(
+  //     networkType: NetworkType.connected,
+  //   ),
+  // );
 }
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    AppState.isInBackgroundTask = true;
+    SentryWidgetsFlutterBinding.ensureInitialized();
     switch (task) {
       case 'eu.twonly.periodic_task':
-        if (await initBackgroundExecution()) {
-          await handlePeriodicTask();
-        }
+      // if (await initBackgroundExecution()) {
+      //   await handlePeriodicTask();
+      // }
       case 'eu.twonly.processing_task':
         if (await initBackgroundExecution()) {
           await handleProcessingTask();
@@ -51,6 +53,18 @@ void callbackDispatcher() {
 bool _isInitialized = false;
 
 Future<bool> initBackgroundExecution() async {
+  // 1. Check startup guard IMMEDIATELY before doing ANYTHING else.
+  if (await StartupGuard.isAppStarting()) {
+    return false;
+  }
+
+  await AppEnvironment.init();
+  AppState.isInBackgroundTask = true;
+
+  if (await StartupGuard.isAppStarting()) {
+    Log.error('App is starting. Returning early.');
+    return false;
+  }
   if (_isInitialized) {
     // Reload the users, as on Android the background isolate can
     // stay alive for multiple hours between task executions
@@ -63,6 +77,8 @@ Future<bool> initBackgroundExecution() async {
     Log.info('Early return as user is not registered yet.');
     return false;
   }
+
+  Log.info('Background task is initialized');
 
   _isInitialized = true;
   return true;

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.3
+## 0.2.8
 
 - Fix: App did not launch sometimes on Android
 

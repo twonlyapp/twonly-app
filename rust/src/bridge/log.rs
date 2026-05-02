@@ -55,19 +55,30 @@ pub(crate) async fn init_tracing(logs_dir: &std::path::Path, is_dart_available: 
 }
 
 fn build_writers(logs_dir: &std::path::Path) -> (NonBlocking, NonBlocking) {
-    let file_appender = tracing_appender::rolling::RollingFileAppender::builder()
+    let file_appender_res = tracing_appender::rolling::RollingFileAppender::builder()
         .rotation(tracing_appender::rolling::Rotation::DAILY)
         .filename_prefix("twonly")
         .filename_suffix("log")
-        .build(logs_dir)
-        .expect("Failed to create file appender");
+        .build(logs_dir);
 
-    let (non_blocking_file, file_guard) = tracing_appender::non_blocking(file_appender);
+    let (non_blocking_file, file_guard) = match file_appender_res {
+        Ok(file_appender) => {
+            let (nb, guard) = tracing_appender::non_blocking(file_appender);
+            (nb, Some(guard))
+        }
+        Err(e) => {
+            eprintln!("Failed to create file appender: {}", e);
+            let (nb, guard) = tracing_appender::non_blocking(std::io::sink());
+            (nb, None)
+        }
+    };
     let (non_blocking_stdout, stdout_guard) = tracing_appender::non_blocking(std::io::stdout());
 
-    TRACING_GUARDS
-        .set(Mutex::new(Some((file_guard, stdout_guard))))
-        .ok();
+    if let Some(fg) = file_guard {
+        TRACING_GUARDS
+            .set(Mutex::new(Some((fg, stdout_guard))))
+            .ok();
+    }
 
     (non_blocking_stdout, non_blocking_file)
 }

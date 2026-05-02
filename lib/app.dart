@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -120,18 +119,21 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
   bool _isTwonlyLocked = true;
+  bool _wasLogged = true;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    Log.info('AppWidgetState: initState started');
+    initAsync();
   }
 
   Future<void> initAsync() async {
+    Log.info('AppWidgetState: initAsync started');
     if (userService.isUserCreated) {
-      await FirebaseMessaging.instance.requestPermission();
+      unawaited(FirebaseMessaging.instance.requestPermission());
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;
@@ -158,6 +160,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_wasLogged) {
+      Log.info('AppWidgetState: build started (_isLoaded: $_isLoaded)');
+      if (_isLoaded) {
+        _wasLogged = true;
+      }
+    }
     if (!_isLoaded) {
       return Center(child: Container());
     }

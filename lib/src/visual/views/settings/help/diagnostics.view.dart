@@ -176,7 +176,7 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
       children: [
         if (_showTimestamps && e.timestamp != null)
           TextSpan(
-            text: '${e.timestamp.toString().split(' ')[1].split('.')[0]} ',
+            text: '${e.timestamp.toString().split(' ')[1]} ',
             style: tsStyle,
           ),
         WidgetSpan(
@@ -306,8 +306,9 @@ class _LogEntry {
     String? level;
     var msg = trimmed;
 
-    // Try to parse leading timestamp (YYYY-MM-DD HH:MM:SS)
-    final tsRegex = RegExp(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+(.*)$');
+    // Try to parse leading timestamp (YYYY-MM-DD HH:MM:SS.mmmmmm)
+    final tsRegex =
+        RegExp(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(.*)$');
     final mTs = tsRegex.firstMatch(trimmed);
     if (mTs != null) {
       try {
