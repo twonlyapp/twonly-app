@@ -65,6 +65,11 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     )..where((t) => t.mediaId.equals(mediaId))).getSingleOrNull();
   }
 
+  Future<List<MediaFile>> getMediaFilesByIds(List<String> mediaIds) async {
+    return (select(mediaFiles)..where((t) => t.mediaId.isIn(mediaIds))).get();
+  }
+
+
   Future<MediaFile?> getDraftMediaFile() async {
     final medias = await (select(
       mediaFiles,

@@ -140,15 +140,22 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   Future<void> purgeMessageTable() async {
     final allGroups = await select(groups).get();
 
-    for (final group in allGroups) {
+    final groupedByTime = <int, List<String>>{};
+    for (final g in allGroups) {
+      groupedByTime
+          .putIfAbsent(g.deleteMessagesAfterMilliseconds, () => [])
+          .add(g.groupId);
+    }
+
+    for (final entry in groupedByTime.entries) {
       final deletionTime = clock.now().subtract(
-        Duration(
-          milliseconds: group.deleteMessagesAfterMilliseconds,
-        ),
+        Duration(milliseconds: entry.key),
       );
+      final groupIds = entry.value;
+
       await (delete(messages)..where(
             (m) =>
-                m.groupId.equals(group.groupId) &
+                m.groupId.isIn(groupIds) &
                 (m.mediaStored.equals(true) &
                         m.isDeletedFromSender.equals(true) |
                     m.mediaStored.equals(false)) &
@@ -402,6 +409,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Future<List<Message>> getMessagesByMediaId(String mediaId) async {
     return (select(messages)..where((t) => t.mediaId.equals(mediaId))).get();
+  }
+
+  Future<List<Message>> getMessagesByMediaIds(List<String> mediaIds) async {
+    return (select(messages)..where((t) => t.mediaId.isIn(mediaIds))).get();
   }
 
   Stream<List<(MessageAction, Contact)>> watchMessageActions(String messageId) {

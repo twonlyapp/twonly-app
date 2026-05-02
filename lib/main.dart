@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mutex/mutex.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
@@ -27,32 +28,50 @@ import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
+import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
+import 'package:twonly/src/utils/startup_guard.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
+
+final _initMutex = Mutex();
 
 /// This function is used to initialized the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
 Future<void> twonlyMinimumInitialization() async {
-  SentryWidgetsFlutterBinding.ensureInitialized();
+  Log.info('twonlyMinimumInitialization: called');
+  await exclusiveAccess(
+    lockName: 'init',
+    mutex: _initMutex,
+    action: () async {
+      Log.info('twonlyMinimumInitialization: started');
+      setupLocator();
 
-  await AppEnvironment.init();
-  Log.init();
-  setupLocator();
+      Log.info('twonlyMinimumInitialization: RustLib.init()');
+      await RustLib.init();
 
-  await RustLib.init();
+      Log.info('twonlyMinimumInitialization: initFlutterCallbacksForRust()');
+      await initFlutterCallbacksForRust();
 
-  await initFlutterCallbacksForRust();
-
-  await bridge.initializeTwonlyFlutter(
-    config: bridge.TwonlyConfig(
-      databasePath: '${AppEnvironment.supportDir}/twonly.sqlite',
-      dataDirectory: AppEnvironment.supportDir,
-    ),
+      Log.info('twonlyMinimumInitialization: bridge.initializeTwonlyFlutter()');
+      await bridge.initializeTwonlyFlutter(
+        config: bridge.TwonlyConfig(
+          databasePath: '${AppEnvironment.supportDir}/twonly.sqlite',
+          dataDirectory: AppEnvironment.supportDir,
+        ),
+      );
+      Log.info('twonlyMinimumInitialization: finished');
+    },
   );
 }
 
 void main() async {
+  final binding = SentryWidgetsFlutterBinding.ensureInitialized();
+  await AppEnvironment.init();
+  final stopwatch = Stopwatch()..start();
+
+  unawaited(StartupGuard.markAppStartup());
+
   await twonlyMinimumInitialization();
 
   unawaited(initFCMService());
@@ -67,21 +86,20 @@ void main() async {
     storageError = true;
   }
 
-  final dbExists = File(
-    '${AppEnvironment.supportDir}/twonly.sqlite',
-  ).existsSync();
-
   if (Platform.isIOS && userExists) {
-    if (!dbExists) {
+    final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
+    if (!dbFile.existsSync()) {
       Log.error('[twonly] IOS: App was removed and then reinstalled again...');
       await SecureStorage.instance.deleteAll();
       userExists = false;
     }
   }
 
+  Log.info('User loaded.');
+
   final settingsController = SettingsChangeProvider()..loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  await initFileDownloader();
+  unawaited(initFileDownloader());
 
   if (userExists) {
     if (userService.currentUser.allowErrorTrackingViaSentry) {
@@ -96,22 +114,22 @@ void main() async {
     }
 
     await runMigrations();
-
-    await twonlyDB.messagesDao.purgeMessageTable();
-    await twonlyDB.receiptsDao.purgeReceivedReceipts();
-    await UserDiscoveryService.removeDeletedContacts();
-
-    unawaited(MediaFileService.purgeTempFolder());
-
-    unawaited(setupPushNotification());
-    unawaited(finishStartedPreprocessing());
-    unawaited(createPushAvatars());
-    unawaited(performTwonlySafeBackup());
-    unawaited(initializeBackgroundTaskManager());
+    // We wait for the first frame to be rendered before starting heavy tasks.
+    // This ensures the splash screen is dismissed on Android immediately.
+    binding.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(seconds: 1));
+      unawaited(postStartupTasks());
+      unawaited(apiService.connect());
+    });
   }
 
   await apiService.listenToNetworkChanges();
-  unawaited(apiService.connect());
+
+  stopwatch.stop();
+
+  Log.info(
+    'Initialization finished after ${stopwatch.elapsed}. Calling runApp...',
+  );
 
   runApp(
     MultiProvider(
@@ -160,4 +178,25 @@ Future<void> runMigrations() async {
       }
     });
   }
+}
+
+Future<void> postStartupTasks() async {
+  Log.info('Post startup started.');
+  // 1. Immediate background cleanup (Non-blocking for UI)
+  await twonlyDB.messagesDao.purgeMessageTable();
+  unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
+  unawaited(UserDiscoveryService.removeDeletedContacts());
+  unawaited(MediaFileService.purgeTempFolder());
+
+  // 2. Service initializations
+  unawaited(setupPushNotification());
+  unawaited(finishStartedPreprocessing());
+  unawaited(createPushAvatars());
+
+  await Future.delayed(const Duration(seconds: 10));
+  unawaited(initializeBackgroundTaskManager());
+  // 3. Delayed tasks (Wait for app to settle)
+  await Future.delayed(const Duration(minutes: 2));
+  unawaited(performTwonlySafeBackup());
+  unawaited(cleanLogFile());
 }

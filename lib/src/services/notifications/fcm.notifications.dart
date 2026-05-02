@@ -7,6 +7,7 @@ import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -117,6 +118,7 @@ Future<void> initFCMService() async {
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  SentryWidgetsFlutterBinding.ensureInitialized();
   final isInitialized = await initBackgroundExecution();
   Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);

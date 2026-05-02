@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/utils/log.dart';
 
 class AppEnvironment {
   static late final String cacheDir;
@@ -14,6 +15,7 @@ class AppEnvironment {
   static Future<void> init() async {
     cacheDir = (await getApplicationCacheDirectory()).path;
     supportDir = (await getApplicationSupportDirectory()).path;
+    Log.init();
   }
 
   static void initTesting() {

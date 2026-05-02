@@ -54,7 +54,6 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
             return Err(UserDiscoveryError::NotInitialized);
         }
 
-        tracing::debug!("Loading Config from {}", config_path.display());
         Ok(std::fs::read_to_string(&config_path)?)
     }
 

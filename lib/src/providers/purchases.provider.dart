@@ -54,6 +54,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     }
 
     loadPurchases();
+    Log.info('PurchasesProvider: constructor finished');
   }
 
   SubscriptionPlan plan = SubscriptionPlan.Free;
@@ -74,6 +75,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   Future<void> loadPurchases() async {
     final available = await iapConnection.isAvailable();
+    Log.info('PurchasesProvider: IAP available: $available');
     if (!available) {
       storeState = StoreState.notAvailable;
       Log.warn('Store is not available');

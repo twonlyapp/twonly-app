@@ -24,7 +24,6 @@ class Log {
         );
       }
     });
-    cleanLogFile();
   }
 
   static String filterLogMessage(String msg) {
@@ -106,7 +105,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
   final logFile = File('${AppEnvironment.supportDir}/app.log');
 
   final logMessage =
-      '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
+      '${clock.now()} ${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}\n';
 
   return _protectFileAccess(() async {
     if (!logFile.existsSync()) {

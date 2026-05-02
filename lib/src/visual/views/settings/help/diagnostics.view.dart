@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -157,25 +158,39 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
     final tsStyle = TextStyle(
       color: isDarkMode(context) ? Colors.white : Colors.black,
       fontFamily: 'monospace',
+      fontSize: 12,
     );
-    final levelStyle = TextStyle(
-      color: Colors.blueGrey.shade600,
+    final fileNameStyle = TextStyle(
+      color: Colors.blueGrey.shade400,
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace',
+      fontSize: 11,
     );
     final msgStyle = TextStyle(
       color: isDarkMode(context) ? Colors.white : Colors.black,
       fontFamily: 'monospace',
+      fontSize: 13,
     );
 
     return TextSpan(
       children: [
         if (_showTimestamps && e.timestamp != null)
           TextSpan(
-            text: '${e.timestamp} '.replaceAll('.000', ''),
+            text: '${e.timestamp.toString().split(' ')[1]} ',
             style: tsStyle,
           ),
-        TextSpan(text: '${e.fileName}\n', style: levelStyle),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: FaIcon(
+              e.isBackground ? FontAwesomeIcons.clock : FontAwesomeIcons.mobile,
+              size: 12,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        TextSpan(text: '${e.fileName}\n', style: fileNameStyle),
         TextSpan(text: e.message, style: msgStyle),
       ],
     );
@@ -274,24 +289,26 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
 
 class _LogEntry {
   _LogEntry({
+    required this.timestamp,
+    required this.level,
     required this.message,
     required this.line,
     required this.fileName,
-    this.timestamp,
-    this.level,
+    required this.isBackground,
   });
 
   // Minimal parser based on the sample log format
   factory _LogEntry.parse(String raw) {
     // Example line:
-    // 2025-12-25 23:36:52 WARNING [twonly] api.service.dart:189) > websocket error: ...
+    // 2025-12-25 23:36:52 WARNING [f] [twonly] api.service.dart:189) > websocket error: ...
     final trimmed = raw.trim();
     DateTime? ts;
     String? level;
     var msg = trimmed;
 
-    // Try to parse leading timestamp (YYYY-MM-DD HH:MM:SS)
-    final tsRegex = RegExp(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+(.*)$');
+    // Try to parse leading timestamp (YYYY-MM-DD HH:MM:SS.mmmmmm)
+    final tsRegex =
+        RegExp(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(.*)$');
     final mTs = tsRegex.firstMatch(trimmed);
     if (mTs != null) {
       try {
@@ -318,11 +335,17 @@ class _LogEntry {
       }
     }
 
-    msg = msg.trim().replaceAll('[twonly] ', '');
+    final isBackground = msg.contains('[b] ');
+
+    msg = msg
+        .trim()
+        .replaceAll('[twonly] ', '')
+        .replaceAll('[f] ', '')
+        .replaceAll('[b] ', '');
+
     final fileNameS = msg.split(' > ');
     final fileName = fileNameS[0];
-
-    msg = fileNameS.sublist(1).join();
+    msg = fileNameS.sublist(1).join(' > ');
 
     return _LogEntry(
       timestamp: ts,
@@ -330,11 +353,14 @@ class _LogEntry {
       message: msg,
       line: raw,
       fileName: fileName,
+      isBackground: isBackground,
     );
   }
+
   final DateTime? timestamp;
   final String? level;
   final String message;
   final String line;
   final String fileName;
+  final bool isBackground;
 }

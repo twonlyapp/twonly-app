@@ -57,6 +57,10 @@ pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {
 }
 
 pub async fn initialize_twonly_flutter(config: TwonlyConfig) -> Result<()> {
+    if GLOBAL_TWONLY.initialized() {
+        tracing::info!("twonly already initialized.");
+        return Ok(());
+    }
     let log_dir = PathBuf::from(&config.data_directory).join("log");
     init_tracing(&log_dir, true).await;
     tracing::info!("Initialized twonly workspace.");
