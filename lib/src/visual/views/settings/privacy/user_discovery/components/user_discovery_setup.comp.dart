@@ -465,7 +465,7 @@ class _ExampleLabel extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Padding(
-        padding: const EdgeInsets.only(right: 12, bottom: 0),
+        padding: const EdgeInsets.only(right: 12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(

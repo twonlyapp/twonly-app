@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -180,9 +180,31 @@ class _ContactViewState extends State<ContactView> {
       body: ListView(
         key: ValueKey(contact.userId),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: AvatarIcon(contactId: contact.userId, fontSize: 30),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                // ignore: inference_failure_on_function_invocation
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return Dialog(
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AvatarIcon(contactId: contact.userId, fontSize: 200),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: AvatarIcon(contactId: contact.userId, fontSize: 30),
+              ),
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -331,7 +353,9 @@ class _ContactViewState extends State<ContactView> {
                       ),
                     );
                   },
-                  child: Text(context.lang.contactUserDiscoveryManualApprovalApprove),
+                  child: Text(
+                    context.lang.contactUserDiscoveryManualApprovalApprove,
+                  ),
                 ),
               )
             else
