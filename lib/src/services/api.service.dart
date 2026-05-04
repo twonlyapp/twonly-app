@@ -145,6 +145,7 @@ class ApiService {
   }
 
   Future<void> onClosed() async {
+    Log.info('websocket connection closed');
     _channel = null;
     isAuthenticated = false;
     _connectionStateController.add(false);
@@ -249,7 +250,7 @@ class ApiService {
           completer.complete(msg);
         }
       } else {
-        await handleServerMessage(msg);
+        unawaited(handleServerMessage(msg));
       }
     } catch (e) {
       Log.error('Error parsing the servers message: $e');

@@ -12,19 +12,30 @@ import 'package:twonly/src/utils/log.dart';
 
 Future<CiphertextMessage?> signalEncryptMessage(
   int target,
+  Uint8List plaintextContent, {
+  bool useLock = true,
+}) async {
+  if (useLock) {
+    return lockingSignalProtocol.protect<CiphertextMessage?>(() async {
+      return _signalEncryptMessage(target, plaintextContent);
+    });
+  }
+  return _signalEncryptMessage(target, plaintextContent);
+}
+
+Future<CiphertextMessage?> _signalEncryptMessage(
+  int target,
   Uint8List plaintextContent,
 ) async {
-  return lockingSignalProtocol.protect<CiphertextMessage?>(() async {
-    try {
-      final signalStore = (await getSignalStore())!;
-      final address = getSignalAddress(target);
-      final session = SessionCipher.fromStore(signalStore, address);
-      return await session.encrypt(plaintextContent);
-    } catch (e) {
-      Log.error(e.toString());
-      return null;
-    }
-  });
+  try {
+    final signalStore = (await getSignalStore())!;
+    final address = getSignalAddress(target);
+    final session = SessionCipher.fromStore(signalStore, address);
+    return await session.encrypt(plaintextContent);
+  } catch (e) {
+    Log.error(e.toString());
+    return null;
+  }
 }
 
 Future<(EncryptedContent?, PlaintextContent_DecryptionErrorMessage_Type?)>
@@ -67,8 +78,9 @@ signalDecryptMessage(
       Log.info(e.toString());
       return (null, null);
     } on InvalidMessageException catch (e) {
+      Log.warn(e);
       if (!resyncedUsers.contains(fromUserId)) {
-        if (await handleSessionResync(fromUserId)) {
+        if (await handleSessionResync(fromUserId, useLock: false)) {
           // This flag prevents from resyncing the session the client received multiple new
           // messages from the server he could not decrypt
           resyncedUsers.add(fromUserId);
@@ -81,10 +93,10 @@ signalDecryptMessage(
                 type: EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC,
               ),
             ),
+            useLock: false,
           );
         }
       }
-      Log.warn(e);
       return (null, PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN);
     } catch (e) {
       Log.error(e);
