@@ -16,8 +16,12 @@ class UserDiscoveryCallbacks {
   static Future<Uint8List?> signData(
     Uint8List inputData,
   ) async {
+    Log.info('UserDiscoveryCallbacks: signData started');
     var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
-    if (privKey == null) return null;
+    if (privKey == null) {
+      Log.error('UserDiscoveryCallbacks: signData failed, privKey is null');
+      return null;
+    }
     final random = getRandomUint8List(32);
     final signature = sign(
       privKey.serialize(),
@@ -25,6 +29,7 @@ class UserDiscoveryCallbacks {
       random,
     );
     privKey = null;
+    Log.info('UserDiscoveryCallbacks: signData finished');
     return signature;
   }
 

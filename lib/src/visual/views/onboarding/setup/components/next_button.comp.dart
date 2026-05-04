@@ -22,7 +22,7 @@ class NextButtonComp extends StatelessWidget {
       userService.currentUser.currentSetupPage,
     );
     return ElevatedButton(
-      onPressed: canSubmit
+      onPressed: (canSubmit && !isLoading)
           ? () async {
               if (onPressed != null) {
                 final error = await onPressed?.call();

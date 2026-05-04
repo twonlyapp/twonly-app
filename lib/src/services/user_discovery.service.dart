@@ -76,11 +76,18 @@ class UserDiscoveryService {
     required bool sharePromotion,
   }) async {
     try {
+      Log.info('UserDiscoveryService: initializeOrUpdate started');
+      final userId = userService.currentUser.userId;
+      final publicKey = await getUserPublicKey();
+      Log.info('UserDiscoveryService: initializing Rust bridge');
       await FlutterUserDiscovery.initializeOrUpdate(
         threshold: threshold,
-        userId: userService.currentUser.userId,
-        publicKey: await getUserPublicKey(),
+        userId: userId,
+        publicKey: publicKey,
         sharePromotion: sharePromotion,
+      );
+      Log.info(
+        'UserDiscoveryService: Rust bridge initialized, updating UserService',
       );
       await UserService.update(
         (u) => u
@@ -88,8 +95,9 @@ class UserDiscoveryService {
           ..userDiscoverySharePromotion = sharePromotion
           ..userDiscoveryThreshold = threshold,
       );
+      Log.info('UserDiscoveryService: initializeOrUpdate finished');
     } catch (e) {
-      Log.error(e);
+      Log.error('UserDiscoveryService: initializeOrUpdate error: $e');
     }
   }
 

@@ -17,6 +17,8 @@ class LetYourFriendsFindYou extends StatefulWidget {
 }
 
 class _LetYourFriendsFindYouState extends State<LetYourFriendsFindYou> {
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -77,8 +79,19 @@ class _LetYourFriendsFindYouState extends State<LetYourFriendsFindYou> {
             ),
           const SizedBox(height: 50),
           NextButtonComp(
+            isLoading: _isLoading,
             onPressed: () async {
-              return !(await widget.state.initializeOrUpdate());
+              setState(() {
+                _isLoading = true;
+              });
+              try {
+                final result = await widget.state.initializeOrUpdate();
+                return !result;
+              } finally {
+                setState(() {
+                  _isLoading = false;
+                });
+              }
             },
           ),
         ],

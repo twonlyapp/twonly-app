@@ -10,12 +10,16 @@ impl FlutterUserDiscovery {
         public_key: Vec<u8>,
         share_promotion: bool,
     ) -> Result<()> {
-        Ok(get_twonly_flutter()?
-            .user_discovery
-            .get()
-            .await
+        tracing::info!("Rust bridge: initialize_or_update started");
+        let twonly = get_twonly_flutter()?;
+        tracing::info!("Rust bridge: getting user_discovery lock");
+        let user_discovery = twonly.user_discovery.get().await;
+        tracing::info!("Rust bridge: calling initialize_or_update on protocols");
+        let res = user_discovery
             .initialize_or_update(threshold, user_id, public_key, share_promotion)
-            .await?)
+            .await;
+        tracing::info!("Rust bridge: initialize_or_update on protocols finished");
+        Ok(res?)
     }
 
     pub async fn get_current_version() -> Result<Vec<u8>> {

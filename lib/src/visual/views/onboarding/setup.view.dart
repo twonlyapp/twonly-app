@@ -43,6 +43,14 @@ extension SetupPagesExtension on SetupPages {
     }
     return null;
   }
+
+  SetupPages? previous() {
+    final prevIndex = index - 1;
+    if (prevIndex >= 0) {
+      return SetupPages.values[prevIndex];
+    }
+    return null;
+  }
 }
 
 class SetupView extends StatefulWidget {
@@ -119,31 +127,51 @@ class _SetupViewState extends State<SetupView> {
           ),
           body: ListView(
             key: ValueKey(currentPage.name),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             children: [
               _buildPage(currentPage, state),
-              if (!currentPage.isLast)
-                SizedBox(
-                  height: 50,
-                  child: Center(
-                    child: TextButton(
-                      onPressed: () async {
-                        await UserService.update(
-                          (u) => u.skipSetupPages = true,
-                        );
-                        widget.onUpdate?.call();
-                      },
-                      child: Text(
-                        context.lang.onboardingFinishLater,
-                        style: TextStyle(
-                          color: context.color.primary,
-                          fontWeight: FontWeight.bold,
+              if (currentPage.index > 0 || !currentPage.isLast)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (currentPage.index > 0)
+                        TextButton(
+                          onPressed: () async {
+                            await UserService.update((u) {
+                              u.currentSetupPage = currentPage.previous()?.name;
+                            });
+                          },
+                          child: Text(
+                            context.lang.back,
+                            style: TextStyle(
+                              color: context.color.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      if (currentPage.index > 0 && !currentPage.isLast)
+                        const SizedBox(width: 24),
+                      if (!currentPage.isLast)
+                        TextButton(
+                          onPressed: () async {
+                            await UserService.update(
+                              (u) => u.skipSetupPages = true,
+                            );
+                            widget.onUpdate?.call();
+                          },
+                          child: Text(
+                            context.lang.onboardingFinishLater,
+                            style: TextStyle(
+                              color: context.color.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              const SizedBox(height: 60),
             ],
           ),
         );

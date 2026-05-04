@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9
+
+- Fix: Messages occasionally not received until app restart
+
 ## 0.2.8
 
 - Fix: App did not launch sometimes on Android
