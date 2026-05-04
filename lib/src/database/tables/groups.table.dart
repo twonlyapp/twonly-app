@@ -83,6 +83,8 @@ enum GroupActionType {
   demoteToMember,
   updatedGroupName,
   changeDisplayMaxTime,
+  updatedContactUsername,
+  updatedContactDisplayName,
 }
 
 @DataClassName('GroupHistory')

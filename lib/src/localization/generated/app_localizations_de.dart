@@ -1711,4 +1711,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingExampleLabel => 'Beispiel';
+
+  @override
+  String makerChangedUsername(Object maker, Object oldName, Object newName) {
+    return '$maker hat seinen Benutzernamen von $oldName zu $newName geändert.';
+  }
+
+  @override
+  String makerChangedDisplayName(Object maker, Object oldName, Object newName) {
+    return '$maker hat seinen Anzeigenamen von $oldName zu $newName geändert.';
+  }
 }

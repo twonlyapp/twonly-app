@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
@@ -126,6 +127,44 @@ Future<void> handleContactUpdate(
       if (contactUpdate.hasDisplayName() &&
           contactUpdate.hasUsername() &&
           senderProfileCounter != null) {
+        final contact = await twonlyDB.contactsDao
+            .getContactByUserId(fromUserId)
+            .getSingleOrNull();
+
+        if (contact != null) {
+          final sharedGroups = await twonlyDB.groupsDao.getGroupsForMember(
+            fromUserId,
+          );
+
+          if (contact.username != contactUpdate.username) {
+            for (final group in sharedGroups) {
+              await twonlyDB.groupsDao.insertGroupAction(
+                GroupHistoriesCompanion(
+                  groupId: Value(group.groupId),
+                  type: const Value(GroupActionType.updatedContactUsername),
+                  contactId: Value(fromUserId),
+                  oldGroupName: Value('@${contact.username}'),
+                  newGroupName: Value('@${contactUpdate.username}'),
+                ),
+              );
+            }
+          }
+
+          if (contact.displayName != contactUpdate.displayName) {
+            for (final group in sharedGroups) {
+              await twonlyDB.groupsDao.insertGroupAction(
+                GroupHistoriesCompanion(
+                  groupId: Value(group.groupId),
+                  type: const Value(GroupActionType.updatedContactDisplayName),
+                  contactId: Value(fromUserId),
+                  oldGroupName: Value(contact.displayName ?? ''),
+                  newGroupName: Value(contactUpdate.displayName),
+                ),
+              );
+            }
+          }
+        }
+
         await twonlyDB.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(

@@ -3049,6 +3049,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Example'**
   String get onboardingExampleLabel;
+
+  /// No description provided for @makerChangedUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} changed their username from {oldName} to {newName}.'**
+  String makerChangedUsername(Object maker, Object oldName, Object newName);
+
+  /// No description provided for @makerChangedDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} changed their display name from {oldName} to {newName}.'**
+  String makerChangedDisplayName(Object maker, Object oldName, Object newName);
 }
 
 class _AppLocalizationsDelegate
