@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
@@ -18,21 +16,6 @@ class LetYourFriendsFindYou extends StatefulWidget {
 
 class _LetYourFriendsFindYouState extends State<LetYourFriendsFindYou> {
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (userService.currentUser.isUserDiscoveryEnabled &&
-          userService.currentUser.userDiscoverySharePromotion) {
-        // feature is already configured...
-        UserService.update((user) {
-          user.currentSetupPage = SetupPages.letYourFriendsFindYou.next()?.name;
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
