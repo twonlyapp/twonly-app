@@ -109,6 +109,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool userDiscoverySharePromotion = true;
 
+  @JsonKey(defaultValue: false)
+  bool userDiscoveryInitializationError = false;
+
   //  -- Custom DATA --
 
   @JsonKey(defaultValue: 100_000)

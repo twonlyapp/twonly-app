@@ -55,12 +55,20 @@ class UserDiscoverySetupState {
   Future<bool> initializeOrUpdate() async {
     try {
       Log.info('UserDiscoverySetupState: initializeOrUpdate started');
+      var hasError = false;
       if (isUserDiscoveryEnabled) {
         Log.info('UserDiscoverySetupState: initializing UserDiscoveryService');
-        await UserDiscoveryService.initializeOrUpdate(
-          threshold: threshold,
-          sharePromotion: sharePromotion,
-        );
+        try {
+          await UserDiscoveryService.initializeOrUpdate(
+            threshold: threshold,
+            sharePromotion: sharePromotion,
+          );
+        } catch (e) {
+          Log.error(
+            'UserDiscoverySetupState: UserDiscoveryService failed or timed out: $e',
+          );
+          hasError = true;
+        }
       }
 
       Log.info('UserDiscoverySetupState: updating UserService');
@@ -68,7 +76,8 @@ class UserDiscoverySetupState {
         u
           ..isUserDiscoveryEnabled = isUserDiscoveryEnabled
           ..requiredSendImages = requiredSendImages
-          ..userDiscoveryRequiresManualApproval = isManualApprovalEnabled;
+          ..userDiscoveryRequiresManualApproval = isManualApprovalEnabled
+          ..userDiscoveryInitializationError = hasError;
       });
 
       Log.info('UserDiscoverySetupState: initializeOrUpdate finished');
@@ -474,7 +483,7 @@ class _ExampleLabel extends StatelessWidget {
           ),
           child: Text(
             context.lang.onboardingExampleLabel,
-            style: const TextStyle(fontSize: 10, color: Colors.white),
+            style: const TextStyle(fontSize: 10),
           ),
         ),
       ),

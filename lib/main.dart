@@ -193,6 +193,21 @@ Future<void> postStartupTasks() async {
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
 
+  if (userService.currentUser.userDiscoveryInitializationError) {
+    unawaited(() async {
+      try {
+        await UserDiscoveryService.initializeOrUpdate(
+          threshold: userService.currentUser.userDiscoveryThreshold,
+          sharePromotion: userService.currentUser.userDiscoverySharePromotion,
+        );
+      } catch (e) {
+        Log.error(
+          'Failed to retry UserDiscovery initialization on startup: $e',
+        );
+      }
+    }());
+  }
+
   await Future.delayed(const Duration(seconds: 10));
   unawaited(initializeBackgroundTaskManager());
   // 3. Delayed tasks (Wait for app to settle)
