@@ -75,22 +75,27 @@ class UserDiscoveryService {
     required int threshold,
     required bool sharePromotion,
   }) async {
-    try {
-      await FlutterUserDiscovery.initializeOrUpdate(
-        threshold: threshold,
-        userId: userService.currentUser.userId,
-        publicKey: await getUserPublicKey(),
-        sharePromotion: sharePromotion,
-      );
-      await UserService.update(
-        (u) => u
-          ..isUserDiscoveryEnabled = true
-          ..userDiscoverySharePromotion = sharePromotion
-          ..userDiscoveryThreshold = threshold,
-      );
-    } catch (e) {
-      Log.error(e);
-    }
+    Log.info('UserDiscoveryService: initializeOrUpdate started');
+    final userId = userService.currentUser.userId;
+    final publicKey = await getUserPublicKey();
+    Log.info('UserDiscoveryService: initializing Rust bridge');
+    await FlutterUserDiscovery.initializeOrUpdate(
+      threshold: threshold,
+      userId: userId,
+      publicKey: publicKey,
+      sharePromotion: sharePromotion,
+    ).timeout(const Duration(seconds: 8));
+    Log.info(
+      'UserDiscoveryService: Rust bridge initialized, updating UserService',
+    );
+    await UserService.update(
+      (u) => u
+        ..isUserDiscoveryEnabled = true
+        ..userDiscoverySharePromotion = sharePromotion
+        ..userDiscoveryThreshold = threshold
+        ..userDiscoveryInitializationError = false,
+    );
+    Log.info('UserDiscoveryService: initializeOrUpdate finished');
   }
 
   static Future<Uint8List?> getCurrentVersion() async {

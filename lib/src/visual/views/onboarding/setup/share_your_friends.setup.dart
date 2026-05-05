@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/user.service.dart';
-import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
@@ -17,20 +14,6 @@ class ShareYourFriendsSetupPage extends StatefulWidget {
 
 class _ShareYourFriendsSetupPageState extends State<ShareYourFriendsSetupPage> {
   @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (userService.currentUser.isUserDiscoveryEnabled) {
-        // feature is already configured...
-        UserService.update((user) {
-          user.currentSetupPage = SetupPages.shareYourFriends.next()?.name;
-        });
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
@@ -41,11 +24,7 @@ class _ShareYourFriendsSetupPageState extends State<ShareYourFriendsSetupPage> {
             showOnlySpecificPage: UserDiscoveryPages.shareYourFriends,
           ),
           const SizedBox(height: 60),
-          const NextButtonComp(
-            // onPressed: () async {
-            //   return !(await widget.state.initializeOrUpdate());
-            // },
-          ),
+          const NextButtonComp(),
         ],
       ),
     );

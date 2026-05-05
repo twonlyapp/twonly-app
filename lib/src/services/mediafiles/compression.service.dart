@@ -77,7 +77,8 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
         VideoSegment(video: EditorVideo.file(media.originalPath)),
       ],
       imageLayers: [
-        ImageLayer(image: EditorLayerImage.file(media.overlayImagePath)),
+        if (media.overlayImagePath.existsSync())
+          ImageLayer(image: EditorLayerImage.file(media.overlayImagePath)),
       ],
       enableAudio: !media.removeAudio,
     );

@@ -103,6 +103,25 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     });
   }
 
+  Future<int> getTransferredTrustVerificationsCount() async {
+    final kv = keyVerifications;
+    final ur = userDiscoveryUserRelations;
+
+    final query = selectOnly(ur, distinct: true)
+      ..addColumns([ur.announcedUserId])
+      ..join([
+        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
+        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
+      ])
+      ..where(
+        ur.publicKeyVerifiedTimestamp.isNotNull() &
+            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
+      );
+
+    final rows = await query.get();
+    return rows.length;
+  }
+
   Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');

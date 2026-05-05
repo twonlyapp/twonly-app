@@ -46,7 +46,7 @@ impl UserDiscoveryUtils for UserDiscoveryUtilsFlutter {
 
 impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
     async fn get_config(&self) -> Result<String> {
-        let ws = get_twonly_flutter().unwrap();
+        let ws = get_twonly_flutter()?;
         let config_path =
             PathBuf::from(&ws.config.data_directory).join("user_discovery_config.json");
 
@@ -59,7 +59,7 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
 
     async fn update_config(&self, update: String) -> Result<()> {
         tracing::debug!("Updating configuration file.");
-        let ws = get_twonly_flutter().unwrap();
+        let ws = get_twonly_flutter()?;
         let config_path =
             PathBuf::from(&ws.config.data_directory).join("user_discovery_config.json");
         std::fs::write(config_path, &update)?;

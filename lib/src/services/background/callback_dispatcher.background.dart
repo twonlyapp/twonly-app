@@ -86,6 +86,7 @@ Future<bool> initBackgroundExecution() async {
 
 final Mutex _keyValueMutex = Mutex();
 
+// ignore: unreachable_from_main
 Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
   final shouldBeExecuted = await exclusiveAccess(
     lockName: 'periodic_task',

@@ -1669,4 +1669,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactUserDiscoveryManualApprovalApprove => 'Freigeben';
+
+  @override
+  String get exampleUserName1 => 'max_mustermann';
+
+  @override
+  String get exampleUserName2 => 'erika_musterfrau';
+
+  @override
+  String get exampleUserName3 => 'hans';
+
+  @override
+  String get exampleUserName4 => 'petra';
+
+  @override
+  String get exampleUserName5 => 'klaus';
+
+  @override
+  String get exampleUserName6 => 'sabine';
+
+  @override
+  String get exampleUserName7 => 'stefan';
+
+  @override
+  String get exampleUserName8 => 'monika';
+
+  @override
+  String get exampleUserName9 => 'christian';
+
+  @override
+  String get exampleUserName10 => 'lena';
+
+  @override
+  String get exampleUserName11 => 'david';
+
+  @override
+  String get exampleJane => 'erika';
+
+  @override
+  String get back => 'Zurück';
+
+  @override
+  String get onboardingExampleLabel => 'Beispiel';
+
+  @override
+  String makerChangedUsername(Object maker, Object oldName, Object newName) {
+    return '$maker hat seinen Benutzernamen von $oldName zu $newName geändert.';
+  }
+
+  @override
+  String makerChangedDisplayName(Object maker, Object oldName, Object newName) {
+    return '$maker hat seinen Anzeigenamen von $oldName zu $newName geändert.';
+  }
 }

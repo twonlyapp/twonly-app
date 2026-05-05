@@ -77,7 +77,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     contactSub?.cancel();
     groupActionsSub?.cancel();
     _nextTypingIndicator?.cancel();
-    textFieldFocus?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -108,7 +107,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       });
 
       protectMessageUpdating.protect(() async {
-        if (groupActionsSub == null && !newGroup.isDirectChat) {
+        if (groupActionsSub == null) {
           final actionsStream = twonlyDB.groupsDao.watchGroupActions(
             newGroup.groupId,
           );

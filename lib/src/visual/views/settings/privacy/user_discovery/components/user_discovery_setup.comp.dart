@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -9,18 +10,18 @@ import 'package:twonly/src/visual/views/contact/add_new_contact_components/frien
 import 'package:twonly/src/visual/views/onboarding/setup/components/mock_contact_request_actions.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/setup_switch_card.comp.dart';
 
-const exampleUsers = [
-  'james',
-  'mary',
-  'john',
-  'patricia',
-  'robert',
-  'jennifer',
-  'michael',
-  'linda',
-  'william',
-  'lena',
-  'david',
+List<String> getExampleUsers(BuildContext context) => [
+  context.lang.exampleUserName1,
+  context.lang.exampleUserName2,
+  context.lang.exampleUserName3,
+  context.lang.exampleUserName4,
+  context.lang.exampleUserName5,
+  context.lang.exampleUserName6,
+  context.lang.exampleUserName7,
+  context.lang.exampleUserName8,
+  context.lang.exampleUserName9,
+  context.lang.exampleUserName10,
+  context.lang.exampleUserName11,
 ];
 
 class UserDiscoverySetupState {
@@ -52,21 +53,39 @@ class UserDiscoverySetupState {
   }
 
   Future<bool> initializeOrUpdate() async {
-    if (isUserDiscoveryEnabled) {
-      await UserDiscoveryService.initializeOrUpdate(
-        threshold: threshold,
-        sharePromotion: sharePromotion,
-      );
+    try {
+      Log.info('UserDiscoverySetupState: initializeOrUpdate started');
+      var hasError = false;
+      if (isUserDiscoveryEnabled) {
+        Log.info('UserDiscoverySetupState: initializing UserDiscoveryService');
+        try {
+          await UserDiscoveryService.initializeOrUpdate(
+            threshold: threshold,
+            sharePromotion: sharePromotion,
+          );
+        } catch (e) {
+          Log.error(
+            'UserDiscoverySetupState: UserDiscoveryService failed or timed out: $e',
+          );
+          hasError = true;
+        }
+      }
+
+      Log.info('UserDiscoverySetupState: updating UserService');
+      await UserService.update((u) {
+        u
+          ..isUserDiscoveryEnabled = isUserDiscoveryEnabled
+          ..requiredSendImages = requiredSendImages
+          ..userDiscoveryRequiresManualApproval = isManualApprovalEnabled
+          ..userDiscoveryInitializationError = hasError;
+      });
+
+      Log.info('UserDiscoverySetupState: initializeOrUpdate finished');
+      return true;
+    } catch (e) {
+      Log.error('UserDiscoverySetupState: initializeOrUpdate failed: $e');
+      return false;
     }
-
-    await UserService.update((u) {
-      u
-        ..isUserDiscoveryEnabled = isUserDiscoveryEnabled
-        ..requiredSendImages = requiredSendImages
-        ..userDiscoveryRequiresManualApproval = isManualApprovalEnabled;
-    });
-
-    return true;
   }
 }
 
@@ -107,15 +126,12 @@ class UserDiscoverySetupComp extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             SetupSwitchCard(
               value: state.isUserDiscoveryEnabled,
               onChanged: (val) => state.update(() {
                 state.isUserDiscoveryEnabled = val;
-                if (!val) {
-                  state.sharePromotion = false;
-                }
               }),
               title: context.lang.onboardingUserDiscoveryShareFriends,
               expandedChild: Column(
@@ -143,48 +159,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                     ),
                   ),
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.only(bottom: 8),
                     child: Divider(),
                   ),
-                  Text(
-                    context.lang.onboardingUserDiscoveryContactsVerifiedBadge,
-                    style: TextStyle(
-                      color: context.color.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Container(
-                      width: 100,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 0.5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AvatarIcon(fontSize: 12),
-                          SizedBox(width: 5),
-                          Text(
-                            'jane',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          VerificationBadgeComp(
-                            isVerifiedByTransferredTrust: true,
-                            size: 14,
-                            clickable: false,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  const _ExampleLabel(),
                   Text(
                     context.lang.onboardingUserDiscoveryWhoIsRequesting,
                     style: TextStyle(
@@ -214,9 +192,9 @@ class UserDiscoverySetupComp extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'jane',
-                                  style: TextStyle(
+                                Text(
+                                  context.lang.exampleJane,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                   ),
@@ -226,8 +204,8 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                     children: buildFriendsListTextString(
                                       context,
                                       [
-                                        'mary',
-                                        'james',
+                                        context.lang.exampleUserName2,
+                                        context.lang.exampleUserName1,
                                       ],
                                     ),
                                     style: const TextStyle(fontSize: 10),
@@ -241,6 +219,47 @@ class UserDiscoverySetupComp extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 24),
+                  Text(
+                    context.lang.onboardingUserDiscoveryContactsVerifiedBadge,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const AvatarIcon(fontSize: 12),
+                          const SizedBox(width: 5),
+                          Text(
+                            context.lang.exampleJane,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const VerificationBadgeComp(
+                            isVerifiedByTransferredTrust: true,
+                            size: 14,
+                            clickable: false,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   const SizedBox(height: 16),
                 ],
               ),
@@ -275,18 +294,15 @@ class UserDiscoverySetupComp extends StatelessWidget {
             SetupSwitchCard(
               value: state.sharePromotion,
               onChanged: (val) => state.update(() {
-                if (val) {
-                  state.isUserDiscoveryEnabled = true;
-                }
                 state.sharePromotion = val;
               }),
               title: context.lang.onboardingUserDiscoveryBeRecommended,
-              expandedChild: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
+              expandedChild: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
                       children: [
                         Expanded(
                           child: Text(
@@ -319,125 +335,157 @@ class UserDiscoverySetupComp extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.lang.onboardingUserDiscoveryWhatOthersSee,
-                      style: TextStyle(
-                        color: context.color.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8, top: 8),
+                    child: Divider(),
+                  ),
+                  const _ExampleLabel(),
+                  Text(
+                    context.lang.onboardingUserDiscoveryWhatOthersSee,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontSize: 12,
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey, width: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const AvatarIcon(fontSize: 14),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userService.currentUser.username,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const AvatarIcon(fontSize: 14),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  userService.currentUser.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  RichText(
-                                    text: TextSpan(
-                                      children: buildFriendsListTextString(
-                                        context,
-                                        exampleUsers.sublist(
-                                          0,
-                                          state.threshold,
-                                        ),
+                                ),
+                                RichText(
+                                  text: TextSpan(
+                                    children: buildFriendsListTextString(
+                                      context,
+                                      getExampleUsers(context).sublist(
+                                        0,
+                                        state.threshold,
                                       ),
-                                      style: const TextStyle(fontSize: 11),
                                     ),
+                                    style: const TextStyle(fontSize: 11),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            const MockContactSuggestedActionsComp(),
-                          ],
-                        ),
+                          ),
+                          const MockContactSuggestedActionsComp(),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      context.lang.onboardingUserDiscoveryWhatYouSee,
-                      style: TextStyle(
-                        color: context.color.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.lang.onboardingUserDiscoveryWhatYouSee,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontSize: 12,
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey, width: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const AvatarIcon(fontSize: 14),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'jane',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const AvatarIcon(fontSize: 14),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  context.lang.exampleJane,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
-                                  RichText(
-                                    text: TextSpan(
-                                      children: buildFriendsListTextString(
-                                        context,
-                                        exampleUsers.sublist(
-                                          0,
-                                          state.threshold,
-                                        ),
+                                ),
+                                RichText(
+                                  text: TextSpan(
+                                    children: buildFriendsListTextString(
+                                      context,
+                                      getExampleUsers(context).sublist(
+                                        0,
+                                        state.threshold,
                                       ),
-                                      style: const TextStyle(fontSize: 10),
                                     ),
+                                    style: const TextStyle(fontSize: 10),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            const MockContactRequestActionsComp(),
-                          ],
-                        ),
+                          ),
+                          const MockContactRequestActionsComp(),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ExampleLabel extends StatelessWidget {
+  const _ExampleLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey, width: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            context.lang.onboardingExampleLabel,
+            style: const TextStyle(fontSize: 10),
+          ),
+        ),
       ),
     );
   }

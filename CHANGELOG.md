@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+- Improved: Make contact avatars clickable
+- Fix: Messages occasionally not received until app restart
+- Fix: Complete setup would sometimes get stuck 
+
 ## 0.2.8
 
 - Fix: App did not launch sometimes on Android

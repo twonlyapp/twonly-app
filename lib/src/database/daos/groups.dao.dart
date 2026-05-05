@@ -332,4 +332,18 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
     return query.map((row) => row.readTable(groups)).watch();
   }
+
+  Future<List<Group>> getGroupsForMember(int contactId) {
+    final query =
+        select(groups).join([
+          innerJoin(
+            groupMembers,
+            groupMembers.groupId.equalsExp(groups.groupId),
+          ),
+        ])..where(
+          groupMembers.contactId.equals(contactId),
+        );
+
+    return query.map((row) => row.readTable(groups)).get();
+  }
 }

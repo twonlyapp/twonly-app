@@ -105,6 +105,24 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
         text = (contact == null)
             ? context.lang.youLeftGroup
             : context.lang.makerLeftGroup(maker);
+      case GroupActionType.updatedContactUsername:
+        if (contact != null) {
+          icon = FontAwesomeIcons.userPen;
+          text = context.lang.makerChangedUsername(
+            maker,
+            widget.action.oldGroupName!,
+            widget.action.newGroupName!,
+          );
+        }
+      case GroupActionType.updatedContactDisplayName:
+        if (contact != null) {
+          icon = FontAwesomeIcons.userPen;
+          text = context.lang.makerChangedDisplayName(
+            maker,
+            widget.action.oldGroupName!,
+            widget.action.newGroupName!,
+          );
+        }
     }
 
     // switch (widget.action.type) {

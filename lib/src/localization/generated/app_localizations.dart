@@ -2965,6 +2965,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approve'**
   String get contactUserDiscoveryManualApprovalApprove;
+
+  /// No description provided for @exampleUserName1.
+  ///
+  /// In en, this message translates to:
+  /// **'james'**
+  String get exampleUserName1;
+
+  /// No description provided for @exampleUserName2.
+  ///
+  /// In en, this message translates to:
+  /// **'mary'**
+  String get exampleUserName2;
+
+  /// No description provided for @exampleUserName3.
+  ///
+  /// In en, this message translates to:
+  /// **'john'**
+  String get exampleUserName3;
+
+  /// No description provided for @exampleUserName4.
+  ///
+  /// In en, this message translates to:
+  /// **'patricia'**
+  String get exampleUserName4;
+
+  /// No description provided for @exampleUserName5.
+  ///
+  /// In en, this message translates to:
+  /// **'robert'**
+  String get exampleUserName5;
+
+  /// No description provided for @exampleUserName6.
+  ///
+  /// In en, this message translates to:
+  /// **'jennifer'**
+  String get exampleUserName6;
+
+  /// No description provided for @exampleUserName7.
+  ///
+  /// In en, this message translates to:
+  /// **'michael'**
+  String get exampleUserName7;
+
+  /// No description provided for @exampleUserName8.
+  ///
+  /// In en, this message translates to:
+  /// **'linda'**
+  String get exampleUserName8;
+
+  /// No description provided for @exampleUserName9.
+  ///
+  /// In en, this message translates to:
+  /// **'william'**
+  String get exampleUserName9;
+
+  /// No description provided for @exampleUserName10.
+  ///
+  /// In en, this message translates to:
+  /// **'lena'**
+  String get exampleUserName10;
+
+  /// No description provided for @exampleUserName11.
+  ///
+  /// In en, this message translates to:
+  /// **'david'**
+  String get exampleUserName11;
+
+  /// No description provided for @exampleJane.
+  ///
+  /// In en, this message translates to:
+  /// **'jane'**
+  String get exampleJane;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @onboardingExampleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get onboardingExampleLabel;
+
+  /// No description provided for @makerChangedUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} changed their username from {oldName} to {newName}.'**
+  String makerChangedUsername(Object maker, Object oldName, Object newName);
+
+  /// No description provided for @makerChangedDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} changed their display name from {oldName} to {newName}.'**
+  String makerChangedDisplayName(Object maker, Object oldName, Object newName);
 }
 
 class _AppLocalizationsDelegate

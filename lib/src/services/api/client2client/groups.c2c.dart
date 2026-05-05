@@ -179,6 +179,8 @@ Future<void> handleGroupUpdate(
         ),
       );
     case GroupActionType.createdGroup:
+    case GroupActionType.updatedContactUsername:
+    case GroupActionType.updatedContactDisplayName:
       break;
   }
 }

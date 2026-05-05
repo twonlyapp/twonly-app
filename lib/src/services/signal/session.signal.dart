@@ -8,73 +8,83 @@ import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future<bool> processSignalUserData(Response_UserData userData) async {
-  return lockingSignalProtocol.protect(() async {
-    final SignalProtocolStore? signalStore = await getSignalStore();
+Future<bool> processSignalUserData(
+  Response_UserData userData, {
+  bool useLock = true,
+}) async {
+  if (useLock) {
+    return lockingSignalProtocol.protect(() async {
+      return _processSignalUserData(userData);
+    });
+  }
+  return _processSignalUserData(userData);
+}
 
-    if (signalStore == null) {
-      return false;
-    }
+Future<bool> _processSignalUserData(Response_UserData userData) async {
+  final SignalProtocolStore? signalStore = await getSignalStore();
 
-    final targetAddress = getSignalAddress(userData.userId.toInt());
+  if (signalStore == null) {
+    return false;
+  }
 
-    final sessionBuilder = SessionBuilder.fromSignalStore(
-      signalStore,
-      targetAddress,
-    );
+  final targetAddress = getSignalAddress(userData.userId.toInt());
 
-    ECPublicKey? tempPrePublicKey;
-    int? tempPreKeyId;
+  final sessionBuilder = SessionBuilder.fromSignalStore(
+    signalStore,
+    targetAddress,
+  );
 
-    if (userData.prekeys.isNotEmpty) {
-      tempPrePublicKey = Curve.decodePoint(
-        DjbECPublicKey(
-          Uint8List.fromList(userData.prekeys.first.prekey),
-        ).serialize(),
-        1,
-      );
-      tempPreKeyId = userData.prekeys.first.id.toInt();
-    }
+  ECPublicKey? tempPrePublicKey;
+  int? tempPreKeyId;
 
-    final tempSignedPreKeyId = userData.signedPrekeyId.toInt();
-
-    final tempSignedPreKeyPublic = Curve.decodePoint(
-      DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(),
+  if (userData.prekeys.isNotEmpty) {
+    tempPrePublicKey = Curve.decodePoint(
+      DjbECPublicKey(
+        Uint8List.fromList(userData.prekeys.first.prekey),
+      ).serialize(),
       1,
     );
+    tempPreKeyId = userData.prekeys.first.id.toInt();
+  }
 
-    final tempSignedPreKeySignature = Uint8List.fromList(
-      userData.signedPrekeySignature,
-    );
+  final tempSignedPreKeyId = userData.signedPrekeyId.toInt();
 
-    final tempIdentityKey = IdentityKey(
-      Curve.decodePoint(
-        DjbECPublicKey(
-          Uint8List.fromList(userData.publicIdentityKey),
-        ).serialize(),
-        1,
-      ),
-    );
+  final tempSignedPreKeyPublic = Curve.decodePoint(
+    DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(),
+    1,
+  );
 
-    final preKeyBundle = PreKeyBundle(
-      userData.registrationId.toInt(),
-      defaultDeviceId,
-      tempPreKeyId,
-      tempPrePublicKey,
-      tempSignedPreKeyId,
-      tempSignedPreKeyPublic,
-      tempSignedPreKeySignature,
-      tempIdentityKey,
-    );
+  final tempSignedPreKeySignature = Uint8List.fromList(
+    userData.signedPrekeySignature,
+  );
 
-    try {
-      await sessionBuilder.processPreKeyBundle(preKeyBundle);
-      return true;
-    } catch (e) {
-      Log.error('could not process pre key bundle: $e');
-      return false;
-    }
-  });
+  final tempIdentityKey = IdentityKey(
+    Curve.decodePoint(
+      DjbECPublicKey(
+        Uint8List.fromList(userData.publicIdentityKey),
+      ).serialize(),
+      1,
+    ),
+  );
+
+  final preKeyBundle = PreKeyBundle(
+    userData.registrationId.toInt(),
+    defaultDeviceId,
+    tempPreKeyId,
+    tempPrePublicKey,
+    tempSignedPreKeyId,
+    tempSignedPreKeyPublic,
+    tempSignedPreKeySignature,
+    tempIdentityKey,
+  );
+
+  try {
+    await sessionBuilder.processPreKeyBundle(preKeyBundle);
+    return true;
+  } catch (e) {
+    Log.error('could not process pre key bundle: $e');
+    return false;
+  }
 }
 
 Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
@@ -96,11 +106,14 @@ Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
   }
 }
 
-Future<bool> handleSessionResync(int fromUserId) async {
+Future<bool> handleSessionResync(
+  int fromUserId, {
+  bool useLock = true,
+}) async {
   final userData = await apiService.getUserById(fromUserId);
   if (userData != null) {
     Log.info('Got new session data from the server to re-sync the session');
-    return processSignalUserData(userData);
+    return processSignalUserData(userData, useLock: useLock);
   }
   Log.info('Could not download userdata from the server.');
   return false;

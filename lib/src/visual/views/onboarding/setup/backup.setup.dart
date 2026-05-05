@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/backup/common.backup.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -23,19 +22,6 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
   bool isLoading = false;
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (userService.currentUser.twonlySafeBackup != null) {
-        // twonly safe is already configured...
-        UserService.update((user) {
-          user.currentSetupPage = SetupPages.backup.next()?.name;
-        });
-      }
-    });
-  }
 
   Future<bool> onPressedEnableTwonlySafe() async {
     setState(() {

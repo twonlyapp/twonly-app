@@ -91,9 +91,14 @@ Future<SignalIdentity?> getSignalIdentity() async {
 }
 
 Future<Uint8List> getUserPublicKey() async {
+  Log.info('getUserPublicKey: getting identity');
   final signalIdentity = (await getSignalIdentity())!;
+  Log.info('getUserPublicKey: getting signal store');
   final signalStore = await getSignalStoreFromIdentity(signalIdentity);
-  return (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
+  Log.info('getUserPublicKey: getting key pair');
+  final keyPair = await signalStore.getIdentityKeyPair();
+  Log.info('getUserPublicKey: serializing public key');
+  return keyPair.getPublicKey().serialize();
 }
 
 Future<void> createIfNotExistsSignalIdentity() async {

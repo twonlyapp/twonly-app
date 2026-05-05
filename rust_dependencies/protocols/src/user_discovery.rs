@@ -91,8 +91,8 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         public_key: Vec<u8>,
         share_promotion: bool,
     ) -> Result<()> {
-        let config_lock = self.config_lock.lock().await;
-        let mut config = match self.store.get_config().await {
+        tracing::info!("Protocols: initialize_or_update started, getting config from store");
+        let config = match self.store.get_config().await {
             Ok(config) => {
                 let mut config: UserDiscoveryConfig = serde_json::from_str(&config)?;
                 config.threshold = threshold;
@@ -113,23 +113,39 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             public_key,
         };
 
+        tracing::info!("Protocols: signing data");
         let signature = self.utils.sign_data(&signed_data.encode_to_vec()).await?;
 
         debug_assert_eq!(threshold, config.threshold);
 
+        tracing::info!("Protocols: setting up announcements");
         let verification_shares = self
             .setup_announcements(&config, signed_data, signature)
             .await?;
 
         debug_assert_eq!(verification_shares.len(), threshold as usize - 1);
 
-        config.public_id = public_id;
-        config.announcement_version += 1;
-        config.verification_shares = verification_shares;
-        config.share_promotion = share_promotion;
+        tracing::info!("Protocols: updating config in store");
+        
+        let config_lock = self.config_lock.lock().await;
+        let mut final_config = match self.store.get_config().await {
+            Ok(c) => serde_json::from_str(&c)?,
+            Err(_) => UserDiscoveryConfig {
+                threshold,
+                user_id,
+                ..Default::default()
+            },
+        };
 
-        self.update_config(config, config_lock).await?;
+        final_config.public_id = public_id;
+        final_config.announcement_version += 1;
+        final_config.verification_shares = verification_shares;
+        final_config.share_promotion = share_promotion;
+        final_config.threshold = threshold;
 
+        self.update_config(final_config, config_lock).await?;
+
+        tracing::info!("Protocols: initialize_or_update finished");
         Ok(())
     }
 
