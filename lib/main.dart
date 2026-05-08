@@ -55,9 +55,9 @@ Future<void> twonlyMinimumInitialization() async {
 
       Log.info('twonlyMinimumInitialization: bridge.initializeTwonlyFlutter()');
       await bridge.initializeTwonlyFlutter(
-        config: bridge.TwonlyConfig(
-          databasePath: '${AppEnvironment.supportDir}/twonly.sqlite',
-          dataDirectory: AppEnvironment.supportDir,
+        config: bridge.InitConfig(
+          databaseDir: AppEnvironment.supportDir,
+          dataDir: AppEnvironment.supportDir,
         ),
       );
       Log.info('twonlyMinimumInitialization: finished');

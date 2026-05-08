@@ -68,7 +68,7 @@ fn build_writers(logs_dir: &std::path::Path) -> (NonBlocking, NonBlocking) {
         }
         Err(e) => {
             eprintln!("Failed to create file appender: {}", e);
-            let (nb, guard) = tracing_appender::non_blocking(std::io::sink());
+            let (nb, _guard) = tracing_appender::non_blocking(std::io::sink());
             (nb, None)
         }
     };

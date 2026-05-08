@@ -152,9 +152,7 @@ abstract class RustLibApi extends BaseApi {
     userDiscoveryGetContactPromotion,
   });
 
-  Future<void> crateBridgeInitializeTwonlyFlutter({
-    required TwonlyConfig config,
-  });
+  Future<void> crateBridgeInitializeTwonlyFlutter({required InitConfig config});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -556,13 +554,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateBridgeInitializeTwonlyFlutter({
-    required TwonlyConfig config,
+    required InitConfig config,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_twonly_config(config, serializer);
+          sse_encode_box_autoadd_init_config(config, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1180,9 +1178,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TwonlyConfig dco_decode_box_autoadd_twonly_config(dynamic raw) {
+  InitConfig dco_decode_box_autoadd_init_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_twonly_config(raw);
+    return dco_decode_init_config(raw);
   }
 
   @protected
@@ -1198,6 +1196,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
+  }
+
+  @protected
+  InitConfig dco_decode_init_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return InitConfig(
+      databaseDir: dco_decode_String(arr[0]),
+      dataDir: dco_decode_String(arr[1]),
+    );
   }
 
   @protected
@@ -1273,18 +1283,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       threshold: dco_decode_u_8(arr[3]),
       announcementShare: dco_decode_list_prim_u_8_strict(arr[4]),
       publicKeyVerifiedTimestamp: dco_decode_opt_box_autoadd_i_64(arr[5]),
-    );
-  }
-
-  @protected
-  TwonlyConfig dco_decode_twonly_config(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return TwonlyConfig(
-      databasePath: dco_decode_String(arr[0]),
-      dataDirectory: dco_decode_String(arr[1]),
     );
   }
 
@@ -1375,11 +1373,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TwonlyConfig sse_decode_box_autoadd_twonly_config(
-    SseDeserializer deserializer,
-  ) {
+  InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_twonly_config(deserializer));
+    return (sse_decode_init_config(deserializer));
   }
 
   @protected
@@ -1394,6 +1390,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  InitConfig sse_decode_init_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_databaseDir = sse_decode_String(deserializer);
+    var var_dataDir = sse_decode_String(deserializer);
+    return InitConfig(databaseDir: var_databaseDir, dataDir: var_dataDir);
   }
 
   @protected
@@ -1523,17 +1527,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       threshold: var_threshold,
       announcementShare: var_announcementShare,
       publicKeyVerifiedTimestamp: var_publicKeyVerifiedTimestamp,
-    );
-  }
-
-  @protected
-  TwonlyConfig sse_decode_twonly_config(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_databasePath = sse_decode_String(deserializer);
-    var var_dataDirectory = sse_decode_String(deserializer);
-    return TwonlyConfig(
-      databasePath: var_databasePath,
-      dataDirectory: var_dataDirectory,
     );
   }
 
@@ -1820,12 +1813,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_twonly_config(
-    TwonlyConfig self,
+  void sse_encode_box_autoadd_init_config(
+    InitConfig self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_twonly_config(self, serializer);
+    sse_encode_init_config(self, serializer);
   }
 
   @protected
@@ -1840,6 +1833,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_init_config(InitConfig self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.databaseDir, serializer);
+    sse_encode_String(self.dataDir, serializer);
   }
 
   @protected
@@ -1974,13 +1974,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       self.publicKeyVerifiedTimestamp,
       serializer,
     );
-  }
-
-  @protected
-  void sse_encode_twonly_config(TwonlyConfig self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.databasePath, serializer);
-    sse_encode_String(self.dataDirectory, serializer);
   }
 
   @protected

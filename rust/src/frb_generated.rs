@@ -195,7 +195,7 @@ fn wire__crate__bridge__initialize_twonly_flutter_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_config = <crate::bridge::TwonlyConfig>::sse_decode(&mut deserializer);
+            let api_config = <crate::bridge::InitConfig>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -743,6 +743,18 @@ impl SseDecode for i64 {
     }
 }
 
+impl SseDecode for crate::bridge::InitConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_databaseDir = <String>::sse_decode(deserializer);
+        let mut var_dataDir = <String>::sse_decode(deserializer);
+        return crate::bridge::InitConfig {
+            database_dir: var_databaseDir,
+            data_dir: var_dataDir,
+        };
+    }
+}
+
 impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -863,18 +875,6 @@ impl SseDecode for crate::bridge::OtherPromotion {
     }
 }
 
-impl SseDecode for crate::bridge::TwonlyConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_databasePath = <String>::sse_decode(deserializer);
-        let mut var_dataDirectory = <String>::sse_decode(deserializer);
-        return crate::bridge::TwonlyConfig {
-            database_path: var_databasePath,
-            data_directory: var_dataDirectory,
-        };
-    }
-}
-
 impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -985,6 +985,22 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::user_discovery::F
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::InitConfig {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.database_dir.into_into_dart().into_dart(),
+            self.data_dir.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::InitConfig {}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::InitConfig> for crate::bridge::InitConfig {
+    fn into_into_dart(self) -> crate::bridge::InitConfig {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bridge::OtherPromotion> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1010,24 +1026,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bridge::OtherPromotion>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bridge::OtherPromotion> {
         self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bridge::TwonlyConfig {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.database_path.into_into_dart().into_dart(),
-            self.data_directory.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::TwonlyConfig {}
-impl flutter_rust_bridge::IntoIntoDart<crate::bridge::TwonlyConfig>
-    for crate::bridge::TwonlyConfig
-{
-    fn into_into_dart(self) -> crate::bridge::TwonlyConfig {
-        self
     }
 }
 
@@ -1084,6 +1082,14 @@ impl SseEncode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::bridge::InitConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.database_dir, serializer);
+        <String>::sse_encode(self.data_dir, serializer);
     }
 }
 
@@ -1186,14 +1192,6 @@ impl SseEncode for crate::bridge::OtherPromotion {
         <u8>::sse_encode(self.threshold, serializer);
         <Vec<u8>>::sse_encode(self.announcement_share, serializer);
         <Option<i64>>::sse_encode(self.public_key_verified_timestamp, serializer);
-    }
-}
-
-impl SseEncode for crate::bridge::TwonlyConfig {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.database_path, serializer);
-        <String>::sse_encode(self.data_directory, serializer);
     }
 }
 
