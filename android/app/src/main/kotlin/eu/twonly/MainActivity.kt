@@ -6,6 +6,8 @@ import dev.darttools.flutter_android_volume_keydown.FlutterAndroidVolumeKeydownP
 import android.view.KeyEvent.KEYCODE_VOLUME_DOWN
 import android.view.KeyEvent.KEYCODE_VOLUME_UP
 import io.flutter.embedding.engine.FlutterEngine
+import android.content.Context
+import io.crates.keyring.Keyring
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -23,6 +25,8 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        Keyring.initializeNdkContext(applicationContext)
 
         MediaStoreChannel.configure(flutterEngine, applicationContext)
         VideoCompressionChannel.configure(flutterEngine, applicationContext)

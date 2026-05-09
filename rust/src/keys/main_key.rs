@@ -9,7 +9,7 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// `MainKey` is responsible for handling the cryptographically secure, immutable master key.
 /// It uses HKDF to derive subordinate keys (Authentication Token, Backup Key, Media Main Key).
-#[derive(Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
 pub struct MainKey {
     /// The 32-byte main master key
     main_key: [u8; 32],
@@ -33,6 +33,22 @@ impl MainKey {
         Self { main_key }
     }
 
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.main_key
+    }
+
+    /// Download token required to download a backup.
+    /// This ensures that the user who tries to download the backup must have knowledge over the
+    /// main key
+    pub fn backup_download_token(&self) -> [u8; 32] {
+        self.derive_key(b"backup_download_token")
+    }
+
+    /// Uses as a password to authenitcate agains the server
+    pub fn server_auth_token(&self) -> [u8; 32] {
+        self.derive_key(b"server_auth_token")
+    }
+
     /// Derives the database encryption key.
     pub(crate) fn get_database_key(&self, db: DatabaseKey) -> String {
         let db_name = match db {
@@ -41,11 +57,6 @@ impl MainKey {
         let info = [b"database_key_", db_name as &[u8]].concat();
         let key = self.derive_key(&info);
         hex::encode(key)
-    }
-
-    /// Derives the authentication token uploaded to the server for session authentication.
-    pub fn get_authentication_token(&self) -> [u8; 32] {
-        self.derive_key(b"auth_token")
     }
 
     /// Encrypts a backup payload.
@@ -124,24 +135,6 @@ mod tests {
         let km = MainKey::generate();
         let km2 = MainKey::from_main_key(km.main_key);
         assert_eq!(km.main_key, km2.main_key);
-    }
-
-    #[test]
-    fn test_get_authentication_token() {
-        let km1 = MainKey::generate();
-        let token1 = km1.get_authentication_token();
-
-        let km2 = MainKey::from_main_key(km1.main_key);
-        let token2 = km2.get_authentication_token();
-
-        // Tokens derived from the same main key should match
-        assert_eq!(token1, token2);
-
-        let km3 = MainKey::generate();
-        let token3 = km3.get_authentication_token();
-
-        // Different main keys should produce different tokens
-        assert_ne!(token1, token3);
     }
 
     #[test]

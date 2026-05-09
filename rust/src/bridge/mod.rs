@@ -2,7 +2,6 @@
 pub mod callbacks;
 pub mod wrapper;
 
-use std::path::Path;
 use std::sync::Arc;
 
 use crate::bridge::callbacks::user_discovery::{

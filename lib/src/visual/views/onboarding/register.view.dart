@@ -1,22 +1,19 @@
 // ignore_for_file: avoid_dynamic_calls
 
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
@@ -141,12 +138,7 @@ class _RegisterViewState extends State<RegisterView> {
       currentSetupPage: SetupPages.profile.name,
     )..appVersion = AppState.latestAppVersionId;
 
-    await SecureStorage.instance.write(
-      key: SecureStorageKeys.userData,
-      value: jsonEncode(userData),
-    );
-
-    await userService.tryInit();
+    await UserService.save(userData);
 
     await apiService.authenticate();
     widget.callbackOnSuccess();

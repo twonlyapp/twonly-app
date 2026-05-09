@@ -1,20 +1,22 @@
-mod backup_password;
-mod backup_passwordless;
 mod identity_key;
 mod main_key;
 
+use crate::backup::backup_password::BackupPasswordKeys;
+use crate::error::Result;
+use crate::error::TwonlyError;
+pub(crate) use crate::keys::identity_key::IdentityKey;
 pub(crate) use crate::keys::main_key::{DatabaseKey, MainKey};
 use crate::secure_storage::SecureStorage;
-use crate::{error::Result, keys::identity_key::IdentityKey};
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const KEY_MANAGER_ID: &str = "twonly_key_manager";
 
-#[derive(Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
 pub(crate) struct KeyManager {
     pub(crate) main_key: MainKey,
     pub(crate) identity_keys: Vec<IdentityKey>,
+    pub(crate) backup_password: Option<BackupPasswordKeys>,
 }
 
 impl KeyManager {
@@ -22,6 +24,7 @@ impl KeyManager {
         Ok(KeyManager {
             main_key: MainKey::generate(),
             identity_keys: vec![],
+            backup_password: None,
         })
     }
 
@@ -29,20 +32,18 @@ impl KeyManager {
     pub fn try_from_keychain(storage: &SecureStorage) -> Result<Self> {
         let hex_key = storage
             .read(KEY_MANAGER_ID)?
-            .ok_or_else(|| "Main key not found in keychain".to_string())?;
+            .ok_or_else(|| TwonlyError::MissingMainKey)?;
 
-        let bytes = hex::decode(hex_key).map_err(|e| format!("Failed to decode hex key: {}", e))?;
+        let bytes = hex::decode(hex_key)?;
 
-        let main_key: KeyManager = postcard::from_bytes(&bytes)
-            .map_err(|e| format!("Failed to deserialize KeyManager: {}", e))?;
+        let main_key: KeyManager = postcard::from_bytes(&bytes)?;
 
         Ok(main_key)
     }
 
     /// Stores the main key into the secure keychain/local storage.
     pub fn store_to_keychain(&self, storage: &SecureStorage) -> Result<()> {
-        let serialized = postcard::to_allocvec(self)
-            .map_err(|e| format!("Failed to serialize KeyManager: {}", e))?;
+        let serialized = postcard::to_allocvec(self)?;
 
         let hex_key = hex::encode(serialized);
         storage.write(KEY_MANAGER_ID, &hex_key)?;

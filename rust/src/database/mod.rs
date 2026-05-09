@@ -96,6 +96,7 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use crate::database::tables::received_messages::ReceivedMessage;
+    use chrono::Utc;
 
     use super::*;
     use tempfile::tempdir;
@@ -109,7 +110,7 @@ mod tests {
 
         // 1. Create and initialize database with key
         let db = Database::new(&db_path, Some(key), false).await.unwrap();
-        ReceivedMessage::insert(&db.pool, "sender1", b"hello world")
+        ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();
 
@@ -124,7 +125,7 @@ mod tests {
         let db = Database::new(&db_path, Some(key), false).await.unwrap();
         let messages = ReceivedMessage::get_all(&db.pool).await.unwrap();
         assert_eq!(messages.len(), 1);
-        assert_eq!(messages[0].sender_id, "sender1");
+        assert_eq!(messages[0].sender_id, 1);
         assert_eq!(messages[0].content, b"hello world");
     }
 
@@ -137,7 +138,7 @@ mod tests {
         let key = "secure_password";
 
         let db = Database::new(&db_path, Some(key), false).await.unwrap();
-        ReceivedMessage::insert(&db.pool, "sender1", b"hello world")
+        ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();
 
@@ -154,7 +155,7 @@ mod tests {
         let backup_db = Database::new(&backup_path, Some(key), false).await.unwrap();
         let messages = ReceivedMessage::get_all(&backup_db.pool).await.unwrap();
         assert_eq!(messages.len(), 1);
-        assert_eq!(messages[0].sender_id, "sender1");
+        assert_eq!(messages[0].sender_id, 1);
     }
 
     #[tokio::test]
@@ -165,7 +166,7 @@ mod tests {
         let backup_path = dir.path().join("backup_plain.sqlite").display().to_string();
 
         let db = Database::new(&db_path, None, false).await.unwrap();
-        ReceivedMessage::insert(&db.pool, "sender1", b"hello world")
+        ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();
 
@@ -175,6 +176,6 @@ mod tests {
         let backup_db = Database::new(&backup_path, None, false).await.unwrap();
         let messages = ReceivedMessage::get_all(&backup_db.pool).await.unwrap();
         assert_eq!(messages.len(), 1);
-        assert_eq!(messages[0].sender_id, "sender1");
+        assert_eq!(messages[0].sender_id, 1);
     }
 }

@@ -38,9 +38,9 @@ final _initMutex = Mutex();
 
 /// This function is used to initialized the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
-Future<void> twonlyMinimumInitialization() async {
+Future<bool> twonlyMinimumInitialization() async {
   Log.info('twonlyMinimumInitialization: called');
-  await exclusiveAccess(
+  final hasStorageError = await exclusiveAccess(
     lockName: 'init',
     mutex: _initMutex,
     action: () async {
@@ -54,15 +54,22 @@ Future<void> twonlyMinimumInitialization() async {
       await initFlutterCallbacksForRust();
 
       Log.info('twonlyMinimumInitialization: bridge.initializeTwonlyFlutter()');
-      await bridge.initializeTwonlyFlutter(
-        config: bridge.InitConfig(
-          databaseDir: AppEnvironment.supportDir,
-          dataDir: AppEnvironment.supportDir,
-        ),
-      );
+      try {
+        await bridge.initializeTwonlyFlutter(
+          config: bridge.InitConfig(
+            databaseDir: AppEnvironment.supportDir,
+            dataDir: AppEnvironment.supportDir,
+          ),
+        );
+      } catch (e) {
+        Log.error(e);
+        return true;
+      }
       Log.info('twonlyMinimumInitialization: finished');
+      return false;
     },
   );
+  return hasStorageError;
 }
 
 void main() async {
@@ -72,18 +79,18 @@ void main() async {
 
   unawaited(StartupGuard.markAppStartup());
 
-  await twonlyMinimumInitialization();
-
+  var storageError = await twonlyMinimumInitialization();
   unawaited(initFCMService());
 
   var userExists = false;
-  var storageError = false;
 
-  try {
-    userExists = await userService.tryInit();
-  } catch (e) {
-    Log.error('Failed to initialize user session due to storage error: $e');
-    storageError = true;
+  if (!storageError) {
+    try {
+      userExists = await userService.tryInit();
+    } catch (e) {
+      Log.error('Failed to initialize user session due to storage error: $e');
+      storageError = true;
+    }
   }
 
   if (Platform.isIOS && userExists) {

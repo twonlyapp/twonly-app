@@ -24,7 +24,9 @@ mdk-core = { version = "0.8.0", git = "https://github.com/marmot-protocol/mdk", 
 ] }
 mdk-sqlite-storage = { version = "0.8.0", git = "https://github.com/marmot-protocol/mdk", rev = "7f809f8549458a0d7f7d885bcdd694023abf299c" }
 mdk-storage-traits = { version = "0.8.0", git = "https://github.com/marmot-protocol/mdk", rev = "7f809f8549458a0d7f7d885bcdd694023abf299c" }
-libsqlite3-sys = { version = "0.35.0", features = ["bundled", "sqlcipher"] }
+libsqlite3-sys = { version = "0.35.0", features = [
+    "bundled-sqlcipher-vendored-openssl",
+] }
 tokio = { version = "1.44", features = ["full"] }
 tracing = "0.1.44"
 rand = "0.10.1"
@@ -42,6 +44,7 @@ keyring-core = "1"
 postcard = { version = "1.0", features = ["alloc"] }
 chrono = { version = "0.4", features = ["serde"] }
 zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
+scrypt = { version = "0.12", default-features = false }
 walkdir = "2.5.0"
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain

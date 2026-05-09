@@ -99,7 +99,7 @@ impl Context {
                     Err(err) => {
                         tracing::error!("{err}");
                         if rust_db_path.exists() {
-                            tracing::error!("Rust Database exsist, while the key manager not");
+                            tracing::error!("Rust Database exsist, while the key manager not. This must be a secure storage error.");
                             return Err(TwonlyError::SecureStorageError);
                         }
                         tracing::info!("Generating a new key manager.");

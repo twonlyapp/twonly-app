@@ -777,7 +777,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupPasswordRequirement =>
-      'Das Passwort muss mindestens 8 Zeichen lang sein.';
+      'Das Passwort muss mindestens 10 Zeichen lang sein.';
 
   @override
   String get backupExpertSettings => 'Experteneinstellungen';

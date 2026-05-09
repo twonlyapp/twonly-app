@@ -108,10 +108,9 @@ Future<void> handleBackupData(
     key: SecureStorageKeys.signalSignedPreKey,
     value: secureStorage[SecureStorageKeys.signalSignedPreKey] as String,
   );
-  await storage.write(
-    key: SecureStorageKeys.userData,
-    value: secureStorage[SecureStorageKeys.userData] as String,
-  );
+  final userDataMap = jsonDecode(secureStorage[SecureStorageKeys.userData] as String) as Map<String, dynamic>;
+  final userData = UserData.fromJson(userDataMap);
+  await UserService.save(userData);
   await UserService.update((u) {
     u.deviceId += 1;
   });

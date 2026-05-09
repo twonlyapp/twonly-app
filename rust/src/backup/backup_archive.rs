@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::database::Database;
-use crate::error::Result;
-use crate::keys::DatabaseKey;
+use crate::error::{Result, TwonlyError};
+use crate::keys::{DatabaseKey, MainKey};
 use std::fs::{remove_file, File};
 use std::io::{copy, Cursor};
 use std::path::PathBuf;
@@ -23,7 +23,8 @@ impl BackupArchive {
         Ok(vec![
             ("twonly.sqlite", database_dir.clone(), true, None),
             ("rust_db.sqlite", database_dir, true, Some(rust_db_key)),
-            ("user_discovery_config.json", data_dir, false, None),
+            ("user_discovery_config.json", data_dir.clone(), false, None),
+            ("user.json", data_dir.join("keyvalue"), false, None),
         ])
     }
 
@@ -38,7 +39,7 @@ impl BackupArchive {
         std::fs::create_dir_all(&backup_data_dir)?;
 
         for (file_name, source_dir, is_db, mut encryption_key) in Self::get_backup_files(ctx)? {
-            let file_path = source_dir.join(&file_name);
+            let file_path = source_dir.join(file_name);
             if !file_path.exists() {
                 tracing::warn!(
                     "Could not backup {} as it does not exist.",
@@ -54,15 +55,19 @@ impl BackupArchive {
                     encryption_key.is_none(),
                 )
                 .await?;
-                let backup_database_file = backup_data_dir.join(&file_name).display().to_string();
+                let backup_database_file = backup_data_dir.join(file_name).display().to_string();
                 db.create_backup(backup_database_file.as_str(), encryption_key.as_deref())
                     .await?;
             } else {
-                let file_backup = backup_data_dir.join(&file_name);
+                let file_backup = backup_data_dir.join(file_name);
                 std::fs::copy(file_path, file_backup)?;
             }
             encryption_key.zeroize();
         }
+
+        let mut keys = ctx.get_key_manager()?;
+
+        let keys_serialized = postcard::to_allocvec(&keys)?;
 
         let mut zip_data = Vec::new();
 
@@ -70,6 +75,9 @@ impl BackupArchive {
             let mut zip = ZipWriter::new(Cursor::new(&mut zip_data));
             let options =
                 SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+
+            zip.start_file(".key_manager.bin", options)?;
+            copy(&mut keys_serialized.as_slice(), &mut zip)?;
 
             for entry in WalkDir::new(&backup_data_dir) {
                 let entry = entry?;
@@ -87,8 +95,6 @@ impl BackupArchive {
             zip.finish()?;
         }
 
-        let mut keys = ctx.get_key_manager()?;
-
         let zip_path = data_dir.join("temp_backup.zip");
         std::fs::write(&zip_path, keys.main_key.encrypt_backup(&zip_data))?;
 
@@ -98,13 +104,21 @@ impl BackupArchive {
         Ok(zip_path)
     }
 
-    pub(crate) async fn restore_from_backup(ctx: &Context, file_path: &PathBuf) -> Result<()> {
+    pub(crate) async fn restore_from_backup(
+        ctx: &Context,
+        main_key_bytes: &[u8],
+        file_path: &PathBuf,
+    ) -> Result<()> {
         let data_dir = PathBuf::from(&ctx.get_config()?.data_dir);
 
-        let mut keys = ctx.get_key_manager()?;
+        let main_key_arr: [u8; 32] = main_key_bytes
+            .try_into()
+            .map_err(|_| TwonlyError::Generic("Invalid main key length".to_string()))?;
+
+        let mut main_key = MainKey::from_main_key(main_key_arr);
 
         let encrypted_zip = std::fs::read(file_path)?;
-        let zip_content = keys.main_key.decrypt_backup(&encrypted_zip)?;
+        let zip_content = main_key.decrypt_backup(&encrypted_zip)?;
 
         let restore_temp_dir = data_dir.join("restore_temp");
 
@@ -120,6 +134,15 @@ impl BackupArchive {
             let mut file = archive.by_index(i)?;
 
             if file.is_file() {
+                let name = file.name().to_string();
+                if name == ".key_manager.bin" {
+                    let mut data = Vec::new();
+                    copy(&mut file, &mut data)?;
+                    let key_manager: crate::keys::KeyManager = postcard::from_bytes(&data)?;
+                    key_manager.store_to_keychain(ctx.get_secure_storage()?)?;
+                    continue;
+                }
+
                 let enclosed_name = file.enclosed_name();
                 if let Some(name) = enclosed_name.as_ref().and_then(|p| p.file_name()) {
                     let restored_file = restore_temp_dir.join(name);
@@ -129,9 +152,9 @@ impl BackupArchive {
         }
 
         for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx)? {
-            let src = restore_temp_dir.join(&file_name);
+            let src = restore_temp_dir.join(file_name);
             if src.exists() {
-                let dst = target_dir.join(&file_name);
+                let dst = target_dir.join(file_name);
                 if is_db {
                     // Remove existing database and its temporary files (WAL, SHM)
                     let _ = remove_file(&dst);
@@ -143,7 +166,7 @@ impl BackupArchive {
             }
         }
 
-        keys.zeroize();
+        main_key.zeroize();
         std::fs::remove_dir_all(&restore_temp_dir)?;
 
         Ok(())
@@ -152,6 +175,8 @@ impl BackupArchive {
 
 #[cfg(test)]
 mod tests {
+    use crate::{database::tables::received_messages::ReceivedMessage, keys::KeyManager};
+
     use super::*;
     use tempfile::tempdir;
 
@@ -172,7 +197,14 @@ mod tests {
         {
             let config = ctx.get_config().unwrap();
             let rust_db_path = PathBuf::from(&config.database_dir).join("rust_db.sqlite");
-            let key_manager = ctx.get_key_manager().unwrap();
+            let mut key_manager = ctx.get_key_manager().unwrap();
+            key_manager
+                .identity_keys
+                .push(crate::keys::IdentityKey::Nost());
+            key_manager
+                .store_to_keychain(ctx.get_secure_storage().unwrap())
+                .unwrap();
+
             let db = Database::new(
                 &rust_db_path.display().to_string(),
                 Some(&key_manager.main_key.get_database_key(DatabaseKey::RustDb)),
@@ -181,13 +213,9 @@ mod tests {
             .await
             .unwrap();
 
-            crate::database::tables::received_messages::ReceivedMessage::insert(
-                &db.pool,
-                "sender1",
-                b"original message",
-            )
-            .await
-            .unwrap();
+            ReceivedMessage::insert(&db.pool, 1, b"original message")
+                .await
+                .unwrap();
 
             // Add a file
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
@@ -197,6 +225,9 @@ mod tests {
         // 2. Create backup
         let backup_path = BackupArchive::create_backup(&ctx).await.unwrap();
         assert!(backup_path.exists());
+
+        // Save the original main key bytes
+        let original_main_key = *ctx.get_key_manager().unwrap().main_key.as_bytes();
 
         // 3. Modify data (to simulate state before restore)
         {
@@ -211,20 +242,23 @@ mod tests {
             .await
             .unwrap();
 
-            crate::database::tables::received_messages::ReceivedMessage::insert(
-                &db.pool,
-                "sender2",
-                b"new message",
-            )
-            .await
-            .unwrap();
+            ReceivedMessage::insert(&db.pool, 2, b"new message")
+                .await
+                .unwrap();
 
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             std::fs::write(config_file, "new config").unwrap();
+
+            // Delete old keys to ensure they will be actually restored
+
+            let key_manager = KeyManager::generate().unwrap();
+            key_manager
+                .store_to_keychain(&ctx.get_secure_storage().unwrap())
+                .unwrap();
         }
 
         // 4. Restore backup
-        BackupArchive::restore_from_backup(&ctx, &backup_path)
+        BackupArchive::restore_from_backup(&ctx, &original_main_key, &backup_path)
             .await
             .unwrap();
 
@@ -241,18 +275,22 @@ mod tests {
             .await
             .unwrap();
 
-            let messages =
-                crate::database::tables::received_messages::ReceivedMessage::get_all(&db.pool)
-                    .await
-                    .unwrap();
+            let messages = ReceivedMessage::get_all(&db.pool).await.unwrap();
             // Should only have the original message because restore overwrites
             assert_eq!(messages.len(), 1);
-            assert_eq!(messages[0].sender_id, "sender1");
+            assert_eq!(messages[0].sender_id, 1);
             assert_eq!(messages[0].content, b"original message");
 
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             let config_content = std::fs::read_to_string(config_file).unwrap();
             assert_eq!(config_content, "original config");
+
+            let key_manager = ctx.get_key_manager().unwrap();
+            assert_eq!(key_manager.identity_keys.len(), 1);
+            match &key_manager.identity_keys[0] {
+                crate::keys::IdentityKey::Nost() => {}
+                _ => panic!("Wrong identity key!"),
+            }
         }
     }
 }

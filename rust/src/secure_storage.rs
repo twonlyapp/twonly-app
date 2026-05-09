@@ -32,9 +32,13 @@ impl SecureStorage {
 
         #[cfg(target_os = "ios")]
         {
+            use std::collections::HashMap;
             let group = "CN332ZUGRP.eu.twonly.shared";
-            let store = apple_native_keyring_store::protected::Store::with_application_group(group)
-                .map_err(|e| format!("Failed to init iOS Protected Store: {}", e))?;
+            let mut config = HashMap::new();
+            config.insert("access-group", group);
+            let store =
+                apple_native_keyring_store::protected::Store::new_with_configuration(&config)
+                    .map_err(|e| format!("Failed to init iOS Protected Store: {}", e))?;
             keyring_core::set_default_store(store);
         }
 
@@ -62,8 +66,7 @@ impl SecureStorage {
     /// * `key` - The identifier (account name) for the secret.
     /// * `value` - The secret string to store.
     pub fn write(&self, key: &str, value: &str) -> Result<(), String> {
-        let entry = Entry::new(&self.service_name, key)
-            .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
+        let entry = self.get_entry(key)?;
 
         entry
             .set_password(value)
@@ -77,8 +80,7 @@ impl SecureStorage {
     /// Returns `Ok(Some(String))` if the key exists, `Ok(None)` if it doesn't,
     /// or an `Err` if a system error occurs.
     pub fn read(&self, key: &str) -> Result<Option<String>, String> {
-        let entry = Entry::new(&self.service_name, key)
-            .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
+        let entry = self.get_entry(key)?;
 
         match entry.get_password() {
             Ok(password) => Ok(Some(password)),
@@ -91,13 +93,30 @@ impl SecureStorage {
     ///
     /// If the key does not exist, this function returns `Ok(())` (idempotent).
     pub fn delete(&self, key: &str) -> Result<(), String> {
-        let entry = Entry::new(&self.service_name, key)
-            .map_err(|e| format!("Failed to create keyring entry: {}", e))?;
+        let entry = self.get_entry(key)?;
 
         match entry.delete_credential() {
             Ok(()) => Ok(()),
             Err(KeyringError::NoEntry) => Ok(()),
             Err(e) => Err(format!("Failed to delete secret from keyring: {}", e)),
+        }
+    }
+
+    /// Helper to create a keyring entry with the appropriate platform modifiers.
+    fn get_entry(&self, key: &str) -> Result<Entry, String> {
+        #[cfg(target_os = "ios")]
+        {
+            use std::collections::HashMap;
+            let mut modifiers = HashMap::new();
+            modifiers.insert("access-policy", "AfterFirstUnlock");
+            Entry::new_with_modifiers(&self.service_name, key, &modifiers)
+                .map_err(|e| format!("Failed to create keyring entry with modifiers: {}", e))
+        }
+
+        #[cfg(not(target_os = "ios"))]
+        {
+            Entry::new(&self.service_name, key)
+                .map_err(|e| format!("Failed to create keyring entry: {}", e))
         }
     }
 }

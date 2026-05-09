@@ -1511,7 +1511,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupPasswordRequirement.
   ///
   /// In en, this message translates to:
-  /// **'Password must be at least 8 characters long.'**
+  /// **'Password must be at least 10 characters long.'**
   String get backupPasswordRequirement;
 
   /// No description provided for @backupExpertSettings.
