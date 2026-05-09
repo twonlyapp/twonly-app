@@ -40,12 +40,12 @@ impl MainKey {
     /// Download token required to download a backup.
     /// This ensures that the user who tries to download the backup must have knowledge over the
     /// main key
-    pub fn backup_download_token(&self) -> [u8; 32] {
+    pub fn get_backup_download_token(&self) -> [u8; 32] {
         self.derive_key(b"backup_download_token")
     }
 
     /// Uses as a password to authenitcate agains the server
-    pub fn server_auth_token(&self) -> [u8; 32] {
+    pub fn get_login_token(&self) -> [u8; 32] {
         self.derive_key(b"server_auth_token")
     }
 

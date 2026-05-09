@@ -7,6 +7,7 @@ use crate::error::TwonlyError;
 pub(crate) use crate::keys::identity_key::IdentityKey;
 pub(crate) use crate::keys::main_key::{DatabaseKey, MainKey};
 use crate::secure_storage::SecureStorage;
+use aes_gcm::Aes256Gcm;
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -14,6 +15,7 @@ const KEY_MANAGER_ID: &str = "twonly_key_manager";
 
 #[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
 pub(crate) struct KeyManager {
+    pub(crate) user_id: Option<i64>,
     pub(crate) main_key: MainKey,
     pub(crate) identity_keys: Vec<IdentityKey>,
     pub(crate) backup_password: Option<BackupPasswordKeys>,
@@ -25,6 +27,7 @@ impl KeyManager {
             main_key: MainKey::generate(),
             identity_keys: vec![],
             backup_password: None,
+            user_id: None,
         })
     }
 

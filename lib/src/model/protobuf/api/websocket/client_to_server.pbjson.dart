@@ -447,13 +447,13 @@ const ApplicationData$json = {
       '10': 'deprecated17'
     },
     {
-      '1': 'updatePlanOptions',
+      '1': 'deprecated_19',
       '3': 19,
       '4': 1,
       '5': 11,
-      '6': '.client_to_server.ApplicationData.UpdatePlanOptions',
+      '6': '.client_to_server.ApplicationData.Deprecated',
       '9': 0,
-      '10': 'updatePlanOptions'
+      '10': 'deprecated19'
     },
     {
       '1': 'downloadDone',
@@ -561,7 +561,6 @@ const ApplicationData$json = {
     ApplicationData_ChangeUsername$json,
     ApplicationData_UpdateGoogleFcmToken$json,
     ApplicationData_GetUserById$json,
-    ApplicationData_UpdatePlanOptions$json,
     ApplicationData_GetAvailablePlans$json,
     ApplicationData_GetAddAccountsInvites$json,
     ApplicationData_GetCurrentPlanInfos$json,
@@ -633,14 +632,6 @@ const ApplicationData_GetUserById$json = {
   '1': 'GetUserById',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
-  ],
-};
-
-@$core.Deprecated('Use applicationDataDescriptor instead')
-const ApplicationData_UpdatePlanOptions$json = {
-  '1': 'UpdatePlanOptions',
-  '2': [
-    {'1': 'auto_renewal', '3': 1, '4': 1, '5': 8, '10': 'autoRenewal'},
   ],
 };
 
@@ -788,48 +779,47 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'dGVkSABSDGRlcHJlY2F0ZWQxNRJTCg1kZXByZWNhdGVkXzE2GBAgASgLMiwuY2xpZW50X3RvX3'
     'NlcnZlci5BcHBsaWNhdGlvbkRhdGEuRGVwcmVjYXRlZEgAUgxkZXByZWNhdGVkMTYSUwoNZGVw'
     'cmVjYXRlZF8xNxgRIAEoCzIsLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkRlcH'
-    'JlY2F0ZWRIAFIMZGVwcmVjYXRlZDE3EmMKEXVwZGF0ZVBsYW5PcHRpb25zGBMgASgLMjMuY2xp'
-    'ZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuVXBkYXRlUGxhbk9wdGlvbnNIAFIRdXBkYX'
-    'RlUGxhbk9wdGlvbnMSVAoMZG93bmxvYWREb25lGBQgASgLMi4uY2xpZW50X3RvX3NlcnZlci5B'
-    'cHBsaWNhdGlvbkRhdGEuRG93bmxvYWREb25lSABSDGRvd25sb2FkRG9uZRJ1ChdnZXRTaWduZW'
-    'RQcmVrZXlCeVVzZXJpZBgWIAEoCzI5LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRh'
-    'LkdldFNpZ25lZFByZUtleUJ5VXNlcklkSABSF2dldFNpZ25lZFByZWtleUJ5VXNlcmlkEmYKEn'
-    'VwZGF0ZVNpZ25lZFByZWtleRgXIAEoCzI0LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25E'
-    'YXRhLlVwZGF0ZVNpZ25lZFByZUtleUgAUhJ1cGRhdGVTaWduZWRQcmVrZXkSVwoNZGVsZXRlQW'
-    'Njb3VudBgYIAEoCzIvLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkRlbGV0ZUFj'
-    'Y291bnRIAFINZGVsZXRlQWNjb3VudBJOCgpyZXBvcnRVc2VyGBkgASgLMiwuY2xpZW50X3RvX3'
-    'NlcnZlci5BcHBsaWNhdGlvbkRhdGEuUmVwb3J0VXNlckgAUgpyZXBvcnRVc2VyEloKDmNoYW5n'
-    'ZVVzZXJuYW1lGBogASgLMjAuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuQ2hhbm'
-    'dlVXNlcm5hbWVIAFIOY2hhbmdlVXNlcm5hbWUSUQoLaXBhUHVyY2hhc2UYGyABKAsyLS5jbGll'
-    'bnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5JUEFQdXJjaGFzZUgAUgtpcGFQdXJjaGFzZR'
-    'JXCg1pcGFGb3JjZUNoZWNrGBwgASgLMi8uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRh'
-    'dGEuSVBBRm9yY2VDaGVja0gAUg1pcGFGb3JjZUNoZWNrEmwKFHJlbW92ZUFkZGl0aW9uYWxVc2'
-    'VyGBIgASgLMjYuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuUmVtb3ZlQWRkaXRp'
-    'b25hbFVzZXJIAFIUcmVtb3ZlQWRkaXRpb25hbFVzZXISYwoRYWRkQWRkaXRpb25hbFVzZXIYHS'
-    'ABKAsyMy5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5BZGRBZGRpdGlvbmFsVXNl'
-    'ckgAUhFhZGRBZGRpdGlvbmFsVXNlchJZCg9zZXRfbG9naW5fdG9rZW4YHiABKAsyLy5jbGllbn'
-    'RfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5TZXRMb2dpblRva2VuSABSDXNldExvZ2luVG9r'
-    'ZW4aagoLVGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhIKBGJvZHkYAyABKA'
-    'xSBGJvZHkSIAoJcHVzaF9kYXRhGAQgASgMSABSCHB1c2hEYXRhiAEBQgwKCl9wdXNoX2RhdGEa'
-    'LwoRR2V0VXNlckJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lGiwKDkNoYW'
-    '5nZVVzZXJuYW1lEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZRo1ChRVcGRhdGVHb29nbGVG'
-    'Y21Ub2tlbhIdCgpnb29nbGVfZmNtGAEgASgJUglnb29nbGVGY20aJgoLR2V0VXNlckJ5SWQSFw'
-    'oHdXNlcl9pZBgBIAEoA1IGdXNlcklkGjYKEVVwZGF0ZVBsYW5PcHRpb25zEiEKDGF1dG9fcmVu'
-    'ZXdhbBgBIAEoCFILYXV0b1JlbmV3YWwaEwoRR2V0QXZhaWxhYmxlUGxhbnMaFwoVR2V0QWRkQW'
-    'Njb3VudHNJbnZpdGVzGhUKE0dldEN1cnJlbnRQbGFuSW5mb3MaLwoUUmVtb3ZlQWRkaXRpb25h'
-    'bFVzZXISFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCg'
-    'd1c2VyX2lkGAEgASgDUgZ1c2VySWQaMgoXR2V0U2lnbmVkUHJlS2V5QnlVc2VySWQSFwoHdXNl'
-    'cl9pZBgBIAEoA1IGdXNlcklkGpsBChJVcGRhdGVTaWduZWRQcmVLZXkSKAoQc2lnbmVkX3ByZW'
-    'tleV9pZBgBIAEoA1IOc2lnbmVkUHJla2V5SWQSIwoNc2lnbmVkX3ByZWtleRgCIAEoDFIMc2ln'
-    'bmVkUHJla2V5EjYKF3NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlGAMgASgMUhVzaWduZWRQcmVrZX'
-    'lTaWduYXR1cmUaNQoMRG93bmxvYWREb25lEiUKDmRvd25sb2FkX3Rva2VuGAEgASgMUg1kb3du'
-    'bG9hZFRva2VuGk4KClJlcG9ydFVzZXISKAoQcmVwb3J0ZWRfdXNlcl9pZBgBIAEoA1IOcmVwb3'
-    'J0ZWRVc2VySWQSFgoGcmVhc29uGAIgASgJUgZyZWFzb24acQoLSVBBUHVyY2hhc2USHQoKcHJv'
-    'ZHVjdF9pZBgBIAEoCVIJcHJvZHVjdElkEhYKBnNvdXJjZRgCIAEoCVIGc291cmNlEisKEXZlcm'
-    'lmaWNhdGlvbl9kYXRhGAMgASgJUhB2ZXJpZmljYXRpb25EYXRhGg8KDUlQQUZvcmNlQ2hlY2sa'
-    'DwoNRGVsZXRlQWNjb3VudBosChFBZGRBZGRpdGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgASgDUg'
-    'Z1c2VySWQaMAoNU2V0TG9naW5Ub2tlbhIfCgtsb2dpbl90b2tlbhgBIAEoDFIKbG9naW5Ub2tl'
-    'bhoMCgpEZXByZWNhdGVkQhEKD0FwcGxpY2F0aW9uRGF0YQ==');
+    'JlY2F0ZWRIAFIMZGVwcmVjYXRlZDE3ElMKDWRlcHJlY2F0ZWRfMTkYEyABKAsyLC5jbGllbnRf'
+    'dG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5EZXByZWNhdGVkSABSDGRlcHJlY2F0ZWQxORJUCg'
+    'xkb3dubG9hZERvbmUYFCABKAsyLi5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5E'
+    'b3dubG9hZERvbmVIAFIMZG93bmxvYWREb25lEnUKF2dldFNpZ25lZFByZWtleUJ5VXNlcmlkGB'
+    'YgASgLMjkuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0U2lnbmVkUHJlS2V5'
+    'QnlVc2VySWRIAFIXZ2V0U2lnbmVkUHJla2V5QnlVc2VyaWQSZgoSdXBkYXRlU2lnbmVkUHJla2'
+    'V5GBcgASgLMjQuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuVXBkYXRlU2lnbmVk'
+    'UHJlS2V5SABSEnVwZGF0ZVNpZ25lZFByZWtleRJXCg1kZWxldGVBY2NvdW50GBggASgLMi8uY2'
+    'xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuRGVsZXRlQWNjb3VudEgAUg1kZWxldGVB'
+    'Y2NvdW50Ek4KCnJlcG9ydFVzZXIYGSABKAsyLC5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW'
+    '9uRGF0YS5SZXBvcnRVc2VySABSCnJlcG9ydFVzZXISWgoOY2hhbmdlVXNlcm5hbWUYGiABKAsy'
+    'MC5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5DaGFuZ2VVc2VybmFtZUgAUg5jaG'
+    'FuZ2VVc2VybmFtZRJRCgtpcGFQdXJjaGFzZRgbIAEoCzItLmNsaWVudF90b19zZXJ2ZXIuQXBw'
+    'bGljYXRpb25EYXRhLklQQVB1cmNoYXNlSABSC2lwYVB1cmNoYXNlElcKDWlwYUZvcmNlQ2hlY2'
+    'sYHCABKAsyLy5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5JUEFGb3JjZUNoZWNr'
+    'SABSDWlwYUZvcmNlQ2hlY2sSbAoUcmVtb3ZlQWRkaXRpb25hbFVzZXIYEiABKAsyNi5jbGllbn'
+    'RfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5SZW1vdmVBZGRpdGlvbmFsVXNlckgAUhRyZW1v'
+    'dmVBZGRpdGlvbmFsVXNlchJjChFhZGRBZGRpdGlvbmFsVXNlchgdIAEoCzIzLmNsaWVudF90b1'
+    '9zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkFkZEFkZGl0aW9uYWxVc2VySABSEWFkZEFkZGl0aW9u'
+    'YWxVc2VyElkKD3NldF9sb2dpbl90b2tlbhgeIAEoCzIvLmNsaWVudF90b19zZXJ2ZXIuQXBwbG'
+    'ljYXRpb25EYXRhLlNldExvZ2luVG9rZW5IAFINc2V0TG9naW5Ub2tlbhpqCgtUZXh0TWVzc2Fn'
+    'ZRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoEYm9keRgDIAEoDFIEYm9keRIgCglwdXNoX2'
+    'RhdGEYBCABKAxIAFIIcHVzaERhdGGIAQFCDAoKX3B1c2hfZGF0YRovChFHZXRVc2VyQnlVc2Vy'
+    'bmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUaLAoOQ2hhbmdlVXNlcm5hbWUSGgoIdX'
+    'Nlcm5hbWUYASABKAlSCHVzZXJuYW1lGjUKFFVwZGF0ZUdvb2dsZUZjbVRva2VuEh0KCmdvb2ds'
+    'ZV9mY20YASABKAlSCWdvb2dsZUZjbRomCgtHZXRVc2VyQnlJZBIXCgd1c2VyX2lkGAEgASgDUg'
+    'Z1c2VySWQaEwoRR2V0QXZhaWxhYmxlUGxhbnMaFwoVR2V0QWRkQWNjb3VudHNJbnZpdGVzGhUK'
+    'E0dldEN1cnJlbnRQbGFuSW5mb3MaLwoUUmVtb3ZlQWRkaXRpb25hbFVzZXISFwoHdXNlcl9pZB'
+    'gBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2VyX2lkGAEgASgDUgZ1'
+    'c2VySWQaMgoXR2V0U2lnbmVkUHJlS2V5QnlVc2VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlck'
+    'lkGpsBChJVcGRhdGVTaWduZWRQcmVLZXkSKAoQc2lnbmVkX3ByZWtleV9pZBgBIAEoA1IOc2ln'
+    'bmVkUHJla2V5SWQSIwoNc2lnbmVkX3ByZWtleRgCIAEoDFIMc2lnbmVkUHJla2V5EjYKF3NpZ2'
+    '5lZF9wcmVrZXlfc2lnbmF0dXJlGAMgASgMUhVzaWduZWRQcmVrZXlTaWduYXR1cmUaNQoMRG93'
+    'bmxvYWREb25lEiUKDmRvd25sb2FkX3Rva2VuGAEgASgMUg1kb3dubG9hZFRva2VuGk4KClJlcG'
+    '9ydFVzZXISKAoQcmVwb3J0ZWRfdXNlcl9pZBgBIAEoA1IOcmVwb3J0ZWRVc2VySWQSFgoGcmVh'
+    'c29uGAIgASgJUgZyZWFzb24acQoLSVBBUHVyY2hhc2USHQoKcHJvZHVjdF9pZBgBIAEoCVIJcH'
+    'JvZHVjdElkEhYKBnNvdXJjZRgCIAEoCVIGc291cmNlEisKEXZlcmlmaWNhdGlvbl9kYXRhGAMg'
+    'ASgJUhB2ZXJpZmljYXRpb25EYXRhGg8KDUlQQUZvcmNlQ2hlY2saDwoNRGVsZXRlQWNjb3VudB'
+    'osChFBZGRBZGRpdGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaMAoNU2V0TG9n'
+    'aW5Ub2tlbhIfCgtsb2dpbl90b2tlbhgBIAEoDFIKbG9naW5Ub2tlbhoMCgpEZXByZWNhdGVkQh'
+    'EKD0FwcGxpY2F0aW9uRGF0YQ==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

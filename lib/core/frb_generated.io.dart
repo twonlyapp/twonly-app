@@ -5,6 +5,7 @@
 
 import 'bridge.dart';
 import 'bridge/callbacks.dart';
+import 'bridge/wrapper/key_manager.dart';
 import 'bridge/wrapper/user_discovery.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -120,6 +121,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig dco_decode_box_autoadd_init_config(dynamic raw);
 
   @protected
+  FlutterKeyManager dco_decode_flutter_key_manager(dynamic raw);
+
+  @protected
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
 
   @protected
@@ -203,6 +207,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer);
+
+  @protected
+  FlutterKeyManager sse_decode_flutter_key_manager(
+    SseDeserializer deserializer,
+  );
 
   @protected
   FlutterUserDiscovery sse_decode_flutter_user_discovery(
@@ -394,6 +403,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_init_config(
     InitConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_flutter_key_manager(
+    FlutterKeyManager self,
     SseSerializer serializer,
   );
 

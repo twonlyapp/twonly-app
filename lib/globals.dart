@@ -35,7 +35,7 @@ class AppState {
   static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
-  static int latestAppVersionId = 110;
+  static int latestAppVersionId = 111;
 }
 
 class AppGlobalKeys {

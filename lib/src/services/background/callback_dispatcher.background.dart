@@ -34,6 +34,7 @@ Future<void> initializeBackgroundTaskManager() async {
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     SentryWidgetsFlutterBinding.ensureInitialized();
+    await AppEnvironment.init();
     switch (task) {
       case 'eu.twonly.periodic_task':
       // if (await initBackgroundExecution()) {
@@ -58,7 +59,6 @@ Future<bool> initBackgroundExecution() async {
     return false;
   }
 
-  await AppEnvironment.init();
   AppState.isInBackgroundTask = true;
 
   if (await StartupGuard.isAppStarting()) {

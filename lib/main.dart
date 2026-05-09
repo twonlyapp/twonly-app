@@ -80,7 +80,7 @@ void main() async {
   unawaited(StartupGuard.markAppStartup());
 
   var storageError = await twonlyMinimumInitialization();
-  unawaited(initFCMService());
+  await initFCMService();
 
   var userExists = false;
 
@@ -183,6 +183,13 @@ Future<void> runMigrations() async {
       } else {
         u.currentSetupPage = SetupPages.shareYourFriends.name;
       }
+    });
+  }
+  if (userService.currentUser.appVersion < 111) {
+    await UserService.update((u) {
+      u
+        ..appVersion = 111
+        ..canUseLoginTokenForAuth = false;
     });
   }
 }

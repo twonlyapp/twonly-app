@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class Sticker {
@@ -21,8 +21,7 @@ class Sticker {
 }
 
 Future<List<Sticker>> getStickerIndex() async {
-  final directory = await getApplicationCacheDirectory();
-  final indexFile = File('${directory.path}/stickers.json');
+  final indexFile = File('${AppEnvironment.cacheDir}/stickers.json');
   var res = <Sticker>[];
 
   if (indexFile.existsSync() && kReleaseMode) {

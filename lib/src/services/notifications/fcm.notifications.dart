@@ -119,6 +119,7 @@ Future<void> initFCMService() async {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   SentryWidgetsFlutterBinding.ensureInitialized();
+  await AppEnvironment.init();
   final isInitialized = await initBackgroundExecution();
   Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);

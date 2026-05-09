@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -450,6 +451,21 @@ class ApiService {
           await onAuthenticated();
         } else {
           unawaited(onAuthenticated());
+
+          try {
+            Log.info('Switching authentication to login token');
+            final loginToken = await FlutterKeyManager.getLoginToken();
+            final res = await _setLoginToken(loginToken);
+            if (res.isSuccess) {
+              Log.info('Switch was successfully.');
+              await UserService.update((u) => u.canUseLoginTokenForAuth = true);
+              await SecureStorage.instance.delete(
+                key: SecureStorageKeys.apiAuthToken,
+              );
+            }
+          } catch (e) {
+            Log.error(e);
+          }
         }
         return true;
       }
@@ -466,15 +482,62 @@ class ApiService {
     return false;
   }
 
+  Future<bool> tryAuthenticateWithLoginToken() async {
+    try {
+      final loginToken = await FlutterKeyManager.getLoginToken();
+
+      final authenticate = Handshake_AuthenticateWithLoginToken()
+        ..userId = Int64(userService.currentUser.userId)
+        ..appVersion = (await PackageInfo.fromPlatform()).version
+        ..deviceId = Int64(userService.currentUser.deviceId)
+        ..inBackground = AppState.isInBackgroundTask
+        ..secretLoginToken = loginToken.toList();
+
+      final handshake = Handshake()..authenticateWithLoginToken = authenticate;
+      final req = createClientToServerFromHandshake(handshake);
+
+      final result = await sendRequestSync(req, authenticated: false);
+
+      if (result.isSuccess) {
+        Log.info('websocket is authenticated');
+        isAuthenticated = true;
+        if (AppState.isInBackgroundTask) {
+          await onAuthenticated();
+        } else {
+          unawaited(onAuthenticated());
+        }
+        return true;
+      }
+      if (result.isError) {
+        if (result.error != ErrorCode.AuthTokenNotValid &&
+            result.error != ErrorCode.ForegroundSessionConnected) {
+          Log.error(
+            'got error while authenticating to the server: ${result.error}',
+          );
+          return false;
+        }
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+    return false;
+  }
+
   Future<void> authenticate() async {
     return lockAuthentication.protect(() async {
       if (isAuthenticated) return;
+
       if (await getSignalIdentity() == null) {
         Log.error('Signal identity not found.');
         return;
       }
 
       if (!userService.isUserCreated) return;
+
+      if (userService.currentUser.canUseLoginTokenForAuth) {
+        await tryAuthenticateWithLoginToken();
+        return;
+      }
 
       if (await tryAuthenticateWithToken()) {
         return;
@@ -542,6 +605,8 @@ class ApiService {
 
     final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 
+    final loginToken = await FlutterKeyManager.getLoginToken();
+
     final register = Handshake_Register()
       ..username = username
       ..publicIdentityKey = (await signalStore.getIdentityKeyPair())
@@ -552,6 +617,7 @@ class ApiService {
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id)
       ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
+      ..loginToken = loginToken
       ..proofOfWork = Int64(proofOfWorkResult)
       ..isIos = Platform.isIOS;
 
@@ -617,6 +683,13 @@ class ApiService {
     return sendRequestSync(req, ensureRetransmission: true);
   }
 
+  Future<Result> _setLoginToken(List<int> token) async {
+    final get = ApplicationData_SetLoginToken()..loginToken = token;
+    final appData = ApplicationData()..setLoginToken = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
   Future<Response_UserData?> getUserData(String username) async {
     final get = ApplicationData_GetUserByUsername()..username = username;
     final appData = ApplicationData()..getUserByUsername = get;
@@ -643,13 +716,6 @@ class ApiService {
       }
     }
     return null;
-  }
-
-  Future<Result> updatePlanOptions(bool autoRenewal) async {
-    final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..updatePlanOptions = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
   }
 
   Future<Result> removeAdditionalUser(Int64 userId) async {

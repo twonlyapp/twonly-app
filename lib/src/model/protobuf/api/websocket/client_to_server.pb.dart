@@ -1248,66 +1248,6 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
 }
 
-class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
-  factory ApplicationData_UpdatePlanOptions({
-    $core.bool? autoRenewal,
-  }) {
-    final result = create();
-    if (autoRenewal != null) result.autoRenewal = autoRenewal;
-    return result;
-  }
-
-  ApplicationData_UpdatePlanOptions._();
-
-  factory ApplicationData_UpdatePlanOptions.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_UpdatePlanOptions.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.UpdatePlanOptions',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'autoRenewal')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdatePlanOptions clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdatePlanOptions copyWith(
-          void Function(ApplicationData_UpdatePlanOptions) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_UpdatePlanOptions))
-          as ApplicationData_UpdatePlanOptions;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions create() =>
-      ApplicationData_UpdatePlanOptions._();
-  @$core.override
-  ApplicationData_UpdatePlanOptions createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(
-          create);
-  static ApplicationData_UpdatePlanOptions? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get autoRenewal => $_getBF(0);
-  @$pb.TagNumber(1)
-  set autoRenewal($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasAutoRenewal() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearAutoRenewal() => $_clearField(1);
-}
-
 class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
   factory ApplicationData_GetAvailablePlans() => create();
 
@@ -2178,7 +2118,7 @@ enum ApplicationData_ApplicationData {
   deprecated16,
   deprecated17,
   removeAdditionalUser,
-  updatePlanOptions,
+  deprecated19,
   downloadDone,
   getSignedPrekeyByUserid,
   updateSignedPrekey,
@@ -2209,7 +2149,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_Deprecated? deprecated16,
     ApplicationData_Deprecated? deprecated17,
     ApplicationData_RemoveAdditionalUser? removeAdditionalUser,
-    ApplicationData_UpdatePlanOptions? updatePlanOptions,
+    ApplicationData_Deprecated? deprecated19,
     ApplicationData_DownloadDone? downloadDone,
     ApplicationData_GetSignedPreKeyByUserId? getSignedPrekeyByUserid,
     ApplicationData_UpdateSignedPreKey? updateSignedPrekey,
@@ -2241,7 +2181,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (deprecated17 != null) result.deprecated17 = deprecated17;
     if (removeAdditionalUser != null)
       result.removeAdditionalUser = removeAdditionalUser;
-    if (updatePlanOptions != null) result.updatePlanOptions = updatePlanOptions;
+    if (deprecated19 != null) result.deprecated19 = deprecated19;
     if (downloadDone != null) result.downloadDone = downloadDone;
     if (getSignedPrekeyByUserid != null)
       result.getSignedPrekeyByUserid = getSignedPrekeyByUserid;
@@ -2283,7 +2223,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     16: ApplicationData_ApplicationData.deprecated16,
     17: ApplicationData_ApplicationData.deprecated17,
     18: ApplicationData_ApplicationData.removeAdditionalUser,
-    19: ApplicationData_ApplicationData.updatePlanOptions,
+    19: ApplicationData_ApplicationData.deprecated19,
     20: ApplicationData_ApplicationData.downloadDone,
     22: ApplicationData_ApplicationData.getSignedPrekeyByUserid,
     23: ApplicationData_ApplicationData.updateSignedPrekey,
@@ -2380,10 +2320,9 @@ class ApplicationData extends $pb.GeneratedMessage {
         18, _omitFieldNames ? '' : 'removeAdditionalUser',
         protoName: 'removeAdditionalUser',
         subBuilder: ApplicationData_RemoveAdditionalUser.create)
-    ..aOM<ApplicationData_UpdatePlanOptions>(
-        19, _omitFieldNames ? '' : 'updatePlanOptions',
-        protoName: 'updatePlanOptions',
-        subBuilder: ApplicationData_UpdatePlanOptions.create)
+    ..aOM<ApplicationData_Deprecated>(19, _omitFieldNames ? '' : 'deprecated19',
+        protoName: 'deprecated_19',
+        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_DownloadDone>(
         20, _omitFieldNames ? '' : 'downloadDone',
         protoName: 'downloadDone',
@@ -2672,16 +2611,15 @@ class ApplicationData extends $pb.GeneratedMessage {
       $_ensure(14);
 
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions get updatePlanOptions => $_getN(15);
+  ApplicationData_Deprecated get deprecated19 => $_getN(15);
   @$pb.TagNumber(19)
-  set updatePlanOptions(ApplicationData_UpdatePlanOptions value) =>
-      $_setField(19, value);
+  set deprecated19(ApplicationData_Deprecated value) => $_setField(19, value);
   @$pb.TagNumber(19)
-  $core.bool hasUpdatePlanOptions() => $_has(15);
+  $core.bool hasDeprecated19() => $_has(15);
   @$pb.TagNumber(19)
-  void clearUpdatePlanOptions() => $_clearField(19);
+  void clearDeprecated19() => $_clearField(19);
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions ensureUpdatePlanOptions() => $_ensure(15);
+  ApplicationData_Deprecated ensureDeprecated19() => $_ensure(15);
 
   @$pb.TagNumber(20)
   ApplicationData_DownloadDone get downloadDone => $_getN(16);

@@ -1,8 +1,10 @@
 use crate::error::{Result, TwonlyError};
 use crate::keys::KeyManager;
+use crate::secure_storage::{self, SecureStorage};
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, KeyInit, OsRng};
 use aes_gcm::{Aes256Gcm, Nonce};
+use mdk_core::key_packages;
 use scrypt::{scrypt, Params};
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -21,11 +23,16 @@ impl BackupPasswordKeys {
         }
     }
 
-    pub(crate) fn from_password(password: &str, salt: &str) -> Result<Self> {
+    pub(crate) fn from_password(password: &str, username: &str) -> Result<Self> {
         let params = Params::new(17, 8, 1)?;
         let mut output = [0u8; 64];
 
-        scrypt(password.as_bytes(), salt.as_bytes(), &params, &mut output)?;
+        scrypt(
+            password.as_bytes(),
+            username.as_bytes(),
+            &params,
+            &mut output,
+        )?;
 
         let mut backup_id = [0u8; 32];
         let mut encryption_key = [0u8; 32];
@@ -34,21 +41,13 @@ impl BackupPasswordKeys {
 
         Ok(Self::new(backup_id, encryption_key))
     }
-}
 
-#[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
-pub(crate) struct BackupPlainTextContent {
-    pub(crate) user_id: i64,
-    pub(crate) key_manager: KeyManager,
-}
-
-impl BackupPlainTextContent {
-    fn get_encrypted_backup(&self) -> Result<Vec<u8>> {
-        let Some(keys) = &self.key_manager.backup_password else {
+    fn encrypt_key_manager(key_manager: KeyManager) -> Result<Vec<u8>> {
+        let Some(keys) = &key_manager.backup_password else {
             return Err(TwonlyError::Generic("No backup password".into()));
         };
 
-        let serialized_bytes = postcard::to_allocvec(&self)?;
+        let serialized_bytes = postcard::to_allocvec(&key_manager)?;
 
         let key = aes_gcm::Key::<Aes256Gcm>::from_slice(&keys.encryption_key);
         let cipher = Aes256Gcm::new(key);
@@ -66,10 +65,11 @@ impl BackupPlainTextContent {
         Ok(encrypted_bytes)
     }
 
-    pub(crate) fn from_encrypted_backup(
+    pub(crate) fn restore_key_manager(
+        secure_storage: SecureStorage,
         encrypted_bytes: &[u8],
         keys: &BackupPasswordKeys,
-    ) -> Result<Self> {
+    ) -> Result<()> {
         if encrypted_bytes.len() < 12 {
             return Err(TwonlyError::Generic(
                 "Invalid encrypted backup length".into(),
@@ -84,9 +84,21 @@ impl BackupPlainTextContent {
 
         let decrypted_bytes = cipher.decrypt(nonce, ciphertext)?;
 
-        Ok(postcard::from_bytes(&decrypted_bytes)?)
+        let key_manager: KeyManager = postcard::from_bytes(&decrypted_bytes)?;
+
+        key_manager.store_to_keychain(&secure_storage)?;
+
+        Ok(())
     }
 }
+
+#[derive(Debug, PartialEq, Zeroize, ZeroizeOnDrop, Serialize, Deserialize)]
+pub(crate) struct BackupPlainTextContent {
+    pub(crate) user_id: i64,
+    pub(crate) key_manager: KeyManager,
+}
+
+impl BackupPlainTextContent {}
 
 #[cfg(test)]
 mod tests {

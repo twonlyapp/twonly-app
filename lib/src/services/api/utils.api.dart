@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
@@ -14,6 +18,9 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dar
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/secure_storage.dart';
 
 class Result<T, E> {
   Result.error(this.error) : value = null;
@@ -105,4 +112,37 @@ Future<bool> importSignalContactAndCreateRequest(
   );
 
   return true;
+}
+
+Future<Map<String, String>?> getAuthenticationHeader() async {
+  var headers = <String, String>{};
+
+  if (userService.currentUser.canUseLoginTokenForAuth) {
+    final loginToken = await FlutterKeyManager.getLoginToken();
+
+    headers = {
+      'x-twonly-user-id': userService.currentUser.userId
+          .toRadixString(16)
+          .padLeft(16, '0')
+          .toUpperCase(),
+      'x-twonly-login-token': uint8ListToHex(loginToken),
+    };
+  } else {
+    final apiAuthTokenRaw = await SecureStorage.instance.read(
+      key: SecureStorageKeys.apiAuthToken,
+    );
+
+    if (apiAuthTokenRaw == null) {
+      Log.error('api auth token not defined.');
+      return null;
+    }
+
+    final apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
+
+    headers = {
+      'x-twonly-auth-token': apiAuthToken,
+    };
+  }
+
+  return headers;
 }

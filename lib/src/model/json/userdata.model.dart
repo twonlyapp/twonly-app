@@ -128,6 +128,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool updateFCMToken = true;
 
+  @JsonKey(defaultValue: true)
+  bool canUseLoginTokenForAuth = true;
+
   // --- BACKUP ---
 
   DateTime? nextTimeToShowBackupNotice;
