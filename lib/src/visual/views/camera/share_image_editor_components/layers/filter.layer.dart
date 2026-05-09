@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/image_filter.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/location_filter.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/stickers.dart';
 
 /// Main layer
 class FilterLayer extends StatefulWidget {
@@ -75,7 +75,6 @@ class _FilterLayerState extends State<FilterLayer> {
   List<Widget> pages = [
     const FilterSkeleton(),
     const DateTimeFilter(),
-    // const LocationFilter(),
     const FilterSkeleton(),
   ];
 

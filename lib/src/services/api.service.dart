@@ -617,13 +617,6 @@ class ApiService {
     return sendRequestSync(req, ensureRetransmission: true);
   }
 
-  Future<Result> getCurrentLocation() async {
-    final get = ApplicationData_GetLocation();
-    final appData = ApplicationData()..getLocation = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
   Future<Response_UserData?> getUserData(String username) async {
     final get = ApplicationData_GetUserByUsername()..username = username;
     final appData = ApplicationData()..getUserByUsername = get;
@@ -652,20 +645,6 @@ class ApiService {
     return null;
   }
 
-  Future<Response_Vouchers?> getVoucherList() async {
-    final get = ApplicationData_GetVouchers();
-    final appData = ApplicationData()..getVouchers = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasVouchers()) {
-        return ok.vouchers;
-      }
-    }
-    return null;
-  }
-
   Future<Result> updatePlanOptions(bool autoRenewal) async {
     final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
     final appData = ApplicationData()..updatePlanOptions = get;
@@ -687,34 +666,6 @@ class ApiService {
     return sendRequestSync(req, contactId: userId.toInt());
   }
 
-  Future<Result> buyVoucher(int valueInCents) async {
-    final get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
-    final appData = ApplicationData()..createVoucher = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> switchToPayedPlan(
-    String planId,
-    bool payMonthly,
-    bool autoRenewal,
-  ) async {
-    final get = ApplicationData_SwitchToPayedPlan()
-      ..planId = planId
-      ..payMonthly = payMonthly
-      ..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..switchtoPayedPlan = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> redeemVoucher(String voucher) async {
-    final get = ApplicationData_RedeemVoucher()..voucher = voucher;
-    final appData = ApplicationData()..redeemVoucher = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
   Future<Result> reportUser(int userId, String reason) async {
     final get = ApplicationData_ReportUser()
       ..reportedUserId = Int64(userId)
@@ -727,13 +678,6 @@ class ApiService {
   Future<Result> deleteAccount() async {
     final get = ApplicationData_DeleteAccount();
     final appData = ApplicationData()..deleteAccount = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> redeemUserInviteCode(String inviteCode) async {
-    final get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
-    final appData = ApplicationData()..redeemAdditionalCode = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
