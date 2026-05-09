@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.10
+
+- Fix: Issue with push notifications on Android  
+
 ## 0.2.9
 
 - Improved: Make contact avatars clickable
