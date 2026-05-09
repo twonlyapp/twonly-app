@@ -100,9 +100,9 @@ Future<void> incFlameCounter(
     final contacts = await twonlyDB.groupsDao.getGroupContact(
       group.groupId,
     );
-    if (contacts.length == 1) {
+    for (final contact in contacts) {
       await twonlyDB.contactsDao.updateContact(
-        contacts.first.userId,
+        contact.userId,
         ContactsCompanion(
           mediaReceivedCounter: Value(
             contacts.first.mediaReceivedCounter + (received ? 1 : 0),

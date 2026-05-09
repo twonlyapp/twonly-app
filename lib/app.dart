@@ -133,7 +133,11 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   Future<void> initAsync() async {
     Log.info('AppWidgetState: initAsync started');
     if (userService.isUserCreated) {
-      unawaited(FirebaseMessaging.instance.requestPermission());
+      try {
+        unawaited(FirebaseMessaging.instance.requestPermission());
+      } catch (e) {
+        Log.error(e);
+      }
       if (_isTwonlyLocked) {
         // do not change in case twonly was already unlocked at some point
         _isTwonlyLocked = userService.currentUser.screenLockEnabled;

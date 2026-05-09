@@ -9,18 +9,24 @@ class AppEnvironment {
   static late final String cacheDir;
   static late final String supportDir;
 
+  static bool _isInitialized = false;
+
   // will be loaded in the main_camera_controller.dart
   static List<CameraDescription> cameras = [];
 
   static Future<void> init() async {
+    if (_isInitialized) return;
     cacheDir = (await getApplicationCacheDirectory()).path;
     supportDir = (await getApplicationSupportDirectory()).path;
     Log.init();
+    _isInitialized = true;
   }
 
   static void initTesting() {
+    if (_isInitialized) return;
     cacheDir = '/tmp/twonly_cache';
     supportDir = '/tmp/twonly_support';
+    _isInitialized = true;
   }
 }
 
