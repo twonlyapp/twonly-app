@@ -1736,4 +1736,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoverSuccessBody => 'Klicke hier, um die App wieder zu öffnen';
+
+  @override
+  String get iosRecoveryWelcomeBack => 'Willkommen zurück';
+
+  @override
+  String get iosRecoveryPrompt =>
+      'Wir haben eine zuvor gesicherte twonly-Identität auf diesem Gerät erkannt. Möchtest du deine Kontakte, Nachrichten und Einstellungen automatisch aus deinem Cloud-Archiv herunterladen und wiederherstellen?';
+
+  @override
+  String iosRecoveryNoBackupFound(Object error) {
+    return 'Für dieses Gerät konnte kein Backup-Archiv vom Server abgerufen werden.\n\nFehler: $error\n\nBitte fahre mit der Registrierung eines neuen twonly-Kontos fort.';
+  }
+
+  @override
+  String get registerNewAccount => 'Neues Konto registrieren';
+
+  @override
+  String get tryRestoreAgain => 'Wiederherstellung erneut versuchen';
+
+  @override
+  String get registeringNewAccount => 'Neues Konto wird registriert';
 }

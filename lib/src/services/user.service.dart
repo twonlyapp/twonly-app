@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:mutex/mutex.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
@@ -30,7 +31,9 @@ class UserService {
       // 1. Try to load from KeyValueStore (user.json)
       final userDataMap = await KeyValueStore.get('user');
       if (userDataMap != null) {
-        return UserData.fromJson(userDataMap);
+        final userData = UserData.fromJson(userDataMap);
+        await RustKeyManager.setUserId(userId: userData.userId);
+        return userData;
       }
 
       // 2. If not found, try to load from SecureStorage (Migration path)
@@ -58,6 +61,11 @@ class UserService {
   static Future<void> _migrateFromSecureStorage(UserData userData) async {
     // Currently empty migration logic as requested, but we MUST store the data
     await KeyValueStore.put('user', userData.toJson());
+    try {
+      await RustKeyManager.setUserId(userId: userData.userId);
+    } catch (e) {
+      Log.error('Could not set userId in RustKeyManager during migration: $e');
+    }
 
     // Optional: Log migration
     Log.info('Migrated user data from SecureStorage to KeyValueStore');
@@ -87,6 +95,11 @@ class UserService {
 
   static Future<void> save(UserData user) async {
     await KeyValueStore.put('user', user.toJson());
+    try {
+      await RustKeyManager.setUserId(userId: user.userId);
+    } catch (e) {
+      Log.error('Could not set userId in RustKeyManager during save: $e');
+    }
     await userService.tryInit();
   }
 

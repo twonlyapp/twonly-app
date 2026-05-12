@@ -12,6 +12,19 @@ impl RustKeyManager {
         Ok(key_manager.main_key.get_login_token().to_vec())
     }
 
+    pub async fn get_user_id() -> Result<Option<i64>> {
+        let key_manager = get_twonly_flutter()?.key_manager.lock().await;
+        Ok(key_manager.user_id)
+    }
+
+    pub async fn set_user_id(user_id: i64) -> Result<()> {
+        let ctx = get_twonly_flutter()?;
+        let mut key_manager = ctx.key_manager.lock().await;
+        key_manager.user_id = Some(user_id);
+        key_manager.store_to_keychain(&ctx.secure_storage)?;
+        Ok(())
+    }
+
     pub async fn import_signal_identity(
         identity_key_pair_structure: Vec<u8>,
         registration_id: i64,
@@ -88,5 +101,11 @@ impl RustKeyManager {
         } else {
             Err(TwonlyError::SignalIdentityNotFound)
         }
+    }
+
+    pub async fn remove_key_manager() -> Result<()> {
+        let ctx = get_twonly_flutter()?;
+        crate::keys::KeyManager::remove_from_keychain(&ctx.secure_storage)?;
+        Ok(())
     }
 }

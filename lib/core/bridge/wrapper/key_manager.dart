@@ -17,6 +17,9 @@ class RustKeyManager {
       .api
       .crateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentity();
 
+  static Future<PlatformInt64?> getUserId() => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerGetUserId();
+
   static Future<void> importSignalIdentity({
     required List<int> identityKeyPairStructure,
     required PlatformInt64 registrationId,
@@ -40,12 +43,20 @@ class RustKeyManager {
       .api
       .crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeys();
 
+  static Future<void> removeKeyManager() => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager();
+
   static Future<void> removeSignedPrekey({
     required PlatformInt64 signedPreKeyId,
   }) => RustLib.instance.api
       .crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey(
         signedPreKeyId: signedPreKeyId,
       );
+
+  static Future<void> setUserId({required PlatformInt64 userId}) => RustLib
+      .instance
+      .api
+      .crateBridgeWrapperKeyManagerRustKeyManagerSetUserId(userId: userId);
 
   static Future<void> storeSignedPrekey({
     required PlatformInt64 signedPreKeyId,

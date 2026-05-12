@@ -3079,6 +3079,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Click here to open the app again'**
   String get recoverSuccessBody;
+
+  /// No description provided for @iosRecoveryWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get iosRecoveryWelcomeBack;
+
+  /// No description provided for @iosRecoveryPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'We detected a previously secured twonly identity on this device. Would you like to automatically download and restore your contacts, messages, and settings from your cloud archive?'**
+  String get iosRecoveryPrompt;
+
+  /// No description provided for @iosRecoveryNoBackupFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup archive could be retrieved from the server for this device.\n\nError: {error}\n\nPlease proceed to register a new twonly account.'**
+  String iosRecoveryNoBackupFound(Object error);
+
+  /// No description provided for @registerNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Register New Account'**
+  String get registerNewAccount;
+
+  /// No description provided for @tryRestoreAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Restore Again'**
+  String get tryRestoreAgain;
+
+  /// No description provided for @registeringNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Registering new account'**
+  String get registeringNewAccount;
 }
 
 class _AppLocalizationsDelegate

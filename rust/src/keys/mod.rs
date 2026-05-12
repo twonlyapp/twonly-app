@@ -53,4 +53,10 @@ impl KeyManager {
 
         Ok(())
     }
+
+    /// Removes the KeyManager from the secure keychain/local storage.
+    pub fn remove_from_keychain(storage: &SecureStorage) -> Result<()> {
+        storage.delete(KEY_MANAGER_ID)?;
+        Ok(())
+    }
 }

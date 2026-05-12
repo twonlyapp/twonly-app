@@ -7,6 +7,7 @@ import 'package:clock/clock.dart' as clock;
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:twonly/core/bridge/wrapper/backup.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -102,23 +103,23 @@ class BackupService {
               backup.identityLastSuccessFull!.isBefore(
                 lastWeek.subtract(const Duration(days: 1)),
               ))) {
-        Log.info('Performing a identity backup.');
-        final encryptedBackup =
-            await RustBackupIdentity.getIdentityBackupBytes();
-
-        final backupTempFile = File(
-          '${AppEnvironment.cacheDir}/identity_backup.bin',
-        )..writeAsBytesSync(encryptedBackup);
-
-        Log.info(
-          'Identity backup has a size of ${backupTempFile.statSync().size}.',
-        );
-
         final backupId = await RustBackupIdentity.getBackupId();
         if (backupId == null) {
-          Log.error('Got empty backup id.');
+          Log.error('No backup password was set by the user.');
           backup.identityState = LastBackupUploadState.failed;
         } else {
+          Log.info('Performing a identity backup.');
+          final encryptedBackup =
+              await RustBackupIdentity.getIdentityBackupBytes();
+
+          final backupTempFile = File(
+            '${AppEnvironment.cacheDir}/identity_backup.bin',
+          )..writeAsBytesSync(encryptedBackup);
+
+          Log.info(
+            'Identity backup has a size of ${backupTempFile.statSync().size}.',
+          );
+
           final task = UploadTask.fromFile(
             taskId: 'backup_identity',
             httpRequestMethod: 'PUT',
@@ -288,6 +289,19 @@ class BackupService {
 
       return null;
     });
+  }
+
+  static Future<RecoveryError?> tryToReinstallTheArchive() async {
+    final userId = await RustKeyManager.getUserId();
+    if (userId == null) return null;
+
+    final state = BackupRecovery(
+      username: '',
+      userId: userId,
+      password: '',
+    )..state = BackupRecoveryState.archiveBackupStarted;
+    await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
+    return _nextBackupStage();
   }
 
   static Future<RecoveryError?> startFullBackupRecovery(

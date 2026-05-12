@@ -15,14 +15,20 @@ import 'package:twonly/src/visual/themes/dark.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/critical_error.view.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
+import 'package:twonly/src/visual/views/recovery.view.dart';
 import 'package:twonly/src/visual/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/visual/views/onboarding/register.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
-  const App({required this.storageError, super.key});
+  const App({
+    required this.storageError,
+    required this.recoveryPossible,
+    super.key,
+  });
   final bool storageError;
+  final bool recoveryPossible;
   @override
   State<App> createState() => _AppState();
 }
@@ -85,6 +91,19 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             darkTheme: darkTheme,
             themeMode: context.read<SettingsChangeProvider>().themeMode,
             home: const CriticalErrorView(),
+          );
+        }
+
+        if (widget.recoveryPossible) {
+          return MaterialApp(
+            localizationsDelegates: localizationsDelegates,
+            debugShowCheckedModeBanner: false,
+            supportedLocales: supportedLocales,
+            title: 'twonly',
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: context.read<SettingsChangeProvider>().themeMode,
+            home: const RecoveryView(),
           );
         }
 

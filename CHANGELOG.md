@@ -2,6 +2,7 @@
 
 ## 0.2.11
 
+- New: Seamless recovery for iOS reinstallations
 - Improved: Redesigned snackbar notifications
 - Improved: New backup mechanism to allow larger backup files
 - Improved: Move keys into a centralized Rust-owned structure stored in secure storage

@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -90,6 +88,8 @@ void main() async {
 
   var userExists = false;
 
+  var recoveryPossible = false;
+
   if (!storageError) {
     try {
       userExists = await userService.tryInit();
@@ -99,12 +99,14 @@ void main() async {
     }
   }
 
-  if (Platform.isIOS && userExists) {
-    final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
-    if (!dbFile.existsSync()) {
-      Log.error('[twonly] IOS: App was removed and then reinstalled again...');
-      await SecureStorage.instance.deleteAll();
-      userExists = false;
+  if (!userExists && !storageError) {
+    try {
+      final userId = await RustKeyManager.getUserId();
+      if (userId != null) {
+        recoveryPossible = true;
+      }
+    } catch (e) {
+      Log.error('Could not check KeyManager userId for iOS recovery: $e');
     }
   }
 
@@ -152,7 +154,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
         ChangeNotifierProvider(create: (_) => PurchasesProvider()),
       ],
-      child: App(storageError: storageError),
+      child: App(
+        storageError: storageError,
+        recoveryPossible: recoveryPossible,
+      ),
     ),
   );
 }

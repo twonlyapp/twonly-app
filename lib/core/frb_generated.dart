@@ -74,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1215442517;
+  int get rustContentHash => -1867463121;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -200,6 +200,8 @@ abstract class RustLibApi extends BaseApi {
   Future<(Uint8List, PlatformInt64)>
   crateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentity();
 
+  Future<PlatformInt64?> crateBridgeWrapperKeyManagerRustKeyManagerGetUserId();
+
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentity({
     required List<int> identityKeyPairStructure,
     required PlatformInt64 registrationId,
@@ -214,8 +216,14 @@ abstract class RustLibApi extends BaseApi {
   Future<Map<PlatformInt64, Uint8List>>
   crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeys();
 
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager();
+
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey({
     required PlatformInt64 signedPreKeyId,
+  });
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
+    required PlatformInt64 userId,
   });
 
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
@@ -1036,6 +1044,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<PlatformInt64?> crateBridgeWrapperKeyManagerRustKeyManagerGetUserId() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 20,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_i_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerGetUserIdConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerGetUserIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_get_user_id",
+        argNames: [],
+      );
+
+  @override
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentity({
     required List<int> identityKeyPairStructure,
     required PlatformInt64 registrationId,
@@ -1054,7 +1094,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 21,
             port: port_,
           );
         },
@@ -1098,7 +1138,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 22,
             port: port_,
           );
         },
@@ -1131,7 +1171,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 23,
             port: port_,
           );
         },
@@ -1155,6 +1195,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 24,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_remove_key_manager",
+        argNames: [],
+      );
+
+  @override
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey({
     required PlatformInt64 signedPreKeyId,
   }) {
@@ -1166,7 +1238,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1190,6 +1262,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
+    required PlatformInt64 userId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(userId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 26,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerSetUserIdConstMeta,
+        argValues: [userId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerSetUserIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_set_user_id",
+        argNames: ["userId"],
+      );
+
+  @override
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
     required PlatformInt64 signedPreKeyId,
     required List<int> record,
@@ -1203,7 +1310,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 27,
             port: port_,
           );
         },
