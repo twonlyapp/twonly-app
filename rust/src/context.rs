@@ -82,9 +82,14 @@ impl Context {
 
     async fn init_common(config: InitConfig, is_flutter: bool) -> Result<()> {
         if GLOBAL_CONTEXT.initialized() {
-            tracing::info!("twonly already initialized.");
+            tracing::info!("twonly already initialized. Ensuring storage directories exist.");
+            std::fs::create_dir_all(&config.database_dir)?;
+            std::fs::create_dir_all(&config.data_dir)?;
             return Ok(());
         }
+
+        std::fs::create_dir_all(&config.database_dir)?;
+        std::fs::create_dir_all(&config.data_dir)?;
 
         let log_dir = PathBuf::from(&config.data_dir).join("log");
         init_tracing(&log_dir, is_flutter).await;

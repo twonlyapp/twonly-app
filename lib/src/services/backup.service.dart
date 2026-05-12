@@ -6,7 +6,6 @@ import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart' as clock;
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
-import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/bridge/wrapper/backup.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -307,17 +306,6 @@ class BackupService {
     );
 
     await deleteLocalUserData();
-    try {
-      await bridge.initializeTwonlyFlutter(
-        config: bridge.InitConfig(
-          databaseDir: AppEnvironment.supportDir,
-          dataDir: AppEnvironment.supportDir,
-        ),
-      );
-    } catch (e) {
-      Log.error(e);
-      return RecoveryError.unkownError;
-    }
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
     return _nextBackupStage();
   }

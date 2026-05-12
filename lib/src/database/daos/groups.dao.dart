@@ -277,7 +277,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
                 groups.groupId.equalsExp(groupMembers.groupId),
               ),
             ],
-          )..where(groups.isDirectChat.isNull()));
+          )..where(groups.isDirectChat.equals(false)));
       return query.map((row) => row.readTable(groupMembers)).get();
     } catch (e) {
       Log.error(e);

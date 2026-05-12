@@ -7,7 +7,11 @@ import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class KeyValueStore {
-  static final Mutex _mutex = Mutex();
+  static final Map<String, Mutex> _mutexes = {};
+
+  static Mutex _getMutex(String key) {
+    return _mutexes.putIfAbsent(key, Mutex.new);
+  }
 
   static Future<File> _getFilePath(String key) async {
     return File('${AppEnvironment.supportDir}/keyvalue/$key.json');
@@ -16,7 +20,7 @@ class KeyValueStore {
   static Future<T> _exclusive<T>(String key, Future<T> Function() action) {
     return exclusiveAccess(
       lockName: 'keyvalue-$key',
-      mutex: _mutex,
+      mutex: _getMutex(key),
       action: action,
     );
   }

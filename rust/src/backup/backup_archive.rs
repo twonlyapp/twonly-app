@@ -134,6 +134,7 @@ impl BackupArchive {
         for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx, &key_manager)? {
             let src = restore_temp_dir.join(file_name);
             if src.exists() {
+                std::fs::create_dir_all(&target_dir)?;
                 let dst = target_dir.join(file_name);
                 if is_db {
                     // Remove existing database and its temporary files (WAL, SHM)
