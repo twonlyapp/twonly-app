@@ -341,6 +341,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     await _deInitVolumeControl();
     if (!mounted) return true;
 
+    // Cache active camera ID since ShareImageEditorView closes the camera and resets state parameters.
+    final initialCameraId = mc.selectedCameraDetails.cameraId;
+
     final shouldReturn =
         await Navigator.push(
               context,
@@ -381,7 +384,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return true;
     }
     await mc.selectCamera(
-      mc.selectedCameraDetails.cameraId,
+      initialCameraId,
       false,
     );
     return false;
