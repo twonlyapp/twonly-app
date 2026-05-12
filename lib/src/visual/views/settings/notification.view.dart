@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hashlib/random.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
@@ -22,6 +23,22 @@ class _NotificationViewState extends State<NotificationView> {
   bool _isLoadingTroubleshooting = false;
   bool _isLoadingReset = false;
   bool _troubleshootingDidRun = false;
+  bool? _hasNotificationPermission;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermission();
+  }
+
+  Future<void> _checkPermission() async {
+    final isGranted = await Permission.notification.isGranted;
+    if (mounted) {
+      setState(() {
+        _hasNotificationPermission = isGranted;
+      });
+    }
+  }
 
   Future<void> _troubleshooting() async {
     setState(() {
@@ -93,6 +110,12 @@ class _NotificationViewState extends State<NotificationView> {
       ),
       body: ListView(
         children: [
+          if (_hasNotificationPermission == false)
+            ListTile(
+              title: Text(context.lang.settingsNotifyPermission),
+              subtitle: Text(context.lang.settingsNotifyPermissionDesc),
+              onTap: openAppSettings,
+            ),
           ListTile(
             title: Text(context.lang.settingsNotifyTroubleshooting),
             subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),

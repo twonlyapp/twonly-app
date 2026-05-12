@@ -596,6 +596,18 @@ abstract class AppLocalizations {
   /// **'Notification'**
   String get settingsNotification;
 
+  /// No description provided for @settingsNotifyPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permissions'**
+  String get settingsNotifyPermission;
+
+  /// No description provided for @settingsNotifyPermissionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open system settings to allow push notifications.'**
+  String get settingsNotifyPermissionDesc;
+
   /// No description provided for @settingsNotifyTroubleshooting.
   ///
   /// In en, this message translates to:

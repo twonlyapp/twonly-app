@@ -278,6 +278,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsNotification => 'Benachrichtigung';
 
   @override
+  String get settingsNotifyPermission => 'Benachrichtigungsberechtigung';
+
+  @override
+  String get settingsNotifyPermissionDesc =>
+      'Systemeinstellungen öffnen, um Push-Benachrichtigungen zu erlauben.';
+
+  @override
   String get settingsNotifyTroubleshooting => 'Fehlersuche';
 
   @override
