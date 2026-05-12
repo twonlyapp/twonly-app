@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -357,7 +358,14 @@ class MainCameraController {
           if (res == null) continue;
           final (profile, contact, verificationOk) = res;
 
-          if (contact == null) {
+          if (contact?.blocked ?? false) {
+            await twonlyDB.contactsDao.updateContact(
+              contact!.userId,
+              const ContactsCompanion(blocked: Value(false)),
+            );
+          }
+
+          if (contact == null || contact.deletedByUser) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
               await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(

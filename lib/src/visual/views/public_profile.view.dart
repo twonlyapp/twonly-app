@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -12,7 +13,9 @@ import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
+import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 
 class PublicProfileView extends StatefulWidget {
   const PublicProfileView({super.key});
@@ -25,6 +28,8 @@ class _PublicProfileViewState extends State<PublicProfileView> {
   String? _qrCode;
   Uint8List? _userAvatar;
   Uint8List? _publicKey;
+  int _countContactRequest = 0;
+  late StreamSubscription<int?> _countContactRequestStream;
 
   @override
   void initState() {
@@ -37,12 +42,72 @@ class _PublicProfileViewState extends State<PublicProfileView> {
     _userAvatar = await getUserAvatar();
     _publicKey = await getUserPublicKey();
     if (mounted) setState(() {});
+
+    _countContactRequestStream = twonlyDB.contactsDao
+        .watchContactsRequestedCount()
+        .listen((update) {
+          if (update != null) {
+            if (!mounted) return;
+            setState(() {
+              _countContactRequest = update;
+            });
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _countContactRequestStream.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          Stack(
+            children: (_countContactRequest == 0)
+                ? []
+                : [
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: NotificationBadgeComp(
+                        backgroundColor: isDarkMode(context)
+                            ? Colors.white
+                            : Colors.black,
+                        textColor: isDarkMode(context)
+                            ? Colors.black
+                            : Colors.white,
+                        count: (_countContactRequest).toString(),
+                        child: IconButton(
+                          color: (_countContactRequest > 0)
+                              ? Colors.black
+                              : null,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.userPlus,
+                            size: 18,
+                          ),
+                          onPressed: () => context.push(Routes.chatsAddNewUser),
+                        ),
+                      ),
+                    ),
+                  ],
+          ),
+          const SizedBox(width: 15),
+        ],
+      ),
       body: Column(
         children: [
           Container(width: double.infinity),
