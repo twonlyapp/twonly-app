@@ -237,7 +237,6 @@ Future<void> postStartupTasks() async {
   // 1. Immediate background cleanup (Non-blocking for UI)
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
-  unawaited(UserDiscoveryService.removeDeletedContacts());
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
@@ -245,20 +244,7 @@ Future<void> postStartupTasks() async {
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
 
-  if (userService.currentUser.userDiscoveryInitializationError) {
-    unawaited(() async {
-      try {
-        await UserDiscoveryService.initializeOrUpdate(
-          threshold: userService.currentUser.userDiscoveryThreshold,
-          sharePromotion: userService.currentUser.userDiscoverySharePromotion,
-        );
-      } catch (e) {
-        Log.error(
-          'Failed to retry UserDiscovery initialization on startup: $e',
-        );
-      }
-    }());
-  }
+  unawaited(UserDiscoveryService.verifyInitializationOnStartup());
 
   await Future.delayed(const Duration(seconds: 10));
   unawaited(initializeBackgroundTaskManager());

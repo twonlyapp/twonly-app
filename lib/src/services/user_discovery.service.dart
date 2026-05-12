@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/user_discovery/types.pb.dart';
@@ -177,7 +180,7 @@ class UserDiscoveryService {
     }
   }
 
-  static Future<void> removeDeletedContacts() async {
+  static Future<void> _removeDeletedContacts() async {
     final subquery = twonlyDB.selectOnly(twonlyDB.contacts)
       ..addColumns([twonlyDB.contacts.userId])
       ..where(twonlyDB.contacts.accountDeleted.equals(true));
@@ -215,5 +218,36 @@ class UserDiscoveryService {
     await UserService.update((u) {
       u.isUserDiscoveryEnabled = false;
     });
+  }
+
+  static Future<void> verifyInitializationOnStartup() async {
+    await _removeDeletedContacts();
+    final configExists = File(
+      '${AppEnvironment.supportDir}/user_discovery_config.json',
+    ).existsSync();
+    final hasShares = await (twonlyDB.select(
+      twonlyDB.userDiscoveryShares,
+    )..limit(1)).get().then((list) => list.isNotEmpty);
+
+    if (userService.currentUser.isUserDiscoveryEnabled &&
+        (userService.currentUser.userDiscoveryInitializationError ||
+            !configExists ||
+            !hasShares)) {
+      unawaited(() async {
+        try {
+          Log.info(
+            'Retrying UserDiscovery initialization on startup (configExists: $configExists, hasShares: $hasShares)',
+          );
+          await initializeOrUpdate(
+            threshold: userService.currentUser.userDiscoveryThreshold,
+            sharePromotion: userService.currentUser.userDiscoverySharePromotion,
+          );
+        } catch (e) {
+          Log.error(
+            'Failed to retry UserDiscovery initialization on startup: $e',
+          );
+        }
+      }());
+    }
   }
 }

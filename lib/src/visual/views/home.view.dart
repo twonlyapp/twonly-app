@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -41,6 +42,7 @@ class HomeViewState extends State<HomeView> {
 
   late StreamSubscription<List<SharedFile>> _intentStreamSub;
   late StreamSubscription<Uri> _deepLinkSub;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
 
   static final streamHomeViewPageIndex = StreamController<int>.broadcast();
 
@@ -64,6 +66,13 @@ class HomeViewState extends State<HomeView> {
           response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
+      streamHomeViewPageIndex.add(0);
+    });
+
+    _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
+      Log.info('Opened app from iOS/Remote push notification tap.');
       streamHomeViewPageIndex.add(0);
     });
 
@@ -99,10 +108,23 @@ class HomeViewState extends State<HomeView> {
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
         .getNotificationAppLaunchDetails();
 
+    RemoteMessage? initialRemoteMessage;
+    try {
+      initialRemoteMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
+    } catch (e) {
+      Log.error('Could not get initial Firebase message: $e');
+    }
+
     if (widget.initialPage == 0 ||
+        initialRemoteMessage != null ||
         (notificationAppLaunchDetails != null &&
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
-      if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      if (initialRemoteMessage != null) {
+        Log.info('App launched from iOS/Remote push notification tap.');
+        streamHomeViewPageIndex.add(0);
+      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
+          false) {
         final payload =
             notificationAppLaunchDetails?.notificationResponse?.payload;
         if (payload != null &&
@@ -134,6 +156,7 @@ class HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
+    _onMessageOpenedAppSub?.cancel();
     selectNotificationStream.close();
     streamHomeViewPageIndex.close();
     _disableCameraTimer?.cancel();

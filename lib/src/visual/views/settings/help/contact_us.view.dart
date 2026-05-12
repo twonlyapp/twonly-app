@@ -7,12 +7,10 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
@@ -50,13 +48,6 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiAuthTokenRaw = await SecureStorage.instance.read(
-      key: SecureStorageKeys.apiAuthToken,
-    );
-    if (apiAuthTokenRaw == null) {
-      Log.error('api auth token not defined.');
-      return null;
-    }
     final apiUrl =
         'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
 
