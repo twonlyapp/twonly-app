@@ -283,6 +283,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       await Future.delayed(const Duration(milliseconds: 1000));
     }
 
+    if (!mounted) return;
+
     await mc.cameraController?.pausePreview();
     if (!mounted) {
       return;

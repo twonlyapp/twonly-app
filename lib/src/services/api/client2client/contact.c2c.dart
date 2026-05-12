@@ -60,6 +60,15 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
 }
 
 Future<void> handleContactAccept(int fromUserId) async {
+  final contact = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+  if (contact == null) return;
+  if (contact.requested || contact.deletedByUser) {
+    Log.error('User has never send an request. So ignore the Accept.');
+    return;
+  }
+
   await twonlyDB.contactsDao.updateContact(
     fromUserId,
     const ContactsCompanion(
@@ -68,17 +77,12 @@ Future<void> handleContactAccept(int fromUserId) async {
       deletedByUser: Value(false),
     ),
   );
-  final contact = await twonlyDB.contactsDao
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
-  if (contact != null) {
-    await twonlyDB.groupsDao.createNewDirectChat(
-      fromUserId,
-      GroupsCompanion(
-        groupName: Value(getContactDisplayName(contact)),
-      ),
-    );
-  }
+  await twonlyDB.groupsDao.createNewDirectChat(
+    fromUserId,
+    GroupsCompanion(
+      groupName: Value(getContactDisplayName(contact)),
+    ),
+  );
 }
 
 Future<bool> handleContactRequest(

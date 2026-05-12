@@ -85,6 +85,8 @@ class MainCameraController {
   FaceFilterType _currentFilterType = FaceFilterType.none;
   FaceFilterType get currentFilterType => _currentFilterType;
 
+  Future<void>? _pendingDisposal;
+
   Future<void> closeCamera() async {
     contactsVerified = {};
     scannedNewProfiles = {};
@@ -96,7 +98,7 @@ class MainCameraController {
     final cameraControllerTemp = cameraController;
     cameraController = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
-    Future.delayed(const Duration(milliseconds: 100), () async {
+    _pendingDisposal = Future.delayed(const Duration(milliseconds: 100), () async {
       await cameraControllerTemp?.dispose();
     });
     initCameraStarted = false;
@@ -104,6 +106,7 @@ class MainCameraController {
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
+    await _pendingDisposal;
     initCameraStarted = true;
 
     if (AppEnvironment.cameras.isEmpty) {
