@@ -11,6 +11,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -117,6 +118,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   SentryWidgetsFlutterBinding.ensureInitialized();
   await AppEnvironment.init();
   final isInitialized = await initBackgroundExecution();
+  await setupPushNotification();
   Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
 

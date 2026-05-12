@@ -40,6 +40,7 @@ void callbackDispatcher() {
       // if (await initBackgroundExecution()) {
       //   await handlePeriodicTask();
       // }
+        break;
       case 'eu.twonly.processing_task':
         if (await initBackgroundExecution()) {
           await handleProcessingTask();
@@ -130,24 +131,26 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     return;
   }
 
-  while (!AppState.gotMessageFromServer) {
-    if (stopwatch.elapsed.inSeconds >= 15) {
-      Log.info('No new message from the server after 15 seconds.');
-      break;
+  try {
+    while (!AppState.gotMessageFromServer) {
+      if (stopwatch.elapsed.inSeconds >= 15) {
+        Log.info('No new message from the server after 15 seconds.');
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
     }
-    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (AppState.gotMessageFromServer) {
+      Log.info('Received a server message from the server.');
+    }
+
+    await finishStartedPreprocessing();
+
+    await Future.delayed(const Duration(milliseconds: 2000));
+  } finally {
+    await apiService.close(() {});
+    stopwatch.stop();
   }
-
-  if (AppState.gotMessageFromServer) {
-    Log.info('Received a server message from the server.');
-  }
-
-  await finishStartedPreprocessing();
-
-  await Future.delayed(const Duration(milliseconds: 2000));
-
-  await apiService.close(() {});
-  stopwatch.stop();
 
   Log.info('eu.twonly.periodic_task finished after ${stopwatch.elapsed}.');
   return;

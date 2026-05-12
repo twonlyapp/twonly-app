@@ -138,7 +138,12 @@ class MainCameraController {
             ? ImageFormatGroup.nv21
             : ImageFormatGroup.bgra8888,
       );
-      await cameraController?.initialize();
+      try {
+        await cameraController?.initialize();
+      } catch (e) {
+        Log.error(e);
+        return;
+      }
       await cameraController?.startImageStream(_processCameraImage);
       await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
       if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
