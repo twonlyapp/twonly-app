@@ -96,7 +96,6 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use crate::database::tables::received_messages::ReceivedMessage;
-    use chrono::Utc;
 
     use super::*;
     use tempfile::tempdir;

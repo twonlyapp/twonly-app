@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/services/backup/restore.backup.dart';
-import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
-import 'package:twonly/src/visual/views/settings/backup/backup_server.view.dart';
 
 class BackupRecoveryView extends StatefulWidget {
   const BackupRecoveryView({super.key});
@@ -19,7 +17,6 @@ class BackupRecoveryView extends StatefulWidget {
 class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   bool obscureText = true;
   bool isLoading = false;
-  BackupServer? backupServer;
   final TextEditingController usernameCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
 
@@ -28,30 +25,37 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
       isLoading = true;
     });
 
-    try {
-      await recoverBackup(
-        usernameCtrl.text,
-        passwordCtrl.text,
-        backupServer,
-      );
+    final error = await BackupService.startFullBackupRecovery(
+      usernameCtrl.text,
+      passwordCtrl.text,
+    );
+    if (!mounted) return;
 
-      await Restart.restartApp(
-        notificationTitle: 'Backup successfully recovered.',
-        notificationBody: 'Click here to open the app again',
-        forceKill: true,
-      );
-    } catch (e) {
-      // in case something was already written from the backup...
-      Log.error('$e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$e'),
-            duration: const Duration(seconds: 3),
-          ),
-        );
+    if (error != null) {
+      String errorMessage;
+      switch (error) {
+        case RecoveryError.noInternet:
+          errorMessage = context.lang.recoverErrorNoInternet;
+        case RecoveryError.usernameNotValid:
+          errorMessage = context.lang.recoverErrorUsernameNotValid;
+        case RecoveryError.passwordInvalid:
+          errorMessage = context.lang.recoverErrorPasswordInvalid;
+        case RecoveryError.tryAgainLater:
+          errorMessage = context.lang.recoverErrorTryAgainLater;
+        case RecoveryError.unkownError:
+          errorMessage = context.lang.recoverErrorUnknown;
       }
+      setState(() {
+        isLoading = false;
+      });
+      return showSnackbar(context, errorMessage);
     }
+
+    await Restart.restartApp(
+      notificationTitle: context.lang.recoverSuccessTitle,
+      notificationBody: context.lang.recoverSuccessBody,
+      forceKill: true,
+    );
 
     setState(() {
       isLoading = false;
@@ -134,20 +138,6 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 30),
-            Center(
-              child: OutlinedButton(
-                onPressed: () async {
-                  backupServer =
-                      await context.navPush(
-                            const BackupServerView(),
-                          )
-                          as BackupServer?;
-                  setState(() {});
-                },
-                child: Text(context.lang.backupExpertSettings),
-              ),
             ),
             const SizedBox(height: 10),
             Center(

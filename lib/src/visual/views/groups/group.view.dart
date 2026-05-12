@@ -7,12 +7,13 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact.view.dart';
@@ -343,10 +344,8 @@ Future<String?> showGroupNameChangeDialog(
 }
 
 void showNetworkIssue(BuildContext context) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(context.lang.groupNetworkIssue),
-      duration: const Duration(seconds: 3),
-    ),
+  showSnackbar(
+    context,
+    context.lang.groupNetworkIssue,
   );
 }

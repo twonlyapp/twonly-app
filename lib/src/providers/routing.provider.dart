@@ -16,7 +16,6 @@ import 'package:twonly/src/visual/views/onboarding/recover.view.dart';
 import 'package:twonly/src/visual/views/public_profile.view.dart';
 import 'package:twonly/src/visual/views/settings/account.view.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
-import 'package:twonly/src/visual/views/settings/backup/backup_server.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_setup.view.dart';
 import 'package:twonly/src/visual/views/settings/chat/chat_reactions.view.dart';
@@ -165,10 +164,6 @@ final routerProvider = GoRouter(
           path: 'backup',
           builder: (context, state) => const BackupView(),
           routes: [
-            GoRoute(
-              path: 'server',
-              builder: (context, state) => const BackupServerView(),
-            ),
             GoRoute(
               path: 'recovery',
               builder: (context, state) => const BackupRecoveryView(),

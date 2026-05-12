@@ -13,6 +13,7 @@ import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 
@@ -124,9 +125,7 @@ class _ContactUsState extends State<ContactUsView> {
       }
       if (token == null) {
         if (!mounted) return null;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not upload the debug log!')),
-        );
+        showSnackbar(context, 'Could not upload the debug log!');
         setState(() {
           isLoading = false;
         });

@@ -69,6 +69,8 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   bool blocking = true,
   bool useLock = true,
 }) async {
+  if (apiService.appIsOutdated) return null;
+
   try {
     if (receiptId == null && receipt == null) return null;
     if (receipt == null) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,11 +9,16 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart'
+    show getSignalSignedPreKeyStoreOld;
 import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -21,7 +27,7 @@ import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
-import 'package:twonly/src/services/backup/create.backup.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -185,11 +191,38 @@ Future<void> runMigrations() async {
       }
     });
   }
-  if (userService.currentUser.appVersion < 111) {
+  if (userService.currentUser.appVersion < 113) {
+    final signalIdentity = await SecureStorage.instance.read(
+      // ignore: deprecated_member_use_from_same_package
+      key: SecureStorageKeys.signalIdentity,
+    );
+
+    if (signalIdentity != null) {
+      final decoded = jsonDecode(signalIdentity);
+      final identity = SignalIdentity.fromJson(decoded as Map<String, dynamic>);
+
+      try {
+        await RustKeyManager.importSignalIdentity(
+          identityKeyPairStructure: identity.identityKeyPairU8List,
+          registrationId: identity.registrationId,
+          signedPreKeyStore: await getSignalSignedPreKeyStoreOld(),
+        );
+        Log.info('Importing signal identiy to the rust key manager');
+      } catch (e) {
+        Log.error(e);
+      }
+    }
+
     await UserService.update((u) {
       u
-        ..appVersion = 111
-        ..canUseLoginTokenForAuth = false;
+        ..appVersion = 113
+        ..canUseLoginTokenForAuth = false
+        // As usernames changes where not considered in the old version force users
+        // to reenter there passwords.
+        // ignore: deprecated_member_use_from_same_package
+        ..twonlySafeBackup?.encryptionKey = []
+        // ignore: deprecated_member_use_from_same_package
+        ..twonlySafeBackup?.backupId = [];
     });
   }
 }
@@ -226,6 +259,6 @@ Future<void> postStartupTasks() async {
   unawaited(initializeBackgroundTaskManager());
   // 3. Delayed tasks (Wait for app to settle)
   await Future.delayed(const Duration(minutes: 2));
-  unawaited(performTwonlySafeBackup());
+  unawaited(BackupService.makeBackup());
   unawaited(cleanLogFile());
 }

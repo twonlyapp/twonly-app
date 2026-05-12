@@ -10,7 +10,7 @@ import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 class RealHttpOverrides extends HttpOverrides {

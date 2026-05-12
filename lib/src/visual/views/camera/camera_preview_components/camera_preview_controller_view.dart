@@ -19,6 +19,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
@@ -254,14 +255,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       await File(picture.path).delete();
       return imageBytes;
     } catch (e) {
-      if (context.mounted) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading picture: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+      if (mounted) {
+        showSnackbar(
+          context,
+          'Error loading picture: $e',
         );
+        Log.error(e);
       }
       return null;
     }
@@ -606,17 +605,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   void _showCameraException(dynamic e) {
     Log.error('$e');
-    try {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      // ignore: empty_catches
-    } catch (e) {}
+    if (mounted) showSnackbar(context, 'Error: $e');
   }
 
   @override

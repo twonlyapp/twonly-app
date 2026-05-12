@@ -1,3 +1,3 @@
-mod backup_archive;
-pub(crate) mod backup_password;
-mod backup_passwordless;
+pub(crate) mod backup_archive;
+pub(crate) mod backup_identity;
+pub(crate) mod backup_passwordless;

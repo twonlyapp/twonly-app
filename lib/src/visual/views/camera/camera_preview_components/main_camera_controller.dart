@@ -17,6 +17,7 @@ import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
@@ -373,18 +374,14 @@ class MainCameraController {
             );
 
             await HapticFeedback.heavyImpact();
-            if (verificationOk) {
-              AppGlobalKeys.scaffoldMessengerKey.currentState?.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppGlobalKeys.scaffoldMessengerKey.currentContext?.lang
-                            .verifiedPublicKey(
-                              getContactDisplayName(contact),
-                            ) ??
-                        '',
-                  ),
-                  duration: const Duration(seconds: 6),
+            final context = cameraPreviewKey.currentContext;
+            if (verificationOk && context != null && context.mounted) {
+              showSnackbar(
+                context,
+                context.lang.verifiedPublicKey(
+                  getContactDisplayName(contact),
                 ),
+                level: SnackbarLevel.success,
               );
             }
           }

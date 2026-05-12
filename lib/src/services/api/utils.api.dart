@@ -118,7 +118,7 @@ Future<Map<String, String>?> getAuthenticationHeader() async {
   var headers = <String, String>{};
 
   if (userService.currentUser.canUseLoginTokenForAuth) {
-    final loginToken = await FlutterKeyManager.getLoginToken();
+    final loginToken = await RustKeyManager.getLoginToken();
 
     headers = {
       'x-twonly-user-id': userService.currentUser.userId

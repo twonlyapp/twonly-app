@@ -9,7 +9,7 @@ import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';

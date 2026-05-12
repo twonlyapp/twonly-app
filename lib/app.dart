@@ -77,7 +77,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
         if (widget.storageError) {
           return MaterialApp(
-            scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
@@ -91,7 +90,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
         return MaterialApp.router(
           routerConfig: routerProvider,
-          scaffoldMessengerKey: AppGlobalKeys.scaffoldMessengerKey,
           localizationsDelegates: localizationsDelegates,
           debugShowCheckedModeBanner: false,
           supportedLocales: supportedLocales,

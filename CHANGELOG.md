@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.11
+
+- Improved: Redesigned snackbar notifications
+- Improved: New backup mechanism to allow larger backup files
+- Improved: Move keys into a centralized Rust-owned structure stored in secure storage
+
 ## 0.2.10
 
 - Fix: Issue with push notifications on Android  

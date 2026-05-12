@@ -7,6 +7,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_study.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class UserStudyQuestionnaireView extends StatefulWidget {
   const UserStudyQuestionnaireView({super.key});
@@ -60,10 +61,11 @@ class _UserStudyQuestionnaireViewState
     await handleUserStudyUpload();
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vielen Dank für deine Teilnahme!')),
+    showSnackbar(
+      context,
+      'Vielen Dank für deine Teilnahme!',
+      level: SnackbarLevel.success,
     );
-
     context.pop();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class SubmitMessage extends StatefulWidget {
   const SubmitMessage({required this.fullMessage, super.key});
@@ -28,8 +29,10 @@ class _ContactUsState extends State<SubmitMessage> {
     });
 
     if (feedback.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your message.')),
+      showSnackbar(
+        context,
+        'Please enter a message.',
+        level: SnackbarLevel.info,
       );
       return;
     }
@@ -49,15 +52,16 @@ class _ContactUsState extends State<SubmitMessage> {
     });
 
     if (response.statusCode == 200) {
-      // Handle successful response
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.contactUsSuccess)),
+      showSnackbar(
+        context,
+        context.lang.contactUsSuccess,
+        level: SnackbarLevel.success,
       );
       Navigator.pop(context, true);
     } else {
-      // Handle error response
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit feedback.')),
+      showSnackbar(
+        context,
+        'Failed to submit feedback.',
       );
     }
   }

@@ -5,9 +5,9 @@ import 'package:mutex/mutex.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
-import 'package:twonly/src/utils/keyvalue.dart';
 
 class UserService {
   late UserData currentUser;

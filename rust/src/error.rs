@@ -14,8 +14,14 @@ pub enum TwonlyError {
     #[error("Tried to access the wrong context")]
     WrongContext,
 
+    #[error("Tried to access signal identity while it does not exists")]
+    SignalIdentityNotFound,
+
     #[error("init_flutter_callbacks was not called")]
     MissingCallbackInitialization,
+
+    #[error("wrong input key size. expected: {0} but got {1}")]
+    WronKeySize(usize, usize),
 
     #[error("Could not find the given database")]
     DatabaseNotFound,

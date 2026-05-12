@@ -11,6 +11,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_group_name.view.dart';
@@ -88,12 +89,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
     if (alreadyInGroup.contains(userId)) return;
     if (!selectedUsers.contains(userId)) {
       if (selectedUsers.length + alreadyInGroup.length > 256) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.lang.groupSizeLimitError(256)),
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        showSnackbar(context, context.lang.groupSizeLimitError(256));
         return;
       }
       selectedUsers.add(userId);

@@ -8,7 +8,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleGroupCreate(

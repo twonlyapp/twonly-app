@@ -3,6 +3,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class ChatReactionSelectionView extends StatefulWidget {
   const ChatReactionSelectionView({super.key});
@@ -39,12 +40,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
           user.preSelectedEmojies = _selectedEmojis;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.lang.settingsPreSelectedReactionsError),
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        showSnackbar(context, context.lang.settingsPreSelectedReactionsError);
       }
     }
     setState(() {});

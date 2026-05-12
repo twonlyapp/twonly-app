@@ -133,9 +133,14 @@ class UserData {
 
   // --- BACKUP ---
 
-  DateTime? nextTimeToShowBackupNotice;
-  BackupServer? backupServer;
+  @Deprecated('Use the secure storage in rust')
   TwonlySafeBackup? twonlySafeBackup;
+
+  @JsonKey(defaultValue: false)
+  bool isBackupEnabled = false;
+
+  // Used for push notifcation via FCM.
+  String? fcmToken;
 
   // For my master thesis I want to create a anonymous user study:
   // - users in the "Tester" Plan can, if they want, take part of the user study
@@ -177,20 +182,4 @@ class TwonlySafeBackup {
   List<int> backupId;
   List<int> encryptionKey;
   Map<String, dynamic> toJson() => _$TwonlySafeBackupToJson(this);
-}
-
-@JsonSerializable()
-class BackupServer {
-  BackupServer({
-    required this.serverUrl,
-    required this.retentionDays,
-    required this.maxBackupBytes,
-  });
-  factory BackupServer.fromJson(Map<String, dynamic> json) =>
-      _$BackupServerFromJson(json);
-
-  String serverUrl;
-  int retentionDays;
-  int maxBackupBytes;
-  Map<String, dynamic> toJson() => _$BackupServerToJson(this);
 }

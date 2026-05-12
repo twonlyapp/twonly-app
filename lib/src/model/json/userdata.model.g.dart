@@ -71,6 +71,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['userDiscoveryRequiresManualApproval'] as bool? ?? false
       ..userDiscoverySharePromotion =
           json['userDiscoverySharePromotion'] as bool? ?? true
+      ..userDiscoveryInitializationError =
+          json['userDiscoveryInitializationError'] as bool? ?? false
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -80,17 +82,15 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           .toList()
       ..hideChangeLog = json['hideChangeLog'] as bool? ?? true
       ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
-      ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
-          ? null
-          : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
-      ..backupServer = json['backupServer'] == null
-          ? null
-          : BackupServer.fromJson(json['backupServer'] as Map<String, dynamic>)
+      ..canUseLoginTokenForAuth =
+          json['canUseLoginTokenForAuth'] as bool? ?? true
       ..twonlySafeBackup = json['twonlySafeBackup'] == null
           ? null
           : TwonlySafeBackup.fromJson(
               json['twonlySafeBackup'] as Map<String, dynamic>,
             )
+      ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? false
+      ..fcmToken = json['fcmToken'] as String?
       ..askedForUserStudyPermission =
           json['askedForUserStudyPermission'] as bool? ?? false
       ..userStudyParticipantsToken =
@@ -142,15 +142,16 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'userDiscoveryRequiresManualApproval':
       instance.userDiscoveryRequiresManualApproval,
   'userDiscoverySharePromotion': instance.userDiscoverySharePromotion,
+  'userDiscoveryInitializationError': instance.userDiscoveryInitializationError,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,
   'hideChangeLog': instance.hideChangeLog,
   'updateFCMToken': instance.updateFCMToken,
-  'nextTimeToShowBackupNotice': instance.nextTimeToShowBackupNotice
-      ?.toIso8601String(),
-  'backupServer': instance.backupServer,
+  'canUseLoginTokenForAuth': instance.canUseLoginTokenForAuth,
   'twonlySafeBackup': instance.twonlySafeBackup,
+  'isBackupEnabled': instance.isBackupEnabled,
+  'fcmToken': instance.fcmToken,
   'askedForUserStudyPermission': instance.askedForUserStudyPermission,
   'userStudyParticipantsToken': instance.userStudyParticipantsToken,
   'userStudyCountNewFriendsViaSuggestion':
@@ -201,16 +202,3 @@ const _$LastBackupUploadStateEnumMap = {
   LastBackupUploadState.failed: 'failed',
   LastBackupUploadState.success: 'success',
 };
-
-BackupServer _$BackupServerFromJson(Map<String, dynamic> json) => BackupServer(
-  serverUrl: json['serverUrl'] as String,
-  retentionDays: (json['retentionDays'] as num).toInt(),
-  maxBackupBytes: (json['maxBackupBytes'] as num).toInt(),
-);
-
-Map<String, dynamic> _$BackupServerToJson(BackupServer instance) =>
-    <String, dynamic>{
-      'serverUrl': instance.serverUrl,
-      'retentionDays': instance.retentionDays,
-      'maxBackupBytes': instance.maxBackupBytes,
-    };

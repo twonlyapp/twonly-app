@@ -143,8 +143,8 @@ Future<void> handleContactUpdate(
                   groupId: Value(group.groupId),
                   type: const Value(GroupActionType.updatedContactUsername),
                   contactId: Value(fromUserId),
-                  oldGroupName: Value('@${contact.username}'),
-                  newGroupName: Value('@${contactUpdate.username}'),
+                  oldGroupName: Value(contact.username),
+                  newGroupName: Value(contactUpdate.username),
                 ),
               );
             }
@@ -157,7 +157,7 @@ Future<void> handleContactUpdate(
                   groupId: Value(group.groupId),
                   type: const Value(GroupActionType.updatedContactDisplayName),
                   contactId: Value(fromUserId),
-                  oldGroupName: Value(contact.displayName ?? ''),
+                  oldGroupName: Value(contact.displayName ?? contact.username),
                   newGroupName: Value(contactUpdate.displayName),
                 ),
               );

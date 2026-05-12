@@ -11,6 +11,7 @@ use crate::context::Context;
 use crate::database::Database;
 use crate::error::Result;
 use crate::error::TwonlyError;
+use crate::keys::KeyManager;
 use crate::secure_storage::SecureStorage;
 use crate::utils::Shared;
 use flutter_rust_bridge::frb;
@@ -18,6 +19,7 @@ use protocols::user_discovery::UserDiscovery;
 
 pub use protocols::user_discovery::traits::AnnouncedUser;
 pub use protocols::user_discovery::traits::OtherPromotion;
+use tokio::sync::Mutex;
 
 pub struct InitConfig {
     pub database_dir: String,
@@ -46,8 +48,10 @@ pub(crate) struct TwonlyFlutter {
     pub(crate) config: InitConfig,
     pub(crate) user_discovery:
         Shared<UserDiscovery<UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter>>,
+    #[allow(dead_code)]
     pub(crate) rust_db: Arc<Database>,
     pub(crate) secure_storage: SecureStorage,
+    pub(crate) key_manager: Arc<Mutex<KeyManager>>,
 }
 
 pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {

@@ -21,6 +21,7 @@ import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -215,6 +216,7 @@ class _ChatListViewState extends State<ChatListView> {
         child: Column(
           children: [
             const FinishSetupComp(),
+            const MissingBackupComp(),
             if (_groupsNotPinned.isEmpty &&
                 _groupsPinned.isEmpty &&
                 _groupsArchived.isEmpty)

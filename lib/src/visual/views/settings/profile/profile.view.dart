@@ -8,10 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/services/backup/common.backup.dart';
-import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
@@ -71,15 +70,11 @@ class _ProfileViewState extends State<ProfileView> {
 
       if (result.error == ErrorCode.UsernameAlreadyTaken ||
           result.error == ErrorCode.UsernameNotValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result.error == ErrorCode.UsernameAlreadyTaken
-                  ? context.lang.errorUsernameAlreadyTaken
-                  : context.lang.errorUsernameNotValid,
-            ),
-            duration: const Duration(seconds: 3),
-          ),
+        showSnackbar(
+          context,
+          result.error == ErrorCode.UsernameAlreadyTaken
+              ? context.lang.errorUsernameAlreadyTaken
+              : context.lang.errorUsernameNotValid,
         );
         return;
       }
@@ -88,10 +83,6 @@ class _ProfileViewState extends State<ProfileView> {
 
       return;
     }
-
-    // as the username has changes, remove the old from the server and then upload it again.
-    await removeTwonlySafeFromServer();
-    unawaited(performTwonlySafeBackup(force: true));
 
     await UserService.update(
       (u) => u

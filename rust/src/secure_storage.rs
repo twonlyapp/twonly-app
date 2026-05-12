@@ -92,15 +92,15 @@ impl SecureStorage {
     /// Deletes the secret associated with the given key from the secure keyring.
     ///
     /// If the key does not exist, this function returns `Ok(())` (idempotent).
-    pub fn delete(&self, key: &str) -> Result<(), String> {
-        let entry = self.get_entry(key)?;
+    // pub fn delete(&self, key: &str) -> Result<(), String> {
+    //     let entry = self.get_entry(key)?;
 
-        match entry.delete_credential() {
-            Ok(()) => Ok(()),
-            Err(KeyringError::NoEntry) => Ok(()),
-            Err(e) => Err(format!("Failed to delete secret from keyring: {}", e)),
-        }
-    }
+    //     match entry.delete_credential() {
+    //         Ok(()) => Ok(()),
+    //         Err(KeyringError::NoEntry) => Ok(()),
+    //         Err(e) => Err(format!("Failed to delete secret from keyring: {}", e)),
+    //     }
+    // }
 
     /// Helper to create a keyring entry with the appropriate platform modifiers.
     fn get_entry(&self, key: &str) -> Result<Entry, String> {
@@ -142,10 +142,10 @@ mod tests {
         assert_eq!(read_val, Some(secret.to_string()));
 
         // 3. Delete the secret
-        storage.delete(key).expect("Failed to delete secret");
+        // storage.delete(key).expect("Failed to delete secret");
 
         // 4. Verify the secret is gone
-        let after_delete = storage.read(key).expect("Failed to read after delete");
-        assert_eq!(after_delete, None);
+        // let after_delete = storage.read(key).expect("Failed to read after delete");
+        // assert_eq!(after_delete, None);
     }
 }

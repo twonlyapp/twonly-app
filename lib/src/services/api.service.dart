@@ -32,7 +32,7 @@ import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/server_messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
@@ -60,6 +60,8 @@ class ApiService {
   final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : 's';
+
+  String get apiEndpoint => 'http$apiSecure://$apiHost/api/';
 
   final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
@@ -123,7 +125,7 @@ class ApiService {
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
-      unawaited(signalHandleNewServerConnection());
+      unawaited(SignalIdentityService.onAuthenticated());
       resetResyncedUsers();
       resetUserDiscoveryRequestUpdates();
       unawaited(fetchGroupStatesForUnjoinedGroups());
@@ -454,7 +456,7 @@ class ApiService {
 
           try {
             Log.info('Switching authentication to login token');
-            final loginToken = await FlutterKeyManager.getLoginToken();
+            final loginToken = await RustKeyManager.getLoginToken();
             final res = await _setLoginToken(loginToken);
             if (res.isSuccess) {
               Log.info('Switch was successfully.');
@@ -484,7 +486,7 @@ class ApiService {
 
   Future<bool> tryAuthenticateWithLoginToken() async {
     try {
-      final loginToken = await FlutterKeyManager.getLoginToken();
+      final loginToken = await RustKeyManager.getLoginToken();
 
       final authenticate = Handshake_AuthenticateWithLoginToken()
         ..userId = Int64(userService.currentUser.userId)
@@ -527,8 +529,7 @@ class ApiService {
     return lockAuthentication.protect(() async {
       if (isAuthenticated) return;
 
-      if (await getSignalIdentity() == null) {
-        Log.error('Signal identity not found.');
+      if (!userService.isUserCreated) {
         return;
       }
 
@@ -605,7 +606,7 @@ class ApiService {
 
     final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 
-    final loginToken = await FlutterKeyManager.getLoginToken();
+    final loginToken = await RustKeyManager.getLoginToken();
 
     final register = Handshake_Register()
       ..username = username
@@ -688,6 +689,21 @@ class ApiService {
     final appData = ApplicationData()..setLoginToken = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
+  }
+
+  Future<int?> getUserIdFromUsername(String username) async {
+    final appData = Handshake(
+      getUseridByUsername: Handshake_GetUserIdByUsername(username: username),
+    );
+    final req = createClientToServerFromHandshake(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasUserid()) {
+        return ok.userid.toInt();
+      }
+    }
+    return null;
   }
 
   Future<Response_UserData?> getUserData(String username) async {

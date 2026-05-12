@@ -468,6 +468,64 @@ class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
   static Handshake_GetAuthChallenge? _defaultInstance;
 }
 
+class Handshake_GetUserIdByUsername extends $pb.GeneratedMessage {
+  factory Handshake_GetUserIdByUsername({
+    $core.String? username,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    return result;
+  }
+
+  Handshake_GetUserIdByUsername._();
+
+  factory Handshake_GetUserIdByUsername.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_GetUserIdByUsername.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.GetUserIdByUsername',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetUserIdByUsername clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetUserIdByUsername copyWith(
+          void Function(Handshake_GetUserIdByUsername) updates) =>
+      super.copyWith(
+              (message) => updates(message as Handshake_GetUserIdByUsername))
+          as Handshake_GetUserIdByUsername;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetUserIdByUsername create() =>
+      Handshake_GetUserIdByUsername._();
+  @$core.override
+  Handshake_GetUserIdByUsername createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetUserIdByUsername getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Handshake_GetUserIdByUsername>(create);
+  static Handshake_GetUserIdByUsername? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+}
+
 class Handshake_GetAuthToken extends $pb.GeneratedMessage {
   factory Handshake_GetAuthToken({
     $fixnum.Int64? userId,
@@ -758,6 +816,7 @@ enum Handshake_Handshake {
   authenticate,
   requestPOW,
   authenticateWithLoginToken,
+  getUseridByUsername,
   notSet
 }
 
@@ -769,6 +828,7 @@ class Handshake extends $pb.GeneratedMessage {
     Handshake_Authenticate? authenticate,
     Handshake_RequestPOW? requestPOW,
     Handshake_AuthenticateWithLoginToken? authenticateWithLoginToken,
+    Handshake_GetUserIdByUsername? getUseridByUsername,
   }) {
     final result = create();
     if (register != null) result.register = register;
@@ -778,6 +838,8 @@ class Handshake extends $pb.GeneratedMessage {
     if (requestPOW != null) result.requestPOW = requestPOW;
     if (authenticateWithLoginToken != null)
       result.authenticateWithLoginToken = authenticateWithLoginToken;
+    if (getUseridByUsername != null)
+      result.getUseridByUsername = getUseridByUsername;
     return result;
   }
 
@@ -798,6 +860,7 @@ class Handshake extends $pb.GeneratedMessage {
     4: Handshake_Handshake.authenticate,
     5: Handshake_Handshake.requestPOW,
     6: Handshake_Handshake.authenticateWithLoginToken,
+    7: Handshake_Handshake.getUseridByUsername,
     0: Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -805,7 +868,7 @@ class Handshake extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register',
         subBuilder: Handshake_Register.create)
     ..aOM<Handshake_GetAuthChallenge>(
@@ -821,6 +884,9 @@ class Handshake extends $pb.GeneratedMessage {
     ..aOM<Handshake_AuthenticateWithLoginToken>(
         6, _omitFieldNames ? '' : 'authenticateWithLoginToken',
         subBuilder: Handshake_AuthenticateWithLoginToken.create)
+    ..aOM<Handshake_GetUserIdByUsername>(
+        7, _omitFieldNames ? '' : 'getUseridByUsername',
+        subBuilder: Handshake_GetUserIdByUsername.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -847,6 +913,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   Handshake_Handshake whichHandshake() =>
       _Handshake_HandshakeByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -855,6 +922,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   void clearHandshake() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -926,6 +994,18 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   Handshake_AuthenticateWithLoginToken ensureAuthenticateWithLoginToken() =>
       $_ensure(5);
+
+  @$pb.TagNumber(7)
+  Handshake_GetUserIdByUsername get getUseridByUsername => $_getN(6);
+  @$pb.TagNumber(7)
+  set getUseridByUsername(Handshake_GetUserIdByUsername value) =>
+      $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasGetUseridByUsername() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearGetUseridByUsername() => $_clearField(7);
+  @$pb.TagNumber(7)
+  Handshake_GetUserIdByUsername ensureGetUseridByUsername() => $_ensure(6);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {

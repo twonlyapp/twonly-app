@@ -125,44 +125,6 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
         }
     }
 
-    // switch (widget.action.type) {
-    //   case GroupActionType.updatedGroupName:
-    //     text = (contact == null)
-    //         ? 'You have changed the group name to "${widget.action.newGroupName}".'
-    //         : '$maker has changed the group name to "${widget.action.newGroupName}".';
-    //     icon = FontAwesomeIcons.pencil;
-    //   case GroupActionType.createdGroup:
-    //     icon = FontAwesomeIcons.penToSquare;
-    //     text = (contact == null)
-    //         ? 'You have created the group.'
-    //         : '$maker has created the group.';
-    //   case GroupActionType.removedMember:
-    //     icon = FontAwesomeIcons.userMinus;
-    //     text = (contact == null)
-    //         ? 'You have removed $affected from the group.'
-    //         : '$maker has removed $affected from the group.';
-    //   case GroupActionType.addMember:
-    //     icon = FontAwesomeIcons.userPlus;
-    //     text = (contact == null)
-    //         ? 'You have added $affected to the group.'
-    //         : '$maker has added $affected to the group.';
-    //   case GroupActionType.promoteToAdmin:
-    //     icon = FontAwesomeIcons.key;
-    //     text = (contact == null)
-    //         ? 'You made $affected an admin.'
-    //         : '$maker made $affected an admin.';
-    //   case GroupActionType.demoteToMember:
-    //     icon = FontAwesomeIcons.key;
-    //     text = (contact == null)
-    //         ? 'You revoked $affectedR admin rights.'
-    //         : '$maker revoked $affectedR admin rights.';
-    //   case GroupActionType.leftGroup:
-    //     icon = FontAwesomeIcons.userMinus;
-    //     text = (contact == null)
-    //         ? 'You have left the group.'
-    //         : '$maker has left the group.';
-    // }
-
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Center(

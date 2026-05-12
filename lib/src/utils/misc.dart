@@ -197,12 +197,12 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
   }
 }
 
-String formatBytes(int bytes, {int decimalPlaces = 2}) {
+String formatBytes(int bytes) {
   if (bytes <= 0) return '0 Bytes';
   const units = <String>['Bytes', 'KB', 'MB', 'GB', 'TB'];
   final unitIndex = (log(bytes) / log(1000)).floor();
   final formattedSize = bytes / pow(1000, unitIndex);
-  return '${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}';
+  return '${formattedSize.ceil()} ${units[unitIndex]}';
 }
 
 bool isUUIDNewer(String uuid1, String uuid2) {

@@ -28,15 +28,6 @@ impl MainKey {
         Self { main_key }
     }
 
-    /// Initializes a MainKey from an existing main key.
-    pub fn from_main_key(main_key: [u8; 32]) -> Self {
-        Self { main_key }
-    }
-
-    pub fn as_bytes(&self) -> &[u8; 32] {
-        &self.main_key
-    }
-
     /// Download token required to download a backup.
     /// This ensures that the user who tries to download the backup must have knowledge over the
     /// main key
@@ -71,22 +62,22 @@ impl MainKey {
     }
 
     /// Encrypts a newly generated media key using the derived Media Main Key.
-    pub fn encrypt_media_key(&self, media_key: &[u8; 32]) -> Vec<u8> {
-        self.encrypt_with_info(b"media_main_key", media_key)
-    }
+    // pub fn encrypt_media_key(&self, media_key: &[u8; 32]) -> Vec<u8> {
+    //     self.encrypt_with_info(b"media_main_key", media_key)
+    // }
 
     /// Decrypts a wrapped media key using the derived Media Main Key.
-    pub fn decrypt_media_key(&self, wrapped_media_key: &[u8]) -> Result<[u8; 32]> {
-        let decrypted = self.decrypt_with_info(b"media_main_key", wrapped_media_key)?;
+    // pub fn decrypt_media_key(&self, wrapped_media_key: &[u8]) -> Result<[u8; 32]> {
+    //     let decrypted = self.decrypt_with_info(b"media_main_key", wrapped_media_key)?;
 
-        if decrypted.len() != 32 {
-            return Err("Invalid decrypted key length".to_string())?;
-        }
+    //     if decrypted.len() != 32 {
+    //         return Err("Invalid decrypted key length".to_string())?;
+    //     }
 
-        let mut result = [0u8; 32];
-        result.copy_from_slice(&decrypted);
-        Ok(result)
-    }
+    //     let mut result = [0u8; 32];
+    //     result.copy_from_slice(&decrypted);
+    //     Ok(result)
+    // }
 
     fn derive_key(&self, info: &[u8]) -> [u8; 32] {
         let hk = Hkdf::<Sha256>::new(None, &self.main_key);
@@ -131,13 +122,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_generate_and_from_main_key() {
-        let km = MainKey::generate();
-        let km2 = MainKey::from_main_key(km.main_key);
-        assert_eq!(km.main_key, km2.main_key);
-    }
-
-    #[test]
     fn test_backup_encryption_decryption_success() {
         let km = MainKey::generate();
         let payload = b"this is a secret backup payload";
@@ -176,74 +160,74 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_media_key_encryption_decryption_success() {
-        let km = MainKey::generate();
-        let mut media_key = [0u8; 32];
-        OsRng.fill_bytes(&mut media_key);
+    // #[test]
+    // fn test_media_key_encryption_decryption_success() {
+    //     let km = MainKey::generate();
+    //     let mut media_key = [0u8; 32];
+    //     OsRng.fill_bytes(&mut media_key);
 
-        let encrypted = km.encrypt_media_key(&media_key);
-        let decrypted = km.decrypt_media_key(&encrypted).unwrap();
+    //     let encrypted = km.encrypt_media_key(&media_key);
+    //     let decrypted = km.decrypt_media_key(&encrypted).unwrap();
 
-        assert_eq!(media_key, decrypted);
-    }
+    //     assert_eq!(media_key, decrypted);
+    // }
 
-    #[test]
-    fn test_media_key_decryption_tampered_payload_fails() {
-        let km = MainKey::generate();
-        let mut media_key = [0u8; 32];
-        OsRng.fill_bytes(&mut media_key);
+    // #[test]
+    // fn test_media_key_decryption_tampered_payload_fails() {
+    //     let km = MainKey::generate();
+    //     let mut media_key = [0u8; 32];
+    //     OsRng.fill_bytes(&mut media_key);
 
-        let mut encrypted = km.encrypt_media_key(&media_key);
+    //     let mut encrypted = km.encrypt_media_key(&media_key);
 
-        // Tamper with the ciphertext
-        let last_idx = encrypted.len() - 1;
-        encrypted[last_idx] ^= 1;
+    //     // Tamper with the ciphertext
+    //     let last_idx = encrypted.len() - 1;
+    //     encrypted[last_idx] ^= 1;
 
-        let result = km.decrypt_media_key(&encrypted);
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Decryption failure");
-    }
+    //     let result = km.decrypt_media_key(&encrypted);
+    //     assert!(result.is_err());
+    //     assert_eq!(result.unwrap_err().to_string(), "Decryption failure");
+    // }
 
-    #[test]
-    fn test_media_key_decryption_too_short_fails() {
-        let km = MainKey::generate();
-        let short_payload = vec![0u8; 10]; // Less than 12 bytes nonce
+    // #[test]
+    // fn test_media_key_decryption_too_short_fails() {
+    //     let km = MainKey::generate();
+    //     let short_payload = vec![0u8; 10]; // Less than 12 bytes nonce
 
-        let result = km.decrypt_media_key(&short_payload);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Invalid encrypted data length"
-        );
-    }
+    //     let result = km.decrypt_media_key(&short_payload);
+    //     assert!(result.is_err());
+    //     assert_eq!(
+    //         result.unwrap_err().to_string(),
+    //         "Invalid encrypted data length"
+    //     );
+    // }
 
-    #[test]
-    fn test_media_key_decryption_wrong_decrypted_length_fails() {
-        let km = MainKey::generate();
+    // #[test]
+    // fn test_media_key_decryption_wrong_decrypted_length_fails() {
+    //     let km = MainKey::generate();
 
-        // Manually encrypt a 31 byte payload
-        let hk = Hkdf::<Sha256>::new(None, &km.main_key);
-        let mut media_main_key = [0u8; 32];
-        hk.expand(b"media_main_key", &mut media_main_key)
-            .expect("HKDF expand failed");
+    //     // Manually encrypt a 31 byte payload
+    //     let hk = Hkdf::<Sha256>::new(None, &km.main_key);
+    //     let mut media_main_key = [0u8; 32];
+    //     hk.expand(b"media_main_key", &mut media_main_key)
+    //         .expect("HKDF expand failed");
 
-        let key = Key::<Aes256Gcm>::from_slice(&media_main_key);
-        let cipher = Aes256Gcm::new(key);
-        let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
-        let payload = vec![0u8; 31];
-        let ciphertext = cipher
-            .encrypt(&nonce, payload.as_ref())
-            .expect("encryption failure");
+    //     let key = Key::<Aes256Gcm>::from_slice(&media_main_key);
+    //     let cipher = Aes256Gcm::new(key);
+    //     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
+    //     let payload = vec![0u8; 31];
+    //     let ciphertext = cipher
+    //         .encrypt(&nonce, payload.as_ref())
+    //         .expect("encryption failure");
 
-        let mut encrypted = nonce.to_vec();
-        encrypted.extend_from_slice(&ciphertext);
+    //     let mut encrypted = nonce.to_vec();
+    //     encrypted.extend_from_slice(&ciphertext);
 
-        let result = km.decrypt_media_key(&encrypted);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "Invalid decrypted key length"
-        );
-    }
+    //     let result = km.decrypt_media_key(&encrypted);
+    //     assert!(result.is_err());
+    //     assert_eq!(
+    //         result.unwrap_err().to_string(),
+    //         "Invalid decrypted key length"
+    //     );
+    // }
 }

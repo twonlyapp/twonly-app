@@ -659,12 +659,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get open => 'Offene';
 
   @override
-  String get createVoucher => 'Gutschein kaufen';
-
-  @override
-  String get redeemVoucher => 'Gutschein einlösen';
-
-  @override
   String get buy => 'Kaufen';
 
   @override
@@ -725,13 +719,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aufgrund des Sicherheitssystems von twonly gibt es (derzeit) keine Funktion zur Wiederherstellung des Passworts. Daher musst du dir dein Passwort merken oder, besser noch, aufschreiben.';
 
   @override
-  String get backupServer => 'Server';
+  String get backupIdentityHeader => 'Identität';
 
   @override
-  String get backupMaxBackupSize => 'max. Backup-Größe';
-
-  @override
-  String get backupStorageRetention => 'Speicheraufbewahrung';
+  String get backupArchiveHeader => 'Kontakte, Einstellungen und Nachrichten';
 
   @override
   String get backupLastBackupDate => 'Letztes Backup';
@@ -741,9 +732,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupLastBackupResult => 'Ergebnis';
-
-  @override
-  String get backupData => 'Daten-Backup';
 
   @override
   String get backupInsecurePassword => 'Unsicheres Passwort';
@@ -780,20 +768,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Passwort muss mindestens 10 Zeichen lang sein.';
 
   @override
-  String get backupExpertSettings => 'Experteneinstellungen';
-
-  @override
   String get backupEnableBackup => 'Automatische Sicherung aktivieren';
-
-  @override
-  String get backupOwnServerDesc =>
-      'Speichere dein twonly Backup auf einem Server deiner Wahl.';
-
-  @override
-  String get backupUseOwnServer => 'Server verwenden';
-
-  @override
-  String get backupResetServer => 'Standardserver verwenden';
 
   @override
   String get backupTwonlySaveNow => 'Jetzt speichern';
@@ -1272,9 +1247,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get openYourOwnQRcode => 'Eigenen QR-Code öffnen';
 
   @override
-  String get skipForNow => 'Vorerst überspringen';
-
-  @override
   String get finishSetupCardTitle => 'Profil vervollständigen';
 
   @override
@@ -1283,6 +1255,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get finishSetupCardAction => 'Setup fortsetzen';
+
+  @override
+  String get missingBackupCardTitle => 'Backup einrichten';
+
+  @override
+  String get missingBackupCardDesc =>
+      'Wir haben den Backup-Mechanismus verbessert, weshalb du ihn erneut einrichten musst.';
+
+  @override
+  String get missingBackupCardAction => 'Jetzt einrichten';
 
   @override
   String get onboardingFinishLater => 'Später abschließen';
@@ -1714,11 +1696,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String makerChangedUsername(Object maker, Object oldName, Object newName) {
-    return '$maker hat seinen Benutzernamen von $oldName zu $newName geändert.';
+    return '$maker hat den Benutzernamen von $oldName zu $newName geändert.';
   }
 
   @override
   String makerChangedDisplayName(Object maker, Object oldName, Object newName) {
-    return '$maker hat seinen Anzeigenamen von $oldName zu $newName geändert.';
+    return '$maker hat den Anzeigenamen von $oldName zu $newName geändert.';
   }
+
+  @override
+  String get recoverErrorNoInternet =>
+      'Keine Internetverbindung. Bitte überprüfe deine Netzwerkverbindung und versuche es erneut.';
+
+  @override
+  String get recoverErrorUsernameNotValid =>
+      'Der eingegebene Benutzername ist ungültig oder existiert nicht.';
+
+  @override
+  String get recoverErrorPasswordInvalid =>
+      'Das eingegebene Passwort ist falsch.';
+
+  @override
+  String get recoverErrorTryAgainLater =>
+      'Der Server ist derzeit nicht erreichbar. Bitte versuche es später erneut.';
+
+  @override
+  String get recoverErrorUnknown =>
+      'Ein unbekannter Fehler ist aufgetreten. Bitte versuche es erneut.';
+
+  @override
+  String get recoverSuccessTitle => 'Backup erfolgreich wiederhergestellt.';
+
+  @override
+  String get recoverSuccessBody => 'Klicke hier, um die App wieder zu öffnen';
 }

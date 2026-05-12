@@ -653,12 +653,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get open => 'Open';
 
   @override
-  String get createVoucher => 'Buy voucher';
-
-  @override
-  String get redeemVoucher => 'Redeem voucher';
-
-  @override
   String get buy => 'Buy';
 
   @override
@@ -719,13 +713,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.';
 
   @override
-  String get backupServer => 'Server';
+  String get backupIdentityHeader => 'Identity';
 
   @override
-  String get backupMaxBackupSize => 'max. backup size';
-
-  @override
-  String get backupStorageRetention => 'Storage retention';
+  String get backupArchiveHeader => 'Contacts, Settings and Messages';
 
   @override
   String get backupLastBackupDate => 'Last backup';
@@ -735,9 +726,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupLastBackupResult => 'Result';
-
-  @override
-  String get backupData => 'Data-Backup';
 
   @override
   String get backupInsecurePassword => 'Insecure password';
@@ -774,20 +762,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must be at least 10 characters long.';
 
   @override
-  String get backupExpertSettings => 'Expert settings';
-
-  @override
   String get backupEnableBackup => 'Activate automatic backup';
-
-  @override
-  String get backupOwnServerDesc =>
-      'Save your twonly Backup at twonly or on any server of your choice.';
-
-  @override
-  String get backupUseOwnServer => 'Use server';
-
-  @override
-  String get backupResetServer => 'Use standard server';
 
   @override
   String get backupTwonlySaveNow => 'Save now';
@@ -1263,9 +1238,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openYourOwnQRcode => 'Open your own QR code';
 
   @override
-  String get skipForNow => 'Skip for now';
-
-  @override
   String get finishSetupCardTitle => 'Complete your profile';
 
   @override
@@ -1274,6 +1246,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finishSetupCardAction => 'Resume Setup';
+
+  @override
+  String get missingBackupCardTitle => 'Setup backup';
+
+  @override
+  String get missingBackupCardDesc =>
+      'We have improved the backup mechanism, which requires you to set it up again.';
+
+  @override
+  String get missingBackupCardAction => 'Set up now';
 
   @override
   String get onboardingFinishLater => 'Finish later';
@@ -1706,4 +1688,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String makerChangedDisplayName(Object maker, Object oldName, Object newName) {
     return '$maker changed their display name from $oldName to $newName.';
   }
+
+  @override
+  String get recoverErrorNoInternet =>
+      'No internet connection. Please check your network and try again.';
+
+  @override
+  String get recoverErrorUsernameNotValid =>
+      'The username provided is not valid or does not exist.';
+
+  @override
+  String get recoverErrorPasswordInvalid =>
+      'The password provided is incorrect.';
+
+  @override
+  String get recoverErrorTryAgainLater =>
+      'The server is currently unavailable. Please try again later.';
+
+  @override
+  String get recoverErrorUnknown =>
+      'An unknown error occurred. Please try again.';
+
+  @override
+  String get recoverSuccessTitle => 'Backup successfully recovered.';
+
+  @override
+  String get recoverSuccessBody => 'Click here to open the app again';
 }

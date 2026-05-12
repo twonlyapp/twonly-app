@@ -89,10 +89,12 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
             ),
             innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
           ],
-        )..where(
-          ur.announcedUserId.equals(contactId) &
-              ur.publicKeyVerifiedTimestamp.isNotNull(),
-        );
+        )
+          ..where(
+            ur.announcedUserId.equals(contactId) &
+                ur.publicKeyVerifiedTimestamp.isNotNull(),
+          )
+          ..groupBy([contacts.userId]);
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -116,7 +118,8 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       ..where(
         ur.publicKeyVerifiedTimestamp.isNotNull() &
             ur.announcedUserId.equalsExp(ur.fromContactId).not(),
-      );
+      )
+      ..groupBy([ur.announcedUserId]);
 
     final rows = await query.get();
     return rows.length;

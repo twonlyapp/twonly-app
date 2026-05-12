@@ -11,7 +11,7 @@ use crate::{
 };
 use protocols::user_discovery::UserDiscovery;
 use std::{path::PathBuf, sync::Arc};
-use tokio::sync::OnceCell;
+use tokio::sync::{Mutex, OnceCell};
 use zeroize::Zeroize;
 
 use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage, standalone::TwonlyStandalone};
@@ -35,6 +35,7 @@ impl Context {
         Self::init_common(config, true).await
     }
 
+    #[allow(dead_code)]
     pub(crate) async fn init_standalone(config: InitConfig) -> Result<()> {
         Self::init_common(config, false).await
     }
@@ -44,6 +45,8 @@ impl Context {
         database_dir: PathBuf,
         data_dir: PathBuf,
     ) -> Result<Context> {
+        use tokio::sync::Mutex;
+
         std::fs::create_dir_all(&database_dir)?;
         std::fs::create_dir_all(&data_dir)?;
 
@@ -73,6 +76,7 @@ impl Context {
             config,
             rust_db,
             secure_storage,
+            key_manager: Arc::new(Mutex::new(key_manager)),
         }))
     }
 
@@ -92,7 +96,7 @@ impl Context {
         let rust_db_path = database_dir.join("rust_db.sqlite");
 
         tracing::info!("Initialized twonly workspace.");
-        let _: Result<&'static Context> = GLOBAL_CONTEXT
+        let res: Result<&'static Context> = GLOBAL_CONTEXT
             .get_or_try_init(|| async {
                 let key_manager = match KeyManager::try_from_keychain(&secure_storage) {
                     Ok(key) => key,
@@ -127,6 +131,7 @@ impl Context {
                         config,
                         secure_storage,
                         rust_db,
+                        key_manager: Arc::new(Mutex::new(key_manager)),
                         user_discovery: Shared::new(UserDiscovery::new(
                             UserDiscoveryStoreFlutter {},
                             UserDiscoveryUtilsFlutter {},
@@ -136,12 +141,13 @@ impl Context {
                     Ok(Context::Standalone(TwonlyStandalone {
                         config,
                         rust_db,
+                        key_manager: Arc::new(Mutex::new(key_manager)),
                         secure_storage,
                     }))
                 }
             })
             .await;
-
+        res?;
         Ok(())
     }
 
@@ -149,12 +155,12 @@ impl Context {
         GLOBAL_CONTEXT.get().ok_or(TwonlyError::Initialization)
     }
 
-    pub(crate) fn get_secure_storage(&self) -> Result<&SecureStorage> {
-        match self {
-            Self::Flutter(twonly) => Ok(&twonly.secure_storage),
-            Self::Standalone(twonly) => Ok(&twonly.secure_storage),
-        }
-    }
+    // pub(crate) fn get_secure_storage(&self) -> Result<&SecureStorage> {
+    //     match self {
+    //         Self::Flutter(twonly) => Ok(&twonly.secure_storage),
+    //         Self::Standalone(twonly) => Ok(&twonly.secure_storage),
+    //     }
+    // }
 
     pub(crate) fn get_config(&self) -> Result<&InitConfig> {
         match self {
@@ -163,7 +169,10 @@ impl Context {
         }
     }
 
-    pub(crate) fn get_key_manager(&self) -> Result<KeyManager> {
-        KeyManager::try_from_keychain(self.get_secure_storage()?)
+    pub(crate) async fn get_key_manager(&self) -> Result<tokio::sync::MutexGuard<'_, KeyManager>> {
+        match self {
+            Self::Flutter(twonly) => Ok(twonly.key_manager.lock().await),
+            Self::Standalone(twonly) => Ok(twonly.key_manager.lock().await),
+        }
     }
 }

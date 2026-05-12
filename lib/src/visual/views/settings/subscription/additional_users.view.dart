@@ -12,6 +12,7 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/settings/subscription/select_additional_users.view.dart';
 
 class AdditionalUsersView extends StatefulWidget {
@@ -80,24 +81,20 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
         );
         if (contact != null && mounted) {
           if (res.error == ErrorCode.UserIsNotInFreePlan) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.lang.additionalUserAddErrorNotInFreePlan(
-                    getContactDisplayName(contact),
-                  ),
-                ),
+            showSnackbar(
+              context,
+              context.lang.additionalUserAddErrorNotInFreePlan(
+                getContactDisplayName(contact),
               ),
+              level: SnackbarLevel.info,
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  context.lang.additionalUserAddError(
-                    getContactDisplayName(contact),
-                  ),
-                ),
+            showSnackbar(
+              context,
+              context.lang.additionalUserAddError(
+                getContactDisplayName(contact),
               ),
+              level: SnackbarLevel.info,
             );
           }
         }
@@ -231,14 +228,11 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                   if (res.isSuccess) {
                     widget.refresh();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          errorCodeToText(
-                            context,
-                            res.error as ErrorCode,
-                          ),
-                        ),
+                    showSnackbar(
+                      context,
+                      errorCodeToText(
+                        context,
+                        res.error as ErrorCode,
                       ),
                     );
                   }

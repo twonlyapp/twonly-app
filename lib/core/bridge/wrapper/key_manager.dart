@@ -6,11 +6,55 @@
 import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-class FlutterKeyManager {
-  const FlutterKeyManager();
+class RustKeyManager {
+  const RustKeyManager();
 
   static Future<Uint8List> getLoginToken() => RustLib.instance.api
-      .crateBridgeWrapperKeyManagerFlutterKeyManagerGetLoginToken();
+      .crateBridgeWrapperKeyManagerRustKeyManagerGetLoginToken();
+
+  static Future<(Uint8List, PlatformInt64)> getSignalIdentity() => RustLib
+      .instance
+      .api
+      .crateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentity();
+
+  static Future<void> importSignalIdentity({
+    required List<int> identityKeyPairStructure,
+    required PlatformInt64 registrationId,
+    required Map<PlatformInt64, Uint8List> signedPreKeyStore,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentity(
+        identityKeyPairStructure: identityKeyPairStructure,
+        registrationId: registrationId,
+        signedPreKeyStore: signedPreKeyStore,
+      );
+
+  static Future<Uint8List?> loadSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekey(
+        signedPreKeyId: signedPreKeyId,
+      );
+
+  static Future<Map<PlatformInt64, Uint8List>> loadSignedPrekeys() => RustLib
+      .instance
+      .api
+      .crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeys();
+
+  static Future<void> removeSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey(
+        signedPreKeyId: signedPreKeyId,
+      );
+
+  static Future<void> storeSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+    required List<int> record,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey(
+        signedPreKeyId: signedPreKeyId,
+        record: record,
+      );
 
   @override
   int get hashCode => 0;
@@ -18,5 +62,5 @@ class FlutterKeyManager {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is FlutterKeyManager && runtimeType == other.runtimeType;
+      other is RustKeyManager && runtimeType == other.runtimeType;
 }

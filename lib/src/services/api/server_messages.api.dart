@@ -28,7 +28,7 @@ import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
