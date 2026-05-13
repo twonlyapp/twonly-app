@@ -37,11 +37,12 @@ void callbackDispatcher() {
     await AppEnvironment.init();
     switch (task) {
       case 'eu.twonly.periodic_task':
-      // if (await initBackgroundExecution()) {
-      //   await handlePeriodicTask();
-      // }
+        // if (await initBackgroundExecution()) {
+        //   await handlePeriodicTask();
+        // }
         break;
       case 'eu.twonly.processing_task':
+      case _ when task.startsWith('progressing_finish_uploads_'):
         if (await initBackgroundExecution()) {
           await handleProcessingTask();
         }

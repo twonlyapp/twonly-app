@@ -14,11 +14,7 @@ class ShortcutsDao extends DatabaseAccessor<TwonlyDB> with _$ShortcutsDaoMixin {
   ShortcutsDao(super.db);
 
   Stream<List<Shortcut>> watchAllShortcuts() {
-    return (select(shortcuts)..orderBy([
-          (t) =>
-              OrderingTerm(expression: t.usageCounter, mode: OrderingMode.desc),
-        ]))
-        .watch();
+    return select(shortcuts).watch();
   }
 
   Future<Shortcut?> getShortcutByEmoji(String emoji) {
