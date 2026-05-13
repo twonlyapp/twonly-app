@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -245,6 +246,16 @@ Future<void> runMigrations() async {
           ..twonlySafeBackup?.backupId = [];
       });
     }
+  }
+  if (kDebugMode) {
+    assert(
+      AppState.latestAppVersionId == 113,
+      'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
+    );
+    assert(
+      AppState.latestAppVersionId == userService.currentUser.appVersion,
+      "Migration incomplete: currentUser.appVersion (${userService.currentUser.appVersion}) does not match AppState.latestAppVersionId (${AppState.latestAppVersionId}). Ensure the user's appVersion is updated in the migration block.",
+    );
   }
 }
 

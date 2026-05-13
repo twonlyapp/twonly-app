@@ -148,6 +148,7 @@ class MainCameraController {
         await cameraController?.initialize();
       } catch (e) {
         Log.error(e);
+        cameraController = null; // ensure uninitialized controller is not reused
         return;
       }
       await cameraController?.startImageStream(_processCameraImage);

@@ -352,6 +352,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       return nextMediaOrExit();
     }
 
+    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    unawaited(
+      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
+    );
+
     var timerRequired = false;
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {

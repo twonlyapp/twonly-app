@@ -341,7 +341,7 @@ class BackupService {
       return (null, RecoveryError.noInternet);
     }
 
-    Log.warn('Backup downlaod status: ${response.statusCode}');
+    Log.info('Backup downlaod status: ${response.statusCode}');
 
     switch (response.statusCode) {
       case 200:

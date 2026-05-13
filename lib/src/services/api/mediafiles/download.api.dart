@@ -356,8 +356,6 @@ Future<void> handleEncryptedFile(String mediaId) async {
       Log.info('Decryption of $mediaId was successful');
 
       mediaService.encryptedPath.deleteSync();
-
-      unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
     },
   );
 }

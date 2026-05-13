@@ -32,5 +32,5 @@ class AppState {
   static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
-  static int latestAppVersionId = 112;
+  static int latestAppVersionId = 113;
 }
