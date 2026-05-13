@@ -9,6 +9,9 @@ RegExp emojiRegex() => RegExp(
 );
 
 bool isOneEmoji(String character) {
+  if (EmojiAnimationComp.animatedIcons.containsKey(character)) {
+    return true;
+  }
   final matches = emojiRegex().allMatches(character);
   if (matches.length == 1) {
     final match = matches.first;
