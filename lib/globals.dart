@@ -9,6 +9,8 @@ class AppEnvironment {
 
   static bool _isInitialized = false;
 
+  static bool _isInitialized = false;
+
   // will be loaded in the main_camera_controller.dart
   static List<CameraDescription> cameras = [];
 
