@@ -95,6 +95,7 @@ class ApiService {
     try {
       final channel = IOWebSocketChannel.connect(
         Uri.parse(apiUrl),
+        pingInterval: const Duration(seconds: 30),
       );
       _channel = channel;
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
@@ -247,11 +248,11 @@ class ApiService {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
       if (msg.v0.hasResponse()) {
-        await removeFromRetransmissionBuffer(msg.v0.seq);
         final completer = _pendingRequests.remove(msg.v0.seq);
         if (completer != null && !completer.isCompleted) {
           completer.complete(msg);
         }
+        unawaited(removeFromRetransmissionBuffer(msg.v0.seq));
       } else {
         unawaited(handleServerMessage(msg));
       }

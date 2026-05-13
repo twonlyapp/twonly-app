@@ -7,6 +7,8 @@
 - Improved: Redesigned snackbar notifications
 - Improved: New backup mechanism to allow larger backup files
 - Improved: Move keys into a centralized Rust-owned structure stored in secure storage
+- Fix: Messages occasionally not received until app restart
+- Fix: Multiple smaller issues
 
 ## 0.2.10
 

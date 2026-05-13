@@ -67,7 +67,6 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   Receipt? receipt,
   bool onlyReturnEncryptedData = false,
   bool blocking = true,
-  bool useLock = true,
 }) async {
   if (apiService.appIsOutdated) return null;
 
@@ -135,7 +134,6 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       final cipherText = await signalEncryptMessage(
         receipt.contactId,
         Uint8List.fromList(message.encryptedContent),
-        useLock: useLock,
       );
       if (cipherText == null) {
         Log.error('Could not encrypt the message. Aborting and trying again.');
@@ -340,7 +338,6 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   bool blocking = true,
   String? messageId,
   bool onlySendIfNoReceiptsAreOpen = false,
-  bool useLock = true,
 }) async {
   if (onlySendIfNoReceiptsAreOpen) {
     final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
@@ -402,7 +399,6 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
       receipt: receipt,
       onlyReturnEncryptedData: onlyReturnEncryptedData,
       blocking: blocking,
-      useLock: useLock,
     );
     if (!blocking) {
       return null;
