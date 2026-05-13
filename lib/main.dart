@@ -197,38 +197,54 @@ Future<void> runMigrations() async {
     });
   }
   if (userService.currentUser.appVersion < 113) {
+    var migrationSuccess = true;
     final signalIdentity = await SecureStorage.instance.read(
       // ignore: deprecated_member_use_from_same_package
       key: SecureStorageKeys.signalIdentity,
     );
 
     if (signalIdentity != null) {
-      final decoded = jsonDecode(signalIdentity);
-      final identity = SignalIdentity.fromJson(decoded as Map<String, dynamic>);
-
       try {
+        final decoded = jsonDecode(signalIdentity);
+        final identity = SignalIdentity.fromJson(
+          decoded as Map<String, dynamic>,
+        );
+
         await RustKeyManager.importSignalIdentity(
           identityKeyPairStructure: identity.identityKeyPairU8List,
           registrationId: identity.registrationId,
           signedPreKeyStore: await getSignalSignedPreKeyStoreOld(),
         );
         Log.info('Importing signal identiy to the rust key manager');
+
+        // Clean up old keys after successful migration
+        await SecureStorage.instance.delete(
+          // ignore: deprecated_member_use_from_same_package
+          key: SecureStorageKeys.signalIdentity,
+        );
+        await SecureStorage.instance.delete(
+          // ignore: deprecated_member_use_from_same_package
+          key: SecureStorageKeys.signalSignedPreKey,
+        );
       } catch (e) {
-        Log.error(e);
+        Log.error('Failed to migrate signal identity: $e');
+        migrationSuccess = false;
       }
     }
 
-    await UserService.update((u) {
-      u
-        ..appVersion = 113
-        ..canUseLoginTokenForAuth = false
-        // As usernames changes where not considered in the old version force users
-        // to reenter there passwords.
-        // ignore: deprecated_member_use_from_same_package
-        ..twonlySafeBackup?.encryptionKey = []
-        // ignore: deprecated_member_use_from_same_package
-        ..twonlySafeBackup?.backupId = [];
-    });
+    if (migrationSuccess) {
+      await UserService.update((u) {
+        u
+          ..appVersion = 113
+          ..canUseLoginTokenForAuth = false
+          // As usernames changes where not considered in the old version force users
+          // to reenter there passwords.
+          // ignore: deprecated_member_use_from_same_package
+          ..twonlySafeBackup?.encryptionKey = []
+          // ignore: deprecated_member_use_from_same_package
+          ..twonlySafeBackup?.backupId = [];
+      });
+    }
   }
 }
 
