@@ -10,6 +10,7 @@ import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
+import 'package:twonly/src/database/daos/shortcuts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -17,6 +18,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
+import 'package:twonly/src/database/tables/shortcuts.table.dart';
 import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
@@ -52,6 +54,8 @@ part 'twonly.db.g.dart';
     UserDiscoveryOtherPromotions,
     UserDiscoveryOwnPromotions,
     UserDiscoveryShares,
+    Shortcuts,
+    ShortcutMembers,
   ],
   daos: [
     MessagesDao,
@@ -62,6 +66,7 @@ part 'twonly.db.g.dart';
     MediaFilesDao,
     UserDiscoveryDao,
     KeyVerificationDao,
+    ShortcutsDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
@@ -74,7 +79,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -185,6 +190,10 @@ class TwonlyDB extends _$TwonlyDB {
             for (final column in columns) {
               await m.addColumn(schema.contacts, column);
             }
+          },
+          from12To13: (m, schema) async {
+            await m.createTable(schema.shortcuts);
+            await m.createTable(schema.shortcutMembers);
           },
         )(m, from, to);
       },

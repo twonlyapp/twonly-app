@@ -1757,4 +1757,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get registeringNewAccount => 'Neues Konto wird registriert';
+
+  @override
+  String get createShortcut => 'Shortcut erstellen';
+
+  @override
+  String get editShortcut => 'Shortcut bearbeiten';
+
+  @override
+  String get deleteShortcut => 'Shortcut löschen';
+
+  @override
+  String get deleteShortcutBody =>
+      'Bist du sicher, dass du diesen Shortcut löschen möchtest?';
+
+  @override
+  String get updateShortcut => 'Shortcut aktualisieren';
+
+  @override
+  String get selectEmoji => 'Emoji auswählen';
+
+  @override
+  String get errorEmojiUsedOrInvalid =>
+      'Emoji wird bereits verwendet oder ist ungültig';
 }

@@ -417,6 +417,7 @@ class ApiService {
             ),
           );
         }
+        await twonlyDB.receiptsDao.deleteReceiptForUser(contactId);
       }
     }
     return res;

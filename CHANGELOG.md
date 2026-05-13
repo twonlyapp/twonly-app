@@ -2,6 +2,7 @@
 
 ## 0.2.11
 
+- New: Create custom shortcuts to quickly share images with pre-selected groups
 - New: Seamless recovery for iOS reinstallations
 - Improved: Redesigned snackbar notifications
 - Improved: New backup mechanism to allow larger backup files

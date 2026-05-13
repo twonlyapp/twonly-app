@@ -3115,6 +3115,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Registering new account'**
   String get registeringNewAccount;
+
+  /// No description provided for @createShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Create shortcut'**
+  String get createShortcut;
+
+  /// No description provided for @editShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit shortcut'**
+  String get editShortcut;
+
+  /// No description provided for @deleteShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete shortcut'**
+  String get deleteShortcut;
+
+  /// No description provided for @deleteShortcutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this shortcut?'**
+  String get deleteShortcutBody;
+
+  /// No description provided for @updateShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Update shortcut'**
+  String get updateShortcut;
+
+  /// No description provided for @selectEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Emoji'**
+  String get selectEmoji;
+
+  /// No description provided for @errorEmojiUsedOrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji already used or invalid'**
+  String get errorEmojiUsedOrInvalid;
 }
 
 class _AppLocalizationsDelegate

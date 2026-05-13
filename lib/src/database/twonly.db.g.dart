@@ -11456,6 +11456,483 @@ class UserDiscoverySharesCompanion extends UpdateCompanion<UserDiscoveryShare> {
   }
 }
 
+class $ShortcutsTable extends Shortcuts
+    with TableInfo<$ShortcutsTable, Shortcut> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShortcutsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _usageCounterMeta = const VerificationMeta(
+    'usageCounter',
+  );
+  @override
+  late final GeneratedColumn<int> usageCounter = GeneratedColumn<int>(
+    'usage_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, emoji, usageCounter];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shortcuts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Shortcut> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emojiMeta);
+    }
+    if (data.containsKey('usage_counter')) {
+      context.handle(
+        _usageCounterMeta,
+        usageCounter.isAcceptableOrUnknown(
+          data['usage_counter']!,
+          _usageCounterMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Shortcut map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Shortcut(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      )!,
+      usageCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_counter'],
+      )!,
+    );
+  }
+
+  @override
+  $ShortcutsTable createAlias(String alias) {
+    return $ShortcutsTable(attachedDatabase, alias);
+  }
+}
+
+class Shortcut extends DataClass implements Insertable<Shortcut> {
+  final int id;
+  final String emoji;
+  final int usageCounter;
+  const Shortcut({
+    required this.id,
+    required this.emoji,
+    required this.usageCounter,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['emoji'] = Variable<String>(emoji);
+    map['usage_counter'] = Variable<int>(usageCounter);
+    return map;
+  }
+
+  ShortcutsCompanion toCompanion(bool nullToAbsent) {
+    return ShortcutsCompanion(
+      id: Value(id),
+      emoji: Value(emoji),
+      usageCounter: Value(usageCounter),
+    );
+  }
+
+  factory Shortcut.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Shortcut(
+      id: serializer.fromJson<int>(json['id']),
+      emoji: serializer.fromJson<String>(json['emoji']),
+      usageCounter: serializer.fromJson<int>(json['usageCounter']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'emoji': serializer.toJson<String>(emoji),
+      'usageCounter': serializer.toJson<int>(usageCounter),
+    };
+  }
+
+  Shortcut copyWith({int? id, String? emoji, int? usageCounter}) => Shortcut(
+    id: id ?? this.id,
+    emoji: emoji ?? this.emoji,
+    usageCounter: usageCounter ?? this.usageCounter,
+  );
+  Shortcut copyWithCompanion(ShortcutsCompanion data) {
+    return Shortcut(
+      id: data.id.present ? data.id.value : this.id,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
+      usageCounter: data.usageCounter.present
+          ? data.usageCounter.value
+          : this.usageCounter,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Shortcut(')
+          ..write('id: $id, ')
+          ..write('emoji: $emoji, ')
+          ..write('usageCounter: $usageCounter')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, emoji, usageCounter);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Shortcut &&
+          other.id == this.id &&
+          other.emoji == this.emoji &&
+          other.usageCounter == this.usageCounter);
+}
+
+class ShortcutsCompanion extends UpdateCompanion<Shortcut> {
+  final Value<int> id;
+  final Value<String> emoji;
+  final Value<int> usageCounter;
+  const ShortcutsCompanion({
+    this.id = const Value.absent(),
+    this.emoji = const Value.absent(),
+    this.usageCounter = const Value.absent(),
+  });
+  ShortcutsCompanion.insert({
+    this.id = const Value.absent(),
+    required String emoji,
+    this.usageCounter = const Value.absent(),
+  }) : emoji = Value(emoji);
+  static Insertable<Shortcut> custom({
+    Expression<int>? id,
+    Expression<String>? emoji,
+    Expression<int>? usageCounter,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (emoji != null) 'emoji': emoji,
+      if (usageCounter != null) 'usage_counter': usageCounter,
+    });
+  }
+
+  ShortcutsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? emoji,
+    Value<int>? usageCounter,
+  }) {
+    return ShortcutsCompanion(
+      id: id ?? this.id,
+      emoji: emoji ?? this.emoji,
+      usageCounter: usageCounter ?? this.usageCounter,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
+    if (usageCounter.present) {
+      map['usage_counter'] = Variable<int>(usageCounter.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortcutsCompanion(')
+          ..write('id: $id, ')
+          ..write('emoji: $emoji, ')
+          ..write('usageCounter: $usageCounter')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ShortcutMembersTable extends ShortcutMembers
+    with TableInfo<$ShortcutMembersTable, ShortcutMember> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShortcutMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _shortcutIdMeta = const VerificationMeta(
+    'shortcutId',
+  );
+  @override
+  late final GeneratedColumn<int> shortcutId = GeneratedColumn<int>(
+    'shortcut_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES shortcuts (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [shortcutId, groupId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shortcut_members';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShortcutMember> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('shortcut_id')) {
+      context.handle(
+        _shortcutIdMeta,
+        shortcutId.isAcceptableOrUnknown(data['shortcut_id']!, _shortcutIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shortcutIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {shortcutId, groupId};
+  @override
+  ShortcutMember map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShortcutMember(
+      shortcutId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shortcut_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+    );
+  }
+
+  @override
+  $ShortcutMembersTable createAlias(String alias) {
+    return $ShortcutMembersTable(attachedDatabase, alias);
+  }
+}
+
+class ShortcutMember extends DataClass implements Insertable<ShortcutMember> {
+  final int shortcutId;
+  final String groupId;
+  const ShortcutMember({required this.shortcutId, required this.groupId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['shortcut_id'] = Variable<int>(shortcutId);
+    map['group_id'] = Variable<String>(groupId);
+    return map;
+  }
+
+  ShortcutMembersCompanion toCompanion(bool nullToAbsent) {
+    return ShortcutMembersCompanion(
+      shortcutId: Value(shortcutId),
+      groupId: Value(groupId),
+    );
+  }
+
+  factory ShortcutMember.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShortcutMember(
+      shortcutId: serializer.fromJson<int>(json['shortcutId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'shortcutId': serializer.toJson<int>(shortcutId),
+      'groupId': serializer.toJson<String>(groupId),
+    };
+  }
+
+  ShortcutMember copyWith({int? shortcutId, String? groupId}) => ShortcutMember(
+    shortcutId: shortcutId ?? this.shortcutId,
+    groupId: groupId ?? this.groupId,
+  );
+  ShortcutMember copyWithCompanion(ShortcutMembersCompanion data) {
+    return ShortcutMember(
+      shortcutId: data.shortcutId.present
+          ? data.shortcutId.value
+          : this.shortcutId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortcutMember(')
+          ..write('shortcutId: $shortcutId, ')
+          ..write('groupId: $groupId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(shortcutId, groupId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShortcutMember &&
+          other.shortcutId == this.shortcutId &&
+          other.groupId == this.groupId);
+}
+
+class ShortcutMembersCompanion extends UpdateCompanion<ShortcutMember> {
+  final Value<int> shortcutId;
+  final Value<String> groupId;
+  final Value<int> rowid;
+  const ShortcutMembersCompanion({
+    this.shortcutId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShortcutMembersCompanion.insert({
+    required int shortcutId,
+    required String groupId,
+    this.rowid = const Value.absent(),
+  }) : shortcutId = Value(shortcutId),
+       groupId = Value(groupId);
+  static Insertable<ShortcutMember> custom({
+    Expression<int>? shortcutId,
+    Expression<String>? groupId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (shortcutId != null) 'shortcut_id': shortcutId,
+      if (groupId != null) 'group_id': groupId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShortcutMembersCompanion copyWith({
+    Value<int>? shortcutId,
+    Value<String>? groupId,
+    Value<int>? rowid,
+  }) {
+    return ShortcutMembersCompanion(
+      shortcutId: shortcutId ?? this.shortcutId,
+      groupId: groupId ?? this.groupId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (shortcutId.present) {
+      map['shortcut_id'] = Variable<int>(shortcutId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShortcutMembersCompanion(')
+          ..write('shortcutId: $shortcutId, ')
+          ..write('groupId: $groupId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -11497,6 +11974,10 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $UserDiscoveryOwnPromotionsTable(this);
   late final $UserDiscoverySharesTable userDiscoveryShares =
       $UserDiscoverySharesTable(this);
+  late final $ShortcutsTable shortcuts = $ShortcutsTable(this);
+  late final $ShortcutMembersTable shortcutMembers = $ShortcutMembersTable(
+    this,
+  );
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final ReceiptsDao receiptsDao = ReceiptsDao(this as TwonlyDB);
@@ -11509,6 +11990,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final KeyVerificationDao keyVerificationDao = KeyVerificationDao(
     this as TwonlyDB,
   );
+  late final ShortcutsDao shortcutsDao = ShortcutsDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11536,6 +12018,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     userDiscoveryOtherPromotions,
     userDiscoveryOwnPromotions,
     userDiscoveryShares,
+    shortcuts,
+    shortcutMembers,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -11672,6 +12156,20 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('user_discovery_shares', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'shortcuts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -13487,6 +13985,29 @@ final class $$GroupsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
+  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.shortcutMembers,
+    aliasName: $_aliasNameGenerator(
+      db.groups.groupId,
+      db.shortcutMembers.groupId,
+    ),
+  );
+
+  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
+    final manager =
+        $$ShortcutMembersTableTableManager($_db, $_db.shortcutMembers).filter(
+          (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _shortcutMembersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
@@ -13688,6 +14209,31 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
           }) => $$GroupHistoriesTableFilterComposer(
             $db: $db,
             $table: $db.groupHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> shortcutMembersRefs(
+    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  ) {
+    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.shortcutMembers,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.shortcutMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -14030,6 +14576,31 @@ class $$GroupsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> shortcutMembersRefs<T extends Object>(
+    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  ) {
+    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.shortcutMembers,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shortcutMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$GroupsTableTableManager
@@ -14049,6 +14620,7 @@ class $$GroupsTableTableManager
             bool messagesRefs,
             bool groupMembersRefs,
             bool groupHistoriesRefs,
+            bool shortcutMembersRefs,
           })
         > {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
@@ -14189,6 +14761,7 @@ class $$GroupsTableTableManager
                 messagesRefs = false,
                 groupMembersRefs = false,
                 groupHistoriesRefs = false,
+                shortcutMembersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -14196,6 +14769,7 @@ class $$GroupsTableTableManager
                     if (messagesRefs) db.messages,
                     if (groupMembersRefs) db.groupMembers,
                     if (groupHistoriesRefs) db.groupHistories,
+                    if (shortcutMembersRefs) db.shortcutMembers,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -14259,6 +14833,27 @@ class $$GroupsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (shortcutMembersRefs)
+                        await $_getPrefetchedData<
+                          Group,
+                          $GroupsTable,
+                          ShortcutMember
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroupsTableReferences
+                              ._shortcutMembersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).shortcutMembersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.groupId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -14283,6 +14878,7 @@ typedef $$GroupsTableProcessedTableManager =
         bool messagesRefs,
         bool groupMembersRefs,
         bool groupHistoriesRefs,
+        bool shortcutMembersRefs,
       })
     >;
 typedef $$MediaFilesTableCreateCompanionBuilder =
@@ -21859,6 +22455,629 @@ typedef $$UserDiscoverySharesTableProcessedTableManager =
       UserDiscoveryShare,
       PrefetchHooks Function({bool contactId})
     >;
+typedef $$ShortcutsTableCreateCompanionBuilder =
+    ShortcutsCompanion Function({
+      Value<int> id,
+      required String emoji,
+      Value<int> usageCounter,
+    });
+typedef $$ShortcutsTableUpdateCompanionBuilder =
+    ShortcutsCompanion Function({
+      Value<int> id,
+      Value<String> emoji,
+      Value<int> usageCounter,
+    });
+
+final class $$ShortcutsTableReferences
+    extends BaseReferences<_$TwonlyDB, $ShortcutsTable, Shortcut> {
+  $$ShortcutsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
+  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.shortcutMembers,
+    aliasName: $_aliasNameGenerator(
+      db.shortcuts.id,
+      db.shortcutMembers.shortcutId,
+    ),
+  );
+
+  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
+    final manager = $$ShortcutMembersTableTableManager(
+      $_db,
+      $_db.shortcutMembers,
+    ).filter((f) => f.shortcutId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _shortcutMembersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ShortcutsTableFilterComposer
+    extends Composer<_$TwonlyDB, $ShortcutsTable> {
+  $$ShortcutsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get usageCounter => $composableBuilder(
+    column: $table.usageCounter,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> shortcutMembersRefs(
+    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  ) {
+    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shortcutMembers,
+      getReferencedColumn: (t) => t.shortcutId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutMembersTableFilterComposer(
+            $db: $db,
+            $table: $db.shortcutMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShortcutsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ShortcutsTable> {
+  $$ShortcutsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get usageCounter => $composableBuilder(
+    column: $table.usageCounter,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShortcutsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ShortcutsTable> {
+  $$ShortcutsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  GeneratedColumn<int> get usageCounter => $composableBuilder(
+    column: $table.usageCounter,
+    builder: (column) => column,
+  );
+
+  Expression<T> shortcutMembersRefs<T extends Object>(
+    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  ) {
+    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shortcutMembers,
+      getReferencedColumn: (t) => t.shortcutId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutMembersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shortcutMembers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShortcutsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ShortcutsTable,
+          Shortcut,
+          $$ShortcutsTableFilterComposer,
+          $$ShortcutsTableOrderingComposer,
+          $$ShortcutsTableAnnotationComposer,
+          $$ShortcutsTableCreateCompanionBuilder,
+          $$ShortcutsTableUpdateCompanionBuilder,
+          (Shortcut, $$ShortcutsTableReferences),
+          Shortcut,
+          PrefetchHooks Function({bool shortcutMembersRefs})
+        > {
+  $$ShortcutsTableTableManager(_$TwonlyDB db, $ShortcutsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShortcutsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShortcutsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShortcutsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> emoji = const Value.absent(),
+                Value<int> usageCounter = const Value.absent(),
+              }) => ShortcutsCompanion(
+                id: id,
+                emoji: emoji,
+                usageCounter: usageCounter,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String emoji,
+                Value<int> usageCounter = const Value.absent(),
+              }) => ShortcutsCompanion.insert(
+                id: id,
+                emoji: emoji,
+                usageCounter: usageCounter,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ShortcutsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({shortcutMembersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (shortcutMembersRefs) db.shortcutMembers,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (shortcutMembersRefs)
+                    await $_getPrefetchedData<
+                      Shortcut,
+                      $ShortcutsTable,
+                      ShortcutMember
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ShortcutsTableReferences
+                          ._shortcutMembersRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ShortcutsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).shortcutMembersRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.shortcutId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ShortcutsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ShortcutsTable,
+      Shortcut,
+      $$ShortcutsTableFilterComposer,
+      $$ShortcutsTableOrderingComposer,
+      $$ShortcutsTableAnnotationComposer,
+      $$ShortcutsTableCreateCompanionBuilder,
+      $$ShortcutsTableUpdateCompanionBuilder,
+      (Shortcut, $$ShortcutsTableReferences),
+      Shortcut,
+      PrefetchHooks Function({bool shortcutMembersRefs})
+    >;
+typedef $$ShortcutMembersTableCreateCompanionBuilder =
+    ShortcutMembersCompanion Function({
+      required int shortcutId,
+      required String groupId,
+      Value<int> rowid,
+    });
+typedef $$ShortcutMembersTableUpdateCompanionBuilder =
+    ShortcutMembersCompanion Function({
+      Value<int> shortcutId,
+      Value<String> groupId,
+      Value<int> rowid,
+    });
+
+final class $$ShortcutMembersTableReferences
+    extends BaseReferences<_$TwonlyDB, $ShortcutMembersTable, ShortcutMember> {
+  $$ShortcutMembersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ShortcutsTable _shortcutIdTable(_$TwonlyDB db) =>
+      db.shortcuts.createAlias(
+        $_aliasNameGenerator(db.shortcutMembers.shortcutId, db.shortcuts.id),
+      );
+
+  $$ShortcutsTableProcessedTableManager get shortcutId {
+    final $_column = $_itemColumn<int>('shortcut_id')!;
+
+    final manager = $$ShortcutsTableTableManager(
+      $_db,
+      $_db.shortcuts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shortcutIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
+    $_aliasNameGenerator(db.shortcutMembers.groupId, db.groups.groupId),
+  );
+
+  $$GroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$GroupsTableTableManager(
+      $_db,
+      $_db.groups,
+    ).filter((f) => f.groupId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ShortcutMembersTableFilterComposer
+    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
+  $$ShortcutMembersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ShortcutsTableFilterComposer get shortcutId {
+    final $$ShortcutsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shortcutId,
+      referencedTable: $db.shortcuts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutsTableFilterComposer(
+            $db: $db,
+            $table: $db.shortcuts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableFilterComposer get groupId {
+    final $$GroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShortcutMembersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
+  $$ShortcutMembersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ShortcutsTableOrderingComposer get shortcutId {
+    final $$ShortcutsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shortcutId,
+      referencedTable: $db.shortcuts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutsTableOrderingComposer(
+            $db: $db,
+            $table: $db.shortcuts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableOrderingComposer get groupId {
+    final $$GroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShortcutMembersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
+  $$ShortcutMembersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ShortcutsTableAnnotationComposer get shortcutId {
+    final $$ShortcutsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shortcutId,
+      referencedTable: $db.shortcuts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShortcutsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shortcuts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GroupsTableAnnotationComposer get groupId {
+    final $$GroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.groups,
+      getReferencedColumn: (t) => t.groupId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShortcutMembersTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ShortcutMembersTable,
+          ShortcutMember,
+          $$ShortcutMembersTableFilterComposer,
+          $$ShortcutMembersTableOrderingComposer,
+          $$ShortcutMembersTableAnnotationComposer,
+          $$ShortcutMembersTableCreateCompanionBuilder,
+          $$ShortcutMembersTableUpdateCompanionBuilder,
+          (ShortcutMember, $$ShortcutMembersTableReferences),
+          ShortcutMember,
+          PrefetchHooks Function({bool shortcutId, bool groupId})
+        > {
+  $$ShortcutMembersTableTableManager(_$TwonlyDB db, $ShortcutMembersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShortcutMembersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShortcutMembersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShortcutMembersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> shortcutId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShortcutMembersCompanion(
+                shortcutId: shortcutId,
+                groupId: groupId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int shortcutId,
+                required String groupId,
+                Value<int> rowid = const Value.absent(),
+              }) => ShortcutMembersCompanion.insert(
+                shortcutId: shortcutId,
+                groupId: groupId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ShortcutMembersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({shortcutId = false, groupId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (shortcutId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.shortcutId,
+                                referencedTable:
+                                    $$ShortcutMembersTableReferences
+                                        ._shortcutIdTable(db),
+                                referencedColumn:
+                                    $$ShortcutMembersTableReferences
+                                        ._shortcutIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$ShortcutMembersTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$ShortcutMembersTableReferences
+                                        ._groupIdTable(db)
+                                        .groupId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ShortcutMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ShortcutMembersTable,
+      ShortcutMember,
+      $$ShortcutMembersTableFilterComposer,
+      $$ShortcutMembersTableOrderingComposer,
+      $$ShortcutMembersTableAnnotationComposer,
+      $$ShortcutMembersTableCreateCompanionBuilder,
+      $$ShortcutMembersTableUpdateCompanionBuilder,
+      (ShortcutMember, $$ShortcutMembersTableReferences),
+      ShortcutMember,
+      PrefetchHooks Function({bool shortcutId, bool groupId})
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -21926,4 +23145,8 @@ class $TwonlyDBManager {
       );
   $$UserDiscoverySharesTableTableManager get userDiscoveryShares =>
       $$UserDiscoverySharesTableTableManager(_db, _db.userDiscoveryShares);
+  $$ShortcutsTableTableManager get shortcuts =>
+      $$ShortcutsTableTableManager(_db, _db.shortcuts);
+  $$ShortcutMembersTableTableManager get shortcutMembers =>
+      $$ShortcutMembersTableTableManager(_db, _db.shortcutMembers);
 }

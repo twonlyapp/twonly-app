@@ -31,7 +31,7 @@ Future<void> createThumbnailsForVideo(
       'It took ${stopwatch.elapsedMilliseconds}ms to create the thumbnail.',
     );
   } else {
-    Log.error(
+    Log.warn(
       'Thumbnail creation failed for the video with exit code.',
     );
   }

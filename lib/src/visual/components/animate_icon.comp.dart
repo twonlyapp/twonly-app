@@ -82,6 +82,7 @@ class EmojiAnimationComp extends StatelessWidget {
     '😴': 'sleep.lottie',
     '🤒': 'thermometer-face.lottie',
     '🤕': 'bandage-face.lottie',
+    '🫪': 'distorted_face.json',
     '🤥': 'liar.lottie',
     '😇': 'halo.lottie',
     '🤠': 'cowboy.lottie',

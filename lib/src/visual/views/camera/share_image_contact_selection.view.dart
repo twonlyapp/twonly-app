@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/shortcut_row.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/background.layer.dart';
 
 class ShareImageView extends StatefulWidget {
@@ -194,6 +195,11 @@ class _ShareImageView extends State<ShareImageView> {
                     ),
                   ),
                 ),
+              const SizedBox(height: 10),
+              ShortcutRowComp(
+                selectedGroupIds: widget.selectedGroupIds,
+                updateSelectedGroupIds: updateSelectedGroupIds,
+              ),
               if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
               BestFriendsSelector(
                 groups: _pinnedContacts,

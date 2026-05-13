@@ -98,9 +98,12 @@ class MainCameraController {
     final cameraControllerTemp = cameraController;
     cameraController = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
-    _pendingDisposal = Future.delayed(const Duration(milliseconds: 100), () async {
-      await cameraControllerTemp?.dispose();
-    });
+    _pendingDisposal = Future.delayed(
+      const Duration(milliseconds: 100),
+      () async {
+        await cameraControllerTemp?.dispose();
+      },
+    );
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
   }
@@ -226,7 +229,7 @@ class MainCameraController {
           (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
         Log.info('Focus point or mode not supported on this device');
       } else {
-        Log.error(e);
+        Log.warn(e);
       }
     }
 
