@@ -61,7 +61,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Message? currentMessage;
 
   DateTime? canBeSeenUntil;
-  double progress = 0;
+  final ValueNotifier<double> progress = ValueNotifier(0);
   bool showSendTextMessageInput = false;
   final GlobalKey mediaWidgetKey = GlobalKey();
 
@@ -100,6 +100,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     progressTimer?.cancel();
     _subscription?.cancel();
     downloadStateListener?.cancel();
+    progress.dispose();
 
     ScreenProtector.preventScreenshotOff();
 
@@ -226,7 +227,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       canBeSeenUntil = null;
       imageSaving = false;
       imageSaved = false;
-      progress = 0;
+      progress.value = 0;
       showSendTextMessageInput = false;
     });
 
@@ -351,6 +352,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       return nextMediaOrExit();
     }
 
+    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    unawaited(
+      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
+    );
+
     var timerRequired = false;
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
@@ -388,9 +394,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
               final duration = ctrl.value.duration.inSeconds;
               if (duration > 0) {
-                setState(() {
-                  progress = 1 - ctrl.value.position.inSeconds / duration;
-                });
+                progress.value = 1 - ctrl.value.position.inSeconds / duration;
               }
 
               if (currentMediaLocal.mediaFile.displayLimitInMilliseconds !=
@@ -450,9 +454,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
         final difference = canBeSeenUntil!.difference(clock.now());
         // Calculate the progress as a value between 0.0 and 1.0
-        progress =
+        progress.value =
             difference.inMilliseconds / (mediaFile.displayLimitInMilliseconds!);
-        setState(() {});
       });
     }
   }
@@ -647,7 +650,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           children: [
             if (_showDownloadingLoader) _loader(),
             if ((currentMedia != null || videoController != null) &&
-                (canBeSeenUntil == null || progress >= 0))
+                (canBeSeenUntil == null || progress.value >= 0))
               GestureDetector(
                 onTap: onTap,
                 onDoubleTap: (videoController == null) ? null : onTap,
@@ -717,7 +720,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (currentMedia != null &&
                 currentMedia?.mediaFile.downloadState != DownloadState.ready)
               Positioned.fill(child: _loader()),
-            if (canBeSeenUntil != null || progress >= 0)
+            if (canBeSeenUntil != null || progress.value >= 0)
               Positioned(
                 right: 20,
                 top: 27,
@@ -726,9 +729,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 2,
+                      child: ValueListenableBuilder<double>(
+                        valueListenable: progress,
+                        builder: (context, value, child) {
+                          return CircularProgressIndicator(
+                            value: value,
+                            strokeWidth: 2,
+                          );
+                        },
                       ),
                     ),
                   ],

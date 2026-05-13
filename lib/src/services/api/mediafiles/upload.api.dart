@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -12,7 +10,6 @@ import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -21,12 +18,12 @@ import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
 final lockRetransmission = Mutex();
@@ -620,21 +617,16 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
       return null;
     }
 
-    final apiAuthTokenRaw = await SecureStorage.instance.read(
-      key: SecureStorageKeys.apiAuthToken,
-    );
-
-    if (apiAuthTokenRaw == null) {
-      Log.error('api auth token not defined.');
-      return null;
-    }
-    final apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
-
     final apiUrl =
         'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
 
-    // try {
     Log.info('Starting upload from ${media.mediaFile.mediaId}');
+
+    final headers = await getAuthenticationHeader();
+    if (headers == null) {
+      Log.error('Auth headers are empty. Returning');
+      return;
+    }
 
     final task = UploadTask.fromFile(
       taskId: 'upload_${media.mediaFile.mediaId}',
@@ -643,9 +635,7 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
       url: apiUrl,
       priority: 0,
       retries: 10,
-      headers: {
-        'x-twonly-auth-token': apiAuthToken,
-      },
+      headers: headers,
     );
 
     final connectivityResult = await Connectivity().checkConnectivity();

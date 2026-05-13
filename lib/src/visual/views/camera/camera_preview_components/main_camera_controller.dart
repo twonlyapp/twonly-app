@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,7 @@ import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
@@ -83,6 +85,8 @@ class MainCameraController {
   FaceFilterType _currentFilterType = FaceFilterType.none;
   FaceFilterType get currentFilterType => _currentFilterType;
 
+  Future<void>? _pendingDisposal;
+
   Future<void> closeCamera() async {
     contactsVerified = {};
     scannedNewProfiles = {};
@@ -94,14 +98,18 @@ class MainCameraController {
     final cameraControllerTemp = cameraController;
     cameraController = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
-    Future.delayed(const Duration(milliseconds: 100), () async {
-      await cameraControllerTemp?.dispose();
-    });
+    _pendingDisposal = Future.delayed(
+      const Duration(milliseconds: 100),
+      () async {
+        await cameraControllerTemp?.dispose();
+      },
+    );
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
+    await _pendingDisposal;
     initCameraStarted = true;
 
     if (AppEnvironment.cameras.isEmpty) {
@@ -136,7 +144,13 @@ class MainCameraController {
             ? ImageFormatGroup.nv21
             : ImageFormatGroup.bgra8888,
       );
-      await cameraController?.initialize();
+      try {
+        await cameraController?.initialize();
+      } catch (e) {
+        Log.error(e);
+        cameraController = null; // ensure uninitialized controller is not reused
+        return;
+      }
       await cameraController?.startImageStream(_processCameraImage);
       await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
       if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
@@ -216,7 +230,7 @@ class MainCameraController {
           (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
         Log.info('Focus point or mode not supported on this device');
       } else {
-        Log.error(e);
+        Log.warn(e);
       }
     }
 
@@ -356,7 +370,14 @@ class MainCameraController {
           if (res == null) continue;
           final (profile, contact, verificationOk) = res;
 
-          if (contact == null) {
+          if (contact?.blocked ?? false) {
+            await twonlyDB.contactsDao.updateContact(
+              contact!.userId,
+              const ContactsCompanion(blocked: Value(false)),
+            );
+          }
+
+          if (contact == null || contact.deletedByUser) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
               await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
@@ -373,18 +394,14 @@ class MainCameraController {
             );
 
             await HapticFeedback.heavyImpact();
-            if (verificationOk) {
-              AppGlobalKeys.scaffoldMessengerKey.currentState?.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppGlobalKeys.scaffoldMessengerKey.currentContext?.lang
-                            .verifiedPublicKey(
-                              getContactDisplayName(contact),
-                            ) ??
-                        '',
-                  ),
-                  duration: const Duration(seconds: 6),
+            final context = cameraPreviewKey.currentContext;
+            if (verificationOk && context != null && context.mounted) {
+              showSnackbar(
+                context,
+                context.lang.verifiedPublicKey(
+                  getContactDisplayName(contact),
                 ),
+                level: SnackbarLevel.success,
               );
             }
           }

@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
@@ -39,8 +41,11 @@ class HomeViewState extends State<HomeView> {
   final MainCameraController _mainCameraController = MainCameraController();
   final PageController _homeViewPageController = PageController(initialPage: 1);
 
-  late StreamSubscription<List<SharedFile>> _intentStreamSub;
-  late StreamSubscription<Uri> _deepLinkSub;
+  StreamSubscription<List<SharedFile>>? _intentStreamSub;
+  StreamSubscription<Uri>? _deepLinkSub;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
+  StreamSubscription<int>? _homeViewPageIndexSub;
+  StreamSubscription<NotificationResponse>? _selectNotificationSub;
 
   static final streamHomeViewPageIndex = StreamController<int>.broadcast();
 
@@ -51,19 +56,28 @@ class HomeViewState extends State<HomeView> {
       if (mounted) setState(() {});
     };
 
-    streamHomeViewPageIndex.stream.listen((index) {
+    _homeViewPageIndexSub = streamHomeViewPageIndex.stream.listen((index) {
       _homeViewPageController.jumpToPage(index);
       setState(() {
         _activePageIdx = index;
       });
     });
 
-    selectNotificationStream.stream.listen((response) async {
+    _selectNotificationSub = selectNotificationStream.stream.listen((
+      response,
+    ) async {
       if (response.payload != null &&
           response.payload!.startsWith(Routes.chats) &&
           response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
+      streamHomeViewPageIndex.add(0);
+    });
+
+    _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
+      Log.info('Opened app from iOS/Remote push notification tap.');
       streamHomeViewPageIndex.add(0);
     });
 
@@ -99,10 +113,23 @@ class HomeViewState extends State<HomeView> {
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
         .getNotificationAppLaunchDetails();
 
+    RemoteMessage? initialRemoteMessage;
+    try {
+      initialRemoteMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
+    } catch (e) {
+      Log.error('Could not get initial Firebase message: $e');
+    }
+
     if (widget.initialPage == 0 ||
+        initialRemoteMessage != null ||
         (notificationAppLaunchDetails != null &&
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
-      if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      if (initialRemoteMessage != null) {
+        Log.info('App launched from iOS/Remote push notification tap.');
+        streamHomeViewPageIndex.add(0);
+      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
+          false) {
         final payload =
             notificationAppLaunchDetails?.notificationResponse?.payload;
         if (payload != null &&
@@ -134,12 +161,13 @@ class HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
-    selectNotificationStream.close();
-    streamHomeViewPageIndex.close();
+    _onMessageOpenedAppSub?.cancel();
+    _homeViewPageIndexSub?.cancel();
+    _selectNotificationSub?.cancel();
     _disableCameraTimer?.cancel();
     _mainCameraController.closeCamera();
-    _intentStreamSub.cancel();
-    _deepLinkSub.cancel();
+    _intentStreamSub?.cancel();
+    _deepLinkSub?.cancel();
     super.dispose();
   }
 

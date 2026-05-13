@@ -139,15 +139,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Future<Group?> _insertGroup(GroupsCompanion group) async {
-    try {
-      await into(groups).insert(group);
-      return await (select(
-        groups,
-      )..where((t) => t.groupId.equals(group.groupId.value))).getSingle();
-    } catch (e) {
-      Log.error('Could not insert group: $e');
-      return null;
-    }
+    await into(groups).insertOnConflictUpdate(group);
+    return (select(
+      groups,
+    )..where((t) => t.groupId.equals(group.groupId.value))).getSingleOrNull();
   }
 
   Future<List<Contact>> getGroupContact(String groupId) async {
@@ -277,7 +272,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
                 groups.groupId.equalsExp(groupMembers.groupId),
               ),
             ],
-          )..where(groups.isDirectChat.isNull()));
+          )..where(groups.isDirectChat.equals(false)));
       return query.map((row) => row.readTable(groupMembers)).get();
     } catch (e) {
       Log.error(e);

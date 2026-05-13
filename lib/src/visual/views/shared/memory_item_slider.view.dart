@@ -9,6 +9,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/save_to_gallery.dart';
@@ -82,13 +83,17 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
         await saveImageToGallery(imageBytes);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.galleryExportSuccess)),
+      showSnackbar(
+        context,
+        context.lang.galleryExportSuccess,
+        level: SnackbarLevel.success,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
+      showSnackbar(
+        context,
+        e.toString(),
+        level: SnackbarLevel.success,
       );
     }
   }

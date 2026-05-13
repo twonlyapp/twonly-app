@@ -1,10 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/services/backup/common.backup.dart';
+import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
@@ -24,15 +23,16 @@ class SetupBackupView extends StatefulWidget {
 }
 
 class _SetupBackupViewState extends State<SetupBackupView> {
-  bool isLoading = false;
-  final TextEditingController passwordCtrl = TextEditingController();
-  final TextEditingController repeatedPasswordCtrl = TextEditingController();
+  bool _isLoading = false;
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _repeadedController = TextEditingController();
 
-  Future<void> onPressedEnableTwonlySafe() async {
+  Future<void> _updateBackupPassword() async {
     setState(() {
-      isLoading = true;
+      _isLoading = true;
     });
-    if (!await isSecurePassword(passwordCtrl.text)) {
+
+    if (!await isSecurePassword(_passwordController.text)) {
       if (!mounted) return;
       final ignore = await showAlertDialog(
         context,
@@ -44,7 +44,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
       if (ignore) {
         if (mounted) {
           setState(() {
-            isLoading = false;
+            _isLoading = false;
           });
         }
         return;
@@ -52,11 +52,12 @@ class _SetupBackupViewState extends State<SetupBackupView> {
     }
 
     await Future.delayed(const Duration(milliseconds: 100));
-    await enableTwonlySafe(passwordCtrl.text);
+    await BackupService.updateBackupPassword(_passwordController.text);
+    await UserService.update((u) => u.isBackupEnabled = true);
 
     if (!mounted) return;
     setState(() {
-      isLoading = false;
+      _isLoading = false;
     });
 
     if (widget.callBack != null) {
@@ -100,34 +101,27 @@ class _SetupBackupViewState extends State<SetupBackupView> {
               ),
               const SizedBox(height: 30),
               BackupPasswordTextField(
-                controller: passwordCtrl,
+                controller: _passwordController,
                 labelText: context.lang.password,
                 onChanged: (value) => setState(() {}),
               ),
               PasswordRequirementText(
                 text: context.lang.backupPasswordRequirement,
                 showError:
-                    passwordCtrl.text.length < 8 &&
-                    passwordCtrl.text.isNotEmpty,
+                    _passwordController.text.length < 8 &&
+                    _passwordController.text.isNotEmpty,
               ),
               const SizedBox(height: 5),
               BackupPasswordTextField(
-                controller: repeatedPasswordCtrl,
+                controller: _repeadedController,
                 labelText: context.lang.passwordRepeated,
                 onChanged: (value) => setState(() {}),
               ),
               PasswordRequirementText(
                 text: context.lang.passwordRepeatedNotEqual,
                 showError:
-                    passwordCtrl.text != repeatedPasswordCtrl.text &&
-                    repeatedPasswordCtrl.text.isNotEmpty,
-              ),
-              const SizedBox(height: 10),
-              Center(
-                child: OutlinedButton(
-                  onPressed: () => context.push(Routes.settingsBackupServer),
-                  child: Text(context.lang.backupExpertSettings),
-                ),
+                    _passwordController.text != _repeadedController.text &&
+                    _repeadedController.text.isNotEmpty,
               ),
               const SizedBox(height: 10),
               Text(
@@ -139,13 +133,14 @@ class _SetupBackupViewState extends State<SetupBackupView> {
               Center(
                 child: FilledButton.icon(
                   onPressed:
-                      (!isLoading &&
-                          (passwordCtrl.text == repeatedPasswordCtrl.text &&
-                                  passwordCtrl.text.length >= 8 ||
+                      (!_isLoading &&
+                          (_passwordController.text ==
+                                      _repeadedController.text &&
+                                  _passwordController.text.length >= 8 ||
                               !kReleaseMode))
-                      ? onPressedEnableTwonlySafe
+                      ? _updateBackupPassword
                       : null,
-                  icon: isLoading
+                  icon: _isLoading
                       ? const SizedBox(
                           height: 12,
                           width: 12,
@@ -157,21 +152,6 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                         ? context.lang.backupEnableBackup
                         : context.lang.backupChangePassword,
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () {
-                  if (widget.callBack != null) {
-                    widget.callBack!();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text(
-                  context.lang.skipForNow,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 8, color: Colors.grey),
                 ),
               ),
             ],

@@ -7,7 +7,11 @@ import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class KeyValueStore {
-  static final Mutex _mutex = Mutex();
+  static final Map<String, Mutex> _mutexes = {};
+
+  static Mutex _getMutex(String key) {
+    return _mutexes.putIfAbsent(key, Mutex.new);
+  }
 
   static Future<File> _getFilePath(String key) async {
     return File('${AppEnvironment.supportDir}/keyvalue/$key.json');
@@ -16,7 +20,7 @@ class KeyValueStore {
   static Future<T> _exclusive<T>(String key, Future<T> Function() action) {
     return exclusiveAccess(
       lockName: 'keyvalue-$key',
-      mutex: _mutex,
+      mutex: _getMutex(key),
       action: action,
     );
   }
@@ -32,31 +36,33 @@ class KeyValueStore {
     }
   });
 
-  static Future<Map<String, dynamic>?> get(String key) =>
-      _exclusive(key, () async {
-        final file = await _getFilePath(key);
-        try {
-          if (file.existsSync()) {
-            final contents = await file.readAsString();
-            return jsonDecode(contents) as Map<String, dynamic>;
-          } else {
-            return null;
-          }
-        } catch (e) {
-          Log.warn('Error reading file. Deleting it.: $e');
-          file.deleteSync();
+  static Future<Map<String, dynamic>?> get(String key) async {
+    return _exclusive(key, () async {
+      final file = await _getFilePath(key);
+      try {
+        if (file.existsSync()) {
+          final contents = await file.readAsString();
+          return jsonDecode(contents) as Map<String, dynamic>;
+        } else {
           return null;
         }
-      });
+      } catch (e) {
+        Log.warn('Error reading file. Deleting it.: $e');
+        file.deleteSync();
+        return null;
+      }
+    });
+  }
 
-  static Future<void> put(String key, Map<String, dynamic> value) =>
-      _exclusive(key, () async {
-        try {
-          final file = await _getFilePath(key);
-          await file.parent.create(recursive: true);
-          await file.writeAsString(jsonEncode(value));
-        } catch (e) {
-          Log.error('Error writing file: $e');
-        }
-      });
+  static Future<void> put(String key, Map<String, dynamic> value) async {
+    return _exclusive(key, () async {
+      try {
+        final file = await _getFilePath(key);
+        await file.parent.create(recursive: true);
+        await file.writeAsString(jsonEncode(value));
+      } catch (e) {
+        Log.error('Error writing file: $e');
+      }
+    });
+  }
 }

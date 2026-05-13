@@ -9,9 +9,10 @@ import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
@@ -107,11 +108,10 @@ class GroupMemberContextMenu extends StatelessWidget {
       ),
     );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.lang.contactRequestSend),
-          duration: const Duration(seconds: 3),
-        ),
+      showSnackbar(
+        context,
+        context.lang.contactRequestSend,
+        level: SnackbarLevel.success,
       );
     }
   }

@@ -5,12 +5,16 @@
 
 import 'bridge.dart';
 import 'bridge/callbacks.dart';
+import 'bridge/wrapper/backup.dart';
+import 'bridge/wrapper/key_manager.dart';
 import 'bridge/wrapper/user_discovery.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'keys/backup_password_keys.dart';
+import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -70,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1680338106;
+  int get rustContentHash => -1867463121;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -152,8 +156,79 @@ abstract class RustLibApi extends BaseApi {
     userDiscoveryGetContactPromotion,
   });
 
-  Future<void> crateBridgeInitializeTwonlyFlutter({
-    required TwonlyConfig config,
+  Future<void> crateBridgeInitializeTwonlyFlutter({required InitConfig config});
+
+  Future<(String, String)>
+  crateBridgeWrapperBackupRustBackupArchiveCreateBackupArchive();
+
+  Future<String?>
+  crateBridgeWrapperBackupRustBackupArchiveGetBackupDownloadToken();
+
+  Future<void> crateBridgeWrapperBackupRustBackupArchiveRestoreBackupArchive({
+    required String filePath,
+  });
+
+  Future<String?> crateBridgeWrapperBackupRustBackupIdentityGetBackupId();
+
+  Future<BackupPasswordKeys>
+  crateBridgeWrapperBackupRustBackupIdentityGetBackupPasswordKeys({
+    required PlatformInt64 userId,
+    required String password,
+  });
+
+  Future<Uint8List>
+  crateBridgeWrapperBackupRustBackupIdentityGetIdentityBackupBytes();
+
+  Future<void>
+  crateBridgeWrapperBackupRustBackupIdentityImportBackupPasswordKeys({
+    required List<int> backupId,
+    required List<int> encryptionKey,
+  });
+
+  Future<void> crateBridgeWrapperBackupRustBackupIdentityRestoreIdentityBackup({
+    required BackupPasswordKeys keys,
+    required List<int> encryptedBytes,
+  });
+
+  Future<void> crateBridgeWrapperBackupRustBackupIdentitySetBackupPasswordKeys({
+    required PlatformInt64 userId,
+    required String password,
+  });
+
+  Future<Uint8List> crateBridgeWrapperKeyManagerRustKeyManagerGetLoginToken();
+
+  Future<(Uint8List, PlatformInt64)>
+  crateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentity();
+
+  Future<PlatformInt64?> crateBridgeWrapperKeyManagerRustKeyManagerGetUserId();
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentity({
+    required List<int> identityKeyPairStructure,
+    required PlatformInt64 registrationId,
+    required Map<PlatformInt64, Uint8List> signedPreKeyStore,
+  });
+
+  Future<Uint8List?>
+  crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  });
+
+  Future<Map<PlatformInt64, Uint8List>>
+  crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeys();
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager();
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  });
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
+    required PlatformInt64 userId,
+  });
+
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+    required List<int> record,
   });
 }
 
@@ -556,13 +631,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateBridgeInitializeTwonlyFlutter({
-    required TwonlyConfig config,
+    required InitConfig config,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_twonly_config(config, serializer);
+          sse_encode_box_autoadd_init_config(config, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -585,6 +660,677 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "initialize_twonly_flutter",
         argNames: ["config"],
+      );
+
+  @override
+  Future<(String, String)>
+  crateBridgeWrapperBackupRustBackupArchiveCreateBackupArchive() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_record_string_string,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupArchiveCreateBackupArchiveConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupArchiveCreateBackupArchiveConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_archive_create_backup_archive",
+        argNames: [],
+      );
+
+  @override
+  Future<String?>
+  crateBridgeWrapperBackupRustBackupArchiveGetBackupDownloadToken() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupArchiveGetBackupDownloadTokenConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupArchiveGetBackupDownloadTokenConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_archive_get_backup_download_token",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperBackupRustBackupArchiveRestoreBackupArchive({
+    required String filePath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(filePath, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupArchiveRestoreBackupArchiveConstMeta,
+        argValues: [filePath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupArchiveRestoreBackupArchiveConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_archive_restore_backup_archive",
+        argNames: ["filePath"],
+      );
+
+  @override
+  Future<String?> crateBridgeWrapperBackupRustBackupIdentityGetBackupId() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentityGetBackupIdConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentityGetBackupIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_get_backup_id",
+        argNames: [],
+      );
+
+  @override
+  Future<BackupPasswordKeys>
+  crateBridgeWrapperBackupRustBackupIdentityGetBackupPasswordKeys({
+    required PlatformInt64 userId,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(userId, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_backup_password_keys,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentityGetBackupPasswordKeysConstMeta,
+        argValues: [userId, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentityGetBackupPasswordKeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_get_backup_password_keys",
+        argNames: ["userId", "password"],
+      );
+
+  @override
+  Future<Uint8List>
+  crateBridgeWrapperBackupRustBackupIdentityGetIdentityBackupBytes() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentityGetIdentityBackupBytesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentityGetIdentityBackupBytesConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_get_identity_backup_bytes",
+        argNames: [],
+      );
+
+  @override
+  Future<void>
+  crateBridgeWrapperBackupRustBackupIdentityImportBackupPasswordKeys({
+    required List<int> backupId,
+    required List<int> encryptionKey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(backupId, serializer);
+          sse_encode_list_prim_u_8_loose(encryptionKey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentityImportBackupPasswordKeysConstMeta,
+        argValues: [backupId, encryptionKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentityImportBackupPasswordKeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_import_backup_password_keys",
+        argNames: ["backupId", "encryptionKey"],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperBackupRustBackupIdentityRestoreIdentityBackup({
+    required BackupPasswordKeys keys,
+    required List<int> encryptedBytes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_backup_password_keys(keys, serializer);
+          sse_encode_list_prim_u_8_loose(encryptedBytes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentityRestoreIdentityBackupConstMeta,
+        argValues: [keys, encryptedBytes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentityRestoreIdentityBackupConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_restore_identity_backup",
+        argNames: ["keys", "encryptedBytes"],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperBackupRustBackupIdentitySetBackupPasswordKeys({
+    required PlatformInt64 userId,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(userId, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperBackupRustBackupIdentitySetBackupPasswordKeysConstMeta,
+        argValues: [userId, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperBackupRustBackupIdentitySetBackupPasswordKeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_backup_identity_set_backup_password_keys",
+        argNames: ["userId", "password"],
+      );
+
+  @override
+  Future<Uint8List> crateBridgeWrapperKeyManagerRustKeyManagerGetLoginToken() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 18,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerGetLoginTokenConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerGetLoginTokenConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_get_login_token",
+        argNames: [],
+      );
+
+  @override
+  Future<(Uint8List, PlatformInt64)>
+  crateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentity() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 19,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_record_list_prim_u_8_strict_i_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentityConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerGetSignalIdentityConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_get_signal_identity",
+        argNames: [],
+      );
+
+  @override
+  Future<PlatformInt64?> crateBridgeWrapperKeyManagerRustKeyManagerGetUserId() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 20,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_i_64,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerGetUserIdConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerGetUserIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_get_user_id",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentity({
+    required List<int> identityKeyPairStructure,
+    required PlatformInt64 registrationId,
+    required Map<PlatformInt64, Uint8List> signedPreKeyStore,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(identityKeyPairStructure, serializer);
+          sse_encode_i_64(registrationId, serializer);
+          sse_encode_Map_i_64_list_prim_u_8_strict_None(
+            signedPreKeyStore,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 21,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentityConstMeta,
+        argValues: [
+          identityKeyPairStructure,
+          registrationId,
+          signedPreKeyStore,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerImportSignalIdentityConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_import_signal_identity",
+        argNames: [
+          "identityKeyPairStructure",
+          "registrationId",
+          "signedPreKeyStore",
+        ],
+      );
+
+  @override
+  Future<Uint8List?>
+  crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(signedPreKeyId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 22,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeyConstMeta,
+        argValues: [signedPreKeyId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_load_signed_prekey",
+        argNames: ["signedPreKeyId"],
+      );
+
+  @override
+  Future<Map<PlatformInt64, Uint8List>>
+  crateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeys() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 23,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_Map_i_64_list_prim_u_8_strict_None,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeysConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerLoadSignedPrekeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_load_signed_prekeys",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 24,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_remove_key_manager",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(signedPreKeyId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekeyConstMeta,
+        argValues: [signedPreKeyId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_remove_signed_prekey",
+        argNames: ["signedPreKeyId"],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
+    required PlatformInt64 userId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(userId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 26,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerSetUserIdConstMeta,
+        argValues: [userId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerSetUserIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_set_user_id",
+        argNames: ["userId"],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
+    required PlatformInt64 signedPreKeyId,
+    required List<int> record,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(signedPreKeyId, serializer);
+          sse_encode_list_prim_u_8_loose(record, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 27,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekeyConstMeta,
+        argValues: [signedPreKeyId, record],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_store_signed_prekey",
+        argNames: ["signedPreKeyId", "record"],
       );
 
   Future<void> Function(
@@ -1137,6 +1883,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Map<PlatformInt64, Uint8List> dco_decode_Map_i_64_list_prim_u_8_strict_None(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return Map.fromEntries(
+      dco_decode_list_record_i_64_list_prim_u_8_strict(
+        raw,
+      ).map((e) => MapEntry(e.$1, e.$2)),
+    );
+  }
+
+  @protected
   RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     throw UnimplementedError();
@@ -1162,6 +1920,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupPasswordKeys dco_decode_backup_password_keys(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return BackupPasswordKeys(
+      backupId: dco_decode_u_8_array_32(arr[0]),
+      encryptionKey: dco_decode_u_8_array_32(arr[1]),
+    );
+  }
+
+  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
@@ -1174,15 +1944,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupPasswordKeys dco_decode_box_autoadd_backup_password_keys(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_backup_password_keys(raw);
+  }
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_i_64(raw);
   }
 
   @protected
-  TwonlyConfig dco_decode_box_autoadd_twonly_config(dynamic raw) {
+  InitConfig dco_decode_box_autoadd_init_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_twonly_config(raw);
+    return dco_decode_init_config(raw);
   }
 
   @protected
@@ -1198,6 +1974,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
+  }
+
+  @protected
+  InitConfig dco_decode_init_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return InitConfig(
+      databaseDir: dco_decode_String(arr[0]),
+      dataDir: dco_decode_String(arr[1]),
+    );
   }
 
   @protected
@@ -1228,6 +2016,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<(PlatformInt64, Uint8List)>
+  dco_decode_list_record_i_64_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_record_i_64_list_prim_u_8_strict)
+        .toList();
+  }
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
   }
 
   @protected
@@ -1277,15 +2080,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TwonlyConfig dco_decode_twonly_config(dynamic raw) {
+  (PlatformInt64, Uint8List) dco_decode_record_i_64_list_prim_u_8_strict(
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return TwonlyConfig(
-      databasePath: dco_decode_String(arr[0]),
-      dataDirectory: dco_decode_String(arr[1]),
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_i_64(arr[0]),
+      dco_decode_list_prim_u_8_strict(arr[1]),
     );
+  }
+
+  @protected
+  (Uint8List, PlatformInt64) dco_decode_record_list_prim_u_8_strict_i_64(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_list_prim_u_8_strict(arr[0]),
+      dco_decode_i_64(arr[1]),
+    );
+  }
+
+  @protected
+  (String, String) dco_decode_record_string_string(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_String(arr[0]),
+      dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  RustBackupArchive dco_decode_rust_backup_archive(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return RustBackupArchive();
+  }
+
+  @protected
+  RustBackupIdentity dco_decode_rust_backup_identity(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return RustBackupIdentity();
+  }
+
+  @protected
+  RustKeyManager dco_decode_rust_key_manager(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return RustKeyManager();
   }
 
   @protected
@@ -1298,6 +2159,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  U8Array32 dco_decode_u_8_array_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return U8Array32(dco_decode_list_prim_u_8_strict(raw));
   }
 
   @protected
@@ -1324,6 +2191,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_isize(deserializer);
     return decodeDartOpaque(inner, generalizedFrbRustBinding);
+  }
+
+  @protected
+  Map<PlatformInt64, Uint8List> sse_decode_Map_i_64_list_prim_u_8_strict_None(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_record_i_64_list_prim_u_8_strict(deserializer);
+    return Map.fromEntries(inner.map((e) => MapEntry(e.$1, e.$2)));
   }
 
   @protected
@@ -1355,6 +2231,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupPasswordKeys sse_decode_backup_password_keys(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_backupId = sse_decode_u_8_array_32(deserializer);
+    var var_encryptionKey = sse_decode_u_8_array_32(deserializer);
+    return BackupPasswordKeys(
+      backupId: var_backupId,
+      encryptionKey: var_encryptionKey,
+    );
+  }
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
@@ -1369,17 +2258,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BackupPasswordKeys sse_decode_box_autoadd_backup_password_keys(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_backup_password_keys(deserializer));
+  }
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_i_64(deserializer));
   }
 
   @protected
-  TwonlyConfig sse_decode_box_autoadd_twonly_config(
-    SseDeserializer deserializer,
-  ) {
+  InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_twonly_config(deserializer));
+    return (sse_decode_init_config(deserializer));
   }
 
   @protected
@@ -1394,6 +2289,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  InitConfig sse_decode_init_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_databaseDir = sse_decode_String(deserializer);
+    var var_dataDir = sse_decode_String(deserializer);
+    return InitConfig(databaseDir: var_databaseDir, dataDir: var_dataDir);
   }
 
   @protected
@@ -1442,6 +2345,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<(PlatformInt64, Uint8List)>
+  sse_decode_list_record_i_64_list_prim_u_8_strict(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <(PlatformInt64, Uint8List)>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_record_i_64_list_prim_u_8_strict(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -1527,14 +2456,55 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  TwonlyConfig sse_decode_twonly_config(SseDeserializer deserializer) {
+  (PlatformInt64, Uint8List) sse_decode_record_i_64_list_prim_u_8_strict(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_databasePath = sse_decode_String(deserializer);
-    var var_dataDirectory = sse_decode_String(deserializer);
-    return TwonlyConfig(
-      databasePath: var_databasePath,
-      dataDirectory: var_dataDirectory,
-    );
+    var var_field0 = sse_decode_i_64(deserializer);
+    var var_field1 = sse_decode_list_prim_u_8_strict(deserializer);
+    return (var_field0, var_field1);
+  }
+
+  @protected
+  (Uint8List, PlatformInt64) sse_decode_record_list_prim_u_8_strict_i_64(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_field1 = sse_decode_i_64(deserializer);
+    return (var_field0, var_field1);
+  }
+
+  @protected
+  (String, String) sse_decode_record_string_string(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_String(deserializer);
+    var var_field1 = sse_decode_String(deserializer);
+    return (var_field0, var_field1);
+  }
+
+  @protected
+  RustBackupArchive sse_decode_rust_backup_archive(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RustBackupArchive();
+  }
+
+  @protected
+  RustBackupIdentity sse_decode_rust_backup_identity(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RustBackupIdentity();
+  }
+
+  @protected
+  RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RustKeyManager();
   }
 
   @protected
@@ -1547,6 +2517,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
+  }
+
+  @protected
+  U8Array32 sse_decode_u_8_array_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
+    return U8Array32(inner);
   }
 
   @protected
@@ -1765,6 +2742,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_Map_i_64_list_prim_u_8_strict_None(
+    Map<PlatformInt64, Uint8List> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_record_i_64_list_prim_u_8_strict(
+      self.entries.map((e) => (e.key, e.value)).toList(),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_StreamSink_String_Sse(
     RustStreamSink<String> self,
     SseSerializer serializer,
@@ -1796,6 +2785,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_backup_password_keys(
+    BackupPasswordKeys self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_8_array_32(self.backupId, serializer);
+    sse_encode_u_8_array_32(self.encryptionKey, serializer);
+  }
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
@@ -1811,6 +2810,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_backup_password_keys(
+    BackupPasswordKeys self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_backup_password_keys(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
     SseSerializer serializer,
@@ -1820,12 +2828,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_twonly_config(
-    TwonlyConfig self,
+  void sse_encode_box_autoadd_init_config(
+    InitConfig self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_twonly_config(self, serializer);
+    sse_encode_init_config(self, serializer);
   }
 
   @protected
@@ -1840,6 +2848,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_init_config(InitConfig self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.databaseDir, serializer);
+    sse_encode_String(self.dataDir, serializer);
   }
 
   @protected
@@ -1892,6 +2907,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_record_i_64_list_prim_u_8_strict(
+    List<(PlatformInt64, Uint8List)> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_record_i_64_list_prim_u_8_strict(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
   }
 
   @protected
@@ -1977,10 +3014,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_twonly_config(TwonlyConfig self, SseSerializer serializer) {
+  void sse_encode_record_i_64_list_prim_u_8_strict(
+    (PlatformInt64, Uint8List) self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.databasePath, serializer);
-    sse_encode_String(self.dataDirectory, serializer);
+    sse_encode_i_64(self.$1, serializer);
+    sse_encode_list_prim_u_8_strict(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_record_list_prim_u_8_strict_i_64(
+    (Uint8List, PlatformInt64) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(self.$1, serializer);
+    sse_encode_i_64(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_record_string_string(
+    (String, String) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.$1, serializer);
+    sse_encode_String(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_rust_backup_archive(
+    RustBackupArchive self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_rust_backup_identity(
+    RustBackupIdentity self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_rust_key_manager(
+    RustKeyManager self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -1993,6 +3077,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
+  }
+
+  @protected
+  void sse_encode_u_8_array_32(U8Array32 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(self.inner, serializer);
   }
 
   @protected

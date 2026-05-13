@@ -7,8 +7,8 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -131,8 +131,7 @@ class _MessageInputState extends State<MessageInput> {
       _currentDuration = 0;
     });
     await HapticFeedback.heavyImpact();
-    final audioTmpPath =
-        '${(await getApplicationCacheDirectory()).path}/recording.m4a';
+    final audioTmpPath = '${AppEnvironment.cacheDir}/recording.m4a';
     unawaited(
       recorderController.record(
         path: audioTmpPath,

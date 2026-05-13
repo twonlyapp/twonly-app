@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.2.10+119
+version: 0.2.11+120
 
 environment:
   sdk: ^3.11.0
@@ -167,6 +167,7 @@ dependency_overrides:
     # Using override until this gets merged.
     git:
       url: https://github.com/otsmr/emoji_picker_flutter.git
+      ref: 23a0595f7dde50728afce917c1c58f284ccbb495
   flutter_android_volume_keydown:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git

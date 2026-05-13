@@ -267,13 +267,13 @@ Future<void> requestMediaReupload(String mediaId) async {
   final messages = await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
 
   for (final message in messages) {
-    if (message.openedAt != null) continue;
+    if (message.openedAt != null || message.senderId == null) continue;
     await sendCipherText(
-      messages.first.senderId!,
+      message.senderId!,
       EncryptedContent(
         mediaUpdate: EncryptedContent_MediaUpdate(
           type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-          targetMessageId: messages.first.messageId,
+          targetMessageId: message.messageId,
         ),
       ),
     );
@@ -356,8 +356,6 @@ Future<void> handleEncryptedFile(String mediaId) async {
       Log.info('Decryption of $mediaId was successful');
 
       mediaService.encryptedPath.deleteSync();
-
-      unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
     },
   );
 }

@@ -5,11 +5,9 @@ pub(crate) mod user_discovery;
 use flutter_rust_bridge::DartFnFuture;
 use protocols::user_discovery::traits::{AnnouncedUser, OtherPromotion};
 
-use super::error::Result;
+use crate::error::{Result, TwonlyError};
 use crate::{callback_generator, frb_generated::StreamSink};
 use std::sync::{Arc, OnceLock};
-
-use crate::bridge::error::TwonlyError;
 
 static FLUTTER_CALLBACKS: OnceLock<FlutterCallbacks> = OnceLock::new();
 

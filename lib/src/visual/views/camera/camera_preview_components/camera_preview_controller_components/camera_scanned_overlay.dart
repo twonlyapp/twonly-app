@@ -5,6 +5,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -46,16 +47,19 @@ class CameraScannedOverlay extends StatelessWidget {
       onTap: () async {
         c.isLoading = true;
         mainController.setState();
+
+        showSnackbar(
+          context,
+          context.lang.requestedUserToastText(c.profile.username),
+          level: SnackbarLevel.success,
+        );
         if (await addNewContactFromPublicProfile(c.profile) &&
             context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.lang.requestedUserToastText(c.profile.username),
-              ),
-              duration: const Duration(seconds: 8),
-            ),
-          );
+          // showSnackbar(
+          //   context,
+          //   context.lang.requestedUserToastText(c.profile.username),
+          //   level: SnackbarLevel.success,
+          // );
         }
       },
       child: Container(

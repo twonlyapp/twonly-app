@@ -1,5 +1,5 @@
-use crate::bridge::error::Result;
 use crate::bridge::get_twonly_flutter;
+use crate::error::Result;
 
 pub struct FlutterUserDiscovery {}
 

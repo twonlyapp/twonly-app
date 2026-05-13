@@ -6,13 +6,12 @@ import 'dart:io' show Platform;
 import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -21,11 +20,8 @@ import '../../../firebase_options.dart';
 // see more here: https://firebase.google.com/docs/cloud-messaging/flutter/receive?hl=de
 
 Future<void> checkForTokenUpdates() async {
-  const storage = FlutterSecureStorage();
-
-  final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
-
   try {
+    if (!userService.isUserCreated) return;
     if (Platform.isIOS) {
       var apnsToken = await FirebaseMessaging.instance.getAPNSToken();
       for (var i = 0; i < 20; i++) {
@@ -47,23 +43,22 @@ Future<void> checkForTokenUpdates() async {
 
     Log.info('Loaded FCM token.');
 
-    if (storedToken == null || fcmToken != storedToken) {
-      Log.info('Got new FCM TOKEN.');
-      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
+    if (userService.currentUser.fcmToken == null ||
+        fcmToken != userService.currentUser.fcmToken) {
+      Log.info('Got new FCM token.');
       await UserService.update((u) {
-        u.updateFCMToken = true;
+        u
+          ..updateFCMToken = true
+          ..fcmToken = fcmToken;
       });
     }
 
     FirebaseMessaging.instance.onTokenRefresh
         .listen((fcmToken) async {
-          Log.info('Got new FCM TOKEN.');
-          await storage.write(
-            key: SecureStorageKeys.googleFcm,
-            value: fcmToken,
-          );
           await UserService.update((u) {
-            u.updateFCMToken = true;
+            u
+              ..updateFCMToken = true
+              ..fcmToken = fcmToken;
           });
         })
         .onError((err) {
@@ -75,21 +70,23 @@ Future<void> checkForTokenUpdates() async {
 }
 
 Future<void> initFCMAfterAuthenticated({bool force = false}) async {
+  final fcmToken = userService.currentUser.fcmToken;
   if (userService.currentUser.updateFCMToken || force) {
-    const storage = FlutterSecureStorage();
-    final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
-    if (storedToken != null) {
-      final res = await apiService.updateFCMToken(storedToken);
-      if (res.isSuccess) {
-        Log.info('Uploaded new FCM token!');
-        await UserService.update((u) {
-          u.updateFCMToken = false;
-        });
-      } else {
-        Log.error('Could not update FCM token!');
-      }
+    if (fcmToken == null) {
+      Log.error('FCM token could not be updated as it is empty');
+      await checkForTokenUpdates();
+      return;
+    }
+    final res = await apiService.updateFCMToken(
+      fcmToken,
+    );
+    if (res.isSuccess) {
+      Log.info('Uploaded new FCM token!');
+      await UserService.update((u) {
+        u.updateFCMToken = false;
+      });
     } else {
-      Log.error('Could not send FCM update to server as token is empty.');
+      Log.error('Could not update FCM token!');
     }
   }
 }
@@ -99,7 +96,7 @@ Future<void> resetFCMTokens() async {
   Log.info('Firebase Installation successfully deleted.');
   await FirebaseMessaging.instance.deleteToken();
   Log.info('Old FCM deleted.');
-  await const FlutterSecureStorage().delete(key: SecureStorageKeys.googleFcm);
+  await UserService.update((u) => u.fcmToken = null);
   await checkForTokenUpdates();
   await initFCMAfterAuthenticated(force: true);
 }
@@ -119,7 +116,9 @@ Future<void> initFCMService() async {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   SentryWidgetsFlutterBinding.ensureInitialized();
+  await AppEnvironment.init();
   final isInitialized = await initBackgroundExecution();
+  await setupPushNotification();
   Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
 

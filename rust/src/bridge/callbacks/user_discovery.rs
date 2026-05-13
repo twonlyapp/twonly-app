@@ -1,6 +1,6 @@
 use crate::bridge::callbacks::get_callbacks;
-use crate::bridge::error::TwonlyError;
 use crate::bridge::get_twonly_flutter;
+use crate::error::TwonlyError;
 use protocols::user_discovery::error::{Result, UserDiscoveryError};
 use protocols::user_discovery::traits::UserDiscoveryUtils;
 use protocols::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryStore};
@@ -47,8 +47,7 @@ impl UserDiscoveryUtils for UserDiscoveryUtilsFlutter {
 impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
     async fn get_config(&self) -> Result<String> {
         let ws = get_twonly_flutter()?;
-        let config_path =
-            PathBuf::from(&ws.config.data_directory).join("user_discovery_config.json");
+        let config_path = PathBuf::from(&ws.config.data_dir).join("user_discovery_config.json");
 
         if !config_path.is_file() {
             return Err(UserDiscoveryError::NotInitialized);
@@ -60,8 +59,7 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
     async fn update_config(&self, update: String) -> Result<()> {
         tracing::debug!("Updating configuration file.");
         let ws = get_twonly_flutter()?;
-        let config_path =
-            PathBuf::from(&ws.config.data_directory).join("user_discovery_config.json");
+        let config_path = PathBuf::from(&ws.config.data_dir).join("user_discovery_config.json");
         std::fs::write(config_path, &update)?;
         Ok(())
     }

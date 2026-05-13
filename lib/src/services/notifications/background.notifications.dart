@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -266,8 +266,7 @@ Future<void> showLocalPushNotificationWithoutUserId(
 }
 
 Future<String?> getAvatarIcon(int contactId) async {
-  final directory = await getApplicationCacheDirectory();
-  final avatarsDirectory = Directory('${directory.path}/avatars');
+  final avatarsDirectory = Directory('${AppEnvironment.cacheDir}/avatars');
   final filePath = '${avatarsDirectory.path}/$contactId.png';
   final file = File(filePath);
   if (file.existsSync()) {

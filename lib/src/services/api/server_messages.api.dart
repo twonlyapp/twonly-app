@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
-import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -28,7 +27,7 @@ import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
@@ -36,48 +35,44 @@ import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-final lockHandleServerMessage = Mutex();
-
 Future<void> handleServerMessage(server.ServerToClient msg) async {
-  return lockHandleServerMessage.protect(() async {
-    Log.info('Processing a message from the server.');
+  Log.info('Processing a message from the server.');
 
-    /// Returns means, that the server can delete the message from the server.
-    final ok = client.Response_Ok()..none = true;
-    var response = client.Response()..ok = ok;
+  /// Returns means, that the server can delete the message from the server.
+  final ok = client.Response_Ok()..none = true;
+  var response = client.Response()..ok = ok;
 
-    try {
-      if (msg.v0.hasRequestNewPreKeys()) {
-        response = await handleRequestNewPreKey();
-      } else if (msg.v0.hasNewMessage()) {
-        Log.info('Got 1 message from the server.');
-        await handleClient2ClientMessage(msg.v0.newMessage);
-      } else if (msg.v0.hasNewMessages()) {
-        Log.info(
-          'Got ${msg.v0.newMessages.newMessages.length} messages from the server.',
-        );
-        for (final newMessage in msg.v0.newMessages.newMessages) {
-          try {
-            await handleClient2ClientMessage(newMessage);
-          } catch (e) {
-            Log.error(e);
-          }
+  try {
+    if (msg.v0.hasRequestNewPreKeys()) {
+      response = await handleRequestNewPreKey();
+    } else if (msg.v0.hasNewMessage()) {
+      Log.info('Got 1 message from the server.');
+      await handleClient2ClientMessage(msg.v0.newMessage);
+    } else if (msg.v0.hasNewMessages()) {
+      Log.info(
+        'Got ${msg.v0.newMessages.newMessages.length} messages from the server.',
+      );
+      for (final newMessage in msg.v0.newMessages.newMessages) {
+        try {
+          await handleClient2ClientMessage(newMessage);
+        } catch (e) {
+          Log.error(e);
         }
-      } else {
-        Log.error('Unknown server message: $msg');
       }
-    } catch (e) {
-      Log.error(e);
+    } else {
+      Log.error('Unknown server message: $msg');
     }
+  } catch (e) {
+    Log.error(e);
+  }
 
-    final v0 = client.V0()
-      ..seq = msg.v0.seq
-      ..response = response;
+  final v0 = client.V0()
+    ..seq = msg.v0.seq
+    ..response = response;
 
-    await apiService.sendResponse(ClientToServer()..v0 = v0);
-    AppState.gotMessageFromServer = true;
-    Log.info('Message from server proccessed.');
-  });
+  await apiService.sendResponse(ClientToServer()..v0 = v0);
+  AppState.gotMessageFromServer = true;
+  Log.info('Message from server proccessed.');
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));

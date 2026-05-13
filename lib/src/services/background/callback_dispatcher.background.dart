@@ -34,12 +34,15 @@ Future<void> initializeBackgroundTaskManager() async {
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     SentryWidgetsFlutterBinding.ensureInitialized();
+    await AppEnvironment.init();
     switch (task) {
       case 'eu.twonly.periodic_task':
-      // if (await initBackgroundExecution()) {
-      //   await handlePeriodicTask();
-      // }
+        // if (await initBackgroundExecution()) {
+        //   await handlePeriodicTask();
+        // }
+        break;
       case 'eu.twonly.processing_task':
+      case _ when task.startsWith('progressing_finish_uploads_'):
         if (await initBackgroundExecution()) {
           await handleProcessingTask();
         }
@@ -58,7 +61,6 @@ Future<bool> initBackgroundExecution() async {
     return false;
   }
 
-  await AppEnvironment.init();
   AppState.isInBackgroundTask = true;
 
   if (await StartupGuard.isAppStarting()) {
@@ -130,24 +132,26 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     return;
   }
 
-  while (!AppState.gotMessageFromServer) {
-    if (stopwatch.elapsed.inSeconds >= 15) {
-      Log.info('No new message from the server after 15 seconds.');
-      break;
+  try {
+    while (!AppState.gotMessageFromServer) {
+      if (stopwatch.elapsed.inSeconds >= 15) {
+        Log.info('No new message from the server after 15 seconds.');
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
     }
-    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (AppState.gotMessageFromServer) {
+      Log.info('Received a server message from the server.');
+    }
+
+    await finishStartedPreprocessing();
+
+    await Future.delayed(const Duration(milliseconds: 2000));
+  } finally {
+    await apiService.close(() {});
+    stopwatch.stop();
   }
-
-  if (AppState.gotMessageFromServer) {
-    Log.info('Received a server message from the server.');
-  }
-
-  await finishStartedPreprocessing();
-
-  await Future.delayed(const Duration(milliseconds: 2000));
-
-  await apiService.close(() {});
-  stopwatch.stop();
 
   Log.info('eu.twonly.periodic_task finished after ${stopwatch.elapsed}.');
   return;

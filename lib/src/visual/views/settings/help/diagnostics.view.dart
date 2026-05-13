@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 
 class DiagnosticsView extends StatefulWidget {
@@ -29,21 +30,9 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   }
 
   Future<void> _deleteDebugLog() async {
-    if (await deleteLogFile()) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Log file deleted!'),
-        ),
-      );
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Log file does not exist.'),
-        ),
-      );
-    }
+    await deleteLogFile();
+    if (!mounted) return;
+    showSnackbar(context, 'Log file deleted!', level: SnackbarLevel.info);
   }
 
   @override
@@ -244,8 +233,10 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
                   return InkWell(
                     onLongPress: () {
                       Clipboard.setData(ClipboardData(text: e.line));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Copied line')),
+                      showSnackbar(
+                        context,
+                        'Copied line',
+                        level: SnackbarLevel.info,
                       );
                     },
                     child: Padding(
@@ -307,8 +298,9 @@ class _LogEntry {
     var msg = trimmed;
 
     // Try to parse leading timestamp (YYYY-MM-DD HH:MM:SS.mmmmmm)
-    final tsRegex =
-        RegExp(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(.*)$');
+    final tsRegex = RegExp(
+      r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\s+(.*)$',
+    );
     final mTs = tsRegex.firstMatch(trimmed);
     if (mTs != null) {
       try {

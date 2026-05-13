@@ -16,6 +16,7 @@ import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
@@ -102,12 +103,7 @@ class _ContactViewState extends State<ContactView> {
     if (!mounted) return;
 
     if (!delete) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.lang.deleteUserErrorMessage),
-          duration: const Duration(seconds: 8),
-        ),
-      );
+      showSnackbar(context, context.lang.deleteUserErrorMessage);
       return;
     }
 
@@ -157,11 +153,10 @@ class _ContactViewState extends State<ContactView> {
     final res = await apiService.reportUser(contact.userId, reason);
     if (!mounted) return;
     if (res.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.lang.userGotReported),
-          duration: const Duration(seconds: 3),
-        ),
+      showSnackbar(
+        context,
+        context.lang.userGotReported,
+        level: SnackbarLevel.info,
       );
     } else {
       showNetworkIssue(context);

@@ -19,6 +19,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
@@ -254,14 +255,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       await File(picture.path).delete();
       return imageBytes;
     } catch (e) {
-      if (context.mounted) {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading picture: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+      if (mounted) {
+        showSnackbar(
+          context,
+          'Error loading picture: $e',
         );
+        Log.error(e);
       }
       return null;
     }
@@ -283,6 +282,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       }
       await Future.delayed(const Duration(milliseconds: 1000));
     }
+
+    if (!mounted) return;
 
     await mc.cameraController?.pausePreview();
     if (!mounted) {
@@ -342,6 +343,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     await _deInitVolumeControl();
     if (!mounted) return true;
 
+    // Cache active camera ID since ShareImageEditorView closes the camera and resets state parameters.
+    final initialCameraId = mc.selectedCameraDetails.cameraId;
+
     final shouldReturn =
         await Navigator.push(
               context,
@@ -382,7 +386,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return true;
     }
     await mc.selectCamera(
-      mc.selectedCameraDetails.cameraId,
+      initialCameraId,
       false,
     );
     return false;
@@ -606,17 +610,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   void _showCameraException(dynamic e) {
     Log.error('$e');
-    try {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      // ignore: empty_catches
-    } catch (e) {}
+    if (mounted) showSnackbar(context, 'Error: $e');
   }
 
   @override

@@ -1,13 +1,13 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class AppEnvironment {
-  static late final String cacheDir;
-  static late final String supportDir;
+  static late String cacheDir;
+  static late String supportDir;
+
+  static bool _isInitialized = false;
 
   static bool _isInitialized = false;
 
@@ -22,10 +22,9 @@ class AppEnvironment {
     _isInitialized = true;
   }
 
-  static void initTesting() {
-    if (_isInitialized) return;
-    cacheDir = '/tmp/twonly_cache';
-    supportDir = '/tmp/twonly_support';
+  static void initTesting({String? customCacheDir, String? customSupportDir}) {
+    cacheDir = customCacheDir ?? '/tmp/twonly_cache';
+    supportDir = customSupportDir ?? '/tmp/twonly_support';
     _isInitialized = true;
   }
 }
@@ -35,9 +34,5 @@ class AppState {
   static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
-  static int latestAppVersionId = 110;
-}
-
-class AppGlobalKeys {
-  static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  static int latestAppVersionId = 113;
 }

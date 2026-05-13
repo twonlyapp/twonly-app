@@ -38,21 +38,29 @@ class UserDiscoveryCallbacks {
     Uint8List pubKey,
     Uint8List signature,
   ) async {
-    return Curve.verifySignature(
-      IdentityKey.fromBytes(pubKey, 0).publicKey,
-      inputData,
-      signature,
-    );
+    try {
+      return Curve.verifySignature(
+        IdentityKey.fromBytes(pubKey, 0).publicKey,
+        inputData,
+        signature,
+      );
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<bool> verifyStoredPubKey(
     int contactId,
     Uint8List pubKey,
   ) async {
-    final storedPublicKey = await getPublicKeyFromContact(contactId);
-    if (storedPublicKey != null) {
-      return storedPublicKey.equals(pubKey);
-    } else {
+    try {
+      final storedPublicKey = await getPublicKeyFromContact(contactId);
+      if (storedPublicKey != null) {
+        return storedPublicKey.equals(pubKey);
+      } else {
+        return false;
+      }
+    } catch (_) {
       return false;
     }
   }

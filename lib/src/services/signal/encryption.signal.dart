@@ -12,15 +12,11 @@ import 'package:twonly/src/utils/log.dart';
 
 Future<CiphertextMessage?> signalEncryptMessage(
   int target,
-  Uint8List plaintextContent, {
-  bool useLock = true,
-}) async {
-  if (useLock) {
-    return lockingSignalProtocol.protect<CiphertextMessage?>(() async {
-      return _signalEncryptMessage(target, plaintextContent);
-    });
-  }
-  return _signalEncryptMessage(target, plaintextContent);
+  Uint8List plaintextContent,
+) async {
+  return lockingSignalProtocol.protect<CiphertextMessage?>(() async {
+    return _signalEncryptMessage(target, plaintextContent);
+  });
 }
 
 Future<CiphertextMessage?> _signalEncryptMessage(
@@ -44,63 +40,83 @@ signalDecryptMessage(
   Uint8List encryptedContentRaw,
   int type,
 ) async {
-  return lockingSignalProtocol.protect(() async {
-    try {
-      final session = SessionCipher.fromStore(
-        (await getSignalStore())!,
-        getSignalAddress(fromUserId),
-      );
-
-      Uint8List plaintext;
-
-      switch (type) {
-        case CiphertextMessage.prekeyType:
-          plaintext = await session.decrypt(
-            PreKeySignalMessage(encryptedContentRaw),
+  // Hold the lock only for the cryptographic operation, not for network I/O
+  final (decryptedContent, errorType, needsResync) = await lockingSignalProtocol
+      .protect(() async {
+        try {
+          final session = SessionCipher.fromStore(
+            (await getSignalStore())!,
+            getSignalAddress(fromUserId),
           );
-        case CiphertextMessage.whisperType:
-          plaintext = await session.decryptFromSignal(
-            SignalMessage.fromSerialized(encryptedContentRaw),
+
+          Uint8List plaintext;
+
+          switch (type) {
+            case CiphertextMessage.prekeyType:
+              plaintext = await session.decrypt(
+                PreKeySignalMessage(encryptedContentRaw),
+              );
+            case CiphertextMessage.whisperType:
+              plaintext = await session.decryptFromSignal(
+                SignalMessage.fromSerialized(encryptedContentRaw),
+              );
+            default:
+              Log.error('Unknown Message Decryption Type: $type');
+              return (
+                null,
+                PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN,
+                false,
+              );
+          }
+
+          return (EncryptedContent.fromBuffer(plaintext), null, false);
+        } on InvalidKeyIdException catch (e) {
+          Log.warn(e);
+          return (
+            null,
+            PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN,
+            false,
           );
-        default:
-          Log.error('Unknown Message Decryption Type: $type');
-          return (null, PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN);
-      }
-
-      return (EncryptedContent.fromBuffer(plaintext), null);
-    } on InvalidKeyIdException catch (e) {
-      Log.warn(e);
-      return (
-        null,
-        PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN,
-      );
-    } on DuplicateMessageException catch (e) {
-      Log.info(e.toString());
-      return (null, null);
-    } on InvalidMessageException catch (e) {
-      Log.warn(e);
-      if (!resyncedUsers.contains(fromUserId)) {
-        if (await handleSessionResync(fromUserId, useLock: false)) {
-          // This flag prevents from resyncing the session the client received multiple new
-          // messages from the server he could not decrypt
-          resyncedUsers.add(fromUserId);
-
-          // This message contains a new PreKeyBundle establishing a new signal session
-          await sendCipherText(
-            fromUserId,
-            EncryptedContent(
-              errorMessages: EncryptedContent_ErrorMessages(
-                type: EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC,
-              ),
-            ),
-            useLock: false,
+        } on DuplicateMessageException catch (e) {
+          Log.info(e.toString());
+          return (null, null, false);
+        } on InvalidMessageException catch (e) {
+          Log.warn(e);
+          return (
+            null,
+            PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN,
+            true,
+          );
+        } catch (e) {
+          Log.error(e);
+          return (
+            null,
+            PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN,
+            false,
           );
         }
-      }
-      return (null, PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN);
-    } catch (e) {
-      Log.error(e);
-      return (null, PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN);
+      });
+
+  // Handle session resync OUTSIDE the lock to avoid holding it during
+  // network round-trips (which can block for up to 60 seconds)
+  if (needsResync && !resyncedUsers.contains(fromUserId)) {
+    if (await handleSessionResync(fromUserId)) {
+      // This flag prevents from resyncing the session the client received
+      // multiple new messages from the server he could not decrypt
+      resyncedUsers.add(fromUserId);
+
+      // This message contains a new PreKeyBundle establishing a new signal
+      // session
+      await sendCipherText(
+        fromUserId,
+        EncryptedContent(
+          errorMessages: EncryptedContent_ErrorMessages(
+            type: EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC,
+          ),
+        ),
+      );
     }
-  });
+  }
+
+  return (decryptedContent, errorType);
 }

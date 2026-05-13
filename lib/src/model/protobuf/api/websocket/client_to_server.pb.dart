@@ -258,6 +258,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $core.bool? isIos,
     $core.String? langCode,
     $fixnum.Int64? proofOfWork,
+    $core.List<$core.int>? loginToken,
   }) {
     final result = create();
     if (username != null) result.username = username;
@@ -271,6 +272,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (isIos != null) result.isIos = isIos;
     if (langCode != null) result.langCode = langCode;
     if (proofOfWork != null) result.proofOfWork = proofOfWork;
+    if (loginToken != null) result.loginToken = loginToken;
     return result;
   }
 
@@ -301,6 +303,8 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..aOB(8, _omitFieldNames ? '' : 'isIos')
     ..aOS(9, _omitFieldNames ? '' : 'langCode')
     ..aInt64(10, _omitFieldNames ? '' : 'proofOfWork')
+    ..a<$core.List<$core.int>>(
+        11, _omitFieldNames ? '' : 'loginToken', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -412,6 +416,15 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasProofOfWork() => $_has(9);
   @$pb.TagNumber(10)
   void clearProofOfWork() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.List<$core.int> get loginToken => $_getN(10);
+  @$pb.TagNumber(11)
+  set loginToken($core.List<$core.int> value) => $_setBytes(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasLoginToken() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearLoginToken() => $_clearField(11);
 }
 
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
@@ -453,6 +466,64 @@ class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
   static Handshake_GetAuthChallenge getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthChallenge>(create);
   static Handshake_GetAuthChallenge? _defaultInstance;
+}
+
+class Handshake_GetUserIdByUsername extends $pb.GeneratedMessage {
+  factory Handshake_GetUserIdByUsername({
+    $core.String? username,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    return result;
+  }
+
+  Handshake_GetUserIdByUsername._();
+
+  factory Handshake_GetUserIdByUsername.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_GetUserIdByUsername.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.GetUserIdByUsername',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetUserIdByUsername clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetUserIdByUsername copyWith(
+          void Function(Handshake_GetUserIdByUsername) updates) =>
+      super.copyWith(
+              (message) => updates(message as Handshake_GetUserIdByUsername))
+          as Handshake_GetUserIdByUsername;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetUserIdByUsername create() =>
+      Handshake_GetUserIdByUsername._();
+  @$core.override
+  Handshake_GetUserIdByUsername createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetUserIdByUsername getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Handshake_GetUserIdByUsername>(create);
+  static Handshake_GetUserIdByUsername? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
 }
 
 class Handshake_GetAuthToken extends $pb.GeneratedMessage {
@@ -629,12 +700,123 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   void clearInBackground() => $_clearField(5);
 }
 
+class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
+  factory Handshake_AuthenticateWithLoginToken({
+    $fixnum.Int64? userId,
+    $core.List<$core.int>? secretLoginToken,
+    $core.String? appVersion,
+    $fixnum.Int64? deviceId,
+    $core.bool? inBackground,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (secretLoginToken != null) result.secretLoginToken = secretLoginToken;
+    if (appVersion != null) result.appVersion = appVersion;
+    if (deviceId != null) result.deviceId = deviceId;
+    if (inBackground != null) result.inBackground = inBackground;
+    return result;
+  }
+
+  Handshake_AuthenticateWithLoginToken._();
+
+  factory Handshake_AuthenticateWithLoginToken.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_AuthenticateWithLoginToken.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.AuthenticateWithLoginToken',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'secretLoginToken', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'appVersion')
+    ..aInt64(4, _omitFieldNames ? '' : 'deviceId')
+    ..aOB(5, _omitFieldNames ? '' : 'inBackground')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_AuthenticateWithLoginToken clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_AuthenticateWithLoginToken copyWith(
+          void Function(Handshake_AuthenticateWithLoginToken) updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_AuthenticateWithLoginToken))
+          as Handshake_AuthenticateWithLoginToken;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_AuthenticateWithLoginToken create() =>
+      Handshake_AuthenticateWithLoginToken._();
+  @$core.override
+  Handshake_AuthenticateWithLoginToken createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_AuthenticateWithLoginToken getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Handshake_AuthenticateWithLoginToken>(create);
+  static Handshake_AuthenticateWithLoginToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get secretLoginToken => $_getN(1);
+  @$pb.TagNumber(2)
+  set secretLoginToken($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSecretLoginToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSecretLoginToken() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get appVersion => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set appVersion($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAppVersion() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAppVersion() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get deviceId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set deviceId($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasDeviceId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDeviceId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get inBackground => $_getBF(4);
+  @$pb.TagNumber(5)
+  set inBackground($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasInBackground() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearInBackground() => $_clearField(5);
+}
+
 enum Handshake_Handshake {
   register,
   getAuthChallenge,
   getAuthToken,
   authenticate,
   requestPOW,
+  authenticateWithLoginToken,
+  getUseridByUsername,
   notSet
 }
 
@@ -645,6 +827,8 @@ class Handshake extends $pb.GeneratedMessage {
     Handshake_GetAuthToken? getAuthToken,
     Handshake_Authenticate? authenticate,
     Handshake_RequestPOW? requestPOW,
+    Handshake_AuthenticateWithLoginToken? authenticateWithLoginToken,
+    Handshake_GetUserIdByUsername? getUseridByUsername,
   }) {
     final result = create();
     if (register != null) result.register = register;
@@ -652,6 +836,10 @@ class Handshake extends $pb.GeneratedMessage {
     if (getAuthToken != null) result.getAuthToken = getAuthToken;
     if (authenticate != null) result.authenticate = authenticate;
     if (requestPOW != null) result.requestPOW = requestPOW;
+    if (authenticateWithLoginToken != null)
+      result.authenticateWithLoginToken = authenticateWithLoginToken;
+    if (getUseridByUsername != null)
+      result.getUseridByUsername = getUseridByUsername;
     return result;
   }
 
@@ -671,6 +859,8 @@ class Handshake extends $pb.GeneratedMessage {
     3: Handshake_Handshake.getAuthToken,
     4: Handshake_Handshake.authenticate,
     5: Handshake_Handshake.requestPOW,
+    6: Handshake_Handshake.authenticateWithLoginToken,
+    7: Handshake_Handshake.getUseridByUsername,
     0: Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -678,7 +868,7 @@ class Handshake extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register',
         subBuilder: Handshake_Register.create)
     ..aOM<Handshake_GetAuthChallenge>(
@@ -691,6 +881,12 @@ class Handshake extends $pb.GeneratedMessage {
         subBuilder: Handshake_Authenticate.create)
     ..aOM<Handshake_RequestPOW>(5, _omitFieldNames ? '' : 'requestPOW',
         protoName: 'requestPOW', subBuilder: Handshake_RequestPOW.create)
+    ..aOM<Handshake_AuthenticateWithLoginToken>(
+        6, _omitFieldNames ? '' : 'authenticateWithLoginToken',
+        subBuilder: Handshake_AuthenticateWithLoginToken.create)
+    ..aOM<Handshake_GetUserIdByUsername>(
+        7, _omitFieldNames ? '' : 'getUseridByUsername',
+        subBuilder: Handshake_GetUserIdByUsername.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -716,6 +912,8 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   Handshake_Handshake whichHandshake() =>
       _Handshake_HandshakeByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -723,6 +921,8 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   void clearHandshake() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -780,6 +980,32 @@ class Handshake extends $pb.GeneratedMessage {
   void clearRequestPOW() => $_clearField(5);
   @$pb.TagNumber(5)
   Handshake_RequestPOW ensureRequestPOW() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  Handshake_AuthenticateWithLoginToken get authenticateWithLoginToken =>
+      $_getN(5);
+  @$pb.TagNumber(6)
+  set authenticateWithLoginToken(Handshake_AuthenticateWithLoginToken value) =>
+      $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAuthenticateWithLoginToken() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAuthenticateWithLoginToken() => $_clearField(6);
+  @$pb.TagNumber(6)
+  Handshake_AuthenticateWithLoginToken ensureAuthenticateWithLoginToken() =>
+      $_ensure(5);
+
+  @$pb.TagNumber(7)
+  Handshake_GetUserIdByUsername get getUseridByUsername => $_getN(6);
+  @$pb.TagNumber(7)
+  set getUseridByUsername(Handshake_GetUserIdByUsername value) =>
+      $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasGetUseridByUsername() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearGetUseridByUsername() => $_clearField(7);
+  @$pb.TagNumber(7)
+  Handshake_GetUserIdByUsername ensureGetUseridByUsername() => $_ensure(6);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {
@@ -1102,350 +1328,6 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
 }
 
-class ApplicationData_RedeemVoucher extends $pb.GeneratedMessage {
-  factory ApplicationData_RedeemVoucher({
-    $core.String? voucher,
-  }) {
-    final result = create();
-    if (voucher != null) result.voucher = voucher;
-    return result;
-  }
-
-  ApplicationData_RedeemVoucher._();
-
-  factory ApplicationData_RedeemVoucher.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_RedeemVoucher.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.RedeemVoucher',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'voucher')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemVoucher clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemVoucher copyWith(
-          void Function(ApplicationData_RedeemVoucher) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_RedeemVoucher))
-          as ApplicationData_RedeemVoucher;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemVoucher create() =>
-      ApplicationData_RedeemVoucher._();
-  @$core.override
-  ApplicationData_RedeemVoucher createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemVoucher getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_RedeemVoucher>(create);
-  static ApplicationData_RedeemVoucher? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get voucher => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set voucher($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasVoucher() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVoucher() => $_clearField(1);
-}
-
-class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
-  factory ApplicationData_SwitchToPayedPlan({
-    $core.String? planId,
-    $core.bool? payMonthly,
-    $core.bool? autoRenewal,
-  }) {
-    final result = create();
-    if (planId != null) result.planId = planId;
-    if (payMonthly != null) result.payMonthly = payMonthly;
-    if (autoRenewal != null) result.autoRenewal = autoRenewal;
-    return result;
-  }
-
-  ApplicationData_SwitchToPayedPlan._();
-
-  factory ApplicationData_SwitchToPayedPlan.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_SwitchToPayedPlan.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.SwitchToPayedPlan',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'planId')
-    ..aOB(2, _omitFieldNames ? '' : 'payMonthly')
-    ..aOB(3, _omitFieldNames ? '' : 'autoRenewal')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_SwitchToPayedPlan clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_SwitchToPayedPlan copyWith(
-          void Function(ApplicationData_SwitchToPayedPlan) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_SwitchToPayedPlan))
-          as ApplicationData_SwitchToPayedPlan;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_SwitchToPayedPlan create() =>
-      ApplicationData_SwitchToPayedPlan._();
-  @$core.override
-  ApplicationData_SwitchToPayedPlan createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_SwitchToPayedPlan getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_SwitchToPayedPlan>(
-          create);
-  static ApplicationData_SwitchToPayedPlan? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get planId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set planId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasPlanId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearPlanId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get payMonthly => $_getBF(1);
-  @$pb.TagNumber(2)
-  set payMonthly($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPayMonthly() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPayMonthly() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.bool get autoRenewal => $_getBF(2);
-  @$pb.TagNumber(3)
-  set autoRenewal($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasAutoRenewal() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearAutoRenewal() => $_clearField(3);
-}
-
-class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
-  factory ApplicationData_UpdatePlanOptions({
-    $core.bool? autoRenewal,
-  }) {
-    final result = create();
-    if (autoRenewal != null) result.autoRenewal = autoRenewal;
-    return result;
-  }
-
-  ApplicationData_UpdatePlanOptions._();
-
-  factory ApplicationData_UpdatePlanOptions.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_UpdatePlanOptions.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.UpdatePlanOptions',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'autoRenewal')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdatePlanOptions clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_UpdatePlanOptions copyWith(
-          void Function(ApplicationData_UpdatePlanOptions) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_UpdatePlanOptions))
-          as ApplicationData_UpdatePlanOptions;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions create() =>
-      ApplicationData_UpdatePlanOptions._();
-  @$core.override
-  ApplicationData_UpdatePlanOptions createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(
-          create);
-  static ApplicationData_UpdatePlanOptions? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get autoRenewal => $_getBF(0);
-  @$pb.TagNumber(1)
-  set autoRenewal($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasAutoRenewal() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearAutoRenewal() => $_clearField(1);
-}
-
-class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
-  factory ApplicationData_CreateVoucher({
-    $core.int? valueCents,
-  }) {
-    final result = create();
-    if (valueCents != null) result.valueCents = valueCents;
-    return result;
-  }
-
-  ApplicationData_CreateVoucher._();
-
-  factory ApplicationData_CreateVoucher.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_CreateVoucher.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.CreateVoucher',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'valueCents', fieldType: $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_CreateVoucher clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_CreateVoucher copyWith(
-          void Function(ApplicationData_CreateVoucher) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_CreateVoucher))
-          as ApplicationData_CreateVoucher;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_CreateVoucher create() =>
-      ApplicationData_CreateVoucher._();
-  @$core.override
-  ApplicationData_CreateVoucher createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_CreateVoucher getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_CreateVoucher>(create);
-  static ApplicationData_CreateVoucher? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.int get valueCents => $_getIZ(0);
-  @$pb.TagNumber(1)
-  set valueCents($core.int value) => $_setUnsignedInt32(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasValueCents() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearValueCents() => $_clearField(1);
-}
-
-class ApplicationData_GetLocation extends $pb.GeneratedMessage {
-  factory ApplicationData_GetLocation() => create();
-
-  ApplicationData_GetLocation._();
-
-  factory ApplicationData_GetLocation.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_GetLocation.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetLocation',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetLocation clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetLocation copyWith(
-          void Function(ApplicationData_GetLocation) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_GetLocation))
-          as ApplicationData_GetLocation;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetLocation create() =>
-      ApplicationData_GetLocation._();
-  @$core.override
-  ApplicationData_GetLocation createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetLocation getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetLocation>(create);
-  static ApplicationData_GetLocation? _defaultInstance;
-}
-
-class ApplicationData_GetVouchers extends $pb.GeneratedMessage {
-  factory ApplicationData_GetVouchers() => create();
-
-  ApplicationData_GetVouchers._();
-
-  factory ApplicationData_GetVouchers.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_GetVouchers.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetVouchers',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetVouchers clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetVouchers copyWith(
-          void Function(ApplicationData_GetVouchers) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_GetVouchers))
-          as ApplicationData_GetVouchers;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetVouchers create() =>
-      ApplicationData_GetVouchers._();
-  @$core.override
-  ApplicationData_GetVouchers createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetVouchers getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetVouchers>(create);
-  static ApplicationData_GetVouchers? _defaultInstance;
-}
-
 class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
   factory ApplicationData_GetAvailablePlans() => create();
 
@@ -1576,66 +1458,6 @@ class ApplicationData_GetCurrentPlanInfos extends $pb.GeneratedMessage {
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
           ApplicationData_GetCurrentPlanInfos>(create);
   static ApplicationData_GetCurrentPlanInfos? _defaultInstance;
-}
-
-class ApplicationData_RedeemAdditionalCode extends $pb.GeneratedMessage {
-  factory ApplicationData_RedeemAdditionalCode({
-    $core.String? inviteCode,
-  }) {
-    final result = create();
-    if (inviteCode != null) result.inviteCode = inviteCode;
-    return result;
-  }
-
-  ApplicationData_RedeemAdditionalCode._();
-
-  factory ApplicationData_RedeemAdditionalCode.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_RedeemAdditionalCode.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.RedeemAdditionalCode',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..aOS(2, _omitFieldNames ? '' : 'inviteCode')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemAdditionalCode clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_RedeemAdditionalCode copyWith(
-          void Function(ApplicationData_RedeemAdditionalCode) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_RedeemAdditionalCode))
-          as ApplicationData_RedeemAdditionalCode;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemAdditionalCode create() =>
-      ApplicationData_RedeemAdditionalCode._();
-  @$core.override
-  ApplicationData_RedeemAdditionalCode createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemAdditionalCode getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_RedeemAdditionalCode>(create);
-  static ApplicationData_RedeemAdditionalCode? _defaultInstance;
-
-  @$pb.TagNumber(2)
-  $core.String get inviteCode => $_getSZ(0);
-  @$pb.TagNumber(2)
-  set inviteCode($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(2)
-  $core.bool hasInviteCode() => $_has(0);
-  @$pb.TagNumber(2)
-  void clearInviteCode() => $_clearField(2);
 }
 
 class ApplicationData_RemoveAdditionalUser extends $pb.GeneratedMessage {
@@ -2260,23 +2082,123 @@ class ApplicationData_AddAdditionalUser extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
 }
 
+class ApplicationData_SetLoginToken extends $pb.GeneratedMessage {
+  factory ApplicationData_SetLoginToken({
+    $core.List<$core.int>? loginToken,
+  }) {
+    final result = create();
+    if (loginToken != null) result.loginToken = loginToken;
+    return result;
+  }
+
+  ApplicationData_SetLoginToken._();
+
+  factory ApplicationData_SetLoginToken.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_SetLoginToken.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.SetLoginToken',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'loginToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_SetLoginToken clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_SetLoginToken copyWith(
+          void Function(ApplicationData_SetLoginToken) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_SetLoginToken))
+          as ApplicationData_SetLoginToken;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_SetLoginToken create() =>
+      ApplicationData_SetLoginToken._();
+  @$core.override
+  ApplicationData_SetLoginToken createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_SetLoginToken getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_SetLoginToken>(create);
+  static ApplicationData_SetLoginToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get loginToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set loginToken($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLoginToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLoginToken() => $_clearField(1);
+}
+
+class ApplicationData_Deprecated extends $pb.GeneratedMessage {
+  factory ApplicationData_Deprecated() => create();
+
+  ApplicationData_Deprecated._();
+
+  factory ApplicationData_Deprecated.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_Deprecated.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.Deprecated',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_Deprecated clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_Deprecated copyWith(
+          void Function(ApplicationData_Deprecated) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_Deprecated))
+          as ApplicationData_Deprecated;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_Deprecated create() => ApplicationData_Deprecated._();
+  @$core.override
+  ApplicationData_Deprecated createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_Deprecated getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_Deprecated>(create);
+  static ApplicationData_Deprecated? _defaultInstance;
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
   getPrekeysByUserId,
   getUserById,
   updateGoogleFcmToken,
-  getLocation,
+  deprecated9,
   getCurrentPlanInfos,
-  redeemVoucher,
+  deprecated11,
   getAvailablePlans,
-  createVoucher,
-  getVouchers,
-  switchtoPayedPlan,
-  getAddaccountsInvites,
-  redeemAdditionalCode,
+  deprecated13,
+  deprecated14,
+  deprecated15,
+  deprecated16,
+  deprecated17,
   removeAdditionalUser,
-  updatePlanOptions,
+  deprecated19,
   downloadDone,
   getSignedPrekeyByUserid,
   updateSignedPrekey,
@@ -2286,6 +2208,7 @@ enum ApplicationData_ApplicationData {
   ipaPurchase,
   ipaForceCheck,
   addAdditionalUser,
+  setLoginToken,
   notSet
 }
 
@@ -2296,17 +2219,17 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetPrekeysByUserId? getPrekeysByUserId,
     ApplicationData_GetUserById? getUserById,
     ApplicationData_UpdateGoogleFcmToken? updateGoogleFcmToken,
-    ApplicationData_GetLocation? getLocation,
+    ApplicationData_Deprecated? deprecated9,
     ApplicationData_GetCurrentPlanInfos? getCurrentPlanInfos,
-    ApplicationData_RedeemVoucher? redeemVoucher,
+    ApplicationData_Deprecated? deprecated11,
     ApplicationData_GetAvailablePlans? getAvailablePlans,
-    ApplicationData_CreateVoucher? createVoucher,
-    ApplicationData_GetVouchers? getVouchers,
-    ApplicationData_SwitchToPayedPlan? switchtoPayedPlan,
-    ApplicationData_GetAddAccountsInvites? getAddaccountsInvites,
-    ApplicationData_RedeemAdditionalCode? redeemAdditionalCode,
+    ApplicationData_Deprecated? deprecated13,
+    ApplicationData_Deprecated? deprecated14,
+    ApplicationData_Deprecated? deprecated15,
+    ApplicationData_Deprecated? deprecated16,
+    ApplicationData_Deprecated? deprecated17,
     ApplicationData_RemoveAdditionalUser? removeAdditionalUser,
-    ApplicationData_UpdatePlanOptions? updatePlanOptions,
+    ApplicationData_Deprecated? deprecated19,
     ApplicationData_DownloadDone? downloadDone,
     ApplicationData_GetSignedPreKeyByUserId? getSignedPrekeyByUserid,
     ApplicationData_UpdateSignedPreKey? updateSignedPrekey,
@@ -2316,6 +2239,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_IPAPurchase? ipaPurchase,
     ApplicationData_IPAForceCheck? ipaForceCheck,
     ApplicationData_AddAdditionalUser? addAdditionalUser,
+    ApplicationData_SetLoginToken? setLoginToken,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2325,21 +2249,19 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getUserById != null) result.getUserById = getUserById;
     if (updateGoogleFcmToken != null)
       result.updateGoogleFcmToken = updateGoogleFcmToken;
-    if (getLocation != null) result.getLocation = getLocation;
+    if (deprecated9 != null) result.deprecated9 = deprecated9;
     if (getCurrentPlanInfos != null)
       result.getCurrentPlanInfos = getCurrentPlanInfos;
-    if (redeemVoucher != null) result.redeemVoucher = redeemVoucher;
+    if (deprecated11 != null) result.deprecated11 = deprecated11;
     if (getAvailablePlans != null) result.getAvailablePlans = getAvailablePlans;
-    if (createVoucher != null) result.createVoucher = createVoucher;
-    if (getVouchers != null) result.getVouchers = getVouchers;
-    if (switchtoPayedPlan != null) result.switchtoPayedPlan = switchtoPayedPlan;
-    if (getAddaccountsInvites != null)
-      result.getAddaccountsInvites = getAddaccountsInvites;
-    if (redeemAdditionalCode != null)
-      result.redeemAdditionalCode = redeemAdditionalCode;
+    if (deprecated13 != null) result.deprecated13 = deprecated13;
+    if (deprecated14 != null) result.deprecated14 = deprecated14;
+    if (deprecated15 != null) result.deprecated15 = deprecated15;
+    if (deprecated16 != null) result.deprecated16 = deprecated16;
+    if (deprecated17 != null) result.deprecated17 = deprecated17;
     if (removeAdditionalUser != null)
       result.removeAdditionalUser = removeAdditionalUser;
-    if (updatePlanOptions != null) result.updatePlanOptions = updatePlanOptions;
+    if (deprecated19 != null) result.deprecated19 = deprecated19;
     if (downloadDone != null) result.downloadDone = downloadDone;
     if (getSignedPrekeyByUserid != null)
       result.getSignedPrekeyByUserid = getSignedPrekeyByUserid;
@@ -2351,6 +2273,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (ipaPurchase != null) result.ipaPurchase = ipaPurchase;
     if (ipaForceCheck != null) result.ipaForceCheck = ipaForceCheck;
     if (addAdditionalUser != null) result.addAdditionalUser = addAdditionalUser;
+    if (setLoginToken != null) result.setLoginToken = setLoginToken;
     return result;
   }
 
@@ -2370,17 +2293,17 @@ class ApplicationData extends $pb.GeneratedMessage {
     3: ApplicationData_ApplicationData.getPrekeysByUserId,
     6: ApplicationData_ApplicationData.getUserById,
     8: ApplicationData_ApplicationData.updateGoogleFcmToken,
-    9: ApplicationData_ApplicationData.getLocation,
+    9: ApplicationData_ApplicationData.deprecated9,
     10: ApplicationData_ApplicationData.getCurrentPlanInfos,
-    11: ApplicationData_ApplicationData.redeemVoucher,
+    11: ApplicationData_ApplicationData.deprecated11,
     12: ApplicationData_ApplicationData.getAvailablePlans,
-    13: ApplicationData_ApplicationData.createVoucher,
-    14: ApplicationData_ApplicationData.getVouchers,
-    15: ApplicationData_ApplicationData.switchtoPayedPlan,
-    16: ApplicationData_ApplicationData.getAddaccountsInvites,
-    17: ApplicationData_ApplicationData.redeemAdditionalCode,
+    13: ApplicationData_ApplicationData.deprecated13,
+    14: ApplicationData_ApplicationData.deprecated14,
+    15: ApplicationData_ApplicationData.deprecated15,
+    16: ApplicationData_ApplicationData.deprecated16,
+    17: ApplicationData_ApplicationData.deprecated17,
     18: ApplicationData_ApplicationData.removeAdditionalUser,
-    19: ApplicationData_ApplicationData.updatePlanOptions,
+    19: ApplicationData_ApplicationData.deprecated19,
     20: ApplicationData_ApplicationData.downloadDone,
     22: ApplicationData_ApplicationData.getSignedPrekeyByUserid,
     23: ApplicationData_ApplicationData.updateSignedPrekey,
@@ -2390,6 +2313,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     27: ApplicationData_ApplicationData.ipaPurchase,
     28: ApplicationData_ApplicationData.ipaForceCheck,
     29: ApplicationData_ApplicationData.addAdditionalUser,
+    30: ApplicationData_ApplicationData.setLoginToken,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2422,7 +2346,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       26,
       27,
       28,
-      29
+      29,
+      30
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2442,48 +2367,42 @@ class ApplicationData extends $pb.GeneratedMessage {
         8, _omitFieldNames ? '' : 'updateGoogleFcmToken',
         protoName: 'updateGoogleFcmToken',
         subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
-    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getLocation',
-        protoName: 'getLocation',
-        subBuilder: ApplicationData_GetLocation.create)
+    ..aOM<ApplicationData_Deprecated>(9, _omitFieldNames ? '' : 'deprecated9',
+        protoName: 'deprecated_9',
+        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_GetCurrentPlanInfos>(
         10, _omitFieldNames ? '' : 'getCurrentPlanInfos',
         protoName: 'getCurrentPlanInfos',
         subBuilder: ApplicationData_GetCurrentPlanInfos.create)
-    ..aOM<ApplicationData_RedeemVoucher>(
-        11, _omitFieldNames ? '' : 'redeemVoucher',
-        protoName: 'redeemVoucher',
-        subBuilder: ApplicationData_RedeemVoucher.create)
+    ..aOM<ApplicationData_Deprecated>(11, _omitFieldNames ? '' : 'deprecated11',
+        protoName: 'deprecated_11',
+        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_GetAvailablePlans>(
         12, _omitFieldNames ? '' : 'getAvailablePlans',
         protoName: 'getAvailablePlans',
         subBuilder: ApplicationData_GetAvailablePlans.create)
-    ..aOM<ApplicationData_CreateVoucher>(
-        13, _omitFieldNames ? '' : 'createVoucher',
-        protoName: 'createVoucher',
-        subBuilder: ApplicationData_CreateVoucher.create)
-    ..aOM<ApplicationData_GetVouchers>(14, _omitFieldNames ? '' : 'getVouchers',
-        protoName: 'getVouchers',
-        subBuilder: ApplicationData_GetVouchers.create)
-    ..aOM<ApplicationData_SwitchToPayedPlan>(
-        15, _omitFieldNames ? '' : 'switchtoPayedPlan',
-        protoName: 'switchtoPayedPlan',
-        subBuilder: ApplicationData_SwitchToPayedPlan.create)
-    ..aOM<ApplicationData_GetAddAccountsInvites>(
-        16, _omitFieldNames ? '' : 'getAddaccountsInvites',
-        protoName: 'getAddaccountsInvites',
-        subBuilder: ApplicationData_GetAddAccountsInvites.create)
-    ..aOM<ApplicationData_RedeemAdditionalCode>(
-        17, _omitFieldNames ? '' : 'redeemAdditionalCode',
-        protoName: 'redeemAdditionalCode',
-        subBuilder: ApplicationData_RedeemAdditionalCode.create)
+    ..aOM<ApplicationData_Deprecated>(13, _omitFieldNames ? '' : 'deprecated13',
+        protoName: 'deprecated_13',
+        subBuilder: ApplicationData_Deprecated.create)
+    ..aOM<ApplicationData_Deprecated>(14, _omitFieldNames ? '' : 'deprecated14',
+        protoName: 'deprecated_14',
+        subBuilder: ApplicationData_Deprecated.create)
+    ..aOM<ApplicationData_Deprecated>(15, _omitFieldNames ? '' : 'deprecated15',
+        protoName: 'deprecated_15',
+        subBuilder: ApplicationData_Deprecated.create)
+    ..aOM<ApplicationData_Deprecated>(16, _omitFieldNames ? '' : 'deprecated16',
+        protoName: 'deprecated_16',
+        subBuilder: ApplicationData_Deprecated.create)
+    ..aOM<ApplicationData_Deprecated>(17, _omitFieldNames ? '' : 'deprecated17',
+        protoName: 'deprecated_17',
+        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_RemoveAdditionalUser>(
         18, _omitFieldNames ? '' : 'removeAdditionalUser',
         protoName: 'removeAdditionalUser',
         subBuilder: ApplicationData_RemoveAdditionalUser.create)
-    ..aOM<ApplicationData_UpdatePlanOptions>(
-        19, _omitFieldNames ? '' : 'updatePlanOptions',
-        protoName: 'updatePlanOptions',
-        subBuilder: ApplicationData_UpdatePlanOptions.create)
+    ..aOM<ApplicationData_Deprecated>(19, _omitFieldNames ? '' : 'deprecated19',
+        protoName: 'deprecated_19',
+        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_DownloadDone>(
         20, _omitFieldNames ? '' : 'downloadDone',
         protoName: 'downloadDone',
@@ -2517,6 +2436,9 @@ class ApplicationData extends $pb.GeneratedMessage {
         29, _omitFieldNames ? '' : 'addAdditionalUser',
         protoName: 'addAdditionalUser',
         subBuilder: ApplicationData_AddAdditionalUser.create)
+    ..aOM<ApplicationData_SetLoginToken>(
+        30, _omitFieldNames ? '' : 'setLoginToken',
+        subBuilder: ApplicationData_SetLoginToken.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2563,6 +2485,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(27)
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
+  @$pb.TagNumber(30)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2590,6 +2513,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(27)
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
+  @$pb.TagNumber(30)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2652,15 +2576,15 @@ class ApplicationData extends $pb.GeneratedMessage {
       $_ensure(4);
 
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation get getLocation => $_getN(5);
+  ApplicationData_Deprecated get deprecated9 => $_getN(5);
   @$pb.TagNumber(9)
-  set getLocation(ApplicationData_GetLocation value) => $_setField(9, value);
+  set deprecated9(ApplicationData_Deprecated value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasGetLocation() => $_has(5);
+  $core.bool hasDeprecated9() => $_has(5);
   @$pb.TagNumber(9)
-  void clearGetLocation() => $_clearField(9);
+  void clearDeprecated9() => $_clearField(9);
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation ensureGetLocation() => $_ensure(5);
+  ApplicationData_Deprecated ensureDeprecated9() => $_ensure(5);
 
   @$pb.TagNumber(10)
   ApplicationData_GetCurrentPlanInfos get getCurrentPlanInfos => $_getN(6);
@@ -2676,16 +2600,15 @@ class ApplicationData extends $pb.GeneratedMessage {
       $_ensure(6);
 
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher get redeemVoucher => $_getN(7);
+  ApplicationData_Deprecated get deprecated11 => $_getN(7);
   @$pb.TagNumber(11)
-  set redeemVoucher(ApplicationData_RedeemVoucher value) =>
-      $_setField(11, value);
+  set deprecated11(ApplicationData_Deprecated value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasRedeemVoucher() => $_has(7);
+  $core.bool hasDeprecated11() => $_has(7);
   @$pb.TagNumber(11)
-  void clearRedeemVoucher() => $_clearField(11);
+  void clearDeprecated11() => $_clearField(11);
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher ensureRedeemVoucher() => $_ensure(7);
+  ApplicationData_Deprecated ensureDeprecated11() => $_ensure(7);
 
   @$pb.TagNumber(12)
   ApplicationData_GetAvailablePlans get getAvailablePlans => $_getN(8);
@@ -2700,65 +2623,59 @@ class ApplicationData extends $pb.GeneratedMessage {
   ApplicationData_GetAvailablePlans ensureGetAvailablePlans() => $_ensure(8);
 
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher get createVoucher => $_getN(9);
+  ApplicationData_Deprecated get deprecated13 => $_getN(9);
   @$pb.TagNumber(13)
-  set createVoucher(ApplicationData_CreateVoucher value) =>
-      $_setField(13, value);
+  set deprecated13(ApplicationData_Deprecated value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasCreateVoucher() => $_has(9);
+  $core.bool hasDeprecated13() => $_has(9);
   @$pb.TagNumber(13)
-  void clearCreateVoucher() => $_clearField(13);
+  void clearDeprecated13() => $_clearField(13);
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher ensureCreateVoucher() => $_ensure(9);
+  ApplicationData_Deprecated ensureDeprecated13() => $_ensure(9);
 
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers get getVouchers => $_getN(10);
+  ApplicationData_Deprecated get deprecated14 => $_getN(10);
   @$pb.TagNumber(14)
-  set getVouchers(ApplicationData_GetVouchers value) => $_setField(14, value);
+  set deprecated14(ApplicationData_Deprecated value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasGetVouchers() => $_has(10);
+  $core.bool hasDeprecated14() => $_has(10);
   @$pb.TagNumber(14)
-  void clearGetVouchers() => $_clearField(14);
+  void clearDeprecated14() => $_clearField(14);
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers ensureGetVouchers() => $_ensure(10);
+  ApplicationData_Deprecated ensureDeprecated14() => $_ensure(10);
 
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan get switchtoPayedPlan => $_getN(11);
+  ApplicationData_Deprecated get deprecated15 => $_getN(11);
   @$pb.TagNumber(15)
-  set switchtoPayedPlan(ApplicationData_SwitchToPayedPlan value) =>
-      $_setField(15, value);
+  set deprecated15(ApplicationData_Deprecated value) => $_setField(15, value);
   @$pb.TagNumber(15)
-  $core.bool hasSwitchtoPayedPlan() => $_has(11);
+  $core.bool hasDeprecated15() => $_has(11);
   @$pb.TagNumber(15)
-  void clearSwitchtoPayedPlan() => $_clearField(15);
+  void clearDeprecated15() => $_clearField(15);
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan ensureSwitchtoPayedPlan() => $_ensure(11);
+  ApplicationData_Deprecated ensureDeprecated15() => $_ensure(11);
 
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites get getAddaccountsInvites => $_getN(12);
+  ApplicationData_Deprecated get deprecated16 => $_getN(12);
   @$pb.TagNumber(16)
-  set getAddaccountsInvites(ApplicationData_GetAddAccountsInvites value) =>
-      $_setField(16, value);
+  set deprecated16(ApplicationData_Deprecated value) => $_setField(16, value);
   @$pb.TagNumber(16)
-  $core.bool hasGetAddaccountsInvites() => $_has(12);
+  $core.bool hasDeprecated16() => $_has(12);
   @$pb.TagNumber(16)
-  void clearGetAddaccountsInvites() => $_clearField(16);
+  void clearDeprecated16() => $_clearField(16);
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites ensureGetAddaccountsInvites() =>
-      $_ensure(12);
+  ApplicationData_Deprecated ensureDeprecated16() => $_ensure(12);
 
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode get redeemAdditionalCode => $_getN(13);
+  ApplicationData_Deprecated get deprecated17 => $_getN(13);
   @$pb.TagNumber(17)
-  set redeemAdditionalCode(ApplicationData_RedeemAdditionalCode value) =>
-      $_setField(17, value);
+  set deprecated17(ApplicationData_Deprecated value) => $_setField(17, value);
   @$pb.TagNumber(17)
-  $core.bool hasRedeemAdditionalCode() => $_has(13);
+  $core.bool hasDeprecated17() => $_has(13);
   @$pb.TagNumber(17)
-  void clearRedeemAdditionalCode() => $_clearField(17);
+  void clearDeprecated17() => $_clearField(17);
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode ensureRedeemAdditionalCode() =>
-      $_ensure(13);
+  ApplicationData_Deprecated ensureDeprecated17() => $_ensure(13);
 
   @$pb.TagNumber(18)
   ApplicationData_RemoveAdditionalUser get removeAdditionalUser => $_getN(14);
@@ -2774,16 +2691,15 @@ class ApplicationData extends $pb.GeneratedMessage {
       $_ensure(14);
 
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions get updatePlanOptions => $_getN(15);
+  ApplicationData_Deprecated get deprecated19 => $_getN(15);
   @$pb.TagNumber(19)
-  set updatePlanOptions(ApplicationData_UpdatePlanOptions value) =>
-      $_setField(19, value);
+  set deprecated19(ApplicationData_Deprecated value) => $_setField(19, value);
   @$pb.TagNumber(19)
-  $core.bool hasUpdatePlanOptions() => $_has(15);
+  $core.bool hasDeprecated19() => $_has(15);
   @$pb.TagNumber(19)
-  void clearUpdatePlanOptions() => $_clearField(19);
+  void clearDeprecated19() => $_clearField(19);
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions ensureUpdatePlanOptions() => $_ensure(15);
+  ApplicationData_Deprecated ensureDeprecated19() => $_ensure(15);
 
   @$pb.TagNumber(20)
   ApplicationData_DownloadDone get downloadDone => $_getN(16);
@@ -2891,6 +2807,18 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearAddAdditionalUser() => $_clearField(29);
   @$pb.TagNumber(29)
   ApplicationData_AddAdditionalUser ensureAddAdditionalUser() => $_ensure(24);
+
+  @$pb.TagNumber(30)
+  ApplicationData_SetLoginToken get setLoginToken => $_getN(25);
+  @$pb.TagNumber(30)
+  set setLoginToken(ApplicationData_SetLoginToken value) =>
+      $_setField(30, value);
+  @$pb.TagNumber(30)
+  $core.bool hasSetLoginToken() => $_has(25);
+  @$pb.TagNumber(30)
+  void clearSetLoginToken() => $_clearField(30);
+  @$pb.TagNumber(30)
+  ApplicationData_SetLoginToken ensureSetLoginToken() => $_ensure(25);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

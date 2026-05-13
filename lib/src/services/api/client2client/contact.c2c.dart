@@ -60,6 +60,15 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
 }
 
 Future<void> handleContactAccept(int fromUserId) async {
+  final contact = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+  if (contact == null) return;
+  if (contact.requested || contact.deletedByUser) {
+    Log.error('User has never send an request. So ignore the Accept.');
+    return;
+  }
+
   await twonlyDB.contactsDao.updateContact(
     fromUserId,
     const ContactsCompanion(
@@ -68,17 +77,12 @@ Future<void> handleContactAccept(int fromUserId) async {
       deletedByUser: Value(false),
     ),
   );
-  final contact = await twonlyDB.contactsDao
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
-  if (contact != null) {
-    await twonlyDB.groupsDao.createNewDirectChat(
-      fromUserId,
-      GroupsCompanion(
-        groupName: Value(getContactDisplayName(contact)),
-      ),
-    );
-  }
+  await twonlyDB.groupsDao.createNewDirectChat(
+    fromUserId,
+    GroupsCompanion(
+      groupName: Value(getContactDisplayName(contact)),
+    ),
+  );
 }
 
 Future<bool> handleContactRequest(
@@ -143,8 +147,8 @@ Future<void> handleContactUpdate(
                   groupId: Value(group.groupId),
                   type: const Value(GroupActionType.updatedContactUsername),
                   contactId: Value(fromUserId),
-                  oldGroupName: Value('@${contact.username}'),
-                  newGroupName: Value('@${contactUpdate.username}'),
+                  oldGroupName: Value(contact.username),
+                  newGroupName: Value(contactUpdate.username),
                 ),
               );
             }
@@ -157,7 +161,7 @@ Future<void> handleContactUpdate(
                   groupId: Value(group.groupId),
                   type: const Value(GroupActionType.updatedContactDisplayName),
                   contactId: Value(fromUserId),
-                  oldGroupName: Value(contact.displayName ?? ''),
+                  oldGroupName: Value(contact.displayName ?? contact.username),
                   newGroupName: Value(contactUpdate.displayName),
                 ),
               );

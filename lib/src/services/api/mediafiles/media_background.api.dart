@@ -8,7 +8,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/backup/create.backup.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -22,8 +22,11 @@ Future<void> initFileDownloader() async {
         if (update.task.taskId.contains('download_')) {
           await handleDownloadStatusUpdate(update);
         }
-        if (update.task.taskId.contains('backup')) {
-          await handleBackupStatusUpdate(update);
+        if (update.task.taskId.contains('backup_')) {
+          await BackupService.handleBackupStatusUpdate(
+            update.task.taskId,
+            update,
+          );
         }
       case TaskProgressUpdate():
         Log.info(

@@ -25,7 +25,6 @@ class Routes {
   static const String settingsAccount = '/settings/account';
   static const String settingsSubscription = '/settings/subscription';
   static const String settingsBackup = '/settings/backup';
-  static const String settingsBackupServer = '/settings/backup/server';
   static const String settingsBackupRecovery = '/settings/backup/recovery';
   static const String settingsBackupSetup = '/settings/backup/setup';
   static const String settingsAppearance = '/settings/appearance';

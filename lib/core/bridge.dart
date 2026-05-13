@@ -9,7 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These functions are ignored because they are not marked as `pub`: `get_twonly_flutter`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `TwonlyFlutter`
 
-Future<void> initializeTwonlyFlutter({required TwonlyConfig config}) =>
+Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);
 
 class AnnouncedUser {
@@ -34,6 +34,27 @@ class AnnouncedUser {
           userId == other.userId &&
           publicKey == other.publicKey &&
           publicId == other.publicId;
+}
+
+class InitConfig {
+  final String databaseDir;
+  final String dataDir;
+
+  const InitConfig({
+    required this.databaseDir,
+    required this.dataDir,
+  });
+
+  @override
+  int get hashCode => databaseDir.hashCode ^ dataDir.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InitConfig &&
+          runtimeType == other.runtimeType &&
+          databaseDir == other.databaseDir &&
+          dataDir == other.dataDir;
 }
 
 class OtherPromotion {
@@ -73,25 +94,4 @@ class OtherPromotion {
           threshold == other.threshold &&
           announcementShare == other.announcementShare &&
           publicKeyVerifiedTimestamp == other.publicKeyVerifiedTimestamp;
-}
-
-class TwonlyConfig {
-  final String databasePath;
-  final String dataDirectory;
-
-  const TwonlyConfig({
-    required this.databasePath,
-    required this.dataDirectory,
-  });
-
-  @override
-  int get hashCode => databasePath.hashCode ^ dataDirectory.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TwonlyConfig &&
-          runtimeType == other.runtimeType &&
-          databasePath == other.databasePath &&
-          dataDirectory == other.dataDirectory;
 }

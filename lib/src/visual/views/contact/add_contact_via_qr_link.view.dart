@@ -10,8 +10,10 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class AddContactViaQrLinkView extends StatefulWidget {
   const AddContactViaQrLinkView({
@@ -69,11 +71,8 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
         context.pop();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      if (mounted) showSnackbar(context, 'Error: $e');
+      Log.error(e);
     } finally {
       if (mounted) {
         setState(() {

@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -8,11 +8,16 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart'
+    show getSignalSignedPreKeyStoreOld;
 import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -21,7 +26,7 @@ import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
-import 'package:twonly/src/services/backup/create.backup.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -38,9 +43,9 @@ final _initMutex = Mutex();
 
 /// This function is used to initialized the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
-Future<void> twonlyMinimumInitialization() async {
+Future<bool> twonlyMinimumInitialization() async {
   Log.info('twonlyMinimumInitialization: called');
-  await exclusiveAccess(
+  final hasStorageError = await exclusiveAccess(
     lockName: 'init',
     mutex: _initMutex,
     action: () async {
@@ -54,15 +59,22 @@ Future<void> twonlyMinimumInitialization() async {
       await initFlutterCallbacksForRust();
 
       Log.info('twonlyMinimumInitialization: bridge.initializeTwonlyFlutter()');
-      await bridge.initializeTwonlyFlutter(
-        config: bridge.TwonlyConfig(
-          databasePath: '${AppEnvironment.supportDir}/twonly.sqlite',
-          dataDirectory: AppEnvironment.supportDir,
-        ),
-      );
+      try {
+        await bridge.initializeTwonlyFlutter(
+          config: bridge.InitConfig(
+            databaseDir: AppEnvironment.supportDir,
+            dataDir: AppEnvironment.supportDir,
+          ),
+        );
+      } catch (e) {
+        Log.error(e);
+        return true;
+      }
       Log.info('twonlyMinimumInitialization: finished');
+      return false;
     },
   );
+  return hasStorageError;
 }
 
 void main() async {
@@ -72,26 +84,30 @@ void main() async {
 
   unawaited(StartupGuard.markAppStartup());
 
-  await twonlyMinimumInitialization();
-
-  unawaited(initFCMService());
+  var storageError = await twonlyMinimumInitialization();
+  await initFCMService();
 
   var userExists = false;
-  var storageError = false;
 
-  try {
-    userExists = await userService.tryInit();
-  } catch (e) {
-    Log.error('Failed to initialize user session due to storage error: $e');
-    storageError = true;
+  var recoveryPossible = false;
+
+  if (!storageError) {
+    try {
+      userExists = await userService.tryInit();
+    } catch (e) {
+      Log.error('Failed to initialize user session due to storage error: $e');
+      storageError = true;
+    }
   }
 
-  if (Platform.isIOS && userExists) {
-    final dbFile = File('${AppEnvironment.supportDir}/twonly.sqlite');
-    if (!dbFile.existsSync()) {
-      Log.error('[twonly] IOS: App was removed and then reinstalled again...');
-      await SecureStorage.instance.deleteAll();
-      userExists = false;
+  if (!userExists && !storageError) {
+    try {
+      final userId = await RustKeyManager.getUserId();
+      if (userId != null) {
+        recoveryPossible = true;
+      }
+    } catch (e) {
+      Log.error('Could not check KeyManager userId for iOS recovery: $e');
     }
   }
 
@@ -139,7 +155,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
         ChangeNotifierProvider(create: (_) => PurchasesProvider()),
       ],
-      child: App(storageError: storageError),
+      child: App(
+        storageError: storageError,
+        recoveryPossible: recoveryPossible,
+      ),
     ),
   );
 }
@@ -178,6 +197,66 @@ Future<void> runMigrations() async {
       }
     });
   }
+  if (userService.currentUser.appVersion < 113) {
+    var migrationSuccess = true;
+    final signalIdentity = await SecureStorage.instance.read(
+      // ignore: deprecated_member_use_from_same_package
+      key: SecureStorageKeys.signalIdentity,
+    );
+
+    if (signalIdentity != null) {
+      try {
+        final decoded = jsonDecode(signalIdentity);
+        final identity = SignalIdentity.fromJson(
+          decoded as Map<String, dynamic>,
+        );
+
+        await RustKeyManager.importSignalIdentity(
+          identityKeyPairStructure: identity.identityKeyPairU8List,
+          registrationId: identity.registrationId,
+          signedPreKeyStore: await getSignalSignedPreKeyStoreOld(),
+        );
+        Log.info('Importing signal identiy to the rust key manager');
+
+        // Clean up old keys after successful migration
+        await SecureStorage.instance.delete(
+          // ignore: deprecated_member_use_from_same_package
+          key: SecureStorageKeys.signalIdentity,
+        );
+        await SecureStorage.instance.delete(
+          // ignore: deprecated_member_use_from_same_package
+          key: SecureStorageKeys.signalSignedPreKey,
+        );
+      } catch (e) {
+        Log.error('Failed to migrate signal identity: $e');
+        migrationSuccess = false;
+      }
+    }
+
+    if (migrationSuccess) {
+      await UserService.update((u) {
+        u
+          ..appVersion = 113
+          ..canUseLoginTokenForAuth = false
+          // As usernames changes where not considered in the old version force users
+          // to reenter there passwords.
+          // ignore: deprecated_member_use_from_same_package
+          ..twonlySafeBackup?.encryptionKey = []
+          // ignore: deprecated_member_use_from_same_package
+          ..twonlySafeBackup?.backupId = [];
+      });
+    }
+  }
+  if (kDebugMode) {
+    assert(
+      AppState.latestAppVersionId == 113,
+      'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
+    );
+    assert(
+      AppState.latestAppVersionId == userService.currentUser.appVersion,
+      "Migration incomplete: currentUser.appVersion (${userService.currentUser.appVersion}) does not match AppState.latestAppVersionId (${AppState.latestAppVersionId}). Ensure the user's appVersion is updated in the migration block.",
+    );
+  }
 }
 
 Future<void> postStartupTasks() async {
@@ -185,7 +264,6 @@ Future<void> postStartupTasks() async {
   // 1. Immediate background cleanup (Non-blocking for UI)
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
-  unawaited(UserDiscoveryService.removeDeletedContacts());
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
@@ -193,25 +271,12 @@ Future<void> postStartupTasks() async {
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
 
-  if (userService.currentUser.userDiscoveryInitializationError) {
-    unawaited(() async {
-      try {
-        await UserDiscoveryService.initializeOrUpdate(
-          threshold: userService.currentUser.userDiscoveryThreshold,
-          sharePromotion: userService.currentUser.userDiscoverySharePromotion,
-        );
-      } catch (e) {
-        Log.error(
-          'Failed to retry UserDiscovery initialization on startup: $e',
-        );
-      }
-    }());
-  }
+  unawaited(UserDiscoveryService.verifyInitializationOnStartup());
 
   await Future.delayed(const Duration(seconds: 10));
   unawaited(initializeBackgroundTaskManager());
   // 3. Delayed tasks (Wait for app to settle)
   await Future.delayed(const Duration(minutes: 2));
-  unawaited(performTwonlySafeBackup());
+  unawaited(BackupService.makeBackup());
   unawaited(cleanLogFile());
 }

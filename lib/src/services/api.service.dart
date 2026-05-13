@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
@@ -31,7 +32,7 @@ import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/server_messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
-import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
@@ -59,6 +60,8 @@ class ApiService {
   final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : 's';
+
+  String get apiEndpoint => 'http$apiSecure://$apiHost/api/';
 
   final _planUpdateController = StreamController<SubscriptionPlan>.broadcast();
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
@@ -92,6 +95,7 @@ class ApiService {
     try {
       final channel = IOWebSocketChannel.connect(
         Uri.parse(apiUrl),
+        pingInterval: const Duration(seconds: 30),
       );
       _channel = channel;
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
@@ -122,7 +126,7 @@ class ApiService {
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
-      unawaited(signalHandleNewServerConnection());
+      unawaited(SignalIdentityService.onAuthenticated());
       resetResyncedUsers();
       resetUserDiscoveryRequestUpdates();
       unawaited(fetchGroupStatesForUnjoinedGroups());
@@ -244,11 +248,11 @@ class ApiService {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
       if (msg.v0.hasResponse()) {
-        await removeFromRetransmissionBuffer(msg.v0.seq);
         final completer = _pendingRequests.remove(msg.v0.seq);
         if (completer != null && !completer.isCompleted) {
           completer.complete(msg);
         }
+        unawaited(removeFromRetransmissionBuffer(msg.v0.seq));
       } else {
         unawaited(handleServerMessage(msg));
       }
@@ -414,6 +418,7 @@ class ApiService {
             ),
           );
         }
+        await twonlyDB.receiptsDao.deleteReceiptForUser(contactId);
       }
     }
     return res;
@@ -450,6 +455,21 @@ class ApiService {
           await onAuthenticated();
         } else {
           unawaited(onAuthenticated());
+
+          try {
+            Log.info('Switching authentication to login token');
+            final loginToken = await RustKeyManager.getLoginToken();
+            final res = await _setLoginToken(loginToken);
+            if (res.isSuccess) {
+              Log.info('Switch was successfully.');
+              await UserService.update((u) => u.canUseLoginTokenForAuth = true);
+              await SecureStorage.instance.delete(
+                key: SecureStorageKeys.apiAuthToken,
+              );
+            }
+          } catch (e) {
+            Log.error(e);
+          }
         }
         return true;
       }
@@ -466,15 +486,61 @@ class ApiService {
     return false;
   }
 
+  Future<bool> tryAuthenticateWithLoginToken() async {
+    try {
+      final loginToken = await RustKeyManager.getLoginToken();
+
+      final authenticate = Handshake_AuthenticateWithLoginToken()
+        ..userId = Int64(userService.currentUser.userId)
+        ..appVersion = (await PackageInfo.fromPlatform()).version
+        ..deviceId = Int64(userService.currentUser.deviceId)
+        ..inBackground = AppState.isInBackgroundTask
+        ..secretLoginToken = loginToken.toList();
+
+      final handshake = Handshake()..authenticateWithLoginToken = authenticate;
+      final req = createClientToServerFromHandshake(handshake);
+
+      final result = await sendRequestSync(req, authenticated: false);
+
+      if (result.isSuccess) {
+        Log.info('websocket is authenticated');
+        isAuthenticated = true;
+        if (AppState.isInBackgroundTask) {
+          await onAuthenticated();
+        } else {
+          unawaited(onAuthenticated());
+        }
+        return true;
+      }
+      if (result.isError) {
+        if (result.error != ErrorCode.AuthTokenNotValid &&
+            result.error != ErrorCode.ForegroundSessionConnected) {
+          Log.error(
+            'got error while authenticating to the server: ${result.error}',
+          );
+          return false;
+        }
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+    return false;
+  }
+
   Future<void> authenticate() async {
     return lockAuthentication.protect(() async {
       if (isAuthenticated) return;
-      if (await getSignalIdentity() == null) {
-        Log.error('Signal identity not found.');
+
+      if (!userService.isUserCreated) {
         return;
       }
 
       if (!userService.isUserCreated) return;
+
+      if (userService.currentUser.canUseLoginTokenForAuth) {
+        await tryAuthenticateWithLoginToken();
+        return;
+      }
 
       if (await tryAuthenticateWithToken()) {
         return;
@@ -542,6 +608,8 @@ class ApiService {
 
     final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 
+    final loginToken = await RustKeyManager.getLoginToken();
+
     final register = Handshake_Register()
       ..username = username
       ..publicIdentityKey = (await signalStore.getIdentityKeyPair())
@@ -552,6 +620,7 @@ class ApiService {
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id)
       ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
+      ..loginToken = loginToken
       ..proofOfWork = Int64(proofOfWorkResult)
       ..isIos = Platform.isIOS;
 
@@ -617,11 +686,26 @@ class ApiService {
     return sendRequestSync(req, ensureRetransmission: true);
   }
 
-  Future<Result> getCurrentLocation() async {
-    final get = ApplicationData_GetLocation();
-    final appData = ApplicationData()..getLocation = get;
+  Future<Result> _setLoginToken(List<int> token) async {
+    final get = ApplicationData_SetLoginToken()..loginToken = token;
+    final appData = ApplicationData()..setLoginToken = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
+  }
+
+  Future<int?> getUserIdFromUsername(String username) async {
+    final appData = Handshake(
+      getUseridByUsername: Handshake_GetUserIdByUsername(username: username),
+    );
+    final req = createClientToServerFromHandshake(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasUserid()) {
+        return ok.userid.toInt();
+      }
+    }
+    return null;
   }
 
   Future<Response_UserData?> getUserData(String username) async {
@@ -652,27 +736,6 @@ class ApiService {
     return null;
   }
 
-  Future<Response_Vouchers?> getVoucherList() async {
-    final get = ApplicationData_GetVouchers();
-    final appData = ApplicationData()..getVouchers = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasVouchers()) {
-        return ok.vouchers;
-      }
-    }
-    return null;
-  }
-
-  Future<Result> updatePlanOptions(bool autoRenewal) async {
-    final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..updatePlanOptions = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
   Future<Result> removeAdditionalUser(Int64 userId) async {
     final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
     final appData = ApplicationData()..removeAdditionalUser = get;
@@ -687,34 +750,6 @@ class ApiService {
     return sendRequestSync(req, contactId: userId.toInt());
   }
 
-  Future<Result> buyVoucher(int valueInCents) async {
-    final get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
-    final appData = ApplicationData()..createVoucher = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> switchToPayedPlan(
-    String planId,
-    bool payMonthly,
-    bool autoRenewal,
-  ) async {
-    final get = ApplicationData_SwitchToPayedPlan()
-      ..planId = planId
-      ..payMonthly = payMonthly
-      ..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..switchtoPayedPlan = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> redeemVoucher(String voucher) async {
-    final get = ApplicationData_RedeemVoucher()..voucher = voucher;
-    final appData = ApplicationData()..redeemVoucher = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
   Future<Result> reportUser(int userId, String reason) async {
     final get = ApplicationData_ReportUser()
       ..reportedUserId = Int64(userId)
@@ -727,13 +762,6 @@ class ApiService {
   Future<Result> deleteAccount() async {
     final get = ApplicationData_DeleteAccount();
     final appData = ApplicationData()..deleteAccount = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> redeemUserInviteCode(String inviteCode) async {
-    final get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
-    final appData = ApplicationData()..redeemAdditionalCode = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }

@@ -13,6 +13,9 @@ void main() {
       expect(isOneEmoji('😂'), true);
       expect(isOneEmoji('😂😂'), false);
       expect(isOneEmoji('Hallo 😂'), false);
+      for (final icon in EmojiAnimationComp.animatedIcons.keys) {
+        expect(isOneEmoji(icon), true);
+      }
     });
 
     test('test proof-of-work simple', () async {

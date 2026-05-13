@@ -4,6 +4,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class AccountView extends StatelessWidget {
   const AccountView({super.key});
@@ -58,13 +59,9 @@ class AccountView extends StatelessWidget {
                 final res = await apiService.deleteAccount();
                 if (res.isError) {
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Could not delete the account. Please ensure you have a internet connection!',
-                      ),
-                      duration: Duration(seconds: 3),
-                    ),
+                  showSnackbar(
+                    context,
+                    'Could not delete the account. Please ensure you have a internet connection!',
                   );
                   return;
                 }

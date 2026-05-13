@@ -77,10 +77,12 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 await newService.storeMediaFile();
               }
 
-              setState(() {
-                _imageSaved = true;
-                _imageSaving = false;
-              });
+              if (mounted) {
+                setState(() {
+                  _imageSaved = true;
+                  _imageSaving = false;
+                });
+              }
             },
       child: Row(
         children: [

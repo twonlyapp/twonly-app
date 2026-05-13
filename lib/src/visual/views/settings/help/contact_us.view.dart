@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +7,11 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
+import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 
@@ -50,23 +48,18 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiAuthTokenRaw = await SecureStorage.instance.read(
-      key: SecureStorageKeys.apiAuthToken,
-    );
-    if (apiAuthTokenRaw == null) {
-      Log.error('api auth token not defined.');
-      return null;
-    }
-    final apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
-
     final apiUrl =
         'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
 
-    final requestMultipart = http.MultipartRequest(
-      'POST',
-      Uri.parse(apiUrl),
-    );
-    requestMultipart.headers['x-twonly-auth-token'] = apiAuthToken;
+    final requestMultipart = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
+    final headers = await getAuthenticationHeader();
+    if (headers == null) {
+      Log.error('Auth headers are empty. Returning');
+      return null;
+    }
+
+    requestMultipart.headers.addAll(headers);
 
     requestMultipart.files.add(
       http.MultipartFile.fromBytes(
@@ -123,9 +116,7 @@ class _ContactUsState extends State<ContactUsView> {
       }
       if (token == null) {
         if (!mounted) return null;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not upload the debug log!')),
-        );
+        showSnackbar(context, 'Could not upload the debug log!');
         setState(() {
           isLoading = false;
         });

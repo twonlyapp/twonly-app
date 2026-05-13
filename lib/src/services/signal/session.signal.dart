@@ -8,16 +8,10 @@ import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future<bool> processSignalUserData(
-  Response_UserData userData, {
-  bool useLock = true,
-}) async {
-  if (useLock) {
-    return lockingSignalProtocol.protect(() async {
-      return _processSignalUserData(userData);
-    });
-  }
-  return _processSignalUserData(userData);
+Future<bool> processSignalUserData(Response_UserData userData) async {
+  return lockingSignalProtocol.protect(() async {
+    return _processSignalUserData(userData);
+  });
 }
 
 Future<bool> _processSignalUserData(Response_UserData userData) async {
@@ -106,14 +100,11 @@ Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
   }
 }
 
-Future<bool> handleSessionResync(
-  int fromUserId, {
-  bool useLock = true,
-}) async {
+Future<bool> handleSessionResync(int fromUserId) async {
   final userData = await apiService.getUserById(fromUserId);
   if (userData != null) {
     Log.info('Got new session data from the server to re-sync the session');
-    return processSignalUserData(userData, useLock: useLock);
+    return processSignalUserData(userData);
   }
   Log.info('Could not download userdata from the server.');
   return false;

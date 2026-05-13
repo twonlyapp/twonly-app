@@ -443,8 +443,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: c5bffd3414c1e640389b41165b831df7df1cf517
+      ref: "23a0595f7dde50728afce917c1c58f284ccbb495"
+      resolved-ref: "23a0595f7dde50728afce917c1c58f284ccbb495"
       url: "https://github.com/otsmr/emoji_picker_flutter.git"
     source: git
     version: "4.4.0"

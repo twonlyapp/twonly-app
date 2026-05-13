@@ -16,11 +16,8 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'error.pbenum.dart' as $0;
-import 'server_to_client.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
-
-export 'server_to_client.pbenum.dart';
 
 enum ServerToClient_V { v0, notSet }
 
@@ -752,90 +749,6 @@ class Response_AddAccountsInvites extends $pb.GeneratedMessage {
   $pb.PbList<Response_AddAccountsInvite> get invites => $_getList(0);
 }
 
-class Response_Transaction extends $pb.GeneratedMessage {
-  factory Response_Transaction({
-    $fixnum.Int64? depositCents,
-    Response_TransactionTypes? transactionType,
-    $fixnum.Int64? createdAtUnixTimestamp,
-  }) {
-    final result = create();
-    if (depositCents != null) result.depositCents = depositCents;
-    if (transactionType != null) result.transactionType = transactionType;
-    if (createdAtUnixTimestamp != null)
-      result.createdAtUnixTimestamp = createdAtUnixTimestamp;
-    return result;
-  }
-
-  Response_Transaction._();
-
-  factory Response_Transaction.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Response_Transaction.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Transaction',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
-      createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'depositCents')
-    ..aE<Response_TransactionTypes>(2, _omitFieldNames ? '' : 'transactionType',
-        enumValues: Response_TransactionTypes.values)
-    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Transaction clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Transaction copyWith(void Function(Response_Transaction) updates) =>
-      super.copyWith((message) => updates(message as Response_Transaction))
-          as Response_Transaction;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Response_Transaction create() => Response_Transaction._();
-  @$core.override
-  Response_Transaction createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Response_Transaction getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Transaction>(create);
-  static Response_Transaction? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $fixnum.Int64 get depositCents => $_getI64(0);
-  @$pb.TagNumber(1)
-  set depositCents($fixnum.Int64 value) => $_setInt64(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasDepositCents() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearDepositCents() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Response_TransactionTypes get transactionType => $_getN(1);
-  @$pb.TagNumber(2)
-  set transactionType(Response_TransactionTypes value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasTransactionType() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearTransactionType() => $_clearField(2);
-
-  /// Represents seconds of UTC time since Unix epoch
-  /// 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to
-  /// 9999-12-31T23:59:59Z inclusive.
-  @$pb.TagNumber(3)
-  $fixnum.Int64 get createdAtUnixTimestamp => $_getI64(2);
-  @$pb.TagNumber(3)
-  set createdAtUnixTimestamp($fixnum.Int64 value) => $_setInt64(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCreatedAtUnixTimestamp() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCreatedAtUnixTimestamp() => $_clearField(3);
-}
-
 class Response_AdditionalAccount extends $pb.GeneratedMessage {
   factory Response_AdditionalAccount({
     $fixnum.Int64? userId,
@@ -905,158 +818,82 @@ class Response_AdditionalAccount extends $pb.GeneratedMessage {
   void clearPlanId() => $_clearField(3);
 }
 
-class Response_Voucher extends $pb.GeneratedMessage {
-  factory Response_Voucher({
-    $core.String? voucherId,
-    $fixnum.Int64? valueCents,
-    $core.bool? redeemed,
-    $core.bool? requested,
-    $fixnum.Int64? createdAtUnixTimestamp,
-  }) {
-    final result = create();
-    if (voucherId != null) result.voucherId = voucherId;
-    if (valueCents != null) result.valueCents = valueCents;
-    if (redeemed != null) result.redeemed = redeemed;
-    if (requested != null) result.requested = requested;
-    if (createdAtUnixTimestamp != null)
-      result.createdAtUnixTimestamp = createdAtUnixTimestamp;
-    return result;
-  }
+class Response_Deprecated extends $pb.GeneratedMessage {
+  factory Response_Deprecated() => create();
 
-  Response_Voucher._();
+  Response_Deprecated._();
 
-  factory Response_Voucher.fromBuffer($core.List<$core.int> data,
+  factory Response_Deprecated.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory Response_Voucher.fromJson($core.String json,
+  factory Response_Deprecated.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Voucher',
+      _omitMessageNames ? '' : 'Response.Deprecated',
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'voucherId')
-    ..aInt64(2, _omitFieldNames ? '' : 'valueCents')
-    ..aOB(3, _omitFieldNames ? '' : 'redeemed')
-    ..aOB(4, _omitFieldNames ? '' : 'requested')
-    ..aInt64(5, _omitFieldNames ? '' : 'createdAtUnixTimestamp')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Voucher clone() => deepCopy();
+  Response_Deprecated clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Voucher copyWith(void Function(Response_Voucher) updates) =>
-      super.copyWith((message) => updates(message as Response_Voucher))
-          as Response_Voucher;
+  Response_Deprecated copyWith(void Function(Response_Deprecated) updates) =>
+      super.copyWith((message) => updates(message as Response_Deprecated))
+          as Response_Deprecated;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Response_Voucher create() => Response_Voucher._();
+  static Response_Deprecated create() => Response_Deprecated._();
   @$core.override
-  Response_Voucher createEmptyInstance() => create();
+  Response_Deprecated createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Response_Voucher getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Voucher>(create);
-  static Response_Voucher? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get voucherId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set voucherId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasVoucherId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVoucherId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get valueCents => $_getI64(1);
-  @$pb.TagNumber(2)
-  set valueCents($fixnum.Int64 value) => $_setInt64(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasValueCents() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearValueCents() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.bool get redeemed => $_getBF(2);
-  @$pb.TagNumber(3)
-  set redeemed($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRedeemed() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRedeemed() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.bool get requested => $_getBF(3);
-  @$pb.TagNumber(4)
-  set requested($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRequested() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRequested() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get createdAtUnixTimestamp => $_getI64(4);
-  @$pb.TagNumber(5)
-  set createdAtUnixTimestamp($fixnum.Int64 value) => $_setInt64(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasCreatedAtUnixTimestamp() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearCreatedAtUnixTimestamp() => $_clearField(5);
+  static Response_Deprecated getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_Deprecated>(create);
+  static Response_Deprecated? _defaultInstance;
 }
 
-class Response_Vouchers extends $pb.GeneratedMessage {
-  factory Response_Vouchers({
-    $core.Iterable<Response_Voucher>? vouchers,
-  }) {
-    final result = create();
-    if (vouchers != null) result.vouchers.addAll(vouchers);
-    return result;
-  }
+class Response_Transaction extends $pb.GeneratedMessage {
+  factory Response_Transaction() => create();
 
-  Response_Vouchers._();
+  Response_Transaction._();
 
-  factory Response_Vouchers.fromBuffer($core.List<$core.int> data,
+  factory Response_Transaction.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory Response_Vouchers.fromJson($core.String json,
+  factory Response_Transaction.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Vouchers',
+      _omitMessageNames ? '' : 'Response.Transaction',
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..pPM<Response_Voucher>(1, _omitFieldNames ? '' : 'vouchers',
-        subBuilder: Response_Voucher.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Vouchers clone() => deepCopy();
+  Response_Transaction clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Vouchers copyWith(void Function(Response_Vouchers) updates) =>
-      super.copyWith((message) => updates(message as Response_Vouchers))
-          as Response_Vouchers;
+  Response_Transaction copyWith(void Function(Response_Transaction) updates) =>
+      super.copyWith((message) => updates(message as Response_Transaction))
+          as Response_Transaction;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Response_Vouchers create() => Response_Vouchers._();
+  static Response_Transaction create() => Response_Transaction._();
   @$core.override
-  Response_Vouchers createEmptyInstance() => create();
+  Response_Transaction createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static Response_Vouchers getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Vouchers>(create);
-  static Response_Vouchers? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<Response_Voucher> get vouchers => $_getList(0);
+  static Response_Transaction getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_Transaction>(create);
+  static Response_Transaction? _defaultInstance;
 }
 
 class Response_PlanBallance extends $pb.GeneratedMessage {
@@ -1193,85 +1030,6 @@ class Response_PlanBallance extends $pb.GeneratedMessage {
   $core.bool hasAdditionalAccountOwnerId() => $_has(7);
   @$pb.TagNumber(8)
   void clearAdditionalAccountOwnerId() => $_clearField(8);
-}
-
-class Response_Location extends $pb.GeneratedMessage {
-  factory Response_Location({
-    $core.String? county,
-    $core.String? region,
-    $core.String? city,
-  }) {
-    final result = create();
-    if (county != null) result.county = county;
-    if (region != null) result.region = region;
-    if (city != null) result.city = city;
-    return result;
-  }
-
-  Response_Location._();
-
-  factory Response_Location.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Response_Location.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Location',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'county')
-    ..aOS(2, _omitFieldNames ? '' : 'region')
-    ..aOS(3, _omitFieldNames ? '' : 'city')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Location clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Location copyWith(void Function(Response_Location) updates) =>
-      super.copyWith((message) => updates(message as Response_Location))
-          as Response_Location;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Response_Location create() => Response_Location._();
-  @$core.override
-  Response_Location createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Response_Location getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Location>(create);
-  static Response_Location? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get county => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set county($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasCounty() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearCounty() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get region => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set region($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasRegion() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearRegion() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get city => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set city($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCity() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCity() => $_clearField(3);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
@@ -1754,11 +1512,11 @@ enum Response_Ok_Ok {
   uploadtoken,
   userdata,
   authtoken,
-  location,
+  deprecated7,
   authenticated,
   plans,
   planballance,
-  vouchers,
+  deprecated11,
   addaccountsinvites,
   downloadtokens,
   signedprekey,
@@ -1774,11 +1532,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_UploadToken? uploadtoken,
     Response_UserData? userdata,
     $core.List<$core.int>? authtoken,
-    Response_Location? location,
+    Response_Deprecated? deprecated7,
     Response_Authenticated? authenticated,
     Response_Plans? plans,
     Response_PlanBallance? planballance,
-    Response_Vouchers? vouchers,
+    Response_Deprecated? deprecated11,
     Response_AddAccountsInvites? addaccountsinvites,
     Response_DownloadTokens? downloadtokens,
     Response_SignedPreKey? signedprekey,
@@ -1791,11 +1549,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (uploadtoken != null) result.uploadtoken = uploadtoken;
     if (userdata != null) result.userdata = userdata;
     if (authtoken != null) result.authtoken = authtoken;
-    if (location != null) result.location = location;
+    if (deprecated7 != null) result.deprecated7 = deprecated7;
     if (authenticated != null) result.authenticated = authenticated;
     if (plans != null) result.plans = plans;
     if (planballance != null) result.planballance = planballance;
-    if (vouchers != null) result.vouchers = vouchers;
+    if (deprecated11 != null) result.deprecated11 = deprecated11;
     if (addaccountsinvites != null)
       result.addaccountsinvites = addaccountsinvites;
     if (downloadtokens != null) result.downloadtokens = downloadtokens;
@@ -1820,11 +1578,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     4: Response_Ok_Ok.uploadtoken,
     5: Response_Ok_Ok.userdata,
     6: Response_Ok_Ok.authtoken,
-    7: Response_Ok_Ok.location,
+    7: Response_Ok_Ok.deprecated7,
     8: Response_Ok_Ok.authenticated,
     9: Response_Ok_Ok.plans,
     10: Response_Ok_Ok.planballance,
-    11: Response_Ok_Ok.vouchers,
+    11: Response_Ok_Ok.deprecated11,
     12: Response_Ok_Ok.addaccountsinvites,
     13: Response_Ok_Ok.downloadtokens,
     14: Response_Ok_Ok.signedprekey,
@@ -1847,16 +1605,16 @@ class Response_Ok extends $pb.GeneratedMessage {
         subBuilder: Response_UserData.create)
     ..a<$core.List<$core.int>>(
         6, _omitFieldNames ? '' : 'authtoken', $pb.PbFieldType.OY)
-    ..aOM<Response_Location>(7, _omitFieldNames ? '' : 'location',
-        subBuilder: Response_Location.create)
+    ..aOM<Response_Deprecated>(7, _omitFieldNames ? '' : 'deprecated7',
+        protoName: 'deprecated_7', subBuilder: Response_Deprecated.create)
     ..aOM<Response_Authenticated>(8, _omitFieldNames ? '' : 'authenticated',
         subBuilder: Response_Authenticated.create)
     ..aOM<Response_Plans>(9, _omitFieldNames ? '' : 'plans',
         subBuilder: Response_Plans.create)
     ..aOM<Response_PlanBallance>(10, _omitFieldNames ? '' : 'planballance',
         subBuilder: Response_PlanBallance.create)
-    ..aOM<Response_Vouchers>(11, _omitFieldNames ? '' : 'vouchers',
-        subBuilder: Response_Vouchers.create)
+    ..aOM<Response_Deprecated>(11, _omitFieldNames ? '' : 'deprecated11',
+        protoName: 'deprecated_11', subBuilder: Response_Deprecated.create)
     ..aOM<Response_AddAccountsInvites>(
         12, _omitFieldNames ? '' : 'addaccountsinvites',
         subBuilder: Response_AddAccountsInvites.create)
@@ -1979,15 +1737,15 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearAuthtoken() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  Response_Location get location => $_getN(6);
+  Response_Deprecated get deprecated7 => $_getN(6);
   @$pb.TagNumber(7)
-  set location(Response_Location value) => $_setField(7, value);
+  set deprecated7(Response_Deprecated value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasLocation() => $_has(6);
+  $core.bool hasDeprecated7() => $_has(6);
   @$pb.TagNumber(7)
-  void clearLocation() => $_clearField(7);
+  void clearDeprecated7() => $_clearField(7);
   @$pb.TagNumber(7)
-  Response_Location ensureLocation() => $_ensure(6);
+  Response_Deprecated ensureDeprecated7() => $_ensure(6);
 
   @$pb.TagNumber(8)
   Response_Authenticated get authenticated => $_getN(7);
@@ -2023,15 +1781,15 @@ class Response_Ok extends $pb.GeneratedMessage {
   Response_PlanBallance ensurePlanballance() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  Response_Vouchers get vouchers => $_getN(10);
+  Response_Deprecated get deprecated11 => $_getN(10);
   @$pb.TagNumber(11)
-  set vouchers(Response_Vouchers value) => $_setField(11, value);
+  set deprecated11(Response_Deprecated value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasVouchers() => $_has(10);
+  $core.bool hasDeprecated11() => $_has(10);
   @$pb.TagNumber(11)
-  void clearVouchers() => $_clearField(11);
+  void clearDeprecated11() => $_clearField(11);
   @$pb.TagNumber(11)
-  Response_Vouchers ensureVouchers() => $_ensure(10);
+  Response_Deprecated ensureDeprecated11() => $_ensure(10);
 
   @$pb.TagNumber(12)
   Response_AddAccountsInvites get addaccountsinvites => $_getN(11);

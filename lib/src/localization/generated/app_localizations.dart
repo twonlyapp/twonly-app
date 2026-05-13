@@ -596,6 +596,18 @@ abstract class AppLocalizations {
   /// **'Notification'**
   String get settingsNotification;
 
+  /// No description provided for @settingsNotifyPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permissions'**
+  String get settingsNotifyPermission;
+
+  /// No description provided for @settingsNotifyPermissionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open system settings to allow push notifications.'**
+  String get settingsNotifyPermissionDesc;
+
   /// No description provided for @settingsNotifyTroubleshooting.
   ///
   /// In en, this message translates to:
@@ -1286,18 +1298,6 @@ abstract class AppLocalizations {
   /// **'Open'**
   String get open;
 
-  /// No description provided for @createVoucher.
-  ///
-  /// In en, this message translates to:
-  /// **'Buy voucher'**
-  String get createVoucher;
-
-  /// No description provided for @redeemVoucher.
-  ///
-  /// In en, this message translates to:
-  /// **'Redeem voucher'**
-  String get redeemVoucher;
-
   /// No description provided for @buy.
   ///
   /// In en, this message translates to:
@@ -1412,23 +1412,17 @@ abstract class AppLocalizations {
   /// **'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.'**
   String get backupNoPasswordRecovery;
 
-  /// No description provided for @backupServer.
+  /// No description provided for @backupIdentityHeader.
   ///
   /// In en, this message translates to:
-  /// **'Server'**
-  String get backupServer;
+  /// **'Identity'**
+  String get backupIdentityHeader;
 
-  /// No description provided for @backupMaxBackupSize.
+  /// No description provided for @backupArchiveHeader.
   ///
   /// In en, this message translates to:
-  /// **'max. backup size'**
-  String get backupMaxBackupSize;
-
-  /// No description provided for @backupStorageRetention.
-  ///
-  /// In en, this message translates to:
-  /// **'Storage retention'**
-  String get backupStorageRetention;
+  /// **'Contacts, Settings and Messages'**
+  String get backupArchiveHeader;
 
   /// No description provided for @backupLastBackupDate.
   ///
@@ -1447,12 +1441,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Result'**
   String get backupLastBackupResult;
-
-  /// No description provided for @backupData.
-  ///
-  /// In en, this message translates to:
-  /// **'Data-Backup'**
-  String get backupData;
 
   /// No description provided for @backupInsecurePassword.
   ///
@@ -1511,38 +1499,14 @@ abstract class AppLocalizations {
   /// No description provided for @backupPasswordRequirement.
   ///
   /// In en, this message translates to:
-  /// **'Password must be at least 8 characters long.'**
+  /// **'Password must be at least 10 characters long.'**
   String get backupPasswordRequirement;
-
-  /// No description provided for @backupExpertSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Expert settings'**
-  String get backupExpertSettings;
 
   /// No description provided for @backupEnableBackup.
   ///
   /// In en, this message translates to:
   /// **'Activate automatic backup'**
   String get backupEnableBackup;
-
-  /// No description provided for @backupOwnServerDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Save your twonly Backup at twonly or on any server of your choice.'**
-  String get backupOwnServerDesc;
-
-  /// No description provided for @backupUseOwnServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Use server'**
-  String get backupUseOwnServer;
-
-  /// No description provided for @backupResetServer.
-  ///
-  /// In en, this message translates to:
-  /// **'Use standard server'**
-  String get backupResetServer;
 
   /// No description provided for @backupTwonlySaveNow.
   ///
@@ -2330,12 +2294,6 @@ abstract class AppLocalizations {
   /// **'Open your own QR code'**
   String get openYourOwnQRcode;
 
-  /// No description provided for @skipForNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip for now'**
-  String get skipForNow;
-
   /// No description provided for @finishSetupCardTitle.
   ///
   /// In en, this message translates to:
@@ -2353,6 +2311,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume Setup'**
   String get finishSetupCardAction;
+
+  /// No description provided for @missingBackupCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup backup'**
+  String get missingBackupCardTitle;
+
+  /// No description provided for @missingBackupCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We have improved the backup mechanism, which requires you to set it up again.'**
+  String get missingBackupCardDesc;
+
+  /// No description provided for @missingBackupCardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up now'**
+  String get missingBackupCardAction;
 
   /// No description provided for @onboardingFinishLater.
   ///
@@ -3061,6 +3037,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{maker} changed their display name from {oldName} to {newName}.'**
   String makerChangedDisplayName(Object maker, Object oldName, Object newName);
+
+  /// No description provided for @recoverErrorNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Please check your network and try again.'**
+  String get recoverErrorNoInternet;
+
+  /// No description provided for @recoverErrorUsernameNotValid.
+  ///
+  /// In en, this message translates to:
+  /// **'The username provided is not valid or does not exist.'**
+  String get recoverErrorUsernameNotValid;
+
+  /// No description provided for @recoverErrorPasswordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The password provided is incorrect.'**
+  String get recoverErrorPasswordInvalid;
+
+  /// No description provided for @recoverErrorTryAgainLater.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is currently unavailable. Please try again later.'**
+  String get recoverErrorTryAgainLater;
+
+  /// No description provided for @recoverErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'An unknown error occurred. Please try again.'**
+  String get recoverErrorUnknown;
+
+  /// No description provided for @recoverSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup successfully recovered.'**
+  String get recoverSuccessTitle;
+
+  /// No description provided for @recoverSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Click here to open the app again'**
+  String get recoverSuccessBody;
+
+  /// No description provided for @iosRecoveryWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get iosRecoveryWelcomeBack;
+
+  /// No description provided for @iosRecoveryPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'We detected a previously secured twonly identity on this device. Would you like to automatically download and restore your contacts, messages, and settings from your cloud archive?'**
+  String get iosRecoveryPrompt;
+
+  /// No description provided for @iosRecoveryNoBackupFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup archive could be retrieved from the server for this device.\n\nError: {error}\n\nPlease proceed to register a new twonly account.'**
+  String iosRecoveryNoBackupFound(Object error);
+
+  /// No description provided for @registerNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Register New Account'**
+  String get registerNewAccount;
+
+  /// No description provided for @tryRestoreAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Restore Again'**
+  String get tryRestoreAgain;
+
+  /// No description provided for @registeringNewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Registering new account'**
+  String get registeringNewAccount;
+
+  /// No description provided for @createShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Create shortcut'**
+  String get createShortcut;
+
+  /// No description provided for @editShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit shortcut'**
+  String get editShortcut;
+
+  /// No description provided for @deleteShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete shortcut'**
+  String get deleteShortcut;
+
+  /// No description provided for @deleteShortcutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this shortcut?'**
+  String get deleteShortcutBody;
+
+  /// No description provided for @updateShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Update shortcut'**
+  String get updateShortcut;
+
+  /// No description provided for @selectEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Emoji'**
+  String get selectEmoji;
+
+  /// No description provided for @errorEmojiUsedOrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji already used or invalid'**
+  String get errorEmojiUsedOrInvalid;
 }
 
 class _AppLocalizationsDelegate
