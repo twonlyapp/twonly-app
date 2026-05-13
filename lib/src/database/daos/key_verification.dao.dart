@@ -6,6 +6,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'key_verification.dao.g.dart';
 
@@ -82,14 +83,14 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
 
     final query =
         (select(contacts)..where((u) => u.userId.equals(contactId).not())).join(
-          [
-            innerJoin(
-              ur,
-              ur.fromContactId.equalsExp(contacts.userId),
-            ),
-            innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
-          ],
-        )
+            [
+              innerJoin(
+                ur,
+                ur.fromContactId.equalsExp(contacts.userId),
+              ),
+              innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
+            ],
+          )
           ..where(
             ur.announcedUserId.equals(contactId) &
                 ur.publicKeyVerifiedTimestamp.isNotNull(),
@@ -176,17 +177,21 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Future<void> addKeyVerification(int contactId, VerificationType type) async {
-    await into(keyVerifications).insertOnConflictUpdate(
-      KeyVerificationsCompanion(
-        contactId: Value(contactId),
-        type: Value(type),
-      ),
-    );
-    if (userService.currentUser.isUserDiscoveryEnabled) {
-      await FlutterUserDiscovery.updateVerificationStateForUser(
-        contactId: contactId,
-        publicKeyVerifiedTimestamp: clock.now().millisecondsSinceEpoch,
+    try {
+      await into(keyVerifications).insertOnConflictUpdate(
+        KeyVerificationsCompanion(
+          contactId: Value(contactId),
+          type: Value(type),
+        ),
       );
+      if (userService.currentUser.isUserDiscoveryEnabled) {
+        await FlutterUserDiscovery.updateVerificationStateForUser(
+          contactId: contactId,
+          publicKeyVerifiedTimestamp: clock.now().millisecondsSinceEpoch,
+        );
+      }
+    } catch (e) {
+      Log.error(e);
     }
   }
 }
