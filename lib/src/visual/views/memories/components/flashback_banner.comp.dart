@@ -14,11 +14,13 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (lastYears.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    if (lastYears.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
 
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -27,9 +29,13 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: lastYears.length,
+                itemCount: lastYears.length + 1,
                 separatorBuilder: (context, _) => const SizedBox(width: 12),
                 itemBuilder: (context, idx) {
+                  if (idx == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  idx -= 1;
                   final entry = lastYears.entries.elementAt(idx);
                   final years = entry.key;
                   final items = entry.value;

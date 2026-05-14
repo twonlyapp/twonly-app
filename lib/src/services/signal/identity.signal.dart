@@ -3,6 +3,7 @@ import 'package:clock/clock.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/protocol_state.signal.dart';
@@ -93,19 +94,38 @@ Future<Uint8List> getUserPublicKey() async {
 
 Future<void> createIfNotExistsSignalIdentity() async {
   // check if identity already exists
-  if (await getSignalIdentity() != null) return;
+  final existingIdentity = await getSignalIdentity();
+  if (existingIdentity != null) {
+    final store = await getSignalStoreFromIdentity(existingIdentity);
+    final keys = await store.loadSignedPreKeys();
+    if (keys.isEmpty) {
+      Log.warn(
+        'Signal identity exists but signed prekeys are missing. Generating a new one.',
+      );
+      final keyPair = await store.getIdentityKeyPair();
+      final signedPreKey = generateSignedPreKey(keyPair, defaultDeviceId);
+      await SignalSignedPreKeyStore().storeSignedPreKey(
+        signedPreKey.id,
+        signedPreKey,
+      );
+    }
+    return;
+  }
 
   final identityKeyPair = generateIdentityKeyPair();
   final registrationId = generateRegistrationId(true);
 
   final signedPreKey = generateSignedPreKey(identityKeyPair, defaultDeviceId);
-  final signedPreKeyStore = <int, Uint8List>{};
-  signedPreKeyStore[signedPreKey.id] = signedPreKey.serialize();
+
+  await SignalSignedPreKeyStore().storeSignedPreKey(
+    signedPreKey.id,
+    signedPreKey,
+  );
 
   await RustKeyManager.importSignalIdentity(
     identityKeyPairStructure: identityKeyPair.serialize(),
     registrationId: registrationId,
-    signedPreKeyStore: signedPreKeyStore,
+    signedPreKeyStore: const {},
   );
 }
 

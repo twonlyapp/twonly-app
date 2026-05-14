@@ -8316,6 +8316,285 @@ class SignalSessionStoresCompanion extends UpdateCompanion<SignalSessionStore> {
   }
 }
 
+class $SignalSignedPreKeyStoresTable extends SignalSignedPreKeyStores
+    with TableInfo<$SignalSignedPreKeyStoresTable, SignalSignedPreKeyStore> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalSignedPreKeyStoresTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _signedPreKeyIdMeta = const VerificationMeta(
+    'signedPreKeyId',
+  );
+  @override
+  late final GeneratedColumn<int> signedPreKeyId = GeneratedColumn<int>(
+    'signed_pre_key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _signedPreKeyMeta = const VerificationMeta(
+    'signedPreKey',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> signedPreKey =
+      GeneratedColumn<Uint8List>(
+        'signed_pre_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    signedPreKeyId,
+    signedPreKey,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_signed_pre_key_stores';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalSignedPreKeyStore> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('signed_pre_key_id')) {
+      context.handle(
+        _signedPreKeyIdMeta,
+        signedPreKeyId.isAcceptableOrUnknown(
+          data['signed_pre_key_id']!,
+          _signedPreKeyIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('signed_pre_key')) {
+      context.handle(
+        _signedPreKeyMeta,
+        signedPreKey.isAcceptableOrUnknown(
+          data['signed_pre_key']!,
+          _signedPreKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_signedPreKeyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {signedPreKeyId};
+  @override
+  SignalSignedPreKeyStore map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalSignedPreKeyStore(
+      signedPreKeyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}signed_pre_key_id'],
+      )!,
+      signedPreKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}signed_pre_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalSignedPreKeyStoresTable createAlias(String alias) {
+    return $SignalSignedPreKeyStoresTable(attachedDatabase, alias);
+  }
+}
+
+class SignalSignedPreKeyStore extends DataClass
+    implements Insertable<SignalSignedPreKeyStore> {
+  final int signedPreKeyId;
+  final Uint8List signedPreKey;
+  final DateTime createdAt;
+  const SignalSignedPreKeyStore({
+    required this.signedPreKeyId,
+    required this.signedPreKey,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['signed_pre_key_id'] = Variable<int>(signedPreKeyId);
+    map['signed_pre_key'] = Variable<Uint8List>(signedPreKey);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SignalSignedPreKeyStoresCompanion toCompanion(bool nullToAbsent) {
+    return SignalSignedPreKeyStoresCompanion(
+      signedPreKeyId: Value(signedPreKeyId),
+      signedPreKey: Value(signedPreKey),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SignalSignedPreKeyStore.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalSignedPreKeyStore(
+      signedPreKeyId: serializer.fromJson<int>(json['signedPreKeyId']),
+      signedPreKey: serializer.fromJson<Uint8List>(json['signedPreKey']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'signedPreKeyId': serializer.toJson<int>(signedPreKeyId),
+      'signedPreKey': serializer.toJson<Uint8List>(signedPreKey),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SignalSignedPreKeyStore copyWith({
+    int? signedPreKeyId,
+    Uint8List? signedPreKey,
+    DateTime? createdAt,
+  }) => SignalSignedPreKeyStore(
+    signedPreKeyId: signedPreKeyId ?? this.signedPreKeyId,
+    signedPreKey: signedPreKey ?? this.signedPreKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SignalSignedPreKeyStore copyWithCompanion(
+    SignalSignedPreKeyStoresCompanion data,
+  ) {
+    return SignalSignedPreKeyStore(
+      signedPreKeyId: data.signedPreKeyId.present
+          ? data.signedPreKeyId.value
+          : this.signedPreKeyId,
+      signedPreKey: data.signedPreKey.present
+          ? data.signedPreKey.value
+          : this.signedPreKey,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSignedPreKeyStore(')
+          ..write('signedPreKeyId: $signedPreKeyId, ')
+          ..write('signedPreKey: $signedPreKey, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    signedPreKeyId,
+    $driftBlobEquality.hash(signedPreKey),
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalSignedPreKeyStore &&
+          other.signedPreKeyId == this.signedPreKeyId &&
+          $driftBlobEquality.equals(other.signedPreKey, this.signedPreKey) &&
+          other.createdAt == this.createdAt);
+}
+
+class SignalSignedPreKeyStoresCompanion
+    extends UpdateCompanion<SignalSignedPreKeyStore> {
+  final Value<int> signedPreKeyId;
+  final Value<Uint8List> signedPreKey;
+  final Value<DateTime> createdAt;
+  const SignalSignedPreKeyStoresCompanion({
+    this.signedPreKeyId = const Value.absent(),
+    this.signedPreKey = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  SignalSignedPreKeyStoresCompanion.insert({
+    this.signedPreKeyId = const Value.absent(),
+    required Uint8List signedPreKey,
+    this.createdAt = const Value.absent(),
+  }) : signedPreKey = Value(signedPreKey);
+  static Insertable<SignalSignedPreKeyStore> custom({
+    Expression<int>? signedPreKeyId,
+    Expression<Uint8List>? signedPreKey,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (signedPreKeyId != null) 'signed_pre_key_id': signedPreKeyId,
+      if (signedPreKey != null) 'signed_pre_key': signedPreKey,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  SignalSignedPreKeyStoresCompanion copyWith({
+    Value<int>? signedPreKeyId,
+    Value<Uint8List>? signedPreKey,
+    Value<DateTime>? createdAt,
+  }) {
+    return SignalSignedPreKeyStoresCompanion(
+      signedPreKeyId: signedPreKeyId ?? this.signedPreKeyId,
+      signedPreKey: signedPreKey ?? this.signedPreKey,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (signedPreKeyId.present) {
+      map['signed_pre_key_id'] = Variable<int>(signedPreKeyId.value);
+    }
+    if (signedPreKey.present) {
+      map['signed_pre_key'] = Variable<Uint8List>(signedPreKey.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSignedPreKeyStoresCompanion(')
+          ..write('signedPreKeyId: $signedPreKeyId, ')
+          ..write('signedPreKey: $signedPreKey, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $MessageActionsTable extends MessageActions
     with TableInfo<$MessageActionsTable, MessageAction> {
   @override
@@ -12118,6 +12397,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $SignalSenderKeyStoresTable(this);
   late final $SignalSessionStoresTable signalSessionStores =
       $SignalSessionStoresTable(this);
+  late final $SignalSignedPreKeyStoresTable signalSignedPreKeyStores =
+      $SignalSignedPreKeyStoresTable(this);
   late final $MessageActionsTable messageActions = $MessageActionsTable(this);
   late final $GroupHistoriesTable groupHistories = $GroupHistoriesTable(this);
   late final $KeyVerificationsTable keyVerifications = $KeyVerificationsTable(
@@ -12170,6 +12451,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     signalPreKeyStores,
     signalSenderKeyStores,
     signalSessionStores,
+    signalSignedPreKeyStores,
     messageActions,
     groupHistories,
     keyVerifications,
@@ -19540,6 +19822,185 @@ typedef $$SignalSessionStoresTableProcessedTableManager =
       SignalSessionStore,
       PrefetchHooks Function()
     >;
+typedef $$SignalSignedPreKeyStoresTableCreateCompanionBuilder =
+    SignalSignedPreKeyStoresCompanion Function({
+      Value<int> signedPreKeyId,
+      required Uint8List signedPreKey,
+      Value<DateTime> createdAt,
+    });
+typedef $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder =
+    SignalSignedPreKeyStoresCompanion Function({
+      Value<int> signedPreKeyId,
+      Value<Uint8List> signedPreKey,
+      Value<DateTime> createdAt,
+    });
+
+class $$SignalSignedPreKeyStoresTableFilterComposer
+    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
+  $$SignalSignedPreKeyStoresTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get signedPreKeyId => $composableBuilder(
+    column: $table.signedPreKeyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get signedPreKey => $composableBuilder(
+    column: $table.signedPreKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalSignedPreKeyStoresTableOrderingComposer
+    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
+  $$SignalSignedPreKeyStoresTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get signedPreKeyId => $composableBuilder(
+    column: $table.signedPreKeyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get signedPreKey => $composableBuilder(
+    column: $table.signedPreKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalSignedPreKeyStoresTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $SignalSignedPreKeyStoresTable> {
+  $$SignalSignedPreKeyStoresTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get signedPreKeyId => $composableBuilder(
+    column: $table.signedPreKeyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get signedPreKey => $composableBuilder(
+    column: $table.signedPreKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$SignalSignedPreKeyStoresTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $SignalSignedPreKeyStoresTable,
+          SignalSignedPreKeyStore,
+          $$SignalSignedPreKeyStoresTableFilterComposer,
+          $$SignalSignedPreKeyStoresTableOrderingComposer,
+          $$SignalSignedPreKeyStoresTableAnnotationComposer,
+          $$SignalSignedPreKeyStoresTableCreateCompanionBuilder,
+          $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder,
+          (
+            SignalSignedPreKeyStore,
+            BaseReferences<
+              _$TwonlyDB,
+              $SignalSignedPreKeyStoresTable,
+              SignalSignedPreKeyStore
+            >,
+          ),
+          SignalSignedPreKeyStore,
+          PrefetchHooks Function()
+        > {
+  $$SignalSignedPreKeyStoresTableTableManager(
+    _$TwonlyDB db,
+    $SignalSignedPreKeyStoresTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalSignedPreKeyStoresTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SignalSignedPreKeyStoresTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SignalSignedPreKeyStoresTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> signedPreKeyId = const Value.absent(),
+                Value<Uint8List> signedPreKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SignalSignedPreKeyStoresCompanion(
+                signedPreKeyId: signedPreKeyId,
+                signedPreKey: signedPreKey,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> signedPreKeyId = const Value.absent(),
+                required Uint8List signedPreKey,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => SignalSignedPreKeyStoresCompanion.insert(
+                signedPreKeyId: signedPreKeyId,
+                signedPreKey: signedPreKey,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalSignedPreKeyStoresTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $SignalSignedPreKeyStoresTable,
+      SignalSignedPreKeyStore,
+      $$SignalSignedPreKeyStoresTableFilterComposer,
+      $$SignalSignedPreKeyStoresTableOrderingComposer,
+      $$SignalSignedPreKeyStoresTableAnnotationComposer,
+      $$SignalSignedPreKeyStoresTableCreateCompanionBuilder,
+      $$SignalSignedPreKeyStoresTableUpdateCompanionBuilder,
+      (
+        SignalSignedPreKeyStore,
+        BaseReferences<
+          _$TwonlyDB,
+          $SignalSignedPreKeyStoresTable,
+          SignalSignedPreKeyStore
+        >,
+      ),
+      SignalSignedPreKeyStore,
+      PrefetchHooks Function()
+    >;
 typedef $$MessageActionsTableCreateCompanionBuilder =
     MessageActionsCompanion Function({
       required String messageId,
@@ -23335,6 +23796,11 @@ class $TwonlyDBManager {
       $$SignalSenderKeyStoresTableTableManager(_db, _db.signalSenderKeyStores);
   $$SignalSessionStoresTableTableManager get signalSessionStores =>
       $$SignalSessionStoresTableTableManager(_db, _db.signalSessionStores);
+  $$SignalSignedPreKeyStoresTableTableManager get signalSignedPreKeyStores =>
+      $$SignalSignedPreKeyStoresTableTableManager(
+        _db,
+        _db.signalSignedPreKeyStores,
+      );
   $$MessageActionsTableTableManager get messageActions =>
       $$MessageActionsTableTableManager(_db, _db.messageActions);
   $$GroupHistoriesTableTableManager get groupHistories =>

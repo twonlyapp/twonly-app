@@ -430,38 +430,34 @@ class MemoriesViewState extends State<MemoriesView> {
                           ),
                         ),
                       ),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        sliver: SliverGrid(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                mainAxisSpacing: 2,
-                                crossAxisSpacing: 2,
-                                childAspectRatio: 9 / 16,
-                              ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, idx) {
-                              final globalIndex = orderedByMonth[month]![idx];
-                              final item = state.galleryItems[globalIndex];
-                              final mediaId =
-                                  item.mediaService.mediaFile.mediaId;
-                              final isSelected = _selectedMediaIds.contains(
-                                mediaId,
-                              );
+                      SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              mainAxisSpacing: 2,
+                              crossAxisSpacing: 2,
+                              childAspectRatio: 9 / 16,
+                            ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, idx) {
+                            final globalIndex = orderedByMonth[month]![idx];
+                            final item = state.galleryItems[globalIndex];
+                            final mediaId = item.mediaService.mediaFile.mediaId;
+                            final isSelected = _selectedMediaIds.contains(
+                              mediaId,
+                            );
 
-                              return MemoriesThumbnailComp(
-                                galleryItem: item,
-                                index: globalIndex,
-                                selectionMode: _selectionMode,
-                                isSelected: isSelected,
-                                activeMediaIdNotifier: _activeMediaIdNotifier,
-                                onLongPress: () => _onLongPressItem(mediaId),
-                                onTap: () => _onTapItem(mediaId, globalIndex),
-                              );
-                            },
-                            childCount: orderedByMonth[month]!.length,
-                          ),
+                            return MemoriesThumbnailComp(
+                              galleryItem: item,
+                              index: globalIndex,
+                              selectionMode: _selectionMode,
+                              isSelected: isSelected,
+                              activeMediaIdNotifier: _activeMediaIdNotifier,
+                              onLongPress: () => _onLongPressItem(mediaId),
+                              onTap: () => _onTapItem(mediaId, globalIndex),
+                            );
+                          },
+                          childCount: orderedByMonth[month]!.length,
                         ),
                       ),
                     ],

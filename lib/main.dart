@@ -267,9 +267,36 @@ Future<void> runMigrations() async {
     }
     await UserService.update((u) => u.appVersion = 114);
   }
+
+  if (userService.currentUser.appVersion < 115) {
+    var migrationSuccess = true;
+    try {
+      final rustStore = await RustKeyManager.loadSignedPrekeys();
+      for (final entry in rustStore.entries) {
+        final companion = SignalSignedPreKeyStoresCompanion(
+          signedPreKeyId: Value(entry.key),
+          signedPreKey: Value(entry.value),
+        );
+        await twonlyDB
+            .into(twonlyDB.signalSignedPreKeyStores)
+            .insert(
+              companion,
+              mode: InsertMode.insertOrReplace,
+            );
+        await RustKeyManager.removeSignedPrekey(signedPreKeyId: entry.key);
+      }
+    } catch (e) {
+      Log.error('Failed to migrate signed prekeys to Drift: $e');
+      migrationSuccess = false;
+    }
+    if (migrationSuccess) {
+      await UserService.update((u) => u.appVersion = 115);
+    }
+  }
+
   if (kDebugMode) {
     assert(
-      AppState.latestAppVersionId == 114,
+      AppState.latestAppVersionId == 115,
       'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
     );
     assert(
