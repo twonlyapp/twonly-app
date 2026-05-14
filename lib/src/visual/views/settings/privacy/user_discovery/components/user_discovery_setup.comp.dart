@@ -30,7 +30,7 @@ class UserDiscoverySetupState {
     this.isUserDiscoveryEnabled = true,
     this.sharePromotion = true,
     this.isManualApprovalEnabled = false,
-    this.threshold = 2,
+    this.threshold = 3,
     this.requiredSendImages = 4,
   });
 

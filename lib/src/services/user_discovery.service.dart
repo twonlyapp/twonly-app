@@ -66,6 +66,7 @@ class UserDiscoveryService {
 
   static bool shouldRequestManualApproval(Contact c) {
     final u = userService.currentUser;
+    if (!c.accepted || c.blocked) return false;
     if (!u.isUserDiscoveryEnabled) return false;
     if (c.mediaSendCounter < u.requiredSendImages) return false;
     if (c.userDiscoveryExcluded) return false;
