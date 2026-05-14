@@ -2676,6 +2676,36 @@ class $MediaFilesTable extends MediaFiles
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
+  @override
+  late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _hasCropAnalyzedMeta = const VerificationMeta(
+    'hasCropAnalyzed',
+  );
+  @override
+  late final GeneratedColumn<bool> hasCropAnalyzed = GeneratedColumn<bool>(
+    'has_crop_analyzed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_crop_analyzed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _preProgressingProcessMeta =
       const VerificationMeta('preProgressingProcess');
   @override
@@ -2792,6 +2822,17 @@ class $MediaFilesTable extends MediaFiles
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _createdAtMonthMeta = const VerificationMeta(
+    'createdAtMonth',
+  );
+  @override
+  late final GeneratedColumn<String> createdAtMonth = GeneratedColumn<String>(
+    'created_at_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     mediaId,
@@ -2801,6 +2842,8 @@ class $MediaFilesTable extends MediaFiles
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isFavorite,
+    hasCropAnalyzed,
     preProgressingProcess,
     reuploadRequestedBy,
     displayLimitInMilliseconds,
@@ -2811,6 +2854,7 @@ class $MediaFilesTable extends MediaFiles
     encryptionNonce,
     storedFileHash,
     createdAt,
+    createdAtMonth,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2853,6 +2897,21 @@ class $MediaFilesTable extends MediaFiles
         isDraftMedia.isAcceptableOrUnknown(
           data['is_draft_media']!,
           _isDraftMediaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_favorite')) {
+      context.handle(
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
+    }
+    if (data.containsKey('has_crop_analyzed')) {
+      context.handle(
+        _hasCropAnalyzedMeta,
+        hasCropAnalyzed.isAcceptableOrUnknown(
+          data['has_crop_analyzed']!,
+          _hasCropAnalyzedMeta,
         ),
       );
     }
@@ -2934,6 +2993,15 @@ class $MediaFilesTable extends MediaFiles
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('created_at_month')) {
+      context.handle(
+        _createdAtMonthMeta,
+        createdAtMonth.isAcceptableOrUnknown(
+          data['created_at_month']!,
+          _createdAtMonthMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2976,6 +3044,14 @@ class $MediaFilesTable extends MediaFiles
       isDraftMedia: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_draft_media'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      hasCropAnalyzed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_crop_analyzed'],
       )!,
       preProgressingProcess: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -3020,6 +3096,10 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      createdAtMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at_month'],
+      ),
     );
   }
 
@@ -3056,6 +3136,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool stored;
   final bool isDraftMedia;
+  final bool isFavorite;
+  final bool hasCropAnalyzed;
   final int? preProgressingProcess;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
@@ -3066,6 +3148,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? encryptionNonce;
   final Uint8List? storedFileHash;
   final DateTime createdAt;
+  final String? createdAtMonth;
   const MediaFile({
     required this.mediaId,
     required this.type,
@@ -3074,6 +3157,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     required this.requiresAuthentication,
     required this.stored,
     required this.isDraftMedia,
+    required this.isFavorite,
+    required this.hasCropAnalyzed,
     this.preProgressingProcess,
     this.reuploadRequestedBy,
     this.displayLimitInMilliseconds,
@@ -3084,6 +3169,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     this.encryptionNonce,
     this.storedFileHash,
     required this.createdAt,
+    this.createdAtMonth,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3107,6 +3193,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
+    map['is_favorite'] = Variable<bool>(isFavorite);
+    map['has_crop_analyzed'] = Variable<bool>(hasCropAnalyzed);
     if (!nullToAbsent || preProgressingProcess != null) {
       map['pre_progressing_process'] = Variable<int>(preProgressingProcess);
     }
@@ -3141,6 +3229,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       map['stored_file_hash'] = Variable<Uint8List>(storedFileHash);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || createdAtMonth != null) {
+      map['created_at_month'] = Variable<String>(createdAtMonth);
+    }
     return map;
   }
 
@@ -3157,6 +3248,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
+      isFavorite: Value(isFavorite),
+      hasCropAnalyzed: Value(hasCropAnalyzed),
       preProgressingProcess: preProgressingProcess == null && nullToAbsent
           ? const Value.absent()
           : Value(preProgressingProcess),
@@ -3186,6 +3279,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ? const Value.absent()
           : Value(storedFileHash),
       createdAt: Value(createdAt),
+      createdAtMonth: createdAtMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAtMonth),
     );
   }
 
@@ -3210,6 +3306,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       ),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
+      isFavorite: serializer.fromJson<bool>(json['isFavorite']),
+      hasCropAnalyzed: serializer.fromJson<bool>(json['hasCropAnalyzed']),
       preProgressingProcess: serializer.fromJson<int?>(
         json['preProgressingProcess'],
       ),
@@ -3226,6 +3324,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionNonce: serializer.fromJson<Uint8List?>(json['encryptionNonce']),
       storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      createdAtMonth: serializer.fromJson<String?>(json['createdAtMonth']),
     );
   }
   @override
@@ -3245,6 +3344,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
+      'isFavorite': serializer.toJson<bool>(isFavorite),
+      'hasCropAnalyzed': serializer.toJson<bool>(hasCropAnalyzed),
       'preProgressingProcess': serializer.toJson<int?>(preProgressingProcess),
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
       'displayLimitInMilliseconds': serializer.toJson<int?>(
@@ -3257,6 +3358,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'encryptionNonce': serializer.toJson<Uint8List?>(encryptionNonce),
       'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'createdAtMonth': serializer.toJson<String?>(createdAtMonth),
     };
   }
 
@@ -3268,6 +3370,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     bool? requiresAuthentication,
     bool? stored,
     bool? isDraftMedia,
+    bool? isFavorite,
+    bool? hasCropAnalyzed,
     Value<int?> preProgressingProcess = const Value.absent(),
     Value<List<int>?> reuploadRequestedBy = const Value.absent(),
     Value<int?> displayLimitInMilliseconds = const Value.absent(),
@@ -3278,6 +3382,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     Value<Uint8List?> encryptionNonce = const Value.absent(),
     Value<Uint8List?> storedFileHash = const Value.absent(),
     DateTime? createdAt,
+    Value<String?> createdAtMonth = const Value.absent(),
   }) => MediaFile(
     mediaId: mediaId ?? this.mediaId,
     type: type ?? this.type,
@@ -3289,6 +3394,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         requiresAuthentication ?? this.requiresAuthentication,
     stored: stored ?? this.stored,
     isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+    isFavorite: isFavorite ?? this.isFavorite,
+    hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
     preProgressingProcess: preProgressingProcess.present
         ? preProgressingProcess.value
         : this.preProgressingProcess,
@@ -3315,6 +3422,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         ? storedFileHash.value
         : this.storedFileHash,
     createdAt: createdAt ?? this.createdAt,
+    createdAtMonth: createdAtMonth.present
+        ? createdAtMonth.value
+        : this.createdAtMonth,
   );
   MediaFile copyWithCompanion(MediaFilesCompanion data) {
     return MediaFile(
@@ -3333,6 +3443,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
           : this.isDraftMedia,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      hasCropAnalyzed: data.hasCropAnalyzed.present
+          ? data.hasCropAnalyzed.value
+          : this.hasCropAnalyzed,
       preProgressingProcess: data.preProgressingProcess.present
           ? data.preProgressingProcess.value
           : this.preProgressingProcess,
@@ -3361,6 +3477,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ? data.storedFileHash.value
           : this.storedFileHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      createdAtMonth: data.createdAtMonth.present
+          ? data.createdAtMonth.value
+          : this.createdAtMonth,
     );
   }
 
@@ -3374,6 +3493,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
@@ -3383,7 +3504,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
           ..write('storedFileHash: $storedFileHash, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('createdAtMonth: $createdAtMonth')
           ..write(')'))
         .toString();
   }
@@ -3397,6 +3519,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isFavorite,
+    hasCropAnalyzed,
     preProgressingProcess,
     reuploadRequestedBy,
     displayLimitInMilliseconds,
@@ -3407,6 +3531,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     $driftBlobEquality.hash(encryptionNonce),
     $driftBlobEquality.hash(storedFileHash),
     createdAt,
+    createdAtMonth,
   );
   @override
   bool operator ==(Object other) =>
@@ -3419,6 +3544,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
+          other.isFavorite == this.isFavorite &&
+          other.hasCropAnalyzed == this.hasCropAnalyzed &&
           other.preProgressingProcess == this.preProgressingProcess &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
@@ -3434,7 +3561,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
             other.storedFileHash,
             this.storedFileHash,
           ) &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.createdAtMonth == this.createdAtMonth);
 }
 
 class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
@@ -3445,6 +3573,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
+  final Value<bool> isFavorite;
+  final Value<bool> hasCropAnalyzed;
   final Value<int?> preProgressingProcess;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
@@ -3455,6 +3585,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> encryptionNonce;
   final Value<Uint8List?> storedFileHash;
   final Value<DateTime> createdAt;
+  final Value<String?> createdAtMonth;
   final Value<int> rowid;
   const MediaFilesCompanion({
     this.mediaId = const Value.absent(),
@@ -3464,6 +3595,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
@@ -3474,6 +3607,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionNonce = const Value.absent(),
     this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MediaFilesCompanion.insert({
@@ -3484,6 +3618,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isFavorite = const Value.absent(),
+    this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
@@ -3494,6 +3630,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionNonce = const Value.absent(),
     this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : mediaId = Value(mediaId),
        type = Value(type);
@@ -3505,6 +3642,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
+    Expression<bool>? isFavorite,
+    Expression<bool>? hasCropAnalyzed,
     Expression<int>? preProgressingProcess,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
@@ -3515,6 +3654,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? encryptionNonce,
     Expression<Uint8List>? storedFileHash,
     Expression<DateTime>? createdAt,
+    Expression<String>? createdAtMonth,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3526,6 +3666,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
+      if (isFavorite != null) 'is_favorite': isFavorite,
+      if (hasCropAnalyzed != null) 'has_crop_analyzed': hasCropAnalyzed,
       if (preProgressingProcess != null)
         'pre_progressing_process': preProgressingProcess,
       if (reuploadRequestedBy != null)
@@ -3539,6 +3681,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (encryptionNonce != null) 'encryption_nonce': encryptionNonce,
       if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (createdAt != null) 'created_at': createdAt,
+      if (createdAtMonth != null) 'created_at_month': createdAtMonth,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3551,6 +3694,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<bool>? requiresAuthentication,
     Value<bool>? stored,
     Value<bool>? isDraftMedia,
+    Value<bool>? isFavorite,
+    Value<bool>? hasCropAnalyzed,
     Value<int?>? preProgressingProcess,
     Value<List<int>?>? reuploadRequestedBy,
     Value<int?>? displayLimitInMilliseconds,
@@ -3561,6 +3706,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<Uint8List?>? encryptionNonce,
     Value<Uint8List?>? storedFileHash,
     Value<DateTime>? createdAt,
+    Value<String?>? createdAtMonth,
     Value<int>? rowid,
   }) {
     return MediaFilesCompanion(
@@ -3572,6 +3718,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+      isFavorite: isFavorite ?? this.isFavorite,
+      hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
       preProgressingProcess:
           preProgressingProcess ?? this.preProgressingProcess,
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
@@ -3584,6 +3732,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       encryptionNonce: encryptionNonce ?? this.encryptionNonce,
       storedFileHash: storedFileHash ?? this.storedFileHash,
       createdAt: createdAt ?? this.createdAt,
+      createdAtMonth: createdAtMonth ?? this.createdAtMonth,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3619,6 +3768,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     }
     if (isDraftMedia.present) {
       map['is_draft_media'] = Variable<bool>(isDraftMedia.value);
+    }
+    if (isFavorite.present) {
+      map['is_favorite'] = Variable<bool>(isFavorite.value);
+    }
+    if (hasCropAnalyzed.present) {
+      map['has_crop_analyzed'] = Variable<bool>(hasCropAnalyzed.value);
     }
     if (preProgressingProcess.present) {
       map['pre_progressing_process'] = Variable<int>(
@@ -3658,6 +3813,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (createdAtMonth.present) {
+      map['created_at_month'] = Variable<String>(createdAtMonth.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3674,6 +3832,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isFavorite: $isFavorite, ')
+          ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
@@ -3684,6 +3844,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('encryptionNonce: $encryptionNonce, ')
           ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt, ')
+          ..write('createdAtMonth: $createdAtMonth, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14890,6 +15051,8 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isFavorite,
+      Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
       Value<List<int>?> reuploadRequestedBy,
       Value<int?> displayLimitInMilliseconds,
@@ -14900,6 +15063,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<Uint8List?> encryptionNonce,
       Value<Uint8List?> storedFileHash,
       Value<DateTime> createdAt,
+      Value<String?> createdAtMonth,
       Value<int> rowid,
     });
 typedef $$MediaFilesTableUpdateCompanionBuilder =
@@ -14911,6 +15075,8 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isFavorite,
+      Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
       Value<List<int>?> reuploadRequestedBy,
       Value<int?> displayLimitInMilliseconds,
@@ -14921,6 +15087,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<Uint8List?> encryptionNonce,
       Value<Uint8List?> storedFileHash,
       Value<DateTime> createdAt,
+      Value<String?> createdAtMonth,
       Value<int> rowid,
     });
 
@@ -14994,6 +15161,16 @@ class $$MediaFilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasCropAnalyzed => $composableBuilder(
+    column: $table.hasCropAnalyzed,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get preProgressingProcess => $composableBuilder(
     column: $table.preProgressingProcess,
     builder: (column) => ColumnFilters(column),
@@ -15042,6 +15219,11 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAtMonth => $composableBuilder(
+    column: $table.createdAtMonth,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15115,6 +15297,16 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasCropAnalyzed => $composableBuilder(
+    column: $table.hasCropAnalyzed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get preProgressingProcess => $composableBuilder(
     column: $table.preProgressingProcess,
     builder: (column) => ColumnOrderings(column),
@@ -15164,6 +15356,11 @@ class $$MediaFilesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get createdAtMonth => $composableBuilder(
+    column: $table.createdAtMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MediaFilesTableAnnotationComposer
@@ -15203,6 +15400,16 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<bool> get isDraftMedia => $composableBuilder(
     column: $table.isDraftMedia,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isFavorite => $composableBuilder(
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hasCropAnalyzed => $composableBuilder(
+    column: $table.hasCropAnalyzed,
     builder: (column) => column,
   );
 
@@ -15254,6 +15461,11 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAtMonth => $composableBuilder(
+    column: $table.createdAtMonth,
+    builder: (column) => column,
+  );
 
   Expression<T> messagesRefs<T extends Object>(
     Expression<T> Function($$MessagesTableAnnotationComposer a) f,
@@ -15316,6 +15528,8 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
                 Value<List<int>?> reuploadRequestedBy = const Value.absent(),
                 Value<int?> displayLimitInMilliseconds = const Value.absent(),
@@ -15326,6 +15540,7 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> encryptionNonce = const Value.absent(),
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MediaFilesCompanion(
                 mediaId: mediaId,
@@ -15335,6 +15550,8 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isFavorite: isFavorite,
+                hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
                 reuploadRequestedBy: reuploadRequestedBy,
                 displayLimitInMilliseconds: displayLimitInMilliseconds,
@@ -15345,6 +15562,7 @@ class $$MediaFilesTableTableManager
                 encryptionNonce: encryptionNonce,
                 storedFileHash: storedFileHash,
                 createdAt: createdAt,
+                createdAtMonth: createdAtMonth,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -15356,6 +15574,8 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
                 Value<List<int>?> reuploadRequestedBy = const Value.absent(),
                 Value<int?> displayLimitInMilliseconds = const Value.absent(),
@@ -15366,6 +15586,7 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> encryptionNonce = const Value.absent(),
                 Value<Uint8List?> storedFileHash = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MediaFilesCompanion.insert(
                 mediaId: mediaId,
@@ -15375,6 +15596,8 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isFavorite: isFavorite,
+                hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
                 reuploadRequestedBy: reuploadRequestedBy,
                 displayLimitInMilliseconds: displayLimitInMilliseconds,
@@ -15385,6 +15608,7 @@ class $$MediaFilesTableTableManager
                 encryptionNonce: encryptionNonce,
                 storedFileHash: storedFileHash,
                 createdAt: createdAt,
+                createdAtMonth: createdAtMonth,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

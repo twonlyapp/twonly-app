@@ -57,21 +57,16 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   }
 
   Future<void> addAdditionalUser() async {
-    final selectedUserIds =
-        await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SelectAdditionalUsers(
-                  limit: _planLimit,
-                  alreadySelected:
-                      ballance?.additionalAccounts
-                          .map((e) => e.userId.toInt())
-                          .toList() ??
-                      [],
-                ),
-              ),
-            )
-            as List<int>?;
+    final selectedUserIds = await context.navPush(
+      SelectAdditionalUsers(
+        limit: _planLimit,
+        alreadySelected:
+            ballance?.additionalAccounts
+                .map((e) => e.userId.toInt())
+                .toList() ??
+            [],
+      ),
+    ) as List<int>?;
     if (selectedUserIds == null) return;
     for (final selectedUserId in selectedUserIds) {
       final res = await apiService.addAdditionalUser(Int64(selectedUserId));

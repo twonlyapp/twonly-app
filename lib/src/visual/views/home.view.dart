@@ -36,6 +36,7 @@ class HomeViewState extends State<HomeView> {
   int _activePageIdx = 1;
   double _offsetRatio = 0;
   double _offsetFromOne = 0;
+  bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
 
   final MainCameraController _mainCameraController = MainCameraController();
@@ -174,6 +175,29 @@ class HomeViewState extends State<HomeView> {
   bool _onPageView(ScrollNotification notification) {
     _disableCameraTimer?.cancel();
 
+    if (notification.depth > 0 && notification.metrics.axis == Axis.vertical) {
+      if (_activePageIdx == 2 &&
+          notification.metrics.pixels < 100 &&
+          !_isBottomNavVisible) {
+        setState(() {
+          _isBottomNavVisible = true;
+        });
+      } else if (notification is ScrollUpdateNotification) {
+        final delta = notification.scrollDelta ?? 0;
+        if (delta > 5 &&
+            _isBottomNavVisible &&
+            (_activePageIdx != 2 || notification.metrics.pixels >= 100)) {
+          setState(() {
+            _isBottomNavVisible = false;
+          });
+        } else if (delta < -5 && !_isBottomNavVisible) {
+          setState(() {
+            _isBottomNavVisible = true;
+          });
+        }
+      }
+    }
+
     if (notification.depth == 0 && notification is ScrollUpdateNotification) {
       setState(() {
         _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
@@ -259,39 +283,48 @@ class HomeViewState extends State<HomeView> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        unselectedIconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
-        ),
-        selectedIconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.inverseSurface,
-        ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.solidComments),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.camera),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.photoFilm),
-            label: '',
-          ),
-        ],
-        onTap: (index) async {
-          _activePageIdx = index;
-          await _homeViewPageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.bounceIn,
-          );
-          if (mounted) setState(() {});
-        },
-        currentIndex: _activePageIdx,
+      bottomNavigationBar: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        child: _isBottomNavVisible
+            ? BottomNavigationBar(
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                unselectedIconTheme: IconThemeData(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .inverseSurface
+                      .withAlpha(150),
+                ),
+                selectedIconTheme: IconThemeData(
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                ),
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: FaIcon(FontAwesomeIcons.solidComments),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: FaIcon(FontAwesomeIcons.camera),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: FaIcon(FontAwesomeIcons.photoFilm),
+                    label: '',
+                  ),
+                ],
+                onTap: (index) async {
+                  _activePageIdx = index;
+                  await _homeViewPageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 100),
+                    curve: Curves.bounceIn,
+                  );
+                  if (mounted) setState(() {});
+                },
+                currentIndex: _activePageIdx,
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image/image.dart' as img;
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -372,4 +374,142 @@ class MediaFileService {
     namePrefix: '.overlay',
     extensionParam: 'png',
   );
+
+  Future<void> cropTransparentBorders() async {
+    if (mediaFile.type != MediaType.image) {
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
+      );
+      return;
+    }
+
+    if (!storedPath.existsSync()) {
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
+      );
+      return;
+    }
+
+    try {
+      final bytes = storedPath.readAsBytesSync();
+      final image = img.decodeImage(bytes);
+      if (image == null) {
+        await twonlyDB.mediaFilesDao.updateMedia(
+          mediaFile.mediaId,
+          const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
+        );
+        return;
+      }
+
+      var minY = 0;
+      var maxY = image.height - 1;
+      var minX = 0;
+      var maxX = image.width - 1;
+
+      var found = false;
+      for (var y = 0; y < image.height; y++) {
+        for (var x = 0; x < image.width; x++) {
+          if (image.getPixel(x, y).a > 10) {
+            minY = y;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      found = false;
+      for (var y = image.height - 1; y >= minY; y--) {
+        for (var x = 0; x < image.width; x++) {
+          if (image.getPixel(x, y).a > 10) {
+            maxY = y;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      found = false;
+      for (var x = 0; x < image.width; x++) {
+        for (var y = minY; y <= maxY; y++) {
+          if (image.getPixel(x, y).a > 10) {
+            minX = x;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      found = false;
+      for (var x = image.width - 1; x >= minX; x--) {
+        for (var y = minY; y <= maxY; y++) {
+          if (image.getPixel(x, y).a > 10) {
+            maxX = x;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      final newWidth = maxX - minX + 1;
+      final newHeight = maxY - minY + 1;
+
+      if (minY > 0 ||
+          maxY < image.height - 1 ||
+          minX > 0 ||
+          maxX < image.width - 1) {
+        if (newWidth > 10 && newHeight > 10) {
+          final cropped = img.copyCrop(
+            image,
+            x: minX,
+            y: minY,
+            width: newWidth,
+            height: newHeight,
+          );
+          final pngBytes = img.encodePng(cropped);
+          final webpBytes = await FlutterImageCompress.compressWithList(
+            pngBytes,
+            format: CompressFormat.webp,
+            quality: 90,
+          );
+          storedPath.writeAsBytesSync(webpBytes);
+
+          if (thumbnailPath.existsSync()) {
+            thumbnailPath.deleteSync();
+          }
+          await createThumbnail();
+          final checksum = await sha256File(storedPath);
+          await twonlyDB.mediaFilesDao.updateMedia(
+            mediaFile.mediaId,
+            MediaFilesCompanion(
+              hasCropAnalyzed: const Value(true),
+              storedFileHash: Value(Uint8List.fromList(checksum)),
+            ),
+          );
+          await updateFromDB();
+          return;
+        }
+      }
+
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
+      );
+      await updateFromDB();
+    } catch (e) {
+      Log.error(
+        'Error auto-cropping transparent borders for mediaId ${mediaFile.mediaId}: $e',
+      );
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
+      );
+      await updateFromDB();
+    }
+  }
 }

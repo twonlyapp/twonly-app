@@ -596,9 +596,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The plan upgrade must be paid for annually, as the current plan is also billed annually.';
 
   @override
-  String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
-
-  @override
   String upgradeToPaidPlanButton(Object planId, Object sufix) {
     return 'Upgrade to $planId$sufix';
   }
@@ -672,13 +669,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryDelete => 'Delete file';
 
   @override
-  String get galleryDetails => 'Show details';
-
-  @override
   String get galleryExport => 'Export to gallery';
 
   @override
   String get galleryExportSuccess => 'Successfully saved in the Gallery.';
+
+  @override
+  String get gallerySelectAll => 'Select all';
+
+  @override
+  String get galleryDeselectAll => 'Deselect all';
+
+  @override
+  String get galleryFavorite => 'Favorite';
+
+  @override
+  String get galleryUnfavorite => 'Unfavorite';
+
+  @override
+  String get galleryCancel => 'Cancel';
 
   @override
   String get memoriesEmpty =>
@@ -1764,4 +1773,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorEmojiUsedOrInvalid => 'Emoji already used or invalid';
+
+  @override
+  String get subscriptionPledgeTitle => 'Support independent privacy.';
+
+  @override
+  String get subscriptionPledgeSecureTitle => 'Secure by Design';
+
+  @override
+  String get subscriptionPledgeSecureDesc =>
+      'Your messages and shared moments are fully end-to-end encrypted.';
+
+  @override
+  String get subscriptionPledgeNoAdsTitle => 'No Ads or Data selling';
+
+  @override
+  String get subscriptionPledgeNoAdsDesc =>
+      'twonly will never show advertisements or sell your private data.';
+
+  @override
+  String get subscriptionPledgeFundedTitle => 'Independent and funded by Users';
+
+  @override
+  String get subscriptionPledgeFundedDesc =>
+      'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.';
 }

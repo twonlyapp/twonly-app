@@ -122,6 +122,13 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .get();
   }
 
+  Future<List<MediaFile>> getAllUnanalyzedStoredMediaFiles() async {
+    return (select(mediaFiles)..where(
+          (t) => t.stored.equals(true) & t.hasCropAnalyzed.equals(false),
+        ))
+        .get();
+  }
+
   Future<List<MediaFile>> getAllMediaFilesPendingUpload() async {
     return (select(mediaFiles)..where(
           (t) =>

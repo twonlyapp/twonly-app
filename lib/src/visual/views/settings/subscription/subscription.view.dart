@@ -1,7 +1,5 @@
-// ignore_for_file: inference_failure_on_instance_creation
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -61,26 +59,69 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       ),
       body: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.color.primary,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                child: Text(
-                  currentPlan.name,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+          if (currentPlan.name == SubscriptionPlan.Free.name)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    context.lang.subscriptionPledgeTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: context.color.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _MissionRow(
+                    icon: FontAwesomeIcons.shieldHalved,
+                    title: context.lang.subscriptionPledgeSecureTitle,
+                    desc: context.lang.subscriptionPledgeSecureDesc,
+                  ),
+                  const SizedBox(height: 24),
+                  _MissionRow(
+                    icon: FontAwesomeIcons.userSecret,
+                    title: context.lang.subscriptionPledgeNoAdsTitle,
+                    desc: context.lang.subscriptionPledgeNoAdsDesc,
+                  ),
+                  const SizedBox(height: 24),
+                  _MissionRow(
+                    icon: FontAwesomeIcons.heart,
+                    title: context.lang.subscriptionPledgeFundedTitle,
+                    desc: context.lang.subscriptionPledgeFundedDesc,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.color.primary,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  child: Text(
+                    currentPlan.name,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+          const SizedBox(height: 16),
           if (additionalOwnerName != null)
             Center(
               child: Text(
@@ -95,16 +136,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             ),
           if (!isPayingUser(currentPlan) ||
               currentPlan == SubscriptionPlan.Tester) ...[
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Text(
-                  context.lang.upgradeToPaidPlan,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
             PlanCard(
               plan: SubscriptionPlan.Pro,
               onPurchase: initAsync,
@@ -152,14 +183,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               text: context.lang.manageAdditionalUsers,
               subtitle: loaded ? Text('${context.lang.open}: 3') : null,
               onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return AdditionalUsersView(
-                        ballance: ballance,
-                      );
-                    },
+                await context.navPush(
+                  AdditionalUsersView(
+                    ballance: ballance,
                   ),
                 );
                 await initAsync();
@@ -344,6 +370,50 @@ class _PlanCardState extends State<PlanCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MissionRow extends StatelessWidget {
+  const _MissionRow({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
+
+  final IconData icon;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        FaIcon(
+          icon,
+          size: 24,
+          color: context.color.primary.withValues(alpha: 0.8),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          desc,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            height: 1.3,
+          ),
+        ),
+      ],
     );
   }
 }
