@@ -49,6 +49,9 @@ Future<void> handleUserStudyUpload() async {
     final udVerifiedByContactsCount = await twonlyDB.keyVerificationDao
         .getTransferredTrustVerificationsCount();
 
+    final totalContactsWithVerificationBadge = await twonlyDB.keyVerificationDao
+        .getCountOfContactsWithVerificationBadge();
+
     final udFriendsShared = await twonlyDB.contactsDao
         .getContactsAnnouncedViaUserDiscovery();
 
@@ -87,6 +90,8 @@ Future<void> handleUserStudyUpload() async {
 
       'accepted_contacts': contacts.where((c) => c.accepted).length,
       'verified_contacts': verifications.length,
+      'total_contacts_with_verification_badge':
+          totalContactsWithVerificationBadge,
       'verified_contacts_via_migrated_from_old_version': verifications.values
           .where((c) => c == VerificationType.migratedFromOldVersion)
           .length,

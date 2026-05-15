@@ -80,15 +80,29 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
         return null;
       }
     }
-    // ignore: parameter_assignments
-    receiptId = receipt.receiptId;
+
+    if (receipt.retryCount >= 2) {
+      // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received,
+      // but the app was closed before the message was fully processed. Because the receipt was already stored, subsequent retries were
+      // detected as duplicates and rejected.
+      final oldReceiptId = receipt.receiptId;
+      final updatedReceipt = await twonlyDB.receiptsDao.rotateReceiptId(
+        oldReceiptId,
+      );
+      if (updatedReceipt != null) {
+        Log.info(
+          'Changed receiptId $oldReceiptId to ${updatedReceipt.receiptId} as retryCount is ${receipt.retryCount}',
+        );
+        receipt = updatedReceipt;
+      }
+    }
 
     final contact = await twonlyDB.contactsDao.getContactById(
       receipt.contactId,
     );
     if (contact == null || contact.accountDeleted) {
       Log.warn('Will not send message again as user does not exist anymore.');
-      await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
       return null;
     }
 
@@ -100,13 +114,13 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
 
     final message = pb.Message.fromBuffer(receipt.message)
-      ..receiptId = receiptId;
+      ..receiptId = receipt.receiptId;
 
     final encryptedContent = pb.EncryptedContent.fromBuffer(
       message.encryptedContent,
     );
 
-    Log.info('Uploading $receiptId.');
+    Log.info('Uploading ${receipt.receiptId}.');
 
     Uint8List? pushData;
     if (receipt.retryCount == 0) {
@@ -164,7 +178,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     if (resp.isError) {
       Log.warn('Could not transmit message got ${resp.error}.');
       if (resp.error == ErrorCode.UserIdNotFound) {
-        await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         await twonlyDB.contactsDao.updateContact(
           receipt.contactId,
           const ContactsCompanion(accountDeleted: Value(true)),
@@ -182,10 +196,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
         );
       }
       if (!receipt.contactWillSendsReceipt) {
-        await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
       } else {
         await twonlyDB.receiptsDao.updateReceipt(
-          receiptId,
+          receipt.receiptId,
           ReceiptsCompanion(
             ackByServerAt: Value(clock.now()),
             retryCount: Value(receipt.retryCount + 1),
@@ -197,8 +211,8 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
   } catch (e) {
     Log.error('Unknown Error when sending message: $e');
-    if (receiptId != null) {
-      await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+    if (receipt != null) {
+      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
     }
   }
   return null;

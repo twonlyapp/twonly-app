@@ -146,17 +146,16 @@ class MainCameraController {
       );
       try {
         await cameraController?.initialize();
+        await cameraController?.startImageStream(_processCameraImage);
+        await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
+        if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
+          await cameraController?.setVideoStabilizationMode(
+            VideoStabilizationMode.level1,
+          );
+        }
       } catch (e) {
-        Log.error(e);
-        cameraController = null; // ensure uninitialized controller is not reused
+        cameraController = null;
         return;
-      }
-      await cameraController?.startImageStream(_processCameraImage);
-      await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
-      if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
-        await cameraController?.setVideoStabilizationMode(
-          VideoStabilizationMode.level1,
-        );
       }
     } else {
       try {
@@ -179,29 +178,35 @@ class MainCameraController {
       }
     }
 
-    await cameraController?.lockCaptureOrientation(
-      DeviceOrientation.portraitUp,
-    );
-    await cameraController?.setFlashMode(
-      selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
-    );
-    selectedCameraDetails.maxAvailableZoom =
-        await cameraController?.getMaxZoomLevel() ?? 1;
-    selectedCameraDetails.minAvailableZoom =
-        await cameraController?.getMinZoomLevel() ?? 1;
-    selectedCameraDetails
-      ..isZoomAble =
-          selectedCameraDetails.maxAvailableZoom !=
-          selectedCameraDetails.minAvailableZoom
-      ..cameraLoaded = true
-      ..cameraId = cameraId;
+    try {
+      await cameraController?.lockCaptureOrientation(
+        DeviceOrientation.portraitUp,
+      );
+      await cameraController?.setFlashMode(
+        selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
+      );
+      selectedCameraDetails.maxAvailableZoom =
+          await cameraController?.getMaxZoomLevel() ?? 1;
+      selectedCameraDetails.minAvailableZoom =
+          await cameraController?.getMinZoomLevel() ?? 1;
+      selectedCameraDetails
+        ..isZoomAble =
+            selectedCameraDetails.maxAvailableZoom !=
+            selectedCameraDetails.minAvailableZoom
+        ..cameraLoaded = true
+        ..cameraId = cameraId;
 
-    facePaint = null;
-    qrCodePain = null;
-    isSelectingFaceFilters = false;
-    setFilter(FaceFilterType.none);
-    zoomButtonKey = GlobalKey();
-    setState();
+      facePaint = null;
+      qrCodePain = null;
+      isSelectingFaceFilters = false;
+      setFilter(FaceFilterType.none);
+      zoomButtonKey = GlobalKey();
+      setState();
+    } catch (e) {
+      Log.error(e);
+      cameraController = null;
+      return;
+    }
   }
 
   Future<void> onDoubleTap() async {

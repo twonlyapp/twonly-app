@@ -50,6 +50,9 @@ class MediaFiles extends Table {
 
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
   BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
+  BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
+  BoolColumn get hasCropAnalyzed =>
+      boolean().withDefault(const Constant(false))();
 
   IntColumn get preProgressingProcess => integer().nullable()();
 
@@ -67,6 +70,8 @@ class MediaFiles extends Table {
   BlobColumn get storedFileHash => blob().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get createdAtMonth => text().nullable()();
+
 
   @override
   Set<Column> get primaryKey => {mediaId};

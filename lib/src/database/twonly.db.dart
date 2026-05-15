@@ -23,6 +23,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_session_store.table.dart';
+import 'package:twonly/src/database/tables/signal_signed_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -45,6 +46,7 @@ part 'twonly.db.g.dart';
     SignalPreKeyStores,
     SignalSenderKeyStores,
     SignalSessionStores,
+    SignalSignedPreKeyStores,
     MessageActions,
     GroupHistories,
     KeyVerifications,
@@ -79,7 +81,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 15;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -194,6 +196,20 @@ class TwonlyDB extends _$TwonlyDB {
           from12To13: (m, schema) async {
             await m.createTable(schema.shortcuts);
             await m.createTable(schema.shortcutMembers);
+          },
+          from13To14: (m, schema) async {
+            await m.addColumn(
+              schema.mediaFiles,
+              schema.mediaFiles.createdAtMonth,
+            );
+            await m.addColumn(schema.mediaFiles, schema.mediaFiles.isFavorite);
+            await m.addColumn(
+              schema.mediaFiles,
+              schema.mediaFiles.hasCropAnalyzed,
+            );
+          },
+          from14To15: (m, schema) async {
+            await m.createTable(schema.signalSignedPreKeyStores);
           },
         )(m, from, to);
       },

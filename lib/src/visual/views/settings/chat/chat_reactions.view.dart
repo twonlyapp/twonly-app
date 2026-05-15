@@ -82,20 +82,6 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
               );
             },
           ),
-          floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 30),
-            child: FloatingActionButton(
-              foregroundColor: Colors.white,
-              onPressed: () => UserService.update(
-                (u) => u.preSelectedEmojies = EmojiAnimationComp
-                    .animatedIcons
-                    .keys
-                    .toList()
-                    .sublist(0, 6),
-              ),
-              child: const Icon(Icons.settings_backup_restore_rounded),
-            ),
-          ),
         );
       },
     );

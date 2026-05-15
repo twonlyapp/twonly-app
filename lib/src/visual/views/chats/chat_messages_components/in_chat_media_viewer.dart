@@ -6,8 +6,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
-import 'package:twonly/src/visual/views/shared/memory_item_slider.view.dart';
-import 'package:twonly/src/visual/views/shared/memory_item_thumbnail.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
+import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class InChatMediaViewer extends StatefulWidget {
   const InChatMediaViewer({
@@ -36,6 +36,8 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   int? galleryItemIndex;
   StreamSubscription<Message?>? messageStream;
   Timer? _timer;
+  late final ValueNotifier<String?> _activeMediaIdNotifier =
+      ValueNotifier(widget.message.mediaId);
 
   @override
   void initState() {
@@ -71,10 +73,10 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   void dispose() {
-    super.dispose();
     messageStream?.cancel();
     _timer?.cancel();
-    // videoController?.dispose();
+    _activeMediaIdNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> initStream() async {
@@ -99,14 +101,27 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   Future<void> onTap() async {
     if (galleryItemIndex == null) return;
+    _activeMediaIdNotifier.value = widget.message.mediaId;
+
     await Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
-          galleryItems: widget.galleryItems,
-          initialIndex: galleryItemIndex!,
-        ),
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return SynchronizedImageViewerScreen(
+            galleryItems: widget.galleryItems,
+            initialIndex: galleryItemIndex!,
+            activeMediaIdNotifier: _activeMediaIdNotifier,
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }
@@ -148,9 +163,10 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: galleryItemIndex != null
-          ? MemoriesItemThumbnailComp(
+          ? MemoriesThumbnailComp(
               galleryItem: widget.galleryItems[galleryItemIndex!],
               onTap: onTap,
+              activeMediaIdNotifier: _activeMediaIdNotifier,
             )
           : null,
     );

@@ -8,8 +8,15 @@ import android.view.KeyEvent.KEYCODE_VOLUME_UP
 import io.flutter.embedding.engine.FlutterEngine
 import android.content.Context
 import io.crates.keyring.Keyring
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import android.os.Bundle
 
 class MainActivity : FlutterFragmentActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KEYCODE_VOLUME_DOWN && eventSink != null) {

@@ -20,7 +20,7 @@ import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/chats/message_info.view.dart';
-import 'package:twonly/src/visual/views/shared/memory_item_slider.view.dart';
+import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MessageContextMenu extends StatelessWidget {
   const MessageContextMenu({
@@ -77,9 +77,22 @@ class MessageContextMenu extends StatelessWidget {
       context,
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
-          galleryItems: galleryItems,
-        ),
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return SynchronizedImageViewerScreen(
+            galleryItems: galleryItems,
+            initialIndex: 0,
+            activeMediaIdNotifier:
+                ValueNotifier(mediaFileService!.mediaFile.mediaId),
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
       ),
     );
   }

@@ -41,8 +41,10 @@ signalDecryptMessage(
   int type,
 ) async {
   // Hold the lock only for the cryptographic operation, not for network I/O
+  Log.info('Acquiring lockingSignalProtocol for $fromUserId');
   final (decryptedContent, errorType, needsResync) = await lockingSignalProtocol
       .protect(() async {
+        Log.info('Lock acquired for $fromUserId');
         try {
           final session = SessionCipher.fromStore(
             (await getSignalStore())!,
@@ -96,6 +98,8 @@ signalDecryptMessage(
           );
         }
       });
+
+  Log.info('Released lockingSignalProtocol for $fromUserId');
 
   // Handle session resync OUTSIDE the lock to avoid holding it during
   // network round-trips (which can block for up to 60 seconds)

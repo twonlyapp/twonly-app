@@ -215,6 +215,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPreSelectedReactions => 'Vorgewählte Reaktions-Emojis';
 
   @override
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
+      'Duplikate als geöffnet markieren';
+
+  @override
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle =>
+      'Wenn du die selbe Mediendatei in mehreren Chats erhältst, markiert das Öffnen einer Kopie alle anderen als geöffnet.';
+
+  @override
   String get settingsPreSelectedReactionsError =>
       'Es können maximal 12 Reaktionen ausgewählt werden.';
 
@@ -602,9 +610,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Upgrade des Plans muss jährlich bezahlt werden, da der aktuelle Plan ebenfalls jährlich abgerechnet wird.';
 
   @override
-  String get upgradeToPaidPlan => 'Upgrade auf einen kostenpflichtigen Plan.';
-
-  @override
   String upgradeToPaidPlanButton(Object planId, Object sufix) {
     return 'Auf $planId upgraden$sufix';
   }
@@ -678,13 +683,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get galleryDelete => 'Datei löschen';
 
   @override
-  String get galleryDetails => 'Details anzeigen';
-
-  @override
   String get galleryExport => 'In Galerie exportieren';
 
   @override
   String get galleryExportSuccess => 'Erfolgreich in der Gallery gespeichert.';
+
+  @override
+  String get gallerySelectAll => 'Alle auswählen';
+
+  @override
+  String get galleryDeselectAll => 'Auswahl aufheben';
+
+  @override
+  String get galleryFavorite => 'Als Favorit markieren';
+
+  @override
+  String get galleryUnfavorite => 'Favorit entfernen';
+
+  @override
+  String get galleryCancel => 'Abbrechen';
 
   @override
   String get memoriesEmpty =>
@@ -1780,4 +1797,29 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get errorEmojiUsedOrInvalid =>
       'Emoji wird bereits verwendet oder ist ungültig';
+
+  @override
+  String get subscriptionPledgeTitle => 'Unterstütze unabhängigen Datenschutz.';
+
+  @override
+  String get subscriptionPledgeSecureTitle => 'Secure by Design';
+
+  @override
+  String get subscriptionPledgeSecureDesc =>
+      'Deine Nachrichten und Bilder sind immer vollständig Ende-zu-Ende verschlüsselt.';
+
+  @override
+  String get subscriptionPledgeNoAdsTitle => 'Keine Werbung oder Datenverkauf';
+
+  @override
+  String get subscriptionPledgeNoAdsDesc =>
+      'twonly wird niemals Werbung anzeigen oder deine privaten Daten verkaufen.';
+
+  @override
+  String get subscriptionPledgeFundedTitle =>
+      'Unabhängig und durch Nutzer finanziert';
+
+  @override
+  String get subscriptionPledgeFundedDesc =>
+      'twonly wird rein durch Nutzer-Abonnements finanziert, um unsere Unabhängigkeit und die Zukunft von twonly zu sichern.';
 }

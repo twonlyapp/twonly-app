@@ -1,10 +1,11 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:typed_data';
-
+import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<HashMap<int, Uint8List>> getSignalSignedPreKeyStoreOld() async {
@@ -26,25 +27,25 @@ Future<HashMap<int, Uint8List>> getSignalSignedPreKeyStoreOld() async {
 class SignalSignedPreKeyStore extends SignedPreKeyStore {
   @override
   Future<SignedPreKeyRecord> loadSignedPreKey(int signedPreKeyId) async {
-    final store = await RustKeyManager.loadSignedPrekey(
-      signedPreKeyId: signedPreKeyId,
-    );
-    if (store == null) {
+    final record = await (twonlyDB.select(
+      twonlyDB.signalSignedPreKeyStores,
+    )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).get();
+    if (record.isEmpty) {
       throw InvalidKeyIdException(
         'No such signed prekey record! $signedPreKeyId',
       );
     }
-    return SignedPreKeyRecord.fromSerialized(store);
+    return SignedPreKeyRecord.fromSerialized(record.first.signedPreKey);
   }
 
   @override
   Future<List<SignedPreKeyRecord>> loadSignedPreKeys() async {
-    final store = await RustKeyManager.loadSignedPrekeys();
-    final results = <SignedPreKeyRecord>[];
-    for (final serialized in store.values) {
-      results.add(SignedPreKeyRecord.fromSerialized(serialized));
-    }
-    return results;
+    final records = await twonlyDB
+        .select(twonlyDB.signalSignedPreKeyStores)
+        .get();
+    return records
+        .map((r) => SignedPreKeyRecord.fromSerialized(r.signedPreKey))
+        .toList();
   }
 
   @override
@@ -52,21 +53,32 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
     int signedPreKeyId,
     SignedPreKeyRecord record,
   ) async {
-    await RustKeyManager.storeSignedPrekey(
-      signedPreKeyId: signedPreKeyId,
-      record: record.serialize(),
+    final companion = SignalSignedPreKeyStoresCompanion(
+      signedPreKeyId: Value(signedPreKeyId),
+      signedPreKey: Value(record.serialize()),
     );
+
+    try {
+      await twonlyDB
+          .into(twonlyDB.signalSignedPreKeyStores)
+          .insert(companion, mode: InsertMode.insertOrReplace);
+    } catch (e) {
+      Log.error('$e');
+    }
   }
 
   @override
-  Future<bool> containsSignedPreKey(int signedPreKeyId) async =>
-      await RustKeyManager.loadSignedPrekey(
-        signedPreKeyId: signedPreKeyId,
-      ) !=
-      null;
+  Future<bool> containsSignedPreKey(int signedPreKeyId) async {
+    final record = await (twonlyDB.select(
+      twonlyDB.signalSignedPreKeyStores,
+    )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).get();
+    return record.isNotEmpty;
+  }
 
   @override
   Future<void> removeSignedPreKey(int signedPreKeyId) async {
-    await RustKeyManager.removeSignedPrekey(signedPreKeyId: signedPreKeyId);
+    await (twonlyDB.delete(
+      twonlyDB.signalSignedPreKeyStores,
+    )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).go();
   }
 }

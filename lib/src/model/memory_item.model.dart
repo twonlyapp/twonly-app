@@ -5,9 +5,11 @@ class MemoryItem {
   MemoryItem({
     required this.mediaService,
     required this.messages,
+    this.sender,
   });
   final List<Message> messages;
   final MediaFileService mediaService;
+  final Contact? sender;
 
   static Future<Map<String, MemoryItem>> convertFromMessages(
     List<Message> messages,

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:mutex/mutex.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -17,6 +19,7 @@ import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart'
     show getSignalSignedPreKeyStoreOld;
 import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
@@ -28,6 +31,8 @@ import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
+
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -247,9 +252,51 @@ Future<void> runMigrations() async {
       });
     }
   }
+  if (userService.currentUser.appVersion < 114) {
+    final allMedia = await twonlyDB.mediaFilesDao
+        .select(twonlyDB.mediaFiles)
+        .get();
+    for (final media in allMedia) {
+      if (media.createdAtMonth == null) {
+        final monthStr = DateFormat('MMMM yyyy').format(media.createdAt);
+        await twonlyDB.mediaFilesDao.updateMedia(
+          media.mediaId,
+          MediaFilesCompanion(createdAtMonth: Value(monthStr)),
+        );
+      }
+    }
+    await UserService.update((u) => u.appVersion = 114);
+  }
+
+  if (userService.currentUser.appVersion < 115) {
+    var migrationSuccess = true;
+    try {
+      final rustStore = await RustKeyManager.loadSignedPrekeys();
+      for (final entry in rustStore.entries) {
+        final companion = SignalSignedPreKeyStoresCompanion(
+          signedPreKeyId: Value(entry.key),
+          signedPreKey: Value(entry.value),
+        );
+        await twonlyDB
+            .into(twonlyDB.signalSignedPreKeyStores)
+            .insert(
+              companion,
+              mode: InsertMode.insertOrReplace,
+            );
+        await RustKeyManager.removeSignedPrekey(signedPreKeyId: entry.key);
+      }
+    } catch (e) {
+      Log.error('Failed to migrate signed prekeys to Drift: $e');
+      migrationSuccess = false;
+    }
+    if (migrationSuccess) {
+      await UserService.update((u) => u.appVersion = 115);
+    }
+  }
+
   if (kDebugMode) {
     assert(
-      AppState.latestAppVersionId == 113,
+      AppState.latestAppVersionId == 115,
       'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
     );
     assert(
@@ -261,6 +308,8 @@ Future<void> runMigrations() async {
 
 Future<void> postStartupTasks() async {
   Log.info('Post startup started.');
+  unawaited(MemoriesService.prewarmCache());
+
   // 1. Immediate background cleanup (Non-blocking for UI)
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());

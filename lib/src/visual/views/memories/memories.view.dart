@@ -1,19 +1,18 @@
-// ignore_for_file: parameter_assignments
-
-import 'dart:async';
-
-import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
-import 'package:twonly/src/visual/views/shared/memory_item_slider.view.dart';
-import 'package:twonly/src/visual/views/shared/memory_item_thumbnail.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/selection_toolbar.comp.dart';
+import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MemoriesView extends StatefulWidget {
   const MemoriesView({super.key});
@@ -23,254 +22,494 @@ class MemoriesView extends StatefulWidget {
 }
 
 class MemoriesViewState extends State<MemoriesView> {
-  int _filesToMigrate = 0;
-  List<MemoryItem> galleryItems = [];
-  Map<String, List<int>> orderedByMonth = {};
-  List<String> months = [];
-  StreamSubscription<List<MediaFile>>? messageSub;
+  late final MemoriesService _service;
+  final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(null);
+  final ScrollController _scrollController = ScrollController();
+  bool _isViewingFlashback = false;
 
-  final Map<int, List<MemoryItem>> _galleryItemsLastYears = {};
+  final Set<String> _selectedMediaIds = {};
+  bool _filterFavoritesOnly = false;
+  bool get _selectionMode => _selectedMediaIds.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
+    _service = MemoriesService();
+    _activeMediaIdNotifier.addListener(_onActiveMediaChanged);
   }
 
   @override
   void dispose() {
-    messageSub?.cancel();
+    _activeMediaIdNotifier.removeListener(_onActiveMediaChanged);
+    _scrollController.dispose();
+    _service.dispose();
+    _activeMediaIdNotifier.dispose();
     super.dispose();
   }
 
-  Future<void> initAsync() async {
-    final nonHashedFiles = await twonlyDB.mediaFilesDao
-        .getAllNonHashedStoredMediaFiles();
-    if (nonHashedFiles.isNotEmpty) {
-      setState(() {
-        _filesToMigrate = nonHashedFiles.length;
-      });
-      for (final mediaFile in nonHashedFiles) {
-        final mediaService = MediaFileService(mediaFile);
-        await mediaService.hashStoredMedia();
-        setState(() {
-          _filesToMigrate -= 1;
-        });
-      }
-      _filesToMigrate = 0;
+  void _onActiveMediaChanged() {
+    if (_isViewingFlashback) return;
+    final mediaId = _activeMediaIdNotifier.value;
+    if (mediaId == null) return;
+    final state = _service.currentState;
+    if (state.isEmpty) return;
+
+    final index = state.galleryItems.indexWhere(
+      (item) => item.mediaService.mediaFile.mediaId == mediaId,
+    );
+    if (index == -1) return;
+
+    double offset = 56;
+    if (state.galleryItemsLastYears.isNotEmpty) {
+      offset += 220;
     }
-    await messageSub?.cancel();
-    final msgStream = twonlyDB.mediaFilesDao.watchAllStoredMediaFiles();
 
-    messageSub = msgStream.listen((mediaFiles) async {
-      // Group items by month
-      orderedByMonth = {};
-      months = [];
-      var lastMonth = '';
-      galleryItems = [];
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final itemWidth = (screenWidth - 8) / 4;
+    final itemHeight = itemWidth * (16 / 9);
+    final rowHeight = itemHeight + 2;
 
-      final now = clock.now();
+    for (final month in state.months) {
+      final indices = state.orderedByMonth[month]!;
+      offset += 44;
 
-      for (final mediaFile in mediaFiles) {
-        final mediaService = MediaFileService(mediaFile);
-        if (!mediaService.imagePreviewAvailable) continue;
-        if (mediaService.mediaFile.type == MediaType.video) {
-          if (!mediaService.thumbnailPath.existsSync()) {
-            await mediaService.createThumbnail();
-          }
-        }
-        final item = MemoryItem(
-          mediaService: mediaService,
-          messages: [],
-        );
-        galleryItems.add(item);
-        if (mediaFile.createdAt.month == now.month &&
-            mediaFile.createdAt.day == now.day) {
-          final diff = now.year - mediaFile.createdAt.year;
-          if (diff > 0) {
-            if (!_galleryItemsLastYears.containsKey(diff)) {
-              _galleryItemsLastYears[diff] = [];
-            }
-            _galleryItemsLastYears[diff]!.add(item);
-          }
-        }
+      if (indices.contains(index)) {
+        final localIdx = indices.indexOf(index);
+        final row = localIdx ~/ 4;
+        offset += row * rowHeight;
+        break;
+      } else {
+        final totalRows = (indices.length + 3) ~/ 4;
+        offset += totalRows * rowHeight;
       }
-      galleryItems.sort(
-        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
-          a.mediaService.mediaFile.createdAt,
-        ),
+    }
+
+    if (_scrollController.hasClients) {
+      final targetOffset = (offset - 100).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
       );
-      for (var i = 0; i < galleryItems.length; i++) {
-        final month = DateFormat(
-          'MMMM yyyy',
-        ).format(galleryItems[i].mediaService.mediaFile.createdAt);
-        if (lastMonth != month) {
-          lastMonth = month;
-          months.add(month);
-        }
-        orderedByMonth.putIfAbsent(month, () => []).add(i);
-      }
-      if (mounted) {
-        setState(() {});
+      _scrollController.jumpTo(targetOffset);
+    }
+  }
+
+  Future<void> _openViewer(
+    List<MemoryItem> items,
+    int index, {
+    bool isFlashback = false,
+  }) async {
+    if (isFlashback) {
+      _isViewingFlashback = true;
+    }
+    _activeMediaIdNotifier.value = items[index].mediaService.mediaFile.mediaId;
+
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return SynchronizedImageViewerScreen(
+            galleryItems: items,
+            initialIndex: index,
+            activeMediaIdNotifier: _activeMediaIdNotifier,
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
+    );
+
+    if (isFlashback) {
+      _isViewingFlashback = false;
+    }
+  }
+
+  void _toggleSelection(String mediaId) {
+    setState(() {
+      if (_selectedMediaIds.contains(mediaId)) {
+        _selectedMediaIds.remove(mediaId);
+      } else {
+        _selectedMediaIds.add(mediaId);
       }
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    Widget child = Center(
-      child: Text(
-        context.lang.memoriesEmpty,
-        textAlign: TextAlign.center,
-      ),
+  void _onLongPressItem(String mediaId) {
+    setState(() {
+      _selectedMediaIds.add(mediaId);
+    });
+  }
+
+  void _onTapItem(String mediaId, int globalIndex) {
+    if (_selectionMode) {
+      _toggleSelection(mediaId);
+    } else {
+      final state = _service.currentState;
+      var targetItems = state.galleryItems;
+      var targetIndex = globalIndex;
+
+      if (_filterFavoritesOnly) {
+        targetItems = state.galleryItems
+            .where((e) => e.mediaService.mediaFile.isFavorite)
+            .toList();
+        targetIndex = targetItems.indexWhere(
+          (e) => e.mediaService.mediaFile.mediaId == mediaId,
+        );
+        if (targetIndex == -1) targetIndex = 0;
+      }
+
+      _openViewer(targetItems, targetIndex);
+    }
+  }
+
+  void _selectAll() {
+    setState(() {
+      final items = _service.currentState.galleryItems;
+      final targetIds = <String>{};
+
+      for (final item in items) {
+        if (_filterFavoritesOnly) {
+          if (item.mediaService.mediaFile.isFavorite) {
+            targetIds.add(item.mediaService.mediaFile.mediaId);
+          }
+        } else {
+          targetIds.add(item.mediaService.mediaFile.mediaId);
+        }
+      }
+
+      final areAllSelected = targetIds.every(_selectedMediaIds.contains);
+
+      if (areAllSelected) {
+        _selectedMediaIds.removeAll(targetIds);
+      } else {
+        _selectedMediaIds.addAll(targetIds);
+      }
+    });
+  }
+
+  Future<void> _batchDelete() async {
+    final count = _selectedMediaIds.length;
+    final confirmed = await showAlertDialog(
+      context,
+      context.lang.deleteImageTitle,
+      context.lang.deleteImageBody,
     );
-    if (_filesToMigrate > 0) {
-      child = Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ThreeRotatingDots(
-              size: 40,
-              color: context.color.primary,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              context.lang.migrationOfMemories(_filesToMigrate),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    } else if (galleryItems.isNotEmpty) {
-      child = ListView.builder(
-        itemCount:
-            (months.length * 2) + (_galleryItemsLastYears.isEmpty ? 0 : 1),
-        itemBuilder: (context, mIndex) {
-          if (_galleryItemsLastYears.isNotEmpty && mIndex == 0) {
-            return SizedBox(
-              height: 140,
-              width: MediaQuery.sizeOf(context).width,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: _galleryItemsLastYears.entries.map(
-                  (item) {
-                    var text = context.lang.memoriesAYearAgo;
-                    if (item.key > 1) {
-                      text = context.lang.memoriesXYearsAgo(item.key);
-                    }
-                    return GestureDetector(
-                      onTap: () async {
-                        await open(context, item.value, 0);
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
-                            BoxShadow(
-                              spreadRadius: -12,
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        height: 150,
-                        width: 120,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  item.value.first.mediaService.storedPath,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 10,
-                              left: 0,
-                              right: 0,
-                              child: Text(
-                                text,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  shadows: [
-                                    Shadow(
-                                      color: Color.fromARGB(122, 0, 0, 0),
-                                      blurRadius: 5,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ).toList(),
-              ),
-            );
-          }
-          if (_galleryItemsLastYears.isNotEmpty) {
-            mIndex -= 1;
-          }
-          if (mIndex.isEven) {
-            return Padding(
-              padding: const EdgeInsets.all(8),
-              child: Text(months[(mIndex ~/ 2)]),
-            );
-          }
-          final index = (mIndex - 1) ~/ 2;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 9 / 16,
-            ),
-            itemCount: orderedByMonth[months[index]]!.length,
-            itemBuilder: (context, gIndex) {
-              final gaIndex = orderedByMonth[months[index]]![gIndex];
-              return MemoriesItemThumbnailComp(
-                galleryItem: galleryItems[gaIndex],
-                onTap: () async {
-                  await open(context, galleryItems, gaIndex);
-                },
-              );
-            },
-          );
-        },
-      );
+
+    if (!confirmed) return;
+
+    final items = _service.currentState.galleryItems;
+    for (final mediaId in _selectedMediaIds) {
+      final item = items
+          .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+          .firstOrNull;
+      if (item != null) {
+        item.mediaService.fullMediaRemoval();
+      }
+      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Memories')),
-      body: Scrollbar(
-        child: child,
-      ),
+    setState(_selectedMediaIds.clear);
+
+    if (!mounted) return;
+    showSnackbar(
+      context,
+      'Deleted $count items successfully',
+      level: SnackbarLevel.success,
     );
   }
 
-  Future<void> open(
-    BuildContext context,
-    List<MemoryItem> galleryItems,
-    int index,
-  ) async {
-    await Navigator.push(
-          context,
-          PageRouteBuilder(
-            opaque: false,
-            pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
-              galleryItems: galleryItems,
-              initialIndex: index,
-            ),
+  Future<void> _batchExport() async {
+    final items = _service.currentState.galleryItems;
+
+    try {
+      for (final mediaId in _selectedMediaIds) {
+        final item = items
+            .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+            .firstOrNull;
+        if (item != null) {
+          final media = item.mediaService;
+          if (media.mediaFile.type == MediaType.video) {
+            await saveVideoToGallery(media.storedPath.path);
+          } else if (media.mediaFile.type == MediaType.image ||
+              media.mediaFile.type == MediaType.gif) {
+            final imageBytes = await media.storedPath.readAsBytes();
+            await saveImageToGallery(imageBytes);
+          }
+        }
+      }
+
+      if (!mounted) return;
+      showSnackbar(
+        context,
+        context.lang.galleryExportSuccess,
+        level: SnackbarLevel.success,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showSnackbar(context, e.toString());
+    }
+  }
+
+  Future<void> _batchFavorite() async {
+    final items = _service.currentState.galleryItems;
+    var favCount = 0;
+    for (final item in items) {
+      if (_selectedMediaIds.contains(item.mediaService.mediaFile.mediaId)) {
+        if (item.mediaService.mediaFile.isFavorite) {
+          favCount++;
+        }
+      }
+    }
+    final areAllFav =
+        _selectedMediaIds.isNotEmpty && favCount == _selectedMediaIds.length;
+    final targetFav = !areAllFav;
+
+    for (final mediaId in _selectedMediaIds) {
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaId,
+        MediaFilesCompanion(isFavorite: Value(targetFav)),
+      );
+    }
+
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          StreamBuilder<MemoriesState>(
+            initialData: _service.currentState,
+            stream: _service.watchState,
+            builder: (context, snapshot) {
+              final state = snapshot.data ?? _service.currentState;
+
+              if (state.isLoading) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ThreeRotatingDots(
+                        size: 40,
+                        color: context.color.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        context.lang.migrationOfMemories(state.filesToMigrate),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (state.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo_library_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          context.lang.memoriesEmpty,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              var months = state.months;
+              var orderedByMonth = state.orderedByMonth;
+              final lastYears = state.galleryItemsLastYears;
+
+              if (_filterFavoritesOnly) {
+                final filteredOrdered = <String, List<int>>{};
+                final filteredMonths = <String>[];
+
+                for (final m in months) {
+                  final indices = orderedByMonth[m] ?? [];
+                  final favIndices = indices.where((idx) {
+                    return state
+                        .galleryItems[idx]
+                        .mediaService
+                        .mediaFile
+                        .isFavorite;
+                  }).toList();
+
+                  if (favIndices.isNotEmpty) {
+                    filteredOrdered[m] = favIndices;
+                    filteredMonths.add(m);
+                  }
+                }
+
+                months = filteredMonths;
+                orderedByMonth = filteredOrdered;
+              }
+
+              return Scrollbar(
+                controller: _scrollController,
+                thickness: 12,
+                radius: const Radius.circular(6),
+                interactive: true,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverAppBar(
+                      title: const Text(
+                        'Memories',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      floating: true,
+                      snap: true,
+                      elevation: 0,
+                      backgroundColor: context.color.surface,
+                      actions: [
+                        IconButton(
+                          icon: Icon(
+                            _filterFavoritesOnly
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: _filterFavoritesOnly
+                                ? Colors.redAccent
+                                : null,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _filterFavoritesOnly = !_filterFavoritesOnly;
+                            });
+                          },
+                          tooltip: _filterFavoritesOnly
+                              ? 'Show all'
+                              : 'Show favorites only',
+                        ),
+                      ],
+                    ),
+
+                    MemoriesFlashbackBannerComp(
+                      lastYears: lastYears,
+                      onOpenFlashback: (items, idx) =>
+                          _openViewer(items, idx, isFlashback: true),
+                    ),
+
+                    for (final month in months) ...[
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(8, 12, 8, 6),
+                        sliver: SliverToBoxAdapter(
+                          child: Text(
+                            month,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              mainAxisSpacing: 2,
+                              crossAxisSpacing: 2,
+                              childAspectRatio: 9 / 16,
+                            ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, idx) {
+                            final globalIndex = orderedByMonth[month]![idx];
+                            final item = state.galleryItems[globalIndex];
+                            final mediaId = item.mediaService.mediaFile.mediaId;
+                            final isSelected = _selectedMediaIds.contains(
+                              mediaId,
+                            );
+
+                            return MemoriesThumbnailComp(
+                              galleryItem: item,
+                              index: globalIndex,
+                              selectionMode: _selectionMode,
+                              isSelected: isSelected,
+                              activeMediaIdNotifier: _activeMediaIdNotifier,
+                              onLongPress: () => _onLongPressItem(mediaId),
+                              onTap: () => _onTapItem(mediaId, globalIndex),
+                            );
+                          },
+                          childCount: orderedByMonth[month]!.length,
+                        ),
+                      ),
+                    ],
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+                  ],
+                ),
+              );
+            },
           ),
-        )
-        as bool?;
-    if (mounted) setState(() {});
+
+          if (_selectionMode)
+            Builder(
+              builder: (context) {
+                final items = _service.currentState.galleryItems;
+                var visibleCount = 0;
+                var favCount = 0;
+
+                for (final item in items) {
+                  final isFav = item.mediaService.mediaFile.isFavorite;
+                  if (!_filterFavoritesOnly || isFav) {
+                    visibleCount++;
+                  }
+                  if (_selectedMediaIds.contains(
+                    item.mediaService.mediaFile.mediaId,
+                  )) {
+                    if (isFav) {
+                      favCount++;
+                    }
+                  }
+                }
+
+                final areAllSelected =
+                    visibleCount > 0 &&
+                    _selectedMediaIds.length >= visibleCount;
+                final areAllFav =
+                    _selectedMediaIds.isNotEmpty &&
+                    favCount == _selectedMediaIds.length;
+
+                return MemoriesSelectionToolbarComp(
+                  selectedCount: _selectedMediaIds.length,
+                  areAllSelected: areAllSelected,
+                  areAllFav: areAllFav,
+                  onSelectAll: _selectAll,
+                  onExport: _batchExport,
+                  onFavorite: _batchFavorite,
+                  onDelete: _batchDelete,
+                  onClear: () => setState(_selectedMediaIds.clear),
+                );
+              },
+            ),
+        ],
+      ),
+    );
   }
 }

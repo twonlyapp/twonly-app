@@ -104,10 +104,10 @@ Future<void> incFlameCounter(
       contact.userId,
       ContactsCompanion(
         mediaReceivedCounter: Value(
-          contacts.first.mediaReceivedCounter + (received ? 1 : 0),
+          contact.mediaReceivedCounter + (received ? 1 : 0),
         ),
         mediaSendCounter: Value(
-          contacts.first.mediaSendCounter + (received ? 0 : 1),
+          contact.mediaSendCounter + (received ? 0 : 1),
         ),
       ),
     );

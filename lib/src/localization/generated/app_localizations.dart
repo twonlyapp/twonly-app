@@ -482,6 +482,18 @@ abstract class AppLocalizations {
   /// **'Preselected reaction emojis'**
   String get settingsPreSelectedReactions;
 
+  /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark duplicates as opened'**
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle;
+
+  /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If you receive the same media in multiple chats, opening one marks all others as opened.'**
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle;
+
   /// No description provided for @settingsPreSelectedReactionsError.
   ///
   /// In en, this message translates to:
@@ -1178,12 +1190,6 @@ abstract class AppLocalizations {
   /// **'The plan upgrade must be paid for annually, as the current plan is also billed annually.'**
   String get errorPlanUpgradeNotYearly;
 
-  /// No description provided for @upgradeToPaidPlan.
-  ///
-  /// In en, this message translates to:
-  /// **'Upgrade to a paid plan.'**
-  String get upgradeToPaidPlan;
-
   /// No description provided for @upgradeToPaidPlanButton.
   ///
   /// In en, this message translates to:
@@ -1322,12 +1328,6 @@ abstract class AppLocalizations {
   /// **'Delete file'**
   String get galleryDelete;
 
-  /// No description provided for @galleryDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Show details'**
-  String get galleryDetails;
-
   /// No description provided for @galleryExport.
   ///
   /// In en, this message translates to:
@@ -1339,6 +1339,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Successfully saved in the Gallery.'**
   String get galleryExportSuccess;
+
+  /// No description provided for @gallerySelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get gallerySelectAll;
+
+  /// No description provided for @galleryDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get galleryDeselectAll;
+
+  /// No description provided for @galleryFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get galleryFavorite;
+
+  /// No description provided for @galleryUnfavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get galleryUnfavorite;
+
+  /// No description provided for @galleryCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get galleryCancel;
 
   /// No description provided for @memoriesEmpty.
   ///
@@ -3157,6 +3187,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Emoji already used or invalid'**
   String get errorEmojiUsedOrInvalid;
+
+  /// No description provided for @subscriptionPledgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support independent privacy.'**
+  String get subscriptionPledgeTitle;
+
+  /// No description provided for @subscriptionPledgeSecureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure by Design'**
+  String get subscriptionPledgeSecureTitle;
+
+  /// No description provided for @subscriptionPledgeSecureDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your messages and shared moments are fully end-to-end encrypted.'**
+  String get subscriptionPledgeSecureDesc;
+
+  /// No description provided for @subscriptionPledgeNoAdsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Ads or Data selling'**
+  String get subscriptionPledgeNoAdsTitle;
+
+  /// No description provided for @subscriptionPledgeNoAdsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly will never show advertisements or sell your private data.'**
+  String get subscriptionPledgeNoAdsDesc;
+
+  /// No description provided for @subscriptionPledgeFundedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent and funded by Users'**
+  String get subscriptionPledgeFundedTitle;
+
+  /// No description provided for @subscriptionPledgeFundedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.'**
+  String get subscriptionPledgeFundedDesc;
 }
 
 class _AppLocalizationsDelegate
