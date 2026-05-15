@@ -126,6 +126,35 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     return rows.length;
   }
 
+  Future<int> getCountOfContactsWithVerificationBadge() async {
+    final kv = keyVerifications;
+    final ur = userDiscoveryUserRelations;
+
+    final query = selectOnly(ur, distinct: true)
+      ..addColumns([ur.announcedUserId])
+      ..join([
+        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
+        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
+      ])
+      ..where(
+        ur.publicKeyVerifiedTimestamp.isNotNull() &
+            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
+      )
+      ..groupBy([ur.announcedUserId]);
+
+    final rows = await query.get();
+    final transferredIds = rows.map((r) => r.read(ur.announcedUserId)!).toSet();
+
+    final directVerifications = await select(kv).get();
+    final directIds = directVerifications.map((v) => v.contactId).toSet();
+
+    // Reduce transferred contacts where announcedUserId is already in KeyVerifications
+    transferredIds.removeWhere(directIds.contains);
+
+    // Add count of all users who are in the KeyVerification table
+    return transferredIds.length + directIds.length;
+  }
+
   Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');
