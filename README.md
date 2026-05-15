@@ -1,6 +1,6 @@
 # twonly
 
-<a href="https://twonly.eu" rel="some text"><img src="docs/header.png" alt="twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing." /></a>
+<a href="https://twonly.eu" rel="some text"><img src="metadata/en-US/images/featureGraphic.png" alt="twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing." /></a>
 
 This repository contains the complete source code of the [twonly](https://twonly.eu) app. twonly is a replacement for Snapchat, but its purpose is not to replace instant messaging apps, as there are already [many fantastic alternatives](https://www.messenger-matrix.de/messenger-matrix-en.html) out there. It was started because I liked the basic features of Snapchat, such as opening with the camera, the easy-to-use image editor, and the focus on sending fun pictures to friends. But I was annoyed by Snapchat's forced AI chat, receiving random messages to follow strangers, and not knowing how my sent images/text messages were encrypted, if at all. I am also very critical of the direction in which the US is currently moving and therefore try to avoid US providers wherever possible.
 
