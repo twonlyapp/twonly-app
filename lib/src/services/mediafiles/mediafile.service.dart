@@ -284,15 +284,19 @@ class MediaFileService {
       );
     }
     unawaited(createThumbnail());
-    await hashStoredMedia();
+    await hashMediaFile();
     // updateFromDb is done in hashStoredMedia()
   }
 
-  Future<void> hashStoredMedia() async {
-    if (!storedPath.existsSync()) {
+  Future<void> hashMediaFile() async {
+    late final List<int> checksum;
+    if (storedPath.existsSync()) {
+      checksum = await sha256File(storedPath);
+    } else if (tempPath.existsSync()) {
+      checksum = await sha256File(tempPath);
+    } else {
       return;
     }
-    final checksum = await sha256File(storedPath);
     await twonlyDB.mediaFilesDao.updateMedia(
       mediaFile.mediaId,
       MediaFilesCompanion(

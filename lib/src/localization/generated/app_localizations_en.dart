@@ -212,6 +212,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPreSelectedReactions => 'Preselected reaction emojis';
 
   @override
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle =>
+      'Mark duplicates as opened';
+
+  @override
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle =>
+      'Automatically marks identical media files as opened across all chats.';
+
+  @override
   String get settingsPreSelectedReactionsError =>
       'A maximum of 12 reactions can be selected.';
 

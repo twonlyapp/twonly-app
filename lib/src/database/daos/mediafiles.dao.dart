@@ -69,7 +69,6 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return (select(mediaFiles)..where((t) => t.mediaId.isIn(mediaIds))).get();
   }
 
-
   Future<MediaFile?> getDraftMediaFile() async {
     final medias = await (select(
       mediaFiles,
@@ -165,5 +164,25 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
             uploadState: Value(UploadState.preprocessing),
           ),
         );
+  }
+
+  Future<List<String>> getMessageIdsByMediaHash(
+    Uint8List hash,
+    int senderId,
+  ) async {
+    final query =
+        select(db.messages).join([
+          innerJoin(
+            mediaFiles,
+            mediaFiles.mediaId.equalsExp(db.messages.mediaId),
+          ),
+        ])..where(
+          mediaFiles.storedFileHash.equals(hash) &
+              db.messages.senderId.equals(senderId) &
+              db.messages.openedAt.isNull(),
+        );
+
+    final rows = await query.get();
+    return rows.map((row) => row.readTable(db.messages).messageId).toList();
   }
 }

@@ -482,6 +482,18 @@ abstract class AppLocalizations {
   /// **'Preselected reaction emojis'**
   String get settingsPreSelectedReactions;
 
+  /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark duplicates as opened'**
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle;
+
+  /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically marks identical media files as opened across all chats.'**
+  String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle;
+
   /// No description provided for @settingsPreSelectedReactionsError.
   ///
   /// In en, this message translates to:

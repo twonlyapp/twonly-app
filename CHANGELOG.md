@@ -2,6 +2,7 @@
 
 ## 0.2.12
 
+- New: Automatically mark identical media as opened across all chats (Settings > Chats).
 - Improved: Memories viewer redesigned with smoother animations and new quick-action controls.
 - Fix: Reliability of receiving media files.
 

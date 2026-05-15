@@ -85,8 +85,9 @@ class MemoriesService {
             .whereType<String>()
             .toList();
 
-        final mediaFiles =
-            await twonlyDB.mediaFilesDao.getMediaFilesByIds(mediaIds);
+        final mediaFiles = await twonlyDB.mediaFilesDao.getMediaFilesByIds(
+          mediaIds,
+        );
         final mediaFileMap = {for (final m in mediaFiles) m.mediaId: m};
 
         final allContacts = await twonlyDB.contactsDao.getAllContacts();
@@ -108,8 +109,9 @@ class MemoriesService {
           final mediaService = MediaFileService(mediaFile);
           if (!mediaService.imagePreviewAvailable) continue;
 
-          final contact =
-              senderUserId != null ? contactMap[senderUserId] : null;
+          final contact = senderUserId != null
+              ? contactMap[senderUserId]
+              : null;
           final item = MemoryItem(
             mediaService: mediaService,
             messages: [],
@@ -132,7 +134,8 @@ class MemoriesService {
 
         for (var i = 0; i < tempGalleryItems.length; i++) {
           final mFile = tempGalleryItems[i].mediaService.mediaFile;
-          final month = mFile.createdAtMonth ??
+          final month =
+              mFile.createdAtMonth ??
               DateFormat('MMMM yyyy').format(mFile.createdAt);
           if (lastMonth != month) {
             lastMonth = month;
@@ -143,8 +146,9 @@ class MemoriesService {
 
         for (final list in tempGalleryItemsLastYears.values) {
           list.sort(
-            (a, b) => b.mediaService.mediaFile.createdAt
-                .compareTo(a.mediaService.mediaFile.createdAt),
+            (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+              a.mediaService.mediaFile.createdAt,
+            ),
           );
         }
 
@@ -167,10 +171,10 @@ class MemoriesService {
   Future<void> _initAsync() async {
     try {
       // 1. Perform Inventory / Migration of non-hashed stored files
-      final nonHashedFiles =
-          await twonlyDB.mediaFilesDao.getAllNonHashedStoredMediaFiles();
-      final unanalyzedFiles =
-          await twonlyDB.mediaFilesDao.getAllUnanalyzedStoredMediaFiles();
+      final nonHashedFiles = await twonlyDB.mediaFilesDao
+          .getAllNonHashedStoredMediaFiles();
+      final unanalyzedFiles = await twonlyDB.mediaFilesDao
+          .getAllUnanalyzedStoredMediaFiles();
 
       final totalToMigrate = nonHashedFiles.length + unanalyzedFiles.length;
       if (totalToMigrate > 0) {
@@ -178,7 +182,7 @@ class MemoriesService {
 
         for (final mediaFile in nonHashedFiles) {
           final mediaService = MediaFileService(mediaFile);
-          await mediaService.hashStoredMedia();
+          await mediaService.hashMediaFile();
           _updateState(filesToMigrate: _currentState.filesToMigrate - 1);
         }
 
@@ -209,8 +213,9 @@ class MemoriesService {
 
       // High-performance batch DB fetch for sender attribution via Messages table mapping
       final mediaIds = mediaFiles.map((m) => m.mediaId).toList();
-      final allMessages =
-          await twonlyDB.messagesDao.getMessagesByMediaIds(mediaIds);
+      final allMessages = await twonlyDB.messagesDao.getMessagesByMediaIds(
+        mediaIds,
+      );
       final allContacts = await twonlyDB.contactsDao.getAllContacts();
 
       final contactMap = {for (final c in allContacts) c.userId: c};
@@ -255,8 +260,9 @@ class MemoriesService {
 
       // Sort descending by creation date
       tempGalleryItems.sort(
-        (a, b) => b.mediaService.mediaFile.createdAt
-            .compareTo(a.mediaService.mediaFile.createdAt),
+        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+          a.mediaService.mediaFile.createdAt,
+        ),
       );
 
       final tempOrderedByMonth = <String, List<int>>{};
@@ -266,7 +272,8 @@ class MemoriesService {
       // High performance grouping leveraging pre-computed createdAtMonth column
       for (var i = 0; i < tempGalleryItems.length; i++) {
         final mFile = tempGalleryItems[i].mediaService.mediaFile;
-        final month = mFile.createdAtMonth ??
+        final month =
+            mFile.createdAtMonth ??
             DateFormat('MMMM yyyy').format(mFile.createdAt);
         if (lastMonth != month) {
           lastMonth = month;
@@ -277,8 +284,9 @@ class MemoriesService {
 
       for (final list in tempGalleryItemsLastYears.values) {
         list.sort(
-          (a, b) => b.mediaService.mediaFile.createdAt
-              .compareTo(a.mediaService.mediaFile.createdAt),
+          (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+            a.mediaService.mediaFile.createdAt,
+          ),
         );
       }
 

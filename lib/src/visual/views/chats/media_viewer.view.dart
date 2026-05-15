@@ -339,9 +339,28 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
     }
 
+    var markAsOpenMessageIDs = [currentMessage!.messageId];
+
+    if (userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
+        currentMediaLocal.mediaFile.storedFileHash != null) {
+      final messageIds = await twonlyDB.mediaFilesDao.getMessageIdsByMediaHash(
+        currentMediaLocal.mediaFile.storedFileHash!,
+        currentMessage!.senderId!,
+      );
+
+      if (!messageIds.contains(currentMessage!.messageId)) {
+        Log.error(
+          'Original message ID was not returned from `getMessageIdsByMediaHash`.',
+        );
+        messageIds.add(currentMessage!.messageId);
+      }
+
+      markAsOpenMessageIDs = messageIds;
+    }
+
     await notifyContactAboutOpeningMessage(
       currentMessage!.senderId!,
-      [currentMessage!.messageId],
+      markAsOpenMessageIDs,
     );
 
     if (!mounted) return;
