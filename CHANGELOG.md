@@ -3,6 +3,7 @@
 ## 0.2.12
 
 - Improved: Memories viewer redesigned with smoother animations and new quick-action controls.
+- Fix: Reliability of receiving media files.
 
 ## 0.2.11
 

@@ -121,6 +121,7 @@ Future<void> handleMedia(
   MediaFile? mediaFile;
   Message? message;
 
+  Log.info('Starting transaction for media message ${media.senderMessageId}');
   await twonlyDB.transaction(() async {
     mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
       MediaFilesCompanion(
@@ -163,6 +164,9 @@ Future<void> handleMedia(
       ),
     );
   });
+  Log.info(
+    'Finished transaction for media message ${media.senderMessageId}. Success: ${message != null}',
+  );
 
   if (message != null && mediaFile != null) {
     await twonlyDB.groupsDao.increaseLastMessageExchange(

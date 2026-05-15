@@ -191,6 +191,23 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     )..where((c) => c.receiptId.equals(receiptId))).write(updates);
   }
 
+  Future<Receipt?> rotateReceiptId(String oldReceiptId) async {
+    final newReceiptId = uuid.v4();
+    await updateReceipt(
+      oldReceiptId,
+      ReceiptsCompanion(
+        receiptId: Value(newReceiptId),
+      ),
+    );
+    final updatedReceipt = await getReceiptById(newReceiptId);
+    if (updatedReceipt == null) {
+      Log.error(
+        'Tried to change the receipt ID, but could not get the updated receipt...',
+      );
+    }
+    return updatedReceipt;
+  }
+
   Future<void> updateReceiptByContactAndMessageId(
     int contactId,
     String messageId,

@@ -27,6 +27,16 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
 final lockRetransmission = Mutex();
+final Map<String, Mutex> _uploadMutexes = {};
+
+Future<void> _protectMediaUpload(
+  String mediaId,
+  Future<void> Function() action,
+) async {
+  final mutex = _uploadMutexes.putIfAbsent(mediaId, Mutex.new);
+  await mutex.protect(action);
+  _uploadMutexes.remove(mediaId);
+}
 
 Future<void> reuploadMediaFiles() async {
   return exclusiveAccess(
@@ -42,18 +52,33 @@ Future<void> reuploadMediaFiles() async {
 
       final contacts = <int, Contact>{};
 
-      for (final receipt in receipts) {
+      for (var receipt in receipts) {
         if (receipt.retryCount > 1 && receipt.lastRetry != null) {
           final twentyFourHoursAgo = DateTime.now().subtract(
-            const Duration(hours: 24),
+            const Duration(hours: 6),
           );
           if (receipt.lastRetry!.isAfter(twentyFourHoursAgo)) {
             Log.info(
-              'Ignoring ${receipt.receiptId} as it was retried in the last 24h',
+              'Ignoring ${receipt.receiptId} as it was retried in the last 6h',
             );
             continue;
           }
         }
+
+        if (receipt.retryCount >= 2) {
+          // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received, but the app was closed before the message was fully processed. Because the receipt was already stored, subsequent retries were detected as duplicates and rejected.
+          final oldReceiptId = receipt.receiptId;
+          final updatedReceipt = await twonlyDB.receiptsDao.rotateReceiptId(
+            oldReceiptId,
+          );
+          if (updatedReceipt == null) continue;
+
+          Log.info(
+            'Changed receiptId $oldReceiptId to ${updatedReceipt.receiptId} as retryCount is ${receipt.retryCount}',
+          );
+          receipt = updatedReceipt;
+        }
+
         var messageId = receipt.messageId;
         if (receipt.messageId == null) {
           Log.info('Message not in receipt. Loading it from the content.');
@@ -146,7 +171,7 @@ Future<void> reuploadMediaFiles() async {
           Log.info('Reuploading media file $messageId');
           // the media file should be still on the server, so it should be enough
           // to just resend the message containing the download token.
-          await tryToSendCompleteMessage(receipt: receipt);
+          await tryToSendCompleteMessage(receiptId: receipt.receiptId);
         }
       }
     },
@@ -158,35 +183,43 @@ Future<void> reuploadMediaFile(
   MediaFile mediaFile,
   String messageId,
 ) async {
-  Log.info('Reuploading media file: ${mediaFile.mediaId}');
+  return _protectMediaUpload(mediaFile.mediaId, () async {
+    Log.info('Reuploading media file: ${mediaFile.mediaId}');
 
-  await twonlyDB.receiptsDao.updateReceiptByContactAndMessageId(
-    contactId,
-    messageId,
-    const ReceiptsCompanion(
-      markForRetry: Value(null),
-      markForRetryAfterAccepted: Value(null),
-    ),
-  );
+    await twonlyDB.receiptsDao.updateReceiptByContactAndMessageId(
+      contactId,
+      messageId,
+      const ReceiptsCompanion(
+        markForRetry: Value(null),
+        markForRetryAfterAccepted: Value(null),
+      ),
+    );
 
-  final reuploadRequestedBy = (mediaFile.reuploadRequestedBy ?? [])
-    ..add(contactId);
-  await twonlyDB.mediaFilesDao.updateMedia(
-    mediaFile.mediaId,
-    MediaFilesCompanion(
-      uploadState: const Value(UploadState.preprocessing),
-      reuploadRequestedBy: Value(reuploadRequestedBy),
-    ),
-  );
-  final mediaFileUpdated = await MediaFileService.fromMediaId(
-    mediaFile.mediaId,
-  );
-  if (mediaFileUpdated != null) {
-    if (mediaFileUpdated.uploadRequestPath.existsSync()) {
-      mediaFileUpdated.uploadRequestPath.deleteSync();
+    // Refresh media file to get latest reuploadRequestedBy
+    final currentMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
+      mediaFile.mediaId,
+    );
+
+    final reuploadRequestedBy = (currentMedia?.reuploadRequestedBy ?? [])
+      ..add(contactId);
+
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        uploadState: const Value(UploadState.preprocessing),
+        reuploadRequestedBy: Value(reuploadRequestedBy),
+      ),
+    );
+    final mediaFileUpdated = await MediaFileService.fromMediaId(
+      mediaFile.mediaId,
+    );
+    if (mediaFileUpdated != null) {
+      if (mediaFileUpdated.uploadRequestPath.existsSync()) {
+        mediaFileUpdated.uploadRequestPath.deleteSync();
+      }
+      await _startBackgroundMediaUploadInternal(mediaFileUpdated);
     }
-    unawaited(startBackgroundMediaUpload(mediaFileUpdated));
-  }
+  });
 }
 
 final Mutex _lockPreprocessing = Mutex();
@@ -398,6 +431,18 @@ Future<void> insertMediaFileInMessagesTable(
 }
 
 Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
+  return _protectMediaUpload(
+    mediaService.mediaFile.mediaId,
+    () => _startBackgroundMediaUploadInternal(mediaService),
+  );
+}
+
+Future<void> _startBackgroundMediaUploadInternal(
+  MediaFileService mediaService,
+) async {
+  // Refresh the media file state inside the mutex
+  await mediaService.updateFromDB();
+
   if (mediaService.mediaFile.uploadState == UploadState.initialized ||
       mediaService.mediaFile.uploadState == UploadState.preprocessing) {
     await mediaService.setUploadState(UploadState.preprocessing);
@@ -603,54 +648,50 @@ Future<void> _createUploadRequest(MediaFileService media) async {
   await media.uploadRequestPath.writeAsBytes(uploadRequestBytes);
 }
 
-Mutex protectUpload = Mutex();
-
 Future<void> _uploadUploadRequest(MediaFileService media) async {
-  await protectUpload.protect(() async {
-    final currentMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
-      media.mediaFile.mediaId,
-    );
+  final currentMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
+    media.mediaFile.mediaId,
+  );
 
-    if (currentMedia == null ||
-        currentMedia.uploadState == UploadState.backgroundUploadTaskStarted) {
-      Log.info('Download for ${media.mediaFile.mediaId} already started.');
-      return null;
-    }
+  if (currentMedia == null ||
+      currentMedia.uploadState == UploadState.backgroundUploadTaskStarted) {
+    Log.info('Download for ${media.mediaFile.mediaId} already started.');
+    return;
+  }
 
-    final apiUrl =
-        'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
+  final apiUrl =
+      'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
 
-    Log.info('Starting upload from ${media.mediaFile.mediaId}');
+  Log.info('Starting upload from ${media.mediaFile.mediaId}');
 
-    final headers = await getAuthenticationHeader();
-    if (headers == null) {
-      Log.error('Auth headers are empty. Returning');
-      return;
-    }
+  final headers = await getAuthenticationHeader();
+  if (headers == null) {
+    Log.error('Auth headers are empty. Returning');
+    return;
+  }
 
-    final task = UploadTask.fromFile(
-      taskId: 'upload_${media.mediaFile.mediaId}',
-      displayName: media.mediaFile.type.name,
-      file: media.uploadRequestPath,
-      url: apiUrl,
-      priority: 0,
-      retries: 10,
-      headers: headers,
-    );
+  final task = UploadTask.fromFile(
+    taskId: 'upload_${media.mediaFile.mediaId}',
+    displayName: media.mediaFile.type.name,
+    file: media.uploadRequestPath,
+    url: apiUrl,
+    priority: 0,
+    retries: 10,
+    headers: headers,
+  );
 
-    final connectivityResult = await Connectivity().checkConnectivity();
+  final connectivityResult = await Connectivity().checkConnectivity();
 
-    if (AppState.isInBackgroundTask ||
-        !connectivityResult.contains(ConnectivityResult.mobile) &&
-            !connectivityResult.contains(ConnectivityResult.wifi)) {
-      // no internet, directly put it into the background...
-      await FileDownloader().enqueue(task);
-      await media.setUploadState(UploadState.backgroundUploadTaskStarted);
-      Log.info('Enqueue upload task: ${task.taskId}');
-    } else {
-      unawaited(uploadFileFastOrEnqueue(task, media));
-    }
-  });
+  if (AppState.isInBackgroundTask ||
+      !connectivityResult.contains(ConnectivityResult.mobile) &&
+          !connectivityResult.contains(ConnectivityResult.wifi)) {
+    // no internet, directly put it into the background...
+    await FileDownloader().enqueue(task);
+    await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+    Log.info('Enqueue upload task: ${task.taskId}');
+  } else {
+    unawaited(uploadFileFastOrEnqueue(task, media));
+  }
 }
 
 Future<void> uploadFileFastOrEnqueue(

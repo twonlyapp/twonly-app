@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -77,24 +78,32 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
 
+final Map<String, Mutex> _messageLocks = {};
+
 Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   final body = Uint8List.fromList(newMessage.body);
-  final fromUserId = newMessage.fromUserId.toInt();
-
   final message = Message.fromBuffer(body);
+  final receiptId = message.receiptId;
+
+  final mutex = _messageLocks.putIfAbsent(receiptId, Mutex.new);
+  await mutex.protect(() async {
+    await _handleClient2ClientMessage(newMessage, message);
+  });
+  _messageLocks.remove(receiptId);
+}
+
+Future<void> _handleClient2ClientMessage(
+  NewMessage newMessage,
+  Message message,
+) async {
+  final fromUserId = newMessage.fromUserId.toInt();
   final receiptId = message.receiptId;
 
   if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
     return;
   }
 
-  try {
-    await twonlyDB.receiptsDao.gotReceipt(receiptId);
-    Log.info('Got a message with receiptId $receiptId');
-  } catch (e) {
-    Log.error(e);
-    return;
-  }
+  Log.info('Started processing message with receiptId $receiptId');
 
   switch (message.type) {
     case Message_Type.SENDER_DELIVERY_RECEIPT:
@@ -209,7 +218,14 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
         await tryToSendCompleteMessage(receiptId: receiptId);
       }
     case Message_Type.TEST_NOTIFICATION:
-      return;
+      break;
+  }
+
+  try {
+    await twonlyDB.receiptsDao.gotReceipt(receiptId);
+    Log.info('Got a message with receiptId $receiptId');
+  } catch (e) {
+    Log.error('Error marking message as received $receiptId: $e');
   }
 }
 
@@ -238,12 +254,16 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
     );
   }
 
+  Log.info('Calling handleEncryptedMessage for $receiptId');
+
   final (a, b) = await handleEncryptedMessage(
     fromUserId,
     encryptedContent,
     messageType,
     receiptId,
   );
+
+  Log.info('Finished handleEncryptedMessage for $receiptId');
 
   if (Platform.isAndroid && a == null && b == null) {
     // Message was handled without any error -> Show push notification to the user.
