@@ -217,7 +217,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle =>
-      'Automatically marks identical media files as opened across all chats.';
+      'If you receive the same media in multiple chats, opening one marks all others as opened.';
 
   @override
   String get settingsPreSelectedReactionsError =>

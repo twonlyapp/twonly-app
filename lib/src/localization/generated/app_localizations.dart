@@ -491,7 +491,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Automatically marks identical media files as opened across all chats.'**
+  /// **'If you receive the same media in multiple chats, opening one marks all others as opened.'**
   String get settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle;
 
   /// No description provided for @settingsPreSelectedReactionsError.
