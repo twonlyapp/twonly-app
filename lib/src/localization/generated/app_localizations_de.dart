@@ -9,11 +9,8 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get registerTitle => 'Willkommen bei twonly!';
-
-  @override
   String get registerSlogan =>
-      'twonly, eine private und sichere Möglichkeit um mit Freunden in Kontakt zu bleiben.';
+      'Privat und sicher mit Freunden in Kontakt bleiben.';
 
   @override
   String get onboardingWelcomeTitle => 'Willkommen bei twonly!';
@@ -55,15 +52,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGetStartedTitle => 'Auf geht\'s';
 
   @override
-  String get registerUsernameSlogan =>
-      'Bitte wähle einen Benutzernamen, damit dich andere finden können!';
+  String get registerUsernameSlogan => 'Dein öffentlicher Benutzername';
 
   @override
   String get registerUsernameDecoration => 'Benutzername';
 
   @override
-  String get registerUsernameLimits =>
-      'Der Benutzername muss mindestens 3 Zeichen lang sein.';
+  String get registerUsernameLimits => 'Mindestens 3 Zeichen.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -816,7 +811,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupChangePassword => 'Password ändern';
 
   @override
-  String get twonlySafeRecoverTitle => 'Recovery';
+  String get twonlySafeRecoverTitle => 'Backup wiederherstellen';
 
   @override
   String get twonlySafeRecoverDesc =>

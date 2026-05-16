@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_dynamic_calls
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +17,10 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
+import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_wrapper.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class RegisterView extends StatefulWidget {
@@ -134,7 +138,7 @@ class _RegisterViewState extends State<RegisterView> {
       userId: userId,
       username: username,
       displayName: username,
-      subscriptionPlan: 'Preview',
+      subscriptionPlan: 'Free',
       currentSetupPage: SetupPages.profile.name,
     )..appVersion = AppState.latestAppVersionId;
 
@@ -146,174 +150,184 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    if (_registrationDisabled) {
-      return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: ListView(
-              children: [
-                const SizedBox(height: 50),
-                Text(
-                  context.lang.registerTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 30),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    context.lang.registerSlogan,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                const SizedBox(height: 130),
+    return OnboardingWrapper(
+      children: [
+        const SizedBox(height: 40),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: const LinkLogoAnimation(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            context.lang.registerSlogan,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_registrationDisabled) ...[
+                const SizedBox(height: 24),
                 Text(
                   context.lang.registrationClosed,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
+                    fontSize: 16,
                     color: Colors.red,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    InputDecoration getInputDecoration(String hintText) {
-      return InputDecoration(hintText: hintText, fillColor: Colors.grey[400]);
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 10, right: 10),
-          child: ListView(
-            children: [
-              const SizedBox(height: 50),
-              Text(
-                context.lang.registerTitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 30),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Text(
-                  context.lang.registerSlogan,
+                const SizedBox(height: 48),
+              ] else ...[
+                Text(
+                  context.lang.registerUsernameSlogan,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 60),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 10),
-                  child: Text(
-                    context.lang.registerUsernameSlogan,
+                const SizedBox(height: 20),
+                TextField(
+                  controller: usernameController,
+                  onChanged: (value) {
+                    usernameController.text = value.toLowerCase();
+                    usernameController.selection = TextSelection.fromPosition(
+                      TextPosition(
+                        offset: usernameController.text.length,
+                      ),
+                    );
+                    setState(() {
+                      _isValidUserName = usernameController.text.length >= 3;
+                    });
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(12),
+                    FilteringTextInputFormatter.allow(
+                      RegExp('[a-z0-9A-Z._]'),
+                    ),
+                  ],
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: context.lang.registerUsernameDecoration,
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.alternate_email,
+                    ),
+                  ),
+                ),
+                if (_showUserNameError &&
+                    usernameController.text.length < 3) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    context.lang.registerUsernameLimits,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 15),
                   ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: usernameController,
-                onChanged: (value) {
-                  usernameController.text = value.toLowerCase();
-                  usernameController.selection = TextSelection.fromPosition(
-                    TextPosition(offset: usernameController.text.length),
-                  );
-                  setState(() {
-                    _isValidUserName = usernameController.text.length >= 3;
-                  });
-                },
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(12),
-                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
                 ],
-                style: const TextStyle(fontSize: 17),
-                decoration: getInputDecoration(
-                  context.lang.registerUsernameDecoration,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                context.lang.registerUsernameLimits,
-                style: TextStyle(
-                  color: _showUserNameError ? Colors.red : Colors.transparent,
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                context.lang.registerProofOfWorkFailed,
-                style: TextStyle(
-                  color: _showProofOfWorkError
-                      ? Colors.red
-                      : Colors.transparent,
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Column(
-                children: [
-                  FilledButton.icon(
-                    icon: _isTryingToRegister
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(Icons.group),
-                    onPressed: createNewUser,
-                    style: ButtonStyle(
-                      padding: WidgetStateProperty.all<EdgeInsets>(
-                        const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 30,
+                if (_showProofOfWorkError) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    context.lang.registerProofOfWorkFailed,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: _isTryingToRegister ? null : createNewUser,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(60),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isTryingToRegister
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : Text(
+                          context.lang.registerSubmitButton,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      backgroundColor: _isTryingToRegister
-                          ? WidgetStateProperty.all<MaterialColor>(
-                              Colors.grey,
-                            )
-                          : null,
-                    ),
-                    label: Text(
-                      context.lang.registerSubmitButton,
-                      style: const TextStyle(fontSize: 17),
-                    ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextButton(
+                onPressed: () => context.push(
+                  Routes.settingsBackupRecovery,
+                ),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  foregroundColor: Colors.grey[600],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            context.push(Routes.settingsBackupRecovery),
-                        label: Text(context.lang.twonlySafeRecoverBtn),
-                      ),
-                    ],
+                ),
+                child: Text(
+                  context.lang.twonlySafeRecoverBtn,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
+                ),
               ),
-              //   ),
             ],
           ),
         ),
-      ),
+        const Spacer(),
+        const SizedBox(height: 40),
+      ],
     );
   }
 }
