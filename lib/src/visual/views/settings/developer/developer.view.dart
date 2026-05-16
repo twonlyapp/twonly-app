@@ -216,6 +216,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
             isDraftMedia: false,
             isFavorite: false,
             hasCropAnalyzed: false,
+            hasThumbnail: false,
             createdAt: now,
           );
           final mediaService = MediaFileService(mediaFile);

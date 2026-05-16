@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -170,25 +171,38 @@ class MemoriesService {
 
   Future<void> _initAsync() async {
     try {
-      // 1. Perform Inventory / Migration of non-hashed stored files
-      final nonHashedFiles = await twonlyDB.mediaFilesDao
-          .getAllNonHashedStoredMediaFiles();
-      final unanalyzedFiles = await twonlyDB.mediaFilesDao
-          .getAllUnanalyzedStoredMediaFiles();
+      // 1. Perform Inventory / Migration of stored files
+      final pendingFiles = await twonlyDB.mediaFilesDao
+          .getAllMediaFilesPendingMigration();
 
-      final totalToMigrate = nonHashedFiles.length + unanalyzedFiles.length;
-      if (totalToMigrate > 0) {
-        _updateState(filesToMigrate: totalToMigrate);
+      if (pendingFiles.isNotEmpty) {
+        _updateState(filesToMigrate: pendingFiles.length);
 
-        for (final mediaFile in nonHashedFiles) {
+        for (final mediaFile in pendingFiles) {
           final mediaService = MediaFileService(mediaFile);
-          await mediaService.hashMediaFile();
-          _updateState(filesToMigrate: _currentState.filesToMigrate - 1);
-        }
 
-        for (final mediaFile in unanalyzedFiles) {
-          final mediaService = MediaFileService(mediaFile);
-          await mediaService.cropTransparentBorders();
+          if (mediaService.mediaFile.storedFileHash == null) {
+            await mediaService.hashMediaFile();
+          }
+
+          if (!mediaService.mediaFile.hasCropAnalyzed) {
+            await mediaService.cropTransparentBorders();
+          }
+
+          if (mediaService.mediaFile.sizeInBytes == null) {
+            await mediaService.calculateAndSaveSize();
+          }
+
+          if (!mediaService.mediaFile.hasThumbnail) {
+            if (mediaService.thumbnailPath.existsSync()) {
+              await twonlyDB.mediaFilesDao.updateMedia(
+                mediaFile.mediaId,
+                const MediaFilesCompanion(hasThumbnail: Value(true)),
+              );
+            } else if (mediaFile.type != MediaType.audio) {
+              await mediaService.createThumbnail();
+            }
+          }
           _updateState(filesToMigrate: _currentState.filesToMigrate - 1);
         }
 
@@ -234,10 +248,9 @@ class MemoriesService {
         final mediaService = MediaFileService(mediaFile);
         if (!mediaService.imagePreviewAvailable) continue;
 
-        if (mediaService.mediaFile.type == MediaType.video) {
-          if (!mediaService.thumbnailPath.existsSync()) {
-            unawaited(mediaService.createThumbnail());
-          }
+        if (!mediaService.mediaFile.hasThumbnail &&
+            mediaService.mediaFile.type != MediaType.audio) {
+          unawaited(mediaService.createThumbnail());
         }
 
         final senderContact = mediaIdToSenderContact[mediaFile.mediaId];

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.13
+
+- Improved: Media thumbnails for faster loading
+
 ## 0.2.12
 
 - New: Automatically mark identical media as opened across all chats (Settings > Chats).

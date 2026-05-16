@@ -286,15 +286,14 @@ class HomeViewState extends State<HomeView> {
       bottomNavigationBar: AnimatedSize(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        child: _isBottomNavVisible
+        child: (_activePageIdx != 2 || _isBottomNavVisible)
             ? BottomNavigationBar(
                 showSelectedLabels: false,
                 showUnselectedLabels: false,
                 unselectedIconTheme: IconThemeData(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .inverseSurface
-                      .withAlpha(150),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.inverseSurface.withAlpha(150),
                 ),
                 selectedIconTheme: IconThemeData(
                   color: Theme.of(context).colorScheme.inverseSurface,

@@ -69,6 +69,11 @@ class MediaFiles extends Table {
 
   BlobColumn get storedFileHash => blob().nullable()();
 
+  BoolColumn get hasThumbnail =>
+      boolean().withDefault(const Constant(false))();
+
+  IntColumn get sizeInBytes => integer().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdAtMonth => text().nullable()();
 

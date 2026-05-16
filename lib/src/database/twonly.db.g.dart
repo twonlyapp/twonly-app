@@ -2810,6 +2810,32 @@ class $MediaFilesTable extends MediaFiles
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _hasThumbnailMeta = const VerificationMeta(
+    'hasThumbnail',
+  );
+  @override
+  late final GeneratedColumn<bool> hasThumbnail = GeneratedColumn<bool>(
+    'has_thumbnail',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_thumbnail" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sizeInBytesMeta = const VerificationMeta(
+    'sizeInBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeInBytes = GeneratedColumn<int>(
+    'size_in_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2853,6 +2879,8 @@ class $MediaFilesTable extends MediaFiles
     encryptionMac,
     encryptionNonce,
     storedFileHash,
+    hasThumbnail,
+    sizeInBytes,
     createdAt,
     createdAtMonth,
   ];
@@ -2987,6 +3015,24 @@ class $MediaFilesTable extends MediaFiles
         ),
       );
     }
+    if (data.containsKey('has_thumbnail')) {
+      context.handle(
+        _hasThumbnailMeta,
+        hasThumbnail.isAcceptableOrUnknown(
+          data['has_thumbnail']!,
+          _hasThumbnailMeta,
+        ),
+      );
+    }
+    if (data.containsKey('size_in_bytes')) {
+      context.handle(
+        _sizeInBytesMeta,
+        sizeInBytes.isAcceptableOrUnknown(
+          data['size_in_bytes']!,
+          _sizeInBytesMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3092,6 +3138,14 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.blob,
         data['${effectivePrefix}stored_file_hash'],
       ),
+      hasThumbnail: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_thumbnail'],
+      )!,
+      sizeInBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_in_bytes'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3147,6 +3201,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? encryptionMac;
   final Uint8List? encryptionNonce;
   final Uint8List? storedFileHash;
+  final bool hasThumbnail;
+  final int? sizeInBytes;
   final DateTime createdAt;
   final String? createdAtMonth;
   const MediaFile({
@@ -3168,6 +3224,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     this.encryptionMac,
     this.encryptionNonce,
     this.storedFileHash,
+    required this.hasThumbnail,
+    this.sizeInBytes,
     required this.createdAt,
     this.createdAtMonth,
   });
@@ -3228,6 +3286,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || storedFileHash != null) {
       map['stored_file_hash'] = Variable<Uint8List>(storedFileHash);
     }
+    map['has_thumbnail'] = Variable<bool>(hasThumbnail);
+    if (!nullToAbsent || sizeInBytes != null) {
+      map['size_in_bytes'] = Variable<int>(sizeInBytes);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || createdAtMonth != null) {
       map['created_at_month'] = Variable<String>(createdAtMonth);
@@ -3278,6 +3340,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       storedFileHash: storedFileHash == null && nullToAbsent
           ? const Value.absent()
           : Value(storedFileHash),
+      hasThumbnail: Value(hasThumbnail),
+      sizeInBytes: sizeInBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sizeInBytes),
       createdAt: Value(createdAt),
       createdAtMonth: createdAtMonth == null && nullToAbsent
           ? const Value.absent()
@@ -3323,6 +3389,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionMac: serializer.fromJson<Uint8List?>(json['encryptionMac']),
       encryptionNonce: serializer.fromJson<Uint8List?>(json['encryptionNonce']),
       storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
+      hasThumbnail: serializer.fromJson<bool>(json['hasThumbnail']),
+      sizeInBytes: serializer.fromJson<int?>(json['sizeInBytes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       createdAtMonth: serializer.fromJson<String?>(json['createdAtMonth']),
     );
@@ -3357,6 +3425,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'encryptionMac': serializer.toJson<Uint8List?>(encryptionMac),
       'encryptionNonce': serializer.toJson<Uint8List?>(encryptionNonce),
       'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
+      'hasThumbnail': serializer.toJson<bool>(hasThumbnail),
+      'sizeInBytes': serializer.toJson<int?>(sizeInBytes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'createdAtMonth': serializer.toJson<String?>(createdAtMonth),
     };
@@ -3381,6 +3451,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     Value<Uint8List?> encryptionMac = const Value.absent(),
     Value<Uint8List?> encryptionNonce = const Value.absent(),
     Value<Uint8List?> storedFileHash = const Value.absent(),
+    bool? hasThumbnail,
+    Value<int?> sizeInBytes = const Value.absent(),
     DateTime? createdAt,
     Value<String?> createdAtMonth = const Value.absent(),
   }) => MediaFile(
@@ -3421,6 +3493,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     storedFileHash: storedFileHash.present
         ? storedFileHash.value
         : this.storedFileHash,
+    hasThumbnail: hasThumbnail ?? this.hasThumbnail,
+    sizeInBytes: sizeInBytes.present ? sizeInBytes.value : this.sizeInBytes,
     createdAt: createdAt ?? this.createdAt,
     createdAtMonth: createdAtMonth.present
         ? createdAtMonth.value
@@ -3476,6 +3550,12 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       storedFileHash: data.storedFileHash.present
           ? data.storedFileHash.value
           : this.storedFileHash,
+      hasThumbnail: data.hasThumbnail.present
+          ? data.hasThumbnail.value
+          : this.hasThumbnail,
+      sizeInBytes: data.sizeInBytes.present
+          ? data.sizeInBytes.value
+          : this.sizeInBytes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       createdAtMonth: data.createdAtMonth.present
           ? data.createdAtMonth.value
@@ -3504,6 +3584,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
           ..write('storedFileHash: $storedFileHash, ')
+          ..write('hasThumbnail: $hasThumbnail, ')
+          ..write('sizeInBytes: $sizeInBytes, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth')
           ..write(')'))
@@ -3511,7 +3593,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     mediaId,
     type,
     uploadState,
@@ -3530,9 +3612,11 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     $driftBlobEquality.hash(encryptionMac),
     $driftBlobEquality.hash(encryptionNonce),
     $driftBlobEquality.hash(storedFileHash),
+    hasThumbnail,
+    sizeInBytes,
     createdAt,
     createdAtMonth,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3561,6 +3645,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
             other.storedFileHash,
             this.storedFileHash,
           ) &&
+          other.hasThumbnail == this.hasThumbnail &&
+          other.sizeInBytes == this.sizeInBytes &&
           other.createdAt == this.createdAt &&
           other.createdAtMonth == this.createdAtMonth);
 }
@@ -3584,6 +3670,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> encryptionMac;
   final Value<Uint8List?> encryptionNonce;
   final Value<Uint8List?> storedFileHash;
+  final Value<bool> hasThumbnail;
+  final Value<int?> sizeInBytes;
   final Value<DateTime> createdAt;
   final Value<String?> createdAtMonth;
   final Value<int> rowid;
@@ -3606,6 +3694,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
     this.storedFileHash = const Value.absent(),
+    this.hasThumbnail = const Value.absent(),
+    this.sizeInBytes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3629,6 +3719,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
     this.storedFileHash = const Value.absent(),
+    this.hasThumbnail = const Value.absent(),
+    this.sizeInBytes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.createdAtMonth = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3653,6 +3745,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? encryptionMac,
     Expression<Uint8List>? encryptionNonce,
     Expression<Uint8List>? storedFileHash,
+    Expression<bool>? hasThumbnail,
+    Expression<int>? sizeInBytes,
     Expression<DateTime>? createdAt,
     Expression<String>? createdAtMonth,
     Expression<int>? rowid,
@@ -3680,6 +3774,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
       if (encryptionNonce != null) 'encryption_nonce': encryptionNonce,
       if (storedFileHash != null) 'stored_file_hash': storedFileHash,
+      if (hasThumbnail != null) 'has_thumbnail': hasThumbnail,
+      if (sizeInBytes != null) 'size_in_bytes': sizeInBytes,
       if (createdAt != null) 'created_at': createdAt,
       if (createdAtMonth != null) 'created_at_month': createdAtMonth,
       if (rowid != null) 'rowid': rowid,
@@ -3705,6 +3801,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<Uint8List?>? encryptionMac,
     Value<Uint8List?>? encryptionNonce,
     Value<Uint8List?>? storedFileHash,
+    Value<bool>? hasThumbnail,
+    Value<int?>? sizeInBytes,
     Value<DateTime>? createdAt,
     Value<String?>? createdAtMonth,
     Value<int>? rowid,
@@ -3731,6 +3829,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       encryptionMac: encryptionMac ?? this.encryptionMac,
       encryptionNonce: encryptionNonce ?? this.encryptionNonce,
       storedFileHash: storedFileHash ?? this.storedFileHash,
+      hasThumbnail: hasThumbnail ?? this.hasThumbnail,
+      sizeInBytes: sizeInBytes ?? this.sizeInBytes,
       createdAt: createdAt ?? this.createdAt,
       createdAtMonth: createdAtMonth ?? this.createdAtMonth,
       rowid: rowid ?? this.rowid,
@@ -3810,6 +3910,12 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (storedFileHash.present) {
       map['stored_file_hash'] = Variable<Uint8List>(storedFileHash.value);
     }
+    if (hasThumbnail.present) {
+      map['has_thumbnail'] = Variable<bool>(hasThumbnail.value);
+    }
+    if (sizeInBytes.present) {
+      map['size_in_bytes'] = Variable<int>(sizeInBytes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3843,6 +3949,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
           ..write('storedFileHash: $storedFileHash, ')
+          ..write('hasThumbnail: $hasThumbnail, ')
+          ..write('sizeInBytes: $sizeInBytes, ')
           ..write('createdAt: $createdAt, ')
           ..write('createdAtMonth: $createdAtMonth, ')
           ..write('rowid: $rowid')
@@ -15344,6 +15452,8 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<Uint8List?> encryptionMac,
       Value<Uint8List?> encryptionNonce,
       Value<Uint8List?> storedFileHash,
+      Value<bool> hasThumbnail,
+      Value<int?> sizeInBytes,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -15368,6 +15478,8 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<Uint8List?> encryptionMac,
       Value<Uint8List?> encryptionNonce,
       Value<Uint8List?> storedFileHash,
+      Value<bool> hasThumbnail,
+      Value<int?> sizeInBytes,
       Value<DateTime> createdAt,
       Value<String?> createdAtMonth,
       Value<int> rowid,
@@ -15496,6 +15608,16 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<Uint8List> get storedFileHash => $composableBuilder(
     column: $table.storedFileHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasThumbnail => $composableBuilder(
+    column: $table.hasThumbnail,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeInBytes => $composableBuilder(
+    column: $table.sizeInBytes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15634,6 +15756,16 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get hasThumbnail => $composableBuilder(
+    column: $table.hasThumbnail,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeInBytes => $composableBuilder(
+    column: $table.sizeInBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -15741,6 +15873,16 @@ class $$MediaFilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get hasThumbnail => $composableBuilder(
+    column: $table.hasThumbnail,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sizeInBytes => $composableBuilder(
+    column: $table.sizeInBytes,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -15821,6 +15963,8 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> encryptionMac = const Value.absent(),
                 Value<Uint8List?> encryptionNonce = const Value.absent(),
                 Value<Uint8List?> storedFileHash = const Value.absent(),
+                Value<bool> hasThumbnail = const Value.absent(),
+                Value<int?> sizeInBytes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -15843,6 +15987,8 @@ class $$MediaFilesTableTableManager
                 encryptionMac: encryptionMac,
                 encryptionNonce: encryptionNonce,
                 storedFileHash: storedFileHash,
+                hasThumbnail: hasThumbnail,
+                sizeInBytes: sizeInBytes,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,
@@ -15867,6 +16013,8 @@ class $$MediaFilesTableTableManager
                 Value<Uint8List?> encryptionMac = const Value.absent(),
                 Value<Uint8List?> encryptionNonce = const Value.absent(),
                 Value<Uint8List?> storedFileHash = const Value.absent(),
+                Value<bool> hasThumbnail = const Value.absent(),
+                Value<int?> sizeInBytes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> createdAtMonth = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -15889,6 +16037,8 @@ class $$MediaFilesTableTableManager
                 encryptionMac: encryptionMac,
                 encryptionNonce: encryptionNonce,
                 storedFileHash: storedFileHash,
+                hasThumbnail: hasThumbnail,
+                sizeInBytes: sizeInBytes,
                 createdAt: createdAt,
                 createdAtMonth: createdAtMonth,
                 rowid: rowid,
