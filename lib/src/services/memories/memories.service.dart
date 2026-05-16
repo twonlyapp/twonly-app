@@ -15,6 +15,7 @@ import 'package:twonly/src/utils/log.dart';
 class MemoriesState {
   const MemoriesState({
     required this.filesToMigrate,
+    required this.totalFilesToMigrate,
     required this.galleryItems,
     required this.months,
     required this.orderedByMonth,
@@ -22,16 +23,21 @@ class MemoriesState {
   });
 
   final int filesToMigrate;
+  final int totalFilesToMigrate;
   final List<MemoryItem> galleryItems;
   final List<String> months;
   final Map<String, List<int>> orderedByMonth;
   final Map<int, List<MemoryItem>> galleryItemsLastYears;
 
   bool get isLoading => filesToMigrate > 0;
+  double get migrationProgress => totalFilesToMigrate > 0
+      ? (totalFilesToMigrate - filesToMigrate) / totalFilesToMigrate
+      : 0;
   bool get isEmpty => galleryItems.isEmpty && filesToMigrate == 0;
 
   MemoriesState copyWith({
     int? filesToMigrate,
+    int? totalFilesToMigrate,
     List<MemoryItem>? galleryItems,
     List<String>? months,
     Map<String, List<int>>? orderedByMonth,
@@ -39,6 +45,7 @@ class MemoriesState {
   }) {
     return MemoriesState(
       filesToMigrate: filesToMigrate ?? this.filesToMigrate,
+      totalFilesToMigrate: totalFilesToMigrate ?? this.totalFilesToMigrate,
       galleryItems: galleryItems ?? this.galleryItems,
       months: months ?? this.months,
       orderedByMonth: orderedByMonth ?? this.orderedByMonth,
@@ -63,6 +70,7 @@ class MemoriesService {
 
   MemoriesState _currentState = const MemoriesState(
     filesToMigrate: 0,
+    totalFilesToMigrate: 0,
     galleryItems: [],
     months: [],
     orderedByMonth: {},
@@ -182,6 +190,7 @@ class MemoriesService {
 
     return MemoriesState(
       filesToMigrate: filesToMigrate,
+      totalFilesToMigrate: filesToMigrate, // Reset total when computing new state? No, keep existing total if migrating.
       galleryItems: tempGalleryItems,
       months: tempMonths,
       orderedByMonth: tempOrderedByMonth,
@@ -195,7 +204,11 @@ class MemoriesService {
           .getAllMediaFilesPendingMigration();
 
       if (pendingFiles.isNotEmpty) {
-        _updateMigrationCount(pendingFiles.length);
+        _currentState = _currentState.copyWith(
+          filesToMigrate: pendingFiles.length,
+          totalFilesToMigrate: pendingFiles.length,
+        );
+        _notifyState();
 
         for (final mediaFile in pendingFiles) {
           final mediaService = MediaFileService(mediaFile);
@@ -261,7 +274,7 @@ class MemoriesService {
         mediaFiles: mediaFiles,
         mediaIdToSender: mediaIdToSenderContact,
         filesToMigrate: _currentState.filesToMigrate,
-      );
+      ).copyWith(totalFilesToMigrate: _currentState.totalFilesToMigrate);
 
       for (final item in newState.galleryItems) {
         if (!item.mediaService.mediaFile.hasThumbnail &&

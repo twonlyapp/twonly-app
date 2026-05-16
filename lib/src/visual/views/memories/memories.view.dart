@@ -9,7 +9,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/draggable_scrollbar.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/selection_toolbar.comp.dart';
@@ -293,29 +292,6 @@ class MemoriesViewState extends State<MemoriesView> {
             builder: (context, snapshot) {
               final state = snapshot.data ?? _service.currentState;
 
-              if (state.isLoading) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ThreeRotatingDots(
-                        size: 40,
-                        color: context.color.primary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        context.lang.migrationOfMemories(state.filesToMigrate),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
               if (state.isEmpty) {
                 return Center(
                   child: Padding(
@@ -417,6 +393,30 @@ class MemoriesViewState extends State<MemoriesView> {
                           elevation: 0,
                           backgroundColor: context.color.surface,
                           actions: [
+                            if (state.isLoading)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Center(
+                                  child: Tooltip(
+                                    message: context.lang.migrationOfMemories(
+                                      state.filesToMigrate,
+                                    ),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        value: state.migrationProgress,
+                                        strokeWidth: 2.5,
+                                        color: context.color.primary,
+                                        backgroundColor: context.color.primary
+                                            .withOpacity(0.2),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             IconButton(
                               icon: Icon(
                                 _filterFavoritesOnly

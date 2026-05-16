@@ -47,21 +47,15 @@ Future<bool> createThumbnailsForImage(
 ) async {
   final stopwatch = Stopwatch()..start();
 
-  if (destinationFile.existsSync()) {
-    return true;
-  }
-
   try {
-    final bytes = sourceFile.readAsBytesSync();
-    final result = await FlutterImageCompress.compressWithList(
-      bytes,
-      minWidth: 200,
-      minHeight: 200,
-      quality: 70,
+    await FlutterImageCompress.compressAndGetFile(
+      sourceFile.absolute.path,
+      destinationFile.absolute.path,
+      minWidth: 300,
+      minHeight: 300,
+      quality: 100,
       format: CompressFormat.webp,
     );
-
-    destinationFile.writeAsBytesSync(result);
     stopwatch.stop();
     Log.info(
       'It took ${stopwatch.elapsedMilliseconds}ms to create the image thumbnail.',
@@ -94,15 +88,15 @@ Future<bool> createThumbnailsForGif(
 
     final thumbnail = img.copyResize(
       image,
-      width: image.width > image.height ? 200 : null,
-      height: image.height >= image.width ? 200 : null,
+      width: image.width > image.height ? 400 : null,
+      height: image.height >= image.width ? 400 : null,
     );
 
     final pngBytes = img.encodePng(thumbnail);
     final webp = await FlutterImageCompress.compressWithList(
       pngBytes,
       format: CompressFormat.webp,
-      quality: 70,
+      quality: 85,
     );
     destinationFile.writeAsBytesSync(webp);
 

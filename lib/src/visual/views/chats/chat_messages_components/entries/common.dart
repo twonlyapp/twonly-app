@@ -50,10 +50,11 @@ BubbleInfo getBubbleInfo(
   info.spacerWidth = minWidth - measureTextWidth(info.text) - 53;
   if (info.spacerWidth < 0) info.spacerWidth = 0;
 
-  info.expanded = false;
-  if (message.quotesMessageId == null) {
-    info.color = getMessageColor(message.senderId != null);
-  }
+  info
+    ..expanded = false
+    ..color = message.quotesMessageId != null
+        ? Colors.transparent
+        : getMessageColor(message.senderId != null);
   if (message.isDeletedFromSender) {
     info
       ..color = context.color.surfaceBright
