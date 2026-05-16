@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 
 class OnboardingWrapper extends StatelessWidget {
@@ -10,11 +11,20 @@ class OnboardingWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = isDarkMode(context);
+    final backgroundColor = isDark ? const Color(0xFF0F172A) : primaryColor;
+    final topBlobColor = isDark
+        ? primaryColor.withValues(alpha: 0.15)
+        : Colors.white.withValues(alpha: 0.1);
+    final bottomBlobColor = isDark
+        ? primaryColor.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.05);
+
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
-        backgroundColor: primaryColor,
+        backgroundColor: backgroundColor,
         body: Stack(
           children: [
             Positioned(
@@ -25,7 +35,7 @@ class OnboardingWrapper extends StatelessWidget {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: topBlobColor,
                 ),
               ),
             ),
@@ -37,7 +47,7 @@ class OnboardingWrapper extends StatelessWidget {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: bottomBlobColor,
                 ),
               ),
             ),

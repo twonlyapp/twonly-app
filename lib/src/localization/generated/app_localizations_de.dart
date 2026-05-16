@@ -814,10 +814,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get twonlySafeRecoverTitle => 'Backup wiederherstellen';
 
   @override
-  String get twonlySafeRecoverDesc =>
-      'Wenn du ein Backup mit twonly Backup erstellt hast, kannst du es hier wiederherstellen.';
-
-  @override
   String get twonlySafeRecoverBtn => 'Backup wiederherstellen';
 
   @override

@@ -150,6 +150,14 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = isDarkMode(context);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final inputColor = isDark ? const Color(0xFF0F172A) : Colors.grey[100];
+    final sloganColor = isDark
+        ? Colors.white.withValues(alpha: 0.9)
+        : Colors.grey[800];
+    final secondaryButtonColor = isDark ? Colors.grey[400] : Colors.grey[600];
+
     return OnboardingWrapper(
       children: [
         const SizedBox(height: 40),
@@ -176,11 +184,13 @@ class _RegisterViewState extends State<RegisterView> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -206,7 +216,7 @@ class _RegisterViewState extends State<RegisterView> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[800],
+                    color: sloganColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -230,20 +240,25 @@ class _RegisterViewState extends State<RegisterView> {
                       RegExp('[a-z0-9A-Z._]'),
                     ),
                   ],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                   decoration: InputDecoration(
                     hintText: context.lang.registerUsernameDecoration,
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[100],
+                    fillColor: inputColor,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.alternate_email,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),
@@ -309,7 +324,7 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
-                  foregroundColor: Colors.grey[600],
+                  foregroundColor: secondaryButtonColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),

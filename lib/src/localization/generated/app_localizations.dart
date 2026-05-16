@@ -1580,12 +1580,6 @@ abstract class AppLocalizations {
   /// **'Restore backup'**
   String get twonlySafeRecoverTitle;
 
-  /// No description provided for @twonlySafeRecoverDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'If you have created a backup with twonly Backup, you can restore it here.'**
-  String get twonlySafeRecoverDesc;
-
   /// No description provided for @twonlySafeRecoverBtn.
   ///
   /// In en, this message translates to:

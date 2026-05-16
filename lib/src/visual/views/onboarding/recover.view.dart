@@ -66,6 +66,10 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = isDarkMode(context);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final inputColor = isDark ? const Color(0xFF0F172A) : Colors.grey[100];
+
     return OnboardingWrapper(
       children: [
         Row(
@@ -118,11 +122,13 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -134,20 +140,25 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
               TextField(
                 controller: usernameCtrl,
                 onChanged: (value) => setState(() {}),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
                 decoration: InputDecoration(
                   hintText: context.lang.registerUsernameDecoration,
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: inputColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.alternate_email,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
               ),
@@ -155,21 +166,26 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
               TextField(
                 controller: passwordCtrl,
                 onChanged: (value) => setState(() {}),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
                 obscureText: obscureText,
                 decoration: InputDecoration(
                   hintText: context.lang.password,
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: inputColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.lock_outline_rounded,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
                   suffixIcon: IconButton(
                     onPressed: () {
@@ -182,6 +198,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           ? FontAwesomeIcons.eye
                           : FontAwesomeIcons.eyeSlash,
                       size: 16,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),
