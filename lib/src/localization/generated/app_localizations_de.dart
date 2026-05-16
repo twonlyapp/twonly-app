@@ -250,6 +250,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageDataAutoDownWifi => 'Bei Nutzung von WLAN';
 
   @override
+  String get settingsStorageManageTitle => 'Speicher verwalten';
+
+  @override
+  String get settingsStorageUsed => 'Speicherplatz belegt';
+
+  @override
+  String get settingsStorageImages => 'Bilder';
+
+  @override
+  String get settingsStorageVideos => 'Videos';
+
+  @override
+  String get settingsStorageGifs => 'GIFs';
+
+  @override
   String get settingsProfileCustomizeAvatar => 'Avatar anpassen';
 
   @override

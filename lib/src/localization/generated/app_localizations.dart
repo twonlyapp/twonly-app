@@ -542,6 +542,36 @@ abstract class AppLocalizations {
   /// **'When using WI-FI'**
   String get settingsStorageDataAutoDownWifi;
 
+  /// No description provided for @settingsStorageManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage storage'**
+  String get settingsStorageManageTitle;
+
+  /// No description provided for @settingsStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage used'**
+  String get settingsStorageUsed;
+
+  /// No description provided for @settingsStorageImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get settingsStorageImages;
+
+  /// No description provided for @settingsStorageVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get settingsStorageVideos;
+
+  /// No description provided for @settingsStorageGifs.
+  ///
+  /// In en, this message translates to:
+  /// **'GIFs'**
+  String get settingsStorageGifs;
+
   /// No description provided for @settingsProfileCustomizeAvatar.
   ///
   /// In en, this message translates to:

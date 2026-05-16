@@ -89,14 +89,10 @@ class MemoriesService {
         final mediaFiles = await twonlyDB.mediaFilesDao.getMediaFilesByIds(
           mediaIds,
         );
-        final mediaFileMap = {for (final m in mediaFiles) m.mediaId: m};
 
         final allContacts = await twonlyDB.contactsDao.getAllContacts();
         final contactMap = {for (final c in allContacts) c.userId: c};
-
-        final now = clock.now();
-        final tempGalleryItems = <MemoryItem>[];
-        final tempGalleryItemsLastYears = <int, List<MemoryItem>>{};
+        final mediaIdToSender = <String, Contact?>{};
 
         for (final itemJson in itemList) {
           final map = itemJson as Map<String, dynamic>;
@@ -104,64 +100,14 @@ class MemoriesService {
           final senderUserId = map['senderUserId'] as int?;
           if (mediaId == null) continue;
 
-          final mediaFile = mediaFileMap[mediaId];
-          if (mediaFile == null) continue;
-
-          final mediaService = MediaFileService(mediaFile);
-          if (!mediaService.imagePreviewAvailable) continue;
-
-          final contact = senderUserId != null
+          mediaIdToSender[mediaId] = senderUserId != null
               ? contactMap[senderUserId]
               : null;
-          final item = MemoryItem(
-            mediaService: mediaService,
-            messages: [],
-            sender: contact,
-          );
-          tempGalleryItems.add(item);
-
-          if (mediaFile.createdAt.month == now.month &&
-              mediaFile.createdAt.day == now.day) {
-            final diff = now.year - mediaFile.createdAt.year;
-            if (diff > 0) {
-              tempGalleryItemsLastYears.putIfAbsent(diff, () => []).add(item);
-            }
-          }
         }
 
-        final tempOrderedByMonth = <String, List<int>>{};
-        final tempMonths = <String>[];
-        var lastMonth = '';
-
-        for (var i = 0; i < tempGalleryItems.length; i++) {
-          final mFile = tempGalleryItems[i].mediaService.mediaFile;
-          final month =
-              mFile.createdAtMonth ??
-              DateFormat('MMMM yyyy').format(mFile.createdAt);
-          if (lastMonth != month) {
-            lastMonth = month;
-            tempMonths.add(month);
-          }
-          tempOrderedByMonth.putIfAbsent(month, () => []).add(i);
-        }
-
-        for (final list in tempGalleryItemsLastYears.values) {
-          list.sort(
-            (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
-              a.mediaService.mediaFile.createdAt,
-            ),
-          );
-        }
-
-        final sortedGalleryItemsLastYears =
-            SplayTreeMap<int, List<MemoryItem>>.from(tempGalleryItemsLastYears);
-
-        _cachedState = MemoriesState(
-          filesToMigrate: 0,
-          galleryItems: tempGalleryItems,
-          months: tempMonths,
-          orderedByMonth: tempOrderedByMonth,
-          galleryItemsLastYears: sortedGalleryItemsLastYears,
+        _cachedState = _computeState(
+          mediaFiles: mediaFiles,
+          mediaIdToSender: mediaIdToSender,
         );
       }
     } catch (e) {
@@ -169,14 +115,87 @@ class MemoriesService {
     }
   }
 
+  static MemoriesState _computeState({
+    required List<MediaFile> mediaFiles,
+    required Map<String, Contact?> mediaIdToSender,
+    int filesToMigrate = 0,
+  }) {
+    final now = clock.now();
+    final tempGalleryItems = <MemoryItem>[];
+    final tempGalleryItemsLastYears = <int, List<MemoryItem>>{};
+
+    for (final mediaFile in mediaFiles) {
+      final mediaService = MediaFileService(mediaFile);
+      if (!mediaService.imagePreviewAvailable) continue;
+
+      final senderContact = mediaIdToSender[mediaFile.mediaId];
+      final item = MemoryItem(
+        mediaService: mediaService,
+        messages: [],
+        sender: senderContact,
+      );
+
+      tempGalleryItems.add(item);
+
+      if (mediaFile.createdAt.month == now.month &&
+          mediaFile.createdAt.day == now.day) {
+        final diff = now.year - mediaFile.createdAt.year;
+        if (diff > 0) {
+          tempGalleryItemsLastYears.putIfAbsent(diff, () => []).add(item);
+        }
+      }
+    }
+
+    // Sort descending by creation date
+    tempGalleryItems.sort(
+      (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+        a.mediaService.mediaFile.createdAt,
+      ),
+    );
+
+    final tempOrderedByMonth = <String, List<int>>{};
+    final tempMonths = <String>[];
+    var lastMonth = '';
+
+    for (var i = 0; i < tempGalleryItems.length; i++) {
+      final mFile = tempGalleryItems[i].mediaService.mediaFile;
+      final month =
+          mFile.createdAtMonth ??
+          DateFormat('MMMM yyyy').format(mFile.createdAt);
+      if (lastMonth != month) {
+        lastMonth = month;
+        tempMonths.add(month);
+      }
+      tempOrderedByMonth.putIfAbsent(month, () => []).add(i);
+    }
+
+    for (final list in tempGalleryItemsLastYears.values) {
+      list.sort(
+        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+          a.mediaService.mediaFile.createdAt,
+        ),
+      );
+    }
+
+    final sortedGalleryItemsLastYears =
+        SplayTreeMap<int, List<MemoryItem>>.from(tempGalleryItemsLastYears);
+
+    return MemoriesState(
+      filesToMigrate: filesToMigrate,
+      galleryItems: tempGalleryItems,
+      months: tempMonths,
+      orderedByMonth: tempOrderedByMonth,
+      galleryItemsLastYears: sortedGalleryItemsLastYears,
+    );
+  }
+
   Future<void> _initAsync() async {
     try {
-      // 1. Perform Inventory / Migration of stored files
       final pendingFiles = await twonlyDB.mediaFilesDao
           .getAllMediaFilesPendingMigration();
 
       if (pendingFiles.isNotEmpty) {
-        _updateState(filesToMigrate: pendingFiles.length);
+        _updateMigrationCount(pendingFiles.length);
 
         for (final mediaFile in pendingFiles) {
           final mediaService = MediaFileService(mediaFile);
@@ -203,13 +222,12 @@ class MemoriesService {
               await mediaService.createThumbnail();
             }
           }
-          _updateState(filesToMigrate: _currentState.filesToMigrate - 1);
+          _updateMigrationCount(_currentState.filesToMigrate - 1);
         }
 
-        _updateState(filesToMigrate: 0);
+        _updateMigrationCount(0);
       }
 
-      // 2. Subscribe to stored media files stream
       await _dbSubscription?.cancel();
       _dbSubscription = twonlyDB.mediaFilesDao
           .watchAllStoredMediaFiles()
@@ -221,11 +239,6 @@ class MemoriesService {
 
   Future<void> _processMediaFilesStream(List<MediaFile> mediaFiles) async {
     try {
-      final now = clock.now();
-      final tempGalleryItems = <MemoryItem>[];
-      final tempGalleryItemsLastYears = <int, List<MemoryItem>>{};
-
-      // High-performance batch DB fetch for sender attribution via Messages table mapping
       final mediaIds = mediaFiles.map((m) => m.mediaId).toList();
       final allMessages = await twonlyDB.messagesDao.getMessagesByMediaIds(
         mediaIds,
@@ -244,81 +257,24 @@ class MemoriesService {
         }
       }
 
-      for (final mediaFile in mediaFiles) {
-        final mediaService = MediaFileService(mediaFile);
-        if (!mediaService.imagePreviewAvailable) continue;
-
-        if (!mediaService.mediaFile.hasThumbnail &&
-            mediaService.mediaFile.type != MediaType.audio) {
-          unawaited(mediaService.createThumbnail());
-        }
-
-        final senderContact = mediaIdToSenderContact[mediaFile.mediaId];
-        final item = MemoryItem(
-          mediaService: mediaService,
-          messages: [],
-          sender: senderContact,
-        );
-
-        tempGalleryItems.add(item);
-
-        if (mediaFile.createdAt.month == now.month &&
-            mediaFile.createdAt.day == now.day) {
-          final diff = now.year - mediaFile.createdAt.year;
-          if (diff > 0) {
-            tempGalleryItemsLastYears.putIfAbsent(diff, () => []).add(item);
-          }
-        }
-      }
-
-      // Sort descending by creation date
-      tempGalleryItems.sort(
-        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
-          a.mediaService.mediaFile.createdAt,
-        ),
-      );
-
-      final tempOrderedByMonth = <String, List<int>>{};
-      final tempMonths = <String>[];
-      var lastMonth = '';
-
-      // High performance grouping leveraging pre-computed createdAtMonth column
-      for (var i = 0; i < tempGalleryItems.length; i++) {
-        final mFile = tempGalleryItems[i].mediaService.mediaFile;
-        final month =
-            mFile.createdAtMonth ??
-            DateFormat('MMMM yyyy').format(mFile.createdAt);
-        if (lastMonth != month) {
-          lastMonth = month;
-          tempMonths.add(month);
-        }
-        tempOrderedByMonth.putIfAbsent(month, () => []).add(i);
-      }
-
-      for (final list in tempGalleryItemsLastYears.values) {
-        list.sort(
-          (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
-            a.mediaService.mediaFile.createdAt,
-          ),
-        );
-      }
-
-      final sortedGalleryItemsLastYears =
-          SplayTreeMap<int, List<MemoryItem>>.from(tempGalleryItemsLastYears);
-
-      final newState = MemoriesState(
+      final newState = _computeState(
+        mediaFiles: mediaFiles,
+        mediaIdToSender: mediaIdToSenderContact,
         filesToMigrate: _currentState.filesToMigrate,
-        galleryItems: tempGalleryItems,
-        months: tempMonths,
-        orderedByMonth: tempOrderedByMonth,
-        galleryItemsLastYears: sortedGalleryItemsLastYears,
       );
+
+      for (final item in newState.galleryItems) {
+        if (!item.mediaService.mediaFile.hasThumbnail &&
+            item.mediaService.mediaFile.type != MediaType.audio) {
+          unawaited(item.mediaService.createThumbnail());
+        }
+      }
 
       _cachedState = newState;
-      _updateStateWithObject(newState);
+      _updateState(newState);
 
       // Persist to KeyValueStore cache asynchronously
-      final cacheList = tempGalleryItems
+      final cacheList = newState.galleryItems
           .map(
             (item) => {
               'mediaId': item.mediaService.mediaFile.mediaId,
@@ -332,15 +288,17 @@ class MemoriesService {
     }
   }
 
-  void _updateStateWithObject(MemoriesState newState) {
+  void _updateState(MemoriesState newState) {
     _currentState = newState;
-    if (!_stateController.isClosed) {
-      _stateController.add(_currentState);
-    }
+    _notifyState();
   }
 
-  void _updateState({int? filesToMigrate}) {
+  void _updateMigrationCount(int filesToMigrate) {
     _currentState = _currentState.copyWith(filesToMigrate: filesToMigrate);
+    _notifyState();
+  }
+
+  void _notifyState() {
     if (!_stateController.isClosed) {
       _stateController.add(_currentState);
     }

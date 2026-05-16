@@ -37,6 +37,7 @@ class Routes {
       '/settings/privacy/user_discovery';
   static const String settingsNotification = '/settings/notification';
   static const String settingsStorage = '/settings/storage_data';
+  static const String settingsStorageManage = '/settings/storage_data/manage';
   static const String settingsStorageImport = '/settings/storage_data/import';
   static const String settingsStorageExport = '/settings/storage_data/export';
   static const String settingsHelp = '/settings/help';

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -64,6 +65,22 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               defaultAutoDownloadOptions;
           return ListView(
             children: [
+              FutureBuilder<Map<MediaType, int>>(
+                future: twonlyDB.mediaFilesDao.getStorageStats(),
+                builder: (context, snapshot) {
+                  final stats = snapshot.data ?? {};
+                  final totalBytes = stats.values.fold<int>(0, (a, b) => a + b);
+                  final sizeStr = formatBytes(totalBytes);
+
+                  return ListTile(
+                    title: Text(context.lang.settingsStorageManageTitle),
+                    subtitle: Text(sizeStr),
+                    onTap: () => context.push(Routes.settingsStorageManage),
+                    trailing: const Icon(Icons.chevron_right),
+                  );
+                },
+              ),
+              const Divider(),
               ListTile(
                 title: Text(context.lang.settingsStorageDataStoreInGTitle),
                 subtitle: Text(

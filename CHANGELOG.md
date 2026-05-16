@@ -2,7 +2,8 @@
 
 ## 0.2.13
 
-- Improved: Media thumbnails for faster loading
+- New: Manage storage view.
+- Improved: Media thumbnails for faster loading.
 
 ## 0.2.12
 
