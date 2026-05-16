@@ -1804,4 +1804,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
+
+  @override
+  String get dragToZoom => 'Drag to Zoom';
 }

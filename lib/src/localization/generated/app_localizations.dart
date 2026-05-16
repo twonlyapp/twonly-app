@@ -3235,6 +3235,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Zero ads. Total privacy.'**
   String get subscriptionPledgeSubtitle;
+
+  /// No description provided for @dragToZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to Zoom'**
+  String get dragToZoom;
 }
 
 class _AppLocalizationsDelegate

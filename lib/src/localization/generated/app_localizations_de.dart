@@ -1820,4 +1820,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get subscriptionPledgeSubtitle => 'Keine Werbung. Volle Privatsphäre.';
+
+  @override
+  String get dragToZoom => 'Zum Zoomen ziehen';
 }

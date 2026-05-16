@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ZoomTutorialOverlay extends StatefulWidget {
   const ZoomTutorialOverlay({
@@ -107,9 +108,9 @@ class _ZoomTutorialOverlayState extends State<ZoomTutorialOverlay>
                           color: Colors.black,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Text(
-                          'Drag to Zoom',
-                          style: TextStyle(
+                        child: Text(
+                          context.lang.dragToZoom,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
