@@ -36,8 +36,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   int? galleryItemIndex;
   StreamSubscription<Message?>? messageStream;
   Timer? _timer;
-  late final ValueNotifier<String?> _activeMediaIdNotifier =
-      ValueNotifier(widget.message.mediaId);
+  late final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(
+    widget.message.mediaId,
+  );
 
   @override
   void initState() {
@@ -46,14 +47,25 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     unawaited(initStream());
   }
 
+  @override
+  void didUpdateWidget(InChatMediaViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.message.mediaStored != oldWidget.message.mediaStored ||
+        widget.galleryItems != oldWidget.galleryItems) {
+      if (widget.message.mediaStored) {
+        unawaited(loadIndexAsync());
+      }
+    }
+  }
+
   Future<void> loadIndexAsync() async {
-    if (!widget.message.mediaStored) return;
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       /// when the galleryItems are updated this widget is not reloaded
       /// so using this timer as a workaround
       if (loadIndex()) {
         timer.cancel();
-        setState(() {});
+        if (mounted) setState(() {});
       }
     });
   }
