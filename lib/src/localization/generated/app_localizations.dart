@@ -3218,12 +3218,6 @@ abstract class AppLocalizations {
   /// **'Emoji already used or invalid'**
   String get errorEmojiUsedOrInvalid;
 
-  /// No description provided for @subscriptionPledgeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Support independent privacy.'**
-  String get subscriptionPledgeTitle;
-
   /// No description provided for @subscriptionPledgeSecureTitle.
   ///
   /// In en, this message translates to:
@@ -3247,18 +3241,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'twonly will never show advertisements or sell your private data.'**
   String get subscriptionPledgeNoAdsDesc;
-
-  /// No description provided for @subscriptionPledgeFundedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Independent and funded by Users'**
-  String get subscriptionPledgeFundedTitle;
-
-  /// No description provided for @subscriptionPledgeFundedDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.'**
-  String get subscriptionPledgeFundedDesc;
 
   /// No description provided for @subscriptionPledgeSubtitle.
   ///

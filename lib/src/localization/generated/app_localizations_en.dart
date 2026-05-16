@@ -1798,9 +1798,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEmojiUsedOrInvalid => 'Emoji already used or invalid';
 
   @override
-  String get subscriptionPledgeTitle => 'Support independent privacy.';
-
-  @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
 
   @override
@@ -1813,13 +1810,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subscriptionPledgeNoAdsDesc =>
       'twonly will never show advertisements or sell your private data.';
-
-  @override
-  String get subscriptionPledgeFundedTitle => 'Independent and funded by Users';
-
-  @override
-  String get subscriptionPledgeFundedDesc =>
-      'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.';
 
   @override
   String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
