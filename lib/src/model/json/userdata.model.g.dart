@@ -102,7 +102,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
           ? null
           : DateTime.parse(json['lastUserStudyDataUpload'] as String)
-      ..skipSetupPages = json['skipSetupPages'] as bool? ?? false;
+      ..skipSetupPages = json['skipSetupPages'] as bool? ?? false
+      ..hasZoomed = json['hasZoomed'] as bool? ?? false;
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'userId': instance.userId,
@@ -164,6 +165,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       ?.toIso8601String(),
   'currentSetupPage': instance.currentSetupPage,
   'skipSetupPages': instance.skipSetupPages,
+  'hasZoomed': instance.hasZoomed,
 };
 
 const _$ThemeModeEnumMap = {

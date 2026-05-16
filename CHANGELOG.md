@@ -2,6 +2,7 @@
 
 ## 0.2.13
 
+- New: Tutorial on how to use zoom. 
 - New: Manage storage view.
 - Improved: Media thumbnails for faster loading.
 
