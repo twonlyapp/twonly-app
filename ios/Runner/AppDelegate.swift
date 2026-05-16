@@ -13,7 +13,7 @@ import workmanager_apple
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
-    
+
     if let registrar = self.registrar(forPlugin: "VideoCompressionChannel") {
       VideoCompressionChannel.register(with: registrar.messenger())
     }
@@ -32,20 +32,22 @@ import workmanager_apple
     WorkmanagerPlugin.registerBGProcessingTask(
       withIdentifier: "eu.twonly.processing_task"
     )
-    
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+  override func application(
+    _ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
 
-         let sharingIntent = SwiftFlutterSharingIntentPlugin.instance
-         if sharingIntent.hasSameSchemePrefix(url: url) {
-             return sharingIntent.application(app, open: url, options: options)
-         }
+    let sharingIntent = SwiftFlutterSharingIntentPlugin.instance
+    if sharingIntent.hasSameSchemePrefix(url: url) {
+      return sharingIntent.application(app, open: url, options: options)
+    }
 
-         // Proceed url handling for other Flutter libraries like app_links
-         return super.application(app, open: url, options:options)
-       }
+    // Proceed url handling for other Flutter libraries like app_links
+    return super.application(app, open: url, options: options)
+  }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
@@ -58,7 +60,8 @@ import workmanager_apple
     NSLog(
       "Application delegate method userNotificationCenter:didReceive:withCompletionHandler: is called with user info: %@",
       response.notification.request.content.userInfo)
-    //...
+    super.userNotificationCenter(
+      center, didReceive: response, withCompletionHandler: completionHandler)
   }
 
   override func userNotificationCenter(
