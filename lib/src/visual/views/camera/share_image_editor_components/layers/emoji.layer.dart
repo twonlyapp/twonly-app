@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -242,7 +243,13 @@ class _ScreenshotEmojiState extends State<ScreenshotEmoji> {
             key: _boundaryKey,
             child: Text(
               widget.emoji,
-              style: const TextStyle(fontSize: 94),
+              style: TextStyle(
+                fontSize: 94,
+                fontFamily: Platform.isAndroid ? 'sans-serif' : null,
+                fontFamilyFallback: Platform.isAndroid
+                    ? const ['NotoColorEmoji']
+                    : null,
+              ),
             ),
           ),
         ),

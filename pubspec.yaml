@@ -212,3 +212,9 @@ flutter:
     - assets/passwords/
     - CHANGELOG.md
 
+  fonts:
+    - family: NotoColorEmoji
+      fonts:
+        - asset: assets/fonts/NotoColorEmoji.ttf
+
+

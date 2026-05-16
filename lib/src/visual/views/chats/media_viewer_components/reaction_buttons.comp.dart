@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -305,6 +306,10 @@ class _ParticlePainter extends CustomPainter {
         style: TextStyle(
           fontSize: 24 * p.currentScale,
           color: Colors.black.withValues(alpha: p.opacity),
+          fontFamily: Platform.isAndroid ? 'sans-serif' : null,
+          fontFamilyFallback: Platform.isAndroid
+              ? const ['NotoColorEmoji']
+              : null,
         ),
       );
       textPainter
