@@ -13,22 +13,16 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/message_s
 class ChatAudioEntry extends StatelessWidget {
   const ChatAudioEntry({
     required this.message,
-    required this.nextMessage,
     required this.mediaService,
-    required this.prevMessage,
     required this.borderRadius,
-    required this.userIdToContact,
-    required this.minWidth,
+    required this.info,
     super.key,
   });
 
   final Message message;
   final MediaFileService mediaService;
-  final Message? nextMessage;
-  final Message? prevMessage;
-  final Map<int, Contact>? userIdToContact;
   final BorderRadius borderRadius;
-  final double minWidth;
+  final BubbleInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -36,14 +30,6 @@ class ChatAudioEntry extends StatelessWidget {
         !mediaService.originalPath.existsSync()) {
       return Container(); // media file was purged
     }
-    final info = getBubbleInfo(
-      context,
-      message,
-      nextMessage,
-      prevMessage,
-      userIdToContact,
-      minWidth,
-    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -63,12 +49,7 @@ class ChatAudioEntry extends StatelessWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.8,
             minWidth: 250,
           ),
-          padding: const EdgeInsets.only(
-            left: 10,
-            top: 6,
-            bottom: 6,
-            right: 10,
-          ),
+          padding: info.padding,
           decoration: BoxDecoration(
             color: info.color,
             borderRadius: borderRadius,

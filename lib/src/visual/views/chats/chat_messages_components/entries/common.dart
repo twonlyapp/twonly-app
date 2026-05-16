@@ -14,6 +14,8 @@ class BubbleInfo {
   late Color color;
   late bool expanded;
   late double spacerWidth;
+  late EdgeInsets padding;
+  late double minWidth;
 }
 
 BubbleInfo getBubbleInfo(
@@ -29,7 +31,11 @@ BubbleInfo getBubbleInfo(
     ..textColor = Colors.white
     ..color = getMessageColor(message.senderId != null)
     ..displayTime = !combineTextMessageWithNext(message, nextMessage)
-    ..displayUserName = '';
+    ..displayUserName = ''
+    ..minWidth = minWidth
+    ..padding = message.type == MessageType.media.name
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 2)
+        : const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10);
 
   if (message.senderId != null &&
       userIdToContact != null &&
@@ -86,17 +92,15 @@ double measureTextWidth(
 }
 
 bool combineTextMessageWithNext(Message message, Message? nextMessage) {
-  if (nextMessage != null && nextMessage.content != null) {
+  if (nextMessage != null) {
     if (nextMessage.senderId == message.senderId) {
-      if (nextMessage.type == MessageType.text.name &&
-          message.type == MessageType.text.name) {
-        if (!EmojiAnimationComp.supported(nextMessage.content!)) {
-          final diff = nextMessage.createdAt
-              .difference(message.createdAt)
-              .inMinutes;
-          if (diff <= 1) {
-            return true;
-          }
+      if (nextMessage.content == null ||
+          !EmojiAnimationComp.supported(nextMessage.content!)) {
+        final diff = nextMessage.createdAt
+            .difference(message.createdAt)
+            .inMinutes;
+        if (diff <= 1) {
+          return true;
         }
       }
     }

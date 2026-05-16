@@ -8,20 +8,14 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/f
 class ChatTextEntry extends StatelessWidget {
   const ChatTextEntry({
     required this.message,
-    required this.nextMessage,
-    required this.prevMessage,
     required this.borderRadius,
-    required this.userIdToContact,
-    required this.minWidth,
+    required this.info,
     super.key,
   });
 
   final Message message;
-  final Message? nextMessage;
-  final Message? prevMessage;
-  final Map<int, Contact>? userIdToContact;
   final BorderRadius borderRadius;
-  final double minWidth;
+  final BubbleInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -40,15 +34,6 @@ class ChatTextEntry extends StatelessWidget {
       );
     }
 
-    final info = getBubbleInfo(
-      context,
-      message,
-      nextMessage,
-      prevMessage,
-      userIdToContact,
-      minWidth,
-    );
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final textWidth = measureTextWidth(info.text);
@@ -65,14 +50,9 @@ class ChatTextEntry extends StatelessWidget {
         return Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.8,
-            minWidth: minWidth,
+            minWidth: info.minWidth,
           ),
-          padding: const EdgeInsets.only(
-            left: 10,
-            top: 6,
-            bottom: 6,
-            right: 10,
-          ),
+          padding: info.padding,
           decoration: BoxDecoration(
             color: info.color,
             borderRadius: borderRadius,

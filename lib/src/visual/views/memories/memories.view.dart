@@ -411,7 +411,7 @@ class MemoriesViewState extends State<MemoriesView> {
                                         strokeWidth: 2.5,
                                         color: context.color.primary,
                                         backgroundColor: context.color.primary
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                       ),
                                     ),
                                   ),

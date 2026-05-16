@@ -6,46 +6,49 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class FriendlyMessageTime extends StatelessWidget {
-  const FriendlyMessageTime({required this.message, super.key});
+  const FriendlyMessageTime({
+    required this.message,
+    this.color,
+    super.key,
+  });
 
   final Message message;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: AlignmentGeometry.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 6),
-        child: Row(
-          children: [
-            if (message.modifiedAt != null && !message.isDeletedFromSender)
-              Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: SizedBox(
-                  height: 10,
-                  child: FaIcon(
-                    FontAwesomeIcons.pencil,
-                    color: Colors.white.withAlpha(150),
-                    size: 10,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (message.modifiedAt != null && !message.isDeletedFromSender)
+            Padding(
+              padding: const EdgeInsets.only(right: 5),
+              child: SizedBox(
+                height: 10,
+                child: FaIcon(
+                  FontAwesomeIcons.pencil,
+                  color: color ?? Colors.white.withAlpha(150),
+                  size: 10,
                 ),
               ),
-            Text(
-              friendlyTime(
-                context,
-                (message.modifiedAt != null)
-                    ? message.modifiedAt!
-                    : message.createdAt,
-              ),
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.white.withAlpha(150),
-                decoration: TextDecoration.none,
-                fontWeight: FontWeight.normal,
-              ),
             ),
-          ],
-        ),
+          Text(
+            friendlyTime(
+              context,
+              (message.modifiedAt != null)
+                  ? message.modifiedAt!
+                  : message.createdAt,
+            ),
+            style: TextStyle(
+              fontSize: 10,
+              color: color ?? Colors.white.withAlpha(150),
+              decoration: TextDecoration.none,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

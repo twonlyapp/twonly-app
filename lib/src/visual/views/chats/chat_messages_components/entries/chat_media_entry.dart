@@ -26,15 +26,17 @@ class ChatMediaEntry extends StatefulWidget {
     required this.group,
     required this.galleryItems,
     required this.mediaService,
-    required this.minWidth,
+    required this.borderRadius,
+    required this.info,
     super.key,
   });
 
   final Message message;
-  final double minWidth;
   final Group group;
   final List<MemoryItem> galleryItems;
   final MediaFileService mediaService;
+  final BorderRadius borderRadius;
+  final BubbleInfo info;
 
   @override
   State<ChatMediaEntry> createState() => _ChatMediaEntryState();
@@ -116,52 +118,34 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       context,
     );
 
-    var imageBorderRadius = BorderRadius.circular(12);
+    var imageBorderRadius = widget.borderRadius;
 
     Widget additionalMessageData = Container();
 
     final addData = widget.message.additionalMessageData;
     if (addData != null) {
-      final info = getBubbleInfo(
-        context,
-        widget.message,
-        null,
-        null,
-        null,
-        200,
-      );
       final data = AdditionalMessageData.fromBuffer(addData);
       if (data.hasLink() && widget.message.mediaStored) {
-        imageBorderRadius = const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
-          bottomLeft: Radius.circular(5),
-          bottomRight: Radius.circular(5),
+        imageBorderRadius = widget.borderRadius.copyWith(
+          bottomLeft: const Radius.circular(5),
+          bottomRight: const Radius.circular(5),
         );
 
         additionalMessageData = Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.8,
           ),
-          padding: const EdgeInsets.only(
-            left: 10,
-            top: 6,
-            bottom: 6,
-            right: 10,
-          ),
+          padding: widget.info.padding,
           decoration: BoxDecoration(
-            color: info.color,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(5),
-              topRight: Radius.circular(12),
-              bottomLeft: Radius.circular(12),
-              bottomRight: Radius.circular(12),
+            color: widget.info.color,
+            borderRadius: widget.borderRadius.copyWith(
+              topLeft: const Radius.circular(5),
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              BetterText(text: data.link, textColor: info.textColor),
+              BetterText(text: data.link, textColor: widget.info.textColor),
             ],
           ),
         );
@@ -178,7 +162,12 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           onDoubleTap: onDoubleTap,
           onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
           child: SizedBox(
-            width: (widget.minWidth > 150) ? widget.minWidth : 150,
+            width: (widget.info.minWidth > 150)
+                ? widget.info.minWidth
+                : (widget.message.mediaStored &&
+                      widget.mediaService.imagePreviewAvailable)
+                ? 150
+                : null,
             height:
                 (widget.message.mediaStored &&
                     widget.mediaService.imagePreviewAvailable)
@@ -195,6 +184,8 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
                   color: color,
                   galleryItems: widget.galleryItems,
                   canBeReopened: _canBeReopened,
+                  borderRadius: imageBorderRadius,
+                  info: widget.info,
                 ),
               ),
             ),

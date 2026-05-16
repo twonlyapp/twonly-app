@@ -441,6 +441,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     await mc.cameraController!.setZoomLevel(
       mc.selectedCameraDetails.scaleFactor,
     );
+    if (!userService.currentUser.hasZoomed) {
+      await UserService.update((u) => u.hasZoomed = true);
+    }
   }
 
   Future<void> pickImageFromGallery() async {
@@ -613,12 +616,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (mounted) showSnackbar(context, 'Error: $e');
   }
 
-  void _incrementZoomUsageCount() {
-    if (!userService.currentUser.hasZoomed) {
-      UserService.update((u) => u.hasZoomed = true);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
@@ -666,19 +663,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             },
             onLongPressEnd: (a) {
               stopVideoRecording();
-              if ((mc.selectedCameraDetails.scaleFactor - _baseScaleFactor)
-                      .abs() >
-                  0.05) {
-                _incrementZoomUsageCount();
-              }
             },
             onPanEnd: (a) {
               stopVideoRecording();
-              if ((mc.selectedCameraDetails.scaleFactor - _baseScaleFactor)
-                      .abs() >
-                  0.05) {
-                _incrementZoomUsageCount();
-              }
             },
             onPanUpdate: onPanUpdate,
             child: Stack(

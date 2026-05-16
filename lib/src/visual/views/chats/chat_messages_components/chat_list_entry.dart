@@ -101,15 +101,16 @@ class _ChatListEntryState extends State<ChatListEntry> {
     setState(() {});
   }
 
-  Widget? _getChatEntry(BorderRadius borderRadius, int reactionsForWidth) {
+  Widget? _getChatEntry(
+    BorderRadius borderRadius,
+    int reactionsForWidth,
+    BubbleInfo info,
+  ) {
     if (widget.message.type == MessageType.text.name) {
       return ChatTextEntry(
         message: widget.message,
-        nextMessage: widget.nextMessage,
-        prevMessage: widget.prevMessage,
-        userIdToContact: widget.userIdToContact,
         borderRadius: borderRadius,
-        minWidth: reactionsForWidth * 43,
+        info: info,
       );
     }
 
@@ -118,12 +119,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
       if (mediaService!.mediaFile.type == MediaType.audio) {
         return ChatAudioEntry(
           message: widget.message,
-          nextMessage: widget.nextMessage,
-          prevMessage: widget.prevMessage,
           mediaService: mediaService!,
-          userIdToContact: widget.userIdToContact,
           borderRadius: borderRadius,
-          minWidth: reactionsForWidth * 43,
+          info: info,
         );
       }
       return ChatMediaEntry(
@@ -131,7 +129,8 @@ class _ChatListEntryState extends State<ChatListEntry> {
         group: widget.group,
         mediaService: mediaService!,
         galleryItems: widget.galleryItems,
-        minWidth: reactionsForWidth * 43,
+        borderRadius: borderRadius,
+        info: info,
       );
     }
 
@@ -168,6 +167,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
         .length;
     if (reactionsForWidth > 4) reactionsForWidth = 4;
 
+    final info = getBubbleInfo(
+      context,
+      widget.message,
+      widget.nextMessage,
+      widget.prevMessage,
+      widget.userIdToContact,
+      reactionsForWidth * 43.0,
+    );
+
     Widget child = Stack(
       // overflow: Overflow.visible,
       // clipBehavior: Clip.none,
@@ -176,11 +184,8 @@ class _ChatListEntryState extends State<ChatListEntry> {
         if (widget.message.isDeletedFromSender)
           ChatTextEntry(
             message: widget.message,
-            nextMessage: widget.nextMessage,
-            prevMessage: widget.prevMessage,
-            userIdToContact: widget.userIdToContact,
             borderRadius: borderRadius,
-            minWidth: reactionsForWidth * 43,
+            info: info,
           )
         else
           Column(
@@ -191,7 +196,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 mediaService: mediaService,
                 borderRadius: borderRadius,
                 scrollToMessage: widget.scrollToMessage,
-                child: _getChatEntry(borderRadius, reactionsForWidth),
+                child: _getChatEntry(borderRadius, reactionsForWidth, info),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
             ],
