@@ -5,6 +5,7 @@
 - New: Tutorial on how to use zoom. 
 - New: Manage storage view.
 - Improved: Media thumbnails for faster loading.
+- Fix: Some message where not marked as opened.
 
 ## 0.2.12
 
