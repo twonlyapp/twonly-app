@@ -1837,4 +1837,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get subscriptionPledgeFundedDesc =>
       'twonly wird rein durch Nutzer-Abonnements finanziert, um unsere Unabhängigkeit und die Zukunft von twonly zu sichern.';
+
+  @override
+  String get subscriptionPledgeSubtitle => 'Keine Werbung. Volle Privatsphäre.';
 }

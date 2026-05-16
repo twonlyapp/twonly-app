@@ -3259,6 +3259,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.'**
   String get subscriptionPledgeFundedDesc;
+
+  /// No description provided for @subscriptionPledgeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero ads. Total privacy.'**
+  String get subscriptionPledgeSubtitle;
 }
 
 class _AppLocalizationsDelegate

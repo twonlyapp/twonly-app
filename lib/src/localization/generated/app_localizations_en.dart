@@ -1820,4 +1820,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subscriptionPledgeFundedDesc =>
       'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.';
+
+  @override
+  String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
 }

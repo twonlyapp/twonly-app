@@ -66,10 +66,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 children: [
                   const SizedBox(height: 20),
                   Text(
-                    context.lang.subscriptionPledgeTitle,
+                    context.lang.subscriptionPledgeSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: context.color.primary,
                       letterSpacing: 0.5,
@@ -86,12 +86,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     icon: FontAwesomeIcons.userSecret,
                     title: context.lang.subscriptionPledgeNoAdsTitle,
                     desc: context.lang.subscriptionPledgeNoAdsDesc,
-                  ),
-                  const SizedBox(height: 24),
-                  _MissionRow(
-                    icon: FontAwesomeIcons.heart,
-                    title: context.lang.subscriptionPledgeFundedTitle,
-                    desc: context.lang.subscriptionPledgeFundedDesc,
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -145,7 +139,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               onPurchase: initAsync,
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: 30),
           BetterListTile(
             icon: FontAwesomeIcons.fileContract,
             text: context.lang.termsOfService,
