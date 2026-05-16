@@ -3,14 +3,13 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 
 Future<HashMap<int, Uint8List>> getSignalSignedPreKeyStoreOld() async {
   final storeSerialized = await SecureStorage.instance.read(
-    key: SecureStorageKeys.signalSignedPreKey,
+    key: 'signed_pre_key_store',
   );
   final store = HashMap<int, Uint8List>();
   if (storeSerialized == null) {

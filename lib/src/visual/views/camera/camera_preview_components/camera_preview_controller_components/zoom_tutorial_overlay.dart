@@ -130,7 +130,7 @@ class _ZoomTutorialOverlayState extends State<ZoomTutorialOverlay>
                           height: 42,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           child: const Center(
                             child: FaIcon(

@@ -4,7 +4,6 @@ import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
@@ -129,7 +128,7 @@ Future<Map<String, String>?> getAuthenticationHeader() async {
     };
   } else {
     final apiAuthTokenRaw = await SecureStorage.instance.read(
-      key: SecureStorageKeys.apiAuthToken,
+      key: 'api_auth_token',
     );
 
     if (apiAuthTokenRaw == null) {
