@@ -114,16 +114,15 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .get();
   }
 
-  Future<List<MediaFile>> getAllNonHashedStoredMediaFiles() async {
+  Future<List<MediaFile>> getAllMediaFilesPendingMigration() async {
     return (select(mediaFiles)..where(
-          (t) => t.stored.equals(true) & t.storedFileHash.isNull(),
-        ))
-        .get();
-  }
-
-  Future<List<MediaFile>> getAllUnanalyzedStoredMediaFiles() async {
-    return (select(mediaFiles)..where(
-          (t) => t.stored.equals(true) & t.hasCropAnalyzed.equals(false),
+          (t) =>
+              t.stored.equals(true) &
+              (t.storedFileHash.isNull() |
+                  t.hasCropAnalyzed.equals(false) |
+                  (t.hasThumbnail.equals(false) &
+                      t.type.equals(MediaType.audio.name).not()) |
+                  t.sizeInBytes.isNull()),
         ))
         .get();
   }
@@ -184,5 +183,18 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
     final rows = await query.get();
     return rows.map((row) => row.readTable(db.messages).messageId).toList();
+  }
+
+  Future<Map<MediaType, int>> getStorageStats() async {
+    final rows = await select(mediaFiles).get();
+    final stats = <MediaType, int>{};
+
+    for (final row in rows) {
+      final type = row.type;
+      final size = row.sizeInBytes ?? 0;
+      stats[type] = (stats[type] ?? 0) + size;
+    }
+
+    return stats;
   }
 }

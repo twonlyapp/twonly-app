@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -38,7 +37,7 @@ class UserService {
 
       // 2. If not found, try to load from SecureStorage (Migration path)
       final userDataJson = await SecureStorage.instance.read(
-        key: SecureStorageKeys.userData,
+        key: 'userData',
       );
 
       if (userDataJson != null) {

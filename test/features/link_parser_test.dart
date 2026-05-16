@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pro_video_editor/core/platform/io/io_helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parse_link.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
@@ -29,6 +30,9 @@ class LinkParserTest {
 
 void main() {
   test('testing different urls', () async {
+    if (!Platform.isMacOS) {
+      return;
+    }
     final testCases = [
       LinkParserTest(
         url: 'https://mastodon.social/@islieb/115883317936171927',

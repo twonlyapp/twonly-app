@@ -98,16 +98,10 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// No description provided for @registerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to twonly!'**
-  String get registerTitle;
-
   /// No description provided for @registerSlogan.
   ///
   /// In en, this message translates to:
-  /// **'twonly, a privacy friendly way to connect with friends through secure, spontaneous image sharing'**
+  /// **'Stay in touch with friends privately and securely.'**
   String get registerSlogan;
 
   /// No description provided for @onboardingWelcomeTitle.
@@ -179,7 +173,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerUsernameSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Please select a username so others can find you!'**
+  /// **'Your public username'**
   String get registerUsernameSlogan;
 
   /// No description provided for @registerUsernameDecoration.
@@ -191,7 +185,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerUsernameLimits.
   ///
   /// In en, this message translates to:
-  /// **'Your username must be at least 3 characters long.'**
+  /// **'At least 3 characters.'**
   String get registerUsernameLimits;
 
   /// No description provided for @registerProofOfWorkFailed.
@@ -541,6 +535,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When using WI-FI'**
   String get settingsStorageDataAutoDownWifi;
+
+  /// No description provided for @settingsStorageManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage storage'**
+  String get settingsStorageManageTitle;
+
+  /// No description provided for @settingsStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage used'**
+  String get settingsStorageUsed;
+
+  /// No description provided for @settingsStorageImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get settingsStorageImages;
+
+  /// No description provided for @settingsStorageVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get settingsStorageVideos;
+
+  /// No description provided for @settingsStorageGifs.
+  ///
+  /// In en, this message translates to:
+  /// **'GIFs'**
+  String get settingsStorageGifs;
 
   /// No description provided for @settingsProfileCustomizeAvatar.
   ///
@@ -1553,14 +1577,8 @@ abstract class AppLocalizations {
   /// No description provided for @twonlySafeRecoverTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recovery'**
+  /// **'Restore backup'**
   String get twonlySafeRecoverTitle;
-
-  /// No description provided for @twonlySafeRecoverDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'If you have created a backup with twonly Backup, you can restore it here.'**
-  String get twonlySafeRecoverDesc;
 
   /// No description provided for @twonlySafeRecoverBtn.
   ///
@@ -3188,12 +3206,6 @@ abstract class AppLocalizations {
   /// **'Emoji already used or invalid'**
   String get errorEmojiUsedOrInvalid;
 
-  /// No description provided for @subscriptionPledgeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Support independent privacy.'**
-  String get subscriptionPledgeTitle;
-
   /// No description provided for @subscriptionPledgeSecureTitle.
   ///
   /// In en, this message translates to:
@@ -3218,17 +3230,17 @@ abstract class AppLocalizations {
   /// **'twonly will never show advertisements or sell your private data.'**
   String get subscriptionPledgeNoAdsDesc;
 
-  /// No description provided for @subscriptionPledgeFundedTitle.
+  /// No description provided for @subscriptionPledgeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Independent and funded by Users'**
-  String get subscriptionPledgeFundedTitle;
+  /// **'Zero ads. Total privacy.'**
+  String get subscriptionPledgeSubtitle;
 
-  /// No description provided for @subscriptionPledgeFundedDesc.
+  /// No description provided for @dragToZoom.
   ///
   /// In en, this message translates to:
-  /// **'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.'**
-  String get subscriptionPledgeFundedDesc;
+  /// **'Drag to Zoom'**
+  String get dragToZoom;
 }
 
 class _AppLocalizationsDelegate

@@ -441,6 +441,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     await mc.cameraController!.setZoomLevel(
       mc.selectedCameraDetails.scaleFactor,
     );
+    if (!userService.currentUser.hasZoomed) {
+      await UserService.update((u) => u.hasZoomed = true);
+    }
   }
 
   Future<void> pickImageFromGallery() async {

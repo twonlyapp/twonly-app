@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.13
+
+- New: Tutorial on how to use zoom. 
+- New: Manage storage view.
+- Improved: Media thumbnails for faster loading.
+- Fix: Some message where not marked as opened.
+
 ## 0.2.12
 
 - New: Automatically mark identical media as opened across all chats (Settings > Chats).

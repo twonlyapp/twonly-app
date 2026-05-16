@@ -18,7 +18,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
@@ -426,7 +425,7 @@ class ApiService {
 
   Future<bool> tryAuthenticateWithToken() async {
     final apiAuthToken = await SecureStorage.instance.read(
-      key: SecureStorageKeys.apiAuthToken,
+      key: 'api_auth_token',
     );
 
     if (apiAuthToken != null) {
@@ -464,7 +463,7 @@ class ApiService {
               Log.info('Switch was successfully.');
               await UserService.update((u) => u.canUseLoginTokenForAuth = true);
               await SecureStorage.instance.delete(
-                key: SecureStorageKeys.apiAuthToken,
+                key: 'api_auth_token',
               );
             }
           } catch (e) {
@@ -586,7 +585,7 @@ class ApiService {
       final apiAuthTokenB64 = base64Encode(apiAuthToken);
 
       await SecureStorage.instance.write(
-        key: SecureStorageKeys.apiAuthToken,
+        key: 'api_auth_token',
         value: apiAuthTokenB64,
       );
 

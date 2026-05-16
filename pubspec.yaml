@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.2.12+121
+version: 0.2.13+122
 
 environment:
   sdk: ^3.11.0
@@ -211,4 +211,10 @@ flutter:
     - assets/filters/
     - assets/passwords/
     - CHANGELOG.md
+
+  fonts:
+    - family: NotoColorEmoji
+      fonts:
+        - asset: assets/fonts/NotoColorEmoji.ttf
+
 

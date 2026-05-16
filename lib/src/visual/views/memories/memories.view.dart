@@ -7,8 +7,8 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/draggable_scrollbar.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/selection_toolbar.comp.dart';
@@ -292,29 +292,6 @@ class MemoriesViewState extends State<MemoriesView> {
             builder: (context, snapshot) {
               final state = snapshot.data ?? _service.currentState;
 
-              if (state.isLoading) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ThreeRotatingDots(
-                        size: 40,
-                        color: context.color.primary,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        context.lang.migrationOfMemories(state.filesToMigrate),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
               if (state.isEmpty) {
                 return Center(
                   child: Padding(
@@ -371,99 +348,152 @@ class MemoriesViewState extends State<MemoriesView> {
                 orderedByMonth = filteredOrdered;
               }
 
-              return Scrollbar(
-                controller: _scrollController,
-                thickness: 12,
-                radius: const Radius.circular(6),
-                interactive: true,
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverAppBar(
-                      title: const Text(
-                        'Memories',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      floating: true,
-                      snap: true,
-                      elevation: 0,
-                      backgroundColor: context.color.surface,
-                      actions: [
-                        IconButton(
-                          icon: Icon(
-                            _filterFavoritesOnly
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: _filterFavoritesOnly
-                                ? Colors.redAccent
-                                : null,
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return DraggableScrollbar(
+                    controller: _scrollController,
+                    labelBuilder: (offset) {
+                      final state = _service.currentState;
+                      if (state.isEmpty) return null;
+
+                      // Simple heuristic to find month by offset
+                      double currentOffset = 56;
+                      if (state.galleryItemsLastYears.isNotEmpty) {
+                        currentOffset += 220;
+                      }
+
+                      final screenWidth = MediaQuery.sizeOf(context).width;
+                      final itemWidth = (screenWidth - 8) / 4;
+                      final itemHeight = itemWidth * (16 / 9);
+                      final rowHeight = itemHeight + 2;
+
+                      for (final month in state.months) {
+                        final indices = state.orderedByMonth[month]!;
+                        final totalRows = (indices.length + 3) ~/ 4;
+                        final monthHeight = 44 + (totalRows * rowHeight);
+
+                        if (offset < currentOffset + monthHeight) {
+                          return month;
+                        }
+                        currentOffset += monthHeight;
+                      }
+                      return state.months.last;
+                    },
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        SliverAppBar(
+                          title: const Text(
+                            'Memories',
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _filterFavoritesOnly = !_filterFavoritesOnly;
-                            });
-                          },
-                          tooltip: _filterFavoritesOnly
-                              ? 'Show all'
-                              : 'Show favorites only',
+                          floating: true,
+                          snap: true,
+                          elevation: 0,
+                          backgroundColor: context.color.surface,
+                          actions: [
+                            if (state.isLoading)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Center(
+                                  child: Tooltip(
+                                    message: context.lang.migrationOfMemories(
+                                      state.filesToMigrate,
+                                    ),
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        value: state.migrationProgress,
+                                        strokeWidth: 2.5,
+                                        color: context.color.primary,
+                                        backgroundColor: context.color.primary
+                                            .withValues(alpha: 0.2),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            IconButton(
+                              icon: Icon(
+                                _filterFavoritesOnly
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _filterFavoritesOnly
+                                    ? Colors.redAccent
+                                    : null,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _filterFavoritesOnly = !_filterFavoritesOnly;
+                                });
+                              },
+                              tooltip: _filterFavoritesOnly
+                                  ? 'Show all'
+                                  : 'Show favorites only',
+                            ),
+                          ],
+                        ),
+                        MemoriesFlashbackBannerComp(
+                          lastYears: lastYears,
+                          onOpenFlashback: (items, idx) =>
+                              _openViewer(items, idx, isFlashback: true),
+                        ),
+                        for (final month in months) ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(8, 12, 8, 6),
+                            sliver: SliverToBoxAdapter(
+                              child: Text(
+                                month,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SliverGrid(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 4,
+                                  mainAxisSpacing: 2,
+                                  crossAxisSpacing: 2,
+                                  childAspectRatio: 9 / 16,
+                                ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, idx) {
+                                final globalIndex = orderedByMonth[month]![idx];
+                                final item = state.galleryItems[globalIndex];
+                                final mediaId =
+                                    item.mediaService.mediaFile.mediaId;
+                                final isSelected = _selectedMediaIds.contains(
+                                  mediaId,
+                                );
+
+                                return MemoriesThumbnailComp(
+                                  galleryItem: item,
+                                  index: globalIndex,
+                                  selectionMode: _selectionMode,
+                                  isSelected: isSelected,
+                                  activeMediaIdNotifier: _activeMediaIdNotifier,
+                                  onLongPress: () => _onLongPressItem(mediaId),
+                                  onTap: () => _onTapItem(mediaId, globalIndex),
+                                );
+                              },
+                              childCount: orderedByMonth[month]!.length,
+                            ),
+                          ),
+                        ],
+                        const SliverPadding(
+                          padding: EdgeInsets.only(bottom: 32),
                         ),
                       ],
                     ),
-
-                    MemoriesFlashbackBannerComp(
-                      lastYears: lastYears,
-                      onOpenFlashback: (items, idx) =>
-                          _openViewer(items, idx, isFlashback: true),
-                    ),
-
-                    for (final month in months) ...[
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(8, 12, 8, 6),
-                        sliver: SliverToBoxAdapter(
-                          child: Text(
-                            month,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              mainAxisSpacing: 2,
-                              crossAxisSpacing: 2,
-                              childAspectRatio: 9 / 16,
-                            ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, idx) {
-                            final globalIndex = orderedByMonth[month]![idx];
-                            final item = state.galleryItems[globalIndex];
-                            final mediaId = item.mediaService.mediaFile.mediaId;
-                            final isSelected = _selectedMediaIds.contains(
-                              mediaId,
-                            );
-
-                            return MemoriesThumbnailComp(
-                              galleryItem: item,
-                              index: globalIndex,
-                              selectionMode: _selectionMode,
-                              isSelected: isSelected,
-                              activeMediaIdNotifier: _activeMediaIdNotifier,
-                              onLongPress: () => _onLongPressItem(mediaId),
-                              onTap: () => _onTapItem(mediaId, globalIndex),
-                            );
-                          },
-                          childCount: orderedByMonth[month]!.length,
-                        ),
-                      ),
-                    ],
-                    const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),

@@ -5,7 +5,9 @@ import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/onboarding/components/onboarding_wrapper.dart';
 
 class BackupRecoveryView extends StatefulWidget {
   const BackupRecoveryView({super.key});
@@ -64,66 +66,128 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('twonly Backup ${context.lang.twonlySafeRecoverTitle}'),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await showAlertDialog(
-                context,
-                'twonly Backup',
-                context.lang.backupTwonlySafeLongDesc,
-              );
-            },
-            icon: const FaIcon(FontAwesomeIcons.circleInfo),
-            iconSize: 18,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsetsGeometry.symmetric(
-          vertical: 40,
-          horizontal: 40,
-        ),
-        child: ListView(
+    final isDark = isDarkMode(context);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final inputColor = isDark ? const Color(0xFF0F172A) : Colors.grey[100];
+
+    return OnboardingWrapper(
+      children: [
+        Row(
           children: [
-            Text(
-              context.lang.twonlySafeRecoverDesc,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 30),
-            TextField(
-              controller: usernameCtrl,
-              onChanged: (value) {
-                setState(() {});
-              },
-              style: const TextStyle(fontSize: 17),
-              decoration: getInputDecoration(
-                context,
-                context.lang.registerUsernameDecoration,
+            IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
               ),
+              color: Colors.white,
+              iconSize: 20,
             ),
-            const SizedBox(height: 10),
-            Stack(
-              children: [
-                TextField(
-                  controller: passwordCtrl,
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  style: const TextStyle(fontSize: 17),
-                  obscureText: obscureText,
-                  decoration: getInputDecoration(
-                    context,
-                    context.lang.password,
+            const Spacer(),
+            IconButton(
+              onPressed: () async {
+                await showAlertDialog(
+                  context,
+                  'twonly Backup',
+                  context.lang.backupTwonlySafeLongDesc,
+                );
+              },
+              icon: const FaIcon(FontAwesomeIcons.circleInfo),
+              color: Colors.white,
+              iconSize: 20,
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: LinkLogoAnimation(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            context.lang.twonlySafeRecoverTitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: usernameCtrl,
+                onChanged: (value) => setState(() {}),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+                decoration: InputDecoration(
+                  hintText: context.lang.registerUsernameDecoration,
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
+                  filled: true,
+                  fillColor: inputColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.alternate_email,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: IconButton(
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordCtrl,
+                onChanged: (value) => setState(() {}),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+                obscureText: obscureText,
+                decoration: InputDecoration(
+                  hintText: context.lang.password,
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
+                  filled: true,
+                  fillColor: inputColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.lock_outline_rounded,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                  suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
                         obscureText = !obscureText;
@@ -134,28 +198,46 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           ? FontAwesomeIcons.eye
                           : FontAwesomeIcons.eyeSlash,
                       size: 16,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: FilledButton.icon(
-                onPressed: (!isLoading) ? _recoverTwonlySafe : null,
-                icon: isLoading
-                    ? const SizedBox(
-                        height: 12,
-                        width: 12,
-                        child: CircularProgressIndicator(strokeWidth: 1),
-                      )
-                    : const Icon(Icons.lock_clock_rounded),
-                label: Text(context.lang.twonlySafeRecoverBtn),
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: (!isLoading) ? _recoverTwonlySafe : null,
+                style: FilledButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  elevation: 0,
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : Text(
+                        context.lang.twonlySafeRecoverBtn,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
-      ),
+        const Spacer(),
+        const SizedBox(height: 40),
+      ],
     );
   }
 }

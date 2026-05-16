@@ -165,6 +165,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool skipSetupPages = false;
 
+  @JsonKey(defaultValue: false)
+  bool hasZoomed = false;
+
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
 }
 

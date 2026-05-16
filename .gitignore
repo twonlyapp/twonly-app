@@ -10,6 +10,9 @@
 .history
 .svn/
 .swiftpm/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 migrate_working_dir/
 
 # IntelliJ related

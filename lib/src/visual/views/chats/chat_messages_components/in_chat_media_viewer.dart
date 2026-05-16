@@ -5,6 +5,9 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
@@ -17,6 +20,8 @@ class InChatMediaViewer extends StatefulWidget {
     required this.color,
     required this.galleryItems,
     required this.canBeReopened,
+    required this.borderRadius,
+    required this.info,
     super.key,
   });
 
@@ -26,6 +31,8 @@ class InChatMediaViewer extends StatefulWidget {
   final List<MemoryItem> galleryItems;
   final Color color;
   final bool canBeReopened;
+  final BorderRadius borderRadius;
+  final BubbleInfo info;
 
   @override
   State<InChatMediaViewer> createState() => _InChatMediaViewerState();
@@ -36,8 +43,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   int? galleryItemIndex;
   StreamSubscription<Message?>? messageStream;
   Timer? _timer;
-  late final ValueNotifier<String?> _activeMediaIdNotifier =
-      ValueNotifier(widget.message.mediaId);
+  late final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(
+    widget.message.mediaId,
+  );
 
   @override
   void initState() {
@@ -46,14 +54,25 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     unawaited(initStream());
   }
 
+  @override
+  void didUpdateWidget(InChatMediaViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.message.mediaStored != oldWidget.message.mediaStored ||
+        widget.galleryItems != oldWidget.galleryItems) {
+      if (widget.message.mediaStored) {
+        unawaited(loadIndexAsync());
+      }
+    }
+  }
+
   Future<void> loadIndexAsync() async {
-    if (!widget.message.mediaStored) return;
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       /// when the galleryItems are updated this widget is not reloaded
       /// so using this timer as a workaround
       if (loadIndex()) {
         timer.cancel();
-        setState(() {});
+        if (mounted) setState(() {});
       }
     });
   }
@@ -135,21 +154,32 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           minHeight: 39,
         ),
         decoration: BoxDecoration(
+          color: widget.info.color.withValues(alpha: 0.3),
           border: Border.all(
-            color: widget.color,
+            color: widget.info.color.withValues(alpha: 0.4),
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: widget.borderRadius,
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: (widget.canBeReopened) ? 5 : 10.0,
-            horizontal: 4,
-          ),
-          child: MessageSendStateIcon(
-            [widget.message],
-            [widget.mediaService.mediaFile],
-            mainAxisAlignment: MainAxisAlignment.center,
-            canBeReopened: widget.canBeReopened,
+          padding: widget.info.padding,
+          child: Row(
+            children: [
+              MessageSendStateIcon(
+                [widget.message],
+                [widget.mediaService.mediaFile],
+                mainAxisAlignment: widget.message.senderId == null
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                canBeReopened: widget.canBeReopened,
+              ),
+              if (widget.info.displayTime || widget.message.modifiedAt != null)
+                FriendlyMessageTime(
+                  message: widget.message,
+                  color: isDarkMode(context)
+                      ? Colors.white.withAlpha(100)
+                      : Colors.black.withAlpha(100),
+                ),
+            ],
           ),
         ),
       );
@@ -160,7 +190,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           color: Colors.transparent,
         ),
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: widget.borderRadius,
       ),
       child: galleryItemIndex != null
           ? MemoriesThumbnailComp(

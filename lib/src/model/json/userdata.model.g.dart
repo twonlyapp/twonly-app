@@ -33,6 +33,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
+      ..automaticallyMarkEqualMediaFilesAsOpened =
+          json['automaticallyMarkEqualMediaFilesAsOpened'] as bool? ?? false
       ..videoStabilizationEnabled =
           json['videoStabilizationEnabled'] as bool? ?? true
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
@@ -100,7 +102,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
           ? null
           : DateTime.parse(json['lastUserStudyDataUpload'] as String)
-      ..skipSetupPages = json['skipSetupPages'] as bool? ?? false;
+      ..skipSetupPages = json['skipSetupPages'] as bool? ?? false
+      ..hasZoomed = json['hasZoomed'] as bool? ?? false;
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'userId': instance.userId,
@@ -121,6 +124,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
+  'automaticallyMarkEqualMediaFilesAsOpened':
+      instance.automaticallyMarkEqualMediaFilesAsOpened,
   'videoStabilizationEnabled': instance.videoStabilizationEnabled,
   'showFeedbackShortcut': instance.showFeedbackShortcut,
   'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
@@ -160,6 +165,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       ?.toIso8601String(),
   'currentSetupPage': instance.currentSetupPage,
   'skipSetupPages': instance.skipSetupPages,
+  'hasZoomed': instance.hasZoomed,
 };
 
 const _$ThemeModeEnumMap = {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_components/zoom_tutorial_overlay.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/zoom_selector.dart';
@@ -136,25 +138,33 @@ class CameraBottomControls extends StatelessWidget {
   }
 
   Widget _buildShutterButton() {
-    return GestureDetector(
-      onTap: onTakePicture,
-      key: keyTriggerButton,
-      child: Align(
-        child: Container(
-          height: 100,
-          width: 100,
-          clipBehavior: Clip.antiAliasWithSaveLayer,
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              width: 7,
-              color: isVideoRecording ? Colors.red : Colors.white,
+    return StreamBuilder(
+      stream: userService.onUserUpdated,
+      builder: (context, snapshot) {
+        return ZoomTutorialOverlay(
+          hasZoomed: userService.currentUser.hasZoomed,
+          child: GestureDetector(
+            onTap: onTakePicture,
+            key: keyTriggerButton,
+            child: Align(
+              child: Container(
+                height: 100,
+                width: 100,
+                clipBehavior: Clip.antiAliasWithSaveLayer,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    width: 7,
+                    color: isVideoRecording ? Colors.red : Colors.white,
+                  ),
+                ),
+                child: mc.currentFilterType.preview,
+              ),
             ),
           ),
-          child: mc.currentFilterType.preview,
-        ),
-      ),
+        );
+      },
     );
   }
 

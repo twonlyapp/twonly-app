@@ -40,7 +40,7 @@ class HomeViewState extends State<HomeView> {
   Timer? _disableCameraTimer;
 
   final MainCameraController _mainCameraController = MainCameraController();
-  final PageController _homeViewPageController = PageController(initialPage: 1);
+  late final PageController _homeViewPageController;
 
   StreamSubscription<List<SharedFile>>? _intentStreamSub;
   StreamSubscription<Uri>? _deepLinkSub;
@@ -53,12 +53,21 @@ class HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    var initialPage = widget.initialPage;
+    if (initialPage == 1 && !userService.currentUser.startWithCameraOpen) {
+      initialPage = 0;
+    }
+    _activePageIdx = initialPage;
+    _homeViewPageController = PageController(initialPage: initialPage);
+
     _mainCameraController.setState = () {
       if (mounted) setState(() {});
     };
 
     _homeViewPageIndexSub = streamHomeViewPageIndex.stream.listen((index) {
-      _homeViewPageController.jumpToPage(index);
+      if (_homeViewPageController.hasClients) {
+        _homeViewPageController.jumpToPage(index);
+      }
       setState(() {
         _activePageIdx = index;
       });
@@ -286,15 +295,14 @@ class HomeViewState extends State<HomeView> {
       bottomNavigationBar: AnimatedSize(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        child: _isBottomNavVisible
+        child: (_activePageIdx != 2 || _isBottomNavVisible)
             ? BottomNavigationBar(
                 showSelectedLabels: false,
                 showUnselectedLabels: false,
                 unselectedIconTheme: IconThemeData(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .inverseSurface
-                      .withAlpha(150),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.inverseSurface.withAlpha(150),
                 ),
                 selectedIconTheme: IconThemeData(
                   color: Theme.of(context).colorScheme.inverseSurface,

@@ -249,41 +249,49 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Future<void> handleMessagesOpened(
-    int contactId,
+    Value<int> contactId,
     List<String> messageIds,
     DateTime timestamp,
   ) async {
-    await batch((batch) async {
-      for (final messageId in messageIds) {
-        batch.insert(
-          messageActions,
-          MessageActionsCompanion(
-            messageId: Value(messageId),
-            contactId: Value(contactId),
-            type: const Value(MessageActionType.openedAt),
-            actionAt: Value(timestamp),
-          ),
-          mode: InsertMode.insertOrReplace,
-        );
-      }
+    try {
+      await twonlyDB.batch((batch) async {
+        for (final messageId in messageIds) {
+          batch.insert(
+            messageActions,
+            MessageActionsCompanion(
+              messageId: Value(messageId),
+              contactId: contactId,
+              type: const Value(MessageActionType.openedAt),
+              actionAt: Value(timestamp),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+        }
+      });
+    } catch (e) {
+      Log.error(e);
+    }
 
-      for (final messageId in messageIds) {
+    for (final messageId in messageIds) {
+      try {
         final isOpenedByAll = await haveAllMembers(
           messageId,
           MessageActionType.openedAt,
         );
         final now = clock.now();
 
-        batch.update(
-          twonlyDB.messages,
+        await (update(
+          messages,
+        )..where((tbl) => tbl.messageId.equals(messageId))).write(
           MessagesCompanion(
             openedAt: Value(now),
             openedByAll: Value(isOpenedByAll ? now : null),
           ),
-          where: (tbl) => tbl.messageId.equals(messageId),
         );
+      } catch (e) {
+        Log.error(e);
       }
-    });
+    }
   }
 
   Future<void> handleMessageAckByServer(
@@ -309,21 +317,27 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     MessageActionType action,
   ) async {
-    final message = await twonlyDB.messagesDao
-        .getMessageById(messageId)
-        .getSingleOrNull();
-    if (message == null) return true;
-    final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
-      message.groupId,
-    );
+    try {
+      final message = await twonlyDB.messagesDao
+          .getMessageById(messageId)
+          .getSingleOrNull();
+      if (message == null) return true;
+      final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+        message.groupId,
+      );
 
-    final actions =
-        await (select(messageActions)..where(
-              (t) => t.type.equals(action.name) & t.messageId.equals(messageId),
-            ))
-            .get();
+      final actions =
+          await (select(messageActions)..where(
+                (t) =>
+                    t.type.equals(action.name) & t.messageId.equals(messageId),
+              ))
+              .get();
 
-    return members.length == actions.length;
+      return members.length == actions.length;
+    } catch (e) {
+      Log.error(e);
+      return true;
+    }
   }
 
   Future<void> updateMessageId(

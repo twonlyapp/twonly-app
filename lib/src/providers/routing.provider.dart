@@ -23,6 +23,7 @@ import 'package:twonly/src/visual/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/export_media.view.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/import_media.view.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/manage_storage.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/developer.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/reduce_flames.view.dart';
@@ -210,6 +211,10 @@ final routerProvider = GoRouter(
           path: 'storage_data',
           builder: (context, state) => const DataAndStorageView(),
           routes: [
+            GoRoute(
+              path: 'manage',
+              builder: (context, state) => const ManageStorageView(),
+            ),
             GoRoute(
               path: 'import',
               builder: (context, state) => const ImportMediaView(),

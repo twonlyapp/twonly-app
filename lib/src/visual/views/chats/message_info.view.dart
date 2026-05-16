@@ -205,6 +205,8 @@ class _MessageInfoViewState extends State<MessageInfoView> {
               Text(
                 '${context.lang.received}: ${friendlyDateTime(context, widget.message.ackByServer!)}',
               ),
+            if (userService.currentUser.isDeveloper)
+              Text('ID: ${widget.message.messageId}'),
             if (messageHistory.isNotEmpty) ...[
               const SizedBox(height: 10),
               const Divider(),

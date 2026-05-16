@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
@@ -14,7 +15,7 @@ Future<void> handleMessageUpdate(
       );
       try {
         await twonlyDB.messagesDao.handleMessagesOpened(
-          contactId,
+          Value(contactId),
           messageUpdate.multipleTargetMessageIds,
           fromTimestamp(messageUpdate.timestamp),
         );

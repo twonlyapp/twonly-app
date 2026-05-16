@@ -200,14 +200,24 @@ class MediaFileService {
       Log.error('Could not create Thumbnail as stored media does not exists.');
       return;
     }
+    var success = false;
     switch (mediaFile.type) {
       case MediaType.gif:
-      case MediaType.audio:
+        success = await createThumbnailsForGif(storedPath, thumbnailPath);
       case MediaType.image:
-        // all images are already compress..
-        break;
+        success = await createThumbnailsForImage(storedPath, thumbnailPath);
       case MediaType.video:
-        await createThumbnailsForVideo(storedPath, thumbnailPath);
+        success = await createThumbnailsForVideo(storedPath, thumbnailPath);
+      case MediaType.audio:
+        break;
+    }
+
+    if (success) {
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(hasThumbnail: Value(true)),
+      );
+      await updateFromDB();
     }
   }
 
@@ -253,7 +263,9 @@ class MediaFileService {
       tempPath.existsSync();
 
   bool get imagePreviewAvailable =>
-      thumbnailPath.existsSync() || storedPath.existsSync();
+      mediaFile.hasThumbnail ||
+      thumbnailPath.existsSync() ||
+      storedPath.existsSync();
 
   Future<void> storeMediaFile() async {
     Log.info('Storing media file ${mediaFile.mediaId}');
@@ -284,8 +296,22 @@ class MediaFileService {
       );
     }
     unawaited(createThumbnail());
+    await calculateAndSaveSize();
     await hashMediaFile();
     // updateFromDb is done in hashStoredMedia()
+  }
+
+  Future<void> calculateAndSaveSize() async {
+    if (storedPath.existsSync()) {
+      final size = storedPath.lengthSync();
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        MediaFilesCompanion(
+          sizeInBytes: Value(size),
+        ),
+      );
+      await updateFromDB();
+    }
   }
 
   Future<void> hashMediaFile() async {

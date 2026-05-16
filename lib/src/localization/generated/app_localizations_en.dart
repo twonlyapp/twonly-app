@@ -9,11 +9,8 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get registerTitle => 'Welcome to twonly!';
-
-  @override
   String get registerSlogan =>
-      'twonly, a privacy friendly way to connect with friends through secure, spontaneous image sharing';
+      'Stay in touch with friends privately and securely.';
 
   @override
   String get onboardingWelcomeTitle => 'Welcome to twonly!';
@@ -54,15 +51,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGetStartedTitle => 'Let\'s go!';
 
   @override
-  String get registerUsernameSlogan =>
-      'Please select a username so others can find you!';
+  String get registerUsernameSlogan => 'Your public username';
 
   @override
   String get registerUsernameDecoration => 'Username';
 
   @override
-  String get registerUsernameLimits =>
-      'Your username must be at least 3 characters long.';
+  String get registerUsernameLimits => 'At least 3 characters.';
 
   @override
   String get registerProofOfWorkFailed =>
@@ -244,6 +239,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsStorageDataAutoDownWifi => 'When using WI-FI';
+
+  @override
+  String get settingsStorageManageTitle => 'Manage storage';
+
+  @override
+  String get settingsStorageUsed => 'Storage used';
+
+  @override
+  String get settingsStorageImages => 'Images';
+
+  @override
+  String get settingsStorageVideos => 'Videos';
+
+  @override
+  String get settingsStorageGifs => 'GIFs';
 
   @override
   String get settingsProfileCustomizeAvatar => 'Customize your avatar';
@@ -795,11 +805,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupChangePassword => 'Change password';
 
   @override
-  String get twonlySafeRecoverTitle => 'Recovery';
-
-  @override
-  String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Backup, you can restore it here.';
+  String get twonlySafeRecoverTitle => 'Restore backup';
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';
@@ -1783,9 +1789,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorEmojiUsedOrInvalid => 'Emoji already used or invalid';
 
   @override
-  String get subscriptionPledgeTitle => 'Support independent privacy.';
-
-  @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
 
   @override
@@ -1800,9 +1803,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'twonly will never show advertisements or sell your private data.';
 
   @override
-  String get subscriptionPledgeFundedTitle => 'Independent and funded by Users';
+  String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
 
   @override
-  String get subscriptionPledgeFundedDesc =>
-      'twonly is funded purely by user subscriptions to secure our independence and support the future of twonly.';
+  String get dragToZoom => 'Drag to Zoom';
 }

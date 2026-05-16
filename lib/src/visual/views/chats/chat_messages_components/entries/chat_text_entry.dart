@@ -8,20 +8,14 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/f
 class ChatTextEntry extends StatelessWidget {
   const ChatTextEntry({
     required this.message,
-    required this.nextMessage,
-    required this.prevMessage,
     required this.borderRadius,
-    required this.userIdToContact,
-    required this.minWidth,
+    required this.info,
     super.key,
   });
 
   final Message message;
-  final Message? nextMessage;
-  final Message? prevMessage;
-  final Map<int, Contact>? userIdToContact;
   final BorderRadius borderRadius;
-  final double minWidth;
+  final BubbleInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -40,57 +34,66 @@ class ChatTextEntry extends StatelessWidget {
       );
     }
 
-    final info = getBubbleInfo(
-      context,
-      message,
-      nextMessage,
-      prevMessage,
-      userIdToContact,
-      minWidth,
-    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textWidth = measureTextWidth(info.text);
+        const timeWidth = 60.0;
+        final isExpanded =
+            info.expanded ||
+            (textWidth + timeWidth + 20 > constraints.maxWidth);
+        final effectiveSpacerWidth =
+            constraints.minWidth - textWidth - timeWidth;
+        final spacerWidth = effectiveSpacerWidth > 0
+            ? effectiveSpacerWidth
+            : 0.0;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
-        minWidth: minWidth,
-      ),
-      padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
-      decoration: BoxDecoration(
-        color: info.color,
-        borderRadius: borderRadius,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (info.displayUserName != '')
-            Text(
-              info.displayUserName,
-              textAlign: TextAlign.left,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
+        return Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+            minWidth: info.minWidth,
+          ),
+          padding: info.padding,
+          decoration: BoxDecoration(
+            color: info.color,
+            borderRadius: borderRadius,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (info.expanded)
-                Expanded(
-                  child: BetterText(text: info.text, textColor: info.textColor),
-                )
-              else ...[
-                BetterText(text: info.text, textColor: info.textColor),
-                SizedBox(
-                  width: info.spacerWidth,
+              if (info.displayUserName != '')
+                Text(
+                  info.displayUserName,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ],
-              if (info.displayTime || message.modifiedAt != null)
-                FriendlyMessageTime(message: message),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (isExpanded)
+                    Expanded(
+                      child: BetterText(
+                        text: info.text,
+                        textColor: info.textColor,
+                      ),
+                    )
+                  else ...[
+                    BetterText(text: info.text, textColor: info.textColor),
+                    SizedBox(
+                      width: spacerWidth,
+                    ),
+                  ],
+                  if (info.displayTime || message.modifiedAt != null)
+                    FriendlyMessageTime(message: message),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
