@@ -58,6 +58,8 @@ class HomeViewState extends State<HomeView> {
       initialPage = 0;
     }
     _activePageIdx = initialPage;
+    _offsetFromOne = 1.0 - initialPage;
+    _offsetRatio = _offsetFromOne.abs();
     _homeViewPageController = PageController(initialPage: initialPage);
 
     _mainCameraController.setState = () {
@@ -94,6 +96,7 @@ class HomeViewState extends State<HomeView> {
     if (initialPage == 1) {
       unawaited(_mainCameraController.selectCamera(0, true));
     }
+
     unawaited(_initAsync());
 
     // Subscribe to all events (initial link and further)
