@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.2.14
+## 0.2.15
 
 - Fix: Issue with opening directly in chats
-- Fix: Multipe smaller issues
+- Fix: Multiple smaller issues
 
 ## 0.2.13
 
