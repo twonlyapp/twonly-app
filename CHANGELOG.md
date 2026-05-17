@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.16
+
+- Fix: Images not shown after opening due to cleanup
+
 ## 0.2.15
 
 - Fix: Issue with opening directly in chats
