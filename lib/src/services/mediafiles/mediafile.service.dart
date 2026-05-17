@@ -197,7 +197,14 @@ class MediaFileService {
 
   Future<void> createThumbnail() async {
     if (!storedPath.existsSync()) {
-      Log.error('Could not create Thumbnail as stored media does not exists.');
+      if (mediaFile.stored &&
+          mediaFile.createdAt.isBefore(
+            clock.now().subtract(const Duration(days: 30)),
+          )) {
+        // media files does not exists any more so also delete the database entry
+        await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+        fullMediaRemoval();
+      }
       return;
     }
     var success = false;

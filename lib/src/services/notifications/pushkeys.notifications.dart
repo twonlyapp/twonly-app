@@ -30,7 +30,7 @@ Future<void> setupNotificationWithUsers({
 
   // HotFIX: Search for user with id 0 if not there remove all
   // and create new push keys with all users.
-  final pushUser = pushUsers.firstWhereOrNull((x) => x.userId == 0);
+  final pushUser = pushUsers.firstWhereOrNull((x) => x.userId.toInt() == 0);
   if (pushUser == null) {
     Log.info('Clearing push keys');
     await setPushKeys(SecureStorageKeys.receivingPushKeys, []);
@@ -51,7 +51,7 @@ Future<void> setupNotificationWithUsers({
   final contacts = await twonlyDB.contactsDao.getAllContacts();
   for (final contact in contacts) {
     final pushUser = pushUsers.firstWhereOrNull(
-      (x) => x.userId == contact.userId,
+      (x) => x.userId.toInt() == contact.userId,
     );
 
     if (pushUser != null && pushUser.pushKeys.isNotEmpty) {
@@ -124,7 +124,9 @@ Future<void> sendNewPushKey(int userId, PushKey pushKey) async {
 Future<void> updatePushUser(Contact contact) async {
   final pushKeys = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
-  final pushUser = pushKeys.firstWhereOrNull((x) => x.userId == contact.userId);
+  final pushUser = pushKeys.firstWhereOrNull(
+    (x) => x.userId.toInt() == contact.userId,
+  );
 
   if (pushUser == null) {
     pushKeys.add(
@@ -148,7 +150,9 @@ Future<void> updatePushUser(Contact contact) async {
 Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
   final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
-  var pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
+  var pushUser = pushKeys.firstWhereOrNull(
+    (x) => x.userId.toInt() == fromUserId,
+  );
 
   if (pushUser == null) {
     final contact = await twonlyDB.contactsDao
@@ -164,7 +168,7 @@ Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
         lastMessageId: uuid.v7(),
       ),
     );
-    pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
+    pushUser = pushKeys.firstWhereOrNull((x) => x.userId.toInt() == fromUserId);
   }
 
   if (pushUser == null) {
@@ -187,7 +191,9 @@ Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
 Future<void> updateLastMessageId(int fromUserId, String messageId) async {
   final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
-  final pushUser = pushUsers.firstWhereOrNull((x) => x.userId == fromUserId);
+  final pushUser = pushUsers.firstWhereOrNull(
+    (x) => x.userId.toInt() == fromUserId,
+  );
   if (pushUser == null) {
     unawaited(setupNotificationWithUsers());
     return;
@@ -285,7 +291,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
 
   if (content.hasMediaUpdate()) {
     final msg = await twonlyDB.messagesDao
-        .getMessageById(content.reaction.targetMessageId)
+        .getMessageById(content.mediaUpdate.targetMessageId)
         .getSingleOrNull();
     // These notifications should only be send to the original sender.
     if (msg == null || msg.senderId != toUserId) {
@@ -304,7 +310,9 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   if (content.hasGroupCreate()) {
     kind = PushKind.ADDED_TO_GROUP;
     final group = await twonlyDB.groupsDao.getGroup(content.groupId);
-    additionalContent = group!.groupName;
+    if (group != null) {
+      additionalContent = group.groupName;
+    }
   }
 
   if (kind == null) return null;
@@ -339,7 +347,9 @@ Future<Uint8List?> encryptPushNotification(
   var key = 'InsecureOnlyUsedForAddingContact'.codeUnits;
   var keyId = 0;
 
-  final pushUser = pushKeys.firstWhereOrNull((x) => x.userId == toUserId);
+  final pushUser = pushKeys.firstWhereOrNull(
+    (x) => x.userId.toInt() == toUserId,
+  );
 
   if (pushUser == null) {
     // user does not have send any push keys

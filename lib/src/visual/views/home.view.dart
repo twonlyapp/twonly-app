@@ -91,7 +91,9 @@ class HomeViewState extends State<HomeView> {
       streamHomeViewPageIndex.add(0);
     });
 
-    unawaited(_mainCameraController.selectCamera(0, true));
+    if (initialPage == 1) {
+      unawaited(_mainCameraController.selectCamera(0, true));
+    }
     unawaited(_initAsync());
 
     // Subscribe to all events (initial link and further)
