@@ -44,7 +44,7 @@ class MainCameraController {
   CameraController? cameraController;
   ScreenshotController screenshotController = ScreenshotController();
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
-  bool initCameraStarted = true;
+  bool initCameraStarted = false;
   Map<int, ScannedVerifiedContact> contactsVerified = {};
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
   final Set<String> _handledProfileLinks = {};

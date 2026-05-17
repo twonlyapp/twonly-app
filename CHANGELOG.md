@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.14
+
+- Fix: Issue with opening directly in chats
+- Fix: Multipe smaller issues
+
 ## 0.2.13
 
 - New: Tutorial on how to use zoom. 
