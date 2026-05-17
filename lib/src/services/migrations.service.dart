@@ -158,13 +158,18 @@ Future<void> runMigrations() async {
         final now = clock.now();
         for (final messageId in messageIds.first.split(',')) {
           await (twonlyDB.update(
-            twonlyDB.messages,
-          )..where((tbl) => tbl.messageId.equals(messageId))).write(
-            MessagesCompanion(
-              openedAt: Value(now),
-              openedByAll: Value(now),
-            ),
-          );
+                twonlyDB.messages,
+              )..where(
+                (tbl) =>
+                    tbl.messageId.equals(messageId) &
+                    (tbl.openedByAll.isNull() | tbl.openedAt.isNull()),
+              ))
+              .write(
+                MessagesCompanion(
+                  openedAt: Value(now),
+                  openedByAll: Value(now),
+                ),
+              );
         }
       }
     }
