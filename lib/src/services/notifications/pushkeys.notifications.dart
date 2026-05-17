@@ -285,7 +285,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
 
   if (content.hasMediaUpdate()) {
     final msg = await twonlyDB.messagesDao
-        .getMessageById(content.reaction.targetMessageId)
+        .getMessageById(content.mediaUpdate.targetMessageId)
         .getSingleOrNull();
     // These notifications should only be send to the original sender.
     if (msg == null || msg.senderId != toUserId) {
@@ -304,7 +304,9 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   if (content.hasGroupCreate()) {
     kind = PushKind.ADDED_TO_GROUP;
     final group = await twonlyDB.groupsDao.getGroup(content.groupId);
-    additionalContent = group!.groupName;
+    if (group != null) {
+      additionalContent = group.groupName;
+    }
   }
 
   if (kind == null) return null;
