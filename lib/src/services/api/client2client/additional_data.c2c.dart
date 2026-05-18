@@ -10,9 +10,10 @@ Future<void> handleAdditionalDataMessage(
   int fromUserId,
   String groupId,
   EncryptedContent_AdditionalDataMessage message,
+  String receiptId,
 ) async {
   Log.info(
-    'Got a additional data message: ${message.senderMessageId} from $groupId',
+    '[$receiptId] Got a additional data message: ${message.senderMessageId} from $groupId',
   );
 
   // Prevent message overwrite: reject if a message with this ID already
@@ -22,7 +23,7 @@ Future<void> handleAdditionalDataMessage(
       .getSingleOrNull();
   if (existing != null && existing.senderId != fromUserId) {
     Log.warn(
-      '$fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
+      '[$receiptId] $fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
     );
     return;
   }
@@ -45,6 +46,6 @@ Future<void> handleAdditionalDataMessage(
     fromTimestamp(message.timestamp),
   );
   if (msg != null) {
-    Log.info('Inserted a new text message with ID: ${msg.messageId}');
+    Log.info('[$receiptId] Inserted a new text message with ID: ${msg.messageId}');
   }
 }

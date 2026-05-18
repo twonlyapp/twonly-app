@@ -11,9 +11,10 @@ Future<void> handleTextMessage(
   int fromUserId,
   String groupId,
   EncryptedContent_TextMessage textMessage,
+  String receiptId,
 ) async {
   Log.info(
-    'Got a text message: ${textMessage.senderMessageId} from $groupId',
+    '[$receiptId] Got a text message: ${textMessage.senderMessageId} from $groupId',
   );
 
   // Prevent message overwrite: reject if a message with this ID already
@@ -23,7 +24,7 @@ Future<void> handleTextMessage(
       .getSingleOrNull();
   if (existing != null && existing.senderId != fromUserId) {
     Log.warn(
-      '$fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
+      '[$receiptId] $fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
     );
     return;
   }
@@ -47,6 +48,6 @@ Future<void> handleTextMessage(
     fromTimestamp(textMessage.timestamp),
   );
   if (message != null) {
-    Log.info('Inserted a new text message with ID: ${message.messageId}');
+    Log.info('[$receiptId] Inserted a new text message with ID: ${message.messageId}');
   }
 }

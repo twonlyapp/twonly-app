@@ -73,7 +73,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
 
   await apiService.sendResponse(ClientToServer()..v0 = v0);
   AppState.gotMessageFromServer = true;
-  Log.info('Message from server proccessed.');
+  Log.info('All messages from the server proccessed.');
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
@@ -89,7 +89,6 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   await mutex.protect(() async {
     await _handleClient2ClientMessage(newMessage, message);
   });
-  _messageLocks.remove(receiptId);
 }
 
 Future<void> _handleClient2ClientMessage(
@@ -103,11 +102,11 @@ Future<void> _handleClient2ClientMessage(
     return;
   }
 
-  Log.info('Started processing message with receiptId $receiptId');
+  Log.info('[$receiptId] Started processing message');
 
   switch (message.type) {
     case Message_Type.SENDER_DELIVERY_RECEIPT:
-      Log.info('Got delivery receipt for $receiptId!');
+      Log.info('[$receiptId] Got delivery receipt!');
       await twonlyDB.receiptsDao.confirmReceipt(receiptId, fromUserId);
 
     case Message_Type.PLAINTEXT_CONTENT:
@@ -120,13 +119,13 @@ Future<void> _handleClient2ClientMessage(
             await handleSessionResync(fromUserId);
           }
           Log.info(
-            'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
+            '[$receiptId] Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type}',
           );
           retry = true;
         }
         if (message.plaintextContent.hasRetryControlError()) {
           Log.info(
-            'Got access control error for $receiptId. Resending message.',
+            '[$receiptId] Got access control error. Resending message.',
           );
           retry = true;
         }
@@ -140,6 +139,9 @@ Future<void> _handleClient2ClientMessage(
             receiptId: Value(newReceiptId),
             ackByServerAt: const Value(null),
           ),
+        );
+        Log.info(
+          '[$receiptId] Sending error message to the original sender with receiptId $newReceiptId.',
         );
         await tryToSendCompleteMessage(receiptId: newReceiptId);
       }
@@ -197,7 +199,6 @@ Future<void> _handleClient2ClientMessage(
             receiptIdDB = const Value.absent();
           } else {
             // Message was successful processed
-            //
           }
         }
 
@@ -213,7 +214,7 @@ Future<void> _handleClient2ClientMessage(
             ),
           );
         } catch (e) {
-          Log.warn(e);
+          Log.warn('[$receiptId] Error inserting receipt: $e');
         }
         await tryToSendCompleteMessage(receiptId: receiptId);
       }
@@ -223,9 +224,9 @@ Future<void> _handleClient2ClientMessage(
 
   try {
     await twonlyDB.receiptsDao.gotReceipt(receiptId);
-    Log.info('Got a message with receiptId $receiptId');
+    Log.info('[$receiptId] Finished processing');
   } catch (e) {
-    Log.error('Error marking message as received $receiptId: $e');
+    Log.error('[$receiptId] Error marking message as received: $e');
   }
 }
 
@@ -235,26 +236,26 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   Message_Type messageType,
   String receiptId,
 ) async {
-  final (encryptedContent, decryptionErrorType) = await signalDecryptMessage(
+  Log.info('[$receiptId] calling signalDecryptMessage');
+  var (encryptedContent, decryptionErrorType) = await signalDecryptMessage(
     fromUserId,
     encryptedContentRaw,
     messageType.value,
   );
 
   if (encryptedContent == null) {
-    if (decryptionErrorType == null) {
-      // Duplicate message
-      return (null, null);
-    }
     return (
       null,
-      PlaintextContent()
-        ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
-          ..type = decryptionErrorType),
+      PlaintextContent(
+        decryptionErrorMessage: PlaintextContent_DecryptionErrorMessage(
+          type: decryptionErrorType ??=
+              PlaintextContent_DecryptionErrorMessage_Type.UNKNOWN,
+        ),
+      ),
     );
   }
 
-  Log.info('Calling handleEncryptedMessage for $receiptId');
+  Log.info('[$receiptId] Calling handleEncryptedMessage');
 
   final (a, b) = await handleEncryptedMessage(
     fromUserId,
@@ -263,7 +264,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
     receiptId,
   );
 
-  Log.info('Finished handleEncryptedMessage for $receiptId');
+  Log.info('[$receiptId] Finished handleEncryptedMessage');
 
   if (Platform.isAndroid && a == null && b == null) {
     // Message was handled without any error -> Show push notification to the user.
@@ -294,11 +295,16 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await checkForUserDiscoveryChanges(
       fromUserId,
       content.senderUserDiscoveryVersion,
+      receiptId,
     );
   }
 
   if (content.hasContactRequest()) {
-    if (!await handleContactRequest(fromUserId, content.contactRequest)) {
+    if (!await handleContactRequest(
+      fromUserId,
+      content.contactRequest,
+      receiptId,
+    )) {
       return (
         null,
         PlaintextContent()
@@ -312,6 +318,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await handleErrorMessage(
       fromUserId,
       content.errorMessages,
+      receiptId,
     );
     return (null, null);
   }
@@ -321,6 +328,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.contactUpdate,
       senderProfileCounter,
+      receiptId,
     );
     return (null, null);
   }
@@ -329,6 +337,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await handleUserDiscoveryRequest(
       fromUserId,
       content.userDiscoveryRequest,
+      receiptId,
     );
     return (null, null);
   }
@@ -337,12 +346,13 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await handleUserDiscoveryUpdate(
       fromUserId,
       content.userDiscoveryUpdate,
+      receiptId,
     );
     return (null, null);
   }
 
   if (content.hasPushKeys()) {
-    await handlePushKey(fromUserId, content.pushKeys);
+    await handlePushKey(fromUserId, content.pushKeys, receiptId);
     return (null, null);
   }
 
@@ -350,6 +360,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await handleMessageUpdate(
       fromUserId,
       content.messageUpdate,
+      receiptId,
     );
     return (null, null);
   }
@@ -366,12 +377,13 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     await handleMediaUpdate(
       fromUserId,
       content.mediaUpdate,
+      receiptId,
     );
     return (null, null);
   }
 
   if (!content.hasGroupId()) {
-    Log.error('Messages should have a groupId $fromUserId.');
+    Log.error('[$receiptId] Messages should have a groupId $fromUserId.');
     return (null, null);
   }
 
@@ -380,6 +392,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupCreate,
+      receiptId,
     );
     return (null, null);
   }
@@ -392,12 +405,12 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
           .getContactByUserId(fromUserId)
           .getSingleOrNull();
       Log.info(
-        'Contact exists?: ${contact != null} Is deleted? ${contact?.deletedByUser} Accepted? (${contact?.accepted})',
+        '[$receiptId] Contact exists?: ${contact != null} Is deleted? ${contact?.deletedByUser} Accepted? (${contact?.accepted})',
       );
       if (contact == null || !contact.accepted || contact.deletedByUser) {
         await handleNewContactRequest(fromUserId);
         Log.error(
-          'User tries to send message to direct chat while the user does not exists !',
+          '[$receiptId] User tries to send message to direct chat while the user does not exist!',
         );
         return (
           EncryptedContent(
@@ -411,7 +424,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
         );
       }
       Log.info(
-        'Creating new DirectChat between two users',
+        '[$receiptId] Creating new DirectChat between two users',
       );
       await twonlyDB.groupsDao.createNewDirectChat(
         fromUserId,
@@ -422,7 +435,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     } else {
       if (content.hasGroupJoin()) {
         Log.error(
-          'Got group join message, but group does not exists yet, retry later. As probably the GroupCreate was not yet received.',
+          '[$receiptId] Got group join message, but group does not exist yet, retry later. As probably the GroupCreate was not yet received.',
         );
         // In case the group join was received before the GroupCreate the sender should send it later again.
         return (
@@ -432,13 +445,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
         );
       }
 
-      Log.error('User $fromUserId tried to access group ${content.groupId}.');
+      Log.error(
+        '[$receiptId] User $fromUserId tried to access group ${content.groupId}.',
+      );
       return (null, null);
     }
   }
 
   if (content.hasFlameSync()) {
-    await handleFlameSync(content.groupId, content.flameSync);
+    await handleFlameSync(content.groupId, content.flameSync, receiptId);
     return (null, null);
   }
 
@@ -447,6 +462,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupUpdate,
+      receiptId,
     );
     return (null, null);
   }
@@ -456,6 +472,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupJoin,
+      receiptId,
     )) {
       return (
         null,
@@ -471,6 +488,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupJoin,
+      receiptId,
     );
     return (null, null);
   }
@@ -480,6 +498,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.additionalDataMessage,
+      receiptId,
     );
     return (null, null);
   }
@@ -489,6 +508,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.textMessage,
+      receiptId,
     );
     return (null, null);
   }
@@ -498,6 +518,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.reaction,
+      receiptId,
     );
     return (null, null);
   }
@@ -507,6 +528,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.media,
+      receiptId,
     );
     return (null, null);
   }
@@ -516,6 +538,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.typingIndicator,
+      receiptId,
     );
   }
 

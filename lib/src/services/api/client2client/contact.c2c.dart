@@ -88,16 +88,17 @@ Future<void> handleContactAccept(int fromUserId) async {
 Future<bool> handleContactRequest(
   int fromUserId,
   EncryptedContent_ContactRequest contactRequest,
+  String receiptId,
 ) async {
   switch (contactRequest.type) {
     case EncryptedContent_ContactRequest_Type.REQUEST:
-      Log.info('Got a contact request from $fromUserId');
+      Log.info('[$receiptId] Got a contact request from $fromUserId');
       return handleNewContactRequest(fromUserId);
     case EncryptedContent_ContactRequest_Type.ACCEPT:
-      Log.info('Got a contact accept from $fromUserId');
+      Log.info('[$receiptId] Got a contact accept from $fromUserId');
       await handleContactAccept(fromUserId);
     case EncryptedContent_ContactRequest_Type.REJECT:
-      Log.info('Got a contact reject from $fromUserId');
+      Log.info('[$receiptId] Got a contact reject from $fromUserId');
       await twonlyDB.contactsDao.updateContact(
         fromUserId,
         const ContactsCompanion(
@@ -114,14 +115,15 @@ Future<void> handleContactUpdate(
   int fromUserId,
   EncryptedContent_ContactUpdate contactUpdate,
   int? senderProfileCounter,
+  String receiptId,
 ) async {
   switch (contactUpdate.type) {
     case EncryptedContent_ContactUpdate_Type.REQUEST:
-      Log.info('Got a contact update request from $fromUserId');
+      Log.info('[$receiptId] Got a contact update request from $fromUserId');
       await sendContactMyProfileData(fromUserId);
 
     case EncryptedContent_ContactUpdate_Type.UPDATE:
-      Log.info('Got a contact update $fromUserId');
+      Log.info('[$receiptId] Got a contact update $fromUserId');
       Uint8List? avatarSvgCompressed;
       if (contactUpdate.hasAvatarSvgCompressed()) {
         avatarSvgCompressed = Uint8List.fromList(
@@ -188,8 +190,9 @@ Future<void> handleContactUpdate(
 Future<void> handleFlameSync(
   String groupId,
   EncryptedContent_FlameSync flameSync,
+  String receiptId,
 ) async {
-  Log.info('Got a flameSync for group $groupId');
+  Log.info('[$receiptId] Got a flameSync for group $groupId');
 
   final group = await twonlyDB.groupsDao.getGroup(groupId);
   if (group == null || group.lastFlameCounterChange == null) return;

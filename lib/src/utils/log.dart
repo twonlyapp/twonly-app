@@ -136,7 +136,7 @@ Future<void> cleanLogFile() async {
     }
     final lines = await logFile.readAsLines();
 
-    final twoWeekAgo = clock.now().subtract(const Duration(days: 14));
+    final twoWeekAgo = clock.now().subtract(const Duration(days: 3));
     var keepStartIndex = -1;
 
     for (var i = 0; i < lines.length; i += 100) {

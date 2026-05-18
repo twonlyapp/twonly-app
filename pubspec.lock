@@ -2185,7 +2185,7 @@ packages:
     source: hosted
     version: "0.9.1+2"
   workmanager_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: workmanager_platform_interface
       sha256: f40422f10b970c67abb84230b44da22b075147637532ac501729256fcea10a47

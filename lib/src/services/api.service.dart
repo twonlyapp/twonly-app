@@ -90,6 +90,11 @@ class ApiService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
+    if (kDebugMode) {
+      print(
+        'DEBUG: ApiService._connectTo called with: $apiUrl (appIsOutdated=$appIsOutdated)',
+      );
+    }
     if (appIsOutdated) return false;
     try {
       final channel = IOWebSocketChannel.connect(
@@ -101,7 +106,10 @@ class ApiService {
       await _channel!.ready;
       Log.info('websocket connected to $apiUrl');
       return true;
-    } catch (_) {
+    } catch (e, s) {
+      if (kDebugMode) {
+        print('DEBUG: _connectTo caught exception: $e\n$s');
+      }
       return false;
     }
   }
