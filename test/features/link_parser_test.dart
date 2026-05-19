@@ -102,6 +102,7 @@ void main() {
       ),
       LinkParserTest(
         title: 'twonly Public Launch',
+        siteName: 'twonly',
         desc:
             'After about a year of development, twonly is finally ready for its public launch.',
         url: 'https://twonly.eu/en/blog/2026-public-launch.html',

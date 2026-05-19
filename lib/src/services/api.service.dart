@@ -164,6 +164,9 @@ class ApiService {
   }
 
   Future<void> onClosed() async {
+    if (kDebugMode) {
+      print('API onClosed called');
+    }
     if (_channel == null) return;
     Log.info('websocket connection closed');
     _channel = null;
@@ -251,11 +254,17 @@ class ApiService {
   bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   Future<void> _onDone() async {
+    if (kDebugMode) {
+      print('API _onDone called');
+    }
     _reconnectionDelay = 3;
     await onClosed();
   }
 
   Future<void> _onError(dynamic e) async {
+    if (kDebugMode) {
+      print('API _onError called: $e');
+    }
     if (e.toString().contains('Failed host lookup')) {
       Log.info('WebSocket connection failed: Host not reachable.');
     } else {
@@ -265,8 +274,14 @@ class ApiService {
   }
 
   Future<void> _onData(dynamic msgBuffer) async {
+    if (kDebugMode) {
+      print('API _onData received: $msgBuffer');
+    }
     try {
-      final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
+      if (msgBuffer is! Uint8List) {
+        msgBuffer = Uint8List.fromList(msgBuffer as List<int>);
+      }
+      final msg = server.ServerToClient.fromBuffer(msgBuffer);
       if (msg.v0.hasResponse()) {
         final completer = _pendingRequests.remove(msg.v0.seq);
         if (completer != null && !completer.isCompleted) {
