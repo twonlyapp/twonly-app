@@ -137,12 +137,14 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _isLoaded = false;
   bool _isTwonlyLocked = true;
   bool _wasLogged = true;
+  late int _initialPage;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
   void initState() {
     super.initState();
+    _initialPage = widget.initialPage;
     Log.info('AppWidgetState: initState started');
     initAsync();
   }
@@ -150,6 +152,12 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   Future<void> initAsync() async {
     Log.info('AppWidgetState: initAsync started');
     if (userService.isUserCreated) {
+      if (_initialPage != 0) {
+        final count = await twonlyDB.contactsDao.getContactsCount();
+        if (count == 0) {
+          _initialPage = 0;
+        }
+      }
       try {
         unawaited(FirebaseMessaging.instance.requestPermission());
       } catch (e) {
@@ -200,8 +208,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             _isTwonlyLocked = false;
           }),
         );
-      } else if (!userService.currentUser.skipSetupPages &&
-          userService.currentUser.currentSetupPage != null) {
+      } else if (!userService.currentUser.skipSetupPages && userService.currentUser.currentSetupPage != null) {
         // This will only be shown in case the user have not skipped
         child = SetupView(
           onUpdate: () => setState(() {
@@ -210,7 +217,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         );
       } else {
         child = HomeView(
-          initialPage: widget.initialPage,
+          initialPage: _initialPage,
         );
       }
     } else if (_showOnboarding) {

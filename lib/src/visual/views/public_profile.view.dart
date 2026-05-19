@@ -10,10 +10,9 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/components/contact_request_badge.comp.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class PublicProfileView extends StatefulWidget {
   const PublicProfileView({super.key});
@@ -24,8 +23,6 @@ class PublicProfileView extends StatefulWidget {
 
 class _PublicProfileViewState extends State<PublicProfileView> {
   Uint8List? _publicKey;
-  int _countContactRequest = 0;
-  late StreamSubscription<int?> _countContactRequestStream;
 
   @override
   void initState() {
@@ -36,70 +33,15 @@ class _PublicProfileViewState extends State<PublicProfileView> {
   Future<void> initAsync() async {
     _publicKey = await getUserPublicKey();
     if (mounted) setState(() {});
-
-    _countContactRequestStream = twonlyDB.contactsDao
-        .watchContactsRequestedCount()
-        .listen((update) {
-          if (update != null) {
-            if (!mounted) return;
-            setState(() {
-              _countContactRequest = update;
-            });
-          }
-        });
-  }
-
-  @override
-  void dispose() {
-    _countContactRequestStream.cancel();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          Stack(
-            children: (_countContactRequest == 0)
-                ? []
-                : [
-                    Positioned.fill(
-                      child: Center(
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: primaryColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: NotificationBadgeComp(
-                        backgroundColor: isDarkMode(context)
-                            ? Colors.white
-                            : Colors.black,
-                        textColor: isDarkMode(context)
-                            ? Colors.black
-                            : Colors.white,
-                        count: (_countContactRequest).toString(),
-                        child: IconButton(
-                          color: (_countContactRequest > 0)
-                              ? Colors.black
-                              : null,
-                          icon: const FaIcon(
-                            FontAwesomeIcons.userPlus,
-                            size: 18,
-                          ),
-                          onPressed: () => context.push(Routes.chatsAddNewUser),
-                        ),
-                      ),
-                    ),
-                  ],
-          ),
-          const SizedBox(width: 15),
+        actions: const [
+          ContactRequestBadgeComp(),
+          SizedBox(width: 15),
         ],
       ),
       body: Column(
@@ -155,8 +97,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
                   ),
             onTap: () {
               final params = ShareParams(
-                text:
-                    'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(_publicKey!)}',
+                text: 'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(_publicKey!)}',
               );
               SharePlus.instance.share(params);
             },

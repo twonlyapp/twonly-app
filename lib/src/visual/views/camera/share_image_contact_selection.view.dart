@@ -3,9 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -15,6 +13,7 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_request_badge.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
@@ -22,6 +21,7 @@ import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/shortcut_row.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/background.layer.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
@@ -111,9 +111,7 @@ class _ShareImageView extends State<ShareImageView> {
 
     for (final group in groups) {
       if (group.pinned) continue;
-      if (!group.archived &&
-          getFlameCounterFromGroup(group).counter > 0 &&
-          bestFriends.length < 6) {
+      if (!group.archived && getFlameCounterFromGroup(group).counter > 0 && bestFriends.length < 6) {
         bestFriends.add(group);
       } else {
         otherUsers.add(group);
@@ -133,10 +131,7 @@ class _ShareImageView extends State<ShareImageView> {
       await updateGroups(
         _allGroups
             .where(
-              (x) =>
-                  !x.archived ||
-                  !hideArchivedUsers ||
-                  widget.selectedGroupIds.contains(x.groupId),
+              (x) => !x.archived || !hideArchivedUsers || widget.selectedGroupIds.contains(x.groupId),
             )
             .toList(),
       );
@@ -160,31 +155,23 @@ class _ShareImageView extends State<ShareImageView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.shareImageTitle),
+        actions: const [
+          ContactRequestBadgeComp(),
+          SizedBox(width: 15),
+        ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(
             bottom: 40,
             left: 10,
-            top: 20,
             right: 10,
           ),
-          child: Column(
+          child: ListView(
             children: [
               if (_allGroups.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: FilledButton.icon(
-                      icon: const Icon(Icons.person_add),
-                      onPressed: () => context.push(Routes.chatsAddNewUser),
-                      label: Text(
-                        context.lang.chatListViewSearchUserNameBtn,
-                      ),
-                    ),
-                  ),
-                ),
-
-              if (_allGroups.isNotEmpty)
+                const EmptyChatListComp()
+              else ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: TextField(
@@ -195,163 +182,161 @@ class _ShareImageView extends State<ShareImageView> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 10),
-              ShortcutRowComp(
-                selectedGroupIds: widget.selectedGroupIds,
-                updateSelectedGroupIds: updateSelectedGroupIds,
-              ),
-              if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
-              BestFriendsSelector(
-                groups: _pinnedContacts,
-                selectedGroupIds: widget.selectedGroupIds,
-                updateSelectedGroupIds: updateSelectedGroupIds,
-                title: context.lang.shareImagePinnedContacts,
-                showSelectAll:
-                    !widget.mediaFileService.mediaFile.requiresAuthentication,
-              ),
-              const SizedBox(height: 10),
-              BestFriendsSelector(
-                groups: _bestFriends,
-                selectedGroupIds: widget.selectedGroupIds,
-                updateSelectedGroupIds: updateSelectedGroupIds,
-                title: context.lang.shareImageBestFriends,
-                showSelectAll:
-                    !widget.mediaFileService.mediaFile.requiresAuthentication,
-              ),
-              const SizedBox(height: 10),
-              if (_otherUsers.isNotEmpty)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    HeadLineComp(context.lang.shareImageAllUsers),
-                    if (_allGroups.any((x) => x.archived))
-                      Row(
-                        children: [
-                          Text(
-                            context.lang.shareImageShowArchived,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          Transform.scale(
-                            scale: 0.75,
-                            child: Checkbox(
-                              value: !hideArchivedUsers,
-                              side: WidgetStateBorderSide.resolveWith(
-                                (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return const BorderSide(width: 0);
-                                  }
-                                  return BorderSide(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.outline,
-                                  );
+                const SizedBox(height: 10),
+                ShortcutRowComp(
+                  selectedGroupIds: widget.selectedGroupIds,
+                  updateSelectedGroupIds: updateSelectedGroupIds,
+                ),
+                if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
+                BestFriendsSelector(
+                  groups: _pinnedContacts,
+                  selectedGroupIds: widget.selectedGroupIds,
+                  updateSelectedGroupIds: updateSelectedGroupIds,
+                  title: context.lang.shareImagePinnedContacts,
+                  showSelectAll: !widget.mediaFileService.mediaFile.requiresAuthentication,
+                ),
+                const SizedBox(height: 10),
+                BestFriendsSelector(
+                  groups: _bestFriends,
+                  selectedGroupIds: widget.selectedGroupIds,
+                  updateSelectedGroupIds: updateSelectedGroupIds,
+                  title: context.lang.shareImageBestFriends,
+                  showSelectAll: !widget.mediaFileService.mediaFile.requiresAuthentication,
+                ),
+                const SizedBox(height: 10),
+                if (_otherUsers.isNotEmpty)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      HeadLineComp(context.lang.shareImageAllUsers),
+                      if (_allGroups.any((x) => x.archived))
+                        Row(
+                          children: [
+                            Text(
+                              context.lang.shareImageShowArchived,
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                            Transform.scale(
+                              scale: 0.75,
+                              child: Checkbox(
+                                value: !hideArchivedUsers,
+                                side: WidgetStateBorderSide.resolveWith(
+                                  (states) {
+                                    if (states.contains(WidgetState.selected)) {
+                                      return const BorderSide(width: 0);
+                                    }
+                                    return BorderSide(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
+                                    );
+                                  },
+                                ),
+                                onChanged: (a) async {
+                                  hideArchivedUsers = !hideArchivedUsers;
+                                  await _filterUsers(lastQuery);
+                                  if (mounted) setState(() {});
                                 },
                               ),
-                              onChanged: (a) async {
-                                hideArchivedUsers = !hideArchivedUsers;
-                                await _filterUsers(lastQuery);
-                                if (mounted) setState(() {});
-                              },
                             ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              if (_otherUsers.isNotEmpty)
-                Expanded(
-                  child: UserList(
+                          ],
+                        ),
+                    ],
+                  ),
+                if (_otherUsers.isNotEmpty)
+                  UserList(
                     List.from(_otherUsers),
                     selectedGroupIds: widget.selectedGroupIds,
                     updateSelectedGroupIds: updateSelectedGroupIds,
                   ),
-                ),
+              ],
             ],
           ),
         ),
       ),
-      floatingActionButton: SizedBox(
-        height: 168,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 20, right: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (widget.mediaFileService.mediaFile.type == MediaType.image &&
-                  _screenshotImage?.image != null &&
-                  userService.currentUser.showShowImagePreviewWhenSending)
-                SizedBox(
-                  height: 100,
-                  width: 100 * 9 / 16,
-                  child: Container(
-                    clipBehavior: Clip.hardEdge,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: context.color.primary,
-                        width: 2,
-                      ),
-                      color: context.color.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: CustomPaint(
-                        painter: UiImagePainter(_screenshotImage!.image!),
-                      ),
-                    ),
-                  ),
-                ),
-              FilledButton.icon(
-                icon: !mediaStoreFutureReady || sendingImage
-                    ? SizedBox(
-                        height: 12,
-                        width: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+      floatingActionButton: _allGroups.isEmpty
+          ? null
+          : SizedBox(
+              height: 168,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20, right: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (widget.mediaFileService.mediaFile.type == MediaType.image &&
+                        _screenshotImage?.image != null &&
+                        userService.currentUser.showShowImagePreviewWhenSending)
+                      SizedBox(
+                        height: 100,
+                        width: 100 * 9 / 16,
+                        child: Container(
+                          clipBehavior: Clip.hardEdge,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: context.color.primary,
+                              width: 2,
+                            ),
+                            color: context.color.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CustomPaint(
+                              painter: UiImagePainter(_screenshotImage!.image!),
+                            ),
+                          ),
                         ),
-                      )
-                    : const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                onPressed: () async {
-                  if (!mediaStoreFutureReady ||
-                      widget.selectedGroupIds.isEmpty) {
-                    return;
-                  }
+                      ),
+                    FilledButton.icon(
+                      icon: !mediaStoreFutureReady || sendingImage
+                          ? SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).colorScheme.inversePrimary,
+                              ),
+                            )
+                          : const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                      onPressed: () async {
+                        if (!mediaStoreFutureReady || widget.selectedGroupIds.isEmpty) {
+                          return;
+                        }
 
-                  setState(() {
-                    sendingImage = true;
-                  });
+                        setState(() {
+                          sendingImage = true;
+                        });
 
-                  // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-                  await insertMediaFileInMessagesTable(
-                    widget.mediaFileService,
-                    widget.selectedGroupIds.toList(),
-                    additionalData: widget.additionalData,
-                  );
+                        // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
+                        await insertMediaFileInMessagesTable(
+                          widget.mediaFileService,
+                          widget.selectedGroupIds.toList(),
+                          additionalData: widget.additionalData,
+                        );
 
-                  if (context.mounted) {
-                    Navigator.pop(context, true);
-                  }
-                },
-                style: ButtonStyle(
-                  padding: WidgetStateProperty.all<EdgeInsets>(
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                  ),
-                  backgroundColor: WidgetStateProperty.all<Color>(
-                    !mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
-                        ? context.color.onSurface
-                        : context.color.primary,
-                  ),
-                ),
-                label: Text(
-                  '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
-                  style: const TextStyle(fontSize: 17),
+                        if (context.mounted) {
+                          Navigator.pop(context, true);
+                        }
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
+                        backgroundColor: WidgetStateProperty.all<Color>(
+                          !mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
+                              ? context.color.onSurface
+                              : context.color.primary,
+                        ),
+                      ),
+                      label: Text(
+                        '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
+                        style: const TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
@@ -375,6 +360,8 @@ class UserList extends StatelessWidget {
     );
 
     return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       restorationId: 'new_message_users_list',
       itemCount: groups.length,
       itemBuilder: (context, i) {

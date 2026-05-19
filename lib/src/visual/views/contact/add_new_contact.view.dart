@@ -62,24 +62,21 @@ class _SearchUsernameView extends State<AddNewUserView> {
         }
       },
     );
-    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao
-        .watchNewAnnouncedUsersWithRelations()
-        .listen((update) {
-          if (mounted) {
-            setState(() {
-              _newAnnouncedUsers = update;
-            });
-          }
+
+    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao.watchNewAnnouncedUsersWithRelations().listen((update) {
+      if (mounted) {
+        setState(() {
+          _newAnnouncedUsers = update;
         });
-    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao
-        .watchAllAnnouncedUsersWithRelations()
-        .listen((update) {
-          if (mounted) {
-            setState(() {
-              _allAnnouncedUsers = update;
-            });
-          }
+      }
+    });
+    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao.watchAllAnnouncedUsersWithRelations().listen((update) {
+      if (mounted) {
+        setState(() {
+          _allAnnouncedUsers = update;
         });
+      }
+    });
 
     if (widget.username != null) {
       _usernameController.text = widget.username!;
@@ -93,8 +90,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   Future<void> _shareProfile() async {
     final pubKey = await getUserPublicKey();
     final params = ShareParams(
-      text:
-          'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',
+      text: 'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',
     );
     await SharePlus.instance.share(params);
   }
@@ -194,9 +190,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       ),
     );
 
-    if (widget.publicKey != null &&
-        mounted &&
-        widget.publicKey!.equals(userdata.publicIdentityKey)) {
+    if (widget.publicKey != null && mounted && widget.publicKey!.equals(userdata.publicIdentityKey)) {
       final markAsVerified = await showAlertDialog(
         context,
         context.lang.linkFromUsername(username),
@@ -321,15 +315,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
                             FontAwesomeIcons.shareNodes,
                             size: 14,
                           ),
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              context.lang.shareYourProfile,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          label: Text(
+                            context.lang.shareYourProfile,
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ),
                       ),
@@ -353,15 +341,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
                             FontAwesomeIcons.qrcode,
                             size: 14,
                           ),
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              context.lang.openYourOwnQRcode,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          label: Text(
+                            context.lang.openYourOwnQRcode,
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ),
                       ),
@@ -371,11 +353,18 @@ class _SearchUsernameView extends State<AddNewUserView> {
               ),
             ),
             const SizedBox(height: 15),
-            OpenRequestsListComp(
-              contacts: _openRequestsContacts,
-              relations: _allAnnouncedUsers,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Column(
+                children: [
+                  OpenRequestsListComp(
+                    contacts: _openRequestsContacts,
+                    relations: _allAnnouncedUsers,
+                  ),
+                  FriendSuggestionsComp(_newAnnouncedUsers),
+                ],
+              ),
             ),
-            FriendSuggestionsComp(_newAnnouncedUsers),
           ],
         ),
       ),

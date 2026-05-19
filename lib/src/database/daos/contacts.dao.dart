@@ -103,6 +103,13 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return select(contacts).get();
   }
 
+  Future<int> getContactsCount() async {
+    final count = contacts.userId.count();
+    final query = selectOnly(contacts)..addColumns([count]);
+    final result = await query.map((row) => row.read(count)).getSingle();
+    return result ?? 0;
+  }
+
   Stream<int?> watchContactsBlocked() {
     final count = contacts.userId.count();
     final query = selectOnly(contacts)

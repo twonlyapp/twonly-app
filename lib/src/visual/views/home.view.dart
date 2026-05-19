@@ -78,9 +78,7 @@ class HomeViewState extends State<HomeView> {
     _selectNotificationSub = selectNotificationStream.stream.listen((
       response,
     ) async {
-      if (response.payload != null &&
-          response.payload!.startsWith(Routes.chats) &&
-          response.payload! != Routes.chats) {
+      if (response.payload != null && response.payload!.startsWith(Routes.chats) && response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
       streamHomeViewPageIndex.add(0);
@@ -116,40 +114,31 @@ class HomeViewState extends State<HomeView> {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialPage == 1 &&
-              !userService.currentUser.startWithCameraOpen ||
-          widget.initialPage == 0) {
+      if (widget.initialPage == 1 && !userService.currentUser.startWithCameraOpen || widget.initialPage == 0) {
         streamHomeViewPageIndex.add(0);
       }
     });
   }
 
   Future<void> _initAsync() async {
-    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
-        .getNotificationAppLaunchDetails();
+    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
     RemoteMessage? initialRemoteMessage;
     try {
-      initialRemoteMessage = await FirebaseMessaging.instance
-          .getInitialMessage();
+      initialRemoteMessage = await FirebaseMessaging.instance.getInitialMessage();
     } catch (e) {
       Log.error('Could not get initial Firebase message: $e');
     }
 
     if (widget.initialPage == 0 ||
         initialRemoteMessage != null ||
-        (notificationAppLaunchDetails != null &&
-            notificationAppLaunchDetails.didNotificationLaunchApp)) {
+        (notificationAppLaunchDetails != null && notificationAppLaunchDetails.didNotificationLaunchApp)) {
       if (initialRemoteMessage != null) {
         Log.info('App launched from iOS/Remote push notification tap.');
         streamHomeViewPageIndex.add(0);
-      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
-          false) {
-        final payload =
-            notificationAppLaunchDetails?.notificationResponse?.payload;
-        if (payload != null &&
-            payload.startsWith(Routes.chats) &&
-            payload != Routes.chats) {
+      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+        final payload = notificationAppLaunchDetails?.notificationResponse?.payload;
+        if (payload != null && payload.startsWith(Routes.chats) && payload != Routes.chats) {
           await routerProvider.push(payload);
           streamHomeViewPageIndex.add(0);
         }
@@ -190,24 +179,29 @@ class HomeViewState extends State<HomeView> {
     _disableCameraTimer?.cancel();
 
     if (notification.depth > 0 && notification.metrics.axis == Axis.vertical) {
-      if (_activePageIdx == 2 &&
-          notification.metrics.pixels < 100 &&
-          !_isBottomNavVisible) {
-        setState(() {
-          _isBottomNavVisible = true;
-        });
-      } else if (notification is ScrollUpdateNotification) {
-        final delta = notification.scrollDelta ?? 0;
-        if (delta > 5 &&
-            _isBottomNavVisible &&
-            (_activePageIdx != 2 || notification.metrics.pixels >= 100)) {
-          setState(() {
-            _isBottomNavVisible = false;
-          });
-        } else if (delta < -5 && !_isBottomNavVisible) {
+      final canScroll = notification.metrics.maxScrollExtent > notification.metrics.minScrollExtent;
+      if (!canScroll) {
+        if (!_isBottomNavVisible) {
           setState(() {
             _isBottomNavVisible = true;
           });
+        }
+      } else {
+        if (_activePageIdx == 2 && notification.metrics.pixels < 100 && !_isBottomNavVisible) {
+          setState(() {
+            _isBottomNavVisible = true;
+          });
+        } else if (notification is ScrollUpdateNotification) {
+          final delta = notification.scrollDelta ?? 0;
+          if (delta > 5 && _isBottomNavVisible && (_activePageIdx != 2 || notification.metrics.pixels >= 100)) {
+            setState(() {
+              _isBottomNavVisible = false;
+            });
+          } else if (delta < -5 && !_isBottomNavVisible) {
+            setState(() {
+              _isBottomNavVisible = true;
+            });
+          }
         }
       }
     }
@@ -244,9 +238,7 @@ class HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: _offsetRatio == 0
-            ? _mainCameraController.onDoubleTap
-            : null,
+        onDoubleTap: _offsetRatio == 0 ? _mainCameraController.onDoubleTap : null,
         onTapDown: _offsetRatio == 0 ? _mainCameraController.onTapDown : null,
         child: Stack(
           children: <Widget>[
@@ -281,16 +273,12 @@ class HomeViewState extends State<HomeView> {
               left: 0,
               top: 0,
               right: 0,
-              bottom: (_offsetRatio > 0.25)
-                  ? MediaQuery.sizeOf(context).height * 2
-                  : 0,
+              bottom: (_offsetRatio > 0.25) ? MediaQuery.sizeOf(context).height * 2 : 0,
               child: Opacity(
                 opacity: 1 - (_offsetRatio * 4) % 1,
                 child: CameraPreviewControllerView(
                   mainController: _mainCameraController,
-                  isVisible:
-                      ((1 - (_offsetRatio * 4) % 1) == 1) &&
-                      _activePageIdx == 1,
+                  isVisible: ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
                 ),
               ),
             ),

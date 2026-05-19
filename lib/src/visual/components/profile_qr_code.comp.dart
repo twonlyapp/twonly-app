@@ -44,53 +44,52 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _qrCode == null) {
-      return SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    return Container(
-      // padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: context.color.primary,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: QrImageView.withQr(
-        qr: QrCode.fromData(
-          data: _qrCode!,
-          errorCorrectLevel: QrErrorCorrectLevel.M,
-        ),
-        eyeStyle: QrEyeStyle(
-          color: isDarkMode(context) ? Colors.black : Colors.white,
-          borderRadius: 2,
-        ),
-        dataModuleStyle: QrDataModuleStyle(
-          color: isDarkMode(context) ? Colors.black : Colors.white,
-          borderRadius: 2,
-        ),
-        gapless: false,
-        embeddedImage: (widget.showAvatar && _userAvatar != null)
-            ? MemoryImage(_userAvatar!)
-            : null,
-        embeddedImageStyle: QrEmbeddedImageStyle(
-          size: const Size(60, 66),
-          embeddedImageShape: EmbeddedImageShape.square,
-          shapeColor: context.color.primary,
-          safeArea: true,
-        ),
-        size: widget.size,
+    final loaded = !_isLoading && _qrCode != null;
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        child: loaded
+            ? Container(
+                key: const ValueKey('qr_code_container'),
+                // padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: context.color.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 3,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: QrImageView.withQr(
+                  qr: QrCode.fromData(
+                    data: _qrCode!,
+                    errorCorrectLevel: QrErrorCorrectLevel.M,
+                  ),
+                  eyeStyle: QrEyeStyle(
+                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    borderRadius: 2,
+                  ),
+                  dataModuleStyle: QrDataModuleStyle(
+                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                    borderRadius: 2,
+                  ),
+                  gapless: false,
+                  embeddedImage: (widget.showAvatar && _userAvatar != null) ? MemoryImage(_userAvatar!) : null,
+                  embeddedImageStyle: QrEmbeddedImageStyle(
+                    size: const Size(60, 66),
+                    embeddedImageShape: EmbeddedImageShape.square,
+                    shapeColor: context.color.primary,
+                    safeArea: true,
+                  ),
+                  size: widget.size,
+                ),
+              )
+            : const SizedBox.shrink(key: ValueKey('qr_code_placeholder')),
       ),
     );
   }
