@@ -1514,6 +1514,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String mutualGroupsTitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mutual groups',
+      one: '1 mutual group',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mutualGroupsSentMessages(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages sent',
+      one: '1 message sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String chatEntryFlameRestored(Object count) {
     return '$count flames restored';
   }

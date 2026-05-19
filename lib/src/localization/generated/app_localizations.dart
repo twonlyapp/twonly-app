@@ -2738,6 +2738,18 @@ abstract class AppLocalizations {
   /// **'{username} has scanned your QR code and is now verified.'**
   String secretQrTokenVerifiedSnackbar(Object username);
 
+  /// No description provided for @mutualGroupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 mutual group} other{{count} mutual groups}}'**
+  String mutualGroupsTitle(num count);
+
+  /// No description provided for @mutualGroupsSentMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message sent} other{{count} messages sent}}'**
+  String mutualGroupsSentMessages(num count);
+
   /// No description provided for @chatEntryFlameRestored.
   ///
   /// In en, this message translates to:

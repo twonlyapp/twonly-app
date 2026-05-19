@@ -8,7 +8,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -17,10 +16,11 @@ import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/user_discovery_contact_settings.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
-import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -93,14 +93,6 @@ class _ContactViewState extends State<ContactView> {
     );
     if (remove) {
       await twonlyDB.contactsDao.deleteContactByUserId(contact.userId);
-      // await twonlyDB.contactsDao.updateContact(
-      //   contact.userId,
-      //   const ContactsCompanion(
-      //     accepted: Value(false),
-      //     requested: Value(false),
-      //     deletedByUser: Value(true),
-      //   ),
-      // );
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
@@ -240,62 +232,13 @@ class _ContactViewState extends State<ContactView> {
           VerificationExpansionTileComp(
             contact: contact,
           ),
-          if (userService.currentUser.isUserDiscoveryEnabled)
-            if (userService.currentUser.userDiscoveryRequiresManualApproval &&
-                contact.userDiscoveryManualApproved != true)
-              BetterListTile(
-                icon: FontAwesomeIcons.usersViewfinder,
-                text: context.lang.userDiscoverySettingsTitle,
-                subtitle: Text(
-                  context.lang.contactUserDiscoveryManualApprovalPending,
-                  style: const TextStyle(fontSize: 10),
-                ),
-                trailing: TextButton(
-                  onPressed: () async {
-                    await twonlyDB.contactsDao.updateContact(
-                      contact.userId,
-                      const ContactsCompanion(
-                        userDiscoveryManualApproved: Value(true),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    context.lang.contactUserDiscoveryManualApprovalApprove,
-                  ),
-                ),
-              )
-            else
-              BetterListTile(
-                icon: FontAwesomeIcons.usersViewfinder,
-                text: context.lang.userDiscoverySettingsTitle,
-                onTap: () => context.navPush(const UserDiscoverySettingsView()),
-                subtitle:
-                    !contact.userDiscoveryExcluded &&
-                        contact.mediaSendCounter <
-                            userService.currentUser.requiredSendImages
-                    ? Text(
-                        context.lang.contactUserDiscoveryImagesLeft(
-                          userService.currentUser.requiredSendImages -
-                              contact.mediaSendCounter,
-                          getContactDisplayName(contact),
-                        ),
-                        style: const TextStyle(fontSize: 9),
-                      )
-                    : null,
-                trailing: Transform.scale(
-                  scale: 0.8,
-                  child: Switch(
-                    value: !contact.userDiscoveryExcluded,
-                    onChanged: (a) async {
-                      await UserDiscoveryService.changeExclusionForContact(
-                        contact.userId,
-                        !a,
-                      );
-                    },
-                  ),
-                ),
-              ),
-
+          MutualGroupsExpansionTileComp(
+            contact: contact,
+          ),
+          UserDiscoveryContactSettingsComp(
+            contact: contact,
+          ),
+          const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.flag,
             text: context.lang.reportUser,
