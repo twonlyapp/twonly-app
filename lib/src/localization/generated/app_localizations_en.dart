@@ -1321,11 +1321,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Be informed about who is requesting';
 
   @override
-  String get userDiscoverySettingsManualApproval => 'Manual approval';
+  String get userDiscoverySettingsManualApproval => 'Ask before sharing';
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
-      'Before someone is shared, you\'ll be asked first.';
+      'Before one of your friends is shared, you will be asked every time.';
 
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
@@ -1613,6 +1613,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsTitle => 'Mutual Friends';
+
+  @override
+  String get userDiscoveryWhyThisIsUsed => 'Why this is used';
+
+  @override
+  String get userDiscoveryFeatureOffers => 'Your benefits at a glance';
 
   @override
   String get userDiscoveryDisabledLearnMore => 'Learn more';

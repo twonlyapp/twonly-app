@@ -8,7 +8,6 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/views/contact/add_new_contact_components/friend_suggestions.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/mock_contact_request_actions.comp.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/components/setup_switch_card.comp.dart';
 
 List<String> getExampleUsers(BuildContext context) => [
   context.lang.exampleUserName1,
@@ -103,91 +102,94 @@ class UserDiscoverySetupComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showShareYourFriends =
+        showOnlySpecificPage == UserDiscoveryPages.all ||
+        showOnlySpecificPage == UserDiscoveryPages.shareYourFriends;
+    final showLetYourFriendsFindYou =
+        showOnlySpecificPage == UserDiscoveryPages.all ||
+        showOnlySpecificPage == UserDiscoveryPages.letYourFriendsFindYou;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showOnlySpecificPage == UserDiscoveryPages.all ||
-              showOnlySpecificPage == UserDiscoveryPages.shareYourFriends) ...[
+          if (showShareYourFriends) ...[
             Text(
               context.lang.onboardingUserDiscoveryShareFriends,
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
+            // First description text (centered, no card/title/icon)
             RichText(
               text: TextSpan(
                 children: formattedText(
                   context,
                   context.lang.onboardingUserDiscoveryShareFriendsDesc,
                 ),
+                style: TextStyle(
+                  color: context.color.onSurface,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
               textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 24),
 
-            SetupSwitchCard(
-              value: state.isUserDiscoveryEnabled,
-              onChanged: (val) => state.update(() {
-                state.isUserDiscoveryEnabled = val;
-              }),
-              title: context.lang.onboardingUserDiscoveryShareFriends,
-              expandedChild: Column(
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.color.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SwitchListTile(
-                    value: state.isManualApprovalEnabled,
-                    onChanged: (val) => state.update(
-                      () => state.isManualApprovalEnabled = val,
+                  Text(
+                    context.lang.userDiscoveryFeatureOffers,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.color.primary,
                     ),
-                    title: Text(
-                      context.lang.userDiscoverySettingsManualApproval,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    subtitle: Text(
-                      context.lang.userDiscoverySettingsManualApprovalDesc,
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    tileColor: context.color.surfaceContainerLow,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Divider(),
-                  ),
-                  const _ExampleLabel(),
+                  const SizedBox(height: 12),
                   Text(
                     context.lang.onboardingUserDiscoveryWhoIsRequesting,
                     style: TextStyle(
                       color: context.color.onSurfaceVariant,
                       fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                  const SizedBox(height: 8),
+                  Center(
                     child: Container(
+                      constraints: const BoxConstraints(maxWidth: 320),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 0.5),
+                        color: context.color.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.color.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const AvatarIcon(fontSize: 14),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +210,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                         context.lang.exampleUserName1,
                                       ],
                                     ),
-                                    style: const TextStyle(fontSize: 10),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.color.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -219,37 +224,46 @@ class UserDiscoverySetupComp extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   Text(
                     context.lang.onboardingUserDiscoveryContactsVerifiedBadge,
                     style: TextStyle(
                       color: context.color.onSurfaceVariant,
                       fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Center(
                     child: Container(
-                      width: 100,
-                      height: 40,
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 0.5),
+                        color: context.color.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.color.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const AvatarIcon(fontSize: 12),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 8),
                           Text(
                             context.lang.exampleJane,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 6),
                           const VerificationBadgeComp(
                             isVerifiedByTransferredTrust: true,
                             size: 14,
@@ -259,113 +273,171 @@ class UserDiscoverySetupComp extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
 
+            // Checkboxes / settings Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.color.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SwitchListTile(
+                    value: state.isUserDiscoveryEnabled,
+                    onChanged: (val) => state.update(() {
+                      state.isUserDiscoveryEnabled = val;
+                    }),
+                    title: Text(
+                      context.lang.onboardingUserDiscoveryShareFriends,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    tileColor: Colors.transparent,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  AnimatedCrossFade(
+                    firstChild: const SizedBox(
+                      width: double.infinity,
+                      height: 0,
+                    ),
+                    secondChild: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Divider(
+                            color: context.color.outlineVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        SwitchListTile(
+                          value: state.isManualApprovalEnabled,
+                          onChanged: (val) => state.update(
+                            () => state.isManualApprovalEnabled = val,
+                          ),
+                          title: Text(
+                            context.lang.userDiscoverySettingsManualApproval,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Text(
+                            context
+                                .lang
+                                .userDiscoverySettingsManualApprovalDesc,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.color.onSurfaceVariant,
+                            ),
+                          ),
+                          tileColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                        ),
+                      ],
+                    ),
+                    crossFadeState: state.isUserDiscoveryEnabled
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 300),
+                  ),
+                ],
+              ),
+            ),
             if (showOnlySpecificPage == UserDiscoveryPages.all)
-              const SizedBox(height: 80),
+              const SizedBox(height: 48),
           ],
-
-          if (showOnlySpecificPage == UserDiscoveryPages.all ||
-              showOnlySpecificPage ==
-                  UserDiscoveryPages.letYourFriendsFindYou) ...[
+          if (showLetYourFriendsFindYou) ...[
             Text(
               context.lang.onboardingUserDiscoveryLetFriendsFindYou,
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
+            // First description text (centered, no card/title/icon)
             RichText(
               text: TextSpan(
                 children: formattedText(
                   context,
                   context.lang.userDiscoveryDisabledIntro,
                 ),
+                style: TextStyle(
+                  color: context.color.onSurface,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 24),
 
-            const SizedBox(height: 32),
-
-            SetupSwitchCard(
-              value: state.sharePromotion,
-              onChanged: (val) => state.update(() {
-                state.sharePromotion = val;
-              }),
-              title: context.lang.onboardingUserDiscoveryBeRecommended,
-              expandedChild: Column(
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.color.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            context.lang.userDiscoverySettingsMutualFriends,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: state.threshold,
-                            items: List.generate(
-                              9,
-                              (index) {
-                                final value = index + 2;
-                                return DropdownMenuItem<int>(
-                                  value: value,
-                                  child: Text('$value'),
-                                );
-                              },
-                            ),
-                            onChanged: (newValue) {
-                              if (newValue != null) {
-                                state.update(() {
-                                  state.threshold = newValue;
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ],
+                  Text(
+                    context.lang.userDiscoveryFeatureOffers,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.color.primary,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8, top: 8),
-                    child: Divider(),
-                  ),
-                  const _ExampleLabel(),
+                  const SizedBox(height: 12),
                   Text(
                     context.lang.onboardingUserDiscoveryWhatOthersSee,
                     style: TextStyle(
                       color: context.color.onSurfaceVariant,
                       fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  const SizedBox(height: 8),
+                  Center(
                     child: Container(
+                      constraints: const BoxConstraints(maxWidth: 320),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 0.5),
+                        color: context.color.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.color.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const AvatarIcon(fontSize: 14),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,6 +446,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                   userService.currentUser.username,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
                                 ),
                                 RichText(
@@ -385,7 +458,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                         state.threshold,
                                       ),
                                     ),
-                                    style: const TextStyle(fontSize: 11),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: context.color.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -402,28 +478,31 @@ class UserDiscoverySetupComp extends StatelessWidget {
                     style: TextStyle(
                       color: context.color.onSurfaceVariant,
                       fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                    ),
+                  const SizedBox(height: 8),
+                  Center(
                     child: Container(
+                      constraints: const BoxConstraints(maxWidth: 320),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 0.5),
+                        color: context.color.surface,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.color.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const AvatarIcon(fontSize: 14),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +523,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                         state.threshold,
                                       ),
                                     ),
-                                    style: const TextStyle(fontSize: 10),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.color.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -455,37 +537,130 @@ class UserDiscoverySetupComp extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Checkboxes / settings Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: context.color.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SwitchListTile(
+                    value: state.sharePromotion,
+                    onChanged: (val) => state.update(() {
+                      state.sharePromotion = val;
+                    }),
+                    title: Text(
+                      context.lang.onboardingUserDiscoveryBeRecommended,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    tileColor: Colors.transparent,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  AnimatedCrossFade(
+                    firstChild: const SizedBox(
+                      width: double.infinity,
+                      height: 0,
+                    ),
+                    secondChild: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Divider(
+                            color: context.color.outlineVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  context
+                                      .lang
+                                      .userDiscoverySettingsMutualFriends,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.color.surface,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: context.color.outlineVariant
+                                        .withValues(
+                                          alpha: 0.5,
+                                        ),
+                                  ),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    value: state.threshold,
+                                    style: TextStyle(
+                                      color: context.color.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    items: List.generate(
+                                      9,
+                                      (index) {
+                                        final value = index + 2;
+                                        return DropdownMenuItem<int>(
+                                          value: value,
+                                          child: Text('$value'),
+                                        );
+                                      },
+                                    ),
+                                    onChanged: (newValue) {
+                                      if (newValue != null) {
+                                        state.update(() {
+                                          state.threshold = newValue;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    crossFadeState: state.sharePromotion
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 300),
+                  ),
                 ],
               ),
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _ExampleLabel extends StatelessWidget {
-  const _ExampleLabel();
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey, width: 0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            context.lang.onboardingExampleLabel,
-            style: const TextStyle(fontSize: 10),
-          ),
-        ),
       ),
     );
   }

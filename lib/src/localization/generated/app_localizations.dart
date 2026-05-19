@@ -2435,13 +2435,13 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsManualApproval.
   ///
   /// In en, this message translates to:
-  /// **'Manual approval'**
+  /// **'Ask before sharing'**
   String get userDiscoverySettingsManualApproval;
 
   /// No description provided for @userDiscoverySettingsManualApprovalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Before someone is shared, you\'ll be asked first.'**
+  /// **'Before one of your friends is shared, you will be asked every time.'**
   String get userDiscoverySettingsManualApprovalDesc;
 
   /// No description provided for @onboardingUserDiscoveryLetFriendsFindYou.
@@ -2881,6 +2881,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mutual Friends'**
   String get userDiscoverySettingsTitle;
+
+  /// No description provided for @userDiscoveryWhyThisIsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this is used'**
+  String get userDiscoveryWhyThisIsUsed;
+
+  /// No description provided for @userDiscoveryFeatureOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Your benefits at a glance'**
+  String get userDiscoveryFeatureOffers;
 
   /// No description provided for @userDiscoveryDisabledLearnMore.
   ///

@@ -1330,11 +1330,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Erfahre, wer dich anfragt';
 
   @override
-  String get userDiscoverySettingsManualApproval => 'Manuelle Zustimmung';
+  String get userDiscoverySettingsManualApproval => 'Vor dem Teilen fragen';
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
-      'Bevor jemand geteilt wird, wirst du zuerst gefragt.';
+      'Bevor einer deiner Freunde geteilt wird, wirst du jedes Mal gefragt.';
 
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
@@ -1628,6 +1628,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsTitle => 'Gemeinsame Freunde';
+
+  @override
+  String get userDiscoveryWhyThisIsUsed => 'Warum dies verwendet wird';
+
+  @override
+  String get userDiscoveryFeatureOffers => 'Dein Nutzen auf einen Blick';
 
   @override
   String get userDiscoveryDisabledLearnMore => 'Mehr erfahren';

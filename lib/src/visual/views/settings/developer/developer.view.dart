@@ -369,9 +369,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Reopen Setup'),
                 onTap: () async {
                   await UserService.update((u) {
-                    u
-                      ..currentSetupPage = SetupPages.profile.name
-                      ..isUserDiscoveryEnabled = false;
+                    u.currentSetupPage = SetupPages.profile.name;
                   });
                 },
               ),
