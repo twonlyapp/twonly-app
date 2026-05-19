@@ -1269,6 +1269,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openYourOwnQRcode => 'Open your own QR code';
 
   @override
+  String get addContactQrSheetSubtext =>
+      'Let a friend scan this QR code to add you';
+
+  @override
   String get finishSetupCardTitle => 'Complete your profile';
 
   @override
@@ -1885,4 +1889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dragToZoom => 'Drag to Zoom';
+
+  @override
+  String get showUsername => 'Show username';
 }

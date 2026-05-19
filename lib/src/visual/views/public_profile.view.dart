@@ -5,15 +5,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 
@@ -25,8 +23,6 @@ class PublicProfileView extends StatefulWidget {
 }
 
 class _PublicProfileViewState extends State<PublicProfileView> {
-  String? _qrCode;
-  Uint8List? _userAvatar;
   Uint8List? _publicKey;
   int _countContactRequest = 0;
   late StreamSubscription<int?> _countContactRequestStream;
@@ -38,8 +34,6 @@ class _PublicProfileViewState extends State<PublicProfileView> {
   }
 
   Future<void> initAsync() async {
-    _qrCode = await QrCodeUtils.publicProfileLink();
-    _userAvatar = await getUserAvatar();
     _publicKey = await getUserPublicKey();
     if (mounted) setState(() {});
 
@@ -134,43 +128,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
             ),
           ),
           const SizedBox(height: 20),
-          if (_qrCode != null && _userAvatar != null)
-            Container(
-              decoration: BoxDecoration(
-                color: context.color.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: QrImageView.withQr(
-                qr: QrCode.fromData(
-                  data: _qrCode!,
-                  errorCorrectLevel: QrErrorCorrectLevel.M,
-                ),
-                eyeStyle: QrEyeStyle(
-                  color: isDarkMode(context) ? Colors.black : Colors.white,
-                  borderRadius: 2,
-                ),
-                dataModuleStyle: QrDataModuleStyle(
-                  color: isDarkMode(context) ? Colors.black : Colors.white,
-                  borderRadius: 2,
-                ),
-                gapless: false,
-                embeddedImage: MemoryImage(_userAvatar!),
-                embeddedImageStyle: QrEmbeddedImageStyle(
-                  size: const Size(60, 66),
-                  embeddedImageShape: EmbeddedImageShape.square,
-                  shapeColor: context.color.primary,
-                  safeArea: true,
-                ),
-                size: 250,
-              ),
-            ),
+          const ProfileQrCodeComp(),
           const SizedBox(height: 20),
           Text(
             userService.currentUser.username,

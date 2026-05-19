@@ -278,14 +278,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           messageId,
           MessageActionType.openedAt,
         );
-        final now = clock.now();
-
         await (update(
           messages,
         )..where((tbl) => tbl.messageId.equals(messageId))).write(
           MessagesCompanion(
-            openedAt: Value(now),
-            openedByAll: Value(isOpenedByAll ? now : null),
+            openedAt: Value(timestamp),
+            openedByAll: Value(isOpenedByAll ? timestamp : null),
           ),
         );
       } catch (e) {
@@ -309,7 +307,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
     await twonlyDB.messagesDao.updateMessageId(
       messageId,
-      MessagesCompanion(ackByServer: Value(clock.now())),
+      MessagesCompanion(ackByServer: Value(timestamp)),
     );
   }
 

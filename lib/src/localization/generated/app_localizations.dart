@@ -2342,6 +2342,12 @@ abstract class AppLocalizations {
   /// **'Open your own QR code'**
   String get openYourOwnQRcode;
 
+  /// No description provided for @addContactQrSheetSubtext.
+  ///
+  /// In en, this message translates to:
+  /// **'Let a friend scan this QR code to add you'**
+  String get addContactQrSheetSubtext;
+
   /// No description provided for @finishSetupCardTitle.
   ///
   /// In en, this message translates to:
@@ -3343,6 +3349,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag to Zoom'**
   String get dragToZoom;
+
+  /// No description provided for @showUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Show username'**
+  String get showUsername;
 }
 
 class _AppLocalizationsDelegate
