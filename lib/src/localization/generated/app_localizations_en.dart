@@ -1664,6 +1664,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendSuggestionsRequest => 'Request';
 
   @override
+  String get friendSuggestionsAskFriend => 'Ask your friends';
+
+  @override
+  String askFriendsDialogTitle(Object username) {
+    return 'Ask about $username';
+  }
+
+  @override
+  String get askFriendsDialogDescription =>
+      'Select the friends you want to ask about this user:';
+
+  @override
+  String get askFriendsDialogConfirm => 'Ask';
+
+  @override
+  String get askFriendsDialogCancel => 'Cancel';
+
+  @override
+  String get chatAskAFriendReceivedDescription =>
+      'Your friend just got this as a suggestion and wants to know if he knows this person.';
+
+  @override
+  String get chatAskAFriendAddedDescription =>
+      'You have added this user to your contacts.';
+
+  @override
+  String get chatAskAFriendHide => 'Hide';
+
+  @override
+  String get chatAskAFriendRequest => 'Request';
+
+  @override
+  String chatAskAFriendUnknownUser(Object userId) {
+    return 'User $userId';
+  }
+
+  @override
   String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
     return '$imagesLeft more images are needed until your friends are shared with $username.';
   }

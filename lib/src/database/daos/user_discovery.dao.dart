@@ -228,6 +228,12 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
     );
   }
 
+  Future<UserDiscoveryAnnouncedUser?> getAnnouncedUserById(int id) async {
+    return (select(
+      userDiscoveryAnnouncedUsers,
+    )..where((tbl) => tbl.announcedUserId.equals(id))).getSingleOrNull();
+  }
+
   Stream<List<UserDiscoveryAnnouncedUser>> watchAllAnnouncedUsers() =>
       select(userDiscoveryAnnouncedUsers).watch();
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -30,7 +31,7 @@ class UserDiscoverySetupState {
     this.sharePromotion = true,
     this.isManualApprovalEnabled = false,
     this.threshold = 3,
-    this.requiredSendImages = 4,
+    this.requiredSendImages = kReleaseMode ? 4 : 0,
   });
 
   bool wasChanged = false;
@@ -122,7 +123,6 @@ class UserDiscoverySetupComp extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // First description text (centered, no card/title/icon)
             RichText(
               text: TextSpan(
                 children: formattedText(
@@ -278,7 +278,6 @@ class UserDiscoverySetupComp extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Checkboxes / settings Card
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -370,7 +369,6 @@ class UserDiscoverySetupComp extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // First description text (centered, no card/title/icon)
             RichText(
               text: TextSpan(
                 children: formattedText(
@@ -542,7 +540,6 @@ class UserDiscoverySetupComp extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Checkboxes / settings Card
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(

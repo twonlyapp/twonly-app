@@ -227,7 +227,9 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
 
   Future<void> deleteKeyVerification(int contactId) async {
     try {
-      await (delete(keyVerifications)..where((kv) => kv.contactId.equals(contactId))).go();
+      await (delete(
+        keyVerifications,
+      )..where((kv) => kv.contactId.equals(contactId))).go();
       if (userService.currentUser.isUserDiscoveryEnabled) {
         await FlutterUserDiscovery.updateVerificationStateForUser(
           contactId: contactId,
@@ -238,9 +240,14 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     }
   }
 
-  Future<void> deleteKeyVerificationById(int verificationId, int contactId) async {
+  Future<void> deleteKeyVerificationById(
+    int verificationId,
+    int contactId,
+  ) async {
     try {
-      await (delete(keyVerifications)..where((kv) => kv.verificationId.equals(verificationId))).go();
+      await (delete(
+        keyVerifications,
+      )..where((kv) => kv.verificationId.equals(verificationId))).go();
       final remaining = await getContactVerification(contactId);
       if (remaining.isEmpty && userService.currentUser.isUserDiscoveryEnabled) {
         await FlutterUserDiscovery.updateVerificationStateForUser(

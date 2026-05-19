@@ -3,7 +3,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 
-enum MessageType { media, text, contacts, restoreFlameCounter }
+enum MessageType { media, text, contacts, restoreFlameCounter, askAboutUser }
 
 @DataClassName('Message')
 class Messages extends Table {

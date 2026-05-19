@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/flame.service.dart';
@@ -290,6 +291,27 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         ])..where(groupMembers.contactId.equals(userId)));
 
     return query.map((row) => row.readTable(groups)).getSingleOrNull();
+  }
+
+  Future<Group?> createOrGetDirectChat(int contactId) async {
+    var directChat = await getDirectChat(contactId);
+    if (directChat == null) {
+      final contact = await attachedDatabase.contactsDao.getContactById(
+        contactId,
+      );
+      if (contact == null) {
+        Log.error('Contact $contactId not found, cannot create direct chat');
+        return null;
+      }
+      await createNewDirectChat(
+        contactId,
+        GroupsCompanion(
+          groupName: Value(getContactDisplayName(contact)),
+        ),
+      );
+      directChat = await getDirectChat(contactId);
+    }
+    return directChat;
   }
 
   Stream<int> watchSumTotalMediaCounter() {

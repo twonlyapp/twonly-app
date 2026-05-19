@@ -344,6 +344,52 @@ Future<void> insertAndSendContactShareMessage(
   );
 }
 
+Future<void> insertAndSendAskAboutUserMessage(
+  int contactId,
+  int askAboutUserId,
+) async {
+  final directChat = await twonlyDB.groupsDao.createOrGetDirectChat(contactId);
+  if (directChat == null) {
+    Log.error('Failed to get or create direct chat group for contact $contactId');
+    return;
+  }
+
+  final groupId = directChat.groupId;
+
+  final additionalMessageData = AdditionalMessageData(
+    type: AdditionalMessageData_Type.ASK_ABOUT_USER,
+    askAboutUserId: Int64(askAboutUserId),
+  );
+
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      groupId: Value(groupId),
+      type: Value(MessageType.askAboutUser.name),
+      additionalMessageData: Value(additionalMessageData.writeToBuffer()),
+    ),
+  );
+
+  if (message == null) {
+    Log.error('Could not insert message into database');
+    return;
+  }
+
+  final encryptedContent = pb.EncryptedContent(
+    additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
+      senderMessageId: message.messageId,
+      additionalMessageData: additionalMessageData.writeToBuffer(),
+      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+      type: MessageType.askAboutUser.name,
+    ),
+  );
+
+  await sendCipherTextToGroup(
+    groupId,
+    encryptedContent,
+    messageId: message.messageId,
+  );
+}
+
 Future<void> sendCipherTextToGroup(
   String groupId,
   pb.EncryptedContent encryptedContent, {

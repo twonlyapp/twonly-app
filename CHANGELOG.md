@@ -2,6 +2,8 @@
 
 ## 0.2.17
 
+- New: Adds an "Ask a Friend" button to new contact suggestions.
+- Improved: The blue verification checkmark now displays the total number of verifications.
 - Fix: Issue with receiving messages when user closed app while decrypting
 - Fix: Background message fetching reliability.
 

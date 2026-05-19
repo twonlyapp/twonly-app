@@ -4,13 +4,19 @@ import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
+
 class ChatFlameRestoredEntry extends StatelessWidget {
   const ChatFlameRestoredEntry({
     required this.message,
+    required this.borderRadius,
+    required this.info,
     super.key,
   });
 
   final Message message;
+  final BorderRadiusGeometry borderRadius;
+  final BubbleInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +40,10 @@ class ChatFlameRestoredEntry extends StatelessWidget {
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
-      padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.orange,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: borderRadius,
       ),
       child: BetterText(
         text: context.lang.chatEntryFlameRestored(

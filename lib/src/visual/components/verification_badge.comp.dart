@@ -42,9 +42,24 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   @override
   void initState() {
     super.initState();
-    if (widget.group != null) {
+    initAsync();
+  }
+
+  Future<void> initAsync() async {
+    var group = widget.group;
+    var contact = widget.contact;
+
+    if (group?.isDirectChat == true) {
+      final members = await twonlyDB.groupsDao.getGroupContact(group!.groupId);
+      if (members.isNotEmpty) {
+        contact = members.first;
+        group = null;
+      }
+    }
+
+    if (group != null) {
       _streamAllVerified = twonlyDB.keyVerificationDao
-          .watchAllGroupMembersVerified(widget.group!.groupId)
+          .watchAllGroupMembersVerified(group.groupId)
           .listen((update) {
             if (!mounted) return;
             setState(() {
@@ -58,9 +73,9 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
               }
             });
           });
-    } else if (widget.contact != null) {
+    } else if (contact != null) {
       _streamContactVerification = twonlyDB.keyVerificationDao
-          .watchContactVerification(widget.contact!.userId)
+          .watchContactVerification(contact.userId)
           .listen((update) {
             if (!mounted) return;
             setState(() {
@@ -69,7 +84,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           });
 
       _streamTransferredTrust = twonlyDB.keyVerificationDao
-          .watchTransferredTrustVerifications(widget.contact!.userId)
+          .watchTransferredTrustVerifications(contact.userId)
           .listen((update) {
             if (!mounted) return;
             setState(() {

@@ -2966,6 +2966,66 @@ abstract class AppLocalizations {
   /// **'Request'**
   String get friendSuggestionsRequest;
 
+  /// No description provided for @friendSuggestionsAskFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your friends'**
+  String get friendSuggestionsAskFriend;
+
+  /// No description provided for @askFriendsDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about {username}'**
+  String askFriendsDialogTitle(Object username);
+
+  /// No description provided for @askFriendsDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the friends you want to ask about this user:'**
+  String get askFriendsDialogDescription;
+
+  /// No description provided for @askFriendsDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get askFriendsDialogConfirm;
+
+  /// No description provided for @askFriendsDialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get askFriendsDialogCancel;
+
+  /// No description provided for @chatAskAFriendReceivedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friend just got this as a suggestion and wants to know if he knows this person.'**
+  String get chatAskAFriendReceivedDescription;
+
+  /// No description provided for @chatAskAFriendAddedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You have added this user to your contacts.'**
+  String get chatAskAFriendAddedDescription;
+
+  /// No description provided for @chatAskAFriendHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get chatAskAFriendHide;
+
+  /// No description provided for @chatAskAFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get chatAskAFriendRequest;
+
+  /// No description provided for @chatAskAFriendUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User {userId}'**
+  String chatAskAFriendUnknownUser(Object userId);
+
   /// No description provided for @contactUserDiscoveryImagesLeft.
   ///
   /// In en, this message translates to:
