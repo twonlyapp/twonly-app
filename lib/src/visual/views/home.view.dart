@@ -237,53 +237,57 @@ class HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GestureDetector(
-        onDoubleTap: _offsetRatio == 0 ? _mainCameraController.onDoubleTap : null,
-        onTapDown: _offsetRatio == 0 ? _mainCameraController.onTapDown : null,
-        child: Stack(
-          children: <Widget>[
-            MainCameraPreview(mainCameraController: _mainCameraController),
+      body: Stack(
+        children: <Widget>[
+          MainCameraPreview(mainCameraController: _mainCameraController),
+          Positioned.fill(
+            child: Opacity(
+              opacity: _offsetRatio,
+              child: Container(
+                color: context.color.surface,
+              ),
+            ),
+          ),
+          NotificationListener<ScrollNotification>(
+            onNotification: _onPageView,
+            child: Positioned.fill(
+              child: PageView(
+                controller: _homeViewPageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _activePageIdx = index;
+                  });
+                },
+                children: [
+                  const ChatListView(),
+                  Container(),
+                  const MemoriesView(),
+                ],
+              ),
+            ),
+          ),
+          if (_offsetRatio == 0)
             Positioned.fill(
-              child: Opacity(
-                opacity: _offsetRatio,
-                child: Container(
-                  color: context.color.surface,
-                ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onDoubleTap: _mainCameraController.onDoubleTap,
+                onTapDown: _mainCameraController.onTapDown,
               ),
             ),
-            NotificationListener<ScrollNotification>(
-              onNotification: _onPageView,
-              child: Positioned.fill(
-                child: PageView(
-                  controller: _homeViewPageController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _activePageIdx = index;
-                    });
-                  },
-                  children: [
-                    const ChatListView(),
-                    Container(),
-                    const MemoriesView(),
-                  ],
-                ),
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: (_offsetRatio > 0.25) ? MediaQuery.sizeOf(context).height * 2 : 0,
+            child: Opacity(
+              opacity: 1 - (_offsetRatio * 4) % 1,
+              child: CameraPreviewControllerView(
+                mainController: _mainCameraController,
+                isVisible: ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
               ),
             ),
-            Positioned(
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: (_offsetRatio > 0.25) ? MediaQuery.sizeOf(context).height * 2 : 0,
-              child: Opacity(
-                opacity: 1 - (_offsetRatio * 4) % 1,
-                child: CameraPreviewControllerView(
-                  mainController: _mainCameraController,
-                  isVisible: ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       bottomNavigationBar: AnimatedSize(
         duration: const Duration(milliseconds: 250),

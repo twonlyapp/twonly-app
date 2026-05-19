@@ -44,7 +44,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
           SizedBox(width: 15),
         ],
       ),
-      body: Column(
+      body: ListView(
         children: [
           Container(width: double.infinity),
           const SizedBox(height: 10),
@@ -75,6 +75,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
           Text(
             userService.currentUser.username,
             style: const TextStyle(fontSize: 24),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           const Divider(),

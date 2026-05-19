@@ -7,6 +7,7 @@
 - Improved: The blue verification checkmark now displays the total number of verifications.
 - Fix: Issue with receiving messages when user closed app while decrypting
 - Fix: Background message fetching reliability.
+- Fix: Issue with focus changing when taking a picture
 
 ## 0.2.16
 

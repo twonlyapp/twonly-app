@@ -31,21 +31,24 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GestureDetector(
-        onDoubleTap: _mainCameraController.onDoubleTap,
-        onTapDown: _mainCameraController.onTapDown,
-        child: Stack(
-          children: [
-            MainCameraPreview(
-              mainCameraController: _mainCameraController,
+      body: Stack(
+        children: [
+          MainCameraPreview(
+            mainCameraController: _mainCameraController,
+          ),
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onDoubleTap: _mainCameraController.onDoubleTap,
+              onTapDown: _mainCameraController.onTapDown,
             ),
-            CameraPreviewControllerView(
-              mainController: _mainCameraController,
-              hideControllers: true,
-              isVisible: true,
-            ),
-          ],
-        ),
+          ),
+          CameraPreviewControllerView(
+            mainController: _mainCameraController,
+            hideControllers: true,
+            isVisible: true,
+          ),
+        ],
       ),
     );
   }
