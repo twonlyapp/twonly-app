@@ -274,9 +274,6 @@ class ApiService {
   }
 
   Future<void> _onData(dynamic msgBuffer) async {
-    if (kDebugMode) {
-      print('API _onData received: $msgBuffer');
-    }
     try {
       if (msgBuffer is! Uint8List) {
         msgBuffer = Uint8List.fromList(msgBuffer as List<int>);

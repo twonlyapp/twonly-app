@@ -33,7 +33,7 @@ class VerificationBadgeComp extends StatefulWidget {
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   bool _isVerified = false;
-  bool _isVerifiedByTransferredTrust = false;
+  int _verifiedByTransferredTrustCount = 0;
 
   StreamSubscription<VerificationStatus>? _streamAllVerified;
   StreamSubscription<List<KeyVerification>>? _streamContactVerification;
@@ -49,12 +49,12 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             if (!mounted) return;
             setState(() {
               _isVerified = false;
-              _isVerifiedByTransferredTrust = false;
+              _verifiedByTransferredTrustCount = 0;
               if (update == VerificationStatus.trusted) {
                 _isVerified = true;
               }
               if (update == VerificationStatus.partialTrusted) {
-                _isVerifiedByTransferredTrust = true;
+                _verifiedByTransferredTrustCount = 10;
               }
             });
           });
@@ -73,12 +73,12 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           .listen((update) {
             if (!mounted) return;
             setState(() {
-              _isVerifiedByTransferredTrust = update.isNotEmpty;
+              _verifiedByTransferredTrustCount = update.length;
             });
           });
     } else if (widget.isVerifiedByTransferredTrust != null) {
       setState(() {
-        _isVerifiedByTransferredTrust = widget.isVerifiedByTransferredTrust!;
+        _verifiedByTransferredTrustCount = 10;
       });
     }
   }
@@ -94,7 +94,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   @override
   Widget build(BuildContext context) {
     if (!_isVerified &&
-        !_isVerifiedByTransferredTrust &&
+        _verifiedByTransferredTrustCount == 0 &&
         widget.showOnlyIfVerified) {
       return Container();
     }
@@ -112,10 +112,12 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             bottom: 3,
           ),
           child: SvgIcon(
-            assetPath: (_isVerified || _isVerifiedByTransferredTrust)
+            assetPath: _isVerified
                 ? SvgIcons.verifiedGreen
+                : _verifiedByTransferredTrustCount > 0
+                ? SvgIcons.verifiedNumeric(_verifiedByTransferredTrustCount)
                 : SvgIcons.verifiedRed,
-            color: (_isVerifiedByTransferredTrust && !_isVerified)
+            color: (_verifiedByTransferredTrustCount > 0 && !_isVerified)
                 ? colorVerificationBadgeYellow
                 : null,
             size: widget.size,
