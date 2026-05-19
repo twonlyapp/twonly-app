@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.17
+
+- Fix: Issue with receiving messages when user closed app while decrypting
+- Fix: Background message fetching reliability.
+
 ## 0.2.16
 
 - Fix: Images not shown after opening due to cleanup
@@ -14,7 +19,7 @@
 - New: Tutorial on how to use zoom. 
 - New: Manage storage view.
 - Improved: Media thumbnails for faster loading.
-- Fix: Some message where not marked as opened.
+- Fix: Some messages were not marked as opened.
 
 ## 0.2.12
 

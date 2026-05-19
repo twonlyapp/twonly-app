@@ -101,12 +101,20 @@ class ApiService {
         Uri.parse(apiUrl),
         pingInterval: const Duration(seconds: 30),
       );
+
+      try {
+        await channel.ready.timeout(const Duration(seconds: 10));
+      } catch (e) {
+        channel.sink.close().ignore();
+        rethrow;
+      }
+
       _channel = channel;
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
-      await _channel!.ready;
       Log.info('websocket connected to $apiUrl');
       return true;
     } catch (e, s) {
+      _channel = null;
       if (kDebugMode) {
         print('DEBUG: _connectTo caught exception: $e\n$s');
       }
@@ -156,6 +164,7 @@ class ApiService {
   }
 
   Future<void> onClosed() async {
+    if (_channel == null) return;
     Log.info('websocket connection closed');
     _channel = null;
     isAuthenticated = false;
@@ -187,15 +196,19 @@ class ApiService {
     _reconnectionDelay = 3;
   }
 
-  Future<void> close(Function callback) async {
+  Future<void> close(Function? callback) async {
     Log.info('closing websocket connection');
     if (_channel != null) {
-      await _channel!.sink.close();
+      try {
+        await _channel!.sink.close().timeout(const Duration(seconds: 2));
+      } catch (e) {
+        Log.warn('Timeout or error closing websocket: $e');
+      }
       await onClosed();
-      callback();
+      callback?.call();
       return;
     }
-    callback();
+    callback?.call();
   }
 
   Future<void> listenToNetworkChanges() async {
