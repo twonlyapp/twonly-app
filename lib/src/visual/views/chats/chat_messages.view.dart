@@ -146,7 +146,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       _nextTypingIndicator = Timer.periodic(const Duration(seconds: 2), (
         _,
       ) async {
-        await sendTypingIndication(widget.groupId, false);
+        if (_isViewActive()) {
+          await sendTypingIndication(widget.groupId, false);
+        }
       });
     }
   }

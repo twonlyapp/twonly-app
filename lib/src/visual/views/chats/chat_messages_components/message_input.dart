@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +52,7 @@ class _MessageInputState extends State<MessageInput> {
   Offset _recordingOffset = Offset.zero;
   RecordingState _recordingState = RecordingState.none;
   Timer? _nextTypingIndicator;
+  DateTime? _lastTextChangeTime;
 
   Future<void> _sendMessage() async {
     if (_textFieldController.text == '') return;
@@ -70,6 +72,7 @@ class _MessageInputState extends State<MessageInput> {
   void initState() {
     super.initState();
     _textFieldController = TextEditingController();
+    _textFieldController.addListener(_handleTextChange);
     if (widget.group.draftMessage != null) {
       _textFieldController.text = widget.group.draftMessage!;
     }
@@ -78,7 +81,10 @@ class _MessageInputState extends State<MessageInput> {
       _nextTypingIndicator = Timer.periodic(const Duration(seconds: 1), (
         _,
       ) async {
-        if (widget.textFieldFocus.hasFocus) {
+        if (widget.textFieldFocus.hasFocus &&
+            _lastTextChangeTime != null &&
+            DateTime.now().difference(_lastTextChangeTime!) <=
+                const Duration(seconds: 6)) {
           await sendTypingIndication(widget.group.groupId, true);
         }
       });
@@ -88,6 +94,7 @@ class _MessageInputState extends State<MessageInput> {
 
   @override
   void dispose() {
+    _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
     recorderController.dispose();
@@ -103,6 +110,10 @@ class _MessageInputState extends State<MessageInput> {
         _currentDuration = duration.inMilliseconds;
       });
     });
+  }
+
+  void _handleTextChange() {
+    _lastTextChangeTime = clock.now();
   }
 
   void _handleTextFocusChange() {
