@@ -911,8 +911,8 @@ abstract class AppLocalizations {
   /// No description provided for @verificationTypeSecretQrToken.
   ///
   /// In en, this message translates to:
-  /// **'The other person scanned your QR code.'**
-  String get verificationTypeSecretQrToken;
+  /// **'{username} has scanned your QR code.'**
+  String verificationTypeSecretQrToken(Object username);
 
   /// No description provided for @verificationTypeLink.
   ///
@@ -2699,7 +2699,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The checkmark gives you the certainty that you are messaging the right person. Scan the contact\'s QR code to verify it.'**
+  /// **'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
@@ -2719,6 +2719,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @deleteVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete verification?'**
+  String get deleteVerificationTitle;
+
+  /// No description provided for @deleteVerificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this verification?'**
+  String get deleteVerificationBody;
+
+  /// No description provided for @secretQrTokenVerifiedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} has scanned your QR code and is now verified.'**
+  String secretQrTokenVerifiedSnackbar(Object username);
 
   /// No description provided for @chatEntryFlameRestored.
   ///

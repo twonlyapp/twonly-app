@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/add_new_contacts.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
@@ -15,7 +14,6 @@ import 'package:twonly/src/visual/views/settings/privacy/user_discovery/componen
 enum SetupPages {
   profile,
   backup,
-  addNewContact,
   verificationBadge,
   shareYourFriends,
   letYourFriendsFindYou,
@@ -185,8 +183,6 @@ class _SetupViewState extends State<SetupView> {
         return const ProfileSetupPage();
       case SetupPages.backup:
         return const BackupSetupPage();
-      case SetupPages.addNewContact:
-        return const AddNewContactsPage();
       case SetupPages.verificationBadge:
         return const VerificationBadgeSetupPage();
       case SetupPages.shareYourFriends:

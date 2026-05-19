@@ -17,4 +17,5 @@ message PublicProfile {
   bytes  signed_prekey_signature = 6;
   int64  signed_prekey_id        = 7;
   optional bytes secret_verification_token = 8; 
+  optional int64 timestamp = 9;
 }

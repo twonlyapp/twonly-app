@@ -447,8 +447,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get verificationTypeQrScanned => 'Du hast den QR-Code gescannt.';
 
   @override
-  String get verificationTypeSecretQrToken =>
-      'Die andere Person hat deinen QR-Code gescannt.';
+  String verificationTypeSecretQrToken(Object username) {
+    return '$username hat deinen QR-Code gescannt.';
+  }
 
   @override
   String get verificationTypeLink => 'Per Link verifiziert.';
@@ -1501,7 +1502,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst. Scanne einen Kontakt, um diesen zu verifizieren.';
+      'Der Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst. Du kannst Kontakte jederzeit verifizieren, indem du deren QR-Code scannst.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1514,6 +1515,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.';
+
+  @override
+  String get deleteVerificationTitle => 'Verifizierung löschen?';
+
+  @override
+  String get deleteVerificationBody =>
+      'Möchtest du diese Verifizierung wirklich löschen?';
+
+  @override
+  String secretQrTokenVerifiedSnackbar(Object username) {
+    return '$username hat deinen QR-Code gescannt und ist nun verifiziert.';
+  }
 
   @override
   String chatEntryFlameRestored(Object count) {

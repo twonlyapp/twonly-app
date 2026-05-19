@@ -27,7 +27,8 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
   KeyVerificationDao(super.db);
 
   Future<List<VerificationToken>> getRecentVerificationTokens() {
-    final cutoff = DateTime.now().subtract(const Duration(hours: 24));
+    // Tokens are only valid for one hour, so if the users are currently offline, the verification notification will still work later.
+    final cutoff = DateTime.now().subtract(const Duration(hours: 1));
     return (select(
       verificationTokens,
     )..where((t) => t.createdAt.isBiggerOrEqualValue(cutoff))).get();
@@ -217,6 +218,33 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
         await FlutterUserDiscovery.updateVerificationStateForUser(
           contactId: contactId,
           publicKeyVerifiedTimestamp: clock.now().millisecondsSinceEpoch,
+        );
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
+  Future<void> deleteKeyVerification(int contactId) async {
+    try {
+      await (delete(keyVerifications)..where((kv) => kv.contactId.equals(contactId))).go();
+      if (userService.currentUser.isUserDiscoveryEnabled) {
+        await FlutterUserDiscovery.updateVerificationStateForUser(
+          contactId: contactId,
+        );
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
+  Future<void> deleteKeyVerificationById(int verificationId, int contactId) async {
+    try {
+      await (delete(keyVerifications)..where((kv) => kv.verificationId.equals(verificationId))).go();
+      final remaining = await getContactVerification(contactId);
+      if (remaining.isEmpty && userService.currentUser.isUserDiscoveryEnabled) {
+        await FlutterUserDiscovery.updateVerificationStateForUser(
+          contactId: contactId,
         );
       }
     } catch (e) {

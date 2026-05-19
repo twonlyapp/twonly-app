@@ -4,11 +4,9 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -20,6 +18,7 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 
@@ -35,13 +34,9 @@ class ContactView extends StatefulWidget {
 class _ContactViewState extends State<ContactView> {
   Contact? _contact;
   List<GroupMember> _memberOfGroups = [];
-  List<KeyVerification> _keyVerifications = [];
-  List<(Contact, DateTime)> _transferredTrust = [];
 
   late StreamSubscription<Contact?> _streamContact;
   late StreamSubscription<List<GroupMember>> _streamMemberOfGroups;
-  late StreamSubscription<List<KeyVerification>> _streamKeyVerifications;
-  late StreamSubscription<List<(Contact, DateTime)>> _streamTransferredTrust;
 
   @override
   void initState() {
@@ -63,30 +58,12 @@ class _ContactViewState extends State<ContactView> {
             _memberOfGroups = groups;
           });
         });
-    _streamKeyVerifications = twonlyDB.keyVerificationDao
-        .watchContactVerification(widget.userId)
-        .listen((update) {
-          if (!mounted) return;
-          setState(() {
-            _keyVerifications = update;
-          });
-        });
-    _streamTransferredTrust = twonlyDB.keyVerificationDao
-        .watchTransferredTrustVerifications(widget.userId)
-        .listen((update) {
-          if (!mounted) return;
-          setState(() {
-            _transferredTrust = update;
-          });
-        });
   }
 
   @override
   void dispose() {
     _streamContact.cancel();
     _streamMemberOfGroups.cancel();
-    _streamKeyVerifications.cancel();
-    _streamTransferredTrust.cancel();
     super.dispose();
   }
 
@@ -260,75 +237,9 @@ class _ContactViewState extends State<ContactView> {
           RestoreFlameComp(
             contactId: widget.userId,
           ),
-          if (_keyVerifications.isEmpty && _transferredTrust.isEmpty)
-            BetterListTile(
-              leading: VerificationBadgeComp(
-                contact: contact,
-                size: 20,
-              ),
-              text: context.lang.contactVerifyNumberTitle,
-              onTap: () async {
-                await context.push(Routes.settingsHelpFaqVerifyBadge);
-                setState(() {});
-              },
-            ),
-          if (_keyVerifications.isNotEmpty || _transferredTrust.isNotEmpty)
-            ExpansionTile(
-              shape: const RoundedRectangleBorder(),
-              backgroundColor: context.color.surfaceContainer,
-              collapsedShape: const RoundedRectangleBorder(),
-              leading: Padding(
-                padding: const EdgeInsetsGeometry.only(left: 12, right: 12),
-                child: VerificationBadgeComp(
-                  contact: contact,
-                  size: 20,
-                ),
-              ),
-              title: Text(context.lang.userVerifiedTitle),
-              children: [
-                ..._keyVerifications.map(
-                  (kv) => ListTile(
-                    dense: true,
-                    title: Text(_verificationTypeLabel(context, kv.type)),
-                    trailing: Text(
-                      DateFormat.yMd(
-                        Localizations.localeOf(context).toString(),
-                      ).format(kv.createdAt),
-                      style: TextStyle(
-                        color: context.color.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-                ..._transferredTrust.map(
-                  (tt) => ListTile(
-                    dense: true,
-                    title: Row(
-                      children: [
-                        Text(
-                          context.lang.contactVerifiedBy(
-                            getContactDisplayName(tt.$1),
-                          ),
-                        ),
-                        VerificationBadgeComp(
-                          contact: tt.$1,
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      DateFormat.yMd(
-                        Localizations.localeOf(context).toString(),
-                      ).format(tt.$2),
-                      style: TextStyle(
-                        color: context.color.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          VerificationExpansionTileComp(
+            contact: contact,
+          ),
           if (userService.currentUser.isUserDiscoveryEnabled)
             if (userService.currentUser.userDiscoveryRequiresManualApproval &&
                 contact.userDiscoveryManualApproved != true)
@@ -406,19 +317,6 @@ class _ContactViewState extends State<ContactView> {
       ),
     );
   }
-}
-
-String _verificationTypeLabel(BuildContext context, VerificationType type) {
-  return switch (type) {
-    VerificationType.qrScanned => context.lang.verificationTypeQrScanned,
-    VerificationType.secretQrToken =>
-      context.lang.verificationTypeSecretQrToken,
-    VerificationType.link => context.lang.verificationTypeLink,
-    VerificationType.contactSharedByVerified =>
-      context.lang.verificationTypeContactSharedByVerified,
-    VerificationType.migratedFromOldVersion =>
-      context.lang.verificationTypeMigratedFromOldVersion,
-  };
 }
 
 Future<String?> showNicknameChangeDialog(
