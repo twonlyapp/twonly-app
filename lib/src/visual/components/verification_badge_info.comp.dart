@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -23,16 +25,18 @@ class VerificationBadgeInfo extends StatelessWidget {
           description: context.lang.verificationBadgeGreenDesc,
           boldTextColor: primaryColor,
         ),
-        _buildItem(
-          context,
-          icon: const SvgIcon(
-            assetPath: SvgIcons.verifiedGreen,
-            size: 40,
-            color: colorVerificationBadgeYellow,
+        if (userService.currentUser.securityProfile != SecurityProfile.strict ||
+            userService.currentUser.isUserDiscoveryEnabled)
+          _buildItem(
+            context,
+            icon: const SvgIcon(
+              assetPath: SvgIcons.verifiedGreen,
+              size: 40,
+              color: colorVerificationBadgeYellow,
+            ),
+            description: context.lang.verificationBadgeYellowDesc,
+            boldTextColor: colorVerificationBadgeYellow,
           ),
-          description: context.lang.verificationBadgeYellowDesc,
-          boldTextColor: colorVerificationBadgeYellow,
-        ),
         _buildItem(
           context,
           icon: const SvgIcon(assetPath: SvgIcons.verifiedRed, size: 40),

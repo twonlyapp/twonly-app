@@ -79,9 +79,8 @@ class TestClient {
         displayName: username,
         subscriptionPlan: 'Free',
         currentSetupPage: null,
+        appVersion: 100,
       );
-      // ignore: cascade_invocations
-      userData.appVersion = 100;
       await UserService.save(userData);
 
       await api.authenticate();

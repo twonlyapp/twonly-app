@@ -81,7 +81,8 @@ void main() {
       displayName: 'Test User',
       subscriptionPlan: 'Free',
       currentSetupPage: null,
-    )..appVersion = 100;
+      appVersion: 100,
+    );
     userService.isUserCreated = true;
     await UserService.save(userService.currentUser);
     initialUserData = (await KeyValueStore.get('user'))!;

@@ -140,7 +140,8 @@ class _RegisterViewState extends State<RegisterView> {
       displayName: username,
       subscriptionPlan: 'Free',
       currentSetupPage: SetupPages.profile.name,
-    )..appVersion = AppState.latestAppVersionId;
+      appVersion: AppState.latestAppVersionId,
+    );
 
     await UserService.save(userData);
 

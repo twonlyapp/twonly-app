@@ -289,6 +289,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsPrivacyProfileSelectionTitle => 'Security Profile';
+
+  @override
+  String get settingsPrivacyProfileSelectionDesc =>
+      'Choose your setup path and security configuration';
+
+  @override
+  String get securityProfileTitle => 'Security Profile';
+
+  @override
+  String get securityProfileSubtitle =>
+      'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.';
+
+  @override
+  String get securityProfileNormalTitle => 'Normal Protection';
+
+  @override
+  String get securityProfileNormalDesc =>
+      'Good balance between a convenient mode without bothering you too much.';
+
+  @override
+  String get securityProfileStrictTitle => 'Strict Protection';
+
+  @override
+  String get securityProfileStrictDesc =>
+      'Maximum anti-phishing protection but may be inconvenient.';
+
+  @override
   String get settingsNotification => 'Notification';
 
   @override
@@ -1325,7 +1353,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Be informed about who is requesting';
 
   @override
-  String get userDiscoverySettingsManualApproval => 'Ask before sharing';
+  String get userDiscoverySettingsManualApproval =>
+      'Ask every time before sharing';
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
@@ -1892,4 +1921,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showUsername => 'Show username';
+
+  @override
+  String get onboardingProfileSelectionTitle => 'Choose your setup path';
+
+  @override
+  String get onboardingProfileSelectionSubtitle =>
+      'Choose how you want to configure your security and privacy settings.';
+
+  @override
+  String get onboardingProfileSelectionDefaultTitle => 'Default';
+
+  @override
+  String get onboardingProfileSelectionDefaultDesc =>
+      'Instantly applies recommended settings so you can start using the app.';
+
+  @override
+  String get onboardingProfileSelectionDefaultBadge => 'Fast Setup';
+
+  @override
+  String get onboardingProfileSelectionCustomizeTitle => 'Customize';
+
+  @override
+  String get onboardingProfileSelectionCustomizeDesc =>
+      'Step-by-step setup so you can decide for yourself.';
+
+  @override
+  String get onboardingProfileSelectionStrictTitle => 'Enhanced Protection';
+
+  @override
+  String get onboardingProfileSelectionStrictDesc =>
+      'Maximum anti-phishing defense. Recommended for *journalists & public figures*.';
 }

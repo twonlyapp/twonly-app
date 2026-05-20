@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/profile_selection.setup.dart';
+import 'package:twonly/src/visual/views/onboarding/setup/security_profile.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/share_your_friends.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/verification_badge.setup.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
@@ -14,6 +17,8 @@ import 'package:twonly/src/visual/views/settings/privacy/user_discovery/componen
 enum SetupPages {
   profile,
   backup,
+  profileSelection,
+  securityProfile,
   verificationBadge,
   shareYourFriends,
   letYourFriendsFindYou,
@@ -27,25 +32,62 @@ extension SetupPagesExtension on SetupPages {
     );
   }
 
-  int get pageNumber => index + 1;
-  int get totalPages => SetupPages.values.length;
+  static List<SetupPages> get activePages {
+    final setupProfile = userService.currentUser.setupProfile;
+    switch (setupProfile) {
+      case SetupProfile.standard:
+        return [
+          SetupPages.profile,
+          SetupPages.backup,
+          SetupPages.profileSelection,
+        ];
+      case SetupProfile.maximum:
+        return [
+          SetupPages.profile,
+          SetupPages.backup,
+          SetupPages.profileSelection,
+          SetupPages.verificationBadge,
+        ];
+      case SetupProfile.customized:
+        return [
+          SetupPages.profile,
+          SetupPages.backup,
+          SetupPages.profileSelection,
+          SetupPages.securityProfile,
+          SetupPages.verificationBadge,
+          SetupPages.shareYourFriends,
+          SetupPages.letYourFriendsFindYou,
+        ];
+    }
+  }
+
+  int get pageNumber {
+    final idx = activePages.indexOf(this);
+    return idx != -1 ? idx + 1 : 1;
+  }
+
+  int get totalPages => activePages.length;
   int get progressPercentage => ((pageNumber - 1) / totalPages * 100).round();
   String get progressText => '$pageNumber / $totalPages';
 
-  bool get isLast => index == SetupPages.values.length - 1;
+  bool get isLast {
+    return activePages.isNotEmpty && activePages.last == this;
+  }
 
   SetupPages? next() {
-    final nextIndex = index + 1;
-    if (nextIndex < SetupPages.values.length) {
-      return SetupPages.values[nextIndex];
+    final pages = activePages;
+    final idx = pages.indexOf(this);
+    if (idx != -1 && idx + 1 < pages.length) {
+      return pages[idx + 1];
     }
     return null;
   }
 
   SetupPages? previous() {
-    final prevIndex = index - 1;
-    if (prevIndex >= 0) {
-      return SetupPages.values[prevIndex];
+    final pages = activePages;
+    final idx = pages.indexOf(this);
+    if (idx > 0) {
+      return pages[idx - 1];
     }
     return null;
   }
@@ -110,9 +152,7 @@ class _SetupViewState extends State<SetupView> {
                           right: index == currentPage.totalPages - 1 ? 0 : 8,
                         ),
                         decoration: BoxDecoration(
-                          color: isFinished
-                              ? context.color.primary
-                              : context.color.surfaceContainer,
+                          color: isFinished ? context.color.primary : context.color.surfaceContainer,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -149,8 +189,7 @@ class _SetupViewState extends State<SetupView> {
                             ),
                           ),
                         ),
-                      if (currentPage.index > 0 && !currentPage.isLast)
-                        const SizedBox(width: 24),
+                      if (currentPage.index > 0 && !currentPage.isLast) const SizedBox(width: 24),
                       if (!currentPage.isLast)
                         TextButton(
                           onPressed: () async {
@@ -183,6 +222,10 @@ class _SetupViewState extends State<SetupView> {
         return const ProfileSetupPage();
       case SetupPages.backup:
         return const BackupSetupPage();
+      case SetupPages.profileSelection:
+        return const ProfileSelectionSetup();
+      case SetupPages.securityProfile:
+        return const SecurityProfileSetup();
       case SetupPages.verificationBadge:
         return const VerificationBadgeSetupPage();
       case SetupPages.shareYourFriends:

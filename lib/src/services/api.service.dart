@@ -21,8 +21,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart' as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
@@ -66,15 +65,13 @@ class ApiService {
   Stream<SubscriptionPlan> get onPlanUpdated => _planUpdateController.stream;
 
   final _connectionStateController = StreamController<bool>.broadcast();
-  Stream<bool> get onConnectionStateUpdated =>
-      _connectionStateController.stream;
+  Stream<bool> get onConnectionStateUpdated => _connectionStateController.stream;
 
   final _appOutdatedController = StreamController<void>.broadcast();
   Stream<void> get onAppOutdated => _appOutdatedController.stream;
 
   final _newDeviceRegisteredController = StreamController<void>.broadcast();
-  Stream<void> get onNewDeviceRegistered =>
-      _newDeviceRegisteredController.stream;
+  Stream<void> get onNewDeviceRegistered => _newDeviceRegisteredController.stream;
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
@@ -83,18 +80,12 @@ class ApiService {
   Timer? reconnectionTimer;
   int _reconnectionDelay = 5;
 
-  final HashMap<Int64, Completer<server.ServerToClient?>> _pendingRequests =
-      HashMap();
+  final HashMap<Int64, Completer<server.ServerToClient?>> _pendingRequests = HashMap();
   IOWebSocketChannel? _channel;
   // ignore: cancel_subscriptions
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
-    if (kDebugMode) {
-      print(
-        'DEBUG: ApiService._connectTo called with: $apiUrl (appIsOutdated=$appIsOutdated)',
-      );
-    }
     if (appIsOutdated) return false;
     try {
       final channel = IOWebSocketChannel.connect(
@@ -113,11 +104,8 @@ class ApiService {
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
       Log.info('websocket connected to $apiUrl');
       return true;
-    } catch (e, s) {
+    } catch (e) {
       _channel = null;
-      if (kDebugMode) {
-        print('DEBUG: _connectTo caught exception: $e\n$s');
-      }
       return false;
     }
   }
@@ -164,9 +152,6 @@ class ApiService {
   }
 
   Future<void> onClosed() async {
-    if (kDebugMode) {
-      print('API onClosed called');
-    }
     if (_channel == null) return;
     Log.info('websocket connection closed');
     _channel = null;
@@ -254,17 +239,11 @@ class ApiService {
   bool get isConnected => _channel != null && _channel!.closeCode == null;
 
   Future<void> _onDone() async {
-    if (kDebugMode) {
-      print('API _onDone called');
-    }
     _reconnectionDelay = 3;
     await onClosed();
   }
 
   Future<void> _onError(dynamic e) async {
-    if (kDebugMode) {
-      print('API _onError called: $e');
-    }
     if (e.toString().contains('Failed host lookup')) {
       Log.info('WebSocket connection failed: Host not reachable.');
     } else {
@@ -439,9 +418,7 @@ class ApiService {
       }
       if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
         Log.warn('Contact deleted their account $contactId.');
-        final contact = await twonlyDB.contactsDao
-            .getContactByUserId(contactId)
-            .getSingleOrNull();
+        final contact = await twonlyDB.contactsDao.getContactByUserId(contactId).getSingleOrNull();
         if (contact != null) {
           await twonlyDB.contactsDao.updateContact(
             contactId,
@@ -506,8 +483,7 @@ class ApiService {
         return true;
       }
       if (result.isError) {
-        if (result.error != ErrorCode.AuthTokenNotValid &&
-            result.error != ErrorCode.ForegroundSessionConnected) {
+        if (result.error != ErrorCode.AuthTokenNotValid && result.error != ErrorCode.ForegroundSessionConnected) {
           Log.error(
             'got error while authenticating to the server: ${result.error}',
           );
@@ -545,8 +521,7 @@ class ApiService {
         return true;
       }
       if (result.isError) {
-        if (result.error != ErrorCode.AuthTokenNotValid &&
-            result.error != ErrorCode.ForegroundSessionConnected) {
+        if (result.error != ErrorCode.AuthTokenNotValid && result.error != ErrorCode.ForegroundSessionConnected) {
           Log.error(
             'got error while authenticating to the server: ${result.error}',
           );
@@ -578,8 +553,7 @@ class ApiService {
         return;
       }
 
-      final handshake = Handshake()
-        ..getAuthChallenge = Handshake_GetAuthChallenge();
+      final handshake = Handshake()..getAuthChallenge = Handshake_GetAuthChallenge();
       final req = createClientToServerFromHandshake(handshake);
 
       final result = await sendRequestSync(req, authenticated: false);
@@ -644,9 +618,7 @@ class ApiService {
 
     final register = Handshake_Register()
       ..username = username
-      ..publicIdentityKey = (await signalStore.getIdentityKeyPair())
-          .getPublicKey()
-          .serialize()
+      ..publicIdentityKey = (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
       ..registrationId = Int64(signalIdentity.registrationId)
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature

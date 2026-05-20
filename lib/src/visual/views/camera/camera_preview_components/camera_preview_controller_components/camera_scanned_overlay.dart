@@ -33,8 +33,7 @@ class CameraScannedOverlay extends StatelessWidget {
             ...mainController.contactsVerified.values.map(
               (c) => _buildVerifiedContactTile(context, c),
             ),
-            if (mainController.scannedUrl != null)
-              _buildScannedUrlTile(context, mainController.scannedUrl!),
+            if (mainController.scannedUrl != null) _buildScannedUrlTile(context, mainController.scannedUrl!),
           ],
         ),
       ),
@@ -46,15 +45,14 @@ class CameraScannedOverlay extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         c.isLoading = true;
-        mainController.setState();
+        mainController.setState?.call();
 
         showSnackbar(
           context,
           context.lang.requestedUserToastText(c.profile.username),
           level: SnackbarLevel.success,
         );
-        if (await addNewContactFromPublicProfile(c.profile) &&
-            context.mounted) {
+        if (await addNewContactFromPublicProfile(c.profile) && context.mounted) {
           // showSnackbar(
           //   context,
           //   context.lang.requestedUserToastText(c.profile.username),
@@ -121,13 +119,11 @@ class CameraScannedOverlay extends StatelessWidget {
             child: SizedBox(
               width: 30,
               child: Lottie.asset(
-                c.verificationOk
-                    ? 'assets/animations/success.lottie'
-                    : 'assets/animations/failed.lottie',
+                c.verificationOk ? 'assets/animations/success.lottie' : 'assets/animations/failed.lottie',
                 repeat: false,
                 onLoaded: (p0) {
                   Future.delayed(const Duration(seconds: 4), () {
-                    mainController.setState();
+                    mainController.setState?.call();
                   });
                 },
               ),

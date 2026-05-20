@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -15,7 +16,8 @@ class LoggingCallbacks {
               Log.info(log.split('INFO ')[1]);
             } else if (log.contains('DEBUG ')) {
               Log.info(log.split('DEBUG ')[1]);
-            } else if (kDebugMode) {
+            } else if (kDebugMode && !Platform.environment.containsKey('FLUTTER_TEST')) {
+              // ignore: avoid_print
               print(log);
             }
           },

@@ -38,7 +38,7 @@ class _ChatListViewState extends State<ChatListView> {
   List<Group> _groupsPinned = [];
   List<Group> _groupsArchived = [];
 
-  bool _hasContacts = true;
+  bool _hasContacts = false;
   bool get _hasOpenGroup => _groupsNotPinned.isNotEmpty || _groupsArchived.isNotEmpty || _groupsPinned.isNotEmpty;
 
   GlobalKey searchForOtherUsers = GlobalKey();

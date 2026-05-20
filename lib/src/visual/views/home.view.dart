@@ -169,6 +169,7 @@ class HomeViewState extends State<HomeView> {
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
     _disableCameraTimer?.cancel();
+    _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     _intentStreamSub?.cancel();
     _deepLinkSub?.cancel();

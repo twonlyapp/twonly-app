@@ -26,6 +26,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
 
   @override
   void dispose() {
+    _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     super.dispose();
   }

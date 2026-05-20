@@ -18,43 +18,48 @@ class NextButtonComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentPage = SetupPagesExtension.fromStr(
-      userService.currentUser.currentSetupPage,
-    );
-    return ElevatedButton(
-      onPressed: (canSubmit && !isLoading)
-          ? () async {
-              if (onPressed != null) {
-                final error = await onPressed?.call();
-                if (error == true) return;
-              }
-              await UserService.update((user) {
-                user.currentSetupPage = currentPage.next()?.name;
-              });
-            }
-          : null,
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 56),
-        backgroundColor: context.color.primary,
-        foregroundColor: context.color.onPrimary,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          : Text(
-              currentPage.isLast ? context.lang.finishSetup : context.lang.next,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    return StreamBuilder<void>(
+      stream: userService.onUserUpdated,
+      builder: (context, snapshot) {
+        final currentPage = SetupPagesExtension.fromStr(
+          userService.currentUser.currentSetupPage,
+        );
+        return ElevatedButton(
+          onPressed: (canSubmit && !isLoading)
+              ? () async {
+                  if (onPressed != null) {
+                    final error = await onPressed?.call();
+                    if (error == true) return;
+                  }
+                  await UserService.update((user) {
+                    user.currentSetupPage = currentPage.next()?.name;
+                  });
+                }
+              : null,
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 56),
+            backgroundColor: context.color.primary,
+            foregroundColor: context.color.onPrimary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(
+                  currentPage.isLast ? context.lang.finishSetup : context.lang.next,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+        );
+      },
     );
   }
 }

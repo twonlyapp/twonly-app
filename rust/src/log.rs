@@ -34,10 +34,16 @@ pub(crate) async fn init_tracing(logs_dir: &std::path::Path, is_dart_available: 
 
         // Replace stdout with our new DartWriter!
 
+        let default_filter = if std::env::var("FLUTTER_TEST").is_ok() {
+            "info,refinery_core=warn,refinery=warn"
+        } else {
+            "debug,refinery_core=warn,refinery=warn"
+        };
+
         let registry = Registry::default()
             .with(
                 EnvFilter::try_from_default_env()
-                    .unwrap_or_else(|_| EnvFilter::new("debug,refinery_core=warn,refinery=warn")),
+                    .unwrap_or_else(|_| EnvFilter::new(default_filter)),
             )
             .with(stdout_layer);
 

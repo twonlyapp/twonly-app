@@ -293,6 +293,34 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get settingsPrivacyProfileSelectionTitle => 'Sicherheitsprofil';
+
+  @override
+  String get settingsPrivacyProfileSelectionDesc =>
+      'Wähle deinen Setup-Pfad und deine Sicherheitskonfiguration';
+
+  @override
+  String get securityProfileTitle => 'Sicherheitsprofil';
+
+  @override
+  String get securityProfileSubtitle =>
+      'Wähle das Schutzniveau, das zu deiner täglichen Nutzung passt. Dies kann jederzeit in den Einstellungen geändert werden.';
+
+  @override
+  String get securityProfileNormalTitle => 'Normaler Schutz';
+
+  @override
+  String get securityProfileNormalDesc =>
+      'Gute Balance zwischen Komfort und Sicherheit, ohne dich zu sehr einzuschränken.';
+
+  @override
+  String get securityProfileStrictTitle => 'Strikter Schutz';
+
+  @override
+  String get securityProfileStrictDesc =>
+      'Maximaler Schutz vor Phishing, kann aber unkomfortabel sein.';
+
+  @override
   String get settingsNotification => 'Benachrichtigung';
 
   @override
@@ -1334,7 +1362,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Erfahre, wer dich anfragt';
 
   @override
-  String get userDiscoverySettingsManualApproval => 'Vor dem Teilen fragen';
+  String get userDiscoverySettingsManualApproval => 'Vor jedem Teilen fragen';
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
@@ -1908,4 +1936,35 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get showUsername => 'Benutzernamen anzeigen';
+
+  @override
+  String get onboardingProfileSelectionTitle => 'Wähle deinen Setup-Weg';
+
+  @override
+  String get onboardingProfileSelectionSubtitle =>
+      'Wähle aus, wie du deine Sicherheits- und Privatsphäre-Einstellungen konfigurieren möchtest.';
+
+  @override
+  String get onboardingProfileSelectionDefaultTitle => 'Standard';
+
+  @override
+  String get onboardingProfileSelectionDefaultDesc =>
+      'Wendet sofort die empfohlenen Einstellungen an, damit du die App direkt nutzen kannst.';
+
+  @override
+  String get onboardingProfileSelectionDefaultBadge => 'Schnelles Setup';
+
+  @override
+  String get onboardingProfileSelectionCustomizeTitle => 'Anpassen';
+
+  @override
+  String get onboardingProfileSelectionCustomizeDesc =>
+      'Schritt-für-Schritt-Einrichtung, damit du selbst entscheiden kannst.';
+
+  @override
+  String get onboardingProfileSelectionStrictTitle => 'Erhöhter Schutz';
+
+  @override
+  String get onboardingProfileSelectionStrictDesc =>
+      'Maximaler Schutz vor Phishing. Empfohlen für *Journalisten & Personen des öffentlichen Lebens*.';
 }

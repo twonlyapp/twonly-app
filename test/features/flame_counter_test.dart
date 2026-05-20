@@ -83,7 +83,8 @@ void main() {
       displayName: 'Test User',
       subscriptionPlan: 'Free',
       currentSetupPage: null,
-    )..appVersion = 62;
+      appVersion: 62,
+    );
   });
 
   test('test flame counter', () async {

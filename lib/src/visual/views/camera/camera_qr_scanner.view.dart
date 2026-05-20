@@ -24,6 +24,7 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
 
   @override
   void dispose() {
+    _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     super.dispose();
   }

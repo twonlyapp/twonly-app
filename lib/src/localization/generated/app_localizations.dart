@@ -626,6 +626,54 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
+  /// No description provided for @settingsPrivacyProfileSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Profile'**
+  String get settingsPrivacyProfileSelectionTitle;
+
+  /// No description provided for @settingsPrivacyProfileSelectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your setup path and security configuration'**
+  String get settingsPrivacyProfileSelectionDesc;
+
+  /// No description provided for @securityProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Profile'**
+  String get securityProfileTitle;
+
+  /// No description provided for @securityProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.'**
+  String get securityProfileSubtitle;
+
+  /// No description provided for @securityProfileNormalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Protection'**
+  String get securityProfileNormalTitle;
+
+  /// No description provided for @securityProfileNormalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Good balance between a convenient mode without bothering you too much.'**
+  String get securityProfileNormalDesc;
+
+  /// No description provided for @securityProfileStrictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strict Protection'**
+  String get securityProfileStrictTitle;
+
+  /// No description provided for @securityProfileStrictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum anti-phishing protection but may be inconvenient.'**
+  String get securityProfileStrictDesc;
+
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
@@ -2441,7 +2489,7 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsManualApproval.
   ///
   /// In en, this message translates to:
-  /// **'Ask before sharing'**
+  /// **'Ask every time before sharing'**
   String get userDiscoverySettingsManualApproval;
 
   /// No description provided for @userDiscoverySettingsManualApprovalDesc.
@@ -3355,6 +3403,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show username'**
   String get showUsername;
+
+  /// No description provided for @onboardingProfileSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your setup path'**
+  String get onboardingProfileSelectionTitle;
+
+  /// No description provided for @onboardingProfileSelectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to configure your security and privacy settings.'**
+  String get onboardingProfileSelectionSubtitle;
+
+  /// No description provided for @onboardingProfileSelectionDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get onboardingProfileSelectionDefaultTitle;
+
+  /// No description provided for @onboardingProfileSelectionDefaultDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Instantly applies recommended settings so you can start using the app.'**
+  String get onboardingProfileSelectionDefaultDesc;
+
+  /// No description provided for @onboardingProfileSelectionDefaultBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Setup'**
+  String get onboardingProfileSelectionDefaultBadge;
+
+  /// No description provided for @onboardingProfileSelectionCustomizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get onboardingProfileSelectionCustomizeTitle;
+
+  /// No description provided for @onboardingProfileSelectionCustomizeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step setup so you can decide for yourself.'**
+  String get onboardingProfileSelectionCustomizeDesc;
+
+  /// No description provided for @onboardingProfileSelectionStrictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhanced Protection'**
+  String get onboardingProfileSelectionStrictTitle;
+
+  /// No description provided for @onboardingProfileSelectionStrictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum anti-phishing defense. Recommended for *journalists & public figures*.'**
+  String get onboardingProfileSelectionStrictDesc;
 }
 
 class _AppLocalizationsDelegate

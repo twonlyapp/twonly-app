@@ -96,7 +96,8 @@ class UserEnvironment {
       displayName: '$username Display',
       subscriptionPlan: 'Free',
       currentSetupPage: null,
-    )..appVersion = 100;
+      appVersion: 100,
+    );
 
     // ignore: cascade_invocations
     us.isUserCreated = true;

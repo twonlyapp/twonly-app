@@ -26,7 +26,7 @@ List<String> getExampleUsers(BuildContext context) => [
 
 class UserDiscoverySetupState {
   UserDiscoverySetupState({
-    required this.setState,
+    this.setState,
     this.isUserDiscoveryEnabled = true,
     this.sharePromotion = true,
     this.isManualApprovalEnabled = false,
@@ -43,13 +43,17 @@ class UserDiscoverySetupState {
   bool isManualApprovalEnabled;
   int requiredSendImages;
 
-  void Function(void Function()) setState;
+  void Function(void Function())? setState;
 
   void update(void Function() update) {
     update();
-    setState(() {
+    if (setState != null) {
+      setState!(() {
+        wasChanged = true;
+      });
+    } else {
       wasChanged = true;
-    });
+    }
   }
 
   Future<bool> initializeOrUpdate() async {

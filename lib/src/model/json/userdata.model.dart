@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:twonly/src/services/profile.service.dart';
 part 'userdata.model.g.dart';
 
 @JsonSerializable()
@@ -10,9 +11,9 @@ class UserData {
     required this.displayName,
     required this.subscriptionPlan,
     required this.currentSetupPage,
+    required this.appVersion,
   });
-  factory UserData.fromJson(Map<String, dynamic> json) =>
-      _$UserDataFromJson(json);
+  factory UserData.fromJson(Map<String, dynamic> json) => _$UserDataFromJson(json);
 
   final int userId;
 
@@ -34,6 +35,12 @@ class UserData {
 
   @JsonKey(defaultValue: 0)
   int deviceId = 0;
+
+  @JsonKey(defaultValue: SetupProfile.standard)
+  SetupProfile setupProfile = SetupProfile.standard;
+
+  @JsonKey(defaultValue: SecurityProfile.normal)
+  SecurityProfile securityProfile = SecurityProfile.normal;
 
   // --- SUBSCRIPTION DTA ---
 
@@ -179,8 +186,7 @@ class TwonlySafeBackup {
     required this.backupId,
     required this.encryptionKey,
   });
-  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
-      _$TwonlySafeBackupFromJson(json);
+  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) => _$TwonlySafeBackupFromJson(json);
 
   int lastBackupSize = 0;
   LastBackupUploadState backupUploadState = LastBackupUploadState.none;
