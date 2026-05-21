@@ -4,6 +4,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
@@ -39,10 +40,8 @@ class _ResponseContainerState extends State<ResponseContainer> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final messageBox =
-          _message.currentContext?.findRenderObject() as RenderBox?;
-      final previewBox =
-          _preview.currentContext?.findRenderObject() as RenderBox?;
+      final messageBox = _message.currentContext?.findRenderObject() as RenderBox?;
+      final previewBox = _preview.currentContext?.findRenderObject() as RenderBox?;
       if (messageBox == null || previewBox == null) {
         return;
       }
@@ -65,9 +64,7 @@ class _ResponseContainerState extends State<ResponseContainer> {
       return widget.child!;
     }
     return GestureDetector(
-      onTap: widget.scrollToMessage == null
-          ? null
-          : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
+      onTap: widget.scrollToMessage == null ? null : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
@@ -143,16 +140,12 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   }
 
   Future<void> initAsync() async {
-    _message ??= await twonlyDB.messagesDao
-        .getMessageById(widget.messageId!)
-        .getSingleOrNull();
+    _message ??= await twonlyDB.messagesDao.getMessageById(widget.messageId!).getSingleOrNull();
     if (_message?.mediaId != null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
     if (_message?.senderId != null) {
-      final contact = await twonlyDB.contactsDao
-          .getContactByUserId(_message!.senderId!)
-          .getSingleOrNull();
+      final contact = await twonlyDB.contactsDao.getContactByUserId(_message!.senderId!).getSingleOrNull();
       if (contact != null) {
         _username = getContactDisplayName(contact);
       }
@@ -185,6 +178,28 @@ class _ResponsePreviewState extends State<ResponsePreview> {
           case MediaType.audio:
             subtitle = 'Audio';
         }
+      }
+      if (_message!.type == MessageType.contacts.name) {
+        subtitle = context.lang.contacts;
+      }
+      if (_message!.type == MessageType.restoreFlameCounter.name) {
+        if (_message!.additionalMessageData != null) {
+          try {
+            final data = AdditionalMessageData.fromBuffer(
+              _message!.additionalMessageData!,
+            );
+            subtitle = context.lang.chatEntryFlameRestored(
+              data.restoredFlameCounter.toInt(),
+            );
+          } catch (e) {
+            subtitle = context.lang.replyFlameRestored;
+          }
+        } else {
+          subtitle = context.lang.replyFlameRestored;
+        }
+      }
+      if (_message!.type == MessageType.askAboutUser.name) {
+        subtitle = context.lang.replyAskAFriend;
       }
 
       if (_message!.senderId == null) {
@@ -248,8 +263,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               ],
             ),
           ),
-          if (_mediaService != null &&
-              _mediaService!.mediaFile.type != MediaType.audio)
+          if (_mediaService != null && _mediaService!.mediaFile.type != MediaType.audio)
             SizedBox(
               height: widget.showBorder ? 100 : 210,
               child: Image.file(

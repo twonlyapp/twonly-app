@@ -1952,4 +1952,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingProfileSelectionStrictDesc =>
       'Maximum anti-phishing defense. Recommended for *journalists & public figures*.';
+
+  @override
+  String get replyFlameRestored => 'Flames restored';
+
+  @override
+  String get replyAskAFriend => 'Ask a friend';
 }

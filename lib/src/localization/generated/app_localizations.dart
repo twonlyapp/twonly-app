@@ -3457,6 +3457,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maximum anti-phishing defense. Recommended for *journalists & public figures*.'**
   String get onboardingProfileSelectionStrictDesc;
+
+  /// No description provided for @replyFlameRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Flames restored'**
+  String get replyFlameRestored;
+
+  /// No description provided for @replyAskAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a friend'**
+  String get replyAskAFriend;
 }
 
 class _AppLocalizationsDelegate

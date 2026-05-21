@@ -1967,4 +1967,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingProfileSelectionStrictDesc =>
       'Maximaler Schutz vor Phishing. Empfohlen für *Journalisten & Personen des öffentlichen Lebens*.';
+
+  @override
+  String get replyFlameRestored => 'Flammen wiederhergestellt';
+
+  @override
+  String get replyAskAFriend => 'Einen Freund fragen';
 }
