@@ -1958,4 +1958,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get replyAskAFriend => 'Ask a friend';
+
+  @override
+  String get unverifiedWarningDirectTitle => 'Identity not verified in person';
+
+  @override
+  String get unverifiedWarningGroupTitle =>
+      'Not all members are verified in person';
+
+  @override
+  String get unverifiedWarningBody =>
+      '*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.';
+
+  @override
+  String get unverifiedWarningButton => 'Verify now';
 }

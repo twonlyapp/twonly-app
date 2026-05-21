@@ -1973,4 +1973,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get replyAskAFriend => 'Einen Freund fragen';
+
+  @override
+  String get unverifiedWarningDirectTitle =>
+      'Identität nicht persönlich verifiziert';
+
+  @override
+  String get unverifiedWarningGroupTitle =>
+      'Nicht alle Mitglieder sind persönlich verifiziert';
+
+  @override
+  String get unverifiedWarningBody =>
+      '*Teile keine geheimen Daten*. Jemand könnte sich *als dein Freund ausgeben*.';
+
+  @override
+  String get unverifiedWarningButton => 'Jetzt verifizieren';
 }

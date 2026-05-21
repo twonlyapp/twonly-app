@@ -3469,6 +3469,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask a friend'**
   String get replyAskAFriend;
+
+  /// No description provided for @unverifiedWarningDirectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity not verified in person'**
+  String get unverifiedWarningDirectTitle;
+
+  /// No description provided for @unverifiedWarningGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not all members are verified in person'**
+  String get unverifiedWarningGroupTitle;
+
+  /// No description provided for @unverifiedWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.'**
+  String get unverifiedWarningBody;
+
+  /// No description provided for @unverifiedWarningButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify now'**
+  String get unverifiedWarningButton;
 }
 
 class _AppLocalizationsDelegate
