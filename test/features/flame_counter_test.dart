@@ -87,7 +87,7 @@ void main() {
     );
   });
 
-  test('test flame counter', () async {
+  test('normal flame expiring', () async {
     final contactId = await getAndCreateUserId();
     final contact = (await twonlyDB.contactsDao.getContactById(contactId))!;
     await twonlyDB.groupsDao.createNewDirectChat(
@@ -182,6 +182,21 @@ void main() {
       counter: 0,
       isExpiring: false,
     );
+  });
+
+  test('isRestore Possible', () async {
+    final contactId = await getAndCreateUserId();
+    final contact = (await twonlyDB.contactsDao.getContactById(contactId))!;
+    await twonlyDB.groupsDao.createNewDirectChat(
+      contactId,
+      GroupsCompanion(
+        groupName: Value(
+          getContactDisplayName(contact),
+        ),
+      ),
+    );
+
+    final group = (await twonlyDB.groupsDao.getDirectChat(contactId))!;
 
     for (var i = 1; i <= 20; i++) {
       await withClock(
@@ -223,6 +238,48 @@ void main() {
         final group2 = (await twonlyDB.groupsDao.getGroup(group.groupId))!;
         expect(isItPossibleToRestoreFlames(group2), false);
       },
+    );
+  });
+
+  test('flame restoring', () async {
+    final contactId = await getAndCreateUserId();
+    final contact = (await twonlyDB.contactsDao.getContactById(contactId))!;
+    await twonlyDB.groupsDao.createNewDirectChat(
+      contactId,
+      GroupsCompanion(
+        groupName: Value(
+          getContactDisplayName(contact),
+        ),
+      ),
+    );
+
+    final group = (await twonlyDB.groupsDao.getDirectChat(contactId))!;
+
+    for (var i = 1; i <= 5; i++) {
+      await withClock(
+        Clock.fixed(DateTime(2026, 3, i, 1)),
+        () async {
+          await incFlameCounter(group.groupId, true, DateTime(2026, 3, i, 2));
+          await incFlameCounter(group.groupId, false, DateTime(2026, 3, i, 3));
+        },
+      );
+    }
+
+    await expectFlame(DateTime(2026, 3, 5, 19), group.groupId, 5);
+    await expectFlame(DateTime(2026, 3, 8, 19), group.groupId, 0);
+
+    await withClock(
+      Clock.fixed(DateTime(2026, 3, 9, 12)),
+      () async {
+        await restoreFlames(group.groupId);
+      },
+    );
+
+    await expectFlameExpiring(
+      DateTime(2026, 3, 9, 13),
+      group.groupId,
+      counter: 5,
+      isExpiring: false,
     );
   });
 

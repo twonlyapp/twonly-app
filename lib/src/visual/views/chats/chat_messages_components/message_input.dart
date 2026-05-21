@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/user_discovery_manual_approval.comp.dart';
+import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 
 class MessageInput extends StatefulWidget {
   const MessageInput({
@@ -53,6 +54,7 @@ class _MessageInputState extends State<MessageInput> {
   RecordingState _recordingState = RecordingState.none;
   Timer? _nextTypingIndicator;
   DateTime? _lastTextChangeTime;
+  int? _contactId;
 
   Future<void> _sendMessage() async {
     if (_textFieldController.text == '') return;
@@ -83,13 +85,13 @@ class _MessageInputState extends State<MessageInput> {
       ) async {
         if (widget.textFieldFocus.hasFocus &&
             _lastTextChangeTime != null &&
-            DateTime.now().difference(_lastTextChangeTime!) <=
-                const Duration(seconds: 6)) {
+            DateTime.now().difference(_lastTextChangeTime!) <= const Duration(seconds: 6)) {
           await sendTypingIndication(widget.group.groupId, true);
         }
       });
     }
     _initializeControllers();
+    _loadContactId();
   }
 
   @override
@@ -205,11 +207,35 @@ class _MessageInputState extends State<MessageInput> {
     );
   }
 
+  Future<void> _loadContactId() async {
+    if (widget.group.isDirectChat) {
+      final members = await twonlyDB.groupsDao.getGroupContact(widget.group.groupId);
+      if (members.isNotEmpty && mounted) {
+        setState(() {
+          _contactId = members.first.userId;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         UserDiscoveryManualApprovalComp(group: widget.group),
+        if (_contactId != null)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: context.color.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: RestoreFlameComp(
+              contactId: _contactId!,
+              flameOnRightSide: true,
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.only(
             bottom: 10,
@@ -252,9 +278,7 @@ class _MessageInputState extends State<MessageInput> {
                               ),
                               child: FaIcon(
                                 size: 20,
-                                _emojiShowing
-                                    ? FontAwesomeIcons.keyboard
-                                    : FontAwesomeIcons.faceSmile,
+                                _emojiShowing ? FontAwesomeIcons.keyboard : FontAwesomeIcons.faceSmile,
                               ),
                             ),
                           ),
@@ -266,8 +290,7 @@ class _MessageInputState extends State<MessageInput> {
                               controller: _textFieldController,
                               focusNode: widget.textFieldFocus,
                               keyboardType: TextInputType.multiline,
-                              showCursor:
-                                  _recordingState != RecordingState.recording,
+                              showCursor: _recordingState != RecordingState.recording,
                               maxLines: 4,
                               minLines: 1,
                               onChanged: (value) async {
@@ -318,9 +341,7 @@ class _MessageInputState extends State<MessageInput> {
                                         _currentDuration,
                                       ),
                                       style: TextStyle(
-                                        color: isDarkMode(context)
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: isDarkMode(context) ? Colors.white : Colors.black,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -370,17 +391,13 @@ class _MessageInputState extends State<MessageInput> {
                         GestureDetector(
                           onLongPressMoveUpdate: (details) {
                             if (_audioRecordingLock) return;
-                            if (_recordingOffset.dy -
-                                    details.localPosition.dy >=
-                                100) {
+                            if (_recordingOffset.dy - details.localPosition.dy >= 100) {
                               HapticFeedback.heavyImpact();
                               setState(() {
                                 _audioRecordingLock = true;
                               });
                             }
-                            if (_recordingOffset.dx -
-                                        details.localPosition.dx >=
-                                    90 &&
+                            if (_recordingOffset.dx - details.localPosition.dx >= 90 &&
                                 _recordingState == RecordingState.recording) {
                               _recordingState = RecordingState.none;
                               HapticFeedback.heavyImpact();
@@ -388,13 +405,9 @@ class _MessageInputState extends State<MessageInput> {
                             }
 
                             setState(() {
-                              final a =
-                                  _recordingOffset.dx -
-                                  details.localPosition.dx;
+                              final a = _recordingOffset.dx - details.localPosition.dx;
                               if (a > 0 && a <= 90) {
-                                _cancelSlideOffset =
-                                    _recordingOffset.dx -
-                                    details.localPosition.dx;
+                                _cancelSlideOffset = _recordingOffset.dx - details.localPosition.dx;
                               }
                             });
                           },
@@ -414,8 +427,7 @@ class _MessageInputState extends State<MessageInput> {
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              if (_recordingState == RecordingState.recording &&
-                                  !_audioRecordingLock)
+                              if (_recordingState == RecordingState.recording && !_audioRecordingLock)
                                 Positioned.fill(
                                   top: -120,
                                   left: -5,
@@ -426,9 +438,7 @@ class _MessageInputState extends State<MessageInput> {
                                       height: 60,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(90),
-                                        color: isDarkMode(context)
-                                            ? Colors.black
-                                            : Colors.white,
+                                        color: isDarkMode(context) ? Colors.black : Colors.white,
                                       ),
                                       child: const Center(
                                         child: Column(
@@ -448,8 +458,7 @@ class _MessageInputState extends State<MessageInput> {
                                     ),
                                   ),
                                 ),
-                              if (_recordingState == RecordingState.recording &&
-                                  !_audioRecordingLock)
+                              if (_recordingState == RecordingState.recording && !_audioRecordingLock)
                                 Positioned.fill(
                                   top: -20,
                                   left: -25,
@@ -476,15 +485,10 @@ class _MessageInputState extends State<MessageInput> {
                                     ),
                                     child: FaIcon(
                                       size: 20,
-                                      color:
-                                          (_recordingState ==
-                                              RecordingState.recording)
-                                          ? Colors.white
-                                          : null,
+                                      color: (_recordingState == RecordingState.recording) ? Colors.white : null,
                                       (_recordingState == RecordingState.none)
                                           ? FontAwesomeIcons.microphone
-                                          : (_recordingState ==
-                                                RecordingState.recording)
+                                          : (_recordingState == RecordingState.recording)
                                           ? FontAwesomeIcons.stop
                                           : FontAwesomeIcons.play,
                                     ),
@@ -504,9 +508,7 @@ class _MessageInputState extends State<MessageInput> {
                     color: context.color.primary,
                     FontAwesomeIcons.solidPaperPlane,
                   ),
-                  onPressed: _audioRecordingLock
-                      ? _stopAudioRecording
-                      : _sendMessage,
+                  onPressed: _audioRecordingLock ? _stopAudioRecording : _sendMessage,
                 )
               else
                 IconButton(

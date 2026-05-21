@@ -65,23 +65,18 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
 ({int counter, bool isExpiring}) getFlameCounterFromGroup(Group? group) {
   const zero = (counter: 0, isExpiring: false);
   if (group == null) return zero;
-  if (group.lastMessageSend == null ||
-      group.lastMessageReceived == null ||
-      group.lastFlameCounterChange == null) {
+  if (group.lastMessageSend == null || group.lastMessageReceived == null || group.lastFlameCounterChange == null) {
     return zero;
   }
   final now = clock.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
   final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
   final oneDayAgo = startOfToday.subtract(const Duration(days: 1));
-  if (group.lastMessageSend!.isAfter(twoDaysAgo) &&
-          group.lastMessageReceived!.isAfter(twoDaysAgo) ||
+  if (group.lastMessageSend!.isAfter(twoDaysAgo) && group.lastMessageReceived!.isAfter(twoDaysAgo) ||
       group.lastFlameCounterChange!.isAfter(oneDayAgo)) {
     // Flame is expiring when today no exchange has happened yet:
     // both lastMessageSend and lastMessageReceived are before startOfToday.
-    final isExpiring =
-        group.lastMessageSend!.isBefore(oneDayAgo) ||
-        group.lastMessageReceived!.isBefore(oneDayAgo);
+    final isExpiring = group.lastMessageSend!.isBefore(oneDayAgo) || group.lastMessageReceived!.isBefore(oneDayAgo);
     return (counter: group.flameCounter, isExpiring: isExpiring);
   } else {
     return zero;
@@ -122,8 +117,7 @@ Future<void> incFlameCounter(
     final now = clock.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
     final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
-    if (group.lastMessageSend!.isBefore(twoDaysAgo) ||
-        group.lastMessageReceived!.isBefore(twoDaysAgo)) {
+    if (group.lastMessageSend!.isBefore(twoDaysAgo) || group.lastMessageReceived!.isBefore(twoDaysAgo)) {
       flameCounter = 0;
     }
   }
@@ -135,25 +129,21 @@ Future<void> incFlameCounter(
   final now = clock.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
 
-  if (group.lastFlameCounterChange == null ||
-      group.lastFlameCounterChange!.isBefore(startOfToday)) {
+  if (group.lastFlameCounterChange == null || group.lastFlameCounterChange!.isBefore(startOfToday)) {
     // last flame update was yesterday. check if it can be updated.
     var updateFlame = false;
     if (received) {
-      if (group.lastMessageSend != null &&
-          group.lastMessageSend!.isAfter(startOfToday)) {
+      if (group.lastMessageSend != null && group.lastMessageSend!.isAfter(startOfToday)) {
         // today a message was already send -> update flame
         updateFlame = true;
       }
-    } else if (group.lastMessageReceived != null &&
-        group.lastMessageReceived!.isAfter(startOfToday)) {
+    } else if (group.lastMessageReceived != null && group.lastMessageReceived!.isAfter(startOfToday)) {
       // today a message was already received -> update flame
       updateFlame = true;
     }
     if (updateFlame) {
       flameCounter += 1;
-      if (group.lastFlameCounterChange == null ||
-          group.lastFlameCounterChange!.isBefore(timestamp)) {
+      if (group.lastFlameCounterChange == null || group.lastFlameCounterChange!.isBefore(timestamp)) {
         // only update if the timestamp is newer
         lastFlameCounterChange = Value(timestamp);
       }
@@ -170,13 +160,11 @@ Future<void> incFlameCounter(
   }
 
   if (received) {
-    if (group.lastMessageReceived == null ||
-        group.lastMessageReceived!.isBefore(timestamp)) {
+    if (group.lastMessageReceived == null || group.lastMessageReceived!.isBefore(timestamp)) {
       lastMessageReceived = Value(timestamp);
     }
   } else {
-    if (group.lastMessageSend == null ||
-        group.lastMessageSend!.isBefore(timestamp)) {
+    if (group.lastMessageSend == null || group.lastMessageSend!.isBefore(timestamp)) {
       lastMessageSend = Value(timestamp);
     }
   }
@@ -202,4 +190,19 @@ bool isItPossibleToRestoreFlames(Group group) {
       group.maxFlameCounterFrom!.isAfter(
         clock.now().subtract(const Duration(days: 7)),
       );
+}
+
+Future<void> restoreFlames(String groupId) async {
+  final group = await twonlyDB.groupsDao.getGroup(groupId);
+  if (group == null) return;
+  final now = clock.now();
+  await twonlyDB.groupsDao.updateGroup(
+    groupId,
+    GroupsCompanion(
+      flameCounter: Value(group.maxFlameCounter),
+      lastFlameCounterChange: Value(now),
+      lastMessageSend: Value(now),
+      lastMessageReceived: Value(now),
+    ),
+  );
 }

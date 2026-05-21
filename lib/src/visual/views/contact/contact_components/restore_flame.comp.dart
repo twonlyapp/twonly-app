@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
@@ -11,8 +10,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
-    as pb;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart' as pb;
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
@@ -24,9 +22,11 @@ import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 class RestoreFlameComp extends StatefulWidget {
   const RestoreFlameComp({
     required this.contactId,
+    this.flameOnRightSide = false,
     super.key,
   });
   final int contactId;
+  final bool flameOnRightSide;
 
   @override
   State<RestoreFlameComp> createState() => _RestoreFlameCompState();
@@ -60,21 +60,15 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
     final currentPlan = planFromString(
       userService.currentUser.subscriptionPlan,
     );
-    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
-        kReleaseMode) {
+    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) && kReleaseMode) {
       await context.push(Routes.settingsSubscription);
       return;
     }
     Log.info(
       'Restoring flames from ${_group!.flameCounter} to ${_group!.maxFlameCounter}',
     );
-    await twonlyDB.groupsDao.updateGroup(
-      _groupId,
-      GroupsCompanion(
-        flameCounter: Value(_group!.maxFlameCounter),
-        lastFlameCounterChange: Value(clock.now()),
-      ),
-    );
+
+    await restoreFlames(_groupId);
 
     final addData = AdditionalMessageData(
       type: AdditionalMessageData_Type.RESTORED_FLAME_COUNTER,
@@ -115,6 +109,22 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
   Widget build(BuildContext context) {
     if (_group == null || !isItPossibleToRestoreFlames(_group!)) {
       return Container();
+    }
+    if (widget.flameOnRightSide) {
+      return ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        onTap: _restoreFlames,
+        title: Text(
+          'Restore your ${_group!.maxFlameCounter} lost flames',
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        trailing: const SizedBox(
+          width: 24,
+          child: EmojiAnimationComp(
+            emoji: '🔥',
+          ),
+        ),
+      );
     }
     return BetterListTile(
       onTap: _restoreFlames,
