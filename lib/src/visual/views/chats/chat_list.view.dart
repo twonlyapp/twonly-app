@@ -39,6 +39,7 @@ class _ChatListViewState extends State<ChatListView> {
   List<Group> _groupsArchived = [];
 
   bool _hasContacts = false;
+  bool _loading = true;
   bool get _hasOpenGroup => _groupsNotPinned.isNotEmpty || _groupsArchived.isNotEmpty || _groupsPinned.isNotEmpty;
 
   GlobalKey searchForOtherUsers = GlobalKey();
@@ -66,6 +67,7 @@ class _ChatListViewState extends State<ChatListView> {
         _groupsNotPinned = groups.where((x) => !x.pinned && !x.archived).toList();
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
+        _loading = false;
       });
     });
 
@@ -218,7 +220,11 @@ class _ChatListViewState extends State<ChatListView> {
           children: [
             const FinishSetupComp(),
             const MissingBackupComp(),
-            if (!_hasOpenGroup)
+            if (_loading)
+              const Expanded(
+                child: SizedBox.shrink(),
+              )
+            else if (!_hasOpenGroup)
               Expanded(
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
