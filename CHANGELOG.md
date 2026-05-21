@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.17
+## 0.2.18
 
 - New: Adds an "Ask a Friend" button to new contact suggestions.
 - New: Adds security profiles.
@@ -10,6 +10,7 @@
 - Fix: Issue with receiving messages when user closed app while decrypting
 - Fix: Background message fetching reliability.
 - Fix: Issue with focus changing when taking a picture
+- Fix: Issues with the camera initialization
 
 ## 0.2.16
 

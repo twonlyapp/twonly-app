@@ -87,8 +87,10 @@ class MainCameraController {
 
   Future<void>? _initializeFuture;
   Future<void>? _pendingDisposal;
+  int _cameraSessionId = 0;
 
   Future<void> closeCamera() async {
+    _cameraSessionId++;
     contactsVerified = {};
     scannedNewProfiles = {};
     scannedUrl = null;
@@ -119,11 +121,14 @@ class MainCameraController {
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
-    await _pendingDisposal;
     initCameraStarted = true;
+    final sessionId = ++_cameraSessionId;
+    await _pendingDisposal;
+    if (sessionId != _cameraSessionId) return;
 
     if (AppEnvironment.cameras.isEmpty) {
       AppEnvironment.cameras = await availableCameras();
+      if (sessionId != _cameraSessionId) return;
     }
 
     var cameraId = sCameraId;
@@ -145,10 +150,13 @@ class MainCameraController {
     selectedCameraDetails.isZoomAble = false;
 
     if (cameraController == null) {
+      final hasMic = await Permission.microphone.isGranted;
+      if (sessionId != _cameraSessionId) return;
+
       cameraController = CameraController(
         AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
-        enableAudio: await Permission.microphone.isGranted,
+        enableAudio: hasMic,
         imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
       );
       try {

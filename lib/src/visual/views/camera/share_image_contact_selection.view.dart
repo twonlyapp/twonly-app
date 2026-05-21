@@ -254,6 +254,7 @@ class _ShareImageView extends State<ShareImageView> {
           ),
         ),
       ),
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
       floatingActionButton: _allGroups.isEmpty
           ? null
           : SizedBox(

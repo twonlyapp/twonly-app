@@ -267,15 +267,17 @@ class HomeViewState extends State<HomeView> {
               ),
             ),
           ),
-          if (_offsetRatio == 0)
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onDoubleTap: _mainCameraController.onDoubleTap,
-                onTapDown: _mainCameraController.onTapDown,
-              ),
-            ),
+          Positioned.fill(
+            child: _offsetRatio == 0
+                ? GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onDoubleTap: _mainCameraController.onDoubleTap,
+                    onTapDown: _mainCameraController.onTapDown,
+                  )
+                : const SizedBox.shrink(),
+          ),
           Positioned(
+            key: const ValueKey('camera_controls'),
             left: 0,
             top: 0,
             right: 0,

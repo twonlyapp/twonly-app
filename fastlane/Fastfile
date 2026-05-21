@@ -1,0 +1,15 @@
+default_platform(:android)
+
+platform :android do
+  desc "Submit a new App Bundle to the Google Play Internal Track"
+  lane :internal do
+    # This lane assumes that `flutter build appbundle` has already been run from the flutter root.
+    upload_to_play_store(
+      track: 'internal',
+      aab: 'build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

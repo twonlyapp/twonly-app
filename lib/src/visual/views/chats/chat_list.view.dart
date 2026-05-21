@@ -283,6 +283,7 @@ class _ChatListViewState extends State<ChatListView> {
           ],
         ),
       ),
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
       floatingActionButton: !_hasContacts
           ? null
           : Padding(

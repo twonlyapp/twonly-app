@@ -46,24 +46,43 @@ class ScreenshotController {
   }
   late GlobalKey _containerKey;
 
-  Future<ScreenshotImageHelper?> capture({double? pixelRatio}) async {
+  Future<ScreenshotImageHelper?> capture({
+    double? pixelRatio,
+    int retries = 20,
+  }) async {
     try {
       final findRenderObject = _containerKey.currentContext?.findRenderObject();
       if (findRenderObject == null) {
         return null;
       }
       final boundary = findRenderObject as RenderRepaintBoundary;
+
       final context = _containerKey.currentContext;
       var tmpPixelRatio = pixelRatio;
       if (tmpPixelRatio == null) {
         if (context != null && context.mounted) {
-          tmpPixelRatio =
-              tmpPixelRatio ?? MediaQuery.of(context).devicePixelRatio;
+          tmpPixelRatio = tmpPixelRatio ?? MediaQuery.of(context).devicePixelRatio;
         }
       }
       final image = await boundary.toImage(pixelRatio: tmpPixelRatio ?? 1);
       return ScreenshotImageHelper(image: image);
     } catch (e) {
+      if (retries > 0) {
+        final completer = Completer<ScreenshotImageHelper?>();
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          final result = await capture(
+            pixelRatio: pixelRatio,
+            retries: retries - 1,
+          );
+          completer.complete(result);
+        });
+        Timer(const Duration(milliseconds: 50), () {
+          if (!completer.isCompleted) {
+            WidgetsBinding.instance.scheduleFrame();
+          }
+        });
+        return completer.future;
+      }
       Log.error(e);
     }
     return null;

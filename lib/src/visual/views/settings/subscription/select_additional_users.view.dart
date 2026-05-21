@@ -99,6 +99,7 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
         appBar: AppBar(
           title: Text(context.lang.additionalUserSelectTitle),
         ),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         floatingActionButton: FilledButton.icon(
           onPressed: selectedUsers.isEmpty
               ? null

@@ -48,7 +48,7 @@ class SelectedCameraDetails {
   bool cameraLoaded = false;
 }
 
-class CameraPreviewControllerView extends StatelessWidget {
+class CameraPreviewControllerView extends StatefulWidget {
   const CameraPreviewControllerView({
     required this.mainController,
     required this.isVisible,
@@ -63,22 +63,51 @@ class CameraPreviewControllerView extends StatelessWidget {
   final bool hideControllers;
 
   @override
+  State<CameraPreviewControllerView> createState() => _CameraPreviewControllerViewState();
+}
+
+class _CameraPreviewControllerViewState extends State<CameraPreviewControllerView> {
+  Future<bool>? _permissionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!AppState.hasCameraPermissions) {
+      _permissionsFuture = checkPermissions().then((hasPermission) {
+        if (hasPermission) {
+          AppState.hasCameraPermissions = true;
+        }
+        return hasPermission;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: checkPermissions(),
+    if (AppState.hasCameraPermissions) {
+      return CameraPreviewView(
+        sendToGroup: widget.sendToGroup,
+        mainCameraController: widget.mainController,
+        isVisible: widget.isVisible,
+        hideControllers: widget.hideControllers,
+      );
+    }
+
+    return FutureBuilder<bool>(
+      future: _permissionsFuture,
       builder: (context, snap) {
         if (snap.hasData) {
           if (snap.data!) {
             return CameraPreviewView(
-              sendToGroup: sendToGroup,
-              mainCameraController: mainController,
-              isVisible: isVisible,
-              hideControllers: hideControllers,
+              sendToGroup: widget.sendToGroup,
+              mainCameraController: widget.mainController,
+              isVisible: widget.isVisible,
+              hideControllers: widget.hideControllers,
             );
           } else {
             return PermissionHandlerView(
               onSuccess: () {
-                mainController.selectCamera(0, true);
+                widget.mainController.selectCamera(0, true);
               },
             );
           }
@@ -210,8 +239,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> initAsync() async {
     _hasAudioPermission = await Permission.microphone.isGranted;
 
-    if (!_hasAudioPermission &&
-        !userService.currentUser.requestedAudioPermission) {
+    if (!_hasAudioPermission && !userService.currentUser.requestedAudioPermission) {
       await UserService.update((u) => u.requestedAudioPermission = true);
       await requestMicrophonePermission();
     }
@@ -232,8 +260,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> updateScaleFactor(double newScale) async {
-    if (mc.selectedCameraDetails.scaleFactor == newScale ||
-        mc.cameraController == null) {
+    if (mc.selectedCameraDetails.scaleFactor == newScale || mc.cameraController == null) {
       return;
     }
     await mc.cameraController?.setZoomLevel(
@@ -316,9 +343,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     bool sharedFromGallery = false,
     MediaType? mediaType,
   }) async {
-    final type =
-        mediaType ??
-        ((videoFilePath != null) ? MediaType.video : MediaType.image);
+    final type = mediaType ?? ((videoFilePath != null) ? MediaType.video : MediaType.image);
     final mediaFileService = await initializeMediaUpload(
       type,
       userService.currentUser.defaultShowTime,
@@ -359,10 +384,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   mainCameraController: mc,
                   previewLink: mc.sharedLinkForPreview,
                 ),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      return child;
-                    },
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return child;
+                },
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
@@ -392,16 +416,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     return false;
   }
 
-  bool get isFront =>
-      mc.cameraController?.description.lensDirection ==
-      CameraLensDirection.front;
+  bool get isFront => mc.cameraController?.description.lensDirection == CameraLensDirection.front;
 
   Future<void> onPanUpdate(dynamic details) async {
     if (details == null) {
       return;
     }
-    if (mc.cameraController == null ||
-        !mc.cameraController!.value.isInitialized) {
+    if (mc.cameraController == null || !mc.cameraController!.value.isInitialized) {
       return;
     }
 
@@ -530,8 +551,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> startVideoRecording() async {
-    if (mc.cameraController != null &&
-        mc.cameraController!.value.isRecordingVideo) {
+    if (mc.cameraController != null && mc.cameraController!.value.isRecordingVideo) {
       return;
     }
     setState(() {
@@ -551,8 +571,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           _currentTime = clock.now();
         });
         if (_videoRecordingStarted != null &&
-            _currentTime.difference(_videoRecordingStarted!).inSeconds >=
-                maxVideoRecordingTime) {
+            _currentTime.difference(_videoRecordingStarted!).inSeconds >= maxVideoRecordingTime) {
           timer.cancel();
           _videoRecordingTimer = null;
           stopVideoRecording();
@@ -589,8 +608,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _videoRecordingLocked = false;
     });
 
-    if (mc.cameraController == null ||
-        !mc.cameraController!.value.isRecordingVideo) {
+    if (mc.cameraController == null || !mc.cameraController!.value.isRecordingVideo) {
       return;
     }
 
@@ -618,8 +636,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
-    if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
-        mc.cameraController == null) {
+    if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length || mc.cameraController == null) {
       return Container();
     }
     return StreamBuilder(
@@ -643,9 +660,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
               });
               // Get the position of the pointer
-              final renderBox =
-                  keyTriggerButton.currentContext!.findRenderObject()!
-                      as RenderBox;
+              final renderBox = keyTriggerButton.currentContext!.findRenderObject()! as RenderBox;
               final localPosition = renderBox.globalToLocal(
                 details.globalPosition,
               );
@@ -681,24 +696,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       ),
                     ),
                   ),
-                if (!mc.isSharePreviewIsShown &&
-                    widget.sendToGroup != null &&
-                    !mc.isVideoRecording)
+                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null && !mc.isVideoRecording)
                   ShowTitleText(
                     title: widget.sendToGroup!.groupName,
                     desc: context.lang.cameraPreviewSendTo,
                   ),
-                if (!mc.isSharePreviewIsShown &&
-                    mc.sharedLinkForPreview != null &&
-                    !mc.isVideoRecording)
+                if (!mc.isSharePreviewIsShown && mc.sharedLinkForPreview != null && !mc.isVideoRecording)
                   ShowTitleText(
                     title: mc.sharedLinkForPreview?.host ?? '',
                     desc: 'Link',
                     isLink: true,
                   ),
-                if (!mc.isSharePreviewIsShown &&
-                    !mc.isVideoRecording &&
-                    !widget.hideControllers)
+                if (!mc.isSharePreviewIsShown && !mc.isVideoRecording && !widget.hideControllers)
                   CameraTopActions(
                     selectedCameraDetails: mc.selectedCameraDetails,
                     hasAudioPermission: _hasAudioPermission,
@@ -742,8 +751,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   videoRecordingStarted: _videoRecordingStarted,
                   maxVideoRecordingTime: maxVideoRecordingTime,
                 ),
-                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
-                    widget.hideControllers)
+                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null || widget.hideControllers)
                   Positioned(
                     left: 5,
                     top: 10,

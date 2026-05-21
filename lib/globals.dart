@@ -33,4 +33,5 @@ class AppState {
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
   static int latestAppVersionId = 116;
+  static bool hasCameraPermissions = false;
 }
