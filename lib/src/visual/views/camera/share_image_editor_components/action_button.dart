@@ -11,29 +11,44 @@ class ActionButton extends StatelessWidget {
     this.disable = false,
   });
   final VoidCallback? onPressed;
-  final IconData? icon;
+  final dynamic icon;
   final Color? color;
   final String tooltipText;
   final bool disable;
 
   @override
   Widget build(BuildContext context) {
+    final isFaIcon = icon is FaIconData;
     return Tooltip(
       message: tooltipText,
       child: IconButton(
-        icon: FaIcon(
-          icon,
-          size: (icon is FontAwesomeIcons) ? 25 : 30,
-          color: disable
-              ? const Color.fromARGB(154, 255, 255, 255)
-              : color ?? Colors.white,
-          shadows: const [
-            Shadow(
-              color: Color.fromARGB(122, 0, 0, 0),
-              blurRadius: 5,
-            ),
-          ],
-        ),
+        icon: isFaIcon
+            ? FaIcon(
+                icon as FaIconData?,
+                size: 25,
+                color: disable
+                    ? const Color.fromARGB(154, 255, 255, 255)
+                    : color ?? Colors.white,
+                shadows: const [
+                  Shadow(
+                    color: Color.fromARGB(122, 0, 0, 0),
+                    blurRadius: 5,
+                  ),
+                ],
+              )
+            : Icon(
+                icon as IconData?,
+                size: 30,
+                color: disable
+                    ? const Color.fromARGB(154, 255, 255, 255)
+                    : color ?? Colors.white,
+                shadows: const [
+                  Shadow(
+                    color: Color.fromARGB(122, 0, 0, 0),
+                    blurRadius: 5,
+                  ),
+                ],
+              ),
         onPressed: () {
           if (!disable && onPressed != null) onPressed!();
         },

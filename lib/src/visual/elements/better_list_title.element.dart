@@ -15,7 +15,7 @@ class BetterListTile extends StatelessWidget {
     this.iconSize = 20,
     this.padding,
   });
-  final IconData? icon;
+  final dynamic icon;
   final Widget? leading;
   final Widget? trailing;
   final String? text;
@@ -34,11 +34,17 @@ class BetterListTile extends StatelessWidget {
         child: Center(
           child: (leading != null)
               ? leading
-              : FaIcon(
-                  icon,
-                  size: iconSize,
-                  color: color,
-                ),
+              : (icon is IconData)
+                  ? Icon(
+                      icon as IconData,
+                      size: iconSize,
+                      color: color,
+                    )
+                  : FaIcon(
+                      icon as FaIconData?,
+                      size: iconSize,
+                      color: color,
+                    ),
         ),
       ),
       trailing: trailing,
