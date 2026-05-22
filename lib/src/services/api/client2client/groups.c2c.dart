@@ -17,9 +17,7 @@ Future<void> handleGroupCreate(
   EncryptedContent_GroupCreate newGroup,
   String receiptId,
 ) async {
-  final user = await twonlyDB.contactsDao
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
+  final user = await twonlyDB.contactsDao.getContactByUserId(fromUserId).getSingleOrNull();
   if (user == null) {
     // Only contacts can invite other contacts, so this can (via the UI) not happen.
     Log.error(
@@ -229,6 +227,7 @@ Future<void> handleResendGroupPublicKey(
         groupPublicKey: keyPair.getPublicKey().serialize(),
       ),
     ),
+    blocking: false,
   );
 }
 

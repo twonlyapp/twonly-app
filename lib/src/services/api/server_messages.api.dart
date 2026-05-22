@@ -86,8 +86,18 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   final receiptId = message.receiptId;
 
   final mutex = _messageLocks.putIfAbsent(receiptId, Mutex.new);
+  if (mutex.isLocked) {
+    Log.info(
+      '[$receiptId] Skipping — already being processed by another handler',
+    );
+    return;
+  }
   await mutex.protect(() async {
-    await _handleClient2ClientMessage(newMessage, message);
+    try {
+      await _handleClient2ClientMessage(newMessage, message);
+    } finally {
+      _messageLocks.remove(receiptId);
+    }
   });
 }
 
@@ -143,7 +153,7 @@ Future<void> _handleClient2ClientMessage(
         Log.info(
           '[$receiptId] Sending error message to the original sender with receiptId $newReceiptId.',
         );
-        await tryToSendCompleteMessage(receiptId: newReceiptId);
+        await tryToSendCompleteMessage(receiptId: newReceiptId, blocking: false);
       }
 
     case Message_Type.CIPHERTEXT:
@@ -216,7 +226,7 @@ Future<void> _handleClient2ClientMessage(
         } catch (e) {
           Log.warn('[$receiptId] Error inserting receipt: $e');
         }
-        await tryToSendCompleteMessage(receiptId: receiptId);
+        await tryToSendCompleteMessage(receiptId: receiptId, blocking: false);
       }
     case Message_Type.TEST_NOTIFICATION:
       break;

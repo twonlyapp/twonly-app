@@ -566,5 +566,5 @@ Future<void> sendContactMyProfileData(int contactId) async {
       username: userService.currentUser.username,
     ),
   );
-  await sendCipherText(contactId, encryptedContent);
+  await sendCipherText(contactId, encryptedContent, blocking: false);
 }

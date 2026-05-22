@@ -104,7 +104,8 @@ class UserDiscoveryService {
 
   static Future<Uint8List?> getCurrentVersion() async {
     try {
-      return await FlutterUserDiscovery.getCurrentVersion();
+      return await FlutterUserDiscovery.getCurrentVersion()
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
       return null;
@@ -140,7 +141,7 @@ class UserDiscoveryService {
       return await FlutterUserDiscovery.shouldRequestNewMessages(
         contactId: fromUserId,
         version: receivedVersion,
-      );
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
       return null;
@@ -155,7 +156,7 @@ class UserDiscoveryService {
       return await FlutterUserDiscovery.getNewMessages(
         contactId: fromUserId,
         receivedVersion: receivedVersion,
-      );
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
       return null;
@@ -175,7 +176,7 @@ class UserDiscoveryService {
         messages: messages,
         publicKeyVerifiedTimestamp:
             verifications.lastOrNull?.createdAt.millisecondsSinceEpoch,
-      );
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
     }

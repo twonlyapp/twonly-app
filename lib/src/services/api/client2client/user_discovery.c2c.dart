@@ -17,6 +17,7 @@ Future<void> checkForUserDiscoveryChanges(
   List<int> receivedVersion,
   String receiptId,
 ) async {
+  Log.info('[$receiptId] Checking for a new user discovery version.');
   final currentVersion = await UserDiscoveryService.shouldRequestNewMessages(
     fromUserId,
     receivedVersion,
@@ -36,6 +37,7 @@ Future<void> checkForUserDiscoveryChanges(
           currentVersion: currentVersion.toList(),
         ),
       ),
+      blocking: false,
     );
   }
 }
@@ -73,6 +75,7 @@ Future<void> handleUserDiscoveryRequest(
           messages: newMessages,
         ),
       ),
+      blocking: false,
     );
   } else {
     Log.info('[$receiptId] Got update request, but there are no new updates for the user');

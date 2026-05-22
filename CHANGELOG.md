@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.18
+## 0.2.20
 
 - New: Adds an "Ask a Friend" button to new contact suggestions.
 - New: Adds security profiles.

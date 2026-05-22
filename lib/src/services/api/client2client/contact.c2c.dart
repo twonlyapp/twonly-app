@@ -28,7 +28,6 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
         await handleContactAccept(fromUserId);
       }
 
-      // contact was already accepted, so just accept the request in the background.
       await sendCipherText(
         contact.userId,
         EncryptedContent(
@@ -36,6 +35,7 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
             type: EncryptedContent_ContactRequest_Type.ACCEPT,
           ),
         ),
+        blocking: false,
       );
       return true;
     }
@@ -238,6 +238,7 @@ Future<int?> checkForProfileUpdate(
                 type: EncryptedContent_ContactUpdate_Type.REQUEST,
               ),
             ),
+            blocking: false,
           );
         }
       }
