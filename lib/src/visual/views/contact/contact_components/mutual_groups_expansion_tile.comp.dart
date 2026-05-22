@@ -71,7 +71,7 @@ class _MutualGroupsExpansionTileCompState
         child: SizedBox(
           width: 20,
           height: 20,
-          child: Icon(
+          child: FaIcon(
             FontAwesomeIcons.userGroup,
             size: 16,
             color: context.color.onSurfaceVariant,

@@ -22,7 +22,7 @@ class SelectedContactView {
   });
   final String title;
   final String Function(int selected, int? limit) submitButton;
-  final IconData submitIcon;
+  final FaIconData submitIcon;
 }
 
 class SelectContactsView extends StatefulWidget {

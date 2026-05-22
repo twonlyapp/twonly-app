@@ -97,7 +97,7 @@ class AddNewContactsPage extends StatelessWidget {
 
   Widget _buildMethodItem(
     BuildContext context, {
-    required IconData icon,
+    required FaIconData icon,
     required String text,
   }) {
     return Padding(

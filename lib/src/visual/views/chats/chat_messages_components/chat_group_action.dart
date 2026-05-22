@@ -47,7 +47,7 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
   @override
   Widget build(BuildContext context) {
     var text = '';
-    IconData? icon;
+    FaIconData? icon;
 
     final affected = (affectedContact == null)
         ? context.lang.groupActionYou

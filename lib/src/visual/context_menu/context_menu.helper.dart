@@ -21,13 +21,18 @@ class ContextMenu extends StatefulWidget {
 class _ContextMenuState extends State<ContextMenu> {
   Offset? _tapPosition;
 
-  Widget _getIcon(IconData icon) {
+  Widget _getIcon(dynamic icon) {
     return Padding(
       padding: const EdgeInsets.only(left: 12),
-      child: FaIcon(
-        icon,
-        size: 20,
-      ),
+      child: icon is IconData
+          ? Icon(
+              icon,
+              size: 20,
+            )
+          : FaIcon(
+              icon as FaIconData?,
+              size: 20,
+            ),
     );
   }
 
@@ -95,5 +100,5 @@ class ContextMenuItem {
   });
   final String title;
   final Future<void> Function() onTap;
-  final IconData icon;
+  final dynamic icon;
 }

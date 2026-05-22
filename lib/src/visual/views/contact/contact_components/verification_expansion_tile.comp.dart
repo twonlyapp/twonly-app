@@ -128,7 +128,7 @@ class _VerificationExpansionTileCompState
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   iconSize: 8,
-                  icon: Icon(
+                  icon: FaIcon(
                     FontAwesomeIcons.trash,
                     size: 8,
                     color: context.color.onSurfaceVariant,

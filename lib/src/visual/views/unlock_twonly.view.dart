@@ -38,7 +38,7 @@ class _UnlockTwonlyViewState extends State<UnlockTwonlyView> {
             children: [
               const Spacer(),
 
-              const Icon(
+              const FaIcon(
                 FontAwesomeIcons.lock,
                 size: 40,
               ),

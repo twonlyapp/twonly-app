@@ -162,7 +162,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
                             _avatarMakerController.randomizedSelectedOptions,
                       ),
                       IconButton(
-                        icon: const Icon(FontAwesomeIcons.rotateLeft),
+                        icon: const FaIcon(FontAwesomeIcons.rotateLeft),
                         onLongPress: () async {
                           await PersistentAvatarMakerController.clearAvatarMaker();
                           await _avatarMakerController.restoreState();

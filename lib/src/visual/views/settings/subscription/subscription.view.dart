@@ -375,7 +375,7 @@ class _MissionRow extends StatelessWidget {
     required this.desc,
   });
 
-  final IconData icon;
+  final FaIconData icon;
   final String title;
   final String desc;
 
