@@ -15,6 +15,9 @@
 *.sqlite-wal
 migrate_working_dir/
 
+fastlane/report.xml
+fastlane/README.md
+
 # IntelliJ related
 *.iml
 *.ipr

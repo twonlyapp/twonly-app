@@ -3,14 +3,17 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
+import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/snackbar.dart';
 
 class KeyVerificationService {
   static Future<List<int>> getNewSecretVerificationToken() async {
@@ -70,6 +73,18 @@ class KeyVerificationService {
           VerificationType.secretQrToken,
         );
         Log.info('Contact was verified via secretQrToken');
+
+        final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
+        final context = rootNavigatorKey.currentContext;
+        if (context != null && context.mounted && contact != null) {
+          showSnackbar(
+            context,
+            context.lang.secretQrTokenVerifiedSnackbar(
+              getContactDisplayName(contact),
+            ),
+            level: SnackbarLevel.success,
+          );
+        }
         return;
       }
     }

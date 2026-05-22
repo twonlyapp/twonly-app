@@ -119,8 +119,14 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
   if (!shouldBeExecuted) return;
 
   Log.info('eu.twonly.periodic_task was called.');
+  AppState.gotMessageFromServer = false;
 
   final stopwatch = Stopwatch()..start();
+
+  // Issue: Because the background isolate can be reused across multiple periodic tasks,
+  // the API connection state might be stale or disconnected from a previous run.
+  // Explicitly close it here to ensure a clean slate before connecting.
+  await apiService.close(null);
 
   if (!await apiService.connect()) {
     Log.info('Could not connect to the api. Returning early.');

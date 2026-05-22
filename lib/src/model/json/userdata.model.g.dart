@@ -13,13 +13,22 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
         displayName: json['displayName'] as String,
         subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
         currentSetupPage: json['currentSetupPage'] as String?,
+        appVersion: (json['appVersion'] as num?)?.toInt() ?? 0,
       )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
-      ..appVersion = (json['appVersion'] as num?)?.toInt() ?? 0
       ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
       ..isDeveloper = json['isDeveloper'] as bool? ?? false
       ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
+      ..setupProfile =
+          $enumDecodeNullable(_$SetupProfileEnumMap, json['setupProfile']) ??
+          SetupProfile.standard
+      ..securityProfile =
+          $enumDecodeNullable(
+            _$SecurityProfileEnumMap,
+            json['securityProfile'],
+          ) ??
+          SecurityProfile.normal
       ..subscriptionPlanIdStore = json['subscriptionPlanIdStore'] as String?
       ..lastImageSend = json['lastImageSend'] == null
           ? null
@@ -115,6 +124,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'avatarCounter': instance.avatarCounter,
   'isDeveloper': instance.isDeveloper,
   'deviceId': instance.deviceId,
+  'setupProfile': _$SetupProfileEnumMap[instance.setupProfile]!,
+  'securityProfile': _$SecurityProfileEnumMap[instance.securityProfile]!,
   'subscriptionPlan': instance.subscriptionPlan,
   'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
   'lastImageSend': instance.lastImageSend?.toIso8601String(),
@@ -166,6 +177,17 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'currentSetupPage': instance.currentSetupPage,
   'skipSetupPages': instance.skipSetupPages,
   'hasZoomed': instance.hasZoomed,
+};
+
+const _$SetupProfileEnumMap = {
+  SetupProfile.standard: 'standard',
+  SetupProfile.customized: 'customized',
+  SetupProfile.maximum: 'maximum',
+};
+
+const _$SecurityProfileEnumMap = {
+  SecurityProfile.normal: 'normal',
+  SecurityProfile.strict: 'strict',
 };
 
 const _$ThemeModeEnumMap = {

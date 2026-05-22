@@ -77,9 +77,19 @@ const PublicProfile$json = {
       '10': 'secretVerificationToken',
       '17': true
     },
+    {
+      '1': 'timestamp',
+      '3': 9,
+      '4': 1,
+      '5': 3,
+      '9': 1,
+      '10': 'timestamp',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_secret_verification_token'},
+    {'1': '_timestamp'},
   ],
 };
 
@@ -91,4 +101,5 @@ final $typed_data.Uint8List publicProfileDescriptor = $convert.base64Decode(
     'lvbl9pZBgFIAEoA1IOcmVnaXN0cmF0aW9uSWQSNgoXc2lnbmVkX3ByZWtleV9zaWduYXR1cmUY'
     'BiABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRIoChBzaWduZWRfcHJla2V5X2lkGAcgASgDUg'
     '5zaWduZWRQcmVrZXlJZBI/ChlzZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2VuGAggASgMSABSF3Nl'
-    'Y3JldFZlcmlmaWNhdGlvblRva2VuiAEBQhwKGl9zZWNyZXRfdmVyaWZpY2F0aW9uX3Rva2Vu');
+    'Y3JldFZlcmlmaWNhdGlvblRva2VuiAEBEiEKCXRpbWVzdGFtcBgJIAEoA0gBUgl0aW1lc3RhbX'
+    'CIAQFCHAoaX3NlY3JldF92ZXJpZmljYXRpb25fdG9rZW5CDAoKX3RpbWVzdGFtcA==');

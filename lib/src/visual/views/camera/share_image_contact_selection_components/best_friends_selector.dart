@@ -156,7 +156,7 @@ class UserCheckbox extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        substringBy(group.groupName, 12),
+                        substringBy(group.groupName, 11),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

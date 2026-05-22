@@ -293,9 +293,10 @@ Future<List<int>> sha256File(File file) async {
 List<TextSpan> formattedText(
   BuildContext context,
   String input, {
+  Color? textColor,
   Color? boldTextColor,
 }) {
-  final defaultColor = Theme.of(context).colorScheme.onSurface;
+  final defaultColor = textColor ?? Theme.of(context).colorScheme.onSurface;
 
   final regex = RegExp(r'\*(.*?)\*');
   final spans = <TextSpan>[];

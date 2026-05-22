@@ -61,6 +61,8 @@ Future<void> retransmitAllMessages() async {
   });
 }
 
+final Map<String, Mutex> _tryToSendLocks = {};
+
 // When the ackByServerAt is set this value is written in the receipted
 Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
@@ -68,15 +70,41 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   bool onlyReturnEncryptedData = false,
   bool blocking = true,
 }) async {
+  final rId = receiptId ?? receipt?.receiptId;
+  if (rId == null) {
+    Log.error(
+      'Cannot try to send complete message as both receiptId and receipt are null.',
+    );
+    return null;
+  }
+
+  final mutex = _tryToSendLocks.putIfAbsent(rId, Mutex.new);
+  return mutex.protect(() async {
+    return _tryToSendCompleteMessageInternal(
+      receiptId: receiptId,
+      receipt: receipt,
+      onlyReturnEncryptedData: onlyReturnEncryptedData,
+      blocking: blocking,
+    );
+  });
+}
+
+Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
+  String? receiptId,
+  Receipt? receipt,
+  bool onlyReturnEncryptedData = false,
+  bool blocking = true,
+}) async {
+  // this should have a lock for every receiptID, split the function into a _internal withou the lock and a normal with the lock
   if (apiService.appIsOutdated) return null;
+  if (receiptId == null && receipt == null) return null;
 
   try {
-    if (receiptId == null && receipt == null) return null;
     if (receipt == null) {
       // ignore: parameter_assignments
       receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
       if (receipt == null) {
-        Log.warn('Receipt not found.');
+        Log.warn('[$receiptId] Receipt not found.');
         return null;
       }
     }
@@ -120,7 +148,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       message.encryptedContent,
     );
 
-    Log.info('Uploading ${receipt.receiptId}.');
+    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
 
     Uint8List? pushData;
     if (receipt.retryCount == 0) {
@@ -176,7 +204,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     );
 
     if (resp.isError) {
-      Log.warn('Could not transmit message got ${resp.error}.');
+      Log.warn('Could not transmit ${receipt.receiptId} got ${resp.error}.');
       if (resp.error == ErrorCode.UserIdNotFound) {
         await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         await twonlyDB.contactsDao.updateContact(
@@ -210,7 +238,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       }
     }
   } catch (e) {
-    Log.error('Unknown Error when sending message: $e');
+    Log.error('[$receiptId] unknown error when sending message: $e');
     if (receipt != null) {
       await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
     }
@@ -306,6 +334,52 @@ Future<void> insertAndSendContactShareMessage(
       additionalMessageData: additionalMessageData.writeToBuffer(),
       timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
       type: MessageType.contacts.name,
+    ),
+  );
+
+  await sendCipherTextToGroup(
+    groupId,
+    encryptedContent,
+    messageId: message.messageId,
+  );
+}
+
+Future<void> insertAndSendAskAboutUserMessage(
+  int contactId,
+  int askAboutUserId,
+) async {
+  final directChat = await twonlyDB.groupsDao.createOrGetDirectChat(contactId);
+  if (directChat == null) {
+    Log.error('Failed to get or create direct chat group for contact $contactId');
+    return;
+  }
+
+  final groupId = directChat.groupId;
+
+  final additionalMessageData = AdditionalMessageData(
+    type: AdditionalMessageData_Type.ASK_ABOUT_USER,
+    askAboutUserId: Int64(askAboutUserId),
+  );
+
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      groupId: Value(groupId),
+      type: Value(MessageType.askAboutUser.name),
+      additionalMessageData: Value(additionalMessageData.writeToBuffer()),
+    ),
+  );
+
+  if (message == null) {
+    Log.error('Could not insert message into database');
+    return;
+  }
+
+  final encryptedContent = pb.EncryptedContent(
+    additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
+      senderMessageId: message.messageId,
+      additionalMessageData: additionalMessageData.writeToBuffer(),
+      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+      type: MessageType.askAboutUser.name,
     ),
   );
 
@@ -492,5 +566,5 @@ Future<void> sendContactMyProfileData(int contactId) async {
       username: userService.currentUser.username,
     ),
   );
-  await sendCipherText(contactId, encryptedContent);
+  await sendCipherText(contactId, encryptedContent, blocking: false);
 }

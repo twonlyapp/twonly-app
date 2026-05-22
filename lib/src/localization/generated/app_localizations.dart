@@ -626,6 +626,54 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
+  /// No description provided for @settingsPrivacyProfileSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Profile'**
+  String get settingsPrivacyProfileSelectionTitle;
+
+  /// No description provided for @settingsPrivacyProfileSelectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your setup path and security configuration'**
+  String get settingsPrivacyProfileSelectionDesc;
+
+  /// No description provided for @securityProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Profile'**
+  String get securityProfileTitle;
+
+  /// No description provided for @securityProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.'**
+  String get securityProfileSubtitle;
+
+  /// No description provided for @securityProfileNormalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal Protection'**
+  String get securityProfileNormalTitle;
+
+  /// No description provided for @securityProfileNormalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Good balance between a convenient mode without bothering you too much.'**
+  String get securityProfileNormalDesc;
+
+  /// No description provided for @securityProfileStrictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strict Protection'**
+  String get securityProfileStrictTitle;
+
+  /// No description provided for @securityProfileStrictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum anti-phishing protection but may be inconvenient.'**
+  String get securityProfileStrictDesc;
+
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
@@ -911,8 +959,8 @@ abstract class AppLocalizations {
   /// No description provided for @verificationTypeSecretQrToken.
   ///
   /// In en, this message translates to:
-  /// **'The other person scanned your QR code.'**
-  String get verificationTypeSecretQrToken;
+  /// **'{username} has scanned your QR code.'**
+  String verificationTypeSecretQrToken(Object username);
 
   /// No description provided for @verificationTypeLink.
   ///
@@ -2342,6 +2390,12 @@ abstract class AppLocalizations {
   /// **'Open your own QR code'**
   String get openYourOwnQRcode;
 
+  /// No description provided for @addContactQrSheetSubtext.
+  ///
+  /// In en, this message translates to:
+  /// **'Let a friend scan this QR code to add you'**
+  String get addContactQrSheetSubtext;
+
   /// No description provided for @finishSetupCardTitle.
   ///
   /// In en, this message translates to:
@@ -2435,13 +2489,13 @@ abstract class AppLocalizations {
   /// No description provided for @userDiscoverySettingsManualApproval.
   ///
   /// In en, this message translates to:
-  /// **'Manual approval'**
+  /// **'Ask every time before sharing'**
   String get userDiscoverySettingsManualApproval;
 
   /// No description provided for @userDiscoverySettingsManualApprovalDesc.
   ///
   /// In en, this message translates to:
-  /// **'Before someone is shared, you\'ll be asked first.'**
+  /// **'Before one of your friends is shared, you will be asked every time.'**
   String get userDiscoverySettingsManualApprovalDesc;
 
   /// No description provided for @onboardingUserDiscoveryLetFriendsFindYou.
@@ -2699,7 +2753,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The checkmark gives you the certainty that you are messaging the right person. Scan the contact\'s QR code to verify it.'**
+  /// **'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
@@ -2719,6 +2773,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @deleteVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete verification?'**
+  String get deleteVerificationTitle;
+
+  /// No description provided for @deleteVerificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this verification?'**
+  String get deleteVerificationBody;
+
+  /// No description provided for @secretQrTokenVerifiedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} has scanned your QR code and is now verified.'**
+  String secretQrTokenVerifiedSnackbar(Object username);
+
+  /// No description provided for @mutualGroupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 mutual group} other{{count} mutual groups}}'**
+  String mutualGroupsTitle(num count);
+
+  /// No description provided for @mutualGroupsSentMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message sent} other{{count} messages sent}}'**
+  String mutualGroupsSentMessages(num count);
 
   /// No description provided for @chatEntryFlameRestored.
   ///
@@ -2852,6 +2936,18 @@ abstract class AppLocalizations {
   /// **'Mutual Friends'**
   String get userDiscoverySettingsTitle;
 
+  /// No description provided for @userDiscoveryWhyThisIsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this is used'**
+  String get userDiscoveryWhyThisIsUsed;
+
+  /// No description provided for @userDiscoveryFeatureOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Your benefits at a glance'**
+  String get userDiscoveryFeatureOffers;
+
   /// No description provided for @userDiscoveryDisabledLearnMore.
   ///
   /// In en, this message translates to:
@@ -2923,6 +3019,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Request'**
   String get friendSuggestionsRequest;
+
+  /// No description provided for @friendSuggestionsAskFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your friends'**
+  String get friendSuggestionsAskFriend;
+
+  /// No description provided for @askFriendsDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about {username}'**
+  String askFriendsDialogTitle(Object username);
+
+  /// No description provided for @askFriendsDialogDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the friends you want to ask about this user:'**
+  String get askFriendsDialogDescription;
+
+  /// No description provided for @askFriendsDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get askFriendsDialogConfirm;
+
+  /// No description provided for @askFriendsDialogCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get askFriendsDialogCancel;
+
+  /// No description provided for @chatAskAFriendReceivedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friend just got this as a suggestion and wants to know if he knows this person.'**
+  String get chatAskAFriendReceivedDescription;
+
+  /// No description provided for @chatAskAFriendAddedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'You have added this user to your contacts.'**
+  String get chatAskAFriendAddedDescription;
+
+  /// No description provided for @chatAskAFriendHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get chatAskAFriendHide;
+
+  /// No description provided for @chatAskAFriendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get chatAskAFriendRequest;
+
+  /// No description provided for @chatAskAFriendUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User {userId}'**
+  String chatAskAFriendUnknownUser(Object userId);
 
   /// No description provided for @contactUserDiscoveryImagesLeft.
   ///
@@ -3241,6 +3397,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag to Zoom'**
   String get dragToZoom;
+
+  /// No description provided for @showUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Show username'**
+  String get showUsername;
+
+  /// No description provided for @onboardingProfileSelectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your setup path'**
+  String get onboardingProfileSelectionTitle;
+
+  /// No description provided for @onboardingProfileSelectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to configure your security and privacy settings.'**
+  String get onboardingProfileSelectionSubtitle;
+
+  /// No description provided for @onboardingProfileSelectionDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get onboardingProfileSelectionDefaultTitle;
+
+  /// No description provided for @onboardingProfileSelectionDefaultDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Instantly applies recommended settings so you can start using the app.'**
+  String get onboardingProfileSelectionDefaultDesc;
+
+  /// No description provided for @onboardingProfileSelectionDefaultBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Setup'**
+  String get onboardingProfileSelectionDefaultBadge;
+
+  /// No description provided for @onboardingProfileSelectionCustomizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get onboardingProfileSelectionCustomizeTitle;
+
+  /// No description provided for @onboardingProfileSelectionCustomizeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step setup so you can decide for yourself.'**
+  String get onboardingProfileSelectionCustomizeDesc;
+
+  /// No description provided for @onboardingProfileSelectionStrictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhanced Protection'**
+  String get onboardingProfileSelectionStrictTitle;
+
+  /// No description provided for @onboardingProfileSelectionStrictDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum anti-phishing defense. Recommended for *journalists & public figures*.'**
+  String get onboardingProfileSelectionStrictDesc;
+
+  /// No description provided for @replyFlameRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Flames restored'**
+  String get replyFlameRestored;
+
+  /// No description provided for @replyAskAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a friend'**
+  String get replyAskAFriend;
+
+  /// No description provided for @unverifiedWarningDirectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity not verified in person'**
+  String get unverifiedWarningDirectTitle;
+
+  /// No description provided for @unverifiedWarningGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not all members are verified in person'**
+  String get unverifiedWarningGroupTitle;
+
+  /// No description provided for @unverifiedWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.'**
+  String get unverifiedWarningBody;
+
+  /// No description provided for @unverifiedWarningButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify now'**
+  String get unverifiedWarningButton;
 }
 
 class _AppLocalizationsDelegate

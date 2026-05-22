@@ -67,11 +67,21 @@ const AdditionalMessageData$json = {
       '10': 'restoredFlameCounter',
       '17': true
     },
+    {
+      '1': 'ask_about_user_id',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '9': 2,
+      '10': 'askAboutUserId',
+      '17': true
+    },
   ],
   '4': [AdditionalMessageData_Type$json],
   '8': [
     {'1': '_link'},
     {'1': '_restored_flame_counter'},
+    {'1': '_ask_about_user_id'},
   ],
 };
 
@@ -82,6 +92,7 @@ const AdditionalMessageData_Type$json = {
     {'1': 'LINK', '2': 0},
     {'1': 'CONTACTS', '2': 1},
     {'1': 'RESTORED_FLAME_COUNTER', '2': 2},
+    {'1': 'ASK_ABOUT_USER', '2': 3},
   ],
 };
 
@@ -90,6 +101,7 @@ final $typed_data.Uint8List additionalMessageDataDescriptor = $convert.base64Dec
     'ChVBZGRpdGlvbmFsTWVzc2FnZURhdGESLwoEdHlwZRgBIAEoDjIbLkFkZGl0aW9uYWxNZXNzYW'
     'dlRGF0YS5UeXBlUgR0eXBlEhcKBGxpbmsYAiABKAlIAFIEbGlua4gBARIqCghjb250YWN0cxgD'
     'IAMoCzIOLlNoYXJlZENvbnRhY3RSCGNvbnRhY3RzEjkKFnJlc3RvcmVkX2ZsYW1lX2NvdW50ZX'
-    'IYBCABKANIAVIUcmVzdG9yZWRGbGFtZUNvdW50ZXKIAQEiOgoEVHlwZRIICgRMSU5LEAASDAoI'
-    'Q09OVEFDVFMQARIaChZSRVNUT1JFRF9GTEFNRV9DT1VOVEVSEAJCBwoFX2xpbmtCGQoXX3Jlc3'
-    'RvcmVkX2ZsYW1lX2NvdW50ZXI=');
+    'IYBCABKANIAVIUcmVzdG9yZWRGbGFtZUNvdW50ZXKIAQESLgoRYXNrX2Fib3V0X3VzZXJfaWQY'
+    'BSABKANIAlIOYXNrQWJvdXRVc2VySWSIAQEiTgoEVHlwZRIICgRMSU5LEAASDAoIQ09OVEFDVF'
+    'MQARIaChZSRVNUT1JFRF9GTEFNRV9DT1VOVEVSEAISEgoOQVNLX0FCT1VUX1VTRVIQA0IHCgVf'
+    'bGlua0IZChdfcmVzdG9yZWRfZmxhbWVfY291bnRlckIUChJfYXNrX2Fib3V0X3VzZXJfaWQ=');

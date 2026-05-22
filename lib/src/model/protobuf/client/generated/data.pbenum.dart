@@ -22,16 +22,19 @@ class AdditionalMessageData_Type extends $pb.ProtobufEnum {
   static const AdditionalMessageData_Type RESTORED_FLAME_COUNTER =
       AdditionalMessageData_Type._(
           2, _omitEnumNames ? '' : 'RESTORED_FLAME_COUNTER');
+  static const AdditionalMessageData_Type ASK_ABOUT_USER =
+      AdditionalMessageData_Type._(3, _omitEnumNames ? '' : 'ASK_ABOUT_USER');
 
   static const $core.List<AdditionalMessageData_Type> values =
       <AdditionalMessageData_Type>[
     LINK,
     CONTACTS,
     RESTORED_FLAME_COUNTER,
+    ASK_ABOUT_USER,
   ];
 
   static final $core.List<AdditionalMessageData_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 2);
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
   static AdditionalMessageData_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

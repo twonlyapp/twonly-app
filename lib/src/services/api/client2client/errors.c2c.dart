@@ -8,8 +8,9 @@ import 'package:twonly/src/utils/log.dart';
 Future<void> handleErrorMessage(
   int fromUserId,
   EncryptedContent_ErrorMessages error,
+  String receiptId,
 ) async {
-  Log.error('Got error from $fromUserId: $error');
+  Log.error('[$receiptId] Got error from $fromUserId: $error');
 
   switch (error.type) {
     case EncryptedContent_ErrorMessages_Type

@@ -18,10 +18,13 @@ class Log {
     Logger.root.onRecord.listen((record) async {
       unawaited(_writeLogToFile(record));
       if (!kReleaseMode) {
-        // ignore: avoid_print
-        print(
-          '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
-        );
+        if (!Platform.environment.containsKey('FLUTTER_TEST') ||
+            record.level >= Level.WARNING) {
+          // ignore: avoid_print
+          print(
+            '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
+          );
+        }
       }
     });
   }
@@ -136,7 +139,7 @@ Future<void> cleanLogFile() async {
     }
     final lines = await logFile.readAsLines();
 
-    final twoWeekAgo = clock.now().subtract(const Duration(days: 14));
+    final twoWeekAgo = clock.now().subtract(const Duration(days: 3));
     var keepStartIndex = -1;
 
     for (var i = 0; i < lines.length; i += 100) {

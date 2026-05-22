@@ -7,6 +7,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
@@ -63,8 +64,17 @@ class OpenRequestsListComp extends StatelessWidget {
             ],
           ),
           onPressed: () async {
-            const update = ContactsCompanion(blocked: Value(true));
-            await twonlyDB.contactsDao.updateContact(contact.userId, update);
+            final block = await showAlertDialog(
+              context,
+              context.lang.contactBlockTitle(getContactDisplayName(contact)),
+              context.lang.contactBlockBody,
+            );
+            if (block) {
+              const update = ContactsCompanion(blocked: Value(true));
+              if (context.mounted) {
+                await twonlyDB.contactsDao.updateContact(contact.userId, update);
+              }
+            }
           },
         ),
       ),
@@ -179,9 +189,7 @@ class OpenRequestsListComp extends StatelessWidget {
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
-              children: contact.requested
-                  ? requestedActions(context, contact)
-                  : sendRequestActions(context, contact),
+              children: contact.requested ? requestedActions(context, contact) : sendRequestActions(context, contact),
             ),
           );
         }),

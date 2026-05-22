@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
@@ -38,6 +39,7 @@ import 'package:twonly/src/visual/views/settings/help/help.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
+import 'package:twonly/src/visual/views/settings/privacy/profile_selection.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
@@ -47,7 +49,10 @@ import 'package:twonly/src/visual/views/settings/subscription/subscription.view.
 import 'package:twonly/src/visual/views/user_study/user_study_questionnaire.view.dart';
 import 'package:twonly/src/visual/views/user_study/user_study_welcome.view.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final routerProvider = GoRouter(
+  navigatorKey: rootNavigatorKey,
   routes: [
     GoRoute(
       path: Routes.home,
@@ -200,6 +205,10 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'user_discovery',
               builder: (context, state) => const UserDiscoverySettingsView(),
+            ),
+            GoRoute(
+              path: 'profile_selection',
+              builder: (context, state) => const ProfileSelectionSettingsView(),
             ),
           ],
         ),

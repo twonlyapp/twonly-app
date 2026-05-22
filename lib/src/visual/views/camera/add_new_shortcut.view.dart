@@ -203,6 +203,7 @@ class _StartNewChatView extends State<AddNewShortcutView> {
             const SizedBox(width: 8),
           ],
         ),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         floatingActionButton: FilledButton.icon(
           onPressed: (_selectedGroups.isEmpty || shortcutEmoji == null)
               ? null

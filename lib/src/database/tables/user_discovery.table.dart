@@ -16,6 +16,8 @@ class UserDiscoveryAnnouncedUsers extends Table {
   BoolColumn get wasShownToTheUser =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get isHidden => boolean().withDefault(const Constant(false))();
+  BoolColumn get wasAskedFriends =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {announcedUserId};

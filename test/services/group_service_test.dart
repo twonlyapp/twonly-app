@@ -49,7 +49,8 @@ void main() {
       displayName: 'Test User',
       subscriptionPlan: 'Free',
       currentSetupPage: null,
-    )..appVersion = 100;
+      appVersion: 100,
+    );
     userService.isUserCreated = true;
     AppEnvironment.initTesting();
     // Log.init();

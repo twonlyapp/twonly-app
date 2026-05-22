@@ -112,6 +112,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
         appBar: AppBar(
           title: Text(widget.text.title),
         ),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         floatingActionButton: FilledButton.icon(
           onPressed: selectedUsers.isEmpty
               ? null

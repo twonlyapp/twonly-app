@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -75,6 +76,18 @@ class _PrivacyViewState extends State<PrivacyView> {
             title: Text(context.lang.userDiscoverySettingsTitle),
             onTap: () async {
               await context.push(Routes.settingsPrivacyUserDiscovery);
+              setState(() {});
+            },
+          ),
+          ListTile(
+            title: Text(context.lang.settingsPrivacyProfileSelectionTitle),
+            subtitle: Text(
+              userService.currentUser.securityProfile == SecurityProfile.strict
+                  ? context.lang.securityProfileStrictTitle
+                  : context.lang.securityProfileNormalTitle,
+            ),
+            onTap: () async {
+              await context.push(Routes.settingsPrivacyProfileSelection);
               setState(() {});
             },
           ),

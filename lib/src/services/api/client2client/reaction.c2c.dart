@@ -8,8 +8,9 @@ Future<void> handleReaction(
   int fromUserId,
   String groupId,
   EncryptedContent_Reaction reaction,
+  String receiptId,
 ) async {
-  Log.info('Got a reaction from $fromUserId (remove=${reaction.remove})');
+  Log.info('[$receiptId] Got a reaction from $fromUserId (remove=${reaction.remove})');
   await twonlyDB.reactionsDao.updateReaction(
     fromUserId,
     reaction.targetMessageId,

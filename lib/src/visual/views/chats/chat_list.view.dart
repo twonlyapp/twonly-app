@@ -18,6 +18,7 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
@@ -31,10 +32,15 @@ class ChatListView extends StatefulWidget {
 
 class _ChatListViewState extends State<ChatListView> {
   StreamSubscription<void>? _userSub;
-  late StreamSubscription<List<Group>> _contactsSub;
+  StreamSubscription<List<Group>>? _contactsSub;
+  StreamSubscription<List<Contact>>? _contactsCountSub;
   List<Group> _groupsNotPinned = [];
   List<Group> _groupsPinned = [];
   List<Group> _groupsArchived = [];
+
+  bool _hasContacts = false;
+  bool _loading = true;
+  bool get _hasOpenGroup => _groupsNotPinned.isNotEmpty || _groupsArchived.isNotEmpty || _groupsPinned.isNotEmpty;
 
   GlobalKey searchForOtherUsers = GlobalKey();
   bool showFeedbackShortcut = false;
@@ -58,33 +64,35 @@ class _ChatListViewState extends State<ChatListView> {
     _contactsSub = stream.listen((groups) {
       if (!mounted) return;
       setState(() {
-        _groupsNotPinned = groups
-            .where((x) => !x.pinned && !x.archived)
-            .toList();
+        _groupsNotPinned = groups.where((x) => !x.pinned && !x.archived).toList();
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
+        _loading = false;
       });
     });
 
-    _countContactRequestStream = twonlyDB.contactsDao
-        .watchContactsRequestedCount()
-        .listen((update) {
-          if (update != null) {
-            if (!mounted) return;
-            setState(() {
-              _countContactRequest = update;
-            });
-          }
-        });
+    _contactsCountSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((contacts) {
+      if (!mounted) return;
+      setState(() {
+        _hasContacts = contacts.isNotEmpty;
+      });
+    });
 
-    _countAnnouncedStream = twonlyDB.userDiscoveryDao
-        .watchNewAnnouncementsWithDataCount()
-        .listen((update) {
-          if (!mounted) return;
-          setState(() {
-            _countAnnouncedUsers = update;
-          });
+    _countContactRequestStream = twonlyDB.contactsDao.watchContactsRequestedCount().listen((update) {
+      if (update != null) {
+        if (!mounted) return;
+        setState(() {
+          _countContactRequest = update;
         });
+      }
+    });
+
+    _countAnnouncedStream = twonlyDB.userDiscoveryDao.watchNewAnnouncementsWithDataCount().listen((update) {
+      if (!mounted) return;
+      setState(() {
+        _countAnnouncedUsers = update;
+      });
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
@@ -93,8 +101,7 @@ class _ChatListViewState extends State<ChatListView> {
         changeLog.codeUnits,
       )).bytes;
       if (!userService.currentUser.hideChangeLog &&
-          userService.currentUser.lastChangeLogHash.toString() !=
-              changeLogHash.toString()) {
+          userService.currentUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
         await UserService.update((u) {
           u.lastChangeLogHash = changeLogHash;
         });
@@ -113,7 +120,8 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void dispose() {
-    _contactsSub.cancel();
+    _contactsSub?.cancel();
+    _contactsCountSub?.cancel();
     _countContactRequestStream.cancel();
     _countAnnouncedStream.cancel();
     _userSub?.cancel();
@@ -182,16 +190,11 @@ class _ChatListViewState extends State<ChatListView> {
                 ),
               Center(
                 child: NotificationBadgeComp(
-                  backgroundColor: isDarkMode(context)
-                      ? Colors.white
-                      : Colors.black,
+                  backgroundColor: isDarkMode(context) ? Colors.white : Colors.black,
                   textColor: isDarkMode(context) ? Colors.black : Colors.white,
-                  count: (_countAnnouncedUsers + _countContactRequest)
-                      .toString(),
+                  count: (_countAnnouncedUsers + _countContactRequest).toString(),
                   child: IconButton(
-                    color: (_countAnnouncedUsers + _countContactRequest > 0)
-                        ? Colors.black
-                        : null,
+                    color: (_countAnnouncedUsers + _countContactRequest > 0) ? Colors.black : null,
                     key: searchForOtherUsers,
                     icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
                     onPressed: () => context.push(Routes.chatsAddNewUser),
@@ -217,21 +220,15 @@ class _ChatListViewState extends State<ChatListView> {
           children: [
             const FinishSetupComp(),
             const MissingBackupComp(),
-            if (_groupsNotPinned.isEmpty &&
-                _groupsPinned.isEmpty &&
-                _groupsArchived.isEmpty)
+            if (_loading)
+              const Expanded(
+                child: SizedBox.shrink(),
+              )
+            else if (!_hasOpenGroup)
               Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: FilledButton.icon(
-                      icon: const Icon(Icons.person_add),
-                      onPressed: () => context.push(Routes.chatsAddNewUser),
-                      label: Text(
-                        context.lang.chatListViewSearchUserNameBtn,
-                      ),
-                    ),
-                  ),
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [EmptyChatListComp()],
                 ),
               )
             else
@@ -243,10 +240,7 @@ class _ChatListViewState extends State<ChatListView> {
                       _groupsNotPinned.length +
                       (_groupsArchived.isNotEmpty ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index >=
-                        _groupsNotPinned.length +
-                            _groupsPinned.length +
-                            (_groupsPinned.isNotEmpty ? 1 : 0)) {
+                    if (index >= _groupsNotPinned.length + _groupsPinned.length + (_groupsPinned.isNotEmpty ? 1 : 0)) {
                       if (_groupsArchived.isEmpty) return Container();
                       return ListTile(
                         title: Text(
@@ -289,42 +283,45 @@ class _ChatListViewState extends State<ChatListView> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Material(
-              elevation: 3,
-              shape: const CircleBorder(),
-              color: context.color.primary,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => context.push(Routes.settingsPublicProfile),
-                child: SizedBox(
-                  width: 45,
-                  height: 45,
-                  child: Center(
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+      floatingActionButton: !_hasContacts
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Material(
+                    elevation: 3,
+                    shape: const CircleBorder(),
+                    color: context.color.primary,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => context.push(Routes.settingsPublicProfile),
+                      child: SizedBox(
+                        width: 45,
+                        height: 45,
+                        child: Center(
+                          child: FaIcon(
+                            FontAwesomeIcons.qrcode,
+                            color: isDarkMode(context) ? Colors.black : Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  FloatingActionButton(
+                    backgroundColor: context.color.primary,
+                    onPressed: () => context.push(Routes.chatsStartNewChat),
                     child: FaIcon(
-                      FontAwesomeIcons.qrcode,
+                      FontAwesomeIcons.penToSquare,
                       color: isDarkMode(context) ? Colors.black : Colors.white,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            FloatingActionButton(
-              backgroundColor: context.color.primary,
-              onPressed: () => context.push(Routes.chatsStartNewChat),
-              child: FaIcon(
-                FontAwesomeIcons.penToSquare,
-                color: isDarkMode(context) ? Colors.black : Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

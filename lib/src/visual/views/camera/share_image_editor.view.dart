@@ -214,8 +214,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheRight {
     if (layers.isNotEmpty &&
-        (layers.first.isEditing ||
-            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
+        (layers.first.isEditing || (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return <Widget>[
@@ -291,13 +290,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (media.type == MediaType.video) ...[
         const SizedBox(height: 8),
         ActionButton(
-          (mediaService.removeAudio)
-              ? Icons.volume_off_rounded
-              : Icons.volume_up_rounded,
+          (mediaService.removeAudio) ? Icons.volume_off_rounded : Icons.volume_up_rounded,
           tooltipText: 'Enable Audio in Video',
-          color: (mediaService.removeAudio)
-              ? Colors.white.withAlpha(160)
-              : Colors.white,
+          color: (mediaService.removeAudio) ? Colors.white.withAlpha(160) : Colors.white,
           onPressed: () async {
             await mediaService.toggleRemoveAudio();
             if (mediaService.removeAudio) {
@@ -335,9 +330,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ActionButton(
         FontAwesomeIcons.shieldHeart,
         tooltipText: context.lang.protectAsARealTwonly,
-        color: media.requiresAuthentication
-            ? Theme.of(context).colorScheme.primary
-            : Colors.white,
+        color: media.requiresAuthentication ? Theme.of(context).colorScheme.primary : Colors.white,
         onPressed: () async {
           await mediaService.setRequiresAuth(!media.requiresAuthentication);
           selectedGroupIds = HashSet();
@@ -383,8 +376,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheTop {
     if (layers.isNotEmpty &&
-        (layers.first.isEditing ||
-            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
+        (layers.first.isEditing || (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return [
@@ -474,6 +466,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         return (layers.first as BackgroundLayerData).image.image;
       }
     }
+    if (layers.length == 2) {
+      final filterLayer = layers[1];
+      if (layers.first is BackgroundLayerData && filterLayer is FilterLayerData) {
+        if (filterLayer.page == 1) {
+          return (layers.first as BackgroundLayerData).image.image;
+        }
+      }
+    }
 
     for (final x in layers) {
       x.showCustomButtons = false;
@@ -513,15 +513,15 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
     }
     ScreenshotImageHelper? image;
-    var bytes = await widget.screenshotImage?.getBytes();
     if (media.type == MediaType.gif) {
+      final bytes = await widget.screenshotImage?.getBytes();
       if (bytes != null) {
         mediaService.originalPath.writeAsBytesSync(bytes.toList());
       }
     } else {
       image = await getEditedImageBytes();
       if (image == null) return null;
-      bytes = await image.getBytes();
+      final bytes = await image.getBytes();
       if (bytes == null) {
         Log.error('imageBytes are empty');
         return null;
@@ -657,9 +657,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         await askToCloseThenClose();
       },
       child: Scaffold(
-        backgroundColor: widget.sharedFromGallery
-            ? null
-            : Colors.white.withAlpha(0),
+        backgroundColor: widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
         resizeToAvoidBottomInset: false,
         body: Stack(
           fit: StackFit.expand,

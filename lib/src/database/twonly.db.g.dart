@@ -10318,6 +10318,21 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _wasAskedFriendsMeta = const VerificationMeta(
+    'wasAskedFriends',
+  );
+  @override
+  late final GeneratedColumn<bool> wasAskedFriends = GeneratedColumn<bool>(
+    'was_asked_friends',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("was_asked_friends" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     announcedUserId,
@@ -10326,6 +10341,7 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
     username,
     wasShownToTheUser,
     isHidden,
+    wasAskedFriends,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -10388,6 +10404,15 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
         isHidden.isAcceptableOrUnknown(data['is_hidden']!, _isHiddenMeta),
       );
     }
+    if (data.containsKey('was_asked_friends')) {
+      context.handle(
+        _wasAskedFriendsMeta,
+        wasAskedFriends.isAcceptableOrUnknown(
+          data['was_asked_friends']!,
+          _wasAskedFriendsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -10424,6 +10449,10 @@ class $UserDiscoveryAnnouncedUsersTable extends UserDiscoveryAnnouncedUsers
         DriftSqlType.bool,
         data['${effectivePrefix}is_hidden'],
       )!,
+      wasAskedFriends: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}was_asked_friends'],
+      )!,
     );
   }
 
@@ -10441,6 +10470,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
   final String? username;
   final bool wasShownToTheUser;
   final bool isHidden;
+  final bool wasAskedFriends;
   const UserDiscoveryAnnouncedUser({
     required this.announcedUserId,
     required this.announcedPublicKey,
@@ -10448,6 +10478,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
     this.username,
     required this.wasShownToTheUser,
     required this.isHidden,
+    required this.wasAskedFriends,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -10460,6 +10491,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
     }
     map['was_shown_to_the_user'] = Variable<bool>(wasShownToTheUser);
     map['is_hidden'] = Variable<bool>(isHidden);
+    map['was_asked_friends'] = Variable<bool>(wasAskedFriends);
     return map;
   }
 
@@ -10473,6 +10505,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
           : Value(username),
       wasShownToTheUser: Value(wasShownToTheUser),
       isHidden: Value(isHidden),
+      wasAskedFriends: Value(wasAskedFriends),
     );
   }
 
@@ -10490,6 +10523,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
       username: serializer.fromJson<String?>(json['username']),
       wasShownToTheUser: serializer.fromJson<bool>(json['wasShownToTheUser']),
       isHidden: serializer.fromJson<bool>(json['isHidden']),
+      wasAskedFriends: serializer.fromJson<bool>(json['wasAskedFriends']),
     );
   }
   @override
@@ -10502,6 +10536,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
       'username': serializer.toJson<String?>(username),
       'wasShownToTheUser': serializer.toJson<bool>(wasShownToTheUser),
       'isHidden': serializer.toJson<bool>(isHidden),
+      'wasAskedFriends': serializer.toJson<bool>(wasAskedFriends),
     };
   }
 
@@ -10512,6 +10547,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
     Value<String?> username = const Value.absent(),
     bool? wasShownToTheUser,
     bool? isHidden,
+    bool? wasAskedFriends,
   }) => UserDiscoveryAnnouncedUser(
     announcedUserId: announcedUserId ?? this.announcedUserId,
     announcedPublicKey: announcedPublicKey ?? this.announcedPublicKey,
@@ -10519,6 +10555,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
     username: username.present ? username.value : this.username,
     wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
     isHidden: isHidden ?? this.isHidden,
+    wasAskedFriends: wasAskedFriends ?? this.wasAskedFriends,
   );
   UserDiscoveryAnnouncedUser copyWithCompanion(
     UserDiscoveryAnnouncedUsersCompanion data,
@@ -10536,6 +10573,9 @@ class UserDiscoveryAnnouncedUser extends DataClass
           ? data.wasShownToTheUser.value
           : this.wasShownToTheUser,
       isHidden: data.isHidden.present ? data.isHidden.value : this.isHidden,
+      wasAskedFriends: data.wasAskedFriends.present
+          ? data.wasAskedFriends.value
+          : this.wasAskedFriends,
     );
   }
 
@@ -10547,7 +10587,8 @@ class UserDiscoveryAnnouncedUser extends DataClass
           ..write('publicId: $publicId, ')
           ..write('username: $username, ')
           ..write('wasShownToTheUser: $wasShownToTheUser, ')
-          ..write('isHidden: $isHidden')
+          ..write('isHidden: $isHidden, ')
+          ..write('wasAskedFriends: $wasAskedFriends')
           ..write(')'))
         .toString();
   }
@@ -10560,6 +10601,7 @@ class UserDiscoveryAnnouncedUser extends DataClass
     username,
     wasShownToTheUser,
     isHidden,
+    wasAskedFriends,
   );
   @override
   bool operator ==(Object other) =>
@@ -10573,7 +10615,8 @@ class UserDiscoveryAnnouncedUser extends DataClass
           other.publicId == this.publicId &&
           other.username == this.username &&
           other.wasShownToTheUser == this.wasShownToTheUser &&
-          other.isHidden == this.isHidden);
+          other.isHidden == this.isHidden &&
+          other.wasAskedFriends == this.wasAskedFriends);
 }
 
 class UserDiscoveryAnnouncedUsersCompanion
@@ -10584,6 +10627,7 @@ class UserDiscoveryAnnouncedUsersCompanion
   final Value<String?> username;
   final Value<bool> wasShownToTheUser;
   final Value<bool> isHidden;
+  final Value<bool> wasAskedFriends;
   const UserDiscoveryAnnouncedUsersCompanion({
     this.announcedUserId = const Value.absent(),
     this.announcedPublicKey = const Value.absent(),
@@ -10591,6 +10635,7 @@ class UserDiscoveryAnnouncedUsersCompanion
     this.username = const Value.absent(),
     this.wasShownToTheUser = const Value.absent(),
     this.isHidden = const Value.absent(),
+    this.wasAskedFriends = const Value.absent(),
   });
   UserDiscoveryAnnouncedUsersCompanion.insert({
     this.announcedUserId = const Value.absent(),
@@ -10599,6 +10644,7 @@ class UserDiscoveryAnnouncedUsersCompanion
     this.username = const Value.absent(),
     this.wasShownToTheUser = const Value.absent(),
     this.isHidden = const Value.absent(),
+    this.wasAskedFriends = const Value.absent(),
   }) : announcedPublicKey = Value(announcedPublicKey),
        publicId = Value(publicId);
   static Insertable<UserDiscoveryAnnouncedUser> custom({
@@ -10608,6 +10654,7 @@ class UserDiscoveryAnnouncedUsersCompanion
     Expression<String>? username,
     Expression<bool>? wasShownToTheUser,
     Expression<bool>? isHidden,
+    Expression<bool>? wasAskedFriends,
   }) {
     return RawValuesInsertable({
       if (announcedUserId != null) 'announced_user_id': announcedUserId,
@@ -10617,6 +10664,7 @@ class UserDiscoveryAnnouncedUsersCompanion
       if (username != null) 'username': username,
       if (wasShownToTheUser != null) 'was_shown_to_the_user': wasShownToTheUser,
       if (isHidden != null) 'is_hidden': isHidden,
+      if (wasAskedFriends != null) 'was_asked_friends': wasAskedFriends,
     });
   }
 
@@ -10627,6 +10675,7 @@ class UserDiscoveryAnnouncedUsersCompanion
     Value<String?>? username,
     Value<bool>? wasShownToTheUser,
     Value<bool>? isHidden,
+    Value<bool>? wasAskedFriends,
   }) {
     return UserDiscoveryAnnouncedUsersCompanion(
       announcedUserId: announcedUserId ?? this.announcedUserId,
@@ -10635,6 +10684,7 @@ class UserDiscoveryAnnouncedUsersCompanion
       username: username ?? this.username,
       wasShownToTheUser: wasShownToTheUser ?? this.wasShownToTheUser,
       isHidden: isHidden ?? this.isHidden,
+      wasAskedFriends: wasAskedFriends ?? this.wasAskedFriends,
     );
   }
 
@@ -10661,6 +10711,9 @@ class UserDiscoveryAnnouncedUsersCompanion
     if (isHidden.present) {
       map['is_hidden'] = Variable<bool>(isHidden.value);
     }
+    if (wasAskedFriends.present) {
+      map['was_asked_friends'] = Variable<bool>(wasAskedFriends.value);
+    }
     return map;
   }
 
@@ -10672,7 +10725,8 @@ class UserDiscoveryAnnouncedUsersCompanion
           ..write('publicId: $publicId, ')
           ..write('username: $username, ')
           ..write('wasShownToTheUser: $wasShownToTheUser, ')
-          ..write('isHidden: $isHidden')
+          ..write('isHidden: $isHidden, ')
+          ..write('wasAskedFriends: $wasAskedFriends')
           ..write(')'))
         .toString();
   }
@@ -21534,6 +21588,7 @@ typedef $$UserDiscoveryAnnouncedUsersTableCreateCompanionBuilder =
       Value<String?> username,
       Value<bool> wasShownToTheUser,
       Value<bool> isHidden,
+      Value<bool> wasAskedFriends,
     });
 typedef $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder =
     UserDiscoveryAnnouncedUsersCompanion Function({
@@ -21543,6 +21598,7 @@ typedef $$UserDiscoveryAnnouncedUsersTableUpdateCompanionBuilder =
       Value<String?> username,
       Value<bool> wasShownToTheUser,
       Value<bool> isHidden,
+      Value<bool> wasAskedFriends,
     });
 
 final class $$UserDiscoveryAnnouncedUsersTableReferences
@@ -21631,6 +21687,11 @@ class $$UserDiscoveryAnnouncedUsersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get wasAskedFriends => $composableBuilder(
+    column: $table.wasAskedFriends,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> userDiscoveryUserRelationsRefs(
     Expression<bool> Function($$UserDiscoveryUserRelationsTableFilterComposer f)
     f,
@@ -21697,6 +21758,11 @@ class $$UserDiscoveryAnnouncedUsersTableOrderingComposer
     column: $table.isHidden,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get wasAskedFriends => $composableBuilder(
+    column: $table.wasAskedFriends,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UserDiscoveryAnnouncedUsersTableAnnotationComposer
@@ -21731,6 +21797,11 @@ class $$UserDiscoveryAnnouncedUsersTableAnnotationComposer
 
   GeneratedColumn<bool> get isHidden =>
       $composableBuilder(column: $table.isHidden, builder: (column) => column);
+
+  GeneratedColumn<bool> get wasAskedFriends => $composableBuilder(
+    column: $table.wasAskedFriends,
+    builder: (column) => column,
+  );
 
   Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
     Expression<T> Function(
@@ -21810,6 +21881,7 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
                 Value<String?> username = const Value.absent(),
                 Value<bool> wasShownToTheUser = const Value.absent(),
                 Value<bool> isHidden = const Value.absent(),
+                Value<bool> wasAskedFriends = const Value.absent(),
               }) => UserDiscoveryAnnouncedUsersCompanion(
                 announcedUserId: announcedUserId,
                 announcedPublicKey: announcedPublicKey,
@@ -21817,6 +21889,7 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
                 username: username,
                 wasShownToTheUser: wasShownToTheUser,
                 isHidden: isHidden,
+                wasAskedFriends: wasAskedFriends,
               ),
           createCompanionCallback:
               ({
@@ -21826,6 +21899,7 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
                 Value<String?> username = const Value.absent(),
                 Value<bool> wasShownToTheUser = const Value.absent(),
                 Value<bool> isHidden = const Value.absent(),
+                Value<bool> wasAskedFriends = const Value.absent(),
               }) => UserDiscoveryAnnouncedUsersCompanion.insert(
                 announcedUserId: announcedUserId,
                 announcedPublicKey: announcedPublicKey,
@@ -21833,6 +21907,7 @@ class $$UserDiscoveryAnnouncedUsersTableTableManager
                 username: username,
                 wasShownToTheUser: wasShownToTheUser,
                 isHidden: isHidden,
+                wasAskedFriends: wasAskedFriends,
               ),
           withReferenceMapper: (p0) => p0
               .map(

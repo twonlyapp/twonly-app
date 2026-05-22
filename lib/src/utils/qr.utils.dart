@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart' show ListExtensions;
 import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
@@ -41,6 +42,7 @@ class QrCodeUtils {
       signedPrekeySignature: signedPreKey.signature,
       signedPrekeyId: Int64(signedPreKey.id),
       secretVerificationToken: secretVerificationToken,
+      timestamp: Int64(clock.now().millisecondsSinceEpoch),
     );
 
     final data = publicProfile.writeToBuffer();
@@ -94,7 +96,18 @@ class QrCodeUtils {
     );
 
     if (verificationOk) {
-      if (profile.hasSecretVerificationToken()) {
+      var useSecretVerificationToken = profile.hasSecretVerificationToken();
+      if (profile.hasTimestamp()) {
+        // Only notify the scanned user if the QR code was generated within the last 10 minutes.
+        final timestamp = DateTime.fromMillisecondsSinceEpoch(
+          profile.timestamp.toInt(),
+        );
+        final tenMinutesAgo = clock.now().subtract(const Duration(minutes: 10));
+        if (timestamp.isBefore(tenMinutesAgo)) {
+          useSecretVerificationToken = false;
+        }
+      }
+      if (useSecretVerificationToken) {
         unawaited(
           KeyVerificationService.handleScannedVerificationToken(
             contact.userId,

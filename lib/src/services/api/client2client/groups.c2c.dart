@@ -15,14 +15,13 @@ Future<void> handleGroupCreate(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupCreate newGroup,
+  String receiptId,
 ) async {
-  final user = await twonlyDB.contactsDao
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
+  final user = await twonlyDB.contactsDao.getContactByUserId(fromUserId).getSingleOrNull();
   if (user == null) {
     // Only contacts can invite other contacts, so this can (via the UI) not happen.
     Log.error(
-      'User is not a contact. Aborting.',
+      '[$receiptId] User is not a contact. Aborting.',
     );
     return;
   }
@@ -66,7 +65,7 @@ Future<void> handleGroupCreate(
 
   if (group == null) {
     Log.error(
-      'Could not create new group. Probably because the group already existed.',
+      '[$receiptId] Could not create new group. Probably because the group already existed.',
     );
     return;
   }
@@ -108,12 +107,13 @@ Future<void> handleGroupUpdate(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupUpdate update,
+  String receiptId,
 ) async {
-  Log.info('Got group update for $groupId from $fromUserId');
+  Log.info('[$receiptId] Got group update for $groupId from $fromUserId');
 
   final actionType = groupActionTypeFromString(update.groupActionType);
   if (actionType == null) {
-    Log.error('Group action ${update.groupActionType} is unknown ignoring.');
+    Log.error('[$receiptId] Group action ${update.groupActionType} is unknown ignoring.');
     return;
   }
 
@@ -189,10 +189,11 @@ Future<bool> handleGroupJoin(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupJoin join,
+  String receiptId,
 ) async {
   if (await twonlyDB.contactsDao.getContactById(fromUserId) == null) {
     if (!await addNewHiddenContact(fromUserId)) {
-      Log.error('Got group join, but could not load contact.');
+      Log.error('[$receiptId] Got group join, but could not load contact.');
       // This can happen in case the group join was received before the group create.
       // In this case return false, which will cause the receipt to fail and the user
       // will resend this message.
@@ -213,6 +214,7 @@ Future<void> handleResendGroupPublicKey(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupJoin join,
+  String receiptId,
 ) async {
   final group = await twonlyDB.groupsDao.getGroup(groupId);
   if (group == null || group.myGroupPrivateKey == null) return;
@@ -225,6 +227,7 @@ Future<void> handleResendGroupPublicKey(
         groupPublicKey: keyPair.getPublicKey().serialize(),
       ),
     ),
+    blocking: false,
   );
 }
 
@@ -232,6 +235,7 @@ Future<void> handleTypingIndicator(
   int fromUserId,
   String groupId,
   EncryptedContent_TypingIndicator indicator,
+  String receiptId,
 ) async {
   var lastTypeIndicator = const Value<DateTime?>.absent();
 

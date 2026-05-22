@@ -35,7 +35,6 @@ Future<void> _protectMediaUpload(
 ) async {
   final mutex = _uploadMutexes.putIfAbsent(mediaId, Mutex.new);
   await mutex.protect(action);
-  _uploadMutexes.remove(mediaId);
 }
 
 Future<void> reuploadMediaFiles() async {

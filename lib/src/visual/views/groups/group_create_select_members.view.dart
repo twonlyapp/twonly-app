@@ -129,6 +129,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                 : context.lang.addMember,
           ),
         ),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         floatingActionButton: FilledButton.icon(
           onPressed: selectedUsers.isEmpty ? null : submitChanges,
           label: Text(

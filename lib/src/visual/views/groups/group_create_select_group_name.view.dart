@@ -58,6 +58,7 @@ class _GroupCreateSelectGroupNameViewState
         appBar: AppBar(
           title: Text(context.lang.selectGroupName),
         ),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
         floatingActionButton: FilledButton.icon(
           onPressed: (textFieldGroupName.text.isEmpty || _isLoading)
               ? null

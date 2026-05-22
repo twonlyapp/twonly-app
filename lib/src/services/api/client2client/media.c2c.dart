@@ -18,9 +18,10 @@ Future<void> handleMedia(
   int fromUserId,
   String groupId,
   EncryptedContent_Media media,
+  String receiptId,
 ) async {
   Log.info(
-    'Got a media message: ${media.senderMessageId} from $groupId with type ${media.type}',
+    '[$receiptId] Got a media message: ${media.senderMessageId} from $groupId with type ${media.type}',
   );
 
   late MediaType mediaType;
@@ -33,7 +34,7 @@ Future<void> handleMedia(
           message.senderId != fromUserId ||
           message.mediaId == null) {
         Log.warn(
-          'Got reupload from $fromUserId for a message that either does not exists (${message == null}) or senderId = ${message?.senderId}',
+          '[$receiptId] Got reupload for a message that either does not exists (${message == null}) or senderId = ${message?.senderId}',
         );
         return;
       }
@@ -82,13 +83,13 @@ Future<void> handleMedia(
   if (messageTmp != null) {
     if (messageTmp.senderId != fromUserId) {
       Log.warn(
-        '$fromUserId tried to modify the message from ${messageTmp.senderId}.',
+        '[$receiptId] $fromUserId tried to modify the message from ${messageTmp.senderId}.',
       );
       return;
     }
     if (messageTmp.mediaId == null) {
       Log.warn(
-        'This message already exit without a mediaId. Message is dropped.',
+        '[$receiptId] This message already exit without a mediaId. Message is dropped.',
       );
       return;
     }
@@ -97,7 +98,7 @@ Future<void> handleMedia(
     );
     if (mediaFile?.downloadState != DownloadState.reuploadRequested) {
       Log.warn(
-        'This message and media file already exit and was not requested again. Dropping it.',
+        '[$receiptId] This message and media file already exit and was not requested again. Dropping it.',
       );
       return;
     }
@@ -121,7 +122,9 @@ Future<void> handleMedia(
   MediaFile? mediaFile;
   Message? message;
 
-  Log.info('Starting transaction for media message ${media.senderMessageId}');
+  Log.info(
+    '[$receiptId] Starting transaction for media message ${media.senderMessageId}',
+  );
   await twonlyDB.transaction(() async {
     mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
       MediaFilesCompanion(
@@ -141,7 +144,7 @@ Future<void> handleMedia(
     );
 
     if (mediaFile == null) {
-      Log.error('Could not insert media file into database');
+      Log.error('[$receiptId] Could not insert media file into database');
       return;
     }
 
@@ -165,7 +168,7 @@ Future<void> handleMedia(
     );
   });
   Log.info(
-    'Finished transaction for media message ${media.senderMessageId}. Success: ${message != null}',
+    '[$receiptId] Finished transaction for media message ${media.senderMessageId}. Success: ${message != null}',
   );
 
   if (message != null && mediaFile != null) {
@@ -173,7 +176,9 @@ Future<void> handleMedia(
       groupId,
       fromTimestamp(media.timestamp),
     );
-    Log.info('Inserted a new media message with ID: ${message!.messageId}');
+    Log.info(
+      '[$receiptId] Inserted a new media message with ID: ${message!.messageId}',
+    );
     await incFlameCounter(
       message!.groupId,
       true,
@@ -184,12 +189,16 @@ Future<void> handleMedia(
   } else {
     if (mediaFile == null && message == null) {
       Log.error(
-        'Could not insert new message as both the message and mediaFile are empty.',
+        '[$receiptId] Could not insert new message as both the message and mediaFile are empty.',
       );
     } else if (mediaFile == null) {
-      Log.error('Could not insert new message as the mediaFile is empty.');
+      Log.error(
+        '[$receiptId] Could not insert new message as the mediaFile is empty.',
+      );
     } else {
-      Log.error('Could not insert new message as the message is empty.');
+      Log.error(
+        '[$receiptId] Could not insert new message as the message is empty.',
+      );
     }
   }
 }
@@ -197,6 +206,7 @@ Future<void> handleMedia(
 Future<void> handleMediaUpdate(
   int fromUserId,
   EncryptedContent_MediaUpdate mediaUpdate,
+  String receiptId,
 ) async {
   final message = await twonlyDB.messagesDao
       .getMessageById(mediaUpdate.targetMessageId)
@@ -204,14 +214,14 @@ Future<void> handleMediaUpdate(
   if (message == null) {
     // this can happen, in case the message was already deleted.
     Log.info(
-      'Got media update to message ${mediaUpdate.targetMessageId} but message not found.',
+      '[$receiptId] Got media update to message ${mediaUpdate.targetMessageId} but message not found.',
     );
     return;
   }
   if (message.mediaId == null) {
     // this can happen, in case the message was already deleted.
     Log.warn(
-      'Got media update for message ${mediaUpdate.targetMessageId} which does not have a mediaId defined.',
+      '[$receiptId] Got media update for message ${mediaUpdate.targetMessageId} which does not have a mediaId defined.',
     );
     return;
   }
@@ -220,14 +230,14 @@ Future<void> handleMediaUpdate(
   );
   if (mediaFile == null) {
     Log.info(
-      'Got media file update, but media file was not found ${message.mediaId}',
+      '[$receiptId] Got media file update, but media file was not found ${message.mediaId}',
     );
     return;
   }
 
   switch (mediaUpdate.type) {
     case EncryptedContent_MediaUpdate_Type.REOPENED:
-      Log.info('Got media file reopened ${mediaFile.mediaId}');
+      Log.info('[$receiptId] Got media file reopened ${mediaFile.mediaId}');
       await twonlyDB.messagesDao.updateMessageId(
         message.messageId,
         const MessagesCompanion(
@@ -235,7 +245,7 @@ Future<void> handleMediaUpdate(
         ),
       );
     case EncryptedContent_MediaUpdate_Type.STORED:
-      Log.info('Got media file stored ${mediaFile.mediaId}');
+      Log.info('[$receiptId] Got media file stored ${mediaFile.mediaId}');
       final mediaService = MediaFileService(mediaFile);
       await mediaService.storeMediaFile();
       await twonlyDB.messagesDao.updateMessageId(
@@ -246,7 +256,9 @@ Future<void> handleMediaUpdate(
       );
 
     case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
-      Log.info('Got media file decryption error ${mediaFile.mediaId}');
+      Log.info(
+        '[$receiptId] Got media file decryption error ${mediaFile.mediaId}',
+      );
       await reuploadMediaFile(fromUserId, mediaFile, message.messageId);
   }
 }

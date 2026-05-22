@@ -18,10 +18,14 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 class ChatContactsEntry extends StatefulWidget {
   const ChatContactsEntry({
     required this.message,
+    required this.borderRadius,
+    required this.info,
     super.key,
   });
 
   final Message message;
+  final BorderRadiusGeometry borderRadius;
+  final BubbleInfo info;
 
   @override
   State<ChatContactsEntry> createState() => _ChatContactsEntryState();
@@ -46,23 +50,14 @@ class _ChatContactsEntryState extends State<ChatContactsEntry> {
       return const SizedBox.shrink();
     }
 
-    final info = getBubbleInfo(
-      context,
-      widget.message,
-      null,
-      null,
-      null,
-      0,
-    );
-
     return Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: info.color,
-        borderRadius: BorderRadius.circular(12),
+        color: widget.info.color,
+        borderRadius: widget.borderRadius,
       ),
       child: IntrinsicWidth(
         child: Column(

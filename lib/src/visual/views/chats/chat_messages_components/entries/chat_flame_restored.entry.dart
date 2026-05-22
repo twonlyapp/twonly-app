@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
+
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
 class ChatFlameRestoredEntry extends StatelessWidget {
   const ChatFlameRestoredEntry({
     required this.message,
+    required this.borderRadius,
+    required this.info,
     super.key,
   });
 
   final Message message;
+  final BorderRadiusGeometry borderRadius;
+  final BubbleInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -34,16 +41,29 @@ class ChatFlameRestoredEntry extends StatelessWidget {
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
-      padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.orange,
-        borderRadius: BorderRadius.circular(12),
+        color: info.color,
+        borderRadius: borderRadius,
       ),
-      child: BetterText(
-        text: context.lang.chatEntryFlameRestored(
-          data.restoredFlameCounter.toInt(),
-        ),
-        textColor: isDarkMode(context) ? Colors.black : Colors.black,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: EmojiAnimationComp(emoji: '🔥'),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: BetterText(
+              text: context.lang.chatEntryFlameRestored(
+                data.restoredFlameCounter.toInt(),
+              ),
+              textColor: isDarkMode(context) ? Colors.black : Colors.black,
+            ),
+          ),
+        ],
       ),
     );
   }

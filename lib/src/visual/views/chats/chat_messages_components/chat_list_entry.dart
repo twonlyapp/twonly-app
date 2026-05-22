@@ -13,6 +13,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_reaction_row.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_ask_a_friend.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_flame_restored.entry.dart';
@@ -137,12 +138,24 @@ class _ChatListEntryState extends State<ChatListEntry> {
     if (widget.message.type == MessageType.contacts.name) {
       return ChatContactsEntry(
         message: widget.message,
+        borderRadius: borderRadius,
+        info: info,
       );
     }
 
     if (widget.message.type == MessageType.restoreFlameCounter.name) {
       return ChatFlameRestoredEntry(
         message: widget.message,
+        borderRadius: borderRadius,
+        info: info,
+      );
+    }
+
+    if (widget.message.type == MessageType.askAboutUser.name) {
+      return ChatAskAFriendEntry(
+        message: widget.message,
+        borderRadius: borderRadius,
+        info: info,
       );
     }
 

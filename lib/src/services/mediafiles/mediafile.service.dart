@@ -84,6 +84,15 @@ class MediaFileService {
             if (message.openedAt == null) {
               // Message was not yet opened from all persons, so wait...
               delete = false;
+            } else if (message.openedAt!.isAfter(
+              clock.now().subtract(const Duration(minutes: 3)),
+            )) {
+              // When the message was opened in the last two minutes, do not purge.
+              // Bug: When the user opens an image immediately after starting the app, there is a race condition:
+              //      The message is marked as opened, but then purgeTempFolder is run
+              //      (it is unawaited) and deletes the file. Thi gives a grace period:
+              //      The image must have been opened within the last two minutes, otherwise do not delete it.
+              delete = false;
             } else if (mediaFile.requiresAuthentication ||
                 mediaFile.displayLimitInMilliseconds != null) {
               // Message was opened by all persons, and they can not reopen the image.

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.20
+
+- New: Adds an "Ask a Friend" button to new contact suggestions.
+- New: Adds security profiles.
+- Improved: Onboarding flow for new users.
+- Improved: Flame restore experience.
+- Improved: The blue verification checkmark now displays the total number of verifications.
+- Fix: Issue with receiving messages when user closed app while decrypting
+- Fix: Background message fetching reliability.
+- Fix: Issue with focus changing when taking a picture
+- Fix: Issues with the camera initialization
+
+## 0.2.16
+
+- Fix: Images not shown after opening due to cleanup
+
 ## 0.2.15
 
 - Fix: Issue with opening directly in chats
@@ -10,7 +26,7 @@
 - New: Tutorial on how to use zoom. 
 - New: Manage storage view.
 - Improved: Media thumbnails for faster loading.
-- Fix: Some message where not marked as opened.
+- Fix: Some messages were not marked as opened.
 
 ## 0.2.12
 

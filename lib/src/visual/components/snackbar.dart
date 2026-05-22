@@ -62,7 +62,12 @@ void _showOverlay({
   required Duration displayDuration,
   required void Function(AnimationController) onAnimationControllerInit,
 }) {
-  final overlayState = Overlay.maybeOf(context);
+  var overlayState = Overlay.maybeOf(context);
+  if (overlayState == null) {
+    if (context is StatefulElement && context.state is NavigatorState) {
+      overlayState = (context.state as NavigatorState).overlay;
+    }
+  }
   if (overlayState == null) return;
 
   late OverlayEntry overlayEntry;

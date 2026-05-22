@@ -40,7 +40,7 @@ class ScannedNewProfile {
 }
 
 class MainCameraController {
-  late void Function() setState;
+  void Function()? setState;
   CameraController? cameraController;
   ScreenshotController screenshotController = ScreenshotController();
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
@@ -61,12 +61,12 @@ class MainCameraController {
 
   void setSharedLinkForPreview(Uri? url) {
     sharedLinkForPreview = url;
-    setState();
+    setState?.call();
   }
 
   void onImageSend() {
     scannedUrl = '';
-    setState();
+    setState?.call();
   }
 
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
@@ -85,35 +85,50 @@ class MainCameraController {
   FaceFilterType _currentFilterType = FaceFilterType.none;
   FaceFilterType get currentFilterType => _currentFilterType;
 
+  Future<void>? _initializeFuture;
   Future<void>? _pendingDisposal;
+  int _cameraSessionId = 0;
 
   Future<void> closeCamera() async {
+    _cameraSessionId++;
     contactsVerified = {};
     scannedNewProfiles = {};
     scannedUrl = null;
-    try {
-      await cameraController?.stopImageStream();
-      // ignore: empty_catches
-    } catch (e) {}
     final cameraControllerTemp = cameraController;
     cameraController = null;
+    final initFutureTemp = _initializeFuture;
+    _initializeFuture = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
     _pendingDisposal = Future.delayed(
       const Duration(milliseconds: 100),
       () async {
+        try {
+          if (initFutureTemp != null) {
+            await initFutureTemp;
+          }
+          // ignore: empty_catches
+        } catch (e) {}
+        try {
+          await cameraControllerTemp?.stopImageStream();
+          // ignore: empty_catches
+        } catch (e) {}
         await cameraControllerTemp?.dispose();
       },
     );
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
+    setState?.call();
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
-    await _pendingDisposal;
     initCameraStarted = true;
+    final sessionId = ++_cameraSessionId;
+    await _pendingDisposal;
+    if (sessionId != _cameraSessionId) return;
 
     if (AppEnvironment.cameras.isEmpty) {
       AppEnvironment.cameras = await availableCameras();
+      if (sessionId != _cameraSessionId) return;
     }
 
     var cameraId = sCameraId;
@@ -126,8 +141,7 @@ class MainCameraController {
 
     if (init) {
       for (; cameraId < AppEnvironment.cameras.length; cameraId++) {
-        if (AppEnvironment.cameras[cameraId].lensDirection ==
-            CameraLensDirection.back) {
+        if (AppEnvironment.cameras[cameraId].lensDirection == CameraLensDirection.back) {
           break;
         }
       }
@@ -136,18 +150,23 @@ class MainCameraController {
     selectedCameraDetails.isZoomAble = false;
 
     if (cameraController == null) {
+      final hasMic = await Permission.microphone.isGranted;
+      if (sessionId != _cameraSessionId) return;
+
       cameraController = CameraController(
         AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
-        enableAudio: await Permission.microphone.isGranted,
-        imageFormatGroup: Platform.isAndroid
-            ? ImageFormatGroup.nv21
-            : ImageFormatGroup.bgra8888,
+        enableAudio: hasMic,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
       );
       try {
-        await cameraController?.initialize();
+        _initializeFuture = cameraController?.initialize();
+        await _initializeFuture;
+        if (cameraController == null) return;
         await cameraController?.startImageStream(_processCameraImage);
+        if (cameraController == null) return;
         await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
+        if (cameraController == null) return;
         if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
           await cameraController?.setVideoStabilizationMode(
             VideoStabilizationMode.level1,
@@ -165,10 +184,13 @@ class MainCameraController {
       } catch (e) {
         Log.info(e);
       }
+      if (cameraController == null) return;
       selectedCameraDetails.scaleFactor = 1;
 
       await cameraController?.setZoomLevel(1);
+      if (cameraController == null) return;
       await cameraController?.setDescription(AppEnvironment.cameras[cameraId]);
+      if (cameraController == null) return;
       try {
         if (!isVideoRecording) {
           await cameraController?.startImageStream(_processCameraImage);
@@ -179,20 +201,19 @@ class MainCameraController {
     }
 
     try {
+      if (cameraController == null) return;
       await cameraController?.lockCaptureOrientation(
         DeviceOrientation.portraitUp,
       );
+      if (cameraController == null) return;
       await cameraController?.setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
       );
-      selectedCameraDetails.maxAvailableZoom =
-          await cameraController?.getMaxZoomLevel() ?? 1;
-      selectedCameraDetails.minAvailableZoom =
-          await cameraController?.getMinZoomLevel() ?? 1;
+      if (cameraController == null) return;
+      selectedCameraDetails.maxAvailableZoom = await cameraController?.getMaxZoomLevel() ?? 1;
+      selectedCameraDetails.minAvailableZoom = await cameraController?.getMinZoomLevel() ?? 1;
       selectedCameraDetails
-        ..isZoomAble =
-            selectedCameraDetails.maxAvailableZoom !=
-            selectedCameraDetails.minAvailableZoom
+        ..isZoomAble = selectedCameraDetails.maxAvailableZoom != selectedCameraDetails.minAvailableZoom
         ..cameraLoaded = true
         ..cameraId = cameraId;
 
@@ -201,7 +222,7 @@ class MainCameraController {
       isSelectingFaceFilters = false;
       setFilter(FaceFilterType.none);
       zoomButtonKey = GlobalKey();
-      setState();
+      setState?.call();
     } catch (e) {
       Log.error(e);
       cameraController = null;
@@ -214,8 +235,7 @@ class MainCameraController {
   }
 
   Future<void> onTapDown(TapDownDetails details) async {
-    final box =
-        cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
+    final box = cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return;
     final localPosition = box.globalToLocal(details.globalPosition);
 
@@ -224,15 +244,14 @@ class MainCameraController {
     final dx = (localPosition.dx / box.size.width).clamp(0.0, 1.0);
     final dy = (localPosition.dy / box.size.height).clamp(0.0, 1.0);
 
-    setState();
+    setState?.call();
 
     await HapticFeedback.lightImpact();
     try {
       await cameraController?.setFocusPoint(Offset(dx, dy));
       await cameraController?.setFocusMode(FocusMode.auto);
     } catch (e) {
-      if (e is CameraException &&
-          (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
+      if (e is CameraException && (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
         Log.info('Focus point or mode not supported on this device');
       } else {
         Log.warn(e);
@@ -243,7 +262,7 @@ class MainCameraController {
     await Future.delayed(const Duration(milliseconds: 500));
 
     focusPointOffset = null;
-    setState();
+    setState?.call();
   }
 
   void setFilter(FaceFilterType type) {
@@ -253,7 +272,7 @@ class MainCameraController {
       facePaint = null;
       _isBusyFaces = false;
     }
-    setState();
+    setState?.call();
   }
 
   FaceFilterPainter? faceFilterPainter;
@@ -273,8 +292,7 @@ class MainCameraController {
     if (inputImage == null) return;
     _processBarcode(inputImage);
     // check if front camera is selected
-    if (cameraController?.description.lensDirection ==
-        CameraLensDirection.front) {
+    if (cameraController?.description.lensDirection == CameraLensDirection.front) {
       if (_currentFilterType != FaceFilterType.none) {
         _processFaces(inputImage);
       }
@@ -293,16 +311,14 @@ class MainCameraController {
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[cameraController!.value.deviceOrientation];
+      var rotationCompensation = _orientations[cameraController!.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (camera.lensDirection == CameraLensDirection.front) {
         // front-facing
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
       } else {
         // back-facing
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
+        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
     }
@@ -344,9 +360,7 @@ class MainCameraController {
     if (_isBusy) return;
     _isBusy = true;
     final barcodes = await _barcodeScanner.processImage(inputImage);
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        cameraController != null) {
+    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null && cameraController != null) {
       final painter = BarcodeDetectorPainter(
         barcodes,
         inputImage.metadata!.size,
@@ -423,16 +437,14 @@ class MainCameraController {
       }
     }
     _isBusy = false;
-    setState();
+    setState?.call();
   }
 
   Future<void> _processFaces(InputImage inputImage) async {
     if (_isBusyFaces) return;
     _isBusyFaces = true;
     final faces = await _faceDetector.processImage(inputImage);
-    if (inputImage.metadata?.size != null &&
-        inputImage.metadata?.rotation != null &&
-        cameraController != null) {
+    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null && cameraController != null) {
       if (faces.isNotEmpty) {
         CustomPainter? painter;
         switch (_currentFilterType) {
@@ -471,6 +483,6 @@ class MainCameraController {
       }
     }
     _isBusyFaces = false;
-    setState();
+    setState?.call();
   }
 }

@@ -105,6 +105,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     $core.String? link,
     $core.Iterable<SharedContact>? contacts,
     $fixnum.Int64? restoredFlameCounter,
+    $fixnum.Int64? askAboutUserId,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -112,6 +113,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     if (contacts != null) result.contacts.addAll(contacts);
     if (restoredFlameCounter != null)
       result.restoredFlameCounter = restoredFlameCounter;
+    if (askAboutUserId != null) result.askAboutUserId = askAboutUserId;
     return result;
   }
 
@@ -133,6 +135,7 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
     ..pPM<SharedContact>(3, _omitFieldNames ? '' : 'contacts',
         subBuilder: SharedContact.create)
     ..aInt64(4, _omitFieldNames ? '' : 'restoredFlameCounter')
+    ..aInt64(5, _omitFieldNames ? '' : 'askAboutUserId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -184,6 +187,15 @@ class AdditionalMessageData extends $pb.GeneratedMessage {
   $core.bool hasRestoredFlameCounter() => $_has(3);
   @$pb.TagNumber(4)
   void clearRestoredFlameCounter() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get askAboutUserId => $_getI64(4);
+  @$pb.TagNumber(5)
+  set askAboutUserId($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAskAboutUserId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAskAboutUserId() => $_clearField(5);
 }
 
 const $core.bool _omitFieldNames =

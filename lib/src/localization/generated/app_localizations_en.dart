@@ -289,6 +289,34 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsPrivacyProfileSelectionTitle => 'Security Profile';
+
+  @override
+  String get settingsPrivacyProfileSelectionDesc =>
+      'Choose your setup path and security configuration';
+
+  @override
+  String get securityProfileTitle => 'Security Profile';
+
+  @override
+  String get securityProfileSubtitle =>
+      'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.';
+
+  @override
+  String get securityProfileNormalTitle => 'Normal Protection';
+
+  @override
+  String get securityProfileNormalDesc =>
+      'Good balance between a convenient mode without bothering you too much.';
+
+  @override
+  String get securityProfileStrictTitle => 'Strict Protection';
+
+  @override
+  String get securityProfileStrictDesc =>
+      'Maximum anti-phishing protection but may be inconvenient.';
+
+  @override
   String get settingsNotification => 'Notification';
 
   @override
@@ -442,8 +470,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationTypeQrScanned => 'You scanned their QR code.';
 
   @override
-  String get verificationTypeSecretQrToken =>
-      'The other person scanned your QR code.';
+  String verificationTypeSecretQrToken(Object username) {
+    return '$username has scanned your QR code.';
+  }
 
   @override
   String get verificationTypeLink => 'Verified via link.';
@@ -1268,6 +1297,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openYourOwnQRcode => 'Open your own QR code';
 
   @override
+  String get addContactQrSheetSubtext =>
+      'Let a friend scan this QR code to add you';
+
+  @override
   String get finishSetupCardTitle => 'Complete your profile';
 
   @override
@@ -1320,11 +1353,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Be informed about who is requesting';
 
   @override
-  String get userDiscoverySettingsManualApproval => 'Manual approval';
+  String get userDiscoverySettingsManualApproval =>
+      'Ask every time before sharing';
 
   @override
   String get userDiscoverySettingsManualApprovalDesc =>
-      'Before someone is shared, you\'ll be asked first.';
+      'Before one of your friends is shared, you will be asked every time.';
 
   @override
   String get onboardingUserDiscoveryLetFriendsFindYou =>
@@ -1486,7 +1520,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'The checkmark gives you the certainty that you are messaging the right person. Scan the contact\'s QR code to verify it.';
+      'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1499,6 +1533,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'A contact whose identity has *not* yet been verified.';
+
+  @override
+  String get deleteVerificationTitle => 'Delete verification?';
+
+  @override
+  String get deleteVerificationBody =>
+      'Are you sure you want to delete this verification?';
+
+  @override
+  String secretQrTokenVerifiedSnackbar(Object username) {
+    return '$username has scanned your QR code and is now verified.';
+  }
+
+  @override
+  String mutualGroupsTitle(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count mutual groups',
+      one: '1 mutual group',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mutualGroupsSentMessages(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages sent',
+      one: '1 message sent',
+    );
+    return '$_temp0';
+  }
 
   @override
   String chatEntryFlameRestored(Object count) {
@@ -1580,6 +1648,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userDiscoverySettingsTitle => 'Mutual Friends';
 
   @override
+  String get userDiscoveryWhyThisIsUsed => 'Why this is used';
+
+  @override
+  String get userDiscoveryFeatureOffers => 'Your benefits at a glance';
+
+  @override
   String get userDiscoveryDisabledLearnMore => 'Learn more';
 
   @override
@@ -1621,6 +1695,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendSuggestionsRequest => 'Request';
+
+  @override
+  String get friendSuggestionsAskFriend => 'Ask your friends';
+
+  @override
+  String askFriendsDialogTitle(Object username) {
+    return 'Ask about $username';
+  }
+
+  @override
+  String get askFriendsDialogDescription =>
+      'Select the friends you want to ask about this user:';
+
+  @override
+  String get askFriendsDialogConfirm => 'Ask';
+
+  @override
+  String get askFriendsDialogCancel => 'Cancel';
+
+  @override
+  String get chatAskAFriendReceivedDescription =>
+      'Your friend just got this as a suggestion and wants to know if he knows this person.';
+
+  @override
+  String get chatAskAFriendAddedDescription =>
+      'You have added this user to your contacts.';
+
+  @override
+  String get chatAskAFriendHide => 'Hide';
+
+  @override
+  String get chatAskAFriendRequest => 'Request';
+
+  @override
+  String chatAskAFriendUnknownUser(Object userId) {
+    return 'User $userId';
+  }
 
   @override
   String contactUserDiscoveryImagesLeft(Object imagesLeft, Object username) {
@@ -1807,4 +1918,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dragToZoom => 'Drag to Zoom';
+
+  @override
+  String get showUsername => 'Show username';
+
+  @override
+  String get onboardingProfileSelectionTitle => 'Choose your setup path';
+
+  @override
+  String get onboardingProfileSelectionSubtitle =>
+      'Choose how you want to configure your security and privacy settings.';
+
+  @override
+  String get onboardingProfileSelectionDefaultTitle => 'Default';
+
+  @override
+  String get onboardingProfileSelectionDefaultDesc =>
+      'Instantly applies recommended settings so you can start using the app.';
+
+  @override
+  String get onboardingProfileSelectionDefaultBadge => 'Fast Setup';
+
+  @override
+  String get onboardingProfileSelectionCustomizeTitle => 'Customize';
+
+  @override
+  String get onboardingProfileSelectionCustomizeDesc =>
+      'Step-by-step setup so you can decide for yourself.';
+
+  @override
+  String get onboardingProfileSelectionStrictTitle => 'Enhanced Protection';
+
+  @override
+  String get onboardingProfileSelectionStrictDesc =>
+      'Maximum anti-phishing defense. Recommended for *journalists & public figures*.';
+
+  @override
+  String get replyFlameRestored => 'Flames restored';
+
+  @override
+  String get replyAskAFriend => 'Ask a friend';
+
+  @override
+  String get unverifiedWarningDirectTitle => 'Identity not verified in person';
+
+  @override
+  String get unverifiedWarningGroupTitle =>
+      'Not all members are verified in person';
+
+  @override
+  String get unverifiedWarningBody =>
+      '*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.';
+
+  @override
+  String get unverifiedWarningButton => 'Verify now';
 }

@@ -1,0 +1,2 @@
+json_key_file(ENV["GOOGLE_PLAY_JSON_KEY_PATH"] || "../../local_data/accesskeys/upload_track_releases_google_play.json")
+package_name("eu.twonly") # Your application ID

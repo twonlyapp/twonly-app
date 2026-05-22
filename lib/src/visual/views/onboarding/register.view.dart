@@ -140,7 +140,8 @@ class _RegisterViewState extends State<RegisterView> {
       displayName: username,
       subscriptionPlan: 'Free',
       currentSetupPage: SetupPages.profile.name,
-    )..appVersion = AppState.latestAppVersionId;
+      appVersion: AppState.latestAppVersionId,
+    );
 
     await UserService.save(userData);
 
@@ -153,21 +154,19 @@ class _RegisterViewState extends State<RegisterView> {
     final isDark = isDarkMode(context);
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final inputColor = isDark ? const Color(0xFF0F172A) : Colors.grey[100];
-    final sloganColor = isDark
-        ? Colors.white.withValues(alpha: 0.9)
-        : Colors.grey[800];
+    final sloganColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.grey[800];
     final secondaryButtonColor = isDark ? Colors.grey[400] : Colors.grey[600];
 
     return OnboardingWrapper(
       children: [
-        const SizedBox(height: 40),
+        const SizedBox(height: 30),
         Center(
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             child: const LinkLogoAnimation(),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
@@ -180,7 +179,7 @@ class _RegisterViewState extends State<RegisterView> {
             ),
           ),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 30),
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -188,9 +187,7 @@ class _RegisterViewState extends State<RegisterView> {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.3)
-                    : Colors.black.withValues(alpha: 0.1),
+                color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -262,8 +259,7 @@ class _RegisterViewState extends State<RegisterView> {
                     ),
                   ),
                 ),
-                if (_showUserNameError &&
-                    usernameController.text.length < 3) ...[
+                if (_showUserNameError && usernameController.text.length < 3) ...[
                   const SizedBox(height: 8),
                   Text(
                     context.lang.registerUsernameLimits,
