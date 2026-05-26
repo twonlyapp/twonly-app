@@ -212,6 +212,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         // Maybe this is the reason?
         return;
       } else {
+        await androidVolumeDownSub?.cancel();
         androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((
           event,
         ) {
@@ -233,6 +234,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     if (Platform.isAndroid) {
       await androidVolumeDownSub?.cancel();
+      androidVolumeDownSub = null;
     }
   }
 

@@ -253,23 +253,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     List<String> messageIds,
     DateTime timestamp,
   ) async {
-    try {
-      await twonlyDB.batch((batch) async {
-        for (final messageId in messageIds) {
-          batch.insert(
-            messageActions,
-            MessageActionsCompanion(
-              messageId: Value(messageId),
-              contactId: contactId,
-              type: const Value(MessageActionType.openedAt),
-              actionAt: Value(timestamp),
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
-      });
-    } catch (e) {
-      Log.error(e);
+    for (final messageId in messageIds) {
+      try {
+        await into(messageActions).insertOnConflictUpdate(
+          MessageActionsCompanion(
+            messageId: Value(messageId),
+            contactId: contactId,
+            type: const Value(MessageActionType.openedAt),
+            actionAt: Value(timestamp),
+          ),
+        );
+      } catch (e) {
+        Log.error('handleMessagesOpened insert failed for $messageId: $e');
+      }
     }
 
     for (final messageId in messageIds) {
@@ -278,16 +274,20 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           messageId,
           MessageActionType.openedAt,
         );
-        await (update(
-          messages,
-        )..where((tbl) => tbl.messageId.equals(messageId))).write(
-          MessagesCompanion(
-            openedAt: Value(timestamp),
-            openedByAll: Value(isOpenedByAll ? timestamp : null),
-          ),
+        final rowsUpdated =
+            await (update(
+              messages,
+            )..where((tbl) => tbl.messageId.equals(messageId))).write(
+              MessagesCompanion(
+                openedAt: Value(timestamp),
+                openedByAll: Value(isOpenedByAll ? timestamp : null),
+              ),
+            );
+        Log.info(
+          'handleMessagesOpened updated $rowsUpdated rows for message $messageId',
         );
       } catch (e) {
-        Log.error(e);
+        Log.error('handleMessagesOpened update failed: $e');
       }
     }
   }

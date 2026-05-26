@@ -24,15 +24,15 @@ enum MessageSendState {
 
 MessageSendState messageSendStateFromMessage(Message msg) {
   if (msg.senderId == null) {
+    if (msg.openedByAll != null || msg.openedAt != null) {
+      return MessageSendState.sendOpened;
+    }
+
     /// messages was send by me, look up if every messages was received by the server...
     if (msg.ackByServer == null) {
       return MessageSendState.sending;
     }
-    if (msg.openedAt != null) {
-      return MessageSendState.sendOpened;
-    } else {
-      return MessageSendState.send;
-    }
+    return MessageSendState.send;
   }
 
   // message received
