@@ -72,6 +72,13 @@ class MediaFileService {
             delete = false;
           }
 
+          // Never purge temp files while an upload is still in progress.
+          // The temp file is actively needed for encryption/upload.
+          if (mediaFile.uploadState != UploadState.uploaded &&
+              mediaFile.uploadState != UploadState.fileLimitReached) {
+            delete = false;
+          }
+
           final messages = messageMap[mediaId] ?? [];
 
           // in case messages in empty the file will be deleted, as delete is true by default

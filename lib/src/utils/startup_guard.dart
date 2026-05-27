@@ -28,7 +28,7 @@ class StartupGuard {
       final stat = file.statSync();
       final diff = DateTime.now().difference(stat.modified);
 
-      final starting = diff.inSeconds < 30;
+      final starting = diff.inSeconds < 5;
       if (starting) {
         Log.info(
           'Startup guard: App is currently starting (${diff.inSeconds}s ago).',

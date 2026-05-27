@@ -148,8 +148,6 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
       message.encryptedContent,
     );
 
-    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
-
     Uint8List? pushData;
     if (receipt.retryCount == 0) {
       final pushNotification = await getPushNotificationFromEncryptedContent(
@@ -194,8 +192,11 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
     }
 
     if (onlyReturnEncryptedData) {
+      Log.info('Returning message  with receiptID ${receipt.receiptId}.');
       return (message.writeToBuffer(), pushData);
     }
+
+    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
 
     final resp = await apiService.sendTextMessage(
       receipt.contactId,

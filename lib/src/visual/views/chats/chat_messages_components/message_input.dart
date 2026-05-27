@@ -86,7 +86,8 @@ class _MessageInputState extends State<MessageInput> {
       ) async {
         if (widget.textFieldFocus.hasFocus &&
             _lastTextChangeTime != null &&
-            DateTime.now().difference(_lastTextChangeTime!) <= const Duration(seconds: 6)) {
+            DateTime.now().difference(_lastTextChangeTime!) <=
+                const Duration(seconds: 6)) {
           await sendTypingIndication(widget.group.groupId, true);
         }
       });
@@ -210,7 +211,9 @@ class _MessageInputState extends State<MessageInput> {
 
   Future<void> _loadContactId() async {
     if (widget.group.isDirectChat) {
-      final members = await twonlyDB.groupsDao.getGroupContact(widget.group.groupId);
+      final members = await twonlyDB.groupsDao.getGroupContact(
+        widget.group.groupId,
+      );
       if (members.isNotEmpty && mounted) {
         setState(() {
           _contactId = members.first.userId;
@@ -240,18 +243,14 @@ class _MessageInputState extends State<MessageInput> {
         UnverifiedContactWarningComp(
           group: widget.group,
           child: Padding(
-            padding: const EdgeInsets.only(
-              bottom: 10,
-              left: 10,
-              top: 5,
-            ),
+            padding: const EdgeInsets.only(left: 10, bottom: 10),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                    ),
+                    // padding: const EdgeInsets.symmetric(
+                    //   horizontal: 3,
+                    // ),
                     decoration: BoxDecoration(
                       color: context.color.surfaceContainer,
                       borderRadius: BorderRadius.circular(20),
@@ -281,7 +280,9 @@ class _MessageInputState extends State<MessageInput> {
                                 ),
                                 child: FaIcon(
                                   size: 20,
-                                  _emojiShowing ? FontAwesomeIcons.keyboard : FontAwesomeIcons.faceSmile,
+                                  _emojiShowing
+                                      ? FontAwesomeIcons.keyboard
+                                      : FontAwesomeIcons.faceSmile,
                                 ),
                               ),
                             ),
@@ -293,7 +294,8 @@ class _MessageInputState extends State<MessageInput> {
                                 controller: _textFieldController,
                                 focusNode: widget.textFieldFocus,
                                 keyboardType: TextInputType.multiline,
-                                showCursor: _recordingState != RecordingState.recording,
+                                showCursor:
+                                    _recordingState != RecordingState.recording,
                                 maxLines: 4,
                                 minLines: 1,
                                 onChanged: (value) async {
@@ -344,16 +346,21 @@ class _MessageInputState extends State<MessageInput> {
                                           _currentDuration,
                                         ),
                                         style: TextStyle(
-                                          color: isDarkMode(context) ? Colors.white : Colors.black,
+                                          color: isDarkMode(context)
+                                              ? Colors.white
+                                              : Colors.black,
                                           fontSize: 12,
                                         ),
                                       ),
                                       if (!_audioRecordingLock) ...[
                                         SizedBox(
-                                          width: (100 - _cancelSlideOffset) % 101,
+                                          width:
+                                              (100 - _cancelSlideOffset) % 101,
                                         ),
                                         Text(
-                                          context.lang.voiceMessageSlideToCancel,
+                                          context
+                                              .lang
+                                              .voiceMessageSlideToCancel,
                                         ),
                                       ] else ...[
                                         Expanded(
@@ -394,13 +401,17 @@ class _MessageInputState extends State<MessageInput> {
                           GestureDetector(
                             onLongPressMoveUpdate: (details) {
                               if (_audioRecordingLock) return;
-                              if (_recordingOffset.dy - details.localPosition.dy >= 100) {
+                              if (_recordingOffset.dy -
+                                      details.localPosition.dy >=
+                                  100) {
                                 HapticFeedback.heavyImpact();
                                 setState(() {
                                   _audioRecordingLock = true;
                                 });
                               }
-                              if (_recordingOffset.dx - details.localPosition.dx >= 90 &&
+                              if (_recordingOffset.dx -
+                                          details.localPosition.dx >=
+                                      90 &&
                                   _recordingState == RecordingState.recording) {
                                 _recordingState = RecordingState.none;
                                 HapticFeedback.heavyImpact();
@@ -408,9 +419,13 @@ class _MessageInputState extends State<MessageInput> {
                               }
 
                               setState(() {
-                                final a = _recordingOffset.dx - details.localPosition.dx;
+                                final a =
+                                    _recordingOffset.dx -
+                                    details.localPosition.dx;
                                 if (a > 0 && a <= 90) {
-                                  _cancelSlideOffset = _recordingOffset.dx - details.localPosition.dx;
+                                  _cancelSlideOffset =
+                                      _recordingOffset.dx -
+                                      details.localPosition.dx;
                                 }
                               });
                             },
@@ -430,7 +445,9 @@ class _MessageInputState extends State<MessageInput> {
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                if (_recordingState == RecordingState.recording && !_audioRecordingLock)
+                                if (_recordingState ==
+                                        RecordingState.recording &&
+                                    !_audioRecordingLock)
                                   Positioned.fill(
                                     top: -120,
                                     left: -5,
@@ -440,8 +457,12 @@ class _MessageInputState extends State<MessageInput> {
                                         padding: const EdgeInsets.only(top: 13),
                                         height: 60,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(90),
-                                          color: isDarkMode(context) ? Colors.black : Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            90,
+                                          ),
+                                          color: isDarkMode(context)
+                                              ? Colors.black
+                                              : Colors.white,
                                         ),
                                         child: const Center(
                                           child: Column(
@@ -461,7 +482,9 @@ class _MessageInputState extends State<MessageInput> {
                                       ),
                                     ),
                                   ),
-                                if (_recordingState == RecordingState.recording && !_audioRecordingLock)
+                                if (_recordingState ==
+                                        RecordingState.recording &&
+                                    !_audioRecordingLock)
                                   Positioned.fill(
                                     top: -20,
                                     left: -25,
@@ -488,10 +511,15 @@ class _MessageInputState extends State<MessageInput> {
                                       ),
                                       child: FaIcon(
                                         size: 20,
-                                        color: (_recordingState == RecordingState.recording) ? Colors.white : null,
+                                        color:
+                                            (_recordingState ==
+                                                RecordingState.recording)
+                                            ? Colors.white
+                                            : null,
                                         (_recordingState == RecordingState.none)
                                             ? FontAwesomeIcons.microphone
-                                            : (_recordingState == RecordingState.recording)
+                                            : (_recordingState ==
+                                                  RecordingState.recording)
                                             ? FontAwesomeIcons.stop
                                             : FontAwesomeIcons.play,
                                       ),
@@ -511,7 +539,9 @@ class _MessageInputState extends State<MessageInput> {
                       color: context.color.primary,
                       FontAwesomeIcons.solidPaperPlane,
                     ),
-                    onPressed: _audioRecordingLock ? _stopAudioRecording : _sendMessage,
+                    onPressed: _audioRecordingLock
+                        ? _stopAudioRecording
+                        : _sendMessage,
                   )
                 else
                   IconButton(

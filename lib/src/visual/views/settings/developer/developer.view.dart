@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:clock/clock.dart';
@@ -9,12 +10,15 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -292,6 +296,30 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 title: const Text('Show User Discovery Database'),
                 onTap: () =>
                     context.navPush(const UserDiscoveryDeveloperView()),
+              ),
+              ListTile(
+                title: const Text('Share local database'),
+                onTap: () async {
+                  final dbCopyPath =
+                      '${AppEnvironment.cacheDir}/twonly_copy.sqlite';
+                  final dbCopyFile = File(dbCopyPath);
+                  if (dbCopyFile.existsSync()) {
+                    dbCopyFile.deleteSync();
+                  }
+                  try {
+                    await twonlyDB.customStatement("VACUUM INTO '$dbCopyPath'");
+                    if (dbCopyFile.existsSync()) {
+                      await SharePlus.instance.share(
+                        ShareParams(
+                          files: [XFile(dbCopyPath)],
+                          text: 'Twonly Database',
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    Log.error('Failed to create database copy: $e');
+                  }
+                },
               ),
               ListTile(
                 title: const Text('Toggle Video Stabilization'),

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
@@ -143,37 +142,6 @@ Future<void> runMigrations() async {
     if (migrationSuccess) {
       await UserService.update((u) => u.appVersion = 115);
     }
-  }
-
-  if (userService.currentUser.appVersion < 116) {
-    // Because of a Bug in the handleMessagesOpened function, some messages where not marked as opened. So use the logs,
-    // to mark the files as opened.
-    final logs = await loadLogFile();
-    final openedMessages = logs.split(
-      'messages.c2c.dart:12 > Opened message [',
-    );
-    for (final opened in openedMessages) {
-      final messageIds = opened.split(']');
-      if (messageIds.isNotEmpty) {
-        final now = clock.now();
-        for (final messageId in messageIds.first.split(',')) {
-          await (twonlyDB.update(
-                twonlyDB.messages,
-              )..where(
-                (tbl) =>
-                    tbl.messageId.equals(messageId) &
-                    (tbl.openedByAll.isNull() | tbl.openedAt.isNull()),
-              ))
-              .write(
-                MessagesCompanion(
-                  openedAt: Value(now),
-                  openedByAll: Value(now),
-                ),
-              );
-        }
-      }
-    }
-    await UserService.update((u) => u.appVersion = 116);
   }
 
   if (kDebugMode) {

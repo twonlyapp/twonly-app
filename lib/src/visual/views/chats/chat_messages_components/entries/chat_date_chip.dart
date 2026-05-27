@@ -9,8 +9,24 @@ class ChatDateChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate =
-        '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}\n${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
+    final now = DateTime.now();
+    final date = item.date!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final itemDay = DateTime(date.year, date.month, date.day);
+
+    String formattedDate;
+    if (itemDay == today) {
+      formattedDate = context.lang.today;
+    } else if (itemDay == yesterday) {
+      formattedDate = context.lang.yesterday;
+    } else if (date.year == now.year) {
+      formattedDate = DateFormat('E, d. MMM.', locale).format(date);
+    } else {
+      formattedDate = DateFormat('E, d. MMM. y', locale).format(date);
+    }
 
     return Center(
       child: Container(

@@ -23,11 +23,16 @@ class UnverifiedContactWarningComp extends StatelessWidget {
     return StreamBuilder<void>(
       stream: userService.onUserUpdated,
       builder: (context, _) {
-        if (!userService.currentUser.securityProfile.showWarningForNonVerifiedContacts) {
+        if (!userService
+            .currentUser
+            .securityProfile
+            .showWarningForNonVerifiedContacts) {
           return child;
         }
         return StreamBuilder<VerificationStatus>(
-          stream: twonlyDB.keyVerificationDao.watchAllGroupMembersVerified(group.groupId),
+          stream: twonlyDB.keyVerificationDao.watchAllGroupMembersVerified(
+            group.groupId,
+          ),
           builder: (context, snapshot) {
             final status = snapshot.data;
             if (status == null || status == VerificationStatus.trusted) {
@@ -39,7 +44,9 @@ class UnverifiedContactWarningComp extends StatelessWidget {
               decoration: BoxDecoration(
                 color: context.color.errorContainer.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: context.color.error.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: context.color.error.withValues(alpha: 0.5),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -93,14 +100,23 @@ class UnverifiedContactWarningComp extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               backgroundColor: context.color.onErrorContainer,
                               foregroundColor: context.color.errorContainer,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             onPressed: () async {
                               if (group.isDirectChat) {
-                                await context.push(Routes.settingsHelpFaqVerifyBadge);
+                                await context.push(
+                                  Routes.settingsHelpFaqVerifyBadge,
+                                );
                               } else {
-                                await context.push(Routes.profileGroup(group.groupId));
+                                await context.push(
+                                  Routes.profileGroup(group.groupId),
+                                );
                               }
                             },
                             child: Text(context.lang.unverifiedWarningButton),
@@ -109,7 +125,12 @@ class UnverifiedContactWarningComp extends StatelessWidget {
                       ],
                     ),
                   ),
-                  child,
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 5,
+                    ),
+                    child: child,
+                  ),
                 ],
               ),
             );

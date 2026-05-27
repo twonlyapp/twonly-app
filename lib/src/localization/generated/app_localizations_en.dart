@@ -1972,4 +1972,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unverifiedWarningButton => 'Verify now';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
 }
