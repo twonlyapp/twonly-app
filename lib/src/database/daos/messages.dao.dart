@@ -153,18 +153,25 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       );
       final groupIds = entry.value;
 
-      await (delete(messages)..where(
-            (m) =>
-                m.groupId.isIn(groupIds) &
-                ((m.mediaStored.equals(true) &
-                        m.isDeletedFromSender.equals(true)) |
-                    m.mediaStored.equals(false)) &
-                // Only remove the message when ALL members have seen it. Otherwise the receipt will also be deleted which could cause issues in case a member opens the image later..
-                (m.openedByAll.isSmallerThanValue(deletionTime) |
-                    (m.isDeletedFromSender.equals(true) &
-                        m.createdAt.isSmallerThanValue(deletionTime))),
-          ))
-          .go();
+      final deletedCount =
+          await (delete(messages)..where(
+                (m) =>
+                    m.groupId.isIn(groupIds) &
+                    ((m.mediaStored.equals(true) &
+                            m.isDeletedFromSender.equals(true)) |
+                        m.mediaStored.equals(false)) &
+                    // Only remove the message when ALL members have seen it. Otherwise the receipt will also be deleted which could cause issues in case a member opens the image later..
+                    (m.openedByAll.isSmallerThanValue(deletionTime) |
+                        (m.isDeletedFromSender.equals(true) &
+                            m.createdAt.isSmallerThanValue(deletionTime))),
+              ))
+              .go();
+
+      if (deletedCount > 0) {
+        Log.info(
+          'Deleted $deletedCount messages for groups $groupIds due to retention policy.',
+        );
+      }
     }
   }
 
@@ -266,30 +273,48 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           actionTimestamp = msg.createdAt;
         }
 
-        await into(messageActions).insertOnConflictUpdate(
-          MessageActionsCompanion(
-            messageId: Value(messageId),
-            contactId: contactId,
-            type: const Value(MessageActionType.openedAt),
-            actionAt: Value(actionTimestamp),
-          ),
-        );
+        final ts = actionTimestamp;
+        await transaction(() async {
+          await into(messageActions).insertOnConflictUpdate(
+            MessageActionsCompanion(
+              messageId: Value(messageId),
+              contactId: contactId,
+              type: const Value(MessageActionType.openedAt),
+              actionAt: Value(ts),
+            ),
+          );
 
-        final isOpenedByAll = await haveAllMembers(
-          messageId,
-          MessageActionType.openedAt,
-        );
-        final rowsUpdated =
-            await (update(
-              messages,
-            )..where((tbl) => tbl.messageId.equals(messageId))).write(
-              MessagesCompanion(
-                openedAt: Value(actionTimestamp),
-                openedByAll: Value(isOpenedByAll ? actionTimestamp : null),
-              ),
-            );
+          final isOpenedByAll = await haveAllMembers(
+            messageId,
+            MessageActionType.openedAt,
+          );
+          await (update(
+            messages,
+          )..where((tbl) => tbl.messageId.equals(messageId))).write(
+            MessagesCompanion(
+              openedAt: Value(ts),
+              openedByAll: Value(isOpenedByAll ? ts : null),
+            ),
+          );
+        });
+
+        // Read-back verification: confirm the write was persisted.
+        final verified = await getMessageById(messageId).getSingleOrNull();
+        if (verified != null && verified.openedAt == null) {
+          Log.warn(
+            'handleMessagesOpened read-back failed for $messageId, retrying',
+          );
+          await (update(
+            messages,
+          )..where((tbl) => tbl.messageId.equals(messageId))).write(
+            MessagesCompanion(
+              openedAt: Value(actionTimestamp),
+            ),
+          );
+        }
+
         Log.info(
-          'handleMessagesOpened updated $rowsUpdated rows for message $messageId',
+          'handleMessagesOpened completed for message $messageId',
         );
       } catch (e) {
         Log.error('handleMessagesOpened failed for $messageId: $e');
@@ -302,18 +327,20 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     DateTime timestamp,
   ) async {
-    await into(messageActions).insertOnConflictUpdate(
-      MessageActionsCompanion(
-        messageId: Value(messageId),
-        contactId: Value(contactId),
-        type: const Value(MessageActionType.ackByServerAt),
-        actionAt: Value(timestamp),
-      ),
-    );
-    await twonlyDB.messagesDao.updateMessageId(
-      messageId,
-      MessagesCompanion(ackByServer: Value(timestamp)),
-    );
+    await transaction(() async {
+      await into(messageActions).insertOnConflictUpdate(
+        MessageActionsCompanion(
+          messageId: Value(messageId),
+          contactId: Value(contactId),
+          type: const Value(MessageActionType.ackByServerAt),
+          actionAt: Value(timestamp),
+        ),
+      );
+      await twonlyDB.messagesDao.updateMessageId(
+        messageId,
+        MessagesCompanion(ackByServer: Value(timestamp)),
+      );
+    });
   }
 
   Future<bool> haveAllMembers(
@@ -347,18 +374,20 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     MessagesCompanion updatedValues,
   ) async {
-    await (update(
+    final count = await (update(
       messages,
     )..where((c) => c.messageId.equals(messageId))).write(updatedValues);
+    Log.info('Updated $count message(s) with messageId $messageId');
   }
 
   Future<void> updateMessagesByMediaId(
     String mediaId,
     MessagesCompanion updatedValues,
-  ) {
-    return (update(
+  ) async {
+    final count = await (update(
       messages,
     )..where((c) => c.mediaId.equals(mediaId))).write(updatedValues);
+    Log.info('Updated $count message(s) with mediaId $mediaId');
   }
 
   Future<Message?> insertMessage(MessagesCompanion message) async {

@@ -1,4 +1,3 @@
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart'
     show DriftNativeOptions, driftDatabase;
@@ -245,39 +244,5 @@ class TwonlyDB extends _$TwonlyDB {
       final tableSize = row.read<String>('size');
       Log.info('Table: $tableName, Size: $tableSize bytes');
     }
-  }
-
-  Future<void> deleteDataForTwonlySafe() async {
-    await (delete(messages)..where(
-          (t) =>
-              (t.mediaStored.equals(false) &
-              t.isDeletedFromSender.equals(false)),
-        ))
-        .go();
-    await update(messages).write(
-      const MessagesCompanion(
-        downloadToken: Value(null),
-      ),
-    );
-    await (delete(mediaFiles)..where(
-          (t) => (t.stored.equals(false)),
-        ))
-        .go();
-    await delete(receipts).go();
-    await delete(receivedReceipts).go();
-    await update(contacts).write(
-      const ContactsCompanion(
-        avatarSvgCompressed: Value(null),
-        senderProfileCounter: Value(0),
-      ),
-    );
-    await (delete(signalPreKeyStores)..where(
-          (t) => (t.createdAt.isSmallerThanValue(
-            clock.now().subtract(
-              const Duration(days: 25),
-            ),
-          )),
-        ))
-        .go();
   }
 }

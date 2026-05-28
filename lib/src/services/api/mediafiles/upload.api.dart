@@ -64,20 +64,6 @@ Future<void> reuploadMediaFiles() async {
           }
         }
 
-        if (receipt.retryCount >= 2) {
-          // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received, but the app was closed before the message was fully processed. Because the receipt was already stored, subsequent retries were detected as duplicates and rejected.
-          final oldReceiptId = receipt.receiptId;
-          final updatedReceipt = await twonlyDB.receiptsDao.rotateReceiptId(
-            oldReceiptId,
-          );
-          if (updatedReceipt == null) continue;
-
-          Log.info(
-            'Changed receiptId $oldReceiptId to ${updatedReceipt.receiptId} as retryCount is ${receipt.retryCount}',
-          );
-          receipt = updatedReceipt;
-        }
-
         var messageId = receipt.messageId;
         if (receipt.messageId == null) {
           Log.info('Message not in receipt. Loading it from the content.');
