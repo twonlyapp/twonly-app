@@ -12,4 +12,133 @@ platform :android do
       skip_upload_screenshots: true
     )
   end
+
+  desc "Build the application locally and upload it as a new GitHub release"
+  lane :release_github do
+    # Read pubspec.yaml to get the version
+    pubspec_path = File.expand_path("../pubspec.yaml", __dir__)
+    unless File.exist?(pubspec_path)
+      UI.user_error!("Could not find pubspec.yaml at #{pubspec_path}")
+    end
+    
+    pubspec_content = File.read(pubspec_path)
+    version_match = pubspec_content.match(/^version:\s*([^+]+)/)
+    unless version_match
+      UI.user_error!("Could not extract version from pubspec.yaml")
+    end
+    
+    version = version_match[1].strip
+    tag_name = "v#{version}"
+    UI.message("Extracted version: #{version} (tag: #{tag_name})")
+
+    # Load release notes from CHANGELOG.md
+    changelog_path = File.expand_path("../CHANGELOG.md", __dir__)
+    release_notes = "Automated local release via Fastlane"
+    if File.exist?(changelog_path)
+      changelog_content = File.read(changelog_path)
+      escaped_version = Regexp.escape(version)
+      pattern = /##\s*\[?#{escaped_version}\]?(.*?)(?=##\s*|\z)/m
+      match = changelog_content.match(pattern)
+      if match
+        release_notes = match[1].strip
+        UI.message("Loaded release notes from CHANGELOG.md:\n#{release_notes}")
+      else
+        UI.important("Could not find release notes for version #{version} in CHANGELOG.md. Using default description.")
+      end
+    else
+      UI.important("CHANGELOG.md not found at #{changelog_path}. Using default description.")
+    end
+
+    # Handle key.properties swapping if key.github.properties exists
+    key_properties_path = File.expand_path("../android/key.properties", __dir__)
+    github_properties_path = File.expand_path("../android/key.github.properties", __dir__)
+    backup_properties_path = File.expand_path("../android/key.properties.backup", __dir__)
+
+    swapped_properties = false
+    if File.exist?(github_properties_path)
+      UI.message("Found key.github.properties. Swapping in for the build...")
+      if File.exist?(key_properties_path)
+        FileUtils.cp(key_properties_path, backup_properties_path)
+      end
+      FileUtils.cp(github_properties_path, key_properties_path)
+      swapped_properties = true
+    else
+      UI.message("No key.github.properties found. Building with default key.properties...")
+    end
+
+    begin
+      # Build the Android application
+      UI.message("Building Android APK...")
+      Dir.chdir(File.expand_path("..", __dir__)) do
+        sh("flutter build apk --release --split-per-abi")
+      end
+    ensure
+      # Restore original key.properties if swapped
+      if swapped_properties
+        UI.message("Restoring original key.properties...")
+        if File.exist?(backup_properties_path)
+          FileUtils.cp(backup_properties_path, key_properties_path)
+          FileUtils.rm(backup_properties_path)
+        else
+          FileUtils.rm_f(key_properties_path)
+        end
+      end
+    end
+
+    # Find built APKs
+    apk_glob = File.expand_path("../build/app/outputs/flutter-apk/*-release.apk", __dir__)
+    apks = Dir.glob(apk_glob)
+    
+    if apks.empty?
+      UI.user_error!("No release APKs found matching #{apk_glob}")
+    end
+    
+    UI.message("Found APKs to upload: #{apks.join(', ')}")
+
+    # Retrieve GitHub Token (fall back to gh auth token)
+    github_token = ENV["GITHUB_TOKEN"]
+    if github_token.nil? || github_token.empty?
+      UI.message("GITHUB_TOKEN env variable not set. Retrieving token via GitHub CLI (gh auth token)...")
+      begin
+        github_token = sh("gh auth token").strip
+      rescue => e
+        UI.user_error!("Failed to retrieve token from gh CLI. Make sure gh is installed and authenticated, or GITHUB_TOKEN environment variable is set. Error: #{e}")
+      end
+    end
+
+    UI.message("Creating GitHub Release #{tag_name}...")
+    set_github_release(
+      repository_name: "twonlyapp/twonly-app",
+      api_token: github_token,
+      tag_name: tag_name,
+      name: "Release #{tag_name}",
+      description: release_notes,
+      upload_assets: apks
+    )
+    UI.success("Successfully uploaded release #{tag_name} to GitHub!")
+
+    # F-Droid deployment
+    fdroid_repo_dir = "/Users/tobi/Documents/drive/twonly/F-Droid/repo"
+    UI.message("Starting F-Droid deployment...")
+    FileUtils.mkdir_p(fdroid_repo_dir)
+
+    apks.each do |apk_path|
+      basename = File.basename(apk_path)
+      new_name = "eu.twonly_v#{version}-#{basename}"
+      dest_path = File.join(fdroid_repo_dir, new_name)
+      UI.message("Copying APK to F-Droid repo: #{dest_path}")
+      FileUtils.cp(apk_path, dest_path)
+    end
+
+    fdroid_dir = "/Users/tobi/Documents/drive/twonly/F-Droid"
+    update_script = File.join(fdroid_dir, "update.sh")
+    if File.exist?(update_script)
+      UI.message("Executing F-Droid update script...")
+      Dir.chdir(fdroid_dir) do
+        sh("chmod +x ./update.sh && ./update.sh")
+      end
+    else
+      UI.important("F-Droid update script not found at #{update_script}")
+    end
+  end
 end

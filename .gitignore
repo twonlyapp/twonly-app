@@ -55,3 +55,4 @@ android/.kotlin/
 devtools_options.yaml
 rust/target
 rust_dependencies/target
+fastlane/repo/status/running.json

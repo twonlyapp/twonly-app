@@ -1,0 +1,8 @@
+# Example signing credentials configuration for GitHub Releases.
+# Copy this file to 'key.github.properties' and fill in your actual credentials.
+# Do not commit the actual 'key.github.properties' file to version control.
+
+storePassword=YOUR_GITHUB_RELEASE_STORE_PASSWORD
+keyPassword=YOUR_GITHUB_RELEASE_KEY_PASSWORD
+keyAlias=github-releases-signature
+storeFile=/absolute/path/to/your/github-release-keystore.jks

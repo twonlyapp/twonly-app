@@ -51,7 +51,7 @@ Future<void> reuploadMediaFiles() async {
 
       final contacts = <int, Contact>{};
 
-      for (var receipt in receipts) {
+      for (final receipt in receipts) {
         if (receipt.retryCount > 1 && receipt.lastRetry != null) {
           final twentyFourHoursAgo = DateTime.now().subtract(
             const Duration(hours: 6),
