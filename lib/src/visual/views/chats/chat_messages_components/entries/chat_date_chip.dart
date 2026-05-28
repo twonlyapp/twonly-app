@@ -23,9 +23,9 @@ class ChatDateChip extends StatelessWidget {
     } else if (itemDay == yesterday) {
       formattedDate = context.lang.yesterday;
     } else if (date.year == now.year) {
-      formattedDate = DateFormat('E, d. MMM.', locale).format(date);
+      formattedDate = DateFormat('E, d. MMM', locale).format(date);
     } else {
-      formattedDate = DateFormat('E, d. MMM. y', locale).format(date);
+      formattedDate = DateFormat('E, d. MMM y', locale).format(date);
     }
 
     return Center(
