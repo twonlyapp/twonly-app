@@ -148,8 +148,6 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
       message.encryptedContent,
     );
 
-    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
-
     Uint8List? pushData;
     if (receipt.retryCount == 0) {
       final pushNotification = await getPushNotificationFromEncryptedContent(
@@ -194,8 +192,11 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
     }
 
     if (onlyReturnEncryptedData) {
+      Log.info('Returning message  with receiptID ${receipt.receiptId}.');
       return (message.writeToBuffer(), pushData);
     }
+
+    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
 
     final resp = await apiService.sendTextMessage(
       receipt.contactId,
@@ -350,7 +351,9 @@ Future<void> insertAndSendAskAboutUserMessage(
 ) async {
   final directChat = await twonlyDB.groupsDao.createOrGetDirectChat(contactId);
   if (directChat == null) {
-    Log.error('Failed to get or create direct chat group for contact $contactId');
+    Log.error(
+      'Failed to get or create direct chat group for contact $contactId',
+    );
     return;
   }
 
@@ -483,6 +486,17 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   );
 
   if (receipt != null) {
+    try {
+      final typeKeys = _getEncryptedContentTypes(encryptedContent);
+      Log.info(
+        'sendCipherText: type=[$typeKeys] messageId=$messageId receiptId=${receipt.receiptId}',
+      );
+    } catch (_) {
+      Log.info(
+        'sendCipherText: messageId=$messageId receiptId=${receipt.receiptId}',
+      );
+    }
+
     final tmp = tryToSendCompleteMessage(
       receipt: receipt,
       onlyReturnEncryptedData: onlyReturnEncryptedData,
@@ -567,4 +581,22 @@ Future<void> sendContactMyProfileData(int contactId) async {
     ),
   );
   await sendCipherText(contactId, encryptedContent, blocking: false);
+}
+
+String _getEncryptedContentTypes(pb.EncryptedContent content) {
+  final ignoredFields = {
+    'groupId',
+    'isDirectChat',
+    'senderProfileCounter',
+    'senderUserDiscoveryVersion',
+  };
+
+  final types = <String>[];
+  for (final field in content.info_.byName.values) {
+    if (content.hasField(field.tagNumber) &&
+        !ignoredFields.contains(field.name)) {
+      types.add(field.name);
+    }
+  }
+  return types.join(', ');
 }

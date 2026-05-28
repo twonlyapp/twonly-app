@@ -1988,4 +1988,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get unverifiedWarningButton => 'Jetzt verifizieren';
+
+  @override
+  String get today => 'Heute';
+
+  @override
+  String get yesterday => 'Gestern';
 }

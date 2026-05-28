@@ -62,7 +62,6 @@ class _MutualGroupsExpansionTileCompState
       shape: const RoundedRectangleBorder(),
       backgroundColor: context.color.surfaceContainer,
       collapsedShape: const RoundedRectangleBorder(),
-      initiallyExpanded: _groups.length < 5,
       onExpansionChanged: (expanded) {
         setState(() {});
       },

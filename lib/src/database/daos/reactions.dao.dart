@@ -29,7 +29,14 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
     final msg = await twonlyDB.messagesDao
         .getMessageById(messageId)
         .getSingleOrNull();
-    if (msg == null || msg.groupId != groupId) return;
+    if (msg == null) {
+      Log.error('updateReaction: Message $messageId not found!');
+      return;
+    }
+    if (msg.groupId != groupId) {
+      Log.error('updateReaction: Message groupId ${msg.groupId} != $groupId');
+      return;
+    }
 
     try {
       if (remove) {

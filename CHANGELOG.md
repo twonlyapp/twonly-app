@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.23
+
+- Improves: Smaller UI changes
+- Fix: Some messages were not marked as opened.
+
 ## 0.2.20
 
 - New: Adds an "Ask a Friend" button to new contact suggestions.

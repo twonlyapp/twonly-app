@@ -413,6 +413,9 @@ Future<void> insertMediaFileInMessagesTable(
     );
     await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
     if (message != null) {
+      Log.info(
+        'Created message ${message.messageId} for media ${message.mediaId}',
+      );
       // de-archive contact when sending a new message
       await twonlyDB.groupsDao.updateGroup(
         message.groupId,
@@ -444,6 +447,10 @@ Future<void> _startBackgroundMediaUploadInternal(
 
   if (mediaService.mediaFile.uploadState == UploadState.initialized ||
       mediaService.mediaFile.uploadState == UploadState.preprocessing) {
+    Log.info(
+      'Hanlding media file ${mediaService.mediaFile.mediaId} in ${mediaService.mediaFile.uploadState}',
+    );
+
     await mediaService.setUploadState(UploadState.preprocessing);
 
     if (!mediaService.tempPath.existsSync()) {

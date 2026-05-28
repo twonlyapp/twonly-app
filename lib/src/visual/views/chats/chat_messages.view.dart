@@ -20,6 +20,7 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/colors.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/animated_new_message.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.component.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
@@ -40,6 +41,11 @@ class ChatMessagesView extends StatefulWidget {
 class _ChatMessagesViewState extends State<ChatMessagesView>
     with WidgetsBindingObserver {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
+
+  bool _hasReceivedFirstMessageBatch = false;
+  final HashSet<String> _knownMessageIds = HashSet<String>();
+  final HashSet<String> _animateMessageIds = HashSet<String>();
+
   StreamSubscription<Group?>? userSub;
   StreamSubscription<List<Message>>? messageSub;
   StreamSubscription<List<GroupHistory>>? groupActionsSub;
@@ -131,6 +137,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       allMessages = update;
       await protectMessageUpdating.protect(() async {
         await setMessages(update, groupActions);
+        _hasReceivedFirstMessageBatch = true;
       });
     });
 
@@ -159,6 +166,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   ) async {
     if (_isViewActive()) {
       await flutterLocalNotificationsPlugin.cancelAll();
+    }
+
+    for (final msg in newMessages) {
+      if (_hasReceivedFirstMessageBatch &&
+          !_knownMessageIds.contains(msg.messageId) &&
+          msg.senderId == null) {
+        _animateMessageIds.add(msg.messageId);
+      }
+      _knownMessageIds.add(msg.messageId);
     }
 
     final chatItems = <ChatItem>[];
@@ -337,24 +353,32 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                     } else {
                       final chatMessage = messages[i].message!;
                       return BlinkWidget(
+                        key: Key('blink_${chatMessage.messageId}'),
                         enabled: focusedScrollItem == i,
-                        child: ChatListEntry(
-                          key: Key(chatMessage.messageId),
-                          message: messages[i].message!,
-                          nextMessage: (i > 0) ? messages[i - 1].message : null,
-                          prevMessage: ((i + 1) < messages.length)
-                              ? messages[i + 1].message
-                              : null,
-                          group: group,
-                          galleryItems: galleryItems,
-                          userIdToContact: userIdToContact,
-                          scrollToMessage: scrollToMessage,
-                          onResponseTriggered: () {
-                            setState(() {
-                              quotesMessage = chatMessage;
-                            });
-                            textFieldFocus?.requestFocus();
-                          },
+                        child: AnimatedNewMessage(
+                          key: Key('anim_${chatMessage.messageId}'),
+                          messageId: chatMessage.messageId,
+                          animateIds: _animateMessageIds,
+                          child: ChatListEntry(
+                            key: Key(chatMessage.messageId),
+                            message: messages[i].message!,
+                            nextMessage: (i > 0)
+                                ? messages[i - 1].message
+                                : null,
+                            prevMessage: ((i + 1) < messages.length)
+                                ? messages[i + 1].message
+                                : null,
+                            group: group,
+                            galleryItems: galleryItems,
+                            userIdToContact: userIdToContact,
+                            scrollToMessage: scrollToMessage,
+                            onResponseTriggered: () {
+                              setState(() {
+                                quotesMessage = chatMessage;
+                              });
+                              textFieldFocus?.requestFocus();
+                            },
+                          ),
                         ),
                       );
                     }

@@ -92,6 +92,7 @@ class TwonlyDB extends _$TwonlyDB {
         setup: (rawDb) {
           rawDb
             ..execute('PRAGMA journal_mode=WAL;')
+            ..execute('PRAGMA synchronous=FULL;')
             ..execute('PRAGMA busy_timeout=5000;');
         },
       ),

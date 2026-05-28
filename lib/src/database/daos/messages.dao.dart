@@ -102,7 +102,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                     t.openedAt.isNull() |
                     t.mediaStored.equals(true)) &
                 (t.isDeletedFromSender.equals(true) |
-                    (t.type.equals(MessageType.text.name).not() |
+                    (t.type.equals(MessageType.text.name).not() &
                         t.type.equals(MessageType.media.name).not()) |
                     (t.type.equals(MessageType.text.name) &
                         t.content.isNotNull()) |
@@ -156,8 +156,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       await (delete(messages)..where(
             (m) =>
                 m.groupId.isIn(groupIds) &
-                (m.mediaStored.equals(true) &
-                        m.isDeletedFromSender.equals(true) |
+                ((m.mediaStored.equals(true) &
+                        m.isDeletedFromSender.equals(true)) |
                     m.mediaStored.equals(false)) &
                 // Only remove the message when ALL members have seen it. Otherwise the receipt will also be deleted which could cause issues in case a member opens the image later..
                 (m.openedByAll.isSmallerThanValue(deletionTime) |
@@ -253,41 +253,46 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     List<String> messageIds,
     DateTime timestamp,
   ) async {
-    try {
-      await twonlyDB.batch((batch) async {
-        for (final messageId in messageIds) {
-          batch.insert(
-            messageActions,
-            MessageActionsCompanion(
-              messageId: Value(messageId),
-              contactId: contactId,
-              type: const Value(MessageActionType.openedAt),
-              actionAt: Value(timestamp),
-            ),
-            mode: InsertMode.insertOrReplace,
-          );
-        }
-      });
-    } catch (e) {
-      Log.error(e);
-    }
-
     for (final messageId in messageIds) {
       try {
+        var actionTimestamp = timestamp;
+        final msg = await getMessageById(messageId).getSingleOrNull();
+        if (msg != null && actionTimestamp.isBefore(msg.createdAt)) {
+          Log.warn(
+            'Receiver clock skew detected for message $messageId. '
+            'Action timestamp $actionTimestamp is before message creation ${msg.createdAt}. '
+            'Clamping to creation time.',
+          );
+          actionTimestamp = msg.createdAt;
+        }
+
+        await into(messageActions).insertOnConflictUpdate(
+          MessageActionsCompanion(
+            messageId: Value(messageId),
+            contactId: contactId,
+            type: const Value(MessageActionType.openedAt),
+            actionAt: Value(actionTimestamp),
+          ),
+        );
+
         final isOpenedByAll = await haveAllMembers(
           messageId,
           MessageActionType.openedAt,
         );
-        await (update(
-          messages,
-        )..where((tbl) => tbl.messageId.equals(messageId))).write(
-          MessagesCompanion(
-            openedAt: Value(timestamp),
-            openedByAll: Value(isOpenedByAll ? timestamp : null),
-          ),
+        final rowsUpdated =
+            await (update(
+              messages,
+            )..where((tbl) => tbl.messageId.equals(messageId))).write(
+              MessagesCompanion(
+                openedAt: Value(actionTimestamp),
+                openedByAll: Value(isOpenedByAll ? actionTimestamp : null),
+              ),
+            );
+        Log.info(
+          'handleMessagesOpened updated $rowsUpdated rows for message $messageId',
         );
       } catch (e) {
-        Log.error(e);
+        Log.error('handleMessagesOpened failed for $messageId: $e');
       }
     }
   }
