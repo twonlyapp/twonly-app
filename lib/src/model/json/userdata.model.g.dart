@@ -42,6 +42,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
+      ..enableDatabaseLogging = json['enableDatabaseLogging'] as bool? ?? false
       ..automaticallyMarkEqualMediaFilesAsOpened =
           json['automaticallyMarkEqualMediaFilesAsOpened'] as bool? ?? false
       ..videoStabilizationEnabled =
@@ -135,6 +136,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
+  'enableDatabaseLogging': instance.enableDatabaseLogging,
   'automaticallyMarkEqualMediaFilesAsOpened':
       instance.automaticallyMarkEqualMediaFilesAsOpened,
   'videoStabilizationEnabled': instance.videoStabilizationEnabled,

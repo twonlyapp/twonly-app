@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart'
     show DriftNativeOptions, driftDatabase;
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
@@ -11,6 +12,7 @@ import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
 import 'package:twonly/src/database/daos/shortcuts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
+import 'package:twonly/src/database/drift_logging_interceptor.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -83,7 +85,7 @@ class TwonlyDB extends _$TwonlyDB {
   int get schemaVersion => 17;
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(
+    final connection = driftDatabase(
       name: 'twonly',
       native: DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
@@ -96,6 +98,12 @@ class TwonlyDB extends _$TwonlyDB {
         },
       ),
     );
+    try {
+      if (userService.isUserCreated && userService.currentUser.enableDatabaseLogging) {
+        return connection.interceptWith(DriftLoggingInterceptor());
+      }
+    } catch (_) {}
+    return connection;
   }
 
   @override

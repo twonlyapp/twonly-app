@@ -65,6 +65,9 @@ class UserData {
   bool requestedAudioPermission = false;
 
   @JsonKey(defaultValue: false)
+  bool enableDatabaseLogging = false;
+
+  @JsonKey(defaultValue: false)
   bool automaticallyMarkEqualMediaFilesAsOpened = false;
 
   @JsonKey(defaultValue: true)

@@ -263,6 +263,12 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
     );
   }
 
+  Future<void> toggleDatabaseLogging() async {
+    await UserService.update(
+      (u) => u.enableDatabaseLogging = !u.enableDatabaseLogging,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -280,6 +286,14 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 trailing: Switch(
                   value: userService.currentUser.isDeveloper,
                   onChanged: (_) => toggleDeveloperSettings(),
+                ),
+              ),
+              ListTile(
+                title: const Text('Enable Database Logging'),
+                onTap: toggleDatabaseLogging,
+                trailing: Switch(
+                  value: userService.currentUser.enableDatabaseLogging,
+                  onChanged: (_) => toggleDatabaseLogging(),
                 ),
               ),
               ListTile(
