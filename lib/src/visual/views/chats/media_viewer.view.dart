@@ -573,7 +573,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ),
             ),
           ),
-          onPressed: () async {
+          onPressed: () {
             if (!showShortReactions) {
               displayShortReactions();
             } else {

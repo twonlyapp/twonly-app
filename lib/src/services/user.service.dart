@@ -32,6 +32,13 @@ class UserService {
       if (userDataMap != null) {
         final userData = UserData.fromJson(userDataMap);
         await RustKeyManager.setUserId(userId: userData.userId);
+        try {
+          // Ensure that the old userData is removed as it breaks the backup mechanism.
+          // This code can be removed when all users have updated to the latest version...
+          await SecureStorage.instance.delete(key: 'userData');
+        } catch (e) {
+          Log.error('Could not delete user data from SecureStorage: $e');
+        }
         return userData;
       }
 
@@ -58,15 +65,20 @@ class UserService {
   }
 
   static Future<void> _migrateFromSecureStorage(UserData userData) async {
-    // Currently empty migration logic as requested, but we MUST store the data
     await KeyValueStore.put('user', userData.toJson());
+
     try {
       await RustKeyManager.setUserId(userId: userData.userId);
     } catch (e) {
       Log.error('Could not set userId in RustKeyManager during migration: $e');
     }
 
-    // Optional: Log migration
+    try {
+      await SecureStorage.instance.delete(key: 'userData');
+    } catch (e) {
+      Log.error('Could not delete user data from SecureStorage: $e');
+    }
+
     Log.info('Migrated user data from SecureStorage to KeyValueStore');
   }
 

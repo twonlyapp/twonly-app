@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.25
+
+- Improves: Smaller UI changes
+- Fix: Migration issue that resulted in a corrupted backup mechanism 
+- Fix: Database issues causing messages to be lost or the database to be corrupted
+- Fix: Permission view did not disappear after they were granted
+
 ## 0.2.23
 
 - Improves: Smaller UI changes

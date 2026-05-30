@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_dynamic_calls
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,31 +24,56 @@ Future<bool> checkPermissions() async {
   return true;
 }
 
-class PermissionHandlerViewState extends State<PermissionHandlerView> {
+class PermissionHandlerViewState extends State<PermissionHandlerView>
+    with WidgetsBindingObserver {
+  Timer? _timer;
+  bool _isSuccessTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+      await _checkAndTriggerSuccess();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndTriggerSuccess();
+    }
+  }
+
+  Future<void> _checkAndTriggerSuccess() async {
+    if (_isSuccessTriggered) return;
+    try {
+      if (await checkPermissions()) {
+        _isSuccessTriggered = true;
+        _timer?.cancel();
+        // ignore: avoid_dynamic_calls
+        widget.onSuccess();
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
   Future<Map<Permission, PermissionStatus>> permissionServices() async {
-    // try {
     final statuses = await [
       Permission.camera,
-      // Permission.microphone,
       Permission.notification,
     ].request();
-    // } catch (e) {}
-    // You can request multiple permissions at once.
-
-    // if (statuses[Permission.microphone]!.isPermanentlyDenied) {
-    //   openAppSettings();
-    //   // setState(() {});
-    // } else {
-    //   // if (statuses[Permission.microphone]!.isDenied) {
-    //   // }
-    // }
 
     if (statuses[Permission.camera]!.isPermanentlyDenied) {
       await openAppSettings();
-      // setState(() {});
-    } else {
-      // if (statuses[Permission.camera]!.isDenied) {
-      // }
     }
 
     return statuses;
@@ -75,6 +100,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
                   try {
                     await permissionServices();
                     if (await checkPermissions()) {
+                      // ignore: avoid_dynamic_calls
                       widget.onSuccess();
                     }
                   } catch (e) {

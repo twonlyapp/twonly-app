@@ -26,10 +26,11 @@ impl Database {
         let mut connect_options = format!("{db_url}?mode=rwc")
             .parse::<SqliteConnectOptions>()?
             .log_statements(log_statements_level)
-            .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+            .journal_mode(sqlx::sqlite::SqliteJournalMode::Delete)
             .foreign_keys(true)
             .read_only(read_only)
             .busy_timeout(Duration::from_millis(5000))
+            .pragma("synchronous", "FULL")
             .pragma("recursive_triggers", "ON")
             .log_slow_statements(tracing::log::LevelFilter::Warn, Duration::from_millis(500));
 
@@ -43,15 +44,18 @@ impl Database {
             .connect_with(connect_options)
             .await?;
 
+        Ok(Self { pool })
+    }
+
+    pub(crate) async fn run_migrations(&self) -> Result<()> {
         sqlx::migrate!("./src/database/migrations")
-            .run(&pool)
+            .run(&self.pool)
             .await
             .map_err(|e| {
                 tracing::error!("migration error: {:?}", e);
                 TwonlyError::Generic(format!("Migration error: {}", e))
             })?;
-
-        Ok(Self { pool })
+        Ok(())
     }
 
     pub(crate) async fn create_backup(
@@ -91,6 +95,22 @@ impl Database {
         }
         Ok(())
     }
+
+    pub(crate) async fn check_integrity(&self) -> Result<()> {
+        let row: (String,) = sqlx::query_as("PRAGMA integrity_check")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| TwonlyError::Generic(format!("Integrity check query failed: {}", e)))?;
+
+        if row.0.to_lowercase() == "ok" {
+            Ok(())
+        } else {
+            Err(TwonlyError::Generic(format!(
+                "Database integrity check failed: {}",
+                row.0
+            )))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -109,6 +129,7 @@ mod tests {
 
         // 1. Create and initialize database with key
         let db = Database::new(&db_path, Some(key), false).await.unwrap();
+        db.run_migrations().await.unwrap();
         ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();
@@ -137,6 +158,7 @@ mod tests {
         let key = "secure_password";
 
         let db = Database::new(&db_path, Some(key), false).await.unwrap();
+        db.run_migrations().await.unwrap();
         ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();
@@ -165,6 +187,7 @@ mod tests {
         let backup_path = dir.path().join("backup_plain.sqlite").display().to_string();
 
         let db = Database::new(&db_path, None, false).await.unwrap();
+        db.run_migrations().await.unwrap();
         ReceivedMessage::insert(&db.pool, 1, b"hello world")
             .await
             .unwrap();

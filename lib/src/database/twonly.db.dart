@@ -92,14 +92,15 @@ class TwonlyDB extends _$TwonlyDB {
         shareAcrossIsolates: true,
         setup: (rawDb) {
           rawDb
-            ..execute('PRAGMA journal_mode=WAL;')
+            ..execute('PRAGMA journal_mode=DELETE;')
             ..execute('PRAGMA synchronous=FULL;')
             ..execute('PRAGMA busy_timeout=5000;');
         },
       ),
     );
     try {
-      if (userService.isUserCreated && userService.currentUser.enableDatabaseLogging) {
+      if (userService.isUserCreated &&
+          userService.currentUser.enableDatabaseLogging) {
         return connection.interceptWith(DriftLoggingInterceptor());
       }
     } catch (_) {}

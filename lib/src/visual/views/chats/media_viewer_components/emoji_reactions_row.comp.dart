@@ -67,26 +67,24 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSize(
+    return GestureDetector(
       key: _targetKey,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.linearToEaseOut,
-      child: GestureDetector(
-        onTap: () async {
-          await sendReaction(widget.groupId, widget.messageId, widget.emoji);
-          widget.emojiKey.currentState?.spawn(
-            getGlobalOffset(_targetKey),
-            widget.emoji,
-          );
-          widget.hide();
-        },
-        child: SizedBox(
-          width: widget.show ? 40 : 10,
-          child: Center(
-            child: EmojiAnimationComp(
-              emoji: widget.emoji,
-            ),
-          ),
+      onTap: () async {
+        await sendReaction(widget.groupId, widget.messageId, widget.emoji);
+        widget.emojiKey.currentState?.spawn(
+          getGlobalOffset(_targetKey),
+          widget.emoji,
+        );
+        widget.hide();
+      },
+      child: SizedBox(
+        width: 40,
+        child: Center(
+          child: widget.show
+              ? EmojiAnimationComp(
+                  emoji: widget.emoji,
+                )
+              : const SizedBox.shrink(),
         ),
       ),
     );
