@@ -540,7 +540,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   const SizedBox(
                     width: 10,
                     height: 10,
-                    child: CircularProgressIndicator(strokeWidth: 1),
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 1),
                   )
                 else
                   imageSaved
@@ -573,7 +573,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ),
             ),
           ),
-          onPressed: () async {
+          onPressed: () {
             if (!showShortReactions) {
               displayShortReactions();
             } else {

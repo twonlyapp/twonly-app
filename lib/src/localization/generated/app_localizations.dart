@@ -1460,6 +1460,12 @@ abstract class AppLocalizations {
   /// **'Delete for all'**
   String get deleteOkBtnForAll;
 
+  /// No description provided for @memoriesDeleteSnackbarSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Deleted 1 item successfully} other {Deleted {count} items successfully}}'**
+  String memoriesDeleteSnackbarSuccess(num count);
+
   /// No description provided for @deleteOkBtnForMe.
   ///
   /// In en, this message translates to:
@@ -1477,6 +1483,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The image will be irrevocably deleted.'**
   String get deleteImageBody;
+
+  /// No description provided for @deleteMemoriesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}'**
+  String deleteMemoriesBody(num count);
 
   /// No description provided for @settingsBackup.
   ///
@@ -3505,6 +3517,178 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get yesterday;
+
+  /// No description provided for @galleryDisableWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable gallery saving?'**
+  String get galleryDisableWarningTitle;
+
+  /// No description provided for @galleryDisableWarningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you disable this, your media files will not be saved to your gallery and could be permanently lost if twonly is removed or has an issue, as media files are not yet backed up.'**
+  String get galleryDisableWarningBody;
+
+  /// No description provided for @galleryDisableWarningConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get galleryDisableWarningConfirm;
+
+  /// No description provided for @settingsStorageScanGalleryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Gallery'**
+  String get settingsStorageScanGalleryTitle;
+
+  /// No description provided for @importGalleryDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get importGalleryDeselectAll;
+
+  /// No description provided for @importGallerySelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get importGallerySelectAll;
+
+  /// No description provided for @importGalleryPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission to access your gallery is required to import previous twonly media files.'**
+  String get importGalleryPermissionRequired;
+
+  /// No description provided for @importGalleryPermissionError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while requesting permission: {error}'**
+  String importGalleryPermissionError(Object error);
+
+  /// No description provided for @importGalleryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load assets: {error}'**
+  String importGalleryLoadError(Object error);
+
+  /// No description provided for @importGalleryImportingOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing {current} of {total}...'**
+  String importGalleryImportingOf(Object current, Object total);
+
+  /// No description provided for @importGalleryStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting import...'**
+  String get importGalleryStarting;
+
+  /// No description provided for @importGalleryComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Import complete: {imported} successfully imported, {duplicated} duplicated and {failed} failed.'**
+  String importGalleryComplete(
+    Object imported,
+    Object duplicated,
+    Object failed,
+  );
+
+  /// No description provided for @importGalleryGrantAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Access'**
+  String get importGalleryGrantAccess;
+
+  /// No description provided for @importGalleryOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get importGalleryOpenSettings;
+
+  /// No description provided for @importGalleryPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission to access gallery denied.'**
+  String get importGalleryPermissionDenied;
+
+  /// No description provided for @importGalleryTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get importGalleryTryAgain;
+
+  /// No description provided for @importGalleryAlbumNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'\"twonly\" album not found'**
+  String get importGalleryAlbumNotFound;
+
+  /// No description provided for @importGalleryAlbumNotFoundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you don\'t have this album yet, you can also create it to import photos into twonly.'**
+  String get importGalleryAlbumNotFoundDesc;
+
+  /// No description provided for @importGalleryNoImagesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No images found'**
+  String get importGalleryNoImagesFound;
+
+  /// No description provided for @importGalleryNoImagesFoundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no images on your device.'**
+  String get importGalleryNoImagesFoundDesc;
+
+  /// No description provided for @importGalleryShowAllImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all images'**
+  String get importGalleryShowAllImages;
+
+  /// No description provided for @importGalleryShowTwonlyAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Show twonly album'**
+  String get importGalleryShowTwonlyAlbum;
+
+  /// No description provided for @importGalleryToggleDescAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing all images on your device.'**
+  String get importGalleryToggleDescAll;
+
+  /// No description provided for @importGalleryToggleDescTwonly.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing the \"twonly\" album.'**
+  String get importGalleryToggleDescTwonly;
+
+  /// No description provided for @importGalleryFilterTwonly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only show the twonly-Album'**
+  String get importGalleryFilterTwonly;
+
+  /// No description provided for @importGalleryRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get importGalleryRefresh;
+
+  /// No description provided for @importGallerySelectToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Select items to import'**
+  String get importGallerySelectToImport;
+
+  /// No description provided for @importGalleryImportCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Import 1 item} other{Import {count} items}}'**
+  String importGalleryImportCount(num count);
 }
 
 class _AppLocalizationsDelegate

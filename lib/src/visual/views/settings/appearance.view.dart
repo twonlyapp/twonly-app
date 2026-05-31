@@ -115,7 +115,7 @@ class _AppearanceViewState extends State<AppearanceView> {
               ListTile(
                 title: Text(context.lang.contactUsShortcut),
                 onTap: toggleShowFeedbackIcon,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: !userService.currentUser.showFeedbackShortcut,
                   onChanged: (a) => toggleShowFeedbackIcon(),
                 ),
@@ -123,7 +123,7 @@ class _AppearanceViewState extends State<AppearanceView> {
               ListTile(
                 title: Text(context.lang.startWithCameraOpen),
                 onTap: toggleStartWithCameraOpen,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.startWithCameraOpen,
                   onChanged: (a) => toggleStartWithCameraOpen(),
                 ),
@@ -131,7 +131,7 @@ class _AppearanceViewState extends State<AppearanceView> {
               ListTile(
                 title: Text(context.lang.showImagePreviewWhenSending),
                 onTap: toggleShowImagePreviewWhenSending,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value:
                       userService.currentUser.showShowImagePreviewWhenSending,
                   onChanged: (a) => toggleShowImagePreviewWhenSending(),

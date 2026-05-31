@@ -54,7 +54,7 @@ class _VideoPlayerFileHelperState extends State<VideoPlayerFileHelper> {
               aspectRatio: _controller.value.aspectRatio,
               child: VideoPlayerHelper(controller: _controller),
             )
-          : const CircularProgressIndicator(),
+          : const CircularProgressIndicator.adaptive(),
     );
   }
 }

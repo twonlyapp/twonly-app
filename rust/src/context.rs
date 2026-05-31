@@ -63,14 +63,14 @@ impl Context {
         key_manager.store_to_keychain(&secure_storage)?;
 
         let rust_db_path = database_dir.join("rust_db.sqlite");
-        let rust_db = Arc::new(
-            Database::new(
-                &rust_db_path.display().to_string(),
-                Some(&key_manager.main_key.get_database_key(DatabaseKey::RustDb)),
-                false,
-            )
-            .await?,
-        );
+        let rust_db = Database::new(
+            &rust_db_path.display().to_string(),
+            Some(&key_manager.main_key.get_database_key(DatabaseKey::RustDb)),
+            false,
+        )
+        .await?;
+        rust_db.run_migrations().await?;
+        let rust_db = Arc::new(rust_db);
 
         Ok(Context::from_standalone(TwonlyStandalone {
             config,
@@ -120,14 +120,14 @@ impl Context {
 
                 let mut rust_db_key = key_manager.main_key.get_database_key(DatabaseKey::RustDb);
 
-                let rust_db = Arc::new(
-                    Database::new(
-                        &rust_db_path.display().to_string(),
-                        Some(rust_db_key.as_str()),
-                        false,
-                    )
-                    .await?,
-                );
+                let rust_db = Database::new(
+                    &rust_db_path.display().to_string(),
+                    Some(rust_db_key.as_str()),
+                    false,
+                )
+                .await?;
+                rust_db.run_migrations().await?;
+                let rust_db = Arc::new(rust_db);
 
                 rust_db_key.zeroize();
 

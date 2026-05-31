@@ -176,7 +176,7 @@ class _UserStudyQuestionnaireViewState
               'Welche der folgenden Messenger hast du schon einmal benutzt?',
             ),
             ..._messengerOptions.map(
-              (m) => CheckboxListTile(
+              (m) => CheckboxListTile.adaptive(
                 title: Text(m),
                 visualDensity: const VisualDensity(vertical: -4),
                 value: (_responses['messengers'] as List<dynamic>).contains(m),

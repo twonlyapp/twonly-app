@@ -39,6 +39,7 @@ class ReactionButtons extends StatefulWidget {
 class _ReactionButtonsState extends State<ReactionButtons> {
   int selectedShortReaction = -1;
   final GlobalKey _keyEmojiPicker = GlobalKey();
+  bool _renderAnimations = false;
 
   List<String> selectedEmojis = EmojiAnimationComp.animatedIcons.keys
       .toList()
@@ -47,7 +48,26 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   @override
   void initState() {
     super.initState();
+    _renderAnimations = widget.show;
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(ReactionButtons oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.show != oldWidget.show) {
+      if (widget.show) {
+        _renderAnimations = true;
+      } else {
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (mounted && !widget.show) {
+            setState(() {
+              _renderAnimations = false;
+            });
+          }
+        });
+      }
+    }
   }
 
   Future<void> initAsync() async {
@@ -71,91 +91,92 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                 ? 50
                 : widget.mediaViewerDistanceFromBottom)
           : widget.mediaViewerDistanceFromBottom - 20,
-      left: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
-      right: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
+      left: 0,
+      right: 0,
       curve: Curves.linearToEaseOut,
-      child: AnimatedOpacity(
-        opacity: widget.show ? 1.0 : 0.0, // Fade in/out
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
-          padding: widget.show
-              ? const EdgeInsets.symmetric(vertical: 32)
-              : null,
-          child: Column(
-            children: [
-              if (secondRowEmojis.isNotEmpty)
+      child: IgnorePointer(
+        ignoring: !widget.show,
+        child: AnimatedOpacity(
+          opacity: widget.show ? 1.0 : 0.0, // Fade in/out
+          duration: const Duration(milliseconds: 150),
+          child: Container(
+            color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Column(
+              children: [
+                if (secondRowEmojis.isNotEmpty)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: secondRowEmojis
+                        .map(
+                          (emoji) => EmojiReactionWidget(
+                            messageId: widget.messageId,
+                            groupId: widget.groupId,
+                            hide: widget.hide,
+                            show: _renderAnimations,
+                            emoji: emoji as String,
+                            emojiKey: widget.emojiKey,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: secondRowEmojis
-                      .map(
-                        (emoji) => EmojiReactionWidget(
-                          messageId: widget.messageId,
-                          groupId: widget.groupId,
-                          hide: widget.hide,
-                          show: widget.show,
-                          emoji: emoji as String,
-                          emojiKey: widget.emojiKey,
+                  children: [
+                    ...firstRowEmojis.map(
+                      (emoji) => EmojiReactionWidget(
+                        messageId: widget.messageId,
+                        groupId: widget.groupId,
+                        hide: widget.hide,
+                        show: _renderAnimations,
+                        emoji: emoji,
+                        emojiKey: widget.emojiKey,
+                      ),
+                    ),
+                    GestureDetector(
+                      key: _keyEmojiPicker,
+                      onTap: () async {
+                        final layer =
+                            // ignore: inference_failure_on_function_invocation
+                            await showModalBottomSheet(
+                                  context: context,
+                                  backgroundColor: context.color.surface,
+                                  builder: (context) {
+                                    return const EmojiPickerBottom();
+                                  },
+                                )
+                                as EmojiLayerData?;
+                        if (layer == null) return;
+                        await sendReaction(
+                          widget.groupId,
+                          widget.messageId,
+                          layer.text,
+                        );
+                        widget.emojiKey.currentState?.spawn(
+                          getGlobalOffset(_keyEmojiPicker),
+                          layer.text,
+                        );
+                        widget.hide();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: context.color.surfaceContainer.withAlpha(100),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      )
-                      .toList(),
+                        padding: const EdgeInsets.all(8),
+                        child: const FaIcon(
+                          FontAwesomeIcons.ellipsisVertical,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  ...firstRowEmojis.map(
-                    (emoji) => EmojiReactionWidget(
-                      messageId: widget.messageId,
-                      groupId: widget.groupId,
-                      hide: widget.hide,
-                      show: widget.show,
-                      emoji: emoji,
-                      emojiKey: widget.emojiKey,
-                    ),
-                  ),
-                  GestureDetector(
-                    key: _keyEmojiPicker,
-                    onTap: () async {
-                      final layer =
-                          // ignore: inference_failure_on_function_invocation
-                          await showModalBottomSheet(
-                                context: context,
-                                backgroundColor: context.color.surface,
-                                builder: (context) {
-                                  return const EmojiPickerBottom();
-                                },
-                              )
-                              as EmojiLayerData?;
-                      if (layer == null) return;
-                      await sendReaction(
-                        widget.groupId,
-                        widget.messageId,
-                        layer.text,
-                      );
-                      widget.emojiKey.currentState?.spawn(
-                        getGlobalOffset(_keyEmojiPicker),
-                        layer.text,
-                      );
-                      widget.hide();
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.color.surfaceContainer.withAlpha(100),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: const FaIcon(
-                        FontAwesomeIcons.ellipsisVertical,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

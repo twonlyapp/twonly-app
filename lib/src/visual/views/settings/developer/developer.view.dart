@@ -263,6 +263,12 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
     );
   }
 
+  Future<void> toggleDatabaseLogging() async {
+    await UserService.update(
+      (u) => u.enableDatabaseLogging = !u.enableDatabaseLogging,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,9 +283,17 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Show Developer Settings'),
                 onTap: toggleDeveloperSettings,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.isDeveloper,
                   onChanged: (_) => toggleDeveloperSettings(),
+                ),
+              ),
+              ListTile(
+                title: const Text('Enable Database Logging'),
+                onTap: toggleDatabaseLogging,
+                trailing: Switch.adaptive(
+                  value: userService.currentUser.enableDatabaseLogging,
+                  onChanged: (_) => toggleDatabaseLogging(),
                 ),
               ),
               ListTile(
@@ -312,7 +326,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       await SharePlus.instance.share(
                         ShareParams(
                           files: [XFile(dbCopyPath)],
-                          text: 'Twonly Database',
+                          text: 'twonly Database',
                         ),
                       );
                     }
@@ -324,7 +338,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Toggle Video Stabilization'),
                 onTap: toggleVideoStabilization,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.videoStabilizationEnabled,
                   onChanged: (a) => toggleVideoStabilization(),
                 ),
@@ -386,7 +400,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                         )
                       : null,
                   onTap: _isGeneratingMockImages

@@ -1,8 +1,17 @@
 # Changelog
 
+## 0.2.26
+
+- New: Import images from the gallery
+- Improved: Media files are now stored in the dedicated "twonly" album
+- Improved: UI components adapt to native styling (iOS/Android)
+- Fix: Migration issue that resulted in a corrupted backup mechanism 
+- Fix: Database issues causing messages to be lost or the database to be corrupted
+- Fix: Permission view did not disappear after they were granted
+
 ## 0.2.23
 
-- Improves: Smaller UI changes
+- Improved: Smaller UI changes
 - Fix: Some messages were not marked as opened.
 
 ## 0.2.20

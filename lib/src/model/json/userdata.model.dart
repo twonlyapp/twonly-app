@@ -13,7 +13,8 @@ class UserData {
     required this.currentSetupPage,
     required this.appVersion,
   });
-  factory UserData.fromJson(Map<String, dynamic> json) => _$UserDataFromJson(json);
+  factory UserData.fromJson(Map<String, dynamic> json) =>
+      _$UserDataFromJson(json);
 
   final int userId;
 
@@ -65,6 +66,9 @@ class UserData {
   bool requestedAudioPermission = false;
 
   @JsonKey(defaultValue: false)
+  bool enableDatabaseLogging = false;
+
+  @JsonKey(defaultValue: false)
   bool automaticallyMarkEqualMediaFilesAsOpened = false;
 
   @JsonKey(defaultValue: true)
@@ -83,8 +87,8 @@ class UserData {
 
   Map<String, List<String>>? autoDownloadOptions;
 
-  @JsonKey(defaultValue: false)
-  bool storeMediaFilesInGallery = false;
+  @JsonKey(defaultValue: true)
+  bool storeMediaFilesInGallery = true;
 
   @JsonKey(defaultValue: false)
   bool autoStoreAllSendUnlimitedMediaFiles = false;
@@ -186,7 +190,8 @@ class TwonlySafeBackup {
     required this.backupId,
     required this.encryptionKey,
   });
-  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) => _$TwonlySafeBackupFromJson(json);
+  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
+      _$TwonlySafeBackupFromJson(json);
 
   int lastBackupSize = 0;
   LastBackupUploadState backupUploadState = LastBackupUploadState.none;

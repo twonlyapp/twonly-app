@@ -197,7 +197,7 @@ class _SynchronizedImageViewerScreenState
       } else if (item.mediaFile.type == MediaType.image ||
           item.mediaFile.type == MediaType.gif) {
         final imageBytes = await item.storedPath.readAsBytes();
-        await saveImageToGallery(imageBytes);
+        await saveImageToGallery(imageBytes, createdAt: item.mediaFile.createdAt);
       }
       if (!mounted) return;
       showSnackbar(

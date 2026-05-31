@@ -172,7 +172,7 @@ class _DrawLayerState extends State<DrawLayer> {
                 Positioned.fill(
                   child: RotatedBox(
                     quarterTurns: 1,
-                    child: Slider(
+                    child: Slider.adaptive(
                       value: _sliderValue,
                       thumbColor: currentColor,
                       activeColor: Colors.transparent,

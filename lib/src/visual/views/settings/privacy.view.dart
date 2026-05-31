@@ -96,7 +96,7 @@ class _PrivacyViewState extends State<PrivacyView> {
             title: Text(context.lang.settingsTypingIndication),
             subtitle: Text(context.lang.settingsTypingIndicationSubtitle),
             onTap: toggleTypingIndicators,
-            trailing: Switch(
+            trailing: Switch.adaptive(
               value: userService.currentUser.typingIndicators,
               onChanged: (a) => toggleTypingIndicators(),
             ),
@@ -106,7 +106,7 @@ class _PrivacyViewState extends State<PrivacyView> {
             title: Text(context.lang.settingsScreenLock),
             subtitle: Text(context.lang.settingsScreenLockSubtitle),
             onTap: toggleAuthRequirementOnStartup,
-            trailing: Switch(
+            trailing: Switch.adaptive(
               value: userService.currentUser.screenLockEnabled,
               onChanged: (a) => toggleAuthRequirementOnStartup(),
             ),

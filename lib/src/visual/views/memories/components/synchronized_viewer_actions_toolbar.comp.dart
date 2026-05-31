@@ -40,9 +40,9 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: CircularProgressIndicator.adaptive(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
                   : const FaIcon(

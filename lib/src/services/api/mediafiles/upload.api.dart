@@ -51,7 +51,7 @@ Future<void> reuploadMediaFiles() async {
 
       final contacts = <int, Contact>{};
 
-      for (var receipt in receipts) {
+      for (final receipt in receipts) {
         if (receipt.retryCount > 1 && receipt.lastRetry != null) {
           final twentyFourHoursAgo = DateTime.now().subtract(
             const Duration(hours: 6),
@@ -62,20 +62,6 @@ Future<void> reuploadMediaFiles() async {
             );
             continue;
           }
-        }
-
-        if (receipt.retryCount >= 2) {
-          // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received, but the app was closed before the message was fully processed. Because the receipt was already stored, subsequent retries were detected as duplicates and rejected.
-          final oldReceiptId = receipt.receiptId;
-          final updatedReceipt = await twonlyDB.receiptsDao.rotateReceiptId(
-            oldReceiptId,
-          );
-          if (updatedReceipt == null) continue;
-
-          Log.info(
-            'Changed receiptId $oldReceiptId to ${updatedReceipt.receiptId} as retryCount is ${receipt.retryCount}',
-          );
-          receipt = updatedReceipt;
         }
 
         var messageId = receipt.messageId;

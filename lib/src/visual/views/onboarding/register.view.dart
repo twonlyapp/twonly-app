@@ -299,8 +299,8 @@ class _RegisterViewState extends State<RegisterView> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
+                          child: CircularProgressIndicator.adaptive(
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
                             strokeWidth: 3,
                           ),
                         )

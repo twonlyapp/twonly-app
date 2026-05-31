@@ -51,7 +51,7 @@ class _HelpViewState extends State<HelpView> {
                   style: const TextStyle(fontSize: 10),
                 ),
                 onTap: toggleAllowErrorTrackingViaSentry,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.allowErrorTrackingViaSentry,
                   onChanged: (a) => toggleAllowErrorTrackingViaSentry(),
                 ),

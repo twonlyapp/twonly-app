@@ -117,7 +117,7 @@ class _FaqViewState extends State<FaqView> {
         appBar: AppBar(
           title: Text(context.lang.settingsHelpFAQ),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator.adaptive()),
       );
     }
 

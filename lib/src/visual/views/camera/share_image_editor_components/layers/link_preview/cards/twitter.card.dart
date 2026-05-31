@@ -82,7 +82,7 @@ class TwitterPostCard extends StatelessWidget {
                           height: 150,
                           color: const Color(0xFFF5F8FA),
                           child: const Center(
-                            child: CircularProgressIndicator(
+                            child: CircularProgressIndicator.adaptive(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation(twitterBlue),
                             ),

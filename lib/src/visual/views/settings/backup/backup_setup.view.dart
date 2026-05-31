@@ -144,7 +144,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                       ? const SizedBox(
                           height: 12,
                           width: 12,
-                          child: CircularProgressIndicator(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
                         )
                       : const Icon(Icons.lock_clock_rounded),
                   label: Text(

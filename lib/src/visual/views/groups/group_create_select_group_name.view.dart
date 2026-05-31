@@ -68,7 +68,7 @@ class _GroupCreateSelectGroupNameViewState
               ? const SizedBox(
                   width: 15,
                   height: 15,
-                  child: CircularProgressIndicator(
+                  child: CircularProgressIndicator.adaptive(
                     strokeWidth: 1,
                   ),
                 )

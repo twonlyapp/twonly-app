@@ -76,7 +76,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         SizedBox(
           width: 10,
           height: 10,
-          child: CircularProgressIndicator(strokeWidth: 1, color: color),
+          child: CircularProgressIndicator.adaptive(strokeWidth: 1, valueColor: AlwaysStoppedAnimation(color)),
         ),
         const SizedBox(width: 2),
       ],

@@ -198,7 +198,7 @@ class MemoriesViewState extends State<MemoriesView> {
     final confirmed = await showAlertDialog(
       context,
       context.lang.deleteImageTitle,
-      context.lang.deleteImageBody,
+      context.lang.deleteMemoriesBody(count),
     );
 
     if (!confirmed) return;
@@ -219,7 +219,7 @@ class MemoriesViewState extends State<MemoriesView> {
     if (!mounted) return;
     showSnackbar(
       context,
-      'Deleted $count items successfully',
+      context.lang.memoriesDeleteSnackbarSuccess(count),
       level: SnackbarLevel.success,
     );
   }
@@ -239,7 +239,7 @@ class MemoriesViewState extends State<MemoriesView> {
           } else if (media.mediaFile.type == MediaType.image ||
               media.mediaFile.type == MediaType.gif) {
             final imageBytes = await media.storedPath.readAsBytes();
-            await saveImageToGallery(imageBytes);
+            await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
           }
         }
       }
@@ -354,7 +354,7 @@ class MemoriesViewState extends State<MemoriesView> {
                     controller: _scrollController,
                     labelBuilder: (offset) {
                       final state = _service.currentState;
-                      if (state.isEmpty) return null;
+                      if (state.isEmpty || state.months.isEmpty) return null;
 
                       // Simple heuristic to find month by offset
                       double currentOffset = 56;
@@ -409,7 +409,9 @@ class MemoriesViewState extends State<MemoriesView> {
                                       child: CircularProgressIndicator(
                                         value: state.migrationProgress,
                                         strokeWidth: 2.5,
-                                        color: context.color.primary,
+                                        valueColor: AlwaysStoppedAnimation(
+                                          context.color.primary,
+                                        ),
                                         backgroundColor: context.color.primary
                                             .withValues(alpha: 0.2),
                                       ),
@@ -487,8 +489,10 @@ class MemoriesViewState extends State<MemoriesView> {
                             ),
                           ),
                         ],
-                        const SliverPadding(
-                          padding: EdgeInsets.only(bottom: 32),
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 150,
+                          ),
                         ),
                       ],
                     ),

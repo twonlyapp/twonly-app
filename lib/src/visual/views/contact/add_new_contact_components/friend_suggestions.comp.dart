@@ -112,7 +112,7 @@ class FriendSuggestionsComp extends StatelessWidget {
                           final contact = f.$1;
                           final isSelected =
                               selectedFriends.contains(contact.userId);
-                          return CheckboxListTile(
+                          return CheckboxListTile.adaptive(
                             contentPadding: EdgeInsets.zero,
                             title: Text(contact.displayName ?? contact.username),
                             value: isSelected,

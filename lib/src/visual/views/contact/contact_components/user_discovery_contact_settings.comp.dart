@@ -52,7 +52,8 @@ class UserDiscoveryContactSettingsComp extends StatelessWidget {
       icon: FontAwesomeIcons.usersViewfinder,
       text: context.lang.userDiscoverySettingsTitle,
       onTap: () => context.navPush(const UserDiscoverySettingsView()),
-      subtitle: !contact.userDiscoveryExcluded &&
+      subtitle:
+          !contact.userDiscoveryExcluded &&
               contact.mediaSendCounter <
                   userService.currentUser.requiredSendImages
           ? Text(
@@ -66,7 +67,7 @@ class UserDiscoveryContactSettingsComp extends StatelessWidget {
           : null,
       trailing: Transform.scale(
         scale: 0.8,
-        child: Switch(
+        child: Switch.adaptive(
           value: !contact.userDiscoveryExcluded,
           onChanged: (a) async {
             await UserDiscoveryService.changeExclusionForContact(

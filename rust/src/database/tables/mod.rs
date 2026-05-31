@@ -71,6 +71,7 @@ macro_rules! generate_table_tests {
                 let dir = tempdir().unwrap();
                 let db_path = dir.path().join("test.sqlite").display().to_string();
                 let db = Database::new(&db_path, None, false).await.unwrap();
+                db.run_migrations().await.unwrap();
 
                 let _id = $struct::$insert_fn(&db.pool, $($arg),+).await.unwrap();
                 let all = $struct::$select_all_fn(&db.pool).await.unwrap();
@@ -92,6 +93,7 @@ macro_rules! generate_test_select {
                 let dir = tempdir().unwrap();
                 let db_path = dir.path().join("test.sqlite").display().to_string();
                 let db = Database::new(&db_path, None, false).await.unwrap();
+                db.run_migrations().await.unwrap();
 
                 $struct::$insert_fn(&db.pool, $($arg),+).await.unwrap();
                 let results = $struct::$select_fn(&db.pool, $($sel_arg),+).await.unwrap();
