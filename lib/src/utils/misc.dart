@@ -38,12 +38,12 @@ Future<String?> saveImageToGallery(Uint8List imageBytes) async {
     imageBytes,
     quality: 100,
   );
-  final hasAccess = await Gal.hasAccess();
+  final hasAccess = await Gal.hasAccess(toAlbum: true);
   if (!hasAccess) {
-    await Gal.requestAccess();
+    await Gal.requestAccess(toAlbum: true);
   }
   try {
-    await Gal.putImageBytes(jpgImages);
+    await Gal.putImageBytes(jpgImages, album: 'twonly');
     return null;
   } on GalException catch (e) {
     Log.error(e);
@@ -52,12 +52,12 @@ Future<String?> saveImageToGallery(Uint8List imageBytes) async {
 }
 
 Future<String?> saveVideoToGallery(String videoPath) async {
-  final hasAccess = await Gal.hasAccess();
+  final hasAccess = await Gal.hasAccess(toAlbum: true);
   if (!hasAccess) {
-    await Gal.requestAccess();
+    await Gal.requestAccess(toAlbum: true);
   }
   try {
-    await Gal.putVideo(videoPath);
+    await Gal.putVideo(videoPath, album: 'twonly');
     return null;
   } on GalException catch (e) {
     Log.error(e);

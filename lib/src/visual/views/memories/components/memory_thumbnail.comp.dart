@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_transition_painter.dart';
-
 class MemoriesThumbnailComp extends StatefulWidget {
   const MemoriesThumbnailComp({
     required this.galleryItem,
@@ -166,115 +165,60 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
             scale: _scaleAnimation,
             child: FadeTransition(
               opacity: _scaleController,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  color: widget.isSelected
-                      ? context.color.primary
-                      : Colors.transparent,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  margin: EdgeInsets.all(widget.isSelected ? 4 : 0),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      widget.isSelected ? 12 : 0,
-                    ),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (cachedInfo != null)
-                        RawImage(
-                          image: cachedInfo.image,
-                          fit: BoxFit.cover,
-                        )
-                      else if (_imageProvider != null)
-                        Image(
-                          image: _imageProvider!,
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                        )
-                      else
-                        ColoredBox(
-                          color: Colors.grey.shade200,
-                          child: const Center(
-                            child: FaIcon(
-                              FontAwesomeIcons.image,
-                              color: Colors.black26,
-                            ),
+              child: SelectableThumbnailComp(
+                isSelected: widget.isSelected,
+                selectionMode: widget.selectionMode,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (cachedInfo != null)
+                      RawImage(
+                        image: cachedInfo.image,
+                        fit: BoxFit.cover,
+                      )
+                    else if (_imageProvider != null)
+                      Image(
+                        image: _imageProvider!,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      )
+                    else
+                      ColoredBox(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: FaIcon(
+                            FontAwesomeIcons.image,
+                            color: Colors.black26,
                           ),
                         ),
-
-                      if (isVideo)
-                        const Positioned.fill(
-                          child: Center(
-                            child: FaIcon(
-                              FontAwesomeIcons.circlePlay,
-                              color: Colors.white,
-                              size: 32,
-                              shadows: [
-                                Shadow(color: Colors.black54, blurRadius: 6),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      if (widget.selectionMode)
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: widget.isSelected
-                                  ? context.color.primary
-                                  : Colors.black38,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: widget.isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 14,
-                                    color: Colors.white,
-                                  )
-                                : const SizedBox(width: 14, height: 14),
-                          ),
-                        ),
-
-                      if (media.mediaFile.isFavorite)
-                        const Positioned(
-                          bottom: 6,
-                          left: 6,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.redAccent,
-                            size: 16,
+                      ),
+                    if (isVideo)
+                      const Positioned.fill(
+                        child: Center(
+                          child: FaIcon(
+                            FontAwesomeIcons.circlePlay,
+                            color: Colors.white,
+                            size: 32,
                             shadows: [
-                              Shadow(color: Colors.black54, blurRadius: 4),
+                              Shadow(color: Colors.black54, blurRadius: 6),
                             ],
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                    if (media.mediaFile.isFavorite)
+                      const Positioned(
+                        bottom: 6,
+                        left: 6,
+                        child: Icon(
+                          Icons.favorite,
+                          color: Colors.redAccent,
+                          size: 16,
+                          shadows: [
+                            Shadow(color: Colors.black54, blurRadius: 4),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

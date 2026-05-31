@@ -185,6 +185,12 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return rows.map((row) => row.readTable(db.messages).messageId).toList();
   }
 
+  Future<List<MediaFile>> getMediaByHash(Uint8List hash) async {
+    final query = select(db.mediaFiles)
+      ..where((t) => t.storedFileHash.equals(hash));
+    return query.get();
+  }
+
   Future<Map<MediaType, int>> getStorageStats() async {
     final rows = await select(mediaFiles).get();
     final stats = <MediaType, int>{};

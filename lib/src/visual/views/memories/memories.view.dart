@@ -219,7 +219,7 @@ class MemoriesViewState extends State<MemoriesView> {
     if (!mounted) return;
     showSnackbar(
       context,
-      'Deleted $count items successfully',
+      context.lang.memoriesDeleteSnackbarSuccess(count),
       level: SnackbarLevel.success,
     );
   }
@@ -354,7 +354,7 @@ class MemoriesViewState extends State<MemoriesView> {
                     controller: _scrollController,
                     labelBuilder: (offset) {
                       final state = _service.currentState;
-                      if (state.isEmpty) return null;
+                      if (state.isEmpty || state.months.isEmpty) return null;
 
                       // Simple heuristic to find month by offset
                       double currentOffset = 56;
@@ -487,8 +487,10 @@ class MemoriesViewState extends State<MemoriesView> {
                             ),
                           ),
                         ],
-                        const SliverPadding(
-                          padding: EdgeInsets.only(bottom: 32),
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom + 150,
+                          ),
                         ),
                       ],
                     ),

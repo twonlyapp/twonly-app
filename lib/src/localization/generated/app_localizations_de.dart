@@ -753,6 +753,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteOkBtnForAll => 'Für alle löschen';
 
   @override
+  String memoriesDeleteSnackbarSuccess(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elemente erfolgreich gelöscht',
+      one: '1 Element erfolgreich gelöscht',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get deleteOkBtnForMe => 'Für mich löschen';
 
   @override
@@ -1994,4 +2005,115 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get yesterday => 'Gestern';
+
+  @override
+  String get galleryDisableWarningTitle => 'Galeriespeicherung deaktivieren?';
+
+  @override
+  String get galleryDisableWarningBody =>
+      'Wenn du dies deaktivierst, werden deine Mediendateien nicht in deiner Galerie gespeichert und könnten dauerhaft verloren gehen, wenn twonly deinstalliert wird oder ein Problem auftritt, da Mediendateien noch nicht in Backups enthalten sind.';
+
+  @override
+  String get galleryDisableWarningConfirm => 'Deaktivieren';
+
+  @override
+  String get settingsStorageScanGalleryTitle => 'Aus Galerie importieren';
+
+  @override
+  String get importGalleryDeselectAll => 'Alle abwählen';
+
+  @override
+  String get importGallerySelectAll => 'Alle auswählen';
+
+  @override
+  String get importGalleryPermissionRequired =>
+      'Zugriff auf deine Galerie ist erforderlich, um frühere twonly-Mediendateien zu importieren.';
+
+  @override
+  String importGalleryPermissionError(Object error) {
+    return 'Beim Anfordern der Berechtigung ist ein Fehler aufgetreten: $error';
+  }
+
+  @override
+  String importGalleryLoadError(Object error) {
+    return 'Laden der Medien fehlgeschlagen: $error';
+  }
+
+  @override
+  String importGalleryImportingOf(Object current, Object total) {
+    return '$current von $total wird importiert...';
+  }
+
+  @override
+  String get importGalleryStarting => 'Import wird gestartet...';
+
+  @override
+  String importGalleryComplete(
+    Object imported,
+    Object duplicated,
+    Object failed,
+  ) {
+    return 'Import abgeschlossen: $imported erfolgreich importiert, $duplicated Duplikate und $failed fehlgeschlagen.';
+  }
+
+  @override
+  String get importGalleryGrantAccess => 'Zugriff erlauben';
+
+  @override
+  String get importGalleryOpenSettings => 'Einstellungen öffnen';
+
+  @override
+  String get importGalleryPermissionDenied => 'Zugriff auf Galerie verweigert.';
+
+  @override
+  String get importGalleryTryAgain => 'Erneut versuchen';
+
+  @override
+  String get importGalleryAlbumNotFound => '\"twonly\"-Album nicht gefunden';
+
+  @override
+  String get importGalleryAlbumNotFoundDesc =>
+      'Falls du dieses Album noch nicht hast, kannst du es auch erstellen, um Fotos in twonly zu importieren.';
+
+  @override
+  String get importGalleryNoImagesFound => 'Keine Bilder gefunden';
+
+  @override
+  String get importGalleryNoImagesFoundDesc =>
+      'Es befinden sich keine Bilder auf deinem Gerät.';
+
+  @override
+  String get importGalleryShowAllImages => 'Alle Bilder anzeigen';
+
+  @override
+  String get importGalleryShowTwonlyAlbum => 'twonly-Album anzeigen';
+
+  @override
+  String get importGalleryToggleDescAll =>
+      'Es werden alle Bilder auf deinem Gerät angezeigt.';
+
+  @override
+  String get importGalleryToggleDescTwonly =>
+      'Es wird das \"twonly\"-Album angezeigt.';
+
+  @override
+  String get importGalleryFilterTwonly => 'Nur das twonly-Album anzeigen';
+
+  @override
+  String get importGalleryRefresh => 'Aktualisieren';
+
+  @override
+  String get importGallerySelectToImport =>
+      'Elemente zum Importieren auswählen';
+
+  @override
+  String importGalleryImportCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elemente importieren',
+      one: '1 Element importieren',
+    );
+    return '$_temp0';
+  }
 }

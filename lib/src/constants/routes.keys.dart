@@ -41,6 +41,8 @@ class Routes {
   static const String settingsStorage = '/settings/storage_data';
   static const String settingsStorageManage = '/settings/storage_data/manage';
   static const String settingsStorageImport = '/settings/storage_data/import';
+  static const String settingsStorageImportGallery =
+      '/settings/storage_data/import_gallery';
   static const String settingsStorageExport = '/settings/storage_data/export';
   static const String settingsHelp = '/settings/help';
   static const String settingsHelpFaq = '/settings/help/faq';

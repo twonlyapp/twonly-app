@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -39,6 +37,35 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   }
 
   Future<void> toggleStoreInGallery() async {
+    final currentlyEnabled = userService.currentUser.storeMediaFilesInGallery;
+    if (currentlyEnabled) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(context.lang.galleryDisableWarningTitle),
+            content: Text(context.lang.galleryDisableWarningBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(context.lang.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(
+                  context.lang.galleryDisableWarningConfirm,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+      if (confirm != true) {
+        return;
+      }
+    }
+
     await UserService.update((u) {
       u.storeMediaFilesInGallery = !u.storeMediaFilesInGallery;
     });
@@ -83,11 +110,8 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               const Divider(),
               ListTile(
                 title: Text(context.lang.settingsStorageDataStoreInGTitle),
-                subtitle: Text(
-                  context.lang.settingsStorageDataStoreInGSubtitle,
-                ),
                 onTap: toggleStoreInGallery,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.storeMediaFilesInGallery,
                   onChanged: (a) => toggleStoreInGallery(),
                 ),
@@ -99,27 +123,19 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
                   style: const TextStyle(fontSize: 9),
                 ),
                 onTap: toggleAutoStoreMediaFiles,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService
                       .currentUser
                       .autoStoreAllSendUnlimitedMediaFiles,
                   onChanged: (a) => toggleAutoStoreMediaFiles(),
                 ),
               ),
-              if (Platform.isAndroid)
-                ListTile(
-                  title: Text(
-                    context.lang.exportMemories,
-                  ),
-                  onTap: () => context.push(Routes.settingsStorageExport),
-                ),
-              if (Platform.isAndroid)
-                ListTile(
-                  title: Text(
-                    context.lang.importMemories,
-                  ),
-                  onTap: () => context.push(Routes.settingsStorageImport),
-                ),
+              ListTile(
+                title: Text(context.lang.settingsStorageScanGalleryTitle),
+                onTap: () {
+                  context.push(Routes.settingsStorageImportGallery);
+                },
+              ),
               const Divider(),
               ListTile(
                 title: Text(

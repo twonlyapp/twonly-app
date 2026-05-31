@@ -35,7 +35,6 @@ class MainActivity : FlutterFragmentActivity() {
 
         Keyring.initializeNdkContext(applicationContext)
 
-        MediaStoreChannel.configure(flutterEngine, applicationContext)
         VideoCompressionChannel.configure(flutterEngine, applicationContext)
     }
 }

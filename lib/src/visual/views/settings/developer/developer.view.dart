@@ -283,7 +283,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Show Developer Settings'),
                 onTap: toggleDeveloperSettings,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.isDeveloper,
                   onChanged: (_) => toggleDeveloperSettings(),
                 ),
@@ -291,7 +291,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Enable Database Logging'),
                 onTap: toggleDatabaseLogging,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.enableDatabaseLogging,
                   onChanged: (_) => toggleDatabaseLogging(),
                 ),
@@ -326,7 +326,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       await SharePlus.instance.share(
                         ShareParams(
                           files: [XFile(dbCopyPath)],
-                          text: 'Twonly Database',
+                          text: 'twonly Database',
                         ),
                       );
                     }
@@ -338,7 +338,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               ListTile(
                 title: const Text('Toggle Video Stabilization'),
                 onTap: toggleVideoStabilization,
-                trailing: Switch(
+                trailing: Switch.adaptive(
                   value: userService.currentUser.videoStabilizationEnabled,
                   onChanged: (a) => toggleVideoStabilization(),
                 ),
