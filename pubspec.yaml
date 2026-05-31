@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.2.24+133
+version: 0.2.25+134
 
 environment:
   sdk: ^3.11.0
