@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+
 import 'package:clock/clock.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
+import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
@@ -31,12 +33,42 @@ extension ShortCutsExtension on BuildContext {
   }
 }
 
-Future<String?> saveImageToGallery(Uint8List imageBytes) async {
+Future<String?> saveImageToGallery(
+  Uint8List imageBytes, {
+  DateTime? createdAt,
+}) async {
+  var bytesToProcess = imageBytes;
+
+  if (createdAt != null) {
+    try {
+      final image = img.decodeImage(imageBytes);
+      if (image != null) {
+        final formattedDate = DateFormat(
+          'yyyy:MM:dd HH:mm:ss',
+        ).format(createdAt);
+        image.exif.imageIfd[0x0132] = img.IfdValueAscii(
+          formattedDate,
+        ); // DateTime
+        image.exif.exifIfd[0x9003] = img.IfdValueAscii(
+          formattedDate,
+        ); // DateTimeOriginal
+        image.exif.exifIfd[0x9004] = img.IfdValueAscii(
+          formattedDate,
+        ); // DateTimeDigitized
+
+        bytesToProcess = img.encodeJpg(image);
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
   final jpgImages = await FlutterImageCompress.compressWithList(
     // ignore: avoid_redundant_argument_values
     format: CompressFormat.jpeg,
-    imageBytes,
+    bytesToProcess,
     quality: 100,
+    keepExif: true,
   );
   final hasAccess = await Gal.hasAccess(toAlbum: true);
   if (!hasAccess) {

@@ -1484,6 +1484,12 @@ abstract class AppLocalizations {
   /// **'The image will be irrevocably deleted.'**
   String get deleteImageBody;
 
+  /// No description provided for @deleteMemoriesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}'**
+  String deleteMemoriesBody(num count);
+
   /// No description provided for @settingsBackup.
   ///
   /// In en, this message translates to:

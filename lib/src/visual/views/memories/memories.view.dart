@@ -198,7 +198,7 @@ class MemoriesViewState extends State<MemoriesView> {
     final confirmed = await showAlertDialog(
       context,
       context.lang.deleteImageTitle,
-      context.lang.deleteImageBody,
+      context.lang.deleteMemoriesBody(count),
     );
 
     if (!confirmed) return;
@@ -239,7 +239,7 @@ class MemoriesViewState extends State<MemoriesView> {
           } else if (media.mediaFile.type == MediaType.image ||
               media.mediaFile.type == MediaType.gif) {
             final imageBytes = await media.storedPath.readAsBytes();
-            await saveImageToGallery(imageBytes);
+            await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
           }
         }
       }

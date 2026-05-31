@@ -767,6 +767,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteImageBody => 'The image will be irrevocably deleted.';
 
   @override
+  String deleteMemoriesBody(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The $count images will be irrevocably deleted.',
+      one: 'The image will be irrevocably deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsBackup => 'Backup';
 
   @override

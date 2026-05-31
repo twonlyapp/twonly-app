@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.25
+## 0.2.26
 
 - New: Import images from the gallery
 - Improved: Media files are now stored in the dedicated "twonly" album

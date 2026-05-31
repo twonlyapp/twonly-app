@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:exif/exif.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/android_photo_picker.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart' show ShortCutsExtension, sha256File;
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
@@ -37,7 +39,106 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
   @override
   void initState() {
     super.initState();
-    _checkPermissionAndLoad();
+    if (Platform.isAndroid) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _launchAndroidPicker();
+      });
+    } else {
+      _checkPermissionAndLoad();
+    }
+  }
+
+  Future<void> _launchAndroidPicker() async {
+    final uris = await AndroidPhotoPickerService.pickImages();
+    if (uris.isEmpty) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+
+    setState(() {
+      _isImporting = true;
+      _importProgress = 0;
+      _importStatus = context.lang.importGalleryStarting;
+    });
+
+    final total = uris.length;
+    var importedCount = 0;
+    var duplicated = 0;
+    var failedCount = 0;
+
+    for (final uri in uris) {
+      try {
+        setState(() {
+          _importStatus = context.lang.importGalleryImportingOf(
+            importedCount + failedCount + 1,
+            total,
+          );
+          _importProgress = (importedCount + failedCount) / total;
+        });
+
+        final bytes = await AndroidPhotoPickerService.getUriBytes(uri);
+        if (bytes == null) {
+          failedCount++;
+          continue;
+        }
+
+        final hash = Uint8List.fromList(sha256.convert(bytes).bytes);
+
+        final exsits = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
+        if (exsits.isNotEmpty) {
+          duplicated += 1;
+          continue;
+        }
+
+        // Try to get time from EXIF bytes, fallback to current time
+        final createdAt =
+            await getCreationTimeFromBytes(bytes) ?? DateTime.now();
+
+        const type = MediaType.image;
+
+        final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
+          MediaFilesCompanion(
+            type: const Value(type),
+            createdAt: Value(createdAt),
+            storedFileHash: Value(hash),
+            stored: const Value(true),
+          ),
+        );
+
+        if (mediaFile != null) {
+          final mediaService = MediaFileService(mediaFile);
+          await mediaService.storedPath.parent.create(recursive: true);
+          await File(mediaService.storedPath.path).writeAsBytes(bytes);
+
+          await mediaService.calculateAndSaveSize();
+          await mediaService.createThumbnail();
+          unawaited(mediaService.cropTransparentBorders());
+
+          importedCount++;
+        } else {
+          failedCount++;
+        }
+      } catch (e) {
+        failedCount++;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isImporting = false;
+        _importProgress = 1;
+      });
+      showSnackbar(
+        context,
+        context.lang.importGalleryComplete(
+          importedCount,
+          duplicated,
+          failedCount,
+        ),
+        level: SnackbarLevel.success,
+      );
+      Navigator.pop(context, true);
+    }
   }
 
   Future<void> _checkPermissionAndLoad() async {
@@ -166,6 +267,36 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
     return dates.reduce((a, b) => a.isBefore(b) ? a : b);
   }
 
+  Future<DateTime?> getCreationTimeFromBytes(Uint8List bytes) async {
+    final dates = <DateTime>[];
+
+    try {
+      final data = await readExifFromBytes(bytes);
+
+      for (final key in data.keys) {
+        if (key.toLowerCase().contains('datetime') || key.contains('Time')) {
+          final time = data[key]?.printable;
+          if (time != null) {
+            try {
+              dates.add(
+                DateFormat('yyyy:MM:dd HH:mm:ss').parse(time),
+              );
+            } catch (e) {
+              // Ignore unparseable formats
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore EXIF reading errors
+    }
+
+    if (dates.isEmpty) return null;
+
+    // Return the oldest available date
+    return dates.reduce((a, b) => a.isBefore(b) ? a : b);
+  }
+
   void _toggleSelectAll() {
     setState(() {
       if (_selectedAssetIds.length == _assets.length) {
@@ -248,6 +379,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
           await mediaService.calculateAndSaveSize();
           await mediaService.createThumbnail();
+          unawaited(mediaService.cropTransparentBorders());
 
           importedCount++;
         } else {
@@ -314,7 +446,9 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
                     color: Theme.of(context).cardColor,
                     border: Border(
                       bottom: BorderSide(
-                        color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                        color: Theme.of(
+                          context,
+                        ).dividerColor.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
