@@ -165,7 +165,7 @@ class UserCheckbox extends StatelessWidget {
                 ],
               ),
               Expanded(child: Container()),
-              Checkbox(
+              Checkbox.adaptive(
                 value: isChecked,
                 side: WidgetStateBorderSide.resolveWith(
                   (states) {

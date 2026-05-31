@@ -260,7 +260,7 @@ class _StartNewChatView extends State<AddNewShortcutView> {
                           group: group,
                           fontSize: 15,
                         ),
-                        trailing: Checkbox(
+                        trailing: Checkbox.adaptive(
                           value: _selectedGroups.contains(group.groupId),
                           side: WidgetStateBorderSide.resolveWith(
                             (states) {

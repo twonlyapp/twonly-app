@@ -219,8 +219,8 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                     ? const SizedBox(
                         height: 24,
                         width: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
+                        child: CircularProgressIndicator.adaptive(
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
                           strokeWidth: 3,
                         ),
                       )

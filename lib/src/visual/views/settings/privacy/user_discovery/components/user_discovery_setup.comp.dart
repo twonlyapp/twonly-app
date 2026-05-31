@@ -292,7 +292,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SwitchListTile(
+                  SwitchListTile.adaptive(
                     value: state.isUserDiscoveryEnabled,
                     onChanged: (val) => state.update(() {
                       state.isUserDiscoveryEnabled = val;
@@ -323,7 +323,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SwitchListTile(
+                        SwitchListTile.adaptive(
                           value: state.isManualApprovalEnabled,
                           onChanged: (val) => state.update(
                             () => state.isManualApprovalEnabled = val,
@@ -547,7 +547,7 @@ class UserDiscoverySetupComp extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SwitchListTile(
+                  SwitchListTile.adaptive(
                     value: state.sharePromotion,
                     onChanged: (val) => state.update(() {
                       state.sharePromotion = val;

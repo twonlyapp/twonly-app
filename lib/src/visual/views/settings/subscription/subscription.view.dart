@@ -330,7 +330,7 @@ class _PlanCardState extends State<PlanCard> {
                       ? const SizedBox(
                           width: 10,
                           height: 10,
-                          child: CircularProgressIndicator(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
                         )
                       : null,
                   label: Text(
@@ -350,7 +350,7 @@ class _PlanCardState extends State<PlanCard> {
                       ? const SizedBox(
                           width: 10,
                           height: 10,
-                          child: CircularProgressIndicator(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
                         )
                       : null,
                   label: Text(

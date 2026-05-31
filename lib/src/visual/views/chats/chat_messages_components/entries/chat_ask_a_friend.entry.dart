@@ -190,7 +190,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                             child: SizedBox(
                               width: 14,
                               height: 14,
-                              child: CircularProgressIndicator(
+                              child: CircularProgressIndicator.adaptive(
                                 strokeWidth: 2,
                               ),
                             ),
@@ -302,7 +302,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                             ? const SizedBox(
                                 width: 12,
                                 height: 12,
-                                child: CircularProgressIndicator(
+                                child: CircularProgressIndicator.adaptive(
                                   strokeWidth: 2,
                                 ),
                               )

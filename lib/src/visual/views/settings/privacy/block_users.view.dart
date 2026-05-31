@@ -119,7 +119,7 @@ class UserList extends StatelessWidget {
               ],
             ),
             leading: AvatarIcon(contactId: user.userId, fontSize: 15),
-            trailing: Checkbox(
+            trailing: Checkbox.adaptive(
               value: user.blocked,
               onChanged: (value) async {
                 await block(context, user.userId, value);

@@ -717,11 +717,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                             ? SizedBox(
                                 height: 12,
                                 width: 12,
-                                child: CircularProgressIndicator(
+                                child: CircularProgressIndicator.adaptive(
                                   strokeWidth: 2,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.inversePrimary,
+                                  valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
                                 ),
                               )
                             : const FaIcon(FontAwesomeIcons.solidPaperPlane),

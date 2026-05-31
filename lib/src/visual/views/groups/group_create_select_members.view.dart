@@ -223,7 +223,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                             contactId: user.userId,
                             fontSize: 13,
                           ),
-                          trailing: Checkbox(
+                          trailing: Checkbox.adaptive(
                             value:
                                 selectedUsers.contains(user.userId) |
                                 alreadyInGroup.contains(user.userId),

@@ -218,7 +218,7 @@ class _ShareImageView extends State<ShareImageView> {
                             ),
                             Transform.scale(
                               scale: 0.75,
-                              child: Checkbox(
+                              child: Checkbox.adaptive(
                                 value: !hideArchivedUsers,
                                 side: WidgetStateBorderSide.resolveWith(
                                   (states) {
@@ -293,9 +293,9 @@ class _ShareImageView extends State<ShareImageView> {
                           ? SizedBox(
                               height: 12,
                               width: 12,
-                              child: CircularProgressIndicator(
+                              child: CircularProgressIndicator.adaptive(
                                 strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.inversePrimary,
+                                valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
                               ),
                             )
                           : const FaIcon(FontAwesomeIcons.solidPaperPlane),
@@ -382,7 +382,7 @@ class UserList extends StatelessWidget {
             group: group,
             fontSize: 15,
           ),
-          trailing: Checkbox(
+          trailing: Checkbox.adaptive(
             value: selectedGroupIds.contains(group.groupId),
             side: WidgetStateBorderSide.resolveWith(
               (states) {

@@ -243,9 +243,9 @@ $debugLogToken
                     ? SizedBox(
                         height: 12,
                         width: 12,
-                        child: CircularProgressIndicator(
+                        child: CircularProgressIndicator.adaptive(
                           strokeWidth: 2,
-                          color: Theme.of(context).colorScheme.inversePrimary,
+                          valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
                         ),
                       )
                     : const FaIcon(FontAwesomeIcons.angleRight),
@@ -291,7 +291,7 @@ class _IncludeDebugLogState extends State<IncludeDebugLog> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Checkbox(
+        Checkbox.adaptive(
           value: widget.isChecked,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           onChanged: (value) {

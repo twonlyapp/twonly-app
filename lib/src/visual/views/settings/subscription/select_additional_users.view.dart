@@ -195,7 +195,7 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
                             contactId: user.userId,
                             fontSize: 13,
                           ),
-                          trailing: Checkbox(
+                          trailing: Checkbox.adaptive(
                             value:
                                 selectedUsers.contains(user.userId) |
                                 _alreadySelected.contains(user.userId),

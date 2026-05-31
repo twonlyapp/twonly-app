@@ -90,7 +90,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
             const SizedBox(
               width: 12,
               height: 12,
-              child: CircularProgressIndicator(strokeWidth: 1),
+              child: CircularProgressIndicator.adaptive(strokeWidth: 1),
             )
           else
             _imageSaved

@@ -68,7 +68,7 @@ class _SelectShowTimeState extends State<SelectShowTime> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Checkbox(
+                Checkbox.adaptive(
                   value: _storeAsDefault,
                   onChanged: (value) => setState(() {
                     _storeAsDefault = !_storeAsDefault;

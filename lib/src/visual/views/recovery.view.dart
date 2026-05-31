@@ -127,7 +127,7 @@ class _RecoveryViewState extends State<RecoveryView> {
                       ? const SizedBox(
                           height: 16,
                           width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                         )
                       : const Icon(Icons.restore_rounded),
                   style: FilledButton.styleFrom(

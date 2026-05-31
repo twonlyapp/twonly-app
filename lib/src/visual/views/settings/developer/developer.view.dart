@@ -400,7 +400,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                         )
                       : null,
                   onTap: _isGeneratingMockImages

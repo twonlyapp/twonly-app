@@ -112,7 +112,7 @@ class _ChangeLogViewState extends State<ChangeLogView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(context.lang.openChangeLog),
-                Switch(
+                Switch.adaptive(
                   value: !userService.currentUser.hideChangeLog,
                   onChanged: (_) => UserService.update(
                     (u) => u.hideChangeLog = !u.hideChangeLog,

@@ -213,7 +213,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CheckboxListTile(
+          CheckboxListTile.adaptive(
             title: const Text('Image'),
             value: autoDownloadOptions[widget.connectionMode.name]!.contains(
               DownloadMediaTypes.image.name,
@@ -222,7 +222,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
               await _updateAutoDownloadSetting(DownloadMediaTypes.image, value);
             },
           ),
-          CheckboxListTile(
+          CheckboxListTile.adaptive(
             title: const Text('Video'),
             value: autoDownloadOptions[widget.connectionMode.name]!.contains(
               DownloadMediaTypes.video.name,

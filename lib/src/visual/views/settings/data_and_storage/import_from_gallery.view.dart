@@ -379,7 +379,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
 
     if (!_hasPermission) {
@@ -530,7 +530,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(),
+              const CircularProgressIndicator.adaptive(),
               const SizedBox(height: 24),
               Text(
                 _importStatus,
@@ -600,7 +600,7 @@ class _GalleryThumbnailWidgetState extends State<GalleryThumbnailWidget> {
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                     ),
                   ),
                 );

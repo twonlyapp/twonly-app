@@ -3,7 +3,8 @@
 ## 0.2.25
 
 - New: Import images from the gallery
-- Improves: Media files are now stored in the "twonly" album
+- Improved: Media files are now stored in the dedicated "twonly" album
+- Improved: UI components adapt to native styling (iOS/Android)
 - Fix: Migration issue that resulted in a corrupted backup mechanism 
 - Fix: Database issues causing messages to be lost or the database to be corrupted
 - Fix: Permission view did not disappear after they were granted

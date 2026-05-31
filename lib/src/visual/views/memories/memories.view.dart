@@ -409,7 +409,9 @@ class MemoriesViewState extends State<MemoriesView> {
                                       child: CircularProgressIndicator(
                                         value: state.migrationProgress,
                                         strokeWidth: 2.5,
-                                        color: context.color.primary,
+                                        valueColor: AlwaysStoppedAnimation(
+                                          context.color.primary,
+                                        ),
                                         backgroundColor: context.color.primary
                                             .withValues(alpha: 0.2),
                                       ),

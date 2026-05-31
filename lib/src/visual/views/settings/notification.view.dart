@@ -123,7 +123,7 @@ class _NotificationViewState extends State<NotificationView> {
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(
+                    child: CircularProgressIndicator.adaptive(
                       strokeWidth: 2,
                     ),
                   )
@@ -138,7 +138,7 @@ class _NotificationViewState extends State<NotificationView> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: CircularProgressIndicator.adaptive(
                         strokeWidth: 2,
                       ),
                     )

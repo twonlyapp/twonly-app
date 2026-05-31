@@ -129,7 +129,7 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(
+                          child: CircularProgressIndicator.adaptive(
                             strokeWidth: 2,
                           ),
                         )

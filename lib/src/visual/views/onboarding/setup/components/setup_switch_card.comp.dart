@@ -28,7 +28,7 @@ class SetupSwitchCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SwitchListTile(
+          SwitchListTile.adaptive(
             value: value,
             onChanged: onChanged,
             title: Text(
