@@ -93,24 +93,32 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         milliseconds: group!.deleteMessagesAfterMilliseconds,
       ),
     );
-    return ((select(messages)..where(
-            (t) =>
-                t.groupId.equals(groupId) &
-                // messages in groups will only be removed in case all members have received it...
-                // so ensuring that this message is not shown in the messages anymore
-                (t.openedAt.isBiggerThanValue(deletionTime) |
-                    t.openedAt.isNull() |
-                    t.mediaStored.equals(true)) &
-                (t.isDeletedFromSender.equals(true) |
-                    (t.type.equals(MessageType.text.name).not() &
-                        t.type.equals(MessageType.media.name).not()) |
-                    (t.type.equals(MessageType.text.name) &
-                        t.content.isNotNull()) |
-                    (t.type.equals(MessageType.media.name) &
-                        t.mediaId.isNotNull())),
-          ))
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .watch();
+    final query = select(messages).join([
+      leftOuterJoin(
+        mediaFiles,
+        mediaFiles.mediaId.equalsExp(messages.mediaId),
+      ),
+    ])
+      ..where(
+        messages.groupId.equals(groupId) &
+        (messages.openedAt.isBiggerThanValue(deletionTime) |
+            messages.openedAt.isNull() |
+            messages.mediaStored.equals(true)) &
+        (messages.isDeletedFromSender.equals(true) |
+            (messages.type.equals(MessageType.text.name).not() &
+                messages.type.equals(MessageType.media.name).not()) |
+            (messages.type.equals(MessageType.text.name) &
+                messages.content.isNotNull()) |
+            (messages.type.equals(MessageType.media.name) &
+                messages.mediaId.isNotNull() &
+                (mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()))),
+      )
+      ..orderBy([OrderingTerm.asc(messages.createdAt)]);
+
+    return query.map((row) => row.readTable(messages)).watch();
   }
 
   Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {

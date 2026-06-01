@@ -252,7 +252,7 @@ Future<void> downloadFileFast(
   } else {
     if (response.statusCode == 404 || response.statusCode == 403) {
       Log.error(
-        'Got ${response.statusCode} from server. Requesting upload again',
+        'Got ${response.statusCode} from server for media ID ${media.mediaId}. Requesting upload again',
       );
       // Message was deleted from the server. Requesting it again from the sender to upload it again...
       await requestMediaReupload(media.mediaId);
