@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class NextButtonComp extends StatelessWidget {
@@ -24,7 +25,7 @@ class NextButtonComp extends StatelessWidget {
         final currentPage = SetupPagesExtension.fromStr(
           userService.currentUser.currentSetupPage,
         );
-        return ElevatedButton(
+        return MyButton(
           onPressed: (canSubmit && !isLoading)
               ? () async {
                   if (onPressed != null) {
@@ -36,15 +37,6 @@ class NextButtonComp extends StatelessWidget {
                   });
                 }
               : null,
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 56),
-            backgroundColor: context.color.primary,
-            foregroundColor: context.color.onPrimary,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
           child: isLoading
               ? const SizedBox(
                   height: 24,
@@ -56,7 +48,6 @@ class NextButtonComp extends StatelessWidget {
                 )
               : Text(
                   currentPage.isLast ? context.lang.finishSetup : context.lang.next,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
         );
       },

@@ -18,7 +18,8 @@ import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
-import 'package:twonly/src/visual/themes/light.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/contact/add_new_contact_components/friend_suggestions.comp.dart';
 import 'package:twonly/src/visual/views/contact/add_new_contact_components/open_requests_list.comp.dart';
 
@@ -40,6 +41,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   final TextEditingController _usernameController = TextEditingController();
   bool _isLoading = false;
   bool hasRequestedUsers = false;
+  String? _searchError;
 
   List<Contact> _openRequestsContacts = [];
   late StreamSubscription<List<Contact>> _contactsStream;
@@ -63,20 +65,24 @@ class _SearchUsernameView extends State<AddNewUserView> {
       },
     );
 
-    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao.watchNewAnnouncedUsersWithRelations().listen((update) {
-      if (mounted) {
-        setState(() {
-          _newAnnouncedUsers = update;
+    _newAnnouncedUsersStream = twonlyDB.userDiscoveryDao
+        .watchNewAnnouncedUsersWithRelations()
+        .listen((update) {
+          if (mounted) {
+            setState(() {
+              _newAnnouncedUsers = update;
+            });
+          }
         });
-      }
-    });
-    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao.watchAllAnnouncedUsersWithRelations().listen((update) {
-      if (mounted) {
-        setState(() {
-          _allAnnouncedUsers = update;
+    _allAnnouncedUsersStream = twonlyDB.userDiscoveryDao
+        .watchAllAnnouncedUsersWithRelations()
+        .listen((update) {
+          if (mounted) {
+            setState(() {
+              _allAnnouncedUsers = update;
+            });
+          }
         });
-      }
-    });
 
     if (widget.username != null) {
       _usernameController.text = widget.username!;
@@ -90,7 +96,8 @@ class _SearchUsernameView extends State<AddNewUserView> {
   Future<void> _shareProfile() async {
     final pubKey = await getUserPublicKey();
     final params = ShareParams(
-      text: 'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',
+      text:
+          'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',
     );
     await SharePlus.instance.share(params);
   }
@@ -164,18 +171,20 @@ class _SearchUsernameView extends State<AddNewUserView> {
     });
 
     if (userdata == null) {
-      await showAlertDialog(
-        context,
-        context.lang.searchUsernameNotFound,
-        context.lang.searchUsernameNotFoundBody(username),
-      );
+      setState(() {
+        _searchError = context.lang.searchUsernameNotFound;
+      });
       return;
     }
+
+    setState(() {
+      _searchError = null;
+    });
 
     final addUser = await showAlertDialog(
       context,
       context.lang.userFound(username),
-      context.lang.userFoundBody,
+      context.lang.userFoundBody(username),
     );
 
     if (!addUser || !mounted) return;
@@ -190,7 +199,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
       ),
     );
 
-    if (widget.publicKey != null && mounted && widget.publicKey!.equals(userdata.publicIdentityKey)) {
+    if (widget.publicKey != null &&
+        mounted &&
+        widget.publicKey!.equals(userdata.publicIdentityKey)) {
       final markAsVerified = await showAlertDialog(
         context,
         context.lang.linkFromUsername(username),
@@ -218,72 +229,93 @@ class _SearchUsernameView extends State<AddNewUserView> {
         child: ListView(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              child: SearchBar(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              child: MyInput(
                 controller: _usernameController,
                 hintText: context.lang.searchUsernameInput,
-                elevation: const WidgetStatePropertyAll(0),
-                backgroundColor: WidgetStatePropertyAll(
-                  context.color.surfaceContainerHighest.withValues(alpha: 0.3),
-                ),
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                padding: const WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 8),
-                ),
-                leading: const Icon(Icons.search, size: 20, color: Colors.grey),
-                trailing: [
-                  if (_usernameController.text.isNotEmpty) ...[
-                    IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
-                        _usernameController.clear();
-                        setState(() {});
-                      },
-                    ),
-                    if (_isLoading)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-                        ),
-                      )
-                    else
-                      IconButton(
-                        icon: FaIcon(
-                          FontAwesomeIcons.magnifyingGlassPlus,
-                          size: 20,
-                          color: context.color.primary,
-                        ),
-                        onPressed: () => _requestNewUserByUsername(
-                          _usernameController.text,
-                        ),
-                      ),
-                  ] else ...[
-                    IconButton(
-                      icon: FaIcon(
-                        FontAwesomeIcons.camera,
-                        size: 20,
-                        color: context.color.primary,
-                      ),
-                      onPressed: () => context.push(Routes.cameraQRScanner),
-                      tooltip: context.lang.scanOtherProfile,
-                    ),
-                  ],
-                ],
-                onSubmitted: _requestNewUserByUsername,
+                prefixIcon: const Icon(Icons.search, size: 20),
+                errorText: _searchError,
                 onChanged: (value) {
                   _usernameController.text = value.toLowerCase();
                   _usernameController.selection = TextSelection.fromPosition(
                     TextPosition(offset: _usernameController.text.length),
                   );
-                  setState(() {});
+                  setState(() {
+                    _searchError = null;
+                  });
                 },
+                onSubmitted: _requestNewUserByUsername,
+                suffixIcon: _usernameController.text.isNotEmpty
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton.filled(
+                            style: IconButton.styleFrom(
+                              backgroundColor:
+                                  context.color.surfaceContainerHighest,
+                              foregroundColor: context.color.onSurface,
+                              minimumSize: const Size(32, 32),
+                              padding: EdgeInsets.zero,
+                              shape: const CircleBorder(),
+                            ),
+                            iconSize: 16,
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _usernameController.clear();
+                              setState(() {});
+                            },
+                          ),
+                          const SizedBox(width: 0),
+                          if (_isLoading)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator.adaptive(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    context.color.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            IconButton.filled(
+                              style: IconButton.styleFrom(
+                                backgroundColor: context.color.primary,
+                                foregroundColor: context.color.onPrimary,
+                                minimumSize: const Size(32, 32),
+                                padding: EdgeInsets.zero,
+                                shape: const CircleBorder(),
+                              ),
+                              iconSize: 16,
+                              icon: const Icon(Icons.person_add_rounded),
+                              onPressed: () => _requestNewUserByUsername(
+                                _usernameController.text,
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                        ],
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: IconButton.filled(
+                          style: IconButton.styleFrom(
+                            backgroundColor: context.color.primary,
+                            foregroundColor: context.color.onPrimary,
+                            minimumSize: const Size(36, 36),
+                            padding: EdgeInsets.zero,
+                            shape: const CircleBorder(),
+                          ),
+                          iconSize: 18,
+                          icon: const FaIcon(FontAwesomeIcons.camera),
+                          onPressed: () => context.push(Routes.cameraQRScanner),
+                          tooltip: context.lang.scanOtherProfile,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(
@@ -291,63 +323,40 @@ class _SearchUsernameView extends State<AddNewUserView> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            foregroundColor: Colors.black87,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 10,
-                            ),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _shareProfile,
-                          icon: const FaIcon(
-                            FontAwesomeIcons.shareNodes,
-                            size: 14,
-                          ),
-                          label: Text(
-                            context.lang.shareYourProfile,
-                            style: const TextStyle(fontSize: 13),
-                          ),
+                  MyButton(
+                    variant: MyButtonVariant.primaryDense,
+                    onPressed: _shareProfile,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const FaIcon(FontAwesomeIcons.shareNodes, size: 14),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.lang.shareYourProfile,
+                          style: const TextStyle(fontSize: 13),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: context.color.secondaryContainer,
-                            foregroundColor: context.color.onSecondaryContainer,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 10,
-                            ),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _showMyQrCode,
-                          icon: const FaIcon(
-                            FontAwesomeIcons.qrcode,
-                            size: 14,
-                          ),
-                          label: Text(
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: MyButton(
+                      variant: MyButtonVariant.secondaryDense,
+                      onPressed: _showMyQrCode,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const FaIcon(FontAwesomeIcons.qrcode, size: 14),
+                          const SizedBox(width: 8),
+                          Text(
                             context.lang.openYourOwnQRcode,
                             style: const TextStyle(fontSize: 13),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),

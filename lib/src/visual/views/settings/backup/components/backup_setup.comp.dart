@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 
 Future<bool> isSecurePassword(String password) async {
   final badPasswordsStr = await rootBundle.loadString(
@@ -46,29 +46,20 @@ class _BackupPasswordTextFieldState extends State<BackupPasswordTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return MyInput(
       controller: widget.controller,
       onChanged: widget.onChanged,
       obscureText: _obscureText,
-      decoration: InputDecoration(
-        labelText: widget.labelText,
-        filled: true,
-        fillColor: context.color.surfaceContainerLow,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        floatingLabelBehavior: FloatingLabelBehavior.never,
-        suffixIcon: IconButton(
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
-          icon: FaIcon(
-            _obscureText ? FontAwesomeIcons.eye : FontAwesomeIcons.eyeSlash,
-            size: 16,
-          ),
+      hintText: widget.labelText,
+      suffixIcon: IconButton(
+        onPressed: () {
+          setState(() {
+            _obscureText = !_obscureText;
+          });
+        },
+        icon: FaIcon(
+          _obscureText ? FontAwesomeIcons.eye : FontAwesomeIcons.eyeSlash,
+          size: 16,
         ),
       ),
     );
