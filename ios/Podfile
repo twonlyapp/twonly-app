@@ -28,17 +28,9 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
-pod 'Firebase', :modular_headers => true
-pod 'FirebaseMessaging', :modular_headers => true
-pod 'FirebaseCoreInternal', :modular_headers => true
-pod 'GoogleUtilities', :modular_headers => true
-pod 'FirebaseCore', :modular_headers => true
-pod 'SwiftProtobuf'
-# pod 'sqlite3', :modular_headers => true
-
-
 
 target 'Runner' do
+  pod 'SwiftProtobuf'
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
@@ -83,5 +75,6 @@ post_install do |installer|
 end
 
 target 'NotificationService' do
+  pod 'SwiftProtobuf'
   # pod 'Firebase/Messaging'
 end

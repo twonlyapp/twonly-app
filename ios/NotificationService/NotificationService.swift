@@ -193,6 +193,7 @@ func readFromKeychain(key: String) -> String? {
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrAccount as String: key,
+        kSecAttrService as String: "flutter_secure_storage_service",
         kSecReturnData as String: kCFBooleanTrue!,
         kSecMatchLimit as String: kSecMatchLimitOne,
         kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared",  // Use your access group
@@ -220,28 +221,23 @@ func writeToKeychain(key: String, value: String) {
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrAccount as String: key,
-        kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared",
+        kSecAttrService as String: "flutter_secure_storage_service",
+        kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared"
     ]
 
-    let attributesToUpdate: [String: Any] = [
-        kSecValueData as String: data
-    ]
+    // Delete existing item first to ensure a clean overwrite
+    SecItemDelete(query as CFDictionary)
 
-    let status = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
+    // Add the new item with background-compatible accessibility
+    var addQuery = query
+    addQuery[kSecValueData as String] = data
+    addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
 
-    if status == errSecItemNotFound {
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
-        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
-        if addStatus != errSecSuccess {
-            NSLog("Failed to add keychain item: \(addStatus)")
-        } else {
-            NSLog("Successfully added keychain item for key: \(key)")
-        }
-    } else if status != errSecSuccess {
-        NSLog("Failed to update keychain item: \(status)")
+    let status = SecItemAdd(addQuery as CFDictionary, nil)
+    if status != errSecSuccess {
+        NSLog("Failed to write keychain item for key \(key): \(status)")
     } else {
-        NSLog("Successfully updated keychain item for key: \(key)")
+        NSLog("Successfully wrote keychain item for key: \(key)")
     }
 }
 

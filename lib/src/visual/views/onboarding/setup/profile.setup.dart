@@ -8,6 +8,7 @@ import 'package:twonly/src/visual/components/avatar_icon.comp.dart'
     show AvatarIcon;
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';
 
 class ProfileSetupPage extends StatefulWidget {
@@ -60,10 +61,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                 return Container(
                   padding: const EdgeInsets.all(4),
                   clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  foregroundDecoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: context.color.primary.withValues(alpha: 0.2),
+                      color: primaryColor,
                       width: 4,
                     ),
                   ),

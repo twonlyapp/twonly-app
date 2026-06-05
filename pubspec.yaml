@@ -206,6 +206,9 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
 
+  # config:
+  #   enable-swift-package-manager: false
+
   # Enable generation of localized Strings from arb files.
   generate: true
 
