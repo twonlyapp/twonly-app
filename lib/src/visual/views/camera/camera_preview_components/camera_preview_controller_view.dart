@@ -254,17 +254,32 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
   }
 
-  Future<void> requestMicrophonePermission() async {
-    final statuses = await [
-      Permission.microphone,
-    ].request();
-    if (statuses[Permission.microphone]!.isPermanentlyDenied) {
-      await openAppSettings();
-    } else {
-      _hasAudioPermission = await Permission.microphone.isGranted;
-      setState(() {
-        // _hasAudioPermission
-      });
+  Future<void> requestMicrophonePermission({int retryCount = 0}) async {
+    try {
+      final statuses = await [
+        Permission.microphone,
+      ].request();
+      if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+        await openAppSettings();
+      } else {
+        _hasAudioPermission = await Permission.microphone.isGranted;
+        setState(() {
+          // _hasAudioPermission
+        });
+      }
+    } on PlatformException catch (e) {
+      if (e.message?.contains('already running') ?? false) {
+        if (retryCount < 5) {
+          Log.warn(
+            'Microphone permission request conflict, retrying in 300ms... (attempt ${retryCount + 1})',
+          );
+          await Future.delayed(const Duration(milliseconds: 300));
+          return requestMicrophonePermission(retryCount: retryCount + 1);
+        }
+      }
+      Log.error('PlatformException in requestMicrophonePermission: $e');
+    } catch (e) {
+      Log.error('Error in requestMicrophonePermission: $e');
     }
   }
 

@@ -50,7 +50,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             mediaFiles,
             mediaFiles.mediaId.equalsExp(messages.mediaId),
           ),
-        ])..where(
+        ])
+        ..where(
           mediaFiles.downloadState
                   .equals(DownloadState.reuploadRequested.name)
                   .not() &
@@ -60,7 +61,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
               messages.mediaId.isNotNull() &
               messages.senderId.isNotNull() &
               messages.type.equals(MessageType.media.name),
-        );
+        )
+        ..orderBy([OrderingTerm.asc(messages.createdAt)]);
     return query.map((row) => row.readTable(messages)).watch();
   }
 

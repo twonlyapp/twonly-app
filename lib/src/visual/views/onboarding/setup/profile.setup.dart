@@ -59,6 +59,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
               builder: (context, asyncSnapshot) {
                 return Container(
                   padding: const EdgeInsets.all(4),
+                  clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
@@ -67,7 +68,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                     ),
                   ),
                   child: const AvatarIcon(
-                    fontSize: 70,
+                    fontSize: 68,
                     myAvatar: true,
                   ),
                 );
