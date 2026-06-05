@@ -7,9 +7,10 @@ use protocols::user_discovery::traits::{AnnouncedUser, OtherPromotion};
 
 use crate::error::{Result, TwonlyError};
 use crate::{callback_generator, frb_generated::StreamSink};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
-static FLUTTER_CALLBACKS: OnceLock<FlutterCallbacks> = OnceLock::new();
+static FLUTTER_CALLBACKS: std::sync::RwLock<Option<FlutterCallbacks>> =
+    std::sync::RwLock::new(None);
 
 // This will also generate the function init_flutter_callbacks which MUST be called from Flutter to initialize the callbacks
 callback_generator! {
@@ -39,8 +40,10 @@ callback_generator! {
     }
 }
 
-pub(crate) fn get_callbacks() -> Result<&'static FlutterCallbacks> {
+pub(crate) fn get_callbacks() -> Result<FlutterCallbacks> {
     FLUTTER_CALLBACKS
-        .get()
+        .read()
+        .unwrap()
+        .clone()
         .ok_or(TwonlyError::MissingCallbackInitialization)
 }
