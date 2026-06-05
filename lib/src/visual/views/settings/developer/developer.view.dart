@@ -297,8 +297,8 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 ),
               ),
               ListTile(
-                title: const Text('User ID'),
-                subtitle: Text(userService.currentUser.userId.toString()),
+                title: const Text('Informations'),
+                onTap: () => context.push(Routes.settingsDeveloperInformations),
               ),
               ListTile(
                 title: const Text('Show Retransmission Database'),
@@ -344,24 +344,6 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 ),
               ),
               ListTile(
-                title: const Text('Delete all (!) app data'),
-                onTap: () async {
-                  final ok = await showAlertDialog(
-                    context,
-                    'Sure?',
-                    'If you do not have a backup, you have to register with a new account.',
-                  );
-                  if (ok) {
-                    await deleteLocalUserData();
-                    await Restart.restartApp(
-                      notificationTitle: 'Account successfully deleted',
-                      notificationBody: 'Click here to open the app again',
-                      forceKill: true,
-                    );
-                  }
-                },
-              ),
-              ListTile(
                 title: const Text('Reduce flames'),
                 onTap: () => context.push(Routes.settingsDeveloperReduceFlames),
               ),
@@ -400,7 +382,9 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2,
+                          ),
                         )
                       : null,
                   onTap: _isGeneratingMockImages
@@ -413,6 +397,27 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                   await UserService.update((u) {
                     u.currentSetupPage = SetupPages.profile.name;
                   });
+                },
+              ),
+              ListTile(
+                title: const Text(
+                  'Delete all app data',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () async {
+                  final ok = await showAlertDialog(
+                    context,
+                    'Sure?',
+                    'If you do not have a backup, you have to register with a new account.',
+                  );
+                  if (ok) {
+                    await deleteLocalUserData();
+                    await Restart.restartApp(
+                      notificationTitle: 'Account successfully deleted',
+                      notificationBody: 'Click here to open the app again',
+                      forceKill: true,
+                    );
+                  }
                 },
               ),
             ],

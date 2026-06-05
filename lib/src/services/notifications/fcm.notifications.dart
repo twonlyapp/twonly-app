@@ -6,9 +6,11 @@ import 'dart:io' show Platform;
 import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -107,6 +109,7 @@ Future<void> initFCMService() async {
   );
 
   unawaited(checkForTokenUpdates());
+  unawaited(checkFcmHealthAndResetIfNeeded());
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -133,6 +136,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 Future<void> handleRemoteMessage(RemoteMessage message) async {
+  await updateLastFcmMessageTimestamp();
   if (!Platform.isAndroid) {
     Log.error('Got message in Dart while on iOS');
   }
@@ -156,4 +160,101 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
   //  else if (message.data['push_data'] != null) {
   // await handlePushData(message.data['push_data'] as String);
   // }
+}
+
+Future<void> updateLastFcmMessageTimestamp() async {
+  const storage = FlutterSecureStorage();
+  final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
+  try {
+    await storage.write(
+      key: SecureStorageKeys.lastFcmMessageTimestamp,
+      value: nowMs,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+    Log.info('Updated last FCM message timestamp to $nowMs');
+  } catch (e) {
+    Log.error('Could not write last FCM message timestamp: $e');
+  }
+}
+
+Future<void> updateLastServerMessageTimestamp() async {
+  const storage = FlutterSecureStorage();
+  final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
+  try {
+    await storage.write(
+      key: SecureStorageKeys.lastServerMessageTimestamp,
+      value: nowMs,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+    Log.info('Updated last server message timestamp to $nowMs');
+  } catch (e) {
+    Log.error('Could not write last server message timestamp: $e');
+  }
+}
+
+Future<void> checkFcmHealthAndResetIfNeeded() async {
+  if (!userService.isUserCreated) return;
+  const storage = FlutterSecureStorage();
+  try {
+    final lastFcmStr = await storage.read(
+      key: SecureStorageKeys.lastFcmMessageTimestamp,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+    final lastServerStr = await storage.read(
+      key: SecureStorageKeys.lastServerMessageTimestamp,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+
+    final now = DateTime.now();
+    final threeDaysAgo = now.subtract(const Duration(days: 3));
+
+    DateTime? lastFcmTime;
+    if (lastFcmStr != null) {
+      final ms = int.tryParse(lastFcmStr);
+      if (ms != null) {
+        lastFcmTime = DateTime.fromMillisecondsSinceEpoch(ms);
+      }
+    }
+
+    if (lastFcmTime != null) {
+      Log.info('Last message received via FCM messaging system: $lastFcmTime');
+    } else {
+      Log.info('No record of a message received via FCM messaging system.');
+    }
+
+    DateTime? lastServerTime;
+    if (lastServerStr != null) {
+      final ms = int.tryParse(lastServerStr);
+      if (ms != null) {
+        lastServerTime = DateTime.fromMillisecondsSinceEpoch(ms);
+      }
+    }
+
+    // Check conditions:
+    // 1. No messages received via FCM in the last 3 days (either null or older than 3 days)
+    final fcmInactive = lastFcmTime == null || lastFcmTime.isBefore(threeDaysAgo);
+    // 2. Server message received within the last 3 days
+    final serverActive = lastServerTime != null && lastServerTime.isAfter(threeDaysAgo);
+
+    if (fcmInactive && serverActive) {
+      Log.warn('FCM has been inactive for >3 days, but server messages have been active. Resetting FCM tokens...');
+      await resetFCMTokens();
+    } else {
+      Log.info('FCM check passed. No reset needed.');
+    }
+  } catch (e) {
+    Log.error('Error during FCM health check: $e');
+  }
 }
