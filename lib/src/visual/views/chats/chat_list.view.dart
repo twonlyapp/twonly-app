@@ -311,34 +311,33 @@ class _ChatListViewState extends State<ChatListView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Material(
-                    elevation: 3,
-                    shape: const CircleBorder(),
-                    color: context.color.primary,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => context.push(Routes.settingsPublicProfile),
-                      child: SizedBox(
-                        width: 45,
-                        height: 45,
-                        child: Center(
-                          child: FaIcon(
-                            FontAwesomeIcons.qrcode,
-                            color: isDarkMode(context)
-                                ? Colors.black
-                                : Colors.white,
-                          ),
-                        ),
-                      ),
+                  FloatingActionButton(
+                    heroTag: 'qrcode_fab',
+                    elevation: 2,
+                    backgroundColor: isDarkMode(context)
+                        ? Colors.grey[800]
+                        : Colors.grey[200],
+                    foregroundColor: isDarkMode(context)
+                        ? Colors.white
+                        : Colors.black87,
+                    onPressed: () => context.push(Routes.settingsPublicProfile),
+                    child: FaIcon(
+                      FontAwesomeIcons.qrcode,
+                      color: isDarkMode(context)
+                          ? Colors.white
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 12),
                   FloatingActionButton(
-                    backgroundColor: context.color.primary,
+                    heroTag: 'new_chat_fab',
+                    elevation: 2,
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.black87,
                     onPressed: () => context.push(Routes.chatsStartNewChat),
-                    child: FaIcon(
+                    child: const FaIcon(
                       FontAwesomeIcons.penToSquare,
-                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
