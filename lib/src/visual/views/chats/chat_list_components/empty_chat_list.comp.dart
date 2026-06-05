@@ -59,21 +59,23 @@ class EmptyChatListComp extends StatelessWidget {
           const SizedBox(height: 36),
           const Center(child: ProfileQrCodeComp()),
           const SizedBox(height: 36),
-          MyButton(
-            onPressed: () => _shareProfile(context),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const FaIcon(FontAwesomeIcons.shareNodes, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  context.lang.emptyChatListShareBtn,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+          IntrinsicWidth(
+            child: MyButton(
+              onPressed: () => _shareProfile(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const FaIcon(FontAwesomeIcons.shareNodes, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.lang.emptyChatListShareBtn,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),

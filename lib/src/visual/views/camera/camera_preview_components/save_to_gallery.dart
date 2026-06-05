@@ -8,6 +8,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
@@ -33,18 +34,11 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        iconColor: _imageSaved
-            ? Theme.of(context).colorScheme.outline
-            : Theme.of(context).colorScheme.primary,
-        foregroundColor: _imageSaved
-            ? Theme.of(context).colorScheme.outline
-            : Theme.of(context).colorScheme.primary,
-      ),
-      onPressed: (widget.isLoading)
-          ? null
-          : () async {
+    final isEnabled = !widget.isLoading && !_imageSaving;
+    return MyButton(
+      variant: MyButtonVariant.secondaryDense,
+      onPressed: isEnabled
+          ? () async {
               setState(() {
                 _imageSaving = true;
               });
@@ -83,19 +77,24 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                   _imageSaving = false;
                 });
               }
-            },
+            }
+          : null,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (_imageSaving || widget.isLoading)
             const SizedBox(
               width: 12,
               height: 12,
-              child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+              child: CircularProgressIndicator.adaptive(
+                strokeWidth: 1,
+                valueColor: AlwaysStoppedAnimation(Colors.white),
+              ),
             )
           else
             _imageSaved
-                ? const Icon(Icons.check)
-                : const FaIcon(FontAwesomeIcons.floppyDisk),
+                ? const Icon(Icons.check, size: 14)
+                : const FaIcon(FontAwesomeIcons.floppyDisk, size: 14),
           if (widget.displayButtonLabel) const SizedBox(width: 10),
           if (widget.displayButtonLabel)
             Text(

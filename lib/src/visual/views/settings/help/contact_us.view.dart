@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +15,7 @@ import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us/submit_message.view.dart';
 import 'package:twonly/src/visual/views/settings/help/faq.view.dart';
 
@@ -29,12 +33,28 @@ class _ContactUsState extends State<ContactUsView> {
   int? _selectedFeedback;
   String? _selectedReason;
   String? debugLogDownloadToken;
+  String? debugLogEncryptionKey;
 
-  Future<String?> uploadDebugLog() async {
-    if (debugLogDownloadToken != null) return debugLogDownloadToken;
+  Future<(String, String)?> uploadDebugLog() async {
+    if (debugLogDownloadToken != null && debugLogEncryptionKey != null) {
+      return (debugLogDownloadToken!, debugLogEncryptionKey!);
+    }
     final downloadToken = getRandomUint8List(32);
+    final encryptionKey = getRandomUint8List(32);
 
     final debugLog = await loadLogFile();
+
+    // 1. Compress the debug log
+    final logBytes = utf8.encode(debugLog);
+    final compressedBytes = gzip.encode(logBytes);
+
+    // 2. Encrypt using AES-GCM (with 256 bits)
+    final algorithm = AesGcm.with256bits();
+    final secretBox = await algorithm.encrypt(
+      compressedBytes,
+      secretKey: SecretKey(encryptionKey),
+    );
+    final encryptedData = secretBox.concatenation();
 
     final messageOnSuccess = TextMessage()
       ..body = []
@@ -43,7 +63,7 @@ class _ContactUsState extends State<ContactUsView> {
     final uploadRequest = UploadRequest(
       messagesOnSuccess: [messageOnSuccess],
       downloadTokens: [downloadToken],
-      encryptedData: debugLog.codeUnits,
+      encryptedData: encryptedData,
     );
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
@@ -71,10 +91,13 @@ class _ContactUsState extends State<ContactUsView> {
 
     final response = await requestMultipart.send();
     if (response.statusCode == 200) {
+      final tokenHex = uint8ListToHex(downloadToken);
+      final keyHex = uint8ListToHex(encryptionKey);
       setState(() {
-        debugLogDownloadToken = uint8ListToHex(downloadToken);
+        debugLogDownloadToken = tokenHex;
+        debugLogEncryptionKey = keyHex;
       });
-      return debugLogDownloadToken;
+      return (tokenHex, keyHex);
     }
     return null;
   }
@@ -108,13 +131,13 @@ class _ContactUsState extends State<ContactUsView> {
     }
 
     if (includeDebugLog) {
-      String? token;
+      (String, String)? result;
       try {
-        token = await uploadDebugLog();
+        result = await uploadDebugLog();
       } catch (e) {
         Log.error(e);
       }
-      if (token == null) {
+      if (result == null) {
         if (!mounted) return null;
         showSnackbar(context, 'Could not upload the debug log!');
         setState(() {
@@ -122,7 +145,10 @@ class _ContactUsState extends State<ContactUsView> {
         });
         return null;
       }
-      debugLogToken = 'Debug Log: https://api.twonly.eu/api/download/$token';
+      final downloadToken = result.$1;
+      final encryptionKey = result.$2;
+      debugLogToken =
+          'Debug Log: https://logs.twonly.eu#$downloadToken/$encryptionKey';
     }
 
     setState(() {
@@ -238,17 +264,8 @@ $debugLogToken
                   ),
                 ),
               ),
-              ElevatedButton.icon(
-                icon: isLoading
-                    ? SizedBox(
-                        height: 12,
-                        width: 12,
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
-                        ),
-                      )
-                    : const FaIcon(FontAwesomeIcons.angleRight),
+              MyButton(
+                variant: MyButtonVariant.primaryDense,
                 onPressed: isLoading
                     ? null
                     : () async {
@@ -263,7 +280,24 @@ $debugLogToken
                           Navigator.pop(context);
                         }
                       },
-                label: Text(context.lang.next),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isLoading)
+                      const SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.black87),
+                        ),
+                      )
+                    else
+                      const FaIcon(FontAwesomeIcons.angleRight, size: 14),
+                    const SizedBox(width: 8),
+                    Text(context.lang.next),
+                  ],
+                ),
               ),
             ],
           ),

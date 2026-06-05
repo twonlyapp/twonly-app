@@ -40,7 +40,10 @@ class _ChatListViewState extends State<ChatListView> {
 
   bool _hasContacts = false;
   bool _loading = true;
-  bool get _hasOpenGroup => _groupsNotPinned.isNotEmpty || _groupsArchived.isNotEmpty || _groupsPinned.isNotEmpty;
+  bool get _hasOpenGroup =>
+      _groupsNotPinned.isNotEmpty ||
+      _groupsArchived.isNotEmpty ||
+      _groupsPinned.isNotEmpty;
 
   GlobalKey searchForOtherUsers = GlobalKey();
   bool showFeedbackShortcut = false;
@@ -64,35 +67,43 @@ class _ChatListViewState extends State<ChatListView> {
     _contactsSub = stream.listen((groups) {
       if (!mounted) return;
       setState(() {
-        _groupsNotPinned = groups.where((x) => !x.pinned && !x.archived).toList();
+        _groupsNotPinned = groups
+            .where((x) => !x.pinned && !x.archived)
+            .toList();
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
         _loading = false;
       });
     });
 
-    _contactsCountSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((contacts) {
+    _contactsCountSub = twonlyDB.contactsDao.watchAllAcceptedContacts().listen((
+      contacts,
+    ) {
       if (!mounted) return;
       setState(() {
         _hasContacts = contacts.isNotEmpty;
       });
     });
 
-    _countContactRequestStream = twonlyDB.contactsDao.watchContactsRequestedCount().listen((update) {
-      if (update != null) {
-        if (!mounted) return;
-        setState(() {
-          _countContactRequest = update;
+    _countContactRequestStream = twonlyDB.contactsDao
+        .watchContactsRequestedCount()
+        .listen((update) {
+          if (update != null) {
+            if (!mounted) return;
+            setState(() {
+              _countContactRequest = update;
+            });
+          }
         });
-      }
-    });
 
-    _countAnnouncedStream = twonlyDB.userDiscoveryDao.watchNewAnnouncementsWithDataCount().listen((update) {
-      if (!mounted) return;
-      setState(() {
-        _countAnnouncedUsers = update;
-      });
-    });
+    _countAnnouncedStream = twonlyDB.userDiscoveryDao
+        .watchNewAnnouncementsWithDataCount()
+        .listen((update) {
+          if (!mounted) return;
+          setState(() {
+            _countAnnouncedUsers = update;
+          });
+        });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
@@ -101,7 +112,8 @@ class _ChatListViewState extends State<ChatListView> {
         changeLog.codeUnits,
       )).bytes;
       if (!userService.currentUser.hideChangeLog &&
-          userService.currentUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
+          userService.currentUser.lastChangeLogHash.toString() !=
+              changeLogHash.toString()) {
         await UserService.update((u) {
           u.lastChangeLogHash = changeLogHash;
         });
@@ -190,11 +202,16 @@ class _ChatListViewState extends State<ChatListView> {
                 ),
               Center(
                 child: NotificationBadgeComp(
-                  backgroundColor: isDarkMode(context) ? Colors.white : Colors.black,
+                  backgroundColor: isDarkMode(context)
+                      ? Colors.white
+                      : Colors.black,
                   textColor: isDarkMode(context) ? Colors.black : Colors.white,
-                  count: (_countAnnouncedUsers + _countContactRequest).toString(),
+                  count: (_countAnnouncedUsers + _countContactRequest)
+                      .toString(),
                   child: IconButton(
-                    color: (_countAnnouncedUsers + _countContactRequest > 0) ? Colors.black : null,
+                    color: (_countAnnouncedUsers + _countContactRequest > 0)
+                        ? Colors.black
+                        : null,
                     key: searchForOtherUsers,
                     icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
                     onPressed: () => context.push(Routes.chatsAddNewUser),
@@ -240,7 +257,10 @@ class _ChatListViewState extends State<ChatListView> {
                       _groupsNotPinned.length +
                       (_groupsArchived.isNotEmpty ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index >= _groupsNotPinned.length + _groupsPinned.length + (_groupsPinned.isNotEmpty ? 1 : 0)) {
+                    if (index >=
+                        _groupsNotPinned.length +
+                            _groupsPinned.length +
+                            (_groupsPinned.isNotEmpty ? 1 : 0)) {
                       if (_groupsArchived.isEmpty) return Container();
                       return ListTile(
                         title: Text(
@@ -304,7 +324,9 @@ class _ChatListViewState extends State<ChatListView> {
                         child: Center(
                           child: FaIcon(
                             FontAwesomeIcons.qrcode,
-                            color: isDarkMode(context) ? Colors.black : Colors.white,
+                            color: isDarkMode(context)
+                                ? Colors.black
+                                : Colors.white,
                           ),
                         ),
                       ),

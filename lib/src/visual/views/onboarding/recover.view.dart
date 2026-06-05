@@ -7,6 +7,7 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/link_logo_animation.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
 class BackupRecoveryView extends StatefulWidget {
   const BackupRecoveryView({super.key});
@@ -63,70 +64,6 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
     });
   }
 
-  void _showBackupExplanation(BuildContext context) {
-    final isDark = isDarkMode(context);
-    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtitleColor = isDark ? Colors.white70 : Colors.black54;
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: backgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white24 : Colors.black12,
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'twonly Backup',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  context.lang.backupTwonlySafeLongDesc,
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.5,
-                    color: subtitleColor,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                MyButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Got it'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +101,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                             ),
                             const Spacer(),
                             IconButton(
-                              onPressed: () => _showBackupExplanation(context),
+                              onPressed: () => showBackupExplanation(context),
                               icon: const FaIcon(FontAwesomeIcons.circleInfo),
                               color: iconColor,
                               iconSize: 20,

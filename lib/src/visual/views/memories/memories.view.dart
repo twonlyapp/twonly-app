@@ -193,6 +193,63 @@ class MemoriesViewState extends State<MemoriesView> {
     });
   }
 
+  Future<void> _showProgressDialog(
+    String message,
+    Future<void> Function(void Function(double progress) setProgress) task,
+  ) async {
+    final progressNotifier = ValueNotifier<double>(0);
+
+    // Show non-dismissible progress dialog
+    // ignore: unawaited_futures
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 20),
+                ValueListenableBuilder<double>(
+                  valueListenable: progressNotifier,
+                  builder: (context, progress, _) {
+                    return Column(
+                      children: [
+                        LinearProgressIndicator(value: progress),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      await Future<void>.delayed(Duration.zero);
+      await task((p) => progressNotifier.value = p);
+    } finally {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      progressNotifier.dispose();
+    }
+  }
+
   Future<void> _batchDelete() async {
     final count = _selectedMediaIds.length;
     final confirmed = await showAlertDialog(
@@ -204,15 +261,24 @@ class MemoriesViewState extends State<MemoriesView> {
     if (!confirmed) return;
 
     final items = _service.currentState.galleryItems;
-    for (final mediaId in _selectedMediaIds) {
-      final item = items
-          .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
-          .firstOrNull;
-      if (item != null) {
-        item.mediaService.fullMediaRemoval();
-      }
-      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
-    }
+    final selectedList = _selectedMediaIds.toList();
+
+    await _showProgressDialog(
+      'Deleting memories...',
+      (setProgress) async {
+        for (var i = 0; i < selectedList.length; i++) {
+          final mediaId = selectedList[i];
+          final item = items
+              .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+              .firstOrNull;
+          if (item != null) {
+            item.mediaService.fullMediaRemoval();
+          }
+          await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
+          setProgress((i + 1) / selectedList.length);
+        }
+      },
+    );
 
     setState(_selectedMediaIds.clear);
 
@@ -226,23 +292,34 @@ class MemoriesViewState extends State<MemoriesView> {
 
   Future<void> _batchExport() async {
     final items = _service.currentState.galleryItems;
+    final selectedList = _selectedMediaIds.toList();
+    if (selectedList.isEmpty) return;
 
     try {
-      for (final mediaId in _selectedMediaIds) {
-        final item = items
-            .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
-            .firstOrNull;
-        if (item != null) {
-          final media = item.mediaService;
-          if (media.mediaFile.type == MediaType.video) {
-            await saveVideoToGallery(media.storedPath.path);
-          } else if (media.mediaFile.type == MediaType.image ||
-              media.mediaFile.type == MediaType.gif) {
-            final imageBytes = await media.storedPath.readAsBytes();
-            await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
+      await _showProgressDialog(
+        'Exporting memories...',
+        (setProgress) async {
+          for (var i = 0; i < selectedList.length; i++) {
+            final mediaId = selectedList[i];
+            final item = items
+                .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
+                .firstOrNull;
+            if (item != null) {
+              final media = item.mediaService;
+              if (media.mediaFile.type == MediaType.video) {
+                await saveVideoToGallery(media.storedPath.path);
+              } else if (media.mediaFile.type == MediaType.image ||
+                  media.mediaFile.type == MediaType.gif) {
+                final imageBytes = await media.storedPath.readAsBytes();
+                await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
+              }
+            }
+            setProgress((i + 1) / selectedList.length);
           }
-        }
-      }
+        },
+      );
+
+      setState(_selectedMediaIds.clear);
 
       if (!mounted) return;
       showSnackbar(
@@ -258,26 +335,36 @@ class MemoriesViewState extends State<MemoriesView> {
 
   Future<void> _batchFavorite() async {
     final items = _service.currentState.galleryItems;
+    final selectedList = _selectedMediaIds.toList();
+    if (selectedList.isEmpty) return;
+
     var favCount = 0;
     for (final item in items) {
-      if (_selectedMediaIds.contains(item.mediaService.mediaFile.mediaId)) {
+      if (selectedList.contains(item.mediaService.mediaFile.mediaId)) {
         if (item.mediaService.mediaFile.isFavorite) {
           favCount++;
         }
       }
     }
     final areAllFav =
-        _selectedMediaIds.isNotEmpty && favCount == _selectedMediaIds.length;
+        selectedList.isNotEmpty && favCount == selectedList.length;
     final targetFav = !areAllFav;
 
-    for (final mediaId in _selectedMediaIds) {
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaId,
-        MediaFilesCompanion(isFavorite: Value(targetFav)),
-      );
-    }
+    await _showProgressDialog(
+      targetFav ? 'Adding to favorites...' : 'Removing from favorites...',
+      (setProgress) async {
+        for (var i = 0; i < selectedList.length; i++) {
+          final mediaId = selectedList[i];
+          await twonlyDB.mediaFilesDao.updateMedia(
+            mediaId,
+            MediaFilesCompanion(isFavorite: Value(targetFav)),
+          );
+          setProgress((i + 1) / selectedList.length);
+        }
+      },
+    );
 
-    setState(() {});
+    setState(_selectedMediaIds.clear);
   }
 
   @override

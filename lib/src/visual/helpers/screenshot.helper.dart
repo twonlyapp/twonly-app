@@ -25,10 +25,20 @@ class ScreenshotImageHelper {
       return imageBytes;
     }
     if (imageBytesFuture != null) {
-      return imageBytesFuture;
+      try {
+        return imageBytes = await imageBytesFuture;
+      } catch (e) {
+        Log.error('Could not resolve imageBytesFuture: $e');
+        return null;
+      }
     }
     if (file != null) {
-      return file!.readAsBytes();
+      try {
+        return imageBytes = await file!.readAsBytes();
+      } catch (e) {
+        Log.error('Could not read bytes from file: $e');
+        return null;
+      }
     }
     if (image == null) return null;
     final img = await image!.toByteData(format: io.ImageByteFormat.png);
@@ -61,7 +71,8 @@ class ScreenshotController {
       var tmpPixelRatio = pixelRatio;
       if (tmpPixelRatio == null) {
         if (context != null && context.mounted) {
-          tmpPixelRatio = tmpPixelRatio ?? MediaQuery.of(context).devicePixelRatio;
+          tmpPixelRatio =
+              tmpPixelRatio ?? MediaQuery.of(context).devicePixelRatio;
         }
       }
       final image = await boundary.toImage(pixelRatio: tmpPixelRatio ?? 1);

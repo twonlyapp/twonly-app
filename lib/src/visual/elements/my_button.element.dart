@@ -7,6 +7,7 @@ enum MyButtonVariant {
   primary,
   secondary,
   text,
+  primaryMiddle,
   primaryDense,
   secondaryDense,
 }
@@ -140,6 +141,23 @@ class _MyButtonState extends State<MyButton>
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
+          ),
+        );
+      case MyButtonVariant.primaryMiddle:
+        buttonStyle = FilledButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.black87,
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         );
       case MyButtonVariant.primaryDense:

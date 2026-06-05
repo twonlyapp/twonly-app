@@ -6,6 +6,7 @@ import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/backup_setup.comp.dart';
 
 class SetupBackupView extends StatefulWidget {
@@ -76,13 +77,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
           title: const Text('twonly Backup'),
           actions: [
             IconButton(
-              onPressed: () async {
-                await showAlertDialog(
-                  context,
-                  'twonly Backup',
-                  context.lang.backupTwonlySafeLongDesc,
-                );
-              },
+              onPressed: () => showBackupExplanation(context),
               icon: const FaIcon(FontAwesomeIcons.circleInfo),
               iconSize: 18,
             ),
@@ -131,7 +126,8 @@ class _SetupBackupViewState extends State<SetupBackupView> {
               ),
               const SizedBox(height: 10),
               Center(
-                child: FilledButton.icon(
+                child: MyButton(
+                  variant: MyButtonVariant.primaryMiddle,
                   onPressed:
                       (!_isLoading &&
                           (_passwordController.text ==
@@ -140,17 +136,26 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                               !kReleaseMode))
                       ? _updateBackupPassword
                       : null,
-                  icon: _isLoading
-                      ? const SizedBox(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isLoading)
+                        const SizedBox(
                           height: 12,
                           width: 12,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 1,
+                          ),
                         )
-                      : const Icon(Icons.lock_clock_rounded),
-                  label: Text(
-                    userService.currentUser.isBackupEnabled
-                        ? context.lang.backupEnableBackup
-                        : context.lang.backupChangePassword,
+                      else
+                        const Icon(Icons.lock_clock_rounded),
+                      const SizedBox(width: 8),
+                      Text(
+                        userService.currentUser.isBackupEnabled
+                            ? context.lang.backupEnableBackup
+                            : context.lang.backupChangePassword,
+                      ),
+                    ],
                   ),
                 ),
               ),

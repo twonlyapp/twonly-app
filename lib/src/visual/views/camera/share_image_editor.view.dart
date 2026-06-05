@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:typed_data';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -214,7 +216,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheRight {
     if (layers.isNotEmpty &&
-        (layers.first.isEditing || (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
+        (layers.first.isEditing ||
+            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return <Widget>[
@@ -290,9 +293,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (media.type == MediaType.video) ...[
         const SizedBox(height: 8),
         ActionButton(
-          (mediaService.removeAudio) ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          (mediaService.removeAudio)
+              ? Icons.volume_off_rounded
+              : Icons.volume_up_rounded,
           tooltipText: 'Enable Audio in Video',
-          color: (mediaService.removeAudio) ? Colors.white.withAlpha(160) : Colors.white,
+          color: (mediaService.removeAudio)
+              ? Colors.white.withAlpha(160)
+              : Colors.white,
           onPressed: () async {
             await mediaService.toggleRemoveAudio();
             if (mediaService.removeAudio) {
@@ -330,7 +337,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ActionButton(
         FontAwesomeIcons.shieldHeart,
         tooltipText: context.lang.protectAsARealTwonly,
-        color: media.requiresAuthentication ? Theme.of(context).colorScheme.primary : Colors.white,
+        color: media.requiresAuthentication
+            ? Theme.of(context).colorScheme.primary
+            : Colors.white,
         onPressed: () async {
           await mediaService.setRequiresAuth(!media.requiresAuthentication);
           selectedGroupIds = HashSet();
@@ -376,7 +385,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   List<Widget> get actionsAtTheTop {
     if (layers.isNotEmpty &&
-        (layers.first.isEditing || (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
+        (layers.first.isEditing ||
+            (layers.last.isEditing && layers.last.hasCustomActionButtons))) {
       return [];
     }
     return [
@@ -468,7 +478,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
     if (layers.length == 2) {
       final filterLayer = layers[1];
-      if (layers.first is BackgroundLayerData && filterLayer is FilterLayerData) {
+      if (layers.first is BackgroundLayerData &&
+          filterLayer is FilterLayerData) {
         if (filterLayer.page == 1) {
           return (layers.first as BackgroundLayerData).image.image;
         }
@@ -501,6 +512,17 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<ScreenshotImageHelper?> storeImageAsOriginal() async {
+    Uint8List? gifBytes;
+    ScreenshotImageHelper? image;
+    if (media.type == MediaType.gif) {
+      gifBytes = await widget.screenshotImage?.getBytes();
+    } else {
+      image = await getEditedImageBytes();
+      if (image != null) {
+        await image.getBytes();
+      }
+    }
+
     if (mediaService.overlayImagePath.existsSync()) {
       mediaService.overlayImagePath.deleteSync();
     }
@@ -512,14 +534,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         mediaService.originalPath.deleteSync();
       }
     }
-    ScreenshotImageHelper? image;
+
     if (media.type == MediaType.gif) {
-      final bytes = await widget.screenshotImage?.getBytes();
-      if (bytes != null) {
-        mediaService.originalPath.writeAsBytesSync(bytes.toList());
+      if (gifBytes != null) {
+        mediaService.originalPath.writeAsBytesSync(gifBytes.toList());
       }
     } else {
-      image = await getEditedImageBytes();
       if (image == null) return null;
       final bytes = await image.getBytes();
       if (bytes == null) {
@@ -657,7 +677,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         await askToCloseThenClose();
       },
       child: Scaffold(
-        backgroundColor: widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
+        backgroundColor: widget.sharedFromGallery
+            ? null
+            : Colors.white.withAlpha(0),
         resizeToAvoidBottomInset: false,
         body: Stack(
           fit: StackFit.expand,
@@ -701,48 +723,56 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       ),
                       if (widget.sendToGroup != null) const SizedBox(width: 10),
                       if (widget.sendToGroup != null)
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            iconColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Theme.of(
-                              context,
-                            ).colorScheme.primary,
-                          ),
+                        MyButton(
+                          variant: MyButtonVariant.secondaryDense,
                           onPressed: pushShareImageView,
-                          child: const FaIcon(FontAwesomeIcons.userPlus),
+                          child: const FaIcon(
+                            FontAwesomeIcons.userPlus,
+                            size: 14,
+                          ),
                         ),
                       SizedBox(width: widget.sendToGroup == null ? 20 : 10),
-                      FilledButton.icon(
-                        icon: sendingOrLoadingImage
-                            ? SizedBox(
-                                height: 12,
-                                width: 12,
-                                child: CircularProgressIndicator.adaptive(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
+                      IntrinsicWidth(
+                        child: MyButton(
+                          variant: MyButtonVariant.primaryMiddle,
+                          onPressed: sendingOrLoadingImage
+                              ? null
+                              : () async {
+                                  if (widget.sendToGroup == null) {
+                                    return pushShareImageView();
+                                  }
+                                  await sendImageToSinglePerson();
+                                },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (sendingOrLoadingImage)
+                                const SizedBox(
+                                  height: 12,
+                                  width: 12,
+                                  child: CircularProgressIndicator.adaptive(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      Colors.black87,
+                                    ),
+                                  ),
+                                )
+                              else
+                                const FaIcon(
+                                  FontAwesomeIcons.solidPaperPlane,
+                                  size: 14,
                                 ),
-                              )
-                            : const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () async {
-                          if (sendingOrLoadingImage) return;
-                          if (widget.sendToGroup == null) {
-                            return pushShareImageView();
-                          }
-                          await sendImageToSinglePerson();
-                        },
-                        style: ButtonStyle(
-                          padding: WidgetStateProperty.all<EdgeInsets>(
-                            const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 30,
-                            ),
+                              const SizedBox(width: 8),
+                              Text(
+                                (widget.sendToGroup == null)
+                                    ? context.lang.shareImagedEditorShareWith
+                                    : substringBy(
+                                        widget.sendToGroup!.groupName,
+                                        15,
+                                      ),
+                              ),
+                            ],
                           ),
-                        ),
-                        label: Text(
-                          (widget.sendToGroup == null)
-                              ? context.lang.shareImagedEditorShareWith
-                              : substringBy(widget.sendToGroup!.groupName, 15),
-                          style: const TextStyle(fontSize: 17),
                         ),
                       ),
                     ],

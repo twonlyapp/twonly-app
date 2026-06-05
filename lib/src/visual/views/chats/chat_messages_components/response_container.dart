@@ -40,8 +40,10 @@ class _ResponseContainerState extends State<ResponseContainer> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final messageBox = _message.currentContext?.findRenderObject() as RenderBox?;
-      final previewBox = _preview.currentContext?.findRenderObject() as RenderBox?;
+      final messageBox =
+          _message.currentContext?.findRenderObject() as RenderBox?;
+      final previewBox =
+          _preview.currentContext?.findRenderObject() as RenderBox?;
       if (messageBox == null || previewBox == null) {
         return;
       }
@@ -64,7 +66,9 @@ class _ResponseContainerState extends State<ResponseContainer> {
       return widget.child!;
     }
     return GestureDetector(
-      onTap: widget.scrollToMessage == null ? null : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
+      onTap: widget.scrollToMessage == null
+          ? null
+          : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
@@ -140,12 +144,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   }
 
   Future<void> initAsync() async {
-    _message ??= await twonlyDB.messagesDao.getMessageById(widget.messageId!).getSingleOrNull();
+    _message ??= await twonlyDB.messagesDao
+        .getMessageById(widget.messageId!)
+        .getSingleOrNull();
     if (_message?.mediaId != null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
     if (_message?.senderId != null) {
-      final contact = await twonlyDB.contactsDao.getContactByUserId(_message!.senderId!).getSingleOrNull();
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(_message!.senderId!)
+          .getSingleOrNull();
       if (contact != null) {
         _username = getContactDisplayName(contact);
       }
@@ -263,15 +271,21 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               ],
             ),
           ),
-          if (_mediaService != null && _mediaService!.mediaFile.type != MediaType.audio)
-            SizedBox(
-              height: widget.showBorder ? 100 : 210,
-              child: Image.file(
-                _mediaService!.mediaFile.type == MediaType.video
-                    ? _mediaService!.thumbnailPath
-                    : _mediaService!.storedPath,
-              ),
-            ),
+          if (_mediaService != null &&
+              _mediaService!.mediaFile.type != MediaType.audio)
+            () {
+              final isVideo = _mediaService!.mediaFile.type == MediaType.video;
+              final pathToCheck = isVideo
+                  ? _mediaService!.thumbnailPath
+                  : _mediaService!.storedPath;
+              if (pathToCheck.existsSync() && pathToCheck.lengthSync() > 0) {
+                return SizedBox(
+                  height: widget.showBorder ? 100 : 210,
+                  child: Image.file(pathToCheck),
+                );
+              }
+              return const SizedBox.shrink();
+            }(),
         ],
       ),
     );

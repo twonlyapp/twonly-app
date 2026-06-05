@@ -7,6 +7,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
@@ -176,7 +177,8 @@ class _BackupViewState extends State<BackupView> {
                         ]),
                       ),
                       const SizedBox(height: 10),
-                      OutlinedButton(
+                      MyButton(
+                        variant: MyButtonVariant.primaryMiddle,
                         onPressed: _isLoading
                             ? null
                             : () async {
@@ -194,7 +196,8 @@ class _BackupViewState extends State<BackupView> {
                   ),
                 const SizedBox(height: 32),
                 Center(
-                  child: FilledButton(
+                  child: MyButton(
+                    variant: MyButtonVariant.secondaryDense,
                     onPressed: () =>
                         context.push(Routes.settingsBackupSetup, extra: true),
                     child: Text(

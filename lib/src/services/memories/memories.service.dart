@@ -200,6 +200,12 @@ class MemoriesService {
 
   Future<void> _initAsync() async {
     try {
+      // Start DB subscription first so files with existing thumbnails are shown immediately.
+      await _dbSubscription?.cancel();
+      _dbSubscription = twonlyDB.mediaFilesDao
+          .watchAllStoredMediaFiles()
+          .listen(_processMediaFilesStream);
+
       final pendingFiles = await twonlyDB.mediaFilesDao
           .getAllMediaFilesPendingMigration();
 
@@ -210,23 +216,25 @@ class MemoriesService {
         );
         _notifyState();
 
-        for (final mediaFile in pendingFiles) {
+        // Run the multi-step background migration process asynchronously.
+        unawaited(_processMigrationQueue(pendingFiles));
+      }
+    } catch (e) {
+      Log.error('Error initializing MemoriesService: $e');
+    }
+  }
+
+  Future<void> _processMigrationQueue(List<MediaFile> pendingFiles) async {
+    try {
+      // Phase 1: Create thumbnails first so files can be shown in the
+      // gallery immediately, without waiting for heavier operations.
+      for (final mediaFile in pendingFiles) {
+        try {
           final mediaService = MediaFileService(mediaFile);
 
-          if (mediaService.mediaFile.storedFileHash == null) {
-            await mediaService.hashMediaFile();
-          }
-
-          if (!mediaService.mediaFile.hasCropAnalyzed) {
-            await mediaService.cropTransparentBorders();
-          }
-
-          if (mediaService.mediaFile.sizeInBytes == null) {
-            await mediaService.calculateAndSaveSize();
-          }
-
           if (!mediaService.mediaFile.hasThumbnail) {
-            if (mediaService.thumbnailPath.existsSync()) {
+            if (mediaService.thumbnailPath.existsSync() &&
+                mediaService.thumbnailPath.lengthSync() > 0) {
               await twonlyDB.mediaFilesDao.updateMedia(
                 mediaFile.mediaId,
                 const MediaFilesCompanion(hasThumbnail: Value(true)),
@@ -235,18 +243,48 @@ class MemoriesService {
               await mediaService.createThumbnail();
             }
           }
-          _updateMigrationCount(_currentState.filesToMigrate - 1);
+        } catch (e) {
+          Log.error(
+            'Error creating thumbnail for ${mediaFile.mediaId}: $e',
+          );
         }
-
-        _updateMigrationCount(0);
+        _updateMigrationCount(_currentState.filesToMigrate - 1);
       }
 
-      await _dbSubscription?.cancel();
-      _dbSubscription = twonlyDB.mediaFilesDao
-          .watchAllStoredMediaFiles()
-          .listen(_processMediaFilesStream);
+      _updateMigrationCount(0);
+
+      // Phase 2: Background — hash, crop analysis, size calculation.
+      // Each DB write here fires the stream subscription above, keeping
+      // the gallery state fresh without a separate notification step.
+      await _backgroundProcessPendingFiles(pendingFiles);
     } catch (e) {
-      Log.error('Error initializing MemoriesService: $e');
+      Log.error('Error in background migration queue: $e');
+    }
+  }
+
+  Future<void> _backgroundProcessPendingFiles(
+    List<MediaFile> pendingFiles,
+  ) async {
+    for (final mediaFile in pendingFiles) {
+      try {
+        final mediaService = MediaFileService(mediaFile);
+
+        if (mediaService.mediaFile.storedFileHash == null) {
+          await mediaService.hashMediaFile();
+        }
+
+        if (!mediaService.mediaFile.hasCropAnalyzed) {
+          await mediaService.cropTransparentBorders();
+        }
+
+        if (mediaService.mediaFile.sizeInBytes == null) {
+          await mediaService.calculateAndSaveSize();
+        }
+      } catch (e) {
+        Log.error(
+          'Error in background processing of ${mediaFile.mediaId}: $e',
+        );
+      }
     }
   }
 
