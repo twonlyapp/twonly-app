@@ -76,7 +76,7 @@ class _AnimatedNewMessageState extends State<AnimatedNewMessage>
         parent: _controller,
         curve: Curves.easeOut,
       ),
-      axisAlignment: 1,
+      alignment: Alignment.bottomLeft,
       child: ScaleTransition(
         scale: _scaleAnimation,
         alignment: Alignment.bottomRight,
