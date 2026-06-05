@@ -55,6 +55,8 @@
 	<string>Use your microphone to enable audio when making videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>twonly will save photos or videos to your library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app does not use or store your location information.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

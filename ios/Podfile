@@ -68,6 +68,28 @@ post_install do |installer|
 
         ## dart: PermissionGroup.mediaLibrary
         'PERMISSION_PHOTOS=1',
+
+        ## dart: PermissionGroup.location, PermissionGroup.locationAlways, PermissionGroup.locationWhenInUse
+        'PERMISSION_LOCATION=0',
+
+        ## dart: PermissionGroup.contacts
+        'PERMISSION_CONTACTS=0',
+
+        ## dart: PermissionGroup.calendar, PermissionGroup.reminders
+        'PERMISSION_EVENTS=0',
+        'PERMISSION_REMINDERS=0',
+
+        ## dart: PermissionGroup.speech
+        'PERMISSION_SPEECH_RECOGNITION=0',
+
+        ## dart: PermissionGroup.bluetooth
+        'PERMISSION_BLUETOOTH=0',
+
+        ## dart: PermissionGroup.appTrackingTransparency
+        'PERMISSION_APP_TRACKING_TRANSPARENCY=0',
+
+        ## dart: PermissionGroup.sensors
+        'PERMISSION_SENSORS=0',
       ]
 
     end
