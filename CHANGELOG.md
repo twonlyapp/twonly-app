@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.30
+
+- Fix: Changed minimum threshold for the user discovery to 3
+
+## 0.2.28
+
+- Improved: Design of some UI components
+- Improved: Memories viewer shows state for batch operations and has improved performance
+- Fix: Auto-detect if FCM token does not work and trigger a reset
+
 ## 0.2.26
 
 - New: Import images from the gallery

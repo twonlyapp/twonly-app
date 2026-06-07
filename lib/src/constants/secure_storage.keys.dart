@@ -12,4 +12,7 @@ class SecureStorageKeys {
   // Not required for backup...
   static const String receivingPushKeys = 'push_keys_receiving';
   static const String sendingPushKeys = 'push_keys_sending';
+  static const String lastFcmMessageTimestamp = 'last_fcm_message_timestamp';
+  static const String lastServerMessageTimestamp =
+      'last_server_message_timestamp';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:lottie/lottie.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class OnboardingView extends StatelessWidget {
   const OnboardingView({required this.callbackOnSuccess, super.key});
@@ -53,19 +54,6 @@ class OnboardingView extends StatelessWidget {
                 ),
               ),
             ),
-            // PageViewModel(
-            //   title: context.lang.onboardingSendTwonliesTitle,
-            //   body: context.lang.onboardingSendTwonliesBody,
-            //   image: Center(
-            //     child: Padding(
-            //       padding: const EdgeInsets.only(top: 100),
-            //       child: Lottie.asset(
-            //         'assets/animations/twonlies.lottie',
-            //         repeat: false,
-            //       ),
-            //     ),
-            //   ),
-            // ),
             PageViewModel(
               title: context.lang.onboardingNotProductTitle,
               bodyWidget: Column(
@@ -81,7 +69,7 @@ class OnboardingView extends StatelessWidget {
                       right: 50,
                       top: 20,
                     ),
-                    child: FilledButton(
+                    child: MyButton(
                       onPressed: callbackOnSuccess,
                       child: Text(context.lang.registerSubmitButton),
                     ),
@@ -97,17 +85,6 @@ class OnboardingView extends StatelessWidget {
                 ),
               ),
             ),
-            // PageViewModel(
-            //   title: context.lang.onboardingGetStartedTitle,
-            //   image: Center(
-            //     child: Padding(
-            //       padding: const EdgeInsets.only(top: 100),
-            //       child: Lottie.asset(
-            //         'assets/animations/rocket.lottie',
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
           done: const Text(''),
           next: Text(context.lang.next),

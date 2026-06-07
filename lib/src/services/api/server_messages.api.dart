@@ -31,6 +31,7 @@ import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -153,7 +154,10 @@ Future<void> _handleClient2ClientMessage(
         Log.info(
           '[$receiptId] Sending error message to the original sender with receiptId $newReceiptId.',
         );
-        await tryToSendCompleteMessage(receiptId: newReceiptId, blocking: false);
+        await tryToSendCompleteMessage(
+          receiptId: newReceiptId,
+          blocking: false,
+        );
       }
 
     case Message_Type.CIPHERTEXT:
@@ -276,9 +280,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
 
   Log.info('[$receiptId] Finished handleEncryptedMessage');
 
-  if (Platform.isAndroid && a == null && b == null) {
-    // Message was handled without any error -> Show push notification to the user.
-    await showPushNotificationFromServerMessages(fromUserId, encryptedContent);
+  if (a == null && b == null) {
+    unawaited(updateLastServerMessageTimestamp());
+    if (Platform.isAndroid) {
+      // Message was handled without any error. Show push notification to the user for Android.
+      await showPushNotificationFromServerMessages(
+        fromUserId,
+        encryptedContent,
+      );
+    }
   }
 
   return (a, b);

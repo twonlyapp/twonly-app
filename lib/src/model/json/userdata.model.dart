@@ -114,8 +114,8 @@ class UserData {
   @JsonKey(defaultValue: 4)
   int requiredSendImages = 4;
 
-  @JsonKey(defaultValue: 2)
-  int userDiscoveryThreshold = 2;
+  @JsonKey(defaultValue: 3)
+  int userDiscoveryThreshold = 3;
 
   @JsonKey(defaultValue: false)
   bool userDiscoveryRequiresManualApproval = false;

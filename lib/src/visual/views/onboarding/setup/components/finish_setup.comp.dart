@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 class FinishSetupComp extends StatefulWidget {
@@ -123,29 +124,19 @@ class _FinishSetupCompState extends State<FinishSetupComp> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          FilledButton.icon(
+                          MyButton(
                             onPressed: onTap,
-                            icon: const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                            ),
-                            label: Text(
-                              context.lang.finishSetupCardAction,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: context.color.primary,
-                              foregroundColor: context.color.onPrimary,
-                              minimumSize: const Size(0, 40),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
+                            variant: MyButtonVariant.primaryDense,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(context.lang.finishSetupCardAction),
+                              ],
                             ),
                           ),
                         ],

@@ -62,7 +62,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
             ),
           )
       ..storeMediaFilesInGallery =
-          json['storeMediaFilesInGallery'] as bool? ?? false
+          json['storeMediaFilesInGallery'] as bool? ?? true
       ..autoStoreAllSendUnlimitedMediaFiles =
           json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
       ..typingIndicators = json['typingIndicators'] as bool? ?? true
@@ -78,7 +78,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['isUserDiscoveryEnabled'] as bool? ?? false
       ..requiredSendImages = (json['requiredSendImages'] as num?)?.toInt() ?? 4
       ..userDiscoveryThreshold =
-          (json['userDiscoveryThreshold'] as num?)?.toInt() ?? 2
+          (json['userDiscoveryThreshold'] as num?)?.toInt() ?? 3
       ..userDiscoveryRequiresManualApproval =
           json['userDiscoveryRequiresManualApproval'] as bool? ?? false
       ..userDiscoverySharePromotion =

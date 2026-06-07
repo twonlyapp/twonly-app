@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart' show clock;
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/locator.dart';
@@ -327,12 +328,16 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     String groupId,
     DateTime newLastMessage,
   ) async {
+    final now = clock.now();
+    final clampedLastMessage = newLastMessage.isAfter(now)
+        ? now
+        : newLastMessage;
     await (update(groups)..where(
           (t) =>
               t.groupId.equals(groupId) &
-              (t.lastMessageExchange.isSmallerThanValue(newLastMessage)),
+              (t.lastMessageExchange.isSmallerThanValue(clampedLastMessage)),
         ))
-        .write(GroupsCompanion(lastMessageExchange: Value(newLastMessage)));
+        .write(GroupsCompanion(lastMessageExchange: Value(clampedLastMessage)));
   }
 
   Stream<List<Group>> watchNonDirectGroupsForMember(int contactId) {

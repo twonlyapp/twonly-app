@@ -79,20 +79,30 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
       _scaleController.value = 1.0;
     }
 
-    _listener = ImageStreamListener((info, _) {
-      if (mounted) {
-        setState(() {
-          _imageInfo = info;
-        });
-      }
-    });
+    _listener = ImageStreamListener(
+      (info, _) {
+        if (mounted) {
+          setState(() {
+            _imageInfo = info;
+          });
+        }
+      },
+      onError: (exception, stackTrace) {
+        if (mounted) {
+          setState(() {
+            _imageProvider = null;
+            _imageInfo = null;
+          });
+        }
+      },
+    );
     _resolveImage();
   }
 
   void _resolveImage() {
     final media = widget.galleryItem.mediaService;
-    final hasThumbnail = media.thumbnailPath.existsSync();
-    final hasStored = media.storedPath.existsSync();
+    final hasThumbnail = media.thumbnailPath.existsSync() && media.thumbnailPath.lengthSync() > 0;
+    final hasStored = media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
     final isImageOrGif =
         media.mediaFile.type == MediaType.image ||
         media.mediaFile.type == MediaType.gif;
@@ -181,6 +191,17 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
                         image: _imageProvider!,
                         fit: BoxFit.cover,
                         gaplessPlayback: true,
+                        errorBuilder: (context, error, stackTrace) {
+                          return ColoredBox(
+                            color: Colors.grey.shade200,
+                            child: const Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.image,
+                                color: Colors.black26,
+                              ),
+                            ),
+                          );
+                        },
                       )
                     else
                       ColoredBox(

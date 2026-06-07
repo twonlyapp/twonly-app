@@ -213,7 +213,12 @@ class MediaFileService {
   }
 
   Future<void> createThumbnail() async {
-    if (!storedPath.existsSync()) {
+    if (!storedPath.existsSync() || storedPath.lengthSync() == 0) {
+      if (storedPath.existsSync() && storedPath.lengthSync() == 0) {
+        try {
+          storedPath.deleteSync();
+        } catch (_) {}
+      }
       if (mediaFile.stored &&
           mediaFile.createdAt.isBefore(
             clock.now().subtract(const Duration(days: 30)),
@@ -288,8 +293,10 @@ class MediaFileService {
 
   bool get imagePreviewAvailable =>
       mediaFile.hasThumbnail ||
-      thumbnailPath.existsSync() ||
-      storedPath.existsSync();
+      (thumbnailPath.existsSync() && thumbnailPath.lengthSync() > 0) ||
+      mediaFile.type == MediaType.audio ||
+      ((mediaFile.type == MediaType.image || mediaFile.type == MediaType.gif) &&
+          storedPath.existsSync() && storedPath.lengthSync() > 0);
 
   Future<void> storeMediaFile() async {
     Log.info('Storing media file ${mediaFile.mediaId}');
@@ -439,7 +446,7 @@ class MediaFileService {
       return;
     }
 
-    if (!storedPath.existsSync()) {
+    if (!storedPath.existsSync() || storedPath.lengthSync() == 0) {
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         const MediaFilesCompanion(hasCropAnalyzed: Value(true)),
@@ -448,7 +455,7 @@ class MediaFileService {
     }
 
     try {
-      final bytes = storedPath.readAsBytesSync();
+      final bytes = await storedPath.readAsBytes();
       final result = await compute(_processImageCrop, bytes);
 
       if (result.isCropped && result.pngBytes != null) {
@@ -460,18 +467,18 @@ class MediaFileService {
           );
           
           if (webpBytes.isNotEmpty) {
-            storedPath.writeAsBytesSync(webpBytes);
+            await storedPath.writeAsBytes(webpBytes);
           } else {
             Log.warn('WebP compression returned empty, falling back to PNG');
-            storedPath.writeAsBytesSync(result.pngBytes!);
+            await storedPath.writeAsBytes(result.pngBytes!);
           }
         } catch (e) {
           Log.error('Error compressing to WebP, falling back to PNG: $e');
-          storedPath.writeAsBytesSync(result.pngBytes!);
+          await storedPath.writeAsBytes(result.pngBytes!);
         }
 
         if (thumbnailPath.existsSync()) {
-          thumbnailPath.deleteSync();
+          await thumbnailPath.delete();
         }
         await createThumbnail();
         final checksum = await sha256File(storedPath);

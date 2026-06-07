@@ -5,6 +5,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
@@ -152,7 +153,9 @@ class _SetupViewState extends State<SetupView> {
                           right: index == currentPage.totalPages - 1 ? 0 : 8,
                         ),
                         decoration: BoxDecoration(
-                          color: isFinished ? context.color.primary : context.color.surfaceContainer,
+                          color: isFinished
+                              ? context.color.primary
+                              : context.color.surfaceContainer,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -175,35 +178,30 @@ class _SetupViewState extends State<SetupView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (currentPage.index > 0)
-                        TextButton(
+                        MyButton(
                           onPressed: () async {
                             await UserService.update((u) {
                               u.currentSetupPage = currentPage.previous()?.name;
                             });
                           },
+                          variant: MyButtonVariant.text,
                           child: Text(
                             context.lang.back,
-                            style: TextStyle(
-                              color: context.color.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ),
-                      if (currentPage.index > 0 && !currentPage.isLast) const SizedBox(width: 24),
+                      if (currentPage.index > 0 && !currentPage.isLast)
+                        const SizedBox(width: 24),
                       if (!currentPage.isLast)
-                        TextButton(
+                        MyButton(
                           onPressed: () async {
                             await UserService.update(
                               (u) => u.skipSetupPages = true,
                             );
                             widget.onUpdate?.call();
                           },
+                          variant: MyButtonVariant.text,
                           child: Text(
                             context.lang.onboardingFinishLater,
-                            style: TextStyle(
-                              color: context.color.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ),
                     ],

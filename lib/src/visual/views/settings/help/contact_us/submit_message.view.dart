@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class SubmitMessage extends StatefulWidget {
   const SubmitMessage({required this.fullMessage, super.key});
@@ -100,7 +101,8 @@ class _ContactUsState extends State<SubmitMessage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(
+                    MyButton(
+                      variant: MyButtonVariant.primaryDense,
                       onPressed: isLoading ? null : _submitFeedback,
                       child: Text(context.lang.submit),
                     ),

@@ -9,7 +9,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
-class ResponseContainer extends StatefulWidget {
+class ResponseContainer extends StatelessWidget {
   const ResponseContainer({
     required this.msg,
     required this.group,
@@ -28,81 +28,54 @@ class ResponseContainer extends StatefulWidget {
   final void Function(String)? scrollToMessage;
 
   @override
-  State<ResponseContainer> createState() => _ResponseContainerState();
-}
-
-class _ResponseContainerState extends State<ResponseContainer> {
-  double? minWidth;
-  final GlobalKey _message = GlobalKey();
-  final GlobalKey _preview = GlobalKey();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final messageBox = _message.currentContext?.findRenderObject() as RenderBox?;
-      final previewBox = _preview.currentContext?.findRenderObject() as RenderBox?;
-      if (messageBox == null || previewBox == null) {
-        return;
-      }
-      setState(() {
-        if (messageBox.size.width > previewBox.size.width) {
-          minWidth = messageBox.size.width;
-        } else {
-          minWidth = previewBox.size.width;
-        }
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.msg.quotesMessageId == null) {
-      if (widget.child == null) {
+    if (msg.quotesMessageId == null) {
+      if (child == null) {
         return Container();
       }
-      return widget.child!;
+      return child!;
     }
     return GestureDetector(
-      onTap: widget.scrollToMessage == null ? null : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
+      onTap: scrollToMessage == null
+          ? null
+          : () => scrollToMessage!(msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: getMessageColor(widget.msg.senderId != null),
-          borderRadius: widget.borderRadius,
+          color: getMessageColor(msg.senderId != null),
+          borderRadius: borderRadius,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              key: _preview,
-              padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
-              child: Container(
-                width: minWidth,
-                decoration: BoxDecoration(
-                  color: context.color.surface.withAlpha(150),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(8),
-                    topLeft: Radius.circular(8),
-                    bottomLeft: Radius.circular(4),
-                    bottomRight: Radius.circular(4),
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.color.surface.withAlpha(150),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8),
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(4),
+                    ),
+                  ),
+                  child: ResponsePreview(
+                    group: group,
+                    messageId: msg.quotesMessageId,
+                    showBorder: false,
+                    showLeftBorder: false,
+                    colorUsername: false,
                   ),
                 ),
-                child: ResponsePreview(
-                  group: widget.group,
-                  messageId: widget.msg.quotesMessageId,
-                  showBorder: false,
-                ),
               ),
-            ),
-            SizedBox(
-              key: _message,
-              width: minWidth,
-              child: widget.child,
-            ),
-          ],
+              if (child != null) child!,
+            ],
+          ),
         ),
       ),
     );
@@ -115,6 +88,8 @@ class ResponsePreview extends StatefulWidget {
     required this.showBorder,
     this.message,
     this.messageId,
+    this.showLeftBorder = true,
+    this.colorUsername = false,
     super.key,
   });
 
@@ -122,6 +97,8 @@ class ResponsePreview extends StatefulWidget {
   final String? messageId;
   final Group group;
   final bool showBorder;
+  final bool showLeftBorder;
+  final bool colorUsername;
 
   @override
   State<ResponsePreview> createState() => _ResponsePreviewState();
@@ -140,12 +117,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   }
 
   Future<void> initAsync() async {
-    _message ??= await twonlyDB.messagesDao.getMessageById(widget.messageId!).getSingleOrNull();
+    _message ??= await twonlyDB.messagesDao
+        .getMessageById(widget.messageId!)
+        .getSingleOrNull();
     if (_message?.mediaId != null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
     if (_message?.senderId != null) {
-      final contact = await twonlyDB.contactsDao.getContactByUserId(_message!.senderId!).getSingleOrNull();
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(_message!.senderId!)
+          .getSingleOrNull();
       if (contact != null) {
         _username = getContactDisplayName(contact);
       }
@@ -204,74 +185,85 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
       if (_message!.senderId == null) {
         _username = context.lang.you;
-        // _username = _message!.senderId.toString();
       }
 
       color = getMessageColor(_message!.senderId != null);
+    }
 
-      if (!_message!.mediaStored) {
-        return Container(
-          padding: widget.showBorder
-              ? const EdgeInsets.only(left: 10, right: 10)
-              : const EdgeInsets.symmetric(horizontal: 5),
-          decoration: (widget.showBorder)
-              ? BoxDecoration(
-                  border: Border(
-                    left: BorderSide(
-                      color: color,
-                      width: 2,
-                    ),
-                  ),
-                )
-              : null,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _username,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              if (subtitle != null) Text(subtitle),
-            ],
+    final hasImage =
+        _message != null &&
+        _message!.mediaStored &&
+        _mediaService != null &&
+        _mediaService!.mediaFile.type != MediaType.audio;
+
+    Widget? imageWidget;
+    if (hasImage) {
+      final isVideo = _mediaService!.mediaFile.type == MediaType.video;
+      final pathToCheck = isVideo
+          ? _mediaService!.thumbnailPath
+          : _mediaService!.storedPath;
+      if (pathToCheck.existsSync() && pathToCheck.lengthSync() > 0) {
+        imageWidget = Container(
+          height: 40,
+          width: 40,
+          margin: const EdgeInsets.only(left: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.file(
+              pathToCheck,
+              fit: BoxFit.cover,
+            ),
           ),
         );
       }
     }
 
     return Container(
-      padding: const EdgeInsets.only(left: 10),
-      width: 200,
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            color: color,
-            width: 2,
-          ),
-        ),
+      padding: EdgeInsets.only(
+        left: widget.showLeftBorder ? 8 : 4,
+        right: 6,
+        top: 4,
+        bottom: 4,
       ),
+      constraints: BoxConstraints(
+        minWidth: 60,
+        maxWidth: MediaQuery.of(context).size.width * 0.7,
+      ),
+      decoration: widget.showLeftBorder
+          ? BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: color,
+                  width: 2.5,
+                ),
+              ),
+            )
+          : null,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   _username,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: widget.colorUsername ? color : null,
+                  ),
                 ),
-                if (subtitle != null) Text(subtitle),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),
-          if (_mediaService != null && _mediaService!.mediaFile.type != MediaType.audio)
-            SizedBox(
-              height: widget.showBorder ? 100 : 210,
-              child: Image.file(
-                _mediaService!.mediaFile.type == MediaType.video
-                    ? _mediaService!.thumbnailPath
-                    : _mediaService!.storedPath,
-              ),
-            ),
+          if (imageWidget != null) imageWidget,
         ],
       ),
     );

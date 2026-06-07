@@ -347,6 +347,15 @@ class _SynchronizedImageViewerScreenState
                                   backgroundDecoration: const BoxDecoration(
                                     color: Colors.transparent,
                                   ),
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.broken_image_outlined,
+                                        color: Colors.white38,
+                                        size: 64,
+                                      ),
+                                    );
+                                  },
                                   scaleStateChangedCallback: (state) {
                                     final zoomed =
                                         state != PhotoViewScaleState.initial;

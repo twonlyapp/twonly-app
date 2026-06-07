@@ -9,8 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get registerSlogan =>
-      'Stay in touch with friends privately and securely.';
+  String get registerSlogan => 'Stay in touch privately.';
 
   @override
   String get onboardingWelcomeTitle => 'Welcome to twonly!';
@@ -51,7 +50,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGetStartedTitle => 'Let\'s go!';
 
   @override
-  String get registerUsernameSlogan => 'Your public username';
+  String get registerUsernameSlogan => 'Create your account';
 
   @override
   String get registerUsernameDecoration => 'Username';
@@ -606,7 +605,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get userFoundBody => 'Do you want to create a follow request?';
+  String userFoundBody(String username) {
+    return 'Do you want to connect with $username?';
+  }
 
   @override
   String get errorInternalError =>
@@ -2109,4 +2110,26 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get emptyChatListTitle => 'Find your first friend';
+
+  @override
+  String get emptyChatListDesc =>
+      'Let friends scan your QR code, or share them your profile.';
+
+  @override
+  String get emptyChatListShareBtn => 'Share your profile';
+
+  @override
+  String get emptyChatListScanBtn => 'QR Code';
+
+  @override
+  String get emptyChatListAddUsernameBtn => 'By Username';
+
+  @override
+  String get avatarCustomizeRandomize => 'Randomize';
+
+  @override
+  String get avatarCustomizeReset => 'Reset';
 }

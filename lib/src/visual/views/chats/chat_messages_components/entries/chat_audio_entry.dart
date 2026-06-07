@@ -31,34 +31,27 @@ class ChatAudioEntry extends StatelessWidget {
       return Container(); // media file was purged
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textWidth = measureTextWidth(info.text);
-        const timeWidth = 60.0;
-        final isExpanded =
-            info.expanded ||
-            (textWidth + timeWidth + 20 > constraints.maxWidth);
-        final effectiveSpacerWidth =
-            constraints.minWidth - textWidth - timeWidth;
-        final spacerWidth = effectiveSpacerWidth > 0
-            ? effectiveSpacerWidth
-            : 0.0;
+    final showTime = info.displayTime || message.modifiedAt != null;
 
-        return Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
-            minWidth: 250,
-          ),
-          padding: info.padding,
-          decoration: BoxDecoration(
-            color: info.color,
-            borderRadius: borderRadius,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (info.displayUserName != '')
-                Text(
+    return IntrinsicWidth(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          minWidth: 280,
+        ),
+        padding: info.padding,
+        decoration: BoxDecoration(
+          color: info.color,
+          borderRadius: borderRadius,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (info.displayUserName != '')
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
                   info.displayUserName,
                   textAlign: TextAlign.left,
                   style: const TextStyle(
@@ -66,42 +59,37 @@ class ChatAudioEntry extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (isExpanded && info.text != '')
-                    Expanded(
-                      child: BetterText(
-                        text: info.text,
-                        textColor: info.textColor,
-                      ),
-                    )
-                  else if (info.text != '') ...[
-                    BetterText(text: info.text, textColor: info.textColor),
-                    SizedBox(width: spacerWidth),
-                  ] else ...[
-                    if (mediaService.mediaFile.downloadState ==
-                            DownloadState.ready ||
-                        mediaService.mediaFile.downloadState == null)
-                      mediaService.tempPath.existsSync()
-                          ? InChatAudioPlayer(
-                              path: mediaService.tempPath.path,
-                              message: message,
-                            )
-                          : Container()
-                    else
-                      MessageSendStateIcon([message], [mediaService.mediaFile]),
-                    SizedBox(width: spacerWidth),
-                  ],
-                  if (info.displayTime || message.modifiedAt != null)
-                    FriendlyMessageTime(message: message),
-                ],
               ),
-            ],
-          ),
-        );
-      },
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (info.text != '')
+                  Expanded(
+                    child: BetterText(
+                      text: info.text,
+                      textColor: info.textColor,
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: mediaService.mediaFile.downloadState ==
+                                DownloadState.ready ||
+                            mediaService.mediaFile.downloadState == null
+                        ? (mediaService.tempPath.existsSync()
+                            ? InChatAudioPlayer(
+                                path: mediaService.tempPath.path,
+                                message: message,
+                              )
+                            : Container())
+                        : MessageSendStateIcon([message], [mediaService.mediaFile]),
+                  ),
+                if (showTime) FriendlyMessageTime(message: message),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -66,6 +66,18 @@ class MemoriesFlashbackBannerComp extends StatelessWidget {
                           Image.file(
                             items.first.mediaService.storedPath,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return ColoredBox(
+                                color: Colors.grey.shade800,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image_outlined,
+                                    color: Colors.white30,
+                                    size: 32,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           Positioned.fill(
                             child: DecoratedBox(

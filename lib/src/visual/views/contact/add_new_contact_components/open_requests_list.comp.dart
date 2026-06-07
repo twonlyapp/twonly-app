@@ -72,7 +72,10 @@ class OpenRequestsListComp extends StatelessWidget {
             if (block) {
               const update = ContactsCompanion(blocked: Value(true));
               if (context.mounted) {
-                await twonlyDB.contactsDao.updateContact(contact.userId, update);
+                await twonlyDB.contactsDao.updateContact(
+                  contact.userId,
+                  update,
+                );
               }
             }
           },
@@ -189,7 +192,9 @@ class OpenRequestsListComp extends StatelessWidget {
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
-              children: contact.requested ? requestedActions(context, contact) : sendRequestActions(context, contact),
+              children: contact.requested
+                  ? requestedActions(context, contact)
+                  : sendRequestActions(context, contact),
             ),
           );
         }),

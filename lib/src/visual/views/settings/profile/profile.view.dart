@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,8 +9,10 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -22,9 +23,6 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  final AvatarMakerController _avatarMakerController =
-      PersistentAvatarMakerController(customizedPropertyCategories: []);
-
   int twonlyScore = 0;
   late StreamSubscription<int> twonlyScoreSub;
 
@@ -104,22 +102,24 @@ class _ProfileViewState extends State<ProfileView> {
             physics: const BouncingScrollPhysics(),
             children: <Widget>[
               const SizedBox(height: 25),
-              AvatarMakerAvatar(
-                backgroundColor: Colors.transparent,
-                radius: 80,
-                controller: _avatarMakerController,
+              const AvatarIcon(
+                fontSize: 70,
+                myAvatar: true,
               ),
               const SizedBox(height: 10),
               Center(
-                child: SizedBox(
-                  height: 35,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.edit),
-                    label: Text(context.lang.settingsProfileCustomizeAvatar),
-                    onPressed: () async {
-                      await context.push(Routes.settingsProfileModifyAvatar);
-                      await _avatarMakerController.performRestore();
-                    },
+                child: MyButton(
+                  variant: MyButtonVariant.secondaryDense,
+                  onPressed: () async {
+                    await context.push(Routes.settingsProfileModifyAvatar);
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.edit, size: 16),
+                      const SizedBox(width: 8),
+                      Text(context.lang.settingsProfileCustomizeAvatar),
+                    ],
                   ),
                 ),
               ),

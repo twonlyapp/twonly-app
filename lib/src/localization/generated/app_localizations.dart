@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Stay in touch with friends privately and securely.'**
+  /// **'Stay in touch privately.'**
   String get registerSlogan;
 
   /// No description provided for @onboardingWelcomeTitle.
@@ -173,7 +173,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerUsernameSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Your public username'**
+  /// **'Create your account'**
   String get registerUsernameSlogan;
 
   /// No description provided for @registerUsernameDecoration.
@@ -1205,8 +1205,8 @@ abstract class AppLocalizations {
   /// No description provided for @userFoundBody.
   ///
   /// In en, this message translates to:
-  /// **'Do you want to create a follow request?'**
-  String get userFoundBody;
+  /// **'Do you want to connect with {username}?'**
+  String userFoundBody(String username);
 
   /// No description provided for @errorInternalError.
   ///
@@ -3689,6 +3689,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Import 1 item} other{Import {count} items}}'**
   String importGalleryImportCount(num count);
+
+  /// No description provided for @emptyChatListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your first friend'**
+  String get emptyChatListTitle;
+
+  /// No description provided for @emptyChatListDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let friends scan your QR code, or share them your profile.'**
+  String get emptyChatListDesc;
+
+  /// No description provided for @emptyChatListShareBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your profile'**
+  String get emptyChatListShareBtn;
+
+  /// No description provided for @emptyChatListScanBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Code'**
+  String get emptyChatListScanBtn;
+
+  /// No description provided for @emptyChatListAddUsernameBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'By Username'**
+  String get emptyChatListAddUsernameBtn;
+
+  /// No description provided for @avatarCustomizeRandomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Randomize'**
+  String get avatarCustomizeRandomize;
+
+  /// No description provided for @avatarCustomizeReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get avatarCustomizeReset;
 }
 
 class _AppLocalizationsDelegate

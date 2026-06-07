@@ -62,5 +62,7 @@ class Routes {
       '/settings/developer/automated_testing';
   static const String settingsDeveloperReduceFlames =
       '/settings/developer/reduce_flames';
+  static const String settingsDeveloperInformations =
+      '/settings/developer/informations';
   static const String settingsInvite = '/settings/invite';
 }

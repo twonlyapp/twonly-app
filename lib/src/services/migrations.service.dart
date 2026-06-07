@@ -14,6 +14,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
@@ -144,6 +145,19 @@ Future<void> runMigrations() async {
     }
   }
 
+  if (userService.currentUser.appVersion < 116) {
+    if (userService.currentUser.userDiscoveryThreshold == 2) {
+      if (userService.currentUser.isUserDiscoveryEnabled) {
+        await UserDiscoveryService.initializeOrUpdate(
+          threshold: 3,
+          sharePromotion: userService.currentUser.userDiscoverySharePromotion,
+        );
+      } else {
+        await UserService.update((u) => u..userDiscoveryThreshold = 3);
+      }
+    }
+    await UserService.update((u) => u.appVersion = 116);
+  }
   if (kDebugMode) {
     assert(
       AppState.latestAppVersionId == 116,

@@ -15,6 +15,11 @@ class NotificationService: UNNotificationServiceExtension {
         self.contentHandler = contentHandler
         bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
 
+        // Store the current timestamp in Keychain for iOS FCM messaging tracking
+        let nowMs = String(format: "%.0f", Date().timeIntervalSince1970 * 1000)
+        writeToKeychain(key: "last_fcm_message_timestamp", value: nowMs)
+        NSLog("Received APNs push notification, updated last_fcm_message_timestamp to \(nowMs)")
+
         if let bestAttemptContent = bestAttemptContent {
 
             guard bestAttemptContent.userInfo as? [String: Any] != nil,
@@ -188,6 +193,7 @@ func readFromKeychain(key: String) -> String? {
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrAccount as String: key,
+        kSecAttrService as String: "flutter_secure_storage_service",
         kSecReturnData as String: kCFBooleanTrue!,
         kSecMatchLimit as String: kSecMatchLimitOne,
         kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared",  // Use your access group
@@ -203,6 +209,36 @@ func readFromKeychain(key: String) -> String? {
     }
 
     return nil
+}
+
+// Helper function to write to Keychain
+func writeToKeychain(key: String, value: String) {
+    guard let data = value.data(using: .utf8) else {
+        NSLog("Failed to convert value to data for keychain key: \(key)")
+        return
+    }
+
+    let query: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrAccount as String: key,
+        kSecAttrService as String: "flutter_secure_storage_service",
+        kSecAttrAccessGroup as String: "CN332ZUGRP.eu.twonly.shared"
+    ]
+
+    // Delete existing item first to ensure a clean overwrite
+    SecItemDelete(query as CFDictionary)
+
+    // Add the new item with background-compatible accessibility
+    var addQuery = query
+    addQuery[kSecValueData as String] = data
+    addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+
+    let status = SecItemAdd(addQuery as CFDictionary, nil)
+    if status != errSecSuccess {
+        NSLog("Failed to write keychain item for key \(key): \(status)")
+    } else {
+        NSLog("Successfully wrote keychain item for key: \(key)")
+    }
 }
 
 func getPushNotificationText(pushNotification: PushNotification, userKnown: Bool) -> (String, String) {

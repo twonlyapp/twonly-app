@@ -158,6 +158,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 allMediaFiles.add(msg);
               }
             }
+            if (allMediaFiles.length > 1) {
+              if (widget.initialMessage == null &&
+                  currentMedia == null &&
+                  !_showDownloadingLoader) {
+                allMediaFiles.sort(
+                  (a, b) => a.createdAt.compareTo(b.createdAt),
+                );
+              } else {
+                final upcoming = allMediaFiles.sublist(1)
+                  ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+                allMediaFiles = [allMediaFiles.first, ...upcoming];
+              }
+            }
             if (mounted) setState(() {});
             if (firstRun) {
               firstRun = false;
@@ -698,6 +711,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                             ),
                             initialScale: PhotoViewComputedScale.contained,
                             minScale: PhotoViewComputedScale.contained,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.white38,
+                                  size: 64,
+                                ),
+                              );
+                            },
                           ),
                         ),
                     ],

@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/utils/log.dart';
+
+final int isolateCallbackId = Random().nextInt(0x7FFFFFFF);
 
 class AppEnvironment {
   static late String cacheDir;

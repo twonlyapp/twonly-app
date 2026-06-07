@@ -141,7 +141,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
     final query =
         (select(mediaFiles)..where((t) => t.stored.equals(true))).join([])
-          ..groupBy([mediaFiles.storedFileHash]);
+          ..groupBy([
+            const CustomExpression<Object>('COALESCE(stored_file_hash, media_id)')
+          ]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 

@@ -17,6 +17,7 @@ import 'package:twonly/src/visual/components/contact_request_badge.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/headline.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/shortcut_row.comp.dart';
@@ -111,7 +112,9 @@ class _ShareImageView extends State<ShareImageView> {
 
     for (final group in groups) {
       if (group.pinned) continue;
-      if (!group.archived && getFlameCounterFromGroup(group).counter > 0 && bestFriends.length < 6) {
+      if (!group.archived &&
+          getFlameCounterFromGroup(group).counter > 0 &&
+          bestFriends.length < 6) {
         bestFriends.add(group);
       } else {
         otherUsers.add(group);
@@ -131,7 +134,10 @@ class _ShareImageView extends State<ShareImageView> {
       await updateGroups(
         _allGroups
             .where(
-              (x) => !x.archived || !hideArchivedUsers || widget.selectedGroupIds.contains(x.groupId),
+              (x) =>
+                  !x.archived ||
+                  !hideArchivedUsers ||
+                  widget.selectedGroupIds.contains(x.groupId),
             )
             .toList(),
       );
@@ -193,7 +199,8 @@ class _ShareImageView extends State<ShareImageView> {
                   selectedGroupIds: widget.selectedGroupIds,
                   updateSelectedGroupIds: updateSelectedGroupIds,
                   title: context.lang.shareImagePinnedContacts,
-                  showSelectAll: !widget.mediaFileService.mediaFile.requiresAuthentication,
+                  showSelectAll:
+                      !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
                 const SizedBox(height: 10),
                 BestFriendsSelector(
@@ -201,7 +208,8 @@ class _ShareImageView extends State<ShareImageView> {
                   selectedGroupIds: widget.selectedGroupIds,
                   updateSelectedGroupIds: updateSelectedGroupIds,
                   title: context.lang.shareImageBestFriends,
-                  showSelectAll: !widget.mediaFileService.mediaFile.requiresAuthentication,
+                  showSelectAll:
+                      !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
                 const SizedBox(height: 10),
                 if (_otherUsers.isNotEmpty)
@@ -264,7 +272,8 @@ class _ShareImageView extends State<ShareImageView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (widget.mediaFileService.mediaFile.type == MediaType.image &&
+                    if (widget.mediaFileService.mediaFile.type ==
+                            MediaType.image &&
                         _screenshotImage?.image != null &&
                         userService.currentUser.showShowImagePreviewWhenSending)
                       SizedBox(
@@ -288,50 +297,53 @@ class _ShareImageView extends State<ShareImageView> {
                           ),
                         ),
                       ),
-                    FilledButton.icon(
-                      icon: !mediaStoreFutureReady || sendingImage
-                          ? SizedBox(
-                              height: 12,
-                              width: 12,
+                    MyButton(
+                      variant: MyButtonVariant.primaryMiddle,
+                      onPressed:
+                          !mediaStoreFutureReady ||
+                              widget.selectedGroupIds.isEmpty ||
+                              sendingImage
+                          ? null
+                          : () async {
+                              setState(() {
+                                sendingImage = true;
+                              });
+
+                              // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
+                              await insertMediaFileInMessagesTable(
+                                widget.mediaFileService,
+                                widget.selectedGroupIds.toList(),
+                                additionalData: widget.additionalData,
+                              );
+
+                              if (context.mounted) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!mediaStoreFutureReady || sendingImage)
+                            const SizedBox(
+                              height: 14,
+                              width: 14,
                               child: CircularProgressIndicator.adaptive(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.inversePrimary),
+                                valueColor: AlwaysStoppedAnimation(
+                                  Colors.black87,
+                                ),
                               ),
                             )
-                          : const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                      onPressed: () async {
-                        if (!mediaStoreFutureReady || widget.selectedGroupIds.isEmpty) {
-                          return;
-                        }
-
-                        setState(() {
-                          sendingImage = true;
-                        });
-
-                        // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-                        await insertMediaFileInMessagesTable(
-                          widget.mediaFileService,
-                          widget.selectedGroupIds.toList(),
-                          additionalData: widget.additionalData,
-                        );
-
-                        if (context.mounted) {
-                          Navigator.pop(context, true);
-                        }
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                        ),
-                        backgroundColor: WidgetStateProperty.all<Color>(
-                          !mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
-                              ? context.color.onSurface
-                              : context.color.primary,
-                        ),
-                      ),
-                      label: Text(
-                        '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
-                        style: const TextStyle(fontSize: 17),
+                          else
+                            const FaIcon(
+                              FontAwesomeIcons.solidPaperPlane,
+                              size: 14,
+                            ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
+                          ),
+                        ],
                       ),
                     ),
                   ],

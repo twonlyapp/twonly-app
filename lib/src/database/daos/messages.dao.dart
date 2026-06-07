@@ -46,21 +46,23 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   Stream<List<Message>> watchMediaNotOpened(String groupId) {
     final query =
         select(messages).join([
-          leftOuterJoin(
-            mediaFiles,
-            mediaFiles.mediaId.equalsExp(messages.mediaId),
-          ),
-        ])..where(
-          mediaFiles.downloadState
-                  .equals(DownloadState.reuploadRequested.name)
-                  .not() &
-              mediaFiles.type.equals(MediaType.audio.name).not() &
-              messages.openedAt.isNull() &
-              messages.groupId.equals(groupId) &
-              messages.mediaId.isNotNull() &
-              messages.senderId.isNotNull() &
-              messages.type.equals(MessageType.media.name),
-        );
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            mediaFiles.downloadState
+                    .equals(DownloadState.reuploadRequested.name)
+                    .not() &
+                mediaFiles.type.equals(MediaType.audio.name).not() &
+                messages.openedAt.isNull() &
+                messages.groupId.equals(groupId) &
+                messages.mediaId.isNotNull() &
+                messages.senderId.isNotNull() &
+                messages.type.equals(MessageType.media.name),
+          )
+          ..orderBy([OrderingTerm.asc(messages.createdAt)]);
     return query.map((row) => row.readTable(messages)).watch();
   }
 
@@ -93,24 +95,33 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         milliseconds: group!.deleteMessagesAfterMilliseconds,
       ),
     );
-    return ((select(messages)..where(
-            (t) =>
-                t.groupId.equals(groupId) &
-                // messages in groups will only be removed in case all members have received it...
-                // so ensuring that this message is not shown in the messages anymore
-                (t.openedAt.isBiggerThanValue(deletionTime) |
-                    t.openedAt.isNull() |
-                    t.mediaStored.equals(true)) &
-                (t.isDeletedFromSender.equals(true) |
-                    (t.type.equals(MessageType.text.name).not() &
-                        t.type.equals(MessageType.media.name).not()) |
-                    (t.type.equals(MessageType.text.name) &
-                        t.content.isNotNull()) |
-                    (t.type.equals(MessageType.media.name) &
-                        t.mediaId.isNotNull())),
-          ))
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .watch();
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            messages.groupId.equals(groupId) &
+                (messages.openedAt.isBiggerThanValue(deletionTime) |
+                    messages.openedAt.isNull() |
+                    messages.mediaStored.equals(true)) &
+                (messages.isDeletedFromSender.equals(true) |
+                    (messages.type.equals(MessageType.text.name).not() &
+                        messages.type.equals(MessageType.media.name).not()) |
+                    (messages.type.equals(MessageType.text.name) &
+                        messages.content.isNotNull()) |
+                    (messages.type.equals(MessageType.media.name) &
+                        messages.mediaId.isNotNull() &
+                        (mediaFiles.downloadState.isNull() |
+                            mediaFiles.downloadState
+                                .equals(DownloadState.reuploadRequested.name)
+                                .not()))),
+          )
+          ..orderBy([OrderingTerm.asc(messages.createdAt)]);
+
+    return query.map((row) => row.readTable(messages)).watch();
   }
 
   Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {
@@ -161,7 +172,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                             m.isDeletedFromSender.equals(true)) |
                         m.mediaStored.equals(false)) &
                     // Only remove the message when ALL members have seen it. Otherwise the receipt will also be deleted which could cause issues in case a member opens the image later..
-                    (m.openedByAll.isSmallerThanValue(deletionTime) |
+                    ((m.openedByAll.isNotNull() &
+                            m.openedByAll.isSmallerThanValue(deletionTime)) |
                         (m.isDeletedFromSender.equals(true) &
                             m.createdAt.isSmallerThanValue(deletionTime))),
               ))

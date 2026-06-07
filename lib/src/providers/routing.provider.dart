@@ -26,6 +26,7 @@ import 'package:twonly/src/visual/views/settings/data_and_storage/import_from_ga
 import 'package:twonly/src/visual/views/settings/data_and_storage/manage_storage.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/developer.view.dart';
+import 'package:twonly/src/visual/views/settings/developer/informations.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/reduce_flames.view.dart';
 import 'package:twonly/src/visual/views/settings/developer/retransmission_data.view.dart';
 import 'package:twonly/src/visual/views/settings/help/changelog.view.dart';
@@ -287,6 +288,10 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'automated_testing',
               builder: (context, state) => const AutomatedTestingView(),
+            ),
+            GoRoute(
+              path: 'informations',
+              builder: (context, state) => const DeveloperInformationsView(),
             ),
             GoRoute(
               path: 'reduce_flames',

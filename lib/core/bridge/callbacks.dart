@@ -9,8 +9,10 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `FlutterCallbacks`, `Logging`, `UserDiscoveryCallbacks`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`
 
 Future<void> initFlutterCallbacks({
+  required int callbackId,
   required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
   required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
   required FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
@@ -39,6 +41,7 @@ Future<void> initFlutterCallbacks({
   required FutureOr<Uint8List?> Function(PlatformInt64)
   userDiscoveryGetContactPromotion,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
+  callbackId: callbackId,
   loggingGetStreamSink: loggingGetStreamSink,
   userDiscoverySignData: userDiscoverySignData,
   userDiscoveryVerifySignature: userDiscoveryVerifySignature,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -18,8 +19,62 @@ class ContextMenu extends StatefulWidget {
   State<ContextMenu> createState() => _ContextMenuState();
 }
 
-class _ContextMenuState extends State<ContextMenu> {
+class _ContextMenuState extends State<ContextMenu>
+    with SingleTickerProviderStateMixin {
   Offset? _tapPosition;
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        AnimationController(
+          vsync: this,
+          lowerBound: double.negativeInfinity,
+          upperBound: double.infinity,
+          value: 0,
+        )..addListener(() {
+          setState(() {});
+        });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
+    _controller.animateTo(
+      1,
+      duration: const Duration(milliseconds: 60),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _bounce();
+  }
+
+  void _onTapCancel() {
+    _bounce();
+  }
+
+  void _bounce() {
+    const spring = SpringDescription(
+      mass: 1,
+      stiffness: 400,
+      damping: 15,
+    );
+    final simulation = SpringSimulation(
+      spring,
+      _controller.value,
+      0,
+      _controller.velocity,
+    );
+    _controller.animateWith(simulation);
+  }
 
   Widget _getIcon(dynamic icon) {
     return Padding(
@@ -45,6 +100,7 @@ class _ContextMenuState extends State<ContextMenu> {
       return;
     }
     unawaited(HapticFeedback.heavyImpact());
+    _bounce();
 
     await showMenu(
       context: context,
@@ -82,12 +138,16 @@ class _ContextMenuState extends State<ContextMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = 1.0 - (_controller.value * 0.02);
     return GestureDetector(
       onLongPress: _showCustomMenu,
-      onTapDown: (details) {
-        _tapPosition = details.globalPosition;
-      },
-      child: widget.child,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: Transform.scale(
+        scale: scale,
+        child: widget.child,
+      ),
     );
   }
 }

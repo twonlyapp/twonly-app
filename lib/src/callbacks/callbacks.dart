@@ -1,9 +1,11 @@
 import 'package:twonly/core/bridge/callbacks.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/callbacks/logging.callbacks.dart';
 import 'package:twonly/src/callbacks/user_discovery.callbacks.dart';
 
 Future<void> initFlutterCallbacksForRust() async {
   await initFlutterCallbacks(
+    callbackId: isolateCallbackId,
     loggingGetStreamSink: LoggingCallbacks.getStreamSink,
     userDiscoverySetShares: UserDiscoveryCallbacks.setShares,
     userDiscoveryGetShareForContact:

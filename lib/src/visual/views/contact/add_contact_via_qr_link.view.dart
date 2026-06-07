@@ -114,7 +114,7 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
               ),
               const SizedBox(height: 10),
               Text(
-                context.lang.userFoundBody,
+                context.lang.userFoundBody(widget.profile.username),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: context.color.onSurfaceVariant,

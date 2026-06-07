@@ -108,7 +108,8 @@ class UserDiscoverySetupComp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showShareYourFriends =
-        showOnlySpecificPage == UserDiscoveryPages.all || showOnlySpecificPage == UserDiscoveryPages.shareYourFriends;
+        showOnlySpecificPage == UserDiscoveryPages.all ||
+        showOnlySpecificPage == UserDiscoveryPages.shareYourFriends;
     final showLetYourFriendsFindYou =
         showOnlySpecificPage == UserDiscoveryPages.all ||
         showOnlySpecificPage == UserDiscoveryPages.letYourFriendsFindYou;
@@ -336,7 +337,9 @@ class UserDiscoverySetupComp extends StatelessWidget {
                             ),
                           ),
                           subtitle: Text(
-                            context.lang.userDiscoverySettingsManualApprovalDesc,
+                            context
+                                .lang
+                                .userDiscoverySettingsManualApprovalDesc,
                             style: TextStyle(
                               fontSize: 11,
                               color: context.color.onSurfaceVariant,
@@ -350,13 +353,16 @@ class UserDiscoverySetupComp extends StatelessWidget {
                         ),
                       ],
                     ),
-                    crossFadeState: state.isUserDiscoveryEnabled ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                    crossFadeState: state.isUserDiscoveryEnabled
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
                     duration: const Duration(milliseconds: 300),
                   ),
                 ],
               ),
             ),
-            if (showOnlySpecificPage == UserDiscoveryPages.all) const SizedBox(height: 48),
+            if (showOnlySpecificPage == UserDiscoveryPages.all)
+              const SizedBox(height: 48),
           ],
           if (showLetYourFriendsFindYou) ...[
             Text(
@@ -587,7 +593,9 @@ class UserDiscoverySetupComp extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  context.lang.userDiscoverySettingsMutualFriends,
+                                  context
+                                      .lang
+                                      .userDiscoverySettingsMutualFriends,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -603,9 +611,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                   color: context.color.surface,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: context.color.outlineVariant.withValues(
-                                      alpha: 0.5,
-                                    ),
+                                    color: context.color.outlineVariant
+                                        .withValues(
+                                          alpha: 0.5,
+                                        ),
                                   ),
                                 ),
                                 child: DropdownButtonHideUnderline(
@@ -616,9 +625,9 @@ class UserDiscoverySetupComp extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                                     items: List.generate(
-                                      9,
+                                      8,
                                       (index) {
-                                        final value = index + 2;
+                                        final value = index + 3;
                                         return DropdownMenuItem<int>(
                                           value: value,
                                           child: Text('$value'),
@@ -640,7 +649,9 @@ class UserDiscoverySetupComp extends StatelessWidget {
                         ),
                       ],
                     ),
-                    crossFadeState: state.sharePromotion ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                    crossFadeState: state.sharePromotion
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
                     duration: const Duration(milliseconds: 300),
                   ),
                 ],

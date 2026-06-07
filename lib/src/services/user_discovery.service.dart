@@ -84,6 +84,7 @@ class UserDiscoveryService {
     final publicKey = await getUserPublicKey();
     Log.info('UserDiscoveryService: initializing Rust bridge');
     await FlutterUserDiscovery.initializeOrUpdate(
+      callbackId: isolateCallbackId,
       threshold: threshold,
       userId: userId,
       publicKey: publicKey,
@@ -104,7 +105,7 @@ class UserDiscoveryService {
 
   static Future<Uint8List?> getCurrentVersion() async {
     try {
-      return await FlutterUserDiscovery.getCurrentVersion()
+      return await FlutterUserDiscovery.getCurrentVersion(callbackId: isolateCallbackId)
           .timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
@@ -139,6 +140,7 @@ class UserDiscoveryService {
   ) async {
     try {
       return await FlutterUserDiscovery.shouldRequestNewMessages(
+        callbackId: isolateCallbackId,
         contactId: fromUserId,
         version: receivedVersion,
       ).timeout(const Duration(seconds: 5));
@@ -154,6 +156,7 @@ class UserDiscoveryService {
   ) async {
     try {
       return await FlutterUserDiscovery.getNewMessages(
+        callbackId: isolateCallbackId,
         contactId: fromUserId,
         receivedVersion: receivedVersion,
       ).timeout(const Duration(seconds: 5));
@@ -172,6 +175,7 @@ class UserDiscoveryService {
           .getContactVerification(fromUserId);
 
       return await FlutterUserDiscovery.handleNewMessages(
+        callbackId: isolateCallbackId,
         contactId: fromUserId,
         messages: messages,
         publicKeyVerifiedTimestamp:

@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class ModifyAvatarView extends StatefulWidget {
   const ModifyAvatarView({super.key});
@@ -15,12 +16,19 @@ class ModifyAvatarView extends StatefulWidget {
 }
 
 class _ModifyAvatarViewState extends State<ModifyAvatarView> {
-  final AvatarMakerController _avatarMakerController =
-      PersistentAvatarMakerController(customizedPropertyCategories: []);
+  late final _CustomAvatarMakerController _avatarMakerController;
 
   @override
   void initState() {
     super.initState();
+    final svg = userService.currentUser.avatarSvg;
+    if (svg != null && svg.isNotEmpty) {
+      _avatarMakerController = _CustomAvatarMakerController(
+        svg: svg,
+      );
+    } else {
+      _avatarMakerController = _CustomAvatarMakerController.defaultAvatar();
+    }
   }
 
   Future<void> updateUserAvatar(String json, String svg) async {
@@ -33,49 +41,38 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   }
 
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
-    if (isDarkMode(context)) {
-      return AvatarMakerThemeData(
-        boxDecoration: const BoxDecoration(
-          boxShadow: [BoxShadow()],
-        ),
-        unselectedTileDecoration: BoxDecoration(
-          color: const Color.fromARGB(255, 50, 50, 50), // Dark mode color
-          borderRadius: BorderRadius.circular(10),
-        ),
-        selectedTileDecoration: BoxDecoration(
-          color: const Color.fromARGB(255, 100, 100, 100), // Dark mode color
-          borderRadius: BorderRadius.circular(10),
-        ),
-        selectedIconColor: Colors.white,
-        unselectedIconColor: Colors.grey,
-        primaryBgColor: Colors.black, // Dark mode background
-        secondaryBgColor: Colors.grey[850], // Dark mode secondary background
-        labelTextStyle: const TextStyle(
-          color: Colors.white,
-        ), // Light text for dark mode
-      );
-    } else {
-      return AvatarMakerThemeData(
-        boxDecoration: const BoxDecoration(
-          boxShadow: [BoxShadow()],
-        ),
-        unselectedTileDecoration: BoxDecoration(
-          color: const Color.fromARGB(255, 240, 240, 240), // Light mode color
-          borderRadius: BorderRadius.circular(10),
-        ),
-        selectedTileDecoration: BoxDecoration(
-          color: const Color.fromARGB(255, 200, 200, 200), // Light mode color
-          borderRadius: BorderRadius.circular(10),
-        ),
-        selectedIconColor: Colors.black,
-        unselectedIconColor: Colors.grey,
-        primaryBgColor: Colors.white, // Light mode background
-        secondaryBgColor: Colors.grey[200], // Light mode secondary background
-        labelTextStyle: const TextStyle(
-          color: Colors.black,
-        ), // Dark text for light mode
-      );
-    }
+    final colors = context.color;
+    final isDark = isDarkMode(context);
+    return AvatarMakerThemeData(
+      boxDecoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      unselectedTileDecoration: BoxDecoration(
+        color: colors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      selectedTileDecoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.15),
+        border: Border.all(color: colors.primary, width: 2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      selectedIconColor: colors.primary,
+      unselectedIconColor: colors.onSurfaceVariant.withValues(alpha: 0.6),
+      primaryBgColor: colors.surface,
+      secondaryBgColor: colors.surfaceContainerLow,
+      labelTextStyle: TextStyle(
+        color: colors.onSurface,
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 
   Future<bool?> _showBackDialog() {
@@ -148,39 +145,64 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
                     controller: _avatarMakerController,
                   ),
                 ),
-                SizedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.center,
                     children: [
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.floppyDisk),
+                      MyButton(
+                        variant: MyButtonVariant.primaryDense,
                         onPressed: storeAvatarAndExit,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const FaIcon(FontAwesomeIcons.floppyDisk, size: 16),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarSaveChangesStore),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.shuffle),
+                      MyButton(
+                        variant: MyButtonVariant.secondaryDense,
                         onPressed:
                             _avatarMakerController.randomizedSelectedOptions,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const FaIcon(FontAwesomeIcons.shuffle, size: 16),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarCustomizeRandomize),
+                          ],
+                        ),
                       ),
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.rotateLeft),
-                        onLongPress: () async {
-                          await PersistentAvatarMakerController.clearAvatarMaker();
-                          await _avatarMakerController.restoreState();
-                        },
+                      MyButton(
+                        variant: MyButtonVariant.secondaryDense,
                         onPressed: _avatarMakerController.restoreState,
+                        onLongPress: () {
+                          _avatarMakerController.clearCustomizations();
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const FaIcon(FontAwesomeIcons.rotateLeft, size: 16),
+                            const SizedBox(width: 6),
+                            Text(context.lang.avatarCustomizeReset),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
                     vertical: 30,
                   ),
                   child: AvatarMakerCustomizer(
                     scaffoldWidth: min(
                       600,
-                      MediaQuery.of(context).size.width * 0.85,
+                      MediaQuery.of(context).size.width * 0.95,
                     ),
                     theme: getAvatarMakerTheme(context),
                     controller: _avatarMakerController,
@@ -191,6 +213,75 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CustomAvatarMakerController extends NonPersistentAvatarMakerController {
+  _CustomAvatarMakerController({
+    required super.svg,
+  }) : _initialSvg = svg,
+       super.fromSvg() {
+    _initialOptions = Map.from(selectedOptions);
+  }
+
+  _CustomAvatarMakerController.defaultAvatar() : _initialSvg = '', super() {
+    _initialOptions = Map.from(defaultSelectedOptions);
+  }
+
+  final String _initialSvg;
+  late final Map<PropertyCategoryIds, PropertyItem> _initialOptions;
+  List<CustomizedPropertyCategory>? _customPropertyCategories;
+
+  void clearCustomizations() {
+    selectedOptions = Map.from(defaultSelectedOptions);
+    updatePreview();
+  }
+
+  @override
+  List<CustomizedPropertyCategory> get propertyCategories {
+    var list = _customPropertyCategories;
+    if (list == null) {
+      list = super.propertyCategories.map((category) {
+        return CustomizedPropertyCategory(
+          id: category.id,
+          name: category.name,
+          iconFile: category.iconFile,
+          properties: category.properties,
+          defaultValue: category.defaultValue,
+        );
+      }).toList();
+      _customPropertyCategories = list;
+    }
+    return list;
+  }
+
+  @override
+  List<CustomizedPropertyCategory> get displayedPropertyCategories {
+    final order = [
+      PropertyCategoryIds.SkinColor,
+      PropertyCategoryIds.EyeType,
+      PropertyCategoryIds.EyebrowType,
+      PropertyCategoryIds.Nose,
+      PropertyCategoryIds.MouthType,
+      PropertyCategoryIds.HairStyle,
+      PropertyCategoryIds.HairColor,
+      PropertyCategoryIds.FacialHairType,
+      PropertyCategoryIds.FacialHairColor,
+      PropertyCategoryIds.OutfitType,
+      PropertyCategoryIds.OutfitColor,
+      PropertyCategoryIds.Accessory,
+    ];
+    return (propertyCategories.where((c) => order.contains(c.id)).toList()
+      ..sort((a, b) => order.indexOf(a.id).compareTo(order.indexOf(b.id))));
+  }
+
+  @override
+  Future<RestoredData> performRestore() async {
+    final restoredSvg = _initialSvg.isNotEmpty ? _initialSvg : drawAvatarSVG();
+    return RestoredData(
+      svg: restoredSvg,
+      options: Map.from(_initialOptions),
     );
   }
 }
