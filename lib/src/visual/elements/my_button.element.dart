@@ -98,6 +98,12 @@ class _MyButtonState extends State<MyButton>
     final scale = 1.0 - (_controller.value * 0.02);
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;
     final isDark = isDarkMode(context);
+    final disabledBgColor = isDark
+        ? const Color(0xFF353535)
+        : const Color(0xFFE0E0E0);
+    final disabledFgColor = isDark
+        ? const Color(0xFF757575)
+        : const Color(0xFF9E9E9E);
 
     late final ButtonStyle buttonStyle;
     switch (widget.variant) {
@@ -105,6 +111,8 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
           minimumSize: const Size.fromHeight(60),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -119,6 +127,8 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
           foregroundColor: isDark ? Colors.white : Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
           minimumSize: const Size.fromHeight(60),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -135,6 +145,7 @@ class _MyButtonState extends State<MyButton>
           foregroundColor: isDark
               ? Colors.white.withValues(alpha: 0.7)
               : Colors.black.withValues(alpha: 0.7),
+          disabledForegroundColor: disabledFgColor,
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -147,6 +158,8 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(
             horizontal: 24,
@@ -164,6 +177,8 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 40),
           padding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -181,6 +196,8 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
           foregroundColor: isDark ? Colors.white : Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 40),
           padding: const EdgeInsets.symmetric(
             horizontal: 16,
