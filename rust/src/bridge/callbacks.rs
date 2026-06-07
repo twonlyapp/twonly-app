@@ -9,7 +9,13 @@ use crate::error::{Result, TwonlyError};
 use crate::{callback_generator, frb_generated::StreamSink};
 use std::sync::Arc;
 
-static FLUTTER_CALLBACKS: std::sync::RwLock<Option<FlutterCallbacks>> =
+use std::collections::HashMap;
+
+tokio::task_local! {
+    pub(crate) static CURRENT_CALLBACK_ID: u32;
+}
+
+pub(crate) static FLUTTER_CALLBACKS: std::sync::RwLock<Option<HashMap<u32, FlutterCallbacks>>> =
     std::sync::RwLock::new(None);
 
 // This will also generate the function init_flutter_callbacks which MUST be called from Flutter to initialize the callbacks
@@ -41,9 +47,24 @@ callback_generator! {
 }
 
 pub(crate) fn get_callbacks() -> Result<FlutterCallbacks> {
-    FLUTTER_CALLBACKS
-        .read()
-        .unwrap()
-        .clone()
-        .ok_or(TwonlyError::MissingCallbackInitialization)
+    let caller_opt = CURRENT_CALLBACK_ID.try_with(|&c| c).ok();
+
+    let lock = FLUTTER_CALLBACKS.read().unwrap();
+    let map = lock.as_ref().ok_or(TwonlyError::MissingCallbackInitialization)?;
+
+    if let Some(id) = caller_opt {
+        if let Some(cb) = map.get(&id) {
+            return Ok(cb.clone());
+        }
+    }
+
+    // Fallback: if not in a scoped tokio task or if the specific callback_id isn't found,
+    // we pick the first available callbacks from the map. This gracefully handles
+    // tracing initialization which happens outside of any scoped task.
+    if let Some((_, cb)) = map.iter().next() {
+        tracing::error!("FlutterCallbacks fallback used: No CURRENT_CALLBACK_ID scope was found, or the ID was missing from the map. Using an arbitrary callback. This may lead to race conditions if multiple isolates are active.");
+        return Ok(cb.clone());
+    }
+
+    Err(TwonlyError::MissingCallbackInitialization)
 }

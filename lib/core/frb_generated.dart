@@ -87,16 +87,20 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<Uint8List>
-  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion();
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion({
+    required int callbackId,
+  });
 
   Future<List<Uint8List>>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> receivedVersion,
   });
 
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
@@ -104,6 +108,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate({
+    required int callbackId,
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
@@ -112,17 +117,20 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Uint8List?>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> version,
   });
 
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
   });
 
   Future<void> crateBridgeCallbacksInitFlutterCallbacks({
+    required int callbackId,
     required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
     required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
     required FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
@@ -242,11 +250,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<Uint8List>
-  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion() {
+  crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion({
+    required int callbackId,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -260,7 +271,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersionConstMeta,
-        argValues: [],
+        argValues: [callbackId],
         apiImpl: this,
       ),
     );
@@ -270,12 +281,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersionConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_get_current_version",
-        argNames: [],
+        argNames: ["callbackId"],
       );
 
   @override
   Future<List<Uint8List>>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> receivedVersion,
   }) {
@@ -283,6 +295,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_i_64(contactId, serializer);
           sse_encode_list_prim_u_8_loose(receivedVersion, serializer);
           pdeCallFfi(
@@ -298,7 +311,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessagesConstMeta,
-        argValues: [contactId, receivedVersion],
+        argValues: [callbackId, contactId, receivedVersion],
         apiImpl: this,
       ),
     );
@@ -308,12 +321,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessagesConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_get_new_messages",
-        argNames: ["contactId", "receivedVersion"],
+        argNames: ["callbackId", "contactId", "receivedVersion"],
       );
 
   @override
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
@@ -322,6 +336,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_i_64(contactId, serializer);
           sse_encode_opt_box_autoadd_i_64(
             publicKeyVerifiedTimestamp,
@@ -341,7 +356,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta,
-        argValues: [contactId, publicKeyVerifiedTimestamp, messages],
+        argValues: [
+          callbackId,
+          contactId,
+          publicKeyVerifiedTimestamp,
+          messages,
+        ],
         apiImpl: this,
       ),
     );
@@ -351,12 +371,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessagesConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_handle_new_messages",
-        argNames: ["contactId", "publicKeyVerifiedTimestamp", "messages"],
+        argNames: [
+          "callbackId",
+          "contactId",
+          "publicKeyVerifiedTimestamp",
+          "messages",
+        ],
       );
 
   @override
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate({
+    required int callbackId,
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
@@ -366,6 +392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_u_8(threshold, serializer);
           sse_encode_i_64(userId, serializer);
           sse_encode_list_prim_u_8_loose(publicKey, serializer);
@@ -383,7 +410,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta,
-        argValues: [threshold, userId, publicKey, sharePromotion],
+        argValues: [callbackId, threshold, userId, publicKey, sharePromotion],
         apiImpl: this,
       ),
     );
@@ -393,12 +420,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdateConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_initialize_or_update",
-        argNames: ["threshold", "userId", "publicKey", "sharePromotion"],
+        argNames: [
+          "callbackId",
+          "threshold",
+          "userId",
+          "publicKey",
+          "sharePromotion",
+        ],
       );
 
   @override
   Future<Uint8List?>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> version,
   }) {
@@ -406,6 +440,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_i_64(contactId, serializer);
           sse_encode_list_prim_u_8_loose(version, serializer);
           pdeCallFfi(
@@ -421,7 +456,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessagesConstMeta,
-        argValues: [contactId, version],
+        argValues: [callbackId, contactId, version],
         apiImpl: this,
       ),
     );
@@ -431,12 +466,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessagesConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_should_request_new_messages",
-        argNames: ["contactId", "version"],
+        argNames: ["callbackId", "contactId", "version"],
       );
 
   @override
   Future<void>
   crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
   }) {
@@ -444,6 +480,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_i_64(contactId, serializer);
           sse_encode_opt_box_autoadd_i_64(
             publicKeyVerifiedTimestamp,
@@ -462,7 +499,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta:
             kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUserConstMeta,
-        argValues: [contactId, publicKeyVerifiedTimestamp],
+        argValues: [callbackId, contactId, publicKeyVerifiedTimestamp],
         apiImpl: this,
       ),
     );
@@ -472,11 +509,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get kCrateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUserConstMeta =>
       const TaskConstMeta(
         debugName: "flutter_user_discovery_update_verification_state_for_user",
-        argNames: ["contactId", "publicKeyVerifiedTimestamp"],
+        argNames: ["callbackId", "contactId", "publicKeyVerifiedTimestamp"],
       );
 
   @override
   Future<void> crateBridgeCallbacksInitFlutterCallbacks({
+    required int callbackId,
     required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
     required FutureOr<Uint8List?> Function(Uint8List) userDiscoverySignData,
     required FutureOr<bool> Function(Uint8List, Uint8List, Uint8List)
@@ -513,6 +551,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_32(callbackId, serializer);
           sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
             loggingGetStreamSink,
             serializer,
@@ -586,6 +625,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ),
         constMeta: kCrateBridgeCallbacksInitFlutterCallbacksConstMeta,
         argValues: [
+          callbackId,
           loggingGetStreamSink,
           userDiscoverySignData,
           userDiscoveryVerifySignature,
@@ -611,6 +651,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "init_flutter_callbacks",
         argNames: [
+          "callbackId",
           "loggingGetStreamSink",
           "userDiscoverySignData",
           "userDiscoveryVerifySignature",

@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/core/bridge/wrapper/user_discovery.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -216,6 +217,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       );
       if (userService.currentUser.isUserDiscoveryEnabled) {
         await FlutterUserDiscovery.updateVerificationStateForUser(
+          callbackId: isolateCallbackId,
           contactId: contactId,
           publicKeyVerifiedTimestamp: clock.now().millisecondsSinceEpoch,
         );
@@ -232,6 +234,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       )..where((kv) => kv.contactId.equals(contactId))).go();
       if (userService.currentUser.isUserDiscoveryEnabled) {
         await FlutterUserDiscovery.updateVerificationStateForUser(
+          callbackId: isolateCallbackId,
           contactId: contactId,
         );
       }
@@ -251,6 +254,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       final remaining = await getContactVerification(contactId);
       if (remaining.isEmpty && userService.currentUser.isUserDiscoveryEnabled) {
         await FlutterUserDiscovery.updateVerificationStateForUser(
+          callbackId: isolateCallbackId,
           contactId: contactId,
         );
       }

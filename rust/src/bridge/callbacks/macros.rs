@@ -32,6 +32,7 @@ macro_rules! callback_generator {
         // 3. Generate the Automated Init Function
         paste::paste! {
             pub fn init_flutter_callbacks(
+                callback_id: u32,
                 $(
                     $(
                         // Parameters: sub-struct_field + _ + fn_name
@@ -49,9 +50,11 @@ macro_rules! callback_generator {
                     )*
                 };
 
-                // Use the static global strictly named FLUTTER_CALLBACKS
                 let mut lock = FLUTTER_CALLBACKS.write().unwrap();
-                *lock = Some(callbacks);
+                if lock.is_none() {
+                    *lock = Some(std::collections::HashMap::new());
+                }
+                lock.as_mut().unwrap().insert(callback_id, callbacks);
             }
         }
     };

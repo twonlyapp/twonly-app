@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.30
+
+- Fix: Changed minimum threshold for the user discovery to 3
+
 ## 0.2.28
 
 - Improved: Design of some UI components

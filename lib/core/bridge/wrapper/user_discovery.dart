@@ -9,36 +9,45 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 class FlutterUserDiscovery {
   const FlutterUserDiscovery();
 
-  static Future<Uint8List> getCurrentVersion() => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion();
+  static Future<Uint8List> getCurrentVersion({required int callbackId}) =>
+      RustLib.instance.api
+          .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion(
+            callbackId: callbackId,
+          );
 
   static Future<List<Uint8List>> getNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> receivedVersion,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages(
+        callbackId: callbackId,
         contactId: contactId,
         receivedVersion: receivedVersion,
       );
 
   static Future<void> handleNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
     required List<Uint8List> messages,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages(
+        callbackId: callbackId,
         contactId: contactId,
         publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
         messages: messages,
       );
 
   static Future<void> initializeOrUpdate({
+    required int callbackId,
     required int threshold,
     required PlatformInt64 userId,
     required List<int> publicKey,
     required bool sharePromotion,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate(
+        callbackId: callbackId,
         threshold: threshold,
         userId: userId,
         publicKey: publicKey,
@@ -46,19 +55,23 @@ class FlutterUserDiscovery {
       );
 
   static Future<Uint8List?> shouldRequestNewMessages({
+    required int callbackId,
     required PlatformInt64 contactId,
     required List<int> version,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages(
+        callbackId: callbackId,
         contactId: contactId,
         version: version,
       );
 
   static Future<void> updateVerificationStateForUser({
+    required int callbackId,
     required PlatformInt64 contactId,
     PlatformInt64? publicKeyVerifiedTimestamp,
   }) => RustLib.instance.api
       .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryUpdateVerificationStateForUser(
+        callbackId: callbackId,
         contactId: contactId,
         publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
       );

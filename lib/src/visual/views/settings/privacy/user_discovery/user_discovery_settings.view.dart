@@ -26,7 +26,7 @@ class _UserDiscoverySettingsViewState extends State<UserDiscoverySettingsView> {
       isUserDiscoveryEnabled: u.isUserDiscoveryEnabled,
       sharePromotion: u.userDiscoverySharePromotion,
       isManualApprovalEnabled: u.userDiscoveryRequiresManualApproval,
-      threshold: u.userDiscoveryThreshold,
+      threshold: u.userDiscoveryThreshold < 3 ? 3 : u.userDiscoveryThreshold,
     );
   }
 
