@@ -239,8 +239,11 @@ class TwonlyDB extends _$TwonlyDB {
   }
 
   void markUpdated() {
-    notifyUpdates({TableUpdate.onTable(messages, kind: UpdateKind.update)});
-    notifyUpdates({TableUpdate.onTable(contacts, kind: UpdateKind.update)});
+    notifyUpdates({
+      TableUpdate.onTable(messages, kind: UpdateKind.update),
+      TableUpdate.onTable(contacts, kind: UpdateKind.update),
+      TableUpdate.onTable(groups, kind: UpdateKind.update),
+    });
   }
 
   Future<void> printTableSizes() async {
