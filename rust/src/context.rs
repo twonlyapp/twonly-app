@@ -1,3 +1,4 @@
+use crate::user_discovery::UserDiscovery;
 use crate::{
     bridge::{
         callbacks::user_discovery::{UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter},
@@ -9,7 +10,6 @@ use crate::{
     log::init_tracing,
     utils::Shared,
 };
-use protocols::user_discovery::UserDiscovery;
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::{Mutex, OnceCell};
 use zeroize::Zeroize;

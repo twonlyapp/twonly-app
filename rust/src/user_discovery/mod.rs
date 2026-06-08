@@ -4,9 +4,10 @@ pub mod stores;
 pub mod tests;
 pub mod traits;
 
-use std::collections::{HashMap, HashSet};
+#[cfg(test)]
+use std::collections::HashMap;
+use std::collections::{HashSet};
 use std::sync::Arc;
-use std::u8;
 use blahaj::{Share, Sharks};
 use prost::Message;
 use serde::{Deserialize, Serialize};
@@ -184,6 +185,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
     /// * `Ok(HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>)` - All connections the user has discovered
     /// * `Err(UserDiscoveryError)` - If there where erros in the store.
     ///
+    #[cfg(test)]
     pub async fn get_all_announced_users(
         &self,
     ) -> Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>> {
@@ -384,7 +386,8 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
             config.promotion_version += 1;
             new_promotion_version = config.promotion_version;
             announcement_version = config.announcement_version;
-        }).await?;
+        })
+        .await?;
 
         let message = UserDiscoveryMessage {
             version: Some(UserDiscoveryVersion {
@@ -430,7 +433,7 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
         }
         .encode_to_vec();
 
-        let sharks = Sharks(config.threshold as u8);
+        let sharks = Sharks(config.threshold);
         let dealer = sharks.dealer(&encrypted_announcement);
 
         let mut shares: Vec<Vec<u8>> = dealer
@@ -476,12 +479,10 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
     where
         F: FnOnce(&mut UserDiscoveryConfig),
     {
-        let _lock = tokio::time::timeout(
-            std::time::Duration::from_secs(10),
-            self.config_lock.lock(),
-        )
-        .await
-        .ok();
+        let _lock =
+            tokio::time::timeout(std::time::Duration::from_secs(10), self.config_lock.lock())
+                .await
+                .ok();
         let mut config: UserDiscoveryConfig =
             serde_json::from_str(&self.store.get_config().await?)?;
         mutate(&mut config);
@@ -539,9 +540,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     .verify_stored_pubkey(contact_id, &signed_data.public_key)
                     .await?
                 {
-                    return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
-                        "public key does not match with stored one",
-                    )));
+                    return Err(UserDiscoveryError::MaliciousAnnouncementData(
+                        "public key does not match with stored one".to_string(),
+                    ));
                 }
 
                 if !self
@@ -553,9 +554,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     )
                     .await?
                 {
-                    return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
-                        "signature invalid",
-                    )));
+                    return Err(UserDiscoveryError::MaliciousAnnouncementData(
+                        "signature invalid".to_string(),
+                    ));
                 }
 
                 // Only add this user to the promotions if the users enabled this feature
@@ -567,7 +568,8 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         config.promotion_version += 1;
                         new_promotion_version = config.promotion_version;
                         announcement_version = config.announcement_version;
-                    }).await?;
+                    })
+                    .await?;
 
                     let message = UserDiscoveryMessage {
                         version: Some(UserDiscoveryVersion {
@@ -624,11 +626,10 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                     self.store
                         .push_new_user_relation(
                             promotion.from_contact_id,
-                            announced_user,
+                            announced_user.clone(),
                             promotion.public_key_verified_timestamp,
                         )
                         .await?;
-                    return Ok(());
                 }
 
                 Ok(())
@@ -731,9 +732,9 @@ impl<Store: UserDiscoveryStore, Utils: UserDiscoveryUtils> UserDiscovery<Store, 
                         )
                         .await?
                     {
-                        return Err(UserDiscoveryError::MaliciousAnnouncementData(format!(
-                            "signature is invalid",
-                        )));
+                        return Err(UserDiscoveryError::MaliciousAnnouncementData(
+                            "signature is invalid".to_string(),
+                        ));
                     }
 
                     tracing::debug!("Announcement valid.");
@@ -790,4 +791,3 @@ impl Default for UserDiscoveryConfig {
         }
     }
 }
-

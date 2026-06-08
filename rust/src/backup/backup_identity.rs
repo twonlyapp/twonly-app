@@ -52,7 +52,7 @@ impl BackupIdentity {
 
         let key_manager: KeyManager = postcard::from_bytes(&decrypted_bytes)?;
 
-        key_manager.store_to_keychain(&secure_storage)?;
+        key_manager.store_to_keychain(secure_storage)?;
 
         Ok(())
     }

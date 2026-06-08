@@ -88,11 +88,10 @@ macro_rules! generate_test_select {
             #[cfg(test)]
             #[tokio::test]
             async fn [<test_ $select_fn>]() {
-                use crate::database::Database;
                 use tempfile::tempdir;
                 let dir = tempdir().unwrap();
                 let db_path = dir.path().join("test.sqlite").display().to_string();
-                let db = Database::new(&db_path, None, false).await.unwrap();
+                let db = crate::database::Database::new(&db_path, None, false).await.unwrap();
                 db.run_migrations().await.unwrap();
 
                 $struct::$insert_fn(&db.pool, $($arg),+).await.unwrap();

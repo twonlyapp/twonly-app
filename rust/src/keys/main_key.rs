@@ -61,7 +61,7 @@ impl MainKey {
         self.decrypt_with_info(b"backup_key", encrypted_backup)
     }
 
-    /// Encrypts a newly generated media key using the derived Media Main Key.
+    // Encrypts a newly generated media key using the derived Media Main Key.
     // pub fn encrypt_media_key(&self, media_key: &[u8; 32]) -> Vec<u8> {
     //     self.encrypt_with_info(b"media_main_key", media_key)
     // }

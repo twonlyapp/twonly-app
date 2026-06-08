@@ -1,8 +1,13 @@
+#[cfg(test)]
 use std::collections::HashMap;
 
 use crate::user_discovery::error::Result;
 use crate::user_discovery::UserID;
 use std::future::Future;
+
+/// Type alias used in `UserDiscoveryStore::get_all_announced_users`.
+#[cfg(test)]
+pub type AnnouncedUserMap = HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>;
 
 #[derive(Clone, sqlx::FromRow)]
 pub struct OtherPromotion {
@@ -65,9 +70,8 @@ pub trait UserDiscoveryStore {
         public_key_verified_timestamp: Option<i64>,
     ) -> impl Future<Output = Result<()>> + Send;
 
-    fn get_all_announced_users(
-        &self,
-    ) -> impl Future<Output = Result<HashMap<AnnouncedUser, Vec<(UserID, Option<i64>)>>>> + Send;
+    #[cfg(test)]
+    fn get_all_announced_users(&self) -> impl Future<Output = Result<AnnouncedUserMap>> + Send;
 
     fn get_contact_promotion(
         &self,

@@ -1,5 +1,5 @@
+use crate::user_discovery::error::UserDiscoveryError;
 use hex::FromHexError;
-use protocols::user_discovery::error::UserDiscoveryError;
 use scrypt::errors::{InvalidOutputLen, InvalidParams};
 use thiserror::Error;
 use zip::result::ZipError;

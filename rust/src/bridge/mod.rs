@@ -13,12 +13,12 @@ use crate::error::Result;
 use crate::error::TwonlyError;
 use crate::keys::KeyManager;
 use crate::secure_storage::SecureStorage;
+use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use flutter_rust_bridge::frb;
-use protocols::user_discovery::UserDiscovery;
 
-pub use protocols::user_discovery::traits::AnnouncedUser;
-pub use protocols::user_discovery::traits::OtherPromotion;
+pub use crate::user_discovery::traits::AnnouncedUser;
+pub use crate::user_discovery::traits::OtherPromotion;
 use tokio::sync::Mutex;
 
 pub struct InitConfig {
@@ -57,9 +57,9 @@ pub(crate) struct TwonlyFlutter {
 pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {
     let ctx = Context::get_static()?;
     if let Context::Flutter(twonly) = ctx {
-        return Ok(twonly);
+        Ok(twonly)
     } else {
-        return Err(TwonlyError::Initialization);
+        Err(TwonlyError::Initialization)
     }
 }
 
