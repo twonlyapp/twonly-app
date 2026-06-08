@@ -31,6 +31,7 @@ macro_rules! callback_generator {
 
         // 3. Generate the Automated Init Function
         paste::paste! {
+            #[allow(clippy::too_many_arguments)]
             pub fn init_flutter_callbacks(
                 callback_id: u32,
                 $(

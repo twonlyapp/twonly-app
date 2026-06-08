@@ -66,7 +66,7 @@ impl MainKey {
     //     self.encrypt_with_info(b"media_main_key", media_key)
     // }
 
-    /// Decrypts a wrapped media key using the derived Media Main Key.
+    // Decrypts a wrapped media key using the derived Media Main Key.
     // pub fn decrypt_media_key(&self, wrapped_media_key: &[u8]) -> Result<[u8; 32]> {
     //     let decrypted = self.decrypt_with_info(b"media_main_key", wrapped_media_key)?;
 
