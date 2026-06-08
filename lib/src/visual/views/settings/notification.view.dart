@@ -45,7 +45,7 @@ class _NotificationViewState extends State<NotificationView> {
       _isLoadingTroubleshooting = true;
     });
 
-    await initFCMAfterAuthenticated(force: true);
+    await FcmNotificationService.initFCMAfterAuthenticated(force: true);
 
     await setupNotificationWithUsers(force: true);
 
@@ -90,7 +90,7 @@ class _NotificationViewState extends State<NotificationView> {
     setState(() {
       _isLoadingReset = true;
     });
-    await resetFCMTokens();
+    await FcmNotificationService.resetFCMTokens();
     if (!mounted) return;
     await showAlertDialog(
       context,

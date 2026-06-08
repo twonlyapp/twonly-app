@@ -10,6 +10,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -162,6 +163,8 @@ class _RegisterViewState extends State<RegisterView> {
       );
 
       await UserService.save(userData);
+
+      unawaited(FcmNotificationService.initAfterUserLoaded());
 
       await apiService.authenticate();
       widget.callbackOnSuccess();

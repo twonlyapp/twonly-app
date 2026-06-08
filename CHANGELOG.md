@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.31
+
+- Fix: Issue with background notifications on Android
+
 ## 0.2.30
 
 - Fix: Changed minimum threshold for the user discovery to 3

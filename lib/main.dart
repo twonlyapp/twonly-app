@@ -76,7 +76,7 @@ void main() async {
   unawaited(StartupGuard.markAppStartup());
 
   var storageError = await twonlyMinimumInitialization();
-  await initFCMService();
+  await FcmNotificationService.initStartup();
 
   var userExists = false;
 
@@ -109,6 +109,8 @@ void main() async {
   unawaited(initFileDownloader());
 
   if (userExists) {
+    unawaited(FcmNotificationService.initAfterUserLoaded());
+
     if (userService.currentUser.allowErrorTrackingViaSentry) {
       AppState.allowErrorTrackingViaSentry = true;
       await SentryFlutter.init(
