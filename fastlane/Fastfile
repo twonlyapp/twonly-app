@@ -33,7 +33,7 @@ platform :android do
 
     # Load release notes from CHANGELOG.md
     changelog_path = File.expand_path("../CHANGELOG.md", __dir__)
-    release_notes = "Automated local release via Fastlane"
+    release_notes = "Small bug fixes."
     if File.exist?(changelog_path)
       changelog_content = File.read(changelog_path)
       escaped_version = Regexp.escape(version)

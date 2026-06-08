@@ -3,6 +3,7 @@
 ## 0.2.30
 
 - Fix: Changed minimum threshold for the user discovery to 3
+- Fix: Multiple UI issues
 
 ## 0.2.28
 
