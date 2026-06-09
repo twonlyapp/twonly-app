@@ -193,6 +193,7 @@ $debugLogToken
               const SizedBox(height: 5),
               TextField(
                 controller: _controller,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: context.lang.contactUsYourMessage,
                   border: const OutlineInputBorder(),

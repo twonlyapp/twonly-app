@@ -833,6 +833,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         child: TextField(
                           autofocus: true,
                           controller: textMessageController,
+                          textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) async {
                             await twonlyDB.groupsDao.updateGroup(
                               widget.group.groupId,

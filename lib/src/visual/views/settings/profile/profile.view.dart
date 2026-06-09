@@ -176,6 +176,7 @@ class _ProfileViewState extends State<ProfileView> {
                     context.lang.settingsProfileEditDisplayName,
                     context.lang.settingsProfileEditDisplayNameNew,
                     maxLength: 30,
+                    textCapitalization: TextCapitalization.words,
                   );
                   if (context.mounted &&
                       displayName != null &&
@@ -210,6 +211,7 @@ Future<String?> showDisplayNameChangeDialog(
   String hintText, {
   List<TextInputFormatter>? inputFormatters,
   int? maxLength,
+  TextCapitalization textCapitalization = TextCapitalization.none,
 }) {
   final controller = TextEditingController(text: currentName);
 
@@ -223,6 +225,7 @@ Future<String?> showDisplayNameChangeDialog(
           autofocus: true,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
+          textCapitalization: textCapitalization,
           decoration: InputDecoration(
             hintText: hintText,
           ),

@@ -1,18 +1,12 @@
 # Changelog
 
-## 0.2.31
-
-- Fix: Issue with background notifications on Android
-
-## 0.2.30
-
-- Fix: Changed minimum threshold for the user discovery to 3
-- Fix: Multiple UI issues
-
-## 0.2.28
+## 0.3.0
 
 - Improved: Design of some UI components
 - Improved: Memories viewer shows state for batch operations and has improved performance
+- Fix: Issue with background notifications on Android
+- Fix: Changed minimum threshold for the user discovery to 3
+- Fix: Multiple UI issues
 - Fix: Auto-detect if FCM token does not work and trigger a reset
 
 ## 0.2.26

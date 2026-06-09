@@ -256,6 +256,7 @@ class _UserStudyQuestionnaireViewState
 
   Widget _buildTextField(String hint, void Function(String) onChanged) {
     return TextField(
+      textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         hintText: hint,
         border: const OutlineInputBorder(),

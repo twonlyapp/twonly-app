@@ -118,6 +118,7 @@ class _TextViewState extends State<TextLayer> {
           child: TextField(
             controller: textController,
             autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
             maxLines: null,
             minLines: 1,
             onEditingComplete: onEditionComplete,
