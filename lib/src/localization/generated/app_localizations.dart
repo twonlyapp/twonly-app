@@ -140,18 +140,6 @@ abstract class AppLocalizations {
   /// **'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.'**
   String get onboardingFocusBody;
 
-  /// No description provided for @onboardingSendTwonliesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Send twonlies'**
-  String get onboardingSendTwonliesTitle;
-
-  /// No description provided for @onboardingSendTwonliesBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Share moments securely with your partner. twonly ensures that only your partner can open it, keeping your moments with your partner a two(o)nly thing!'**
-  String get onboardingSendTwonliesBody;
-
   /// No description provided for @onboardingNotProductTitle.
   ///
   /// In en, this message translates to:
@@ -163,12 +151,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'twonly is financed by donations and an optional subscription. Your data will never be sold.'**
   String get onboardingNotProductBody;
-
-  /// No description provided for @onboardingGetStartedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Let\'s go!'**
-  String get onboardingGetStartedTitle;
 
   /// No description provided for @registerUsernameSlogan.
   ///
@@ -320,23 +302,11 @@ abstract class AppLocalizations {
   /// **'Username not found'**
   String get searchUsernameNotFound;
 
-  /// No description provided for @searchUsernameNotFoundBody.
-  ///
-  /// In en, this message translates to:
-  /// **'There is no user with the username \"{username}\" registered'**
-  String searchUsernameNotFoundBody(Object username);
-
   /// No description provided for @searchUsernameNewFollowerTitle.
   ///
   /// In en, this message translates to:
   /// **'Open requests'**
   String get searchUsernameNewFollowerTitle;
-
-  /// No description provided for @chatListViewSearchUserNameBtn.
-  ///
-  /// In en, this message translates to:
-  /// **'Add your first twonly contact!'**
-  String get chatListViewSearchUserNameBtn;
 
   /// No description provided for @chatListDetailInput.
   ///
@@ -512,12 +482,6 @@ abstract class AppLocalizations {
   /// **'Store in Gallery'**
   String get settingsStorageDataStoreInGTitle;
 
-  /// No description provided for @settingsStorageDataStoreInGSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Store saved images additional in the systems gallery.'**
-  String get settingsStorageDataStoreInGSubtitle;
-
   /// No description provided for @settingsStorageDataMediaAutoDownload.
   ///
   /// In en, this message translates to:
@@ -611,13 +575,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyBlockUsers.
   ///
   /// In en, this message translates to:
-  /// **'Block users'**
+  /// **'Block contacts'**
   String get settingsPrivacyBlockUsers;
 
   /// No description provided for @settingsPrivacyBlockUsersDesc.
   ///
   /// In en, this message translates to:
-  /// **'Blocked users will not be able to communicate with you. You can unblock a blocked user at any time.'**
+  /// **'Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.'**
   String get settingsPrivacyBlockUsersDesc;
 
   /// No description provided for @settingsPrivacyBlockUsersCount.
@@ -631,12 +595,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Security Profile'**
   String get settingsPrivacyProfileSelectionTitle;
-
-  /// No description provided for @settingsPrivacyProfileSelectionDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose your setup path and security configuration'**
-  String get settingsPrivacyProfileSelectionDesc;
 
   /// No description provided for @securityProfileTitle.
   ///
@@ -935,13 +893,19 @@ abstract class AppLocalizations {
   /// No description provided for @contactVerifyNumberTitle.
   ///
   /// In en, this message translates to:
-  /// **'Verify contact'**
+  /// **'Verify contacts'**
   String get contactVerifyNumberTitle;
+
+  /// No description provided for @contactVerifyNumberSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify the identity of your contacts to make sure you are texting the right person.'**
+  String get contactVerifyNumberSubtitle;
 
   /// No description provided for @userVerifiedTitle.
   ///
   /// In en, this message translates to:
-  /// **'User verified'**
+  /// **'Contact verified'**
   String get userVerifiedTitle;
 
   /// No description provided for @contactVerifiedBy.
@@ -1013,13 +977,13 @@ abstract class AppLocalizations {
   /// No description provided for @contactBlockBody.
   ///
   /// In en, this message translates to:
-  /// **'A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.'**
+  /// **'A blocked contact will no longer be able to send you messages and their profile will be hidden from view. To unblock a contact, simply navigate to Settings > Privacy > Blocked Contacts.'**
   String get contactBlockBody;
 
   /// No description provided for @contactRemove.
   ///
   /// In en, this message translates to:
-  /// **'Remove user'**
+  /// **'Remove contact'**
   String get contactRemove;
 
   /// No description provided for @contactRemoveTitle.
@@ -1031,7 +995,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactRemoveBody.
   ///
   /// In en, this message translates to:
-  /// **'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.'**
+  /// **'Permanently remove the contact. If the contact tries to send you a new message, you will have to accept the contact again first.'**
   String get contactRemoveBody;
 
   /// No description provided for @undo.
@@ -1721,7 +1685,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportUser.
   ///
   /// In en, this message translates to:
-  /// **'Report user'**
+  /// **'Report contact'**
   String get reportUser;
 
   /// No description provided for @newDeviceRegistered.
@@ -2360,18 +2324,6 @@ abstract class AppLocalizations {
   /// **'Draft'**
   String get draftMessage;
 
-  /// No description provided for @exportMemories.
-  ///
-  /// In en, this message translates to:
-  /// **'Export memories (Beta)'**
-  String get exportMemories;
-
-  /// No description provided for @importMemories.
-  ///
-  /// In en, this message translates to:
-  /// **'Import memories (Beta)'**
-  String get importMemories;
-
   /// No description provided for @voiceMessageSlideToCancel.
   ///
   /// In en, this message translates to:
@@ -2771,7 +2723,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGreenDesc.
   ///
   /// In en, this message translates to:
-  /// **'A contact you have *personally* verified.'**
+  /// **'A contact you have *personally verified* using the QR code.'**
   String get verificationBadgeGreenDesc;
 
   /// No description provided for @verificationBadgeYellowDesc.
@@ -2785,6 +2737,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A contact whose identity has *not* yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @scanNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan now'**
+  String get scanNow;
+
+  /// No description provided for @openQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Open QR code'**
+  String get openQrCode;
 
   /// No description provided for @deleteVerificationTitle.
   ///
@@ -2809,12 +2773,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 mutual group} other{{count} mutual groups}}'**
   String mutualGroupsTitle(num count);
-
-  /// No description provided for @mutualGroupsSentMessages.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 message sent} other{{count} messages sent}}'**
-  String mutualGroupsSentMessages(num count);
 
   /// No description provided for @chatEntryFlameRestored.
   ///
@@ -2888,12 +2846,6 @@ abstract class AppLocalizations {
   /// **'When the typing indicator is turned off, you can\'t see when others are typing a message.'**
   String get settingsTypingIndicationSubtitle;
 
-  /// No description provided for @scanQrOrShow.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan / Show QR'**
-  String get scanQrOrShow;
-
   /// No description provided for @contactActionBlock.
   ///
   /// In en, this message translates to:
@@ -2947,12 +2899,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mutual Friends'**
   String get userDiscoverySettingsTitle;
-
-  /// No description provided for @userDiscoveryWhyThisIsUsed.
-  ///
-  /// In en, this message translates to:
-  /// **'Why this is used'**
-  String get userDiscoveryWhyThisIsUsed;
 
   /// No description provided for @userDiscoveryFeatureOffers.
   ///
@@ -3236,12 +3182,6 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get back;
 
-  /// No description provided for @onboardingExampleLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Example'**
-  String get onboardingExampleLabel;
-
   /// No description provided for @makerChangedUsername.
   ///
   /// In en, this message translates to:
@@ -3409,12 +3349,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag to Zoom'**
   String get dragToZoom;
-
-  /// No description provided for @showUsername.
-  ///
-  /// In en, this message translates to:
-  /// **'Show username'**
-  String get showUsername;
 
   /// No description provided for @onboardingProfileSelectionTitle.
   ///
@@ -3641,30 +3575,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There are no images on your device.'**
   String get importGalleryNoImagesFoundDesc;
-
-  /// No description provided for @importGalleryShowAllImages.
-  ///
-  /// In en, this message translates to:
-  /// **'Show all images'**
-  String get importGalleryShowAllImages;
-
-  /// No description provided for @importGalleryShowTwonlyAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Show twonly album'**
-  String get importGalleryShowTwonlyAlbum;
-
-  /// No description provided for @importGalleryToggleDescAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Viewing all images on your device.'**
-  String get importGalleryToggleDescAll;
-
-  /// No description provided for @importGalleryToggleDescTwonly.
-  ///
-  /// In en, this message translates to:
-  /// **'Viewing the \"twonly\" album.'**
-  String get importGalleryToggleDescTwonly;
 
   /// No description provided for @importGalleryFilterTwonly.
   ///
