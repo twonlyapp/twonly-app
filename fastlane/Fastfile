@@ -122,6 +122,11 @@ platform :android do
     UI.message("Starting F-Droid deployment...")
     FileUtils.mkdir_p(fdroid_repo_dir)
 
+    # Delete all APK files in the directory
+    sh("rm -f #{fdroid_repo_dir}/*.apk")
+    
+    UI.message("All APK files deleted.")
+
     apks.each do |apk_path|
       basename = File.basename(apk_path)
       new_name = "eu.twonly_v#{version}-#{basename}"
