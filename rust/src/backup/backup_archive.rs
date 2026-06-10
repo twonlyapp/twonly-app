@@ -13,6 +13,7 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 pub(crate) struct BackupArchive {}
 
 impl BackupArchive {
+    #[allow(clippy::type_complexity)]
     fn get_backup_files(
         ctx: &Context,
         keys: &KeyManager,

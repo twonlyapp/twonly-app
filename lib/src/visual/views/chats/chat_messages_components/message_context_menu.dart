@@ -248,6 +248,7 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                     child: TextField(
                       controller: controller,
                       autofocus: true,
+                      textCapitalization: TextCapitalization.sentences,
                       keyboardType: TextInputType.multiline,
                       maxLines: 4,
                       minLines: 1,

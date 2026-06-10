@@ -6,7 +6,7 @@ macro_rules! generate_insert {
         pub async fn $fn_name(
             pool: &sqlx::SqlitePool,
             $($field: $ty),+
-        ) -> crate::error::Result<i64> {
+        ) -> $crate::error::Result<i64> {
             let sql = format!(
                 "INSERT INTO {} ({}) VALUES ({}) RETURNING id",
                 $table,
@@ -27,7 +27,7 @@ macro_rules! generate_insert {
 #[macro_export]
 macro_rules! generate_select {
     ($table:literal, $fn_name:ident) => {
-        pub async fn $fn_name(pool: &sqlx::SqlitePool) -> crate::error::Result<Vec<Self>> {
+        pub async fn $fn_name(pool: &sqlx::SqlitePool) -> $crate::error::Result<Vec<Self>> {
             let sql = format!("SELECT * FROM {}", $table);
             let results = sqlx::query_as::<_, Self>(sqlx::AssertSqlSafe(sql))
                 .fetch_all(pool)
@@ -36,7 +36,7 @@ macro_rules! generate_select {
         }
     };
     ($table:literal, $fn_name:ident, $($field:ident : $ty:ty),+) => {
-        pub async fn $fn_name(pool: &sqlx::SqlitePool, $($field: $ty),+) -> crate::error::Result<Vec<Self>> {
+        pub async fn $fn_name(pool: &sqlx::SqlitePool, $($field: $ty),+) -> $crate::error::Result<Vec<Self>> {
             let mut sql = format!("SELECT * FROM {} WHERE ", $table);
             let mut filters = Vec::new();
             $(
@@ -63,7 +63,7 @@ macro_rules! generate_table_tests {
         #[cfg(test)]
         mod tests {
             use super::*;
-            use crate::database::Database;
+            use $crate::database::Database;
             use tempfile::tempdir;
 
             #[tokio::test]
@@ -88,11 +88,10 @@ macro_rules! generate_test_select {
             #[cfg(test)]
             #[tokio::test]
             async fn [<test_ $select_fn>]() {
-                use crate::database::Database;
                 use tempfile::tempdir;
                 let dir = tempdir().unwrap();
                 let db_path = dir.path().join("test.sqlite").display().to_string();
-                let db = Database::new(&db_path, None, false).await.unwrap();
+                let db = $crate::database::Database::new(&db_path, None, false).await.unwrap();
                 db.run_migrations().await.unwrap();
 
                 $struct::$insert_fn(&db.pool, $($arg),+).await.unwrap();

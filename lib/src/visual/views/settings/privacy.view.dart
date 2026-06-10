@@ -67,8 +67,9 @@ class _PrivacyViewState extends State<PrivacyView> {
           ),
           ListTile(
             title: Text(context.lang.contactVerifyNumberTitle),
+            subtitle: Text(context.lang.contactVerifyNumberSubtitle),
             onTap: () async {
-              await context.push(Routes.settingsPublicProfile);
+              await context.push(Routes.settingsHelpFaqVerifyBadge);
               setState(() {});
             },
           ),

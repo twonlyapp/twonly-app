@@ -2,8 +2,8 @@ pub(crate) mod log;
 mod macros;
 pub(crate) mod user_discovery;
 
+use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion};
 use flutter_rust_bridge::DartFnFuture;
-use protocols::user_discovery::traits::{AnnouncedUser, OtherPromotion};
 
 use crate::error::{Result, TwonlyError};
 use crate::{callback_generator, frb_generated::StreamSink};
@@ -50,7 +50,9 @@ pub(crate) fn get_callbacks() -> Result<FlutterCallbacks> {
     let caller_opt = CURRENT_CALLBACK_ID.try_with(|&c| c).ok();
 
     let lock = FLUTTER_CALLBACKS.read().unwrap();
-    let map = lock.as_ref().ok_or(TwonlyError::MissingCallbackInitialization)?;
+    let map = lock
+        .as_ref()
+        .ok_or(TwonlyError::MissingCallbackInitialization)?;
 
     if let Some(id) = caller_opt {
         if let Some(cb) = map.get(&id) {

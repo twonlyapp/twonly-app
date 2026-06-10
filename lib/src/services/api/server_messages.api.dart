@@ -5,6 +5,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
+
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -281,7 +282,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   Log.info('[$receiptId] Finished handleEncryptedMessage');
 
   if (a == null && b == null) {
-    unawaited(updateLastServerMessageTimestamp());
+    unawaited(FcmNotificationService.updateLastServerMessageTimestamp());
     if (Platform.isAndroid) {
       // Message was handled without any error. Show push notification to the user for Android.
       await showPushNotificationFromServerMessages(

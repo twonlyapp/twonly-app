@@ -322,6 +322,7 @@ Future<String?> showGroupNameChangeDialog(
         content: TextField(
           controller: controller,
           autofocus: true,
+          textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(hintText: context.lang.groupNameInput),
         ),
         actions: <Widget>[

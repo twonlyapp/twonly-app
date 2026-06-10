@@ -33,7 +33,7 @@ platform :android do
 
     # Load release notes from CHANGELOG.md
     changelog_path = File.expand_path("../CHANGELOG.md", __dir__)
-    release_notes = "Automated local release via Fastlane"
+    release_notes = "Small bug fixes."
     if File.exist?(changelog_path)
       changelog_content = File.read(changelog_path)
       escaped_version = Regexp.escape(version)
@@ -121,6 +121,11 @@ platform :android do
     fdroid_repo_dir = "/Users/tobi/Documents/drive/twonly/F-Droid/repo"
     UI.message("Starting F-Droid deployment...")
     FileUtils.mkdir_p(fdroid_repo_dir)
+
+    # Delete all APK files in the directory
+    sh("rm -f #{fdroid_repo_dir}/*.apk")
+    
+    UI.message("All APK files deleted.")
 
     apks.each do |apk_path|
       basename = File.basename(apk_path)

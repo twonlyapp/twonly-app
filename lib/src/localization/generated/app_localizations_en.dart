@@ -33,21 +33,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.';
 
   @override
-  String get onboardingSendTwonliesTitle => 'Send twonlies';
-
-  @override
-  String get onboardingSendTwonliesBody =>
-      'Share moments securely with your partner. twonly ensures that only your partner can open it, keeping your moments with your partner a two(o)nly thing!';
-
-  @override
   String get onboardingNotProductTitle => 'You are not the product!';
 
   @override
   String get onboardingNotProductBody =>
       'twonly is financed by donations and an optional subscription. Your data will never be sold.';
-
-  @override
-  String get onboardingGetStartedTitle => 'Let\'s go!';
 
   @override
   String get registerUsernameSlogan => 'Create your account';
@@ -126,15 +116,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchUsernameNotFound => 'Username not found';
 
   @override
-  String searchUsernameNotFoundBody(Object username) {
-    return 'There is no user with the username \"$username\" registered';
-  }
-
-  @override
   String get searchUsernameNewFollowerTitle => 'Open requests';
-
-  @override
-  String get chatListViewSearchUserNameBtn => 'Add your first twonly contact!';
 
   @override
   String get chatListDetailInput => 'Type a message';
@@ -227,10 +209,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageDataStoreInGTitle => 'Store in Gallery';
 
   @override
-  String get settingsStorageDataStoreInGSubtitle =>
-      'Store saved images additional in the systems gallery.';
-
-  @override
   String get settingsStorageDataMediaAutoDownload => 'Media auto-download';
 
   @override
@@ -276,11 +254,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPrivacy => 'Privacy & Security';
 
   @override
-  String get settingsPrivacyBlockUsers => 'Block users';
+  String get settingsPrivacyBlockUsers => 'Block contacts';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
-      'Blocked users will not be able to communicate with you. You can unblock a blocked user at any time.';
+      'Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.';
 
   @override
   String settingsPrivacyBlockUsersCount(Object len) {
@@ -289,10 +267,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacyProfileSelectionTitle => 'Security Profile';
-
-  @override
-  String get settingsPrivacyProfileSelectionDesc =>
-      'Choose your setup path and security configuration';
 
   @override
   String get securityProfileTitle => 'Security Profile';
@@ -455,10 +429,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your account will be deleted. There is no change to restore it.';
 
   @override
-  String get contactVerifyNumberTitle => 'Verify contact';
+  String get contactVerifyNumberTitle => 'Verify contacts';
 
   @override
-  String get userVerifiedTitle => 'User verified';
+  String get contactVerifyNumberSubtitle =>
+      'Verify the identity of your contacts to make sure you are texting the right person.';
+
+  @override
+  String get userVerifiedTitle => 'Contact verified';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -503,10 +481,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactBlockBody =>
-      'A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.';
+      'A blocked contact will no longer be able to send you messages and their profile will be hidden from view. To unblock a contact, simply navigate to Settings > Privacy > Blocked Contacts.';
 
   @override
-  String get contactRemove => 'Remove user';
+  String get contactRemove => 'Remove contact';
 
   @override
   String contactRemoveTitle(Object username) {
@@ -515,7 +493,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.';
+      'Permanently remove the contact. If the contact tries to send you a new message, you will have to accept the contact again first.';
 
   @override
   String get undo => 'Undo';
@@ -904,7 +882,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportUserReason => 'Reporting reason';
 
   @override
-  String get reportUser => 'Report user';
+  String get reportUser => 'Report contact';
 
   @override
   String get newDeviceRegistered =>
@@ -1299,12 +1277,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get draftMessage => 'Draft';
 
   @override
-  String get exportMemories => 'Export memories (Beta)';
-
-  @override
-  String get importMemories => 'Import memories (Beta)';
-
-  @override
   String get voiceMessageSlideToCancel => 'Slide to cancel';
 
   @override
@@ -1547,7 +1519,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'A contact you have *personally* verified.';
+      'A contact you have *personally verified* using the QR code.';
 
   @override
   String get verificationBadgeYellowDesc =>
@@ -1556,6 +1528,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'A contact whose identity has *not* yet been verified.';
+
+  @override
+  String get scanNow => 'Scan now';
+
+  @override
+  String get openQrCode => 'Open QR code';
 
   @override
   String get deleteVerificationTitle => 'Delete verification?';
@@ -1576,17 +1554,6 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$count mutual groups',
       one: '1 mutual group',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String mutualGroupsSentMessages(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count messages sent',
-      one: '1 message sent',
     );
     return '$_temp0';
   }
@@ -1637,9 +1604,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'When the typing indicator is turned off, you can\'t see when others are typing a message.';
 
   @override
-  String get scanQrOrShow => 'Scan / Show QR';
-
-  @override
   String get contactActionBlock => 'Block';
 
   @override
@@ -1669,9 +1633,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsTitle => 'Mutual Friends';
-
-  @override
-  String get userDiscoveryWhyThisIsUsed => 'Why this is used';
 
   @override
   String get userDiscoveryFeatureOffers => 'Your benefits at a glance';
@@ -1841,9 +1802,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get onboardingExampleLabel => 'Example';
-
-  @override
   String makerChangedUsername(Object maker, Object oldName, Object newName) {
     return '$maker changed their username from $oldName to $newName.';
   }
@@ -1941,9 +1899,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dragToZoom => 'Drag to Zoom';
-
-  @override
-  String get showUsername => 'Show username';
 
   @override
   String get onboardingProfileSelectionTitle => 'Choose your setup path';
@@ -2078,18 +2033,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get importGalleryNoImagesFoundDesc =>
       'There are no images on your device.';
-
-  @override
-  String get importGalleryShowAllImages => 'Show all images';
-
-  @override
-  String get importGalleryShowTwonlyAlbum => 'Show twonly album';
-
-  @override
-  String get importGalleryToggleDescAll => 'Viewing all images on your device.';
-
-  @override
-  String get importGalleryToggleDescTwonly => 'Viewing the \"twonly\" album.';
 
   @override
   String get importGalleryFilterTwonly => 'Only show the twonly-Album';

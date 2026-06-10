@@ -32,7 +32,7 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => HomeViewState();
 }
 
-class HomeViewState extends State<HomeView> {
+class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   int _activePageIdx = 1;
   double _offsetRatio = 0;
   double _offsetFromOne = 0;
@@ -53,6 +53,7 @@ class HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     var initialPage = widget.initialPage;
     if (initialPage == 1 && !userService.currentUser.startWithCameraOpen) {
       initialPage = 0;
@@ -78,7 +79,9 @@ class HomeViewState extends State<HomeView> {
     _selectNotificationSub = selectNotificationStream.stream.listen((
       response,
     ) async {
-      if (response.payload != null && response.payload!.startsWith(Routes.chats) && response.payload! != Routes.chats) {
+      if (response.payload != null &&
+          response.payload!.startsWith(Routes.chats) &&
+          response.payload! != Routes.chats) {
         await routerProvider.push(response.payload!);
       }
       streamHomeViewPageIndex.add(0);
@@ -92,7 +95,11 @@ class HomeViewState extends State<HomeView> {
     });
 
     if (initialPage == 1) {
-      unawaited(_mainCameraController.selectCamera(0, true));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_isViewActive()) {
+          unawaited(_mainCameraController.selectCamera(0, true));
+        }
+      });
     }
 
     unawaited(_initAsync());
@@ -114,31 +121,40 @@ class HomeViewState extends State<HomeView> {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialPage == 1 && !userService.currentUser.startWithCameraOpen || widget.initialPage == 0) {
+      if (widget.initialPage == 1 &&
+              !userService.currentUser.startWithCameraOpen ||
+          widget.initialPage == 0) {
         streamHomeViewPageIndex.add(0);
       }
     });
   }
 
   Future<void> _initAsync() async {
-    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
 
     RemoteMessage? initialRemoteMessage;
     try {
-      initialRemoteMessage = await FirebaseMessaging.instance.getInitialMessage();
+      initialRemoteMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
     } catch (e) {
       Log.error('Could not get initial Firebase message: $e');
     }
 
     if (widget.initialPage == 0 ||
         initialRemoteMessage != null ||
-        (notificationAppLaunchDetails != null && notificationAppLaunchDetails.didNotificationLaunchApp)) {
+        (notificationAppLaunchDetails != null &&
+            notificationAppLaunchDetails.didNotificationLaunchApp)) {
       if (initialRemoteMessage != null) {
         Log.info('App launched from iOS/Remote push notification tap.');
         streamHomeViewPageIndex.add(0);
-      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
-        final payload = notificationAppLaunchDetails?.notificationResponse?.payload;
-        if (payload != null && payload.startsWith(Routes.chats) && payload != Routes.chats) {
+      } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
+          false) {
+        final payload =
+            notificationAppLaunchDetails?.notificationResponse?.payload;
+        if (payload != null &&
+            payload.startsWith(Routes.chats) &&
+            payload != Routes.chats) {
           await routerProvider.push(payload);
           streamHomeViewPageIndex.add(0);
         }
@@ -165,6 +181,7 @@ class HomeViewState extends State<HomeView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _onMessageOpenedAppSub?.cancel();
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
@@ -176,11 +193,38 @@ class HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
+  bool _isViewActive() {
+    if (!mounted) return false;
+    return ModalRoute.of(context)?.isCurrent ?? false;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      if (_offsetRatio < 1 &&
+          !_mainCameraController.isSharePreviewIsShown &&
+          _isViewActive()) {
+        unawaited(
+          _mainCameraController.selectCamera(
+            _mainCameraController.selectedCameraDetails.cameraId,
+            false,
+          ),
+        );
+      }
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      unawaited(_mainCameraController.closeCamera());
+    }
+  }
+
   bool _onPageView(ScrollNotification notification) {
     _disableCameraTimer?.cancel();
 
     if (notification.depth > 0 && notification.metrics.axis == Axis.vertical) {
-      final canScroll = notification.metrics.maxScrollExtent > notification.metrics.minScrollExtent;
+      final canScroll =
+          notification.metrics.maxScrollExtent >
+          notification.metrics.minScrollExtent;
       if (!canScroll) {
         if (!_isBottomNavVisible) {
           setState(() {
@@ -188,13 +232,17 @@ class HomeViewState extends State<HomeView> {
           });
         }
       } else {
-        if (_activePageIdx == 2 && notification.metrics.pixels < 100 && !_isBottomNavVisible) {
+        if (_activePageIdx == 2 &&
+            notification.metrics.pixels < 100 &&
+            !_isBottomNavVisible) {
           setState(() {
             _isBottomNavVisible = true;
           });
         } else if (notification is ScrollUpdateNotification) {
           final delta = notification.scrollDelta ?? 0;
-          if (delta > 5 && _isBottomNavVisible && (_activePageIdx != 2 || notification.metrics.pixels >= 100)) {
+          if (delta > 5 &&
+              _isBottomNavVisible &&
+              (_activePageIdx != 2 || notification.metrics.pixels >= 100)) {
             setState(() {
               _isBottomNavVisible = false;
             });
@@ -216,7 +264,8 @@ class HomeViewState extends State<HomeView> {
 
     if (_mainCameraController.cameraController == null &&
         !_mainCameraController.initCameraStarted &&
-        _offsetRatio < 1) {
+        _offsetRatio < 1 &&
+        _isViewActive()) {
       unawaited(
         _mainCameraController.selectCamera(
           _mainCameraController.selectedCameraDetails.cameraId,
@@ -281,12 +330,15 @@ class HomeViewState extends State<HomeView> {
             left: 0,
             top: 0,
             right: 0,
-            bottom: (_offsetRatio > 0.25) ? MediaQuery.sizeOf(context).height * 2 : 0,
+            bottom: (_offsetRatio > 0.25)
+                ? MediaQuery.sizeOf(context).height * 2
+                : 0,
             child: Opacity(
               opacity: 1 - (_offsetRatio * 4) % 1,
               child: CameraPreviewControllerView(
                 mainController: _mainCameraController,
-                isVisible: ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
+                isVisible:
+                    ((1 - (_offsetRatio * 4) % 1) == 1) && _activePageIdx == 1,
               ),
             ),
           ),

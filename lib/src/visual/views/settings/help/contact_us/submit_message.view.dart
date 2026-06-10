@@ -86,6 +86,7 @@ class _ContactUsState extends State<SubmitMessage> {
               const SizedBox(height: 10),
               TextField(
                 controller: _controller,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: context.lang.contactUsYourMessage,
                   border: const OutlineInputBorder(),

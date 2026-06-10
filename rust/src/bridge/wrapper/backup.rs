@@ -53,7 +53,7 @@ impl RustBackupIdentity {
 
     pub async fn get_identity_backup_bytes() -> Result<Vec<u8>> {
         let key_manager = get_twonly_flutter()?.key_manager.lock().await;
-        return BackupIdentity::encrypt_key_manager(&key_manager);
+        BackupIdentity::encrypt_key_manager(&key_manager)
     }
 
     pub async fn restore_identity_backup(
@@ -70,7 +70,7 @@ impl RustBackupIdentity {
 impl RustBackupArchive {
     pub async fn create_backup_archive() -> Result<(String, String)> {
         let ctx = Context::get_static()?;
-        let path = BackupArchive::create_backup(&ctx).await?;
+        let path = BackupArchive::create_backup(ctx).await?;
         let key_manager = get_twonly_flutter()?.key_manager.lock().await;
         let token = hex::encode(key_manager.main_key.get_backup_download_token());
         Ok((token, path.canonicalize()?.to_string_lossy().to_string()))

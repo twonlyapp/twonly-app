@@ -1,9 +1,10 @@
 use crate::bridge::callbacks::get_callbacks;
 use crate::bridge::get_twonly_flutter;
 use crate::error::TwonlyError;
-use protocols::user_discovery::error::{Result, UserDiscoveryError};
-use protocols::user_discovery::traits::UserDiscoveryUtils;
-use protocols::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryStore};
+use crate::user_discovery::error::{Result, UserDiscoveryError};
+use crate::user_discovery::traits::UserDiscoveryUtils;
+use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryStore};
+#[cfg(test)]
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -148,6 +149,7 @@ impl UserDiscoveryStore for UserDiscoveryStoreFlutter {
         .ok_or(TwonlyError::DartError.into())
     }
 
+    #[cfg(test)]
     async fn get_all_announced_users(
         &self,
     ) -> Result<HashMap<AnnouncedUser, Vec<(i64, Option<i64>)>>> {

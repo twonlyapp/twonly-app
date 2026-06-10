@@ -293,6 +293,7 @@ class _MessageInputState extends State<MessageInput> {
                               TextField(
                                 controller: _textFieldController,
                                 focusNode: widget.textFieldFocus,
+                                textCapitalization: TextCapitalization.sentences,
                                 keyboardType: TextInputType.multiline,
                                 showCursor:
                                     _recordingState != RecordingState.recording,

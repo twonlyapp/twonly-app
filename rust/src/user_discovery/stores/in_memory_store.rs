@@ -91,7 +91,7 @@ impl UserDiscoveryStore for InMemoryStore {
     async fn get_own_promotions_after_version(&self, version: u32) -> Result<Vec<Vec<u8>>> {
         let storage = self.storage();
         let elements = storage.own_promotions[(version as usize)..]
-            .into_iter()
+            .iter()
             .map(|(_, promotion)| promotion.to_owned())
             .collect();
         Ok(elements)
@@ -107,7 +107,7 @@ impl UserDiscoveryStore for InMemoryStore {
         if let Some(element) = element {
             return Ok(Some(element.1.to_owned()));
         }
-        return Ok(None);
+        Ok(None)
     }
 
     async fn store_other_promotion(&self, promotion: OtherPromotion) -> Result<()> {
@@ -158,7 +158,7 @@ impl UserDiscoveryStore for InMemoryStore {
         let entry = storage
             .announced_users
             .entry(announced_user.clone())
-            .or_insert(vec![]);
+            .or_default();
         if announced_user.user_id != from_contact_id {
             if let Some(found) = entry.iter_mut().find(|x| x.0 == from_contact_id) {
                 found.1 = public_key_verified_timestamp;

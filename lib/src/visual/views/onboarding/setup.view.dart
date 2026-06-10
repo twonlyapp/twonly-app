@@ -18,9 +18,9 @@ import 'package:twonly/src/visual/views/settings/privacy/user_discovery/componen
 enum SetupPages {
   profile,
   backup,
+  verificationBadge,
   profileSelection,
   securityProfile,
-  verificationBadge,
   shareYourFriends,
   letYourFriendsFindYou,
 }
@@ -40,22 +40,23 @@ extension SetupPagesExtension on SetupPages {
         return [
           SetupPages.profile,
           SetupPages.backup,
+          SetupPages.verificationBadge,
           SetupPages.profileSelection,
         ];
       case SetupProfile.maximum:
         return [
           SetupPages.profile,
           SetupPages.backup,
-          SetupPages.profileSelection,
           SetupPages.verificationBadge,
+          SetupPages.profileSelection,
         ];
       case SetupProfile.customized:
         return [
           SetupPages.profile,
           SetupPages.backup,
+          SetupPages.verificationBadge,
           SetupPages.profileSelection,
           SetupPages.securityProfile,
-          SetupPages.verificationBadge,
           SetupPages.shareYourFriends,
           SetupPages.letYourFriendsFindYou,
         ];

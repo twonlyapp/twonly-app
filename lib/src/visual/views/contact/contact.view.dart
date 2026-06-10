@@ -278,6 +278,7 @@ Future<String?> showNicknameChangeDialog(
         content: TextField(
           controller: controller,
           autofocus: true,
+          textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             hintText: context.lang.contactNicknameNew,
           ),
@@ -319,6 +320,7 @@ Future<String?> showReportDialog(
         content: TextField(
           controller: controller,
           autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(hintText: context.lang.reportUserReason),
         ),
         actions: <Widget>[

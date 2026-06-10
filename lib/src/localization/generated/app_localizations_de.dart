@@ -34,21 +34,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verabschiede dich von süchtig machenden Funktionen! twonly wurde für das Teilen von Momenten ohne nutzlose Ablenkungen oder Werbung entwickelt.';
 
   @override
-  String get onboardingSendTwonliesTitle => 'twonlies senden';
-
-  @override
-  String get onboardingSendTwonliesBody =>
-      'Teile Momente sicher mit deinem Partner. twonly stellt sicher, dass nur dein Partner sie öffnen kann, sodass deine Momente mit deinem Partner eine two(o)nly Sache bleiben!';
-
-  @override
   String get onboardingNotProductTitle => 'Du bist nicht das Produkt!';
 
   @override
   String get onboardingNotProductBody =>
       'twonly wird durch Spenden und ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
-
-  @override
-  String get onboardingGetStartedTitle => 'Auf geht\'s';
 
   @override
   String get registerUsernameSlogan => 'Konto erstellen';
@@ -127,16 +117,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUsernameNotFound => 'Benutzername nicht gefunden';
 
   @override
-  String searchUsernameNotFoundBody(Object username) {
-    return 'Es wurde kein Benutzer mit dem Benutzernamen \"$username\" gefunden.';
-  }
-
-  @override
   String get searchUsernameNewFollowerTitle => 'Offene Anfragen';
-
-  @override
-  String get chatListViewSearchUserNameBtn =>
-      'Füge deinen ersten twonly-Kontakt hinzu!';
 
   @override
   String get chatListDetailInput => 'Nachricht eingeben';
@@ -230,10 +211,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';
 
   @override
-  String get settingsStorageDataStoreInGSubtitle =>
-      'Speichere Bilder zusätzlich in der Systemgalerie.';
-
-  @override
   String get settingsStorageDataMediaAutoDownload =>
       'Automatischer Mediendownload';
 
@@ -280,11 +257,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPrivacy => 'Datenschutz & Sicherheit';
 
   @override
-  String get settingsPrivacyBlockUsers => 'Benutzer blockieren';
+  String get settingsPrivacyBlockUsers => 'Kontakte blockieren';
 
   @override
   String get settingsPrivacyBlockUsersDesc =>
-      'Blockierte Benutzer können nicht mit dir kommunizieren. Du kannst einen blockierten Benutzer jederzeit wieder entsperren.';
+      'Blockierte Kontakte können nicht mit dir kommunizieren. Du kannst einen blockierten Kontakt jederzeit wieder entsperren.';
 
   @override
   String settingsPrivacyBlockUsersCount(Object len) {
@@ -293,10 +270,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsPrivacyProfileSelectionTitle => 'Sicherheitsprofil';
-
-  @override
-  String get settingsPrivacyProfileSelectionDesc =>
-      'Wähle deinen Setup-Pfad und deine Sicherheitskonfiguration';
 
   @override
   String get securityProfileTitle => 'Sicherheitsprofil';
@@ -460,10 +433,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Konto wird gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.';
 
   @override
-  String get contactVerifyNumberTitle => 'Benutzer verifizieren';
+  String get contactVerifyNumberTitle => 'Kontakte verifizieren';
 
   @override
-  String get userVerifiedTitle => 'Benutzer verifiziert';
+  String get contactVerifyNumberSubtitle =>
+      'Überprüfe die Identität deiner Kontakte, um sicherzugehen, dass du mit der richtigen Person schreibst.';
+
+  @override
+  String get userVerifiedTitle => 'Kontakt verifiziert';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -508,10 +485,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactBlockBody =>
-      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und deren Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
+      'Ein blockierter Kontakt kann dir keine Nachrichten mehr senden, und deren Profil ist nicht mehr sichtbar. Um die Blockierung eines Kontakts aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Kontakte.';
 
   @override
-  String get contactRemove => 'Benutzer löschen';
+  String get contactRemove => 'Kontakt löschen';
 
   @override
   String contactRemoveTitle(Object username) {
@@ -520,7 +497,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Den Benutzer dauerhaft entfernen. Wenn der Benutzer versucht, dir eine neue Nachricht zu senden, musst du den Benutzer erst wieder akzeptieren.';
+      'Den Kontakt dauerhaft entfernen. Wenn der Kontakt versucht, dir eine neue Nachricht zu senden, musst du den Kontakt erst wieder akzeptieren.';
 
   @override
   String get undo => 'Rückgängig';
@@ -910,7 +887,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get reportUserReason => 'Meldegrund';
 
   @override
-  String get reportUser => 'Benutzer melden';
+  String get reportUser => 'Kontakt melden';
 
   @override
   String get newDeviceRegistered =>
@@ -1308,12 +1285,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get draftMessage => 'Entwurf';
 
   @override
-  String get exportMemories => 'Memories exportieren (Beta)';
-
-  @override
-  String get importMemories => 'Memories importieren (Beta)';
-
-  @override
   String get voiceMessageSlideToCancel => 'Zum Abbrechen ziehen';
 
   @override
@@ -1561,7 +1532,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGreenDesc =>
-      'Ein Kontakt, den du *persönlich verifiziert* hast.';
+      'Ein Kontakt, den du über den QR-code *persönlich verifiziert* hast.';
 
   @override
   String get verificationBadgeYellowDesc =>
@@ -1570,6 +1541,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Ein Kontakt, dessen Identität noch *nicht überprüft* wurde.';
+
+  @override
+  String get scanNow => 'Jetzt scannen';
+
+  @override
+  String get openQrCode => 'QR-Code öffnen';
 
   @override
   String get deleteVerificationTitle => 'Verifizierung löschen?';
@@ -1590,17 +1567,6 @@ class AppLocalizationsDe extends AppLocalizations {
       locale: localeName,
       other: '$count gemeinsame Gruppen',
       one: '1 gemeinsame Gruppe',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String mutualGroupsSentMessages(num count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Nachrichten gesendet',
-      one: '1 Nachricht gesendet',
     );
     return '$_temp0';
   }
@@ -1651,9 +1617,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bei deaktivierten Tipp-Indikatoren kannst du nicht sehen, wenn andere gerade eine Nachricht tippen.';
 
   @override
-  String get scanQrOrShow => 'QR scannen / anzeigen';
-
-  @override
   String get contactActionBlock => 'Blockieren';
 
   @override
@@ -1683,9 +1646,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get userDiscoverySettingsTitle => 'Gemeinsame Freunde';
-
-  @override
-  String get userDiscoveryWhyThisIsUsed => 'Warum dies verwendet wird';
 
   @override
   String get userDiscoveryFeatureOffers => 'Dein Nutzen auf einen Blick';
@@ -1855,9 +1815,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get back => 'Zurück';
 
   @override
-  String get onboardingExampleLabel => 'Beispiel';
-
-  @override
   String makerChangedUsername(Object maker, Object oldName, Object newName) {
     return '$maker hat den Benutzernamen von $oldName zu $newName geändert.';
   }
@@ -1956,9 +1913,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dragToZoom => 'Zum Zoomen ziehen';
-
-  @override
-  String get showUsername => 'Benutzernamen anzeigen';
 
   @override
   String get onboardingProfileSelectionTitle => 'Wähle deinen Setup-Weg';
@@ -2093,20 +2047,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get importGalleryNoImagesFoundDesc =>
       'Es befinden sich keine Bilder auf deinem Gerät.';
-
-  @override
-  String get importGalleryShowAllImages => 'Alle Bilder anzeigen';
-
-  @override
-  String get importGalleryShowTwonlyAlbum => 'twonly-Album anzeigen';
-
-  @override
-  String get importGalleryToggleDescAll =>
-      'Es werden alle Bilder auf deinem Gerät angezeigt.';
-
-  @override
-  String get importGalleryToggleDescTwonly =>
-      'Es wird das \"twonly\"-Album angezeigt.';
 
   @override
   String get importGalleryFilterTwonly => 'Nur das twonly-Album anzeigen';
