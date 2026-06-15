@@ -103,6 +103,19 @@ class _MessageInputState extends State<MessageInput> {
     widget.textFieldFocus.dispose();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
+
+    // Persist draft message on close
+    final draftText = _textFieldController.text;
+    unawaited(
+      twonlyDB.groupsDao.updateGroup(
+        widget.group.groupId,
+        GroupsCompanion(
+          draftMessage: Value(draftText.isEmpty ? null : draftText),
+        ),
+      ),
+    );
+    _textFieldController.dispose();
+
     super.dispose();
   }
 
@@ -293,22 +306,15 @@ class _MessageInputState extends State<MessageInput> {
                               TextField(
                                 controller: _textFieldController,
                                 focusNode: widget.textFieldFocus,
-                                textCapitalization: TextCapitalization.sentences,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
                                 keyboardType: TextInputType.multiline,
                                 showCursor:
                                     _recordingState != RecordingState.recording,
                                 maxLines: 4,
                                 minLines: 1,
-                                onChanged: (value) async {
+                                onChanged: (value) {
                                   setState(() {});
-                                  await twonlyDB.groupsDao.updateGroup(
-                                    widget.group.groupId,
-                                    GroupsCompanion(
-                                      draftMessage: Value(
-                                        _textFieldController.text,
-                                      ),
-                                    ),
-                                  );
                                 },
                                 onSubmitted: (_) {
                                   _sendMessage();

@@ -106,6 +106,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     _disposeVideoController();
 
+    // Persist draft message on close
+    final draftText = textMessageController.text;
+    unawaited(
+      twonlyDB.groupsDao.updateGroup(
+        widget.group.groupId,
+        GroupsCompanion(
+          draftMessage: Value(draftText.isEmpty ? null : draftText),
+        ),
+      ),
+    );
+    textMessageController.dispose();
+
     super.dispose();
   }
 
@@ -834,13 +846,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           autofocus: true,
                           controller: textMessageController,
                           textCapitalization: TextCapitalization.sentences,
-                          onChanged: (value) async {
-                            await twonlyDB.groupsDao.updateGroup(
-                              widget.group.groupId,
-                              GroupsCompanion(
-                                draftMessage: Value(textMessageController.text),
-                              ),
-                            );
+                          onChanged: (value) {
+                            setState(() {});
                           },
                           onEditingComplete: () {
                             setState(() {
