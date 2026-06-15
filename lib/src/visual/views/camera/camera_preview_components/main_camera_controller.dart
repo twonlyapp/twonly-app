@@ -28,6 +28,16 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/painter
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
+class PreviewLink {
+  const PreviewLink({
+    required this.url,
+    required this.shouldGeneratePreview,
+  });
+
+  final Uri url;
+  final bool shouldGeneratePreview;
+}
+
 class ScannedVerifiedContact {
   ScannedVerifiedContact({required this.contact, required this.verificationOk});
   Contact contact;
@@ -58,10 +68,12 @@ class MainCameraController {
   bool isVideoRecording = false;
   DateTime? timeSharedLinkWasSetWithQr;
 
-  Uri? sharedLinkForPreview;
+  PreviewLink? sharedLinkForPreview;
 
-  void setSharedLinkForPreview(Uri? url) {
-    sharedLinkForPreview = url;
+  void setSharedLinkForPreview(Uri? url, {bool generatePreview = true}) {
+    sharedLinkForPreview = url == null
+        ? null
+        : PreviewLink(url: url, shouldGeneratePreview: generatePreview);
     setState?.call();
   }
 
@@ -450,7 +462,7 @@ class MainCameraController {
           scannedUrl = link;
           if (sharedLinkForPreview == null) {
             timeSharedLinkWasSetWithQr = clock.now();
-            setSharedLinkForPreview(Uri.parse(scannedUrl!));
+            setSharedLinkForPreview(Uri.parse(scannedUrl!), generatePreview: false);
           }
         }
       }
