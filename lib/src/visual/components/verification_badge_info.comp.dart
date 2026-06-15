@@ -23,10 +23,17 @@ class VerificationBadgeInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          context.lang.verificationBadgeGeneralDesc,
+        RichText(
+          text: TextSpan(
+            children: formattedText(
+              context,
+              context.lang.verificationBadgeGeneralDesc,
+            ),
+            style: const TextStyle(fontSize: 16),
+          ),
           textAlign: TextAlign.center,
         ),
+
         const SizedBox(height: 30),
         _buildItem(
           context,

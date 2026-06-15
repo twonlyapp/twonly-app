@@ -1528,7 +1528,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst. Du kannst Kontakte jederzeit verifizieren, indem du deren QR-Code scannst.';
+      'Der Haken *schützt dich vor Betrügern und Angreifern*. Es wird neben einem Kontakt angezeigt, der von dir oder einem Freund *manuell überprüft* wurde.';
 
   @override
   String get verificationBadgeGreenDesc =>

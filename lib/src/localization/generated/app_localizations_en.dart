@@ -1515,7 +1515,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.';
+      'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.';
 
   @override
   String get verificationBadgeGreenDesc =>

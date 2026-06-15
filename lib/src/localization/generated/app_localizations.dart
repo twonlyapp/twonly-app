@@ -2717,7 +2717,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.'**
+  /// **'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
