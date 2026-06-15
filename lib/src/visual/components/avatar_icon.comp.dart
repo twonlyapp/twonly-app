@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/avatars.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
 class AvatarIcon extends StatefulWidget {
@@ -64,6 +65,12 @@ class _AvatarIconState extends State<AvatarIcon> {
         errorBuilder: errorBuilder,
       );
     }
+
+    Log.warn(
+      'PNG avatar file for contact ${contact.userId} does not exist. Generating in background.',
+    );
+    unawaited(createPushAvatars(forceForUserId: contact.userId));
+
     if (contact.avatarSvgCompressed != null) {
       return SvgPicture.string(
         getAvatarSvg(contact.avatarSvgCompressed!),
