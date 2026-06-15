@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
@@ -13,7 +14,7 @@ import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 
 class KeyVerificationService {
   static Future<List<int>> getNewSecretVerificationToken() async {
@@ -77,12 +78,14 @@ class KeyVerificationService {
         final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
         final context = rootNavigatorKey.currentContext;
         if (context != null && context.mounted && contact != null) {
-          showSnackbar(
-            context,
-            context.lang.secretQrTokenVerifiedSnackbar(
-              getContactDisplayName(contact),
+          unawaited(
+            VerificationSuccessDialog.show(
+              context,
+              contact,
+              message: context.lang.secretQrTokenVerifiedSnackbar(
+                getContactDisplayName(contact),
+              ),
             ),
-            level: SnackbarLevel.success,
           );
         }
         return;

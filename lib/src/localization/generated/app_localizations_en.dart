@@ -1418,7 +1418,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String verifiedPublicKey(Object username) {
-    return 'The public key of $username has been verified and is valid.';
+    return 'The identity of $username has been successfully verified.';
   }
 
   @override

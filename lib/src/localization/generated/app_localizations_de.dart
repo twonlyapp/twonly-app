@@ -1429,7 +1429,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String verifiedPublicKey(Object username) {
-    return 'Der öffentliche Schlüssel von $username wurde überprüft und ist gültig.';
+    return 'Die Identität von $username wurde erfolgreich überprüft.';
   }
 
   @override

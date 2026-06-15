@@ -12,13 +12,14 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
+import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/face_filters.dart';
@@ -141,7 +142,8 @@ class MainCameraController {
 
     if (init) {
       for (; cameraId < AppEnvironment.cameras.length; cameraId++) {
-        if (AppEnvironment.cameras[cameraId].lensDirection == CameraLensDirection.back) {
+        if (AppEnvironment.cameras[cameraId].lensDirection ==
+            CameraLensDirection.back) {
           break;
         }
       }
@@ -157,7 +159,9 @@ class MainCameraController {
         AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
         enableAudio: hasMic,
-        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
       );
       try {
         _initializeFuture = cameraController?.initialize();
@@ -210,10 +214,14 @@ class MainCameraController {
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
       );
       if (cameraController == null) return;
-      selectedCameraDetails.maxAvailableZoom = await cameraController?.getMaxZoomLevel() ?? 1;
-      selectedCameraDetails.minAvailableZoom = await cameraController?.getMinZoomLevel() ?? 1;
+      selectedCameraDetails.maxAvailableZoom =
+          await cameraController?.getMaxZoomLevel() ?? 1;
+      selectedCameraDetails.minAvailableZoom =
+          await cameraController?.getMinZoomLevel() ?? 1;
       selectedCameraDetails
-        ..isZoomAble = selectedCameraDetails.maxAvailableZoom != selectedCameraDetails.minAvailableZoom
+        ..isZoomAble =
+            selectedCameraDetails.maxAvailableZoom !=
+            selectedCameraDetails.minAvailableZoom
         ..cameraLoaded = true
         ..cameraId = cameraId;
 
@@ -235,7 +243,8 @@ class MainCameraController {
   }
 
   Future<void> onTapDown(TapDownDetails details) async {
-    final box = cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
+    final box =
+        cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null) return;
     final localPosition = box.globalToLocal(details.globalPosition);
 
@@ -251,7 +260,8 @@ class MainCameraController {
       await cameraController?.setFocusPoint(Offset(dx, dy));
       await cameraController?.setFocusMode(FocusMode.auto);
     } catch (e) {
-      if (e is CameraException && (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
+      if (e is CameraException &&
+          (e.code == 'setFocusPointFailed' || e.code == 'setFocusModeFailed')) {
         Log.info('Focus point or mode not supported on this device');
       } else {
         Log.warn(e);
@@ -292,7 +302,8 @@ class MainCameraController {
     if (inputImage == null) return;
     _processBarcode(inputImage);
     // check if front camera is selected
-    if (cameraController?.description.lensDirection == CameraLensDirection.front) {
+    if (cameraController?.description.lensDirection ==
+        CameraLensDirection.front) {
       if (_currentFilterType != FaceFilterType.none) {
         _processFaces(inputImage);
       }
@@ -311,14 +322,16 @@ class MainCameraController {
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
-      var rotationCompensation = _orientations[cameraController!.value.deviceOrientation];
+      var rotationCompensation =
+          _orientations[cameraController!.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (camera.lensDirection == CameraLensDirection.front) {
         // front-facing
         rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
       } else {
         // back-facing
-        rotationCompensation = (sensorOrientation - rotationCompensation + 360) % 360;
+        rotationCompensation =
+            (sensorOrientation - rotationCompensation + 360) % 360;
       }
       rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
     }
@@ -360,7 +373,9 @@ class MainCameraController {
     if (_isBusy) return;
     _isBusy = true;
     final barcodes = await _barcodeScanner.processImage(inputImage);
-    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null && cameraController != null) {
+    if (inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null &&
+        cameraController != null) {
       final painter = BarcodeDetectorPainter(
         barcodes,
         inputImage.metadata!.size,
@@ -397,11 +412,21 @@ class MainCameraController {
           }
 
           if (contact == null || contact.deletedByUser) {
-            if (scannedNewProfiles[profile.userId.toInt()] == null) {
-              await HapticFeedback.heavyImpact();
-              scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
-                profile: profile,
+            final context = cameraPreviewKey.currentContext;
+            if (context != null && context.mounted) {
+              unawaited(HapticFeedback.heavyImpact());
+              final shouldRequest = await AddContactDialog.show(
+                context,
+                profile,
               );
+              if (shouldRequest == true && context.mounted) {
+                showSnackbar(
+                  context,
+                  context.lang.requestedUserToastText(profile.username),
+                  level: SnackbarLevel.success,
+                );
+                await addNewContactFromPublicProfile(profile);
+              }
             }
             continue;
           }
@@ -412,16 +437,10 @@ class MainCameraController {
               verificationOk: verificationOk,
             );
 
-            await HapticFeedback.heavyImpact();
+            unawaited(HapticFeedback.heavyImpact());
             final context = cameraPreviewKey.currentContext;
             if (verificationOk && context != null && context.mounted) {
-              showSnackbar(
-                context,
-                context.lang.verifiedPublicKey(
-                  getContactDisplayName(contact),
-                ),
-                level: SnackbarLevel.success,
-              );
+              await VerificationSuccessDialog.show(context, contact);
             }
           }
           continue;
@@ -444,7 +463,9 @@ class MainCameraController {
     if (_isBusyFaces) return;
     _isBusyFaces = true;
     final faces = await _faceDetector.processImage(inputImage);
-    if (inputImage.metadata?.size != null && inputImage.metadata?.rotation != null && cameraController != null) {
+    if (inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null &&
+        cameraController != null) {
       if (faces.isNotEmpty) {
         CustomPainter? painter;
         switch (_currentFilterType) {

@@ -2567,7 +2567,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifiedPublicKey.
   ///
   /// In en, this message translates to:
-  /// **'The public key of {username} has been verified and is valid.'**
+  /// **'The identity of {username} has been successfully verified.'**
   String verifiedPublicKey(Object username);
 
   /// No description provided for @memoriesAYearAgo.
