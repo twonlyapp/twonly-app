@@ -27,7 +27,10 @@ class UrlListTitle extends StatelessWidget {
       title: (title != null) ? Text(title!) : null,
       subtitle: subtitle == null ? null : Text(subtitle!),
       onTap: () async {
-        await launchUrl(Uri.parse(url));
+        await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        );
       },
       trailing: const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
     );

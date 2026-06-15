@@ -242,7 +242,7 @@ class _MessageInputState extends State<MessageInput> {
         UserDiscoveryManualApprovalComp(group: widget.group),
         if (_contactId != null)
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: context.color.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(16),

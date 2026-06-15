@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AdditionalMessageContent extends StatelessWidget {
   const AdditionalMessageContent(this.message, {super.key});
@@ -33,7 +33,10 @@ class AdditionalMessageContent extends StatelessWidget {
               children: [
                 FilledButton.icon(
                   icon: const FaIcon(FontAwesomeIcons.shareFromSquare),
-                  onPressed: () => launchUrlString(data.link),
+                  onPressed: () => launchUrl(
+                    Uri.parse(data.link),
+                    mode: LaunchMode.externalApplication,
+                  ),
                   label: Text(
                     substringBy(
                       data.link

@@ -41,7 +41,7 @@ class BetterText extends StatelessWidget {
                 url!.startsWith('http') ? url : 'http://$url',
               );
               try {
-                await launchUrl(lUrl);
+                await launchUrl(lUrl, mode: LaunchMode.externalApplication);
               } catch (e) {
                 Log.error('Could not launch $e');
               }

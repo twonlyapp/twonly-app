@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
-import 'package:url_launcher/url_launcher_string.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CameraScannedOverlay extends StatelessWidget {
   const CameraScannedOverlay({
@@ -34,7 +34,10 @@ class CameraScannedOverlay extends StatelessWidget {
   Widget _buildScannedUrlTile(BuildContext context, String url) {
     return GestureDetector(
       onTap: () {
-        launchUrlString(url);
+        launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(8),
