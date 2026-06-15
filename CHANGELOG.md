@@ -3,9 +3,9 @@
 ## 0.3.1
 
 - New: Promotion of sharing contacts when contact is new to twonly
-- Fix: Suppressed link previews for scanned QR codes
 - Improve: Onboarding of new users to the verification badges
 - Improve: Better feedback when a QR code is scanned
+- Fix: Suppressed link previews for scanned QR codes
 - Fix: Black screen on iOS when a link is clicked
 - Fix: Fixed size of the typing indicator to prevent the chat from glitching
 - Fix: Push notifications are not shown for chats that are already open
