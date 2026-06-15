@@ -158,9 +158,21 @@ Future<void> runMigrations() async {
     }
     await UserService.update((u) => u.appVersion = 116);
   }
+
+  if (userService.currentUser.appVersion < 117) {
+    final contacts = await twonlyDB.contactsDao.getAllContacts();
+    final contactCount = contacts.where((c) => c.accepted).length;
+    await UserService.update((u) {
+      u.appVersion = 117;
+      if (contactCount > 5) {
+        u.askForFriendPromotions = false;
+      }
+    });
+  }
+
   if (kDebugMode) {
     assert(
-      AppState.latestAppVersionId == 116,
+      AppState.latestAppVersionId == 117,
       'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
     );
     assert(

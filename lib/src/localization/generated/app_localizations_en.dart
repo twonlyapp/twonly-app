@@ -1548,6 +1548,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String askForFriendPromotionsPrompt(Object username) {
+    return 'Help $username find familiar faces on twonly by sharing mutual friends.';
+  }
+
+  @override
   String mutualGroupsTitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

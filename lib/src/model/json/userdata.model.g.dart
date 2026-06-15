@@ -85,6 +85,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['userDiscoverySharePromotion'] as bool? ?? true
       ..userDiscoveryInitializationError =
           json['userDiscoveryInitializationError'] as bool? ?? false
+      ..askForFriendPromotions = json['askForFriendPromotions'] as bool? ?? true
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -161,6 +162,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       instance.userDiscoveryRequiresManualApproval,
   'userDiscoverySharePromotion': instance.userDiscoverySharePromotion,
   'userDiscoveryInitializationError': instance.userDiscoveryInitializationError,
+  'askForFriendPromotions': instance.askForFriendPromotions,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,

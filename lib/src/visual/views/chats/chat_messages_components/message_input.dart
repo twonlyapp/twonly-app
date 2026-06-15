@@ -19,8 +19,10 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
-import 'package:twonly/src/visual/views/chats/chat_messages_components/unverified_contact_warning.comp.dart';
-import 'package:twonly/src/visual/views/chats/chat_messages_components/user_discovery_manual_approval.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/ask_for_friend_promotions.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/sparks.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/unverified_contact_warning.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/user_discovery_manual_approval.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 
 class MessageInput extends StatefulWidget {
@@ -48,6 +50,7 @@ class _MessageInputState extends State<MessageInput> {
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _emojiShowing = false;
+  bool _showSparks = false;
   bool _audioRecordingLock = false;
   int _currentDuration = 0;
   double _cancelSlideOffset = 0;
@@ -74,6 +77,7 @@ class _MessageInputState extends State<MessageInput> {
   @override
   void initState() {
     super.initState();
+
     _textFieldController = TextEditingController();
     _textFieldController.addListener(_handleTextChange);
     if (widget.group.draftMessage != null) {
@@ -210,6 +214,23 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Future<void> _showAdditionalShareModal(BuildContext context) async {
+    setState(() {
+      _showSparks = false;
+    });
+    if (widget.group.isDirectChat) {
+      final members = await twonlyDB.groupsDao.getGroupContact(
+        widget.group.groupId,
+      );
+      if (members.isNotEmpty) {
+        await twonlyDB.contactsDao.updateContact(
+          members.first.userId,
+          const ContactsCompanion(
+            askForFriendPromotions: Value(false),
+          ),
+        );
+      }
+    }
+    if (!context.mounted) return;
     // ignore: inference_failure_on_function_invocation
     await showModalBottomSheet(
       context: context,
@@ -240,6 +261,15 @@ class _MessageInputState extends State<MessageInput> {
     return Column(
       children: [
         UserDiscoveryManualApprovalComp(group: widget.group),
+        AskForFriendPromotionsComp(
+          group: widget.group,
+          onHighlightChanged: (highlight) {
+            if (!mounted) return;
+            setState(() {
+              _showSparks = highlight;
+            });
+          },
+        ),
         if (_contactId != null)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -261,9 +291,6 @@ class _MessageInputState extends State<MessageInput> {
               children: [
                 Expanded(
                   child: Container(
-                    // padding: const EdgeInsets.symmetric(
-                    //   horizontal: 3,
-                    // ),
                     decoration: BoxDecoration(
                       color: context.color.surfaceContainer,
                       borderRadius: BorderRadius.circular(20),
@@ -551,10 +578,13 @@ class _MessageInputState extends State<MessageInput> {
                         : _sendMessage,
                   )
                 else
-                  IconButton(
-                    icon: const FaIcon(FontAwesomeIcons.plus),
-                    padding: const EdgeInsets.all(15),
-                    onPressed: () => _showAdditionalShareModal(context),
+                  SparksWidget(
+                    animate: _showSparks,
+                    child: IconButton(
+                      icon: const FaIcon(FontAwesomeIcons.plus),
+                      padding: const EdgeInsets.all(15),
+                      onPressed: () => _showAdditionalShareModal(context),
+                    ),
                   ),
               ],
             ),

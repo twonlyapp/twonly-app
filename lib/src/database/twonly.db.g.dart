@@ -200,6 +200,20 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
         defaultValue: const Constant(false),
       );
+  static const VerificationMeta _askForFriendPromotionsMeta =
+      const VerificationMeta('askForFriendPromotions');
+  @override
+  late final GeneratedColumn<bool> askForFriendPromotions =
+      GeneratedColumn<bool>(
+        'ask_for_friend_promotions',
+        aliasedName,
+        true,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("ask_for_friend_promotions" IN (0, 1))',
+        ),
+      );
   static const VerificationMeta _userDiscoveryManualApprovedMeta =
       const VerificationMeta('userDiscoveryManualApproved');
   @override
@@ -255,6 +269,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     createdAt,
     userDiscoveryVersion,
     userDiscoveryExcluded,
+    askForFriendPromotions,
     userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -384,6 +399,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('ask_for_friend_promotions')) {
+      context.handle(
+        _askForFriendPromotionsMeta,
+        askForFriendPromotions.isAcceptableOrUnknown(
+          data['ask_for_friend_promotions']!,
+          _askForFriendPromotionsMeta,
+        ),
+      );
+    }
     if (data.containsKey('user_discovery_manual_approved')) {
       context.handle(
         _userDiscoveryManualApprovedMeta,
@@ -480,6 +504,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.bool,
         data['${effectivePrefix}user_discovery_excluded'],
       )!,
+      askForFriendPromotions: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ask_for_friend_promotions'],
+      ),
       userDiscoveryManualApproved: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}user_discovery_manual_approved'],
@@ -517,6 +545,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime createdAt;
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
+  final bool? askForFriendPromotions;
   final bool? userDiscoveryManualApproved;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
@@ -536,6 +565,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.createdAt,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
+    this.askForFriendPromotions,
     this.userDiscoveryManualApproved,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
@@ -566,6 +596,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
     map['user_discovery_excluded'] = Variable<bool>(userDiscoveryExcluded);
+    if (!nullToAbsent || askForFriendPromotions != null) {
+      map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
+    }
     if (!nullToAbsent || userDiscoveryManualApproved != null) {
       map['user_discovery_manual_approved'] = Variable<bool>(
         userDiscoveryManualApproved,
@@ -601,6 +634,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? const Value.absent()
           : Value(userDiscoveryVersion),
       userDiscoveryExcluded: Value(userDiscoveryExcluded),
+      askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(askForFriendPromotions),
       userDiscoveryManualApproved:
           userDiscoveryManualApproved == null && nullToAbsent
           ? const Value.absent()
@@ -639,6 +675,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryExcluded: serializer.fromJson<bool>(
         json['userDiscoveryExcluded'],
       ),
+      askForFriendPromotions: serializer.fromJson<bool?>(
+        json['askForFriendPromotions'],
+      ),
       userDiscoveryManualApproved: serializer.fromJson<bool?>(
         json['userDiscoveryManualApproved'],
       ),
@@ -669,6 +708,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         userDiscoveryVersion,
       ),
       'userDiscoveryExcluded': serializer.toJson<bool>(userDiscoveryExcluded),
+      'askForFriendPromotions': serializer.toJson<bool?>(
+        askForFriendPromotions,
+      ),
       'userDiscoveryManualApproved': serializer.toJson<bool?>(
         userDiscoveryManualApproved,
       ),
@@ -693,6 +735,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     DateTime? createdAt,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
+    Value<bool?> askForFriendPromotions = const Value.absent(),
     Value<bool?> userDiscoveryManualApproved = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
@@ -716,6 +759,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
     userDiscoveryExcluded: userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+    askForFriendPromotions: askForFriendPromotions.present
+        ? askForFriendPromotions.value
+        : this.askForFriendPromotions,
     userDiscoveryManualApproved: userDiscoveryManualApproved.present
         ? userDiscoveryManualApproved.value
         : this.userDiscoveryManualApproved,
@@ -753,6 +799,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryExcluded: data.userDiscoveryExcluded.present
           ? data.userDiscoveryExcluded.value
           : this.userDiscoveryExcluded,
+      askForFriendPromotions: data.askForFriendPromotions.present
+          ? data.askForFriendPromotions.value
+          : this.askForFriendPromotions,
       userDiscoveryManualApproved: data.userDiscoveryManualApproved.present
           ? data.userDiscoveryManualApproved.value
           : this.userDiscoveryManualApproved,
@@ -783,6 +832,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -807,6 +857,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     createdAt,
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
+    askForFriendPromotions,
     userDiscoveryManualApproved,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -836,6 +887,7 @@ class Contact extends DataClass implements Insertable<Contact> {
             this.userDiscoveryVersion,
           ) &&
           other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
+          other.askForFriendPromotions == this.askForFriendPromotions &&
           other.userDiscoveryManualApproved ==
               this.userDiscoveryManualApproved &&
           other.mediaSendCounter == this.mediaSendCounter &&
@@ -858,6 +910,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime> createdAt;
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
+  final Value<bool?> askForFriendPromotions;
   final Value<bool?> userDiscoveryManualApproved;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
@@ -877,6 +930,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.askForFriendPromotions = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -897,6 +951,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.createdAt = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
+    this.askForFriendPromotions = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -917,6 +972,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<DateTime>? createdAt,
     Expression<Uint8List>? userDiscoveryVersion,
     Expression<bool>? userDiscoveryExcluded,
+    Expression<bool>? askForFriendPromotions,
     Expression<bool>? userDiscoveryManualApproved,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
@@ -941,6 +997,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'user_discovery_version': userDiscoveryVersion,
       if (userDiscoveryExcluded != null)
         'user_discovery_excluded': userDiscoveryExcluded,
+      if (askForFriendPromotions != null)
+        'ask_for_friend_promotions': askForFriendPromotions,
       if (userDiscoveryManualApproved != null)
         'user_discovery_manual_approved': userDiscoveryManualApproved,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
@@ -965,6 +1023,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<DateTime>? createdAt,
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
+    Value<bool?>? askForFriendPromotions,
     Value<bool?>? userDiscoveryManualApproved,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
@@ -986,6 +1045,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
       userDiscoveryExcluded:
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
+      askForFriendPromotions:
+          askForFriendPromotions ?? this.askForFriendPromotions,
       userDiscoveryManualApproved:
           userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
@@ -1047,6 +1108,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         userDiscoveryExcluded.value,
       );
     }
+    if (askForFriendPromotions.present) {
+      map['ask_for_friend_promotions'] = Variable<bool>(
+        askForFriendPromotions.value,
+      );
+    }
     if (userDiscoveryManualApproved.present) {
       map['user_discovery_manual_approved'] = Variable<bool>(
         userDiscoveryManualApproved.value,
@@ -1079,6 +1145,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('createdAt: $createdAt, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
+          ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -12796,6 +12863,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
+      Value<bool?> askForFriendPromotions,
       Value<bool?> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -12817,6 +12885,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
+      Value<bool?> askForFriendPromotions,
       Value<bool?> userDiscoveryManualApproved,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -13196,6 +13265,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get userDiscoveryExcluded => $composableBuilder(
     column: $table.userDiscoveryExcluded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13607,6 +13681,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get userDiscoveryManualApproved => $composableBuilder(
     column: $table.userDiscoveryManualApproved,
     builder: (column) => ColumnOrderings(column),
@@ -13688,6 +13767,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get userDiscoveryExcluded => $composableBuilder(
     column: $table.userDiscoveryExcluded,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
     builder: (column) => column,
   );
 
@@ -14076,6 +14160,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
+                Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14095,6 +14180,7 @@ class $$ContactsTableTableManager
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
+                askForFriendPromotions: askForFriendPromotions,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
@@ -14116,6 +14202,7 @@ class $$ContactsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
+                Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14135,6 +14222,7 @@ class $$ContactsTableTableManager
                 createdAt: createdAt,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
+                askForFriendPromotions: askForFriendPromotions,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,

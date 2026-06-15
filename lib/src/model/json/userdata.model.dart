@@ -128,6 +128,9 @@ class UserData {
 
   //  -- Custom DATA --
 
+  @JsonKey(defaultValue: true)
+  bool askForFriendPromotions = true;
+
   @JsonKey(defaultValue: 100_000)
   int currentPreKeyIndexStart = 100_000;
 

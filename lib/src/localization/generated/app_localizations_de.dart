@@ -1561,6 +1561,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String askForFriendPromotionsPrompt(Object username) {
+    return 'Hilf $username, bekannte Gesichter auf twonly zu finden, indem du gemeinsame Freunde teilst.';
+  }
+
+  @override
   String mutualGroupsTitle(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

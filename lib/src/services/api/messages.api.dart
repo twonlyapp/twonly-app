@@ -19,6 +19,7 @@ import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/services/user.service.dart' show UserService;
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -443,12 +444,26 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     userService.currentUser.avatarCounter,
   );
 
-  if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
-    final contact = await twonlyDB.contactsDao.getContactById(contactId);
-    if (UserDiscoveryService.isContactAllowed(contact)) {
-      final version = await UserDiscoveryService.getCurrentVersion();
-      if (version != null) {
-        encryptedContent.senderUserDiscoveryVersion = version;
+  {
+    if (userService.currentUser.askForFriendPromotions) {
+      final contacts = await twonlyDB.contactsDao.getAllContacts();
+      final contactCount = contacts.where((c) => c.accepted).length;
+      if (contactCount > 5) {
+        await UserService.update((u) {
+          u.askForFriendPromotions = false;
+        });
+      } else {
+        encryptedContent.askForFriendPromotions = true;
+      }
+    }
+
+    if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
+      final contact = await twonlyDB.contactsDao.getContactById(contactId);
+      if (UserDiscoveryService.isContactAllowed(contact)) {
+        final version = await UserDiscoveryService.getCurrentVersion();
+        if (version != null) {
+          encryptedContent.senderUserDiscoveryVersion = version;
+        }
       }
     }
   }

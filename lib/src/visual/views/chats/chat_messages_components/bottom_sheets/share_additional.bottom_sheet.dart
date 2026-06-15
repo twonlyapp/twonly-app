@@ -1,5 +1,7 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -42,6 +44,17 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
         widget.group.groupId,
         selectedContacts,
       );
+      if (widget.group.isDirectChat) {
+        final members = await twonlyDB.groupsDao.getGroupContact(
+          widget.group.groupId,
+        );
+        if (members.isNotEmpty) {
+          await twonlyDB.contactsDao.updateContact(
+            members.first.userId,
+            const ContactsCompanion(askForFriendPromotions: Value(false)),
+          );
+        }
+      }
     }
     if (mounted) {
       Navigator.pop(context);

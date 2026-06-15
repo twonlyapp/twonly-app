@@ -29,6 +29,8 @@ class Contacts extends Table {
   BoolColumn get userDiscoveryExcluded =>
       boolean().withDefault(const Constant(false))();
 
+  BoolColumn get askForFriendPromotions => boolean().nullable()();
+
   BoolColumn get userDiscoveryManualApproved =>
       boolean().nullable().withDefault(const Constant(false))();
 

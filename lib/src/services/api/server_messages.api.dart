@@ -320,6 +320,16 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     );
   }
 
+  if (content.hasAskForFriendPromotions() && content.askForFriendPromotions) {
+    final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
+    if (contact != null && contact.askForFriendPromotions == null) {
+      await twonlyDB.contactsDao.updateContact(
+        fromUserId,
+        const ContactsCompanion(askForFriendPromotions: Value(true)),
+      );
+    }
+  }
+
   if (content.hasContactRequest()) {
     if (!await handleContactRequest(
       fromUserId,

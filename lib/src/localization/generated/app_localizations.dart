@@ -2768,6 +2768,12 @@ abstract class AppLocalizations {
   /// **'{username} has scanned your QR code and is now verified.'**
   String secretQrTokenVerifiedSnackbar(Object username);
 
+  /// No description provided for @askForFriendPromotionsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Help {username} find familiar faces on twonly by sharing mutual friends.'**
+  String askForFriendPromotionsPrompt(Object username);
+
   /// No description provided for @mutualGroupsTitle.
   ///
   /// In en, this message translates to:

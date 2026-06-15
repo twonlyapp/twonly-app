@@ -37,6 +37,7 @@ message EncryptedContent {
     /// This can be added, so the receiver can check weather he is up to date with the current profile
   optional int64 sender_profile_counter        = 4;
   optional bytes sender_user_discovery_version = 21;
+  optional bool ask_for_friend_promotions     = 25;
 
   optional MessageUpdate         message_update          = 5;
   optional Media                 media                   = 6;
