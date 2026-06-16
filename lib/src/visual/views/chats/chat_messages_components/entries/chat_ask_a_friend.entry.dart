@@ -256,8 +256,8 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
             ] else ...[
               StreamBuilder<Contact?>(
                 stream: twonlyDB.contactsDao.watchContact(userId),
-                builder: (context, snapshot) {
-                  final contactInDb = snapshot.data;
+                builder: (context, contactSnapshot) {
+                  final contactInDb = contactSnapshot.data;
                   if (contactInDb != null) {
                     return Text(
                       context.lang.chatAskAFriendAddedDescription,
@@ -268,50 +268,61 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                     );
                   }
 
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: _isLoading ? null : _hideUser,
-                        style: TextButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                        ),
-                        child: Text(
-                          context.lang.chatAskAFriendHide,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.info.textColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                        ).merge(secondaryGreyButtonStyle(context)),
-                        onPressed: _isLoading ? null : _requestUser,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: CircularProgressIndicator.adaptive(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                context.lang.chatAskAFriendRequest,
-                                style: const TextStyle(fontSize: 12),
+                  return StreamBuilder<UserDiscoveryAnnouncedUser?>(
+                    stream:
+                        twonlyDB.userDiscoveryDao.watchAnnouncedUser(userId),
+                    builder: (context, userSnapshot) {
+                      final announcedUser = userSnapshot.data;
+                      if (announcedUser != null && announcedUser.isHidden) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: _isLoading ? null : _hideUser,
+                            style: TextButton.styleFrom(
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                      ),
-                    ],
+                            ),
+                            child: Text(
+                              context.lang.chatAskAFriendHide,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: widget.info.textColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                            ).merge(secondaryGreyButtonStyle(context)),
+                            onPressed: _isLoading ? null : _requestUser,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator.adaptive(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    context.lang.chatAskAFriendRequest,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
