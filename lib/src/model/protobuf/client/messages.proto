@@ -64,6 +64,7 @@ message EncryptedContent {
       ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
       UNKNOWN_MESSAGE_TYPE                                     = 2;
       SESSION_OUT_OF_SYNC                                      = 3;
+      GROUP_NOT_FOUND_OR_NOT_A_MEMBER                          = 4;
     }
     Type   type               = 1;
     string related_receipt_id = 2;
@@ -71,8 +72,9 @@ message EncryptedContent {
 
   message GroupCreate {
     // key for the state stored on the server
-    bytes state_key        = 3;
-    bytes group_public_key = 4;
+    bytes state_key            = 3;
+    bytes group_public_key     = 4;
+    optional string group_name = 5;
   }
 
   message GroupJoin {

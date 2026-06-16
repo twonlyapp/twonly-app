@@ -177,7 +177,17 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
         Uint8List.fromList(message.encryptedContent),
       );
       if (cipherText == null) {
-        Log.error('Could not encrypt the message. Aborting and trying again.');
+        Log.error(
+          '[${receipt.receiptId}] Could not encrypt the message for user ${receipt.contactId}. Aborting and trying again.',
+        );
+        if (receipt.messageId != null) {
+          await twonlyDB.messagesDao.handleMessageAckByServer(
+            receipt.contactId,
+            receipt.messageId!,
+            clock.now(),
+          );
+        }
+        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         return null;
       }
       message.encryptedContent = cipherText.serialize();
@@ -435,7 +445,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
       contactId,
     );
-    if (openReceipts > 6) {
+    if (openReceipts > 10) {
       // this prevents that these types of messages are send in case the receiver is offline
       return null;
     }

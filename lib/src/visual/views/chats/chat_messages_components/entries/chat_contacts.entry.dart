@@ -141,13 +141,13 @@ class _ContactRowState extends State<_ContactRow> {
         ),
       );
 
+      if (added > 0) await importSignalContactAndCreateRequest(userdata);
+
       await KeyVerificationService.verifySharedContact(
         contactId: userdata.userId.toInt(),
         sharedPublicIdentityKey: widget.contact.publicIdentityKey,
         senderId: widget.message.senderId!,
       );
-
-      if (added > 0) await importSignalContactAndCreateRequest(userdata);
     } catch (e) {
       Log.error(e);
     } finally {

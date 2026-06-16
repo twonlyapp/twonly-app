@@ -45,7 +45,7 @@ class _TypingIndicatorState extends State<TypingIndicator> {
 
   StreamSubscription<List<(Contact, GroupMember)>>? membersSub;
   Timer? _periodicUpdate;
-  bool _wasShownOnce = false;
+  double _wasShownOnce = 0;
 
   @override
   void initState() {
@@ -81,19 +81,22 @@ class _TypingIndicatorState extends State<TypingIndicator> {
   @override
   Widget build(BuildContext context) {
     if (_groupMembers.isEmpty) {
-      return SizedBox(height: _wasShownOnce ? 19 : 0);
-    } else {
-      _wasShownOnce = true;
+      return SizedBox(height: _wasShownOnce);
     }
 
+    final height =
+        (widget.group.isDirectChat ? 20 : 24) * _groupMembers.length.toDouble();
+    _wasShownOnce = height;
+
     return SizedBox(
-      height: 19,
+      height: height,
       child: Align(
         alignment: Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.only(left: 12),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: _groupMembers
                 .map(
                   (member) => Padding(

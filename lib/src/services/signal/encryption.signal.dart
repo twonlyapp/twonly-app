@@ -29,7 +29,7 @@ Future<CiphertextMessage?> _signalEncryptMessage(
     final session = SessionCipher.fromStore(signalStore, address);
     return await session.encrypt(plaintextContent);
   } catch (e) {
-    Log.error(e.toString());
+    Log.error('Could not encrypt message for target $target: $e');
     return null;
   }
 }

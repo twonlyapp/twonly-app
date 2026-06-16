@@ -211,6 +211,8 @@ Future<void> _handleClient2ClientMessage(
               type: Message_Type.CIPHERTEXT,
               encryptedContent: encryptedContent.writeToBuffer(),
             );
+            // Use Value.absent() for CIPHERTEXT messages so that insertReceipt generates a new UUID.
+            // This prevents receipt ID collisions and ensures the recipient's ACK is tracked correctly.
             receiptIdDB = const Value.absent();
           } else {
             // Message was successful processed
@@ -219,8 +221,9 @@ Future<void> _handleClient2ClientMessage(
 
         response ??= Message(type: Message_Type.SENDER_DELIVERY_RECEIPT);
 
+        String? targetReceiptId;
         try {
-          await twonlyDB.receiptsDao.insertReceipt(
+          final inserted = await twonlyDB.receiptsDao.insertReceipt(
             ReceiptsCompanion(
               receiptId: receiptIdDB ?? Value(receiptId),
               contactId: Value(fromUserId),
@@ -228,10 +231,18 @@ Future<void> _handleClient2ClientMessage(
               contactWillSendsReceipt: const Value(false),
             ),
           );
+          // Use the inserted receipt's ID because for CIPHERTEXT messages we generate a new UUID
+          // (receiptIdDB is Value.absent()) to avoid ID collisions and properly track individual ACKs.
+          targetReceiptId = inserted?.receiptId;
         } catch (e) {
           Log.warn('[$receiptId] Error inserting receipt: $e');
         }
-        await tryToSendCompleteMessage(receiptId: receiptId, blocking: false);
+        if (targetReceiptId != null) {
+          await tryToSendCompleteMessage(
+            receiptId: targetReceiptId,
+            blocking: false,
+          );
+        }
       }
     case Message_Type.TEST_NOTIFICATION:
       break;
@@ -350,6 +361,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.errorMessages,
       receiptId,
+      groupId: content.hasGroupId() ? content.groupId : null,
     );
     return (null, null);
   }
@@ -430,6 +442,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
 
   /// Verify that the user is (still) in that group...
   if (!await twonlyDB.groupsDao.isContactInGroup(fromUserId, content.groupId)) {
+    // Check if this is a direct chat...
     if (getUUIDforDirectChat(userService.currentUser.userId, fromUserId) ==
         content.groupId) {
       final contact = await twonlyDB.contactsDao
@@ -477,9 +490,19 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       }
 
       Log.error(
-        '[$receiptId] User $fromUserId tried to access group ${content.groupId}.',
+        '[$receiptId] User $fromUserId tried to access group ${content.groupId}. Sending GROUP_NOT_FOUND_OR_NOT_A_MEMBER error.',
       );
-      return (null, null);
+      return (
+        EncryptedContent(
+          groupId: content.groupId,
+          errorMessages: EncryptedContent_ErrorMessages(
+            type: EncryptedContent_ErrorMessages_Type
+                .GROUP_NOT_FOUND_OR_NOT_A_MEMBER,
+            relatedReceiptId: receiptId,
+          ),
+        ),
+        null,
+      );
     }
   }
 
