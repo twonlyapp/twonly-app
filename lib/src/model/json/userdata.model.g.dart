@@ -103,6 +103,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
               json['twonlySafeBackup'] as Map<String, dynamic>,
             )
       ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? false
+      ..passwordLessRecovery = json['passwordLessRecovery'] == null
+          ? null
+          : PasswordLessRecovery.fromJson(
+              json['passwordLessRecovery'] as Map<String, dynamic>,
+            )
       ..fcmToken = json['fcmToken'] as String?
       ..askedForUserStudyPermission =
           json['askedForUserStudyPermission'] as bool? ?? false
@@ -171,6 +176,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'canUseLoginTokenForAuth': instance.canUseLoginTokenForAuth,
   'twonlySafeBackup': instance.twonlySafeBackup,
   'isBackupEnabled': instance.isBackupEnabled,
+  'passwordLessRecovery': instance.passwordLessRecovery,
   'fcmToken': instance.fcmToken,
   'askedForUserStudyPermission': instance.askedForUserStudyPermission,
   'userStudyParticipantsToken': instance.userStudyParticipantsToken,
@@ -233,4 +239,22 @@ const _$LastBackupUploadStateEnumMap = {
   LastBackupUploadState.pending: 'pending',
   LastBackupUploadState.failed: 'failed',
   LastBackupUploadState.success: 'success',
+};
+
+PasswordLessRecovery _$PasswordLessRecoveryFromJson(
+  Map<String, dynamic> json,
+) => PasswordLessRecovery(
+  email: json['email'] as String?,
+  pinSeed: json['pin_seed'] as String?,
+  pinUnlockToken: json['pin_unlock_token'] as String?,
+  threshold: (json['threshold'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$PasswordLessRecoveryToJson(
+  PasswordLessRecovery instance,
+) => <String, dynamic>{
+  'email': instance.email,
+  'pin_seed': instance.pinSeed,
+  'pin_unlock_token': instance.pinUnlockToken,
+  'threshold': instance.threshold,
 };

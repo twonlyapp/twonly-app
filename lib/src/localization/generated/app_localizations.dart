@@ -1928,6 +1928,12 @@ abstract class AppLocalizations {
   /// **'Already in Group'**
   String get alreadyInGroup;
 
+  /// No description provided for @contactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get contactNotVerified;
+
   /// No description provided for @removeContactFromGroupTitle.
   ///
   /// In en, this message translates to:

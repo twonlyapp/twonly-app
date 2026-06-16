@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
@@ -8,6 +9,7 @@ import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
 
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
@@ -176,35 +178,58 @@ class _BackupViewState extends State<BackupView> {
                           ),
                         ]),
                       ),
-                      const SizedBox(height: 10),
-                      MyButton(
-                        variant: MyButtonVariant.primaryMiddle,
-                        onPressed: _isLoading
-                            ? null
-                            : () async {
-                                setState(() {
-                                  _isLoading = true;
-                                });
-                                await BackupService.makeBackup(force: true);
-                                setState(() {
-                                  _isLoading = false;
-                                });
-                              },
-                        child: Text(context.lang.backupTwonlySaveNow),
-                      ),
                     ],
                   ),
-                const SizedBox(height: 32),
-                Center(
-                  child: MyButton(
-                    variant: MyButtonVariant.secondaryDense,
-                    onPressed: () =>
-                        context.push(Routes.settingsBackupSetup, extra: true),
-                    child: Text(
-                      !userService.currentUser.isBackupEnabled
-                          ? context.lang.backupEnableBackup
-                          : context.lang.backupChangePassword,
+
+                if (userService.currentUser.passwordLessRecovery == null &&
+                    kDebugMode) ...[
+                  const SizedBox(height: 20),
+                  Center(
+                    child: MyButton(
+                      variant: MyButtonVariant.primaryMiddle,
+                      onPressed: () =>
+                          context.navPush(const PasswordLessRecoverySetup()),
+                      child: const Text('Setup Passwordless Recovery'),
                     ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (userService.currentUser.isBackupEnabled) ...[
+                        MyButton(
+                          variant: MyButtonVariant.secondaryDense,
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+                                  await BackupService.makeBackup(force: true);
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                },
+                          child: Text(context.lang.backupTwonlySaveNow),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      MyButton(
+                        variant: MyButtonVariant.secondaryDense,
+                        onPressed: () => context.push(
+                          Routes.settingsBackupSetup,
+                          extra: true,
+                        ),
+                        child: Text(
+                          !userService.currentUser.isBackupEnabled
+                              ? context.lang.backupEnableBackup
+                              : context.lang.backupChangePassword,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

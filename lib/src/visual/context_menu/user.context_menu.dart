@@ -18,6 +18,7 @@ class UserContextMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ContextMenu(
+      minWidth: 150,
       items: [
         ContextMenuItem(
           title: context.lang.contextMenuUserProfile,

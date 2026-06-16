@@ -10,6 +10,7 @@ enum MyButtonVariant {
   primaryMiddle,
   primaryDense,
   secondaryDense,
+  error,
 }
 
 class MyButton extends StatefulWidget {
@@ -196,6 +197,25 @@ class _MyButtonState extends State<MyButton>
         buttonStyle = FilledButton.styleFrom(
           backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
           foregroundColor: isDark ? Colors.white : Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
+          minimumSize: const Size(0, 40),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      case MyButtonVariant.error:
+        buttonStyle = FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
           minimumSize: const Size(0, 40),

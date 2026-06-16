@@ -36,8 +36,8 @@ message TrustedFriendShare {
   // The minimum threshold required to decrypte the shares.
   int32 threshold = 3;
 
-  // The actual share which will become: SecretSharedDate
-  bytes share = 4;
+  // The actual share which will become: SharedSecretData
+  bytes shared_secret_data = 4;
 
   message User {
     int64 user_id = 1;
@@ -47,7 +47,7 @@ message TrustedFriendShare {
 }
 
 // After received all shares this is decrypted by the user restoring its own 
-message SecretSharedDate {
+message SharedSecretData {
 
   // No second factor was selected
   optional RecoveryData recovery_data = 1;
@@ -81,6 +81,5 @@ message SecretSharedDate {
 // In case the backup is not available any more the user can use its user_id and his private_key to requister as a new user.
 message RecoveryData {
   int64 user_id = 1;
-  bytes private_key = 2;
-  bytes backup_master_key = 3;
+  bytes key_manager = 3;
 }

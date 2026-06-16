@@ -11,6 +11,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 
@@ -19,10 +20,12 @@ class SelectedContactView {
     required this.title,
     required this.submitButton,
     required this.submitIcon,
+    this.alreadySelectedSubtitle,
   });
   final String title;
   final String Function(int selected, int? limit) submitButton;
   final FaIconData submitIcon;
+  final String? alreadySelectedSubtitle;
 }
 
 class SelectContactsView extends StatefulWidget {
@@ -30,11 +33,18 @@ class SelectContactsView extends StatefulWidget {
     required this.text,
     this.alreadySelected,
     this.limit,
+    this.isAlreadySelectedLocked = true,
+    this.onlyVerified = false,
+    this.sortByMediaCount = false,
     super.key,
   });
   final SelectedContactView text;
   final List<int>? alreadySelected;
   final int? limit;
+  final bool isAlreadySelectedLocked;
+  final bool onlyVerified;
+  final bool sortByMediaCount;
+
   @override
   State<SelectContactsView> createState() => _SelectAdditionalUsers();
 }
@@ -47,12 +57,17 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
 
   final HashSet<int> selectedUsers = HashSet();
   late HashSet<int> _alreadySelected;
+  final HashSet<int> verifiedUserIds = HashSet();
 
   @override
   void initState() {
     super.initState();
 
     _alreadySelected = HashSet.from(widget.alreadySelected ?? []);
+    if (!widget.isAlreadySelectedLocked) {
+      selectedUsers.addAll(_alreadySelected);
+      _alreadySelected.clear();
+    }
 
     final stream = twonlyDB.contactsDao.watchAllAcceptedContacts();
 
@@ -65,6 +80,23 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
       });
       await filterUsers();
     });
+
+    _loadVerifiedContacts();
+  }
+
+  Future<void> _loadVerifiedContacts() async {
+    final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
+    final urs = await (twonlyDB.select(twonlyDB.userDiscoveryUserRelations)
+          ..where((u) => u.publicKeyVerifiedTimestamp.isNotNull()))
+        .get();
+
+    if (!mounted) return;
+    setState(() {
+      verifiedUserIds
+        ..addAll(kvs.map((row) => row.contactId))
+        ..addAll(urs.map((row) => row.announcedUserId));
+    });
+    await filterUsers();
   }
 
   @override
@@ -74,21 +106,37 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
   }
 
   Future<void> filterUsers() async {
-    if (searchUserName.value.text.isEmpty) {
-      setState(() {
-        contacts = allContacts;
-      });
-      return;
+    var filtered = allContacts;
+    if (searchUserName.value.text.isNotEmpty) {
+      filtered = filtered
+          .where(
+            (user) => getContactDisplayName(
+              user,
+            ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
+          )
+          .toList();
     }
-    final usersFiltered = allContacts
-        .where(
-          (user) => getContactDisplayName(
-            user,
-          ).toLowerCase().contains(searchUserName.value.text.toLowerCase()),
-        )
-        .toList();
+
+    if (widget.sortByMediaCount) {
+      filtered.sort((a, b) {
+        final aVerified = verifiedUserIds.contains(a.userId);
+        final bVerified = verifiedUserIds.contains(b.userId);
+        if (aVerified && !bVerified) return -1;
+        if (!aVerified && bVerified) return 1;
+
+        final cmp = b.mediaSendCounter.compareTo(a.mediaSendCounter);
+        if (cmp != 0) return cmp;
+
+        return getContactDisplayName(a).compareTo(getContactDisplayName(b));
+      });
+    } else {
+      filtered.sort(
+        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
+      );
+    }
+
     setState(() {
-      contacts = usersFiltered;
+      contacts = filtered;
     });
   }
 
@@ -119,7 +167,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
               : () => Navigator.pop(context, selectedUsers.toList()),
           label: Text(
             widget.text.submitButton(
-              selectedUsers.length + (widget.alreadySelected?.length ?? 0),
+              selectedUsers.length + _alreadySelected.length,
               widget.limit,
             ),
           ),
@@ -169,10 +217,15 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                                   return Wrap(
                                     spacing: 8,
                                     children: selected.map((w) {
+                                      final contact = allContacts
+                                          .where((t) => t.userId == w)
+                                          .firstOrNull;
+                                      if (contact == null) {
+                                        return const SizedBox.shrink();
+                                      }
                                       return _Chip(
-                                        contact: allContacts.firstWhere(
-                                          (t) => t.userId == w,
-                                        ),
+                                        key: ValueKey(contact.userId),
+                                        contact: contact,
                                         onTap: toggleSelectedUser,
                                       );
                                     }).toList(),
@@ -188,13 +241,27 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                         i -= 2;
                       }
                       final user = contacts[i];
+                      final isVerified = verifiedUserIds.contains(user.userId);
+                      final isSelectionDisabled = widget.onlyVerified && !isVerified;
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
                         child: ListTile(
+                          enabled: !isSelectionDisabled,
                           title: Row(
                             children: [
-                              Text(getContactDisplayName(user)),
+                              Flexible(
+                                child: Text(
+                                  getContactDisplayName(user),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              VerificationBadgeComp(
+                                contact: user,
+                                size: 14,
+                                clickable: false,
+                              ),
                               FlameCounterWidget(
                                 contactId: user.userId,
                                 prefix: true,
@@ -202,8 +269,17 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                             ],
                           ),
                           subtitle: (_alreadySelected.contains(user.userId))
-                              ? Text(context.lang.alreadyInGroup)
-                              : null,
+                              ? (widget.text.alreadySelectedSubtitle != null
+                                  ? Text(widget.text.alreadySelectedSubtitle!)
+                                  : Text(context.lang.alreadyInGroup))
+                              : (isSelectionDisabled
+                                  ? Text(
+                                      context.lang.contactNotVerified,
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.error,
+                                      ),
+                                    )
+                                  : null),
                           leading: AvatarIcon(
                             contactId: user.userId,
                             fontSize: 13,
@@ -222,13 +298,17 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                                 );
                               },
                             ),
-                            onChanged: (value) {
-                              toggleSelectedUser(user.userId);
-                            },
+                            onChanged: isSelectionDisabled
+                                ? null
+                                : (value) {
+                                    toggleSelectedUser(user.userId);
+                                  },
                           ),
-                          onTap: () {
-                            toggleSelectedUser(user.userId);
-                          },
+                          onTap: isSelectionDisabled
+                              ? null
+                              : () {
+                                  toggleSelectedUser(user.userId);
+                                },
                         ),
                       );
                     },
@@ -247,6 +327,7 @@ class _Chip extends StatelessWidget {
   const _Chip({
     required this.contact,
     required this.onTap,
+    super.key,
   });
   final Contact contact;
   final void Function(int) onTap;
@@ -267,6 +348,12 @@ class _Chip extends StatelessWidget {
               getContactDisplayName(contact),
               style: const TextStyle(fontSize: 14),
               overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 4),
+            VerificationBadgeComp(
+              contact: contact,
+              size: 12,
+              clickable: false,
             ),
             const SizedBox(width: 15),
             const FaIcon(

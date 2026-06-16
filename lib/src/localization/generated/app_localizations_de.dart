@@ -1027,6 +1027,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get alreadyInGroup => 'Bereits Mitglied';
 
   @override
+  String get contactNotVerified => 'Nicht verifiziert';
+
+  @override
   String removeContactFromGroupTitle(Object username) {
     return '$username aus dieser Gruppe entfernen?';
   }
