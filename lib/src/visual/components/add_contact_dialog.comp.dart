@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
-/// A premium popup dialog shown when a new user profile is scanned via QR code.
-/// Allows the user to request connection ("Anfragen") or cancel ("Abbrechen").
 class AddContactDialog extends StatelessWidget {
   const AddContactDialog({
-    required this.profile,
+    required this.username,
     super.key,
   });
 
-  final PublicProfile profile;
+  final String username;
 
-  /// Utility method to easily present this dialog.
-  /// Returns `true` if the user chose to request the contact, `false` otherwise.
-  static Future<bool?> show(BuildContext context, PublicProfile profile) {
+  static Future<bool?> show(BuildContext context, String username) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AddContactDialog(profile: profile),
+      builder: (context) => AddContactDialog(username: username),
     );
   }
 
@@ -48,7 +43,7 @@ class AddContactDialog extends StatelessWidget {
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
-                    profile.username,
+                    username,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -59,7 +54,7 @@ class AddContactDialog extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              context.lang.userFoundBody(profile.username),
+              context.lang.userFoundBody(username),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 16,

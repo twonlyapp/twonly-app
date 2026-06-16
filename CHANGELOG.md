@@ -5,6 +5,7 @@
 - New: Promotion of sharing contacts when contact is new to twonly
 - Improve: Onboarding of new users to the verification badges
 - Improve: Better feedback when a QR code is scanned
+- Fix: Shared contacts now correctly show the blue verification badge
 - Fix: Suppressed link previews for scanned QR codes
 - Fix: Black screen on iOS when a link is clicked
 - Fix: Fixed size of the typing indicator to prevent the chat from glitching

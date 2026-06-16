@@ -444,6 +444,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get contactSharedByUnknown =>
+      'Shared by a verified contact (username not available)';
+
+  @override
   String get verificationTypeQrScanned => 'You scanned their QR code.';
 
   @override

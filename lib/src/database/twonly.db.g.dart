@@ -9766,6 +9766,20 @@ class $KeyVerificationsTable extends KeyVerifications
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<VerificationType>($KeyVerificationsTable.$convertertype);
+  static const VerificationMeta _verifiedByMeta = const VerificationMeta(
+    'verifiedBy',
+  );
+  @override
+  late final GeneratedColumn<int> verifiedBy = GeneratedColumn<int>(
+    'verified_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -9783,6 +9797,7 @@ class $KeyVerificationsTable extends KeyVerifications
     verificationId,
     contactId,
     type,
+    verifiedBy,
     createdAt,
   ];
   @override
@@ -9814,6 +9829,12 @@ class $KeyVerificationsTable extends KeyVerifications
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
+    if (data.containsKey('verified_by')) {
+      context.handle(
+        _verifiedByMeta,
+        verifiedBy.isAcceptableOrUnknown(data['verified_by']!, _verifiedByMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -9843,6 +9864,10 @@ class $KeyVerificationsTable extends KeyVerifications
           data['${effectivePrefix}type'],
         )!,
       ),
+      verifiedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verified_by'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -9863,11 +9888,13 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   final int verificationId;
   final int contactId;
   final VerificationType type;
+  final int? verifiedBy;
   final DateTime createdAt;
   const KeyVerification({
     required this.verificationId,
     required this.contactId,
     required this.type,
+    this.verifiedBy,
     required this.createdAt,
   });
   @override
@@ -9880,6 +9907,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
         $KeyVerificationsTable.$convertertype.toSql(type),
       );
     }
+    if (!nullToAbsent || verifiedBy != null) {
+      map['verified_by'] = Variable<int>(verifiedBy);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -9889,6 +9919,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       verificationId: Value(verificationId),
       contactId: Value(contactId),
       type: Value(type),
+      verifiedBy: verifiedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifiedBy),
       createdAt: Value(createdAt),
     );
   }
@@ -9904,6 +9937,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       type: $KeyVerificationsTable.$convertertype.fromJson(
         serializer.fromJson<String>(json['type']),
       ),
+      verifiedBy: serializer.fromJson<int?>(json['verifiedBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -9916,6 +9950,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       'type': serializer.toJson<String>(
         $KeyVerificationsTable.$convertertype.toJson(type),
       ),
+      'verifiedBy': serializer.toJson<int?>(verifiedBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -9924,11 +9959,13 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
     int? verificationId,
     int? contactId,
     VerificationType? type,
+    Value<int?> verifiedBy = const Value.absent(),
     DateTime? createdAt,
   }) => KeyVerification(
     verificationId: verificationId ?? this.verificationId,
     contactId: contactId ?? this.contactId,
     type: type ?? this.type,
+    verifiedBy: verifiedBy.present ? verifiedBy.value : this.verifiedBy,
     createdAt: createdAt ?? this.createdAt,
   );
   KeyVerification copyWithCompanion(KeyVerificationsCompanion data) {
@@ -9938,6 +9975,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           : this.verificationId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       type: data.type.present ? data.type.value : this.type,
+      verifiedBy: data.verifiedBy.present
+          ? data.verifiedBy.value
+          : this.verifiedBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -9948,13 +9988,15 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
+          ..write('verifiedBy: $verifiedBy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(verificationId, contactId, type, createdAt);
+  int get hashCode =>
+      Object.hash(verificationId, contactId, type, verifiedBy, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -9962,6 +10004,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           other.verificationId == this.verificationId &&
           other.contactId == this.contactId &&
           other.type == this.type &&
+          other.verifiedBy == this.verifiedBy &&
           other.createdAt == this.createdAt);
 }
 
@@ -9969,17 +10012,20 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
   final Value<int> verificationId;
   final Value<int> contactId;
   final Value<VerificationType> type;
+  final Value<int?> verifiedBy;
   final Value<DateTime> createdAt;
   const KeyVerificationsCompanion({
     this.verificationId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.type = const Value.absent(),
+    this.verifiedBy = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   KeyVerificationsCompanion.insert({
     this.verificationId = const Value.absent(),
     required int contactId,
     required VerificationType type,
+    this.verifiedBy = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : contactId = Value(contactId),
        type = Value(type);
@@ -9987,12 +10033,14 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
     Expression<int>? verificationId,
     Expression<int>? contactId,
     Expression<String>? type,
+    Expression<int>? verifiedBy,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (verificationId != null) 'verification_id': verificationId,
       if (contactId != null) 'contact_id': contactId,
       if (type != null) 'type': type,
+      if (verifiedBy != null) 'verified_by': verifiedBy,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -10001,12 +10049,14 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
     Value<int>? verificationId,
     Value<int>? contactId,
     Value<VerificationType>? type,
+    Value<int?>? verifiedBy,
     Value<DateTime>? createdAt,
   }) {
     return KeyVerificationsCompanion(
       verificationId: verificationId ?? this.verificationId,
       contactId: contactId ?? this.contactId,
       type: type ?? this.type,
+      verifiedBy: verifiedBy ?? this.verifiedBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -10025,6 +10075,9 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
         $KeyVerificationsTable.$convertertype.toSql(type.value),
       );
     }
+    if (verifiedBy.present) {
+      map['verified_by'] = Variable<int>(verifiedBy.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -10037,6 +10090,7 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
           ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
+          ..write('verifiedBy: $verifiedBy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -12788,6 +12842,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('key_verifications', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'user_discovery_announced_users',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -13031,29 +13092,6 @@ final class $$ContactsTableReferences
         );
 
     final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$KeyVerificationsTable, List<KeyVerification>>
-  _keyVerificationsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.keyVerifications,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.keyVerifications.contactId,
-    ),
-  );
-
-  $$KeyVerificationsTableProcessedTableManager get keyVerificationsRefs {
-    final manager =
-        $$KeyVerificationsTableTableManager($_db, $_db.keyVerifications).filter(
-          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
-        );
-
-    final cache = $_typedResult.readTableOrNull(
-      _keyVerificationsRefsTable($_db),
-    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -13454,31 +13492,6 @@ class $$ContactsTableFilterComposer
           }) => $$GroupHistoriesTableFilterComposer(
             $db: $db,
             $table: $db.groupHistories,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> keyVerificationsRefs(
-    Expression<bool> Function($$KeyVerificationsTableFilterComposer f) f,
-  ) {
-    final $$KeyVerificationsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.keyVerifications,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$KeyVerificationsTableFilterComposer(
-            $db: $db,
-            $table: $db.keyVerifications,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -13965,31 +13978,6 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> keyVerificationsRefs<T extends Object>(
-    Expression<T> Function($$KeyVerificationsTableAnnotationComposer a) f,
-  ) {
-    final $$KeyVerificationsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.keyVerifications,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$KeyVerificationsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.keyVerifications,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
     Expression<T> Function(
       $$UserDiscoveryUserRelationsTableAnnotationComposer a,
@@ -14125,7 +14113,6 @@ class $$ContactsTableTableManager
             bool receiptsRefs,
             bool messageActionsRefs,
             bool groupHistoriesRefs,
-            bool keyVerificationsRefs,
             bool userDiscoveryUserRelationsRefs,
             bool userDiscoveryOtherPromotionsRefs,
             bool userDiscoveryOwnPromotionsRefs,
@@ -14244,7 +14231,6 @@ class $$ContactsTableTableManager
                 receiptsRefs = false,
                 messageActionsRefs = false,
                 groupHistoriesRefs = false,
-                keyVerificationsRefs = false,
                 userDiscoveryUserRelationsRefs = false,
                 userDiscoveryOtherPromotionsRefs = false,
                 userDiscoveryOwnPromotionsRefs = false,
@@ -14260,7 +14246,6 @@ class $$ContactsTableTableManager
                     if (receiptsRefs) db.receipts,
                     if (messageActionsRefs) db.messageActions,
                     if (groupHistoriesRefs) db.groupHistories,
-                    if (keyVerificationsRefs) db.keyVerifications,
                     if (userDiscoveryUserRelationsRefs)
                       db.userDiscoveryUserRelations,
                     if (userDiscoveryOtherPromotionsRefs)
@@ -14419,27 +14404,6 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (keyVerificationsRefs)
-                        await $_getPrefetchedData<
-                          Contact,
-                          $ContactsTable,
-                          KeyVerification
-                        >(
-                          currentTable: table,
-                          referencedTable: $$ContactsTableReferences
-                              ._keyVerificationsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ContactsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).keyVerificationsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.userId,
-                              ),
-                          typedResults: items,
-                        ),
                       if (userDiscoveryUserRelationsRefs)
                         await $_getPrefetchedData<
                           Contact,
@@ -14552,7 +14516,6 @@ typedef $$ContactsTableProcessedTableManager =
         bool receiptsRefs,
         bool messageActionsRefs,
         bool groupHistoriesRefs,
-        bool keyVerificationsRefs,
         bool userDiscoveryUserRelationsRefs,
         bool userDiscoveryOtherPromotionsRefs,
         bool userDiscoveryOwnPromotionsRefs,
@@ -21202,6 +21165,7 @@ typedef $$KeyVerificationsTableCreateCompanionBuilder =
       Value<int> verificationId,
       required int contactId,
       required VerificationType type,
+      Value<int?> verifiedBy,
       Value<DateTime> createdAt,
     });
 typedef $$KeyVerificationsTableUpdateCompanionBuilder =
@@ -21209,6 +21173,7 @@ typedef $$KeyVerificationsTableUpdateCompanionBuilder =
       Value<int> verificationId,
       Value<int> contactId,
       Value<VerificationType> type,
+      Value<int?> verifiedBy,
       Value<DateTime> createdAt,
     });
 
@@ -21234,6 +21199,28 @@ final class $$KeyVerificationsTableReferences
       $_db.contacts,
     ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ContactsTable _verifiedByTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.keyVerifications.verifiedBy,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager? get verifiedBy {
+    final $_column = $_itemColumn<int>('verified_by');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_verifiedByTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -21270,6 +21257,29 @@ class $$KeyVerificationsTableFilterComposer
     final $$ContactsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get verifiedBy {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
       referencedTable: $db.contacts,
       getReferencedColumn: (t) => t.userId,
       builder:
@@ -21336,6 +21346,29 @@ class $$KeyVerificationsTableOrderingComposer
     );
     return composer;
   }
+
+  $$ContactsTableOrderingComposer get verifiedBy {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KeyVerificationsTableAnnotationComposer
@@ -21380,6 +21413,29 @@ class $$KeyVerificationsTableAnnotationComposer
     );
     return composer;
   }
+
+  $$ContactsTableAnnotationComposer get verifiedBy {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KeyVerificationsTableTableManager
@@ -21395,7 +21451,7 @@ class $$KeyVerificationsTableTableManager
           $$KeyVerificationsTableUpdateCompanionBuilder,
           (KeyVerification, $$KeyVerificationsTableReferences),
           KeyVerification,
-          PrefetchHooks Function({bool contactId})
+          PrefetchHooks Function({bool contactId, bool verifiedBy})
         > {
   $$KeyVerificationsTableTableManager(
     _$TwonlyDB db,
@@ -21415,11 +21471,13 @@ class $$KeyVerificationsTableTableManager
                 Value<int> verificationId = const Value.absent(),
                 Value<int> contactId = const Value.absent(),
                 Value<VerificationType> type = const Value.absent(),
+                Value<int?> verifiedBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion(
                 verificationId: verificationId,
                 contactId: contactId,
                 type: type,
+                verifiedBy: verifiedBy,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -21427,11 +21485,13 @@ class $$KeyVerificationsTableTableManager
                 Value<int> verificationId = const Value.absent(),
                 required int contactId,
                 required VerificationType type,
+                Value<int?> verifiedBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion.insert(
                 verificationId: verificationId,
                 contactId: contactId,
                 type: type,
+                verifiedBy: verifiedBy,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -21442,7 +21502,7 @@ class $$KeyVerificationsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: ({contactId = false, verifiedBy = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -21477,6 +21537,21 @@ class $$KeyVerificationsTableTableManager
                               )
                               as T;
                     }
+                    if (verifiedBy) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.verifiedBy,
+                                referencedTable:
+                                    $$KeyVerificationsTableReferences
+                                        ._verifiedByTable(db),
+                                referencedColumn:
+                                    $$KeyVerificationsTableReferences
+                                        ._verifiedByTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -21501,7 +21576,7 @@ typedef $$KeyVerificationsTableProcessedTableManager =
       $$KeyVerificationsTableUpdateCompanionBuilder,
       (KeyVerification, $$KeyVerificationsTableReferences),
       KeyVerification,
-      PrefetchHooks Function({bool contactId})
+      PrefetchHooks Function({bool contactId, bool verifiedBy})
     >;
 typedef $$VerificationTokensTableCreateCompanionBuilder =
     VerificationTokensCompanion Function({

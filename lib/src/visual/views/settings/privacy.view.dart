@@ -5,6 +5,8 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
+import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 
 class PrivacyView extends StatefulWidget {
   const PrivacyView({super.key});
@@ -68,6 +70,7 @@ class _PrivacyViewState extends State<PrivacyView> {
           ListTile(
             title: Text(context.lang.contactVerifyNumberTitle),
             subtitle: Text(context.lang.contactVerifyNumberSubtitle),
+            trailing: const _VerificationBadgeTriangle(),
             onTap: () async {
               await context.push(Routes.settingsHelpFaqVerifyBadge);
               setState(() {});
@@ -110,6 +113,47 @@ class _PrivacyViewState extends State<PrivacyView> {
             trailing: Switch.adaptive(
               value: userService.currentUser.screenLockEnabled,
               onChanged: (a) => toggleAuthRequirementOnStartup(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerificationBadgeTriangle extends StatelessWidget {
+  const _VerificationBadgeTriangle();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 30,
+      height: 30,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 9,
+            child: SvgIcon(
+              assetPath: SvgIcons.verifiedGreen,
+              size: 14,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            child: SvgIcon(
+              assetPath: SvgIcons.verifiedGreen,
+              size: 14,
+              color: colorVerificationBadgeYellow,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: SvgIcon(
+              assetPath: SvgIcons.verifiedRed,
+              size: 14,
             ),
           ),
         ],

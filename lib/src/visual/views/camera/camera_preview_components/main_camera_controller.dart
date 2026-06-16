@@ -429,7 +429,7 @@ class MainCameraController {
               unawaited(HapticFeedback.heavyImpact());
               final shouldRequest = await AddContactDialog.show(
                 context,
-                profile,
+                profile.username,
               );
               if (shouldRequest == true && context.mounted) {
                 showSnackbar(

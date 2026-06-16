@@ -914,6 +914,12 @@ abstract class AppLocalizations {
   /// **'Verified by {username}'**
   String contactVerifiedBy(Object username);
 
+  /// No description provided for @contactSharedByUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by a verified contact (username not available)'**
+  String get contactSharedByUnknown;
+
   /// No description provided for @verificationTypeQrScanned.
   ///
   /// In en, this message translates to:

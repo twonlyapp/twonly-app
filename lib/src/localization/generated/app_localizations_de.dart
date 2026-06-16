@@ -448,6 +448,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get contactSharedByUnknown =>
+      'Geteilt von einem verifizierten Kontakt (Benutzername nicht verfügbar)';
+
+  @override
   String get verificationTypeQrScanned => 'Du hast den QR-Code gescannt.';
 
   @override

@@ -94,6 +94,29 @@ class KeyVerificationService {
 
     Log.error('No valid secret token could be found...');
   }
+
+  static Future<void> verifySharedContact({
+    required int contactId,
+    required List<int> sharedPublicIdentityKey,
+    required int senderId,
+  }) async {
+    final publicIdentityKey = await getPublicKeyFromContact(contactId);
+    if (publicIdentityKey == null) {
+      Log.info('No public key stored for contact $contactId');
+      return;
+    }
+
+    if (publicIdentityKey.equals(sharedPublicIdentityKey)) {
+      Log.info('Verified a user which was shared by a contact');
+      await twonlyDB.keyVerificationDao.addKeyVerification(
+        contactId,
+        VerificationType.contactSharedByVerified,
+        verifiedBy: senderId,
+      );
+    } else {
+      Log.error('Public identity keys do not match for contact $contactId');
+    }
+  }
 }
 
 Future<List<int>> _createVerificationBytes(

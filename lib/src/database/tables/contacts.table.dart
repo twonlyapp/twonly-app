@@ -59,6 +59,11 @@ class KeyVerifications extends Table {
     onDelete: KeyAction.cascade,
   )();
   TextColumn get type => textEnum<VerificationType>()();
+  IntColumn get verifiedBy => integer().nullable().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 

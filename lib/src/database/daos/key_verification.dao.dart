@@ -57,18 +57,70 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Future<bool> isContactVerified(int contactId) async {
-    final row =
-        await (select(keyVerifications)
-              ..where((kv) => kv.contactId.equals(contactId))
-              ..limit(1))
-            .getSingleOrNull();
-    return row != null;
+    final verifierKv = alias(keyVerifications, 'verifierKv');
+    final query = select(keyVerifications).join([
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(keyVerifications.verifiedBy),
+      ),
+    ])..where(keyVerifications.contactId.equals(contactId));
+
+    final rows = await query.get();
+    for (final row in rows) {
+      final kv = row.readTable(keyVerifications);
+      final hasVerifierKv = row.readTableOrNull(verifierKv) != null;
+      if (kv.type == VerificationType.contactSharedByVerified) {
+        if (hasVerifierKv) return true;
+      } else {
+        return true;
+      }
+    }
+    return false;
   }
 
-  Stream<List<KeyVerification>> watchContactVerification(int contactId) {
-    return (select(
-      keyVerifications,
-    )..where((kv) => kv.contactId.equals(contactId))).watch();
+  Stream<List<(KeyVerification, Contact?)>> watchContactVerification(
+    int contactId,
+  ) {
+    final verifier = alias(contacts, 'verifier');
+    final verifierKv = alias(keyVerifications, 'verifierKv');
+    final query = select(keyVerifications).join([
+      leftOuterJoin(
+        verifier,
+        verifier.userId.equalsExp(keyVerifications.verifiedBy),
+      ),
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(keyVerifications.verifiedBy),
+      ),
+    ])..where(keyVerifications.contactId.equals(contactId));
+
+    return query.watch().map((rows) {
+      final uniqueKvs =
+          <int, (KeyVerification, Contact?, bool isVerifierVerified)>{};
+
+      for (final row in rows) {
+        final kv = row.readTable(keyVerifications);
+        final contact = row.readTableOrNull(verifier);
+        final hasVerifierKv = row.readTableOrNull(verifierKv) != null;
+
+        final existing = uniqueKvs[kv.verificationId];
+        if (existing == null || hasVerifierKv) {
+          uniqueKvs[kv.verificationId] = (kv, contact, hasVerifierKv);
+        }
+      }
+
+      return uniqueKvs.values
+          .where((item) {
+            final kv = item.$1;
+            final isVerifierVerified = item.$3;
+            if (kv.type == VerificationType.contactSharedByVerified) {
+              return isVerifierVerified;
+            }
+            return true;
+          })
+          .map((item) => (item.$1, item.$2))
+          .toList();
+    });
   }
 
   Future<List<KeyVerification>> getContactVerification(int contactId) async {
@@ -207,12 +259,17 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     });
   }
 
-  Future<void> addKeyVerification(int contactId, VerificationType type) async {
+  Future<void> addKeyVerification(
+    int contactId,
+    VerificationType type, {
+    int? verifiedBy,
+  }) async {
     try {
       await into(keyVerifications).insertOnConflictUpdate(
         KeyVerificationsCompanion(
           contactId: Value(contactId),
           type: Value(type),
+          verifiedBy: Value(verifiedBy),
         ),
       );
       if (userService.currentUser.isUserDiscoveryEnabled) {
