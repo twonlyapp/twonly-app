@@ -721,6 +721,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                             imageProvider: FileImage(
                               currentMedia!.tempPath,
                             ),
+                            loadingBuilder: (context, event) => _loader(),
                             initialScale: PhotoViewComputedScale.contained,
                             minScale: PhotoViewComputedScale.contained,
                             errorBuilder: (context, error, stackTrace) {
