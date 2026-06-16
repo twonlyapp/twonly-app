@@ -87,6 +87,15 @@ class _SelectChatDeletionTimeListTitleState
             deleteMessagesAfterMilliseconds: Value(selected),
           ),
         );
+        await twonlyDB.groupsDao.insertGroupAction(
+          GroupHistoriesCompanion(
+            groupId: Value(group!.groupId),
+            type: const Value(GroupActionType.changeDisplayMaxTime),
+            newDeleteMessagesAfterMilliseconds: Value(
+              selected,
+            ),
+          ),
+        );
         await sendCipherTextToGroup(
           group!.groupId,
           EncryptedContent(
