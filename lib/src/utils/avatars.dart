@@ -60,10 +60,26 @@ File avatarPNGFile(int contactId) {
   return File('${avatarsDirectory.path}/$contactId.png');
 }
 
-Future<Uint8List> getUserAvatar() async {
+File currentUserAvatarFile(int avatarCounter) {
+  final avatarsDirectory = Directory(
+    '${AppEnvironment.cacheDir}/avatars',
+  );
+
+  if (!avatarsDirectory.existsSync()) {
+    avatarsDirectory.createSync(recursive: true);
+  }
+  return File('${avatarsDirectory.path}/user_$avatarCounter.png');
+}
+
+Future<String?> getUserAvatar() async {
   if (userService.currentUser.avatarSvg == null) {
-    final data = await rootBundle.load('assets/images/default_avatar.png');
-    return data.buffer.asUint8List();
+    return null;
+  }
+
+  final avatarCounter = userService.currentUser.avatarCounter;
+  final file = currentUserAvatarFile(avatarCounter);
+  if (file.existsSync()) {
+    return file.path;
   }
 
   final pictureInfo = await vg.loadPicture(
@@ -76,9 +92,8 @@ Future<Uint8List> getUserAvatar() async {
   final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
   final pngBytes = byteData!.buffer.asUint8List();
 
-  final file = avatarPNGFile(userService.currentUser.userId)
-    ..writeAsBytesSync(pngBytes);
+  await file.writeAsBytes(pngBytes);
   pictureInfo.picture.dispose();
 
-  return file.readAsBytesSync();
+  return file.path;
 }

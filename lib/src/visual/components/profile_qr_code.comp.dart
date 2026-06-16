@@ -1,5 +1,6 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -32,11 +33,20 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
 
   Future<void> _loadData() async {
     final qr = await QrCodeUtils.publicProfileLink();
-    final avatar = widget.showAvatar ? await getUserAvatar() : null;
+    Uint8List? avatarBytes;
+    if (widget.showAvatar) {
+      final avatarPath = await getUserAvatar();
+      if (avatarPath != null) {
+        avatarBytes = await File(avatarPath).readAsBytes();
+      } else {
+        final data = await rootBundle.load('assets/images/default_avatar.png');
+        avatarBytes = data.buffer.asUint8List();
+      }
+    }
     if (mounted) {
       setState(() {
         _qrCode = qr;
-        _userAvatar = avatar;
+        _userAvatar = avatarBytes;
         _isLoading = false;
       });
     }
@@ -53,7 +63,6 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
         child: loaded
             ? Container(
                 key: const ValueKey('qr_code_container'),
-                // padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   color: context.color.primary,
                   borderRadius: BorderRadius.circular(12),
@@ -79,7 +88,9 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
                     borderRadius: 2,
                   ),
                   gapless: false,
-                  embeddedImage: (widget.showAvatar && _userAvatar != null) ? MemoryImage(_userAvatar!) : null,
+                  embeddedImage: (widget.showAvatar && _userAvatar != null)
+                      ? MemoryImage(_userAvatar!)
+                      : null,
                   embeddedImageStyle: QrEmbeddedImageStyle(
                     size: const Size(60, 66),
                     embeddedImageShape: EmbeddedImageShape.square,
