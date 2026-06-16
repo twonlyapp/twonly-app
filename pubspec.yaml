@@ -181,6 +181,7 @@ dev_dependencies:
   drift_dev: ^2.25.2
   flutter_launcher_icons: ^0.14.1
   flutter_lints: ^6.0.0
+  vector_graphics_compiler: ^1.2.0
   flutter_test:
     sdk: flutter
   json_serializable: ^6.8.0

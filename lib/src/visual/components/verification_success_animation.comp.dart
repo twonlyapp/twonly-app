@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:twonly/src/visual/themes/light.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
 /// Animated chain-link logo for the "verification success" moment.
 ///
@@ -338,8 +339,10 @@ class VerificationSuccessAnimationState
                       child: SizedBox(
                         width: widget.size * 0.5,
                         height: widget.size * 0.5,
-                        child: SvgPicture.asset(
-                          'assets/icons/verified_badge_green.svg',
+                        child: const SvgPicture(
+                          AssetBytesLoader(
+                            'assets/icons/verified_badge_green.svg.vec',
+                          ),
                         ),
                       ),
                     ),
