@@ -95,14 +95,10 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       if (!mounted) return;
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) {
-            return MediaViewerView(
-              widget.group,
-              initialMessage: widget.message,
-            );
-          },
-        ),
+        MediaViewerView.buildPage<void>(
+          group: widget.group,
+          initialMessage: widget.message,
+        ).createRoute(context),
       );
     } else if (widget.mediaService.mediaFile.downloadState ==
         DownloadState.pending) {

@@ -85,9 +85,12 @@ final routerProvider = GoRouter(
         ),
         GoRoute(
           path: 'media_viewer',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final group = state.extra! as Group;
-            return MediaViewerView(group);
+            return MediaViewerView.buildPage(
+              key: state.pageKey,
+              group: group,
+            );
           },
         ),
         GoRoute(

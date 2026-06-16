@@ -17,6 +17,7 @@ class MyInput extends StatefulWidget {
     this.autofocus = false,
     this.errorText,
     this.obscureText = false,
+    this.dense = false,
     super.key,
   });
 
@@ -31,6 +32,7 @@ class MyInput extends StatefulWidget {
   final bool autofocus;
   final String? errorText;
   final bool obscureText;
+  final bool dense;
 
   @override
   State<MyInput> createState() => _MyInputState();
@@ -165,14 +167,15 @@ class _MyInputState extends State<MyInput> with SingleTickerProviderStateMixin {
             color: isDark ? Colors.white : Colors.black87,
           ),
           decoration: InputDecoration(
+            isDense: widget.dense,
             hintText: widget.hintText,
             hintStyle: TextStyle(
               color: inputHintColor,
             ),
             filled: true,
             fillColor: inputFillColor,
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 18,
+            contentPadding: EdgeInsets.symmetric(
+              vertical: widget.dense ? 14 : 18,
               horizontal: 24,
             ),
             border: OutlineInputBorder(
