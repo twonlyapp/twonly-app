@@ -56,17 +56,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   void didUpdateWidget(ReactionButtons oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.show != oldWidget.show) {
-      if (widget.show) {
-        _renderAnimations = true;
-      } else {
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (mounted && !widget.show) {
-            setState(() {
-              _renderAnimations = false;
-            });
-          }
-        });
-      }
+      _renderAnimations = widget.show;
     }
   }
 
@@ -98,7 +88,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         ignoring: !widget.show,
         child: AnimatedOpacity(
           opacity: widget.show ? 1.0 : 0.0, // Fade in/out
-          duration: const Duration(milliseconds: 150),
+          duration: Duration(milliseconds: widget.show ? 150 : 50),
           child: Container(
             color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
             padding: const EdgeInsets.symmetric(vertical: 32),

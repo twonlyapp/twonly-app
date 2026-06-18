@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
@@ -33,16 +34,50 @@ class VerificationBadgeComp extends StatefulWidget {
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   bool _isVerified = false;
+  bool _isSharedVerified = false;
   int _verifiedByTransferredTrustCount = 0;
+  int _sharedByVerifiedCount = 0;
+  int _transferredTrustBaseCount = 0;
+
+  List<(KeyVerification, Contact?)> _keyVerifications = [];
+  List<(Contact, DateTime)> _transferredTrust = [];
 
   StreamSubscription<VerificationStatus>? _streamAllVerified;
-  StreamSubscription<List<KeyVerification>>? _streamContactVerification;
+  StreamSubscription<List<(KeyVerification, Contact?)>>?
+  _streamContactVerification;
   StreamSubscription<List<(Contact, DateTime)>>? _streamTransferredTrust;
 
   @override
   void initState() {
     super.initState();
     initAsync();
+  }
+
+  void _updateVerificationCounts() {
+    setState(() {
+      final sharedVerifications = _keyVerifications
+          .where(
+            (pair) => pair.$1.type == VerificationType.contactSharedByVerified,
+          )
+          .toList();
+
+      _isVerified = _keyVerifications.any(
+        (pair) => pair.$1.type != VerificationType.contactSharedByVerified,
+      );
+      _isSharedVerified = sharedVerifications.isNotEmpty;
+      _sharedByVerifiedCount = sharedVerifications.length;
+
+      final sharedByVerifierIds = sharedVerifications
+          .where((pair) => pair.$1.verifiedBy != null)
+          .map((pair) => pair.$1.verifiedBy!)
+          .toSet();
+
+      _transferredTrustBaseCount = _transferredTrust
+          .where((tt) => !sharedByVerifierIds.contains(tt.$1.userId))
+          .length;
+      _verifiedByTransferredTrustCount =
+          _sharedByVerifiedCount + _transferredTrustBaseCount;
+    });
   }
 
   Future<void> initAsync() async {
@@ -64,6 +99,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
             if (!mounted) return;
             setState(() {
               _isVerified = false;
+              _isSharedVerified = false;
               _verifiedByTransferredTrustCount = 0;
               if (update == VerificationStatus.trusted) {
                 _isVerified = true;
@@ -78,18 +114,16 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
           .watchContactVerification(contact.userId)
           .listen((update) {
             if (!mounted) return;
-            setState(() {
-              _isVerified = update.isNotEmpty;
-            });
+            _keyVerifications = update;
+            _updateVerificationCounts();
           });
 
       _streamTransferredTrust = twonlyDB.keyVerificationDao
           .watchTransferredTrustVerifications(contact.userId)
           .listen((update) {
             if (!mounted) return;
-            setState(() {
-              _verifiedByTransferredTrustCount = update.length;
-            });
+            _transferredTrust = update;
+            _updateVerificationCounts();
           });
     } else if (widget.isVerifiedByTransferredTrust != null) {
       setState(() {
@@ -109,6 +143,7 @@ class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
   @override
   Widget build(BuildContext context) {
     if (!_isVerified &&
+        !_isSharedVerified &&
         _verifiedByTransferredTrustCount == 0 &&
         widget.showOnlyIfVerified) {
       return Container();

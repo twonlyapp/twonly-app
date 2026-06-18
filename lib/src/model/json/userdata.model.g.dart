@@ -85,6 +85,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['userDiscoverySharePromotion'] as bool? ?? true
       ..userDiscoveryInitializationError =
           json['userDiscoveryInitializationError'] as bool? ?? false
+      ..askForFriendPromotions = json['askForFriendPromotions'] as bool? ?? true
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -102,6 +103,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
               json['twonlySafeBackup'] as Map<String, dynamic>,
             )
       ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? false
+      ..passwordLessRecovery = json['passwordLessRecovery'] == null
+          ? null
+          : PasswordLessRecovery.fromJson(
+              json['passwordLessRecovery'] as Map<String, dynamic>,
+            )
       ..fcmToken = json['fcmToken'] as String?
       ..askedForUserStudyPermission =
           json['askedForUserStudyPermission'] as bool? ?? false
@@ -161,6 +167,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       instance.userDiscoveryRequiresManualApproval,
   'userDiscoverySharePromotion': instance.userDiscoverySharePromotion,
   'userDiscoveryInitializationError': instance.userDiscoveryInitializationError,
+  'askForFriendPromotions': instance.askForFriendPromotions,
   'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,
@@ -169,6 +176,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'canUseLoginTokenForAuth': instance.canUseLoginTokenForAuth,
   'twonlySafeBackup': instance.twonlySafeBackup,
   'isBackupEnabled': instance.isBackupEnabled,
+  'passwordLessRecovery': instance.passwordLessRecovery,
   'fcmToken': instance.fcmToken,
   'askedForUserStudyPermission': instance.askedForUserStudyPermission,
   'userStudyParticipantsToken': instance.userStudyParticipantsToken,
@@ -231,4 +239,26 @@ const _$LastBackupUploadStateEnumMap = {
   LastBackupUploadState.pending: 'pending',
   LastBackupUploadState.failed: 'failed',
   LastBackupUploadState.success: 'success',
+};
+
+PasswordLessRecovery _$PasswordLessRecoveryFromJson(
+  Map<String, dynamic> json,
+) => PasswordLessRecovery(
+  email: json['email'] as String?,
+  pinSeed: json['pinSeed'] as String?,
+  pinUnlockToken: json['pinUnlockToken'] as String?,
+  threshold: (json['threshold'] as num?)?.toInt(),
+  lastHeartbeat: json['lastHeartbeat'] == null
+      ? null
+      : DateTime.parse(json['lastHeartbeat'] as String),
+);
+
+Map<String, dynamic> _$PasswordLessRecoveryToJson(
+  PasswordLessRecovery instance,
+) => <String, dynamic>{
+  'email': instance.email,
+  'pinSeed': instance.pinSeed,
+  'pinUnlockToken': instance.pinUnlockToken,
+  'threshold': instance.threshold,
+  'lastHeartbeat': instance.lastHeartbeat?.toIso8601String(),
 };

@@ -9,11 +9,13 @@ class ContextMenu extends StatefulWidget {
   const ContextMenu({
     required this.child,
     required this.items,
+    this.minWidth,
     super.key,
   });
 
   final List<ContextMenuItem> items;
   final Widget child;
+  final double? minWidth;
 
   @override
   State<ContextMenu> createState() => _ContextMenuState();
@@ -116,17 +118,26 @@ class _ContextMenuState extends State<ContextMenu>
       ),
       items: <PopupMenuEntry<int>>[
         ...widget.items.map(
-          (item) => PopupMenuItem(
-            padding: const EdgeInsets.only(right: 4),
-            child: ListTile(
+          (item) {
+            Widget child = ListTile(
               title: Text(item.title),
               onTap: () async {
                 if (mounted) Navigator.pop(context);
                 await item.onTap();
               },
               leading: _getIcon(item.icon),
-            ),
-          ),
+            );
+            if (widget.minWidth != null) {
+              child = ConstrainedBox(
+                constraints: BoxConstraints(minWidth: widget.minWidth!),
+                child: child,
+              );
+            }
+            return PopupMenuItem(
+              padding: const EdgeInsets.only(right: 4),
+              child: child,
+            );
+          },
         ),
       ],
       position: RelativeRect.fromRect(

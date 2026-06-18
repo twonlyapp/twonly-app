@@ -82,7 +82,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (response.payload != null &&
           response.payload!.startsWith(Routes.chats) &&
           response.payload! != Routes.chats) {
-        await routerProvider.push(response.payload!);
+        routerProvider.go(response.payload!);
       }
       streamHomeViewPageIndex.add(0);
     });
@@ -155,7 +155,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         if (payload != null &&
             payload.startsWith(Routes.chats) &&
             payload != Routes.chats) {
-          await routerProvider.push(payload);
+          routerProvider.go(payload);
           streamHomeViewPageIndex.add(0);
         }
         if (payload == Routes.chats) {

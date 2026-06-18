@@ -23,14 +23,20 @@ class Contacts extends Table {
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
-  // contact_versions: HashMap<UserID, Vec<u8>>,
+  // User Discovery
   BlobColumn get userDiscoveryVersion => blob().nullable()();
-
   BoolColumn get userDiscoveryExcluded =>
       boolean().withDefault(const Constant(false))();
-
   BoolColumn get userDiscoveryManualApproved =>
       boolean().nullable().withDefault(const Constant(false))();
+
+  // Passwordless-Recovery
+  BoolColumn get recoveryIsTrustedFriend =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get recoveryLastHeartbeat => dateTime().nullable()();
+  BlobColumn get recoverySecretShare => blob().nullable()();
+
+  BoolColumn get askForFriendPromotions => boolean().nullable()();
 
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();
   IntColumn get mediaReceivedCounter =>
@@ -57,6 +63,11 @@ class KeyVerifications extends Table {
     onDelete: KeyAction.cascade,
   )();
   TextColumn get type => textEnum<VerificationType>()();
+  IntColumn get verifiedBy => integer().nullable().references(
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 

@@ -128,6 +128,9 @@ class UserData {
 
   //  -- Custom DATA --
 
+  @JsonKey(defaultValue: true)
+  bool askForFriendPromotions = true;
+
   @JsonKey(defaultValue: 100_000)
   int currentPreKeyIndexStart = 100_000;
 
@@ -152,6 +155,8 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool isBackupEnabled = false;
+
+  PasswordLessRecovery? passwordLessRecovery;
 
   // Used for push notifcation via FCM.
   String? fcmToken;
@@ -199,4 +204,26 @@ class TwonlySafeBackup {
   List<int> backupId;
   List<int> encryptionKey;
   Map<String, dynamic> toJson() => _$TwonlySafeBackupToJson(this);
+}
+
+@JsonSerializable()
+class PasswordLessRecovery {
+  PasswordLessRecovery({
+    this.email,
+    this.pinSeed,
+    this.pinUnlockToken,
+    this.threshold,
+    this.lastHeartbeat,
+  });
+
+  factory PasswordLessRecovery.fromJson(Map<String, dynamic> json) =>
+      _$PasswordLessRecoveryFromJson(json);
+
+  String? email;
+  String? pinSeed;
+  String? pinUnlockToken;
+  int? threshold;
+  DateTime? lastHeartbeat;
+
+  Map<String, dynamic> toJson() => _$PasswordLessRecoveryToJson(this);
 }

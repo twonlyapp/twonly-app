@@ -17,7 +17,9 @@ Future<void> handleGroupCreate(
   EncryptedContent_GroupCreate newGroup,
   String receiptId,
 ) async {
-  final user = await twonlyDB.contactsDao.getContactByUserId(fromUserId).getSingleOrNull();
+  final user = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
   if (user == null) {
     // Only contacts can invite other contacts, so this can (via the UI) not happen.
     Log.error(
@@ -43,11 +45,26 @@ Future<void> handleGroupCreate(
         stateVersionId: const Value(0),
         stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
         myGroupPrivateKey: Value(myGroupKey.serialize()),
-        groupName: const Value(''),
+        groupName: Value(newGroup.hasGroupName() ? newGroup.groupName : ''),
         joinedGroup: const Value(false),
       ),
     );
   } else {
+    // In this case make a group state update and check if the fromUserId is still a admin. otherwise return with an log error message
+    final updatedState = await fetchGroupState(group);
+    if (updatedState == null) {
+      Log.error(
+        '[$receiptId] Received group invite/create for $groupId, but failed to fetch group state from server.',
+      );
+      return;
+    }
+    final (_, state) = updatedState;
+    if (!state.adminIds.any((id) => id.toInt() == fromUserId)) {
+      Log.error(
+        '[$receiptId] Received group invite/create for $groupId from $fromUserId, but they are not an admin of this group.',
+      );
+      return;
+    }
     // User was already in the group, so update leftGroup back to false
     await twonlyDB.groupsDao.updateGroup(
       groupId,
@@ -55,7 +72,6 @@ Future<void> handleGroupCreate(
         stateVersionId: const Value(0),
         stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
         myGroupPrivateKey: Value(myGroupKey.serialize()),
-        groupName: const Value(''),
         joinedGroup: const Value(false),
         leftGroup: const Value(false),
         deletedContent: const Value(false),
@@ -79,18 +95,8 @@ Future<void> handleGroupCreate(
     ),
   );
 
-  await twonlyDB.groupsDao.insertOrUpdateGroupMember(
-    GroupMembersCompanion(
-      groupId: Value(groupId),
-      contactId: Value(fromUserId),
-      memberState: const Value(
-        MemberState.admin, // is the group creator, so must be admin...
-      ),
-      groupPublicKey: Value(Uint8List.fromList(newGroup.groupPublicKey)),
-    ),
-  );
-
-  // can be done in the background -> websocket message can be ACK
+  // Load group members from the server as this is the single source of truth.
+  // This can be done in the background, so the WebSocket message can be ACKed.
   unawaited(fetchGroupStatesForUnjoinedGroups());
 
   await sendCipherTextToGroup(
@@ -113,7 +119,9 @@ Future<void> handleGroupUpdate(
 
   final actionType = groupActionTypeFromString(update.groupActionType);
   if (actionType == null) {
-    Log.error('[$receiptId] Group action ${update.groupActionType} is unknown ignoring.');
+    Log.error(
+      '[$receiptId] Group action ${update.groupActionType} is unknown ignoring.',
+    );
     return;
   }
 

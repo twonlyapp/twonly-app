@@ -148,7 +148,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               size: 15,
             ),
             onTap: () async {
-              await launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
+              await launchUrl(
+                Uri.parse('https://twonly.eu/de/legal/agb.html'),
+                mode: LaunchMode.externalApplication,
+              );
             },
           ),
           BetterListTile(
@@ -164,6 +167,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             onTap: () async {
               await launchUrl(
                 Uri.parse('https://twonly.eu/de/legal/privacy.html'),
+                mode: LaunchMode.externalApplication,
               );
             },
           ),
@@ -330,7 +334,9 @@ class _PlanCardState extends State<PlanCard> {
                       ? const SizedBox(
                           width: 10,
                           height: 10,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 1,
+                          ),
                         )
                       : null,
                   label: Text(
@@ -350,7 +356,9 @@ class _PlanCardState extends State<PlanCard> {
                       ? const SizedBox(
                           width: 10,
                           height: 10,
-                          child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 1,
+                          ),
                         )
                       : null,
                   label: Text(

@@ -448,6 +448,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get contactSharedByUnknown =>
+      'Geteilt von einem verifizierten Kontakt (Benutzername nicht verfügbar)';
+
+  @override
   String get verificationTypeQrScanned => 'Du hast den QR-Code gescannt.';
 
   @override
@@ -1023,6 +1027,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get alreadyInGroup => 'Bereits Mitglied';
 
   @override
+  String get contactNotVerified => 'Nicht verifiziert';
+
+  @override
   String removeContactFromGroupTitle(Object username) {
     return '$username aus dieser Gruppe entfernen?';
   }
@@ -1429,7 +1436,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String verifiedPublicKey(Object username) {
-    return 'Der öffentliche Schlüssel von $username wurde überprüft und ist gültig.';
+    return 'Die Identität von $username wurde erfolgreich überprüft.';
   }
 
   @override
@@ -1528,7 +1535,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst. Du kannst Kontakte jederzeit verifizieren, indem du deren QR-Code scannst.';
+      'Der Haken *schützt dich vor Betrügern und Angreifern*. Es wird neben einem Kontakt angezeigt, der von dir oder einem Freund *manuell überprüft* wurde.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1558,6 +1565,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String secretQrTokenVerifiedSnackbar(Object username) {
     return '$username hat deinen QR-Code gescannt und ist nun verifiziert.';
+  }
+
+  @override
+  String askForFriendPromotionsPrompt(Object username) {
+    return 'Hilf $username, bekannte Gesichter auf twonly zu finden, indem du gemeinsame Freunde teilst.';
   }
 
   @override

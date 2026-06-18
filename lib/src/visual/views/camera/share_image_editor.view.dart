@@ -51,7 +51,7 @@ class ShareImageEditorView extends StatefulWidget {
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
   final MainCameraController? mainCameraController;
-  final Uri? previewLink;
+  final PreviewLink? previewLink;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -81,9 +81,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       layers.add(FilterLayerData(key: GlobalKey()));
     }
 
-    if (widget.previewLink != null) {
+    if (widget.previewLink != null && widget.previewLink!.shouldGeneratePreview) {
       layers.add(
-        LinkPreviewLayerData(key: GlobalKey(), link: widget.previewLink!),
+        LinkPreviewLayerData(key: GlobalKey(), link: widget.previewLink!.url),
       );
     }
 
@@ -635,7 +635,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (widget.previewLink != null) {
       additionalData = AdditionalMessageData(
         type: AdditionalMessageData_Type.LINK,
-        link: widget.previewLink.toString(),
+        link: widget.previewLink!.url.toString(),
       );
     }
     return additionalData;

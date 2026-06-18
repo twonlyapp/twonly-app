@@ -40,16 +40,13 @@ Future<bool> twonlyMinimumInitialization() async {
     lockName: 'init',
     mutex: _initMutex,
     action: () async {
-      Log.info('twonlyMinimumInitialization: started');
+      Log.info('twonlyMinimumInitialization started');
       setupLocator();
 
-      Log.info('twonlyMinimumInitialization: RustLib.init()');
       await RustLib.init();
 
-      Log.info('twonlyMinimumInitialization: initFlutterCallbacksForRust()');
       await initFlutterCallbacksForRust();
 
-      Log.info('twonlyMinimumInitialization: bridge.initializeTwonlyFlutter()');
       try {
         await bridge.initializeTwonlyFlutter(
           config: bridge.InitConfig(

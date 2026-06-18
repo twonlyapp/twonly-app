@@ -11,8 +11,10 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
@@ -34,6 +36,8 @@ class _ChatListViewState extends State<ChatListView> {
   StreamSubscription<void>? _userSub;
   StreamSubscription<List<Group>>? _contactsSub;
   StreamSubscription<List<Contact>>? _contactsCountSub;
+  StreamSubscription<List<MediaFile>>? _precacheSub;
+  final Set<String> _precachedMediaIds = {};
   List<Group> _groupsNotPinned = [];
   List<Group> _groupsPinned = [];
   List<Group> _groupsArchived = [];
@@ -105,6 +109,24 @@ class _ChatListViewState extends State<ChatListView> {
           });
         });
 
+    _precacheSub = twonlyDB.messagesDao.watchUnopenedMediaFiles().listen((mediaFiles) {
+      if (!mounted) return;
+      for (final media in mediaFiles) {
+        if (!_precachedMediaIds.contains(media.mediaId)) {
+          _precachedMediaIds.add(media.mediaId);
+          final fileService = MediaFileService(media);
+          if (fileService.tempPath.existsSync()) {
+            precacheImage(
+              FileImage(fileService.tempPath),
+              context,
+            ).catchError((Object e, StackTrace st) {
+              Log.error('Failed to precache image in ChatListView: $e\n$st');
+            });
+          }
+        }
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final changeLog = await rootBundle.loadString('CHANGELOG.md');
       final changeLogHash = (await compute(
@@ -137,6 +159,7 @@ class _ChatListViewState extends State<ChatListView> {
     _countContactRequestStream.cancel();
     _countAnnouncedStream.cancel();
     _userSub?.cancel();
+    _precacheSub?.cancel();
     super.dispose();
   }
 

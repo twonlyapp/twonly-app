@@ -45,6 +45,7 @@ class _TypingIndicatorState extends State<TypingIndicator> {
 
   StreamSubscription<List<(Contact, GroupMember)>>? membersSub;
   Timer? _periodicUpdate;
+  double _wasShownOnce = 0;
 
   @override
   void initState() {
@@ -79,47 +80,63 @@ class _TypingIndicatorState extends State<TypingIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    if (_groupMembers.isEmpty) return Container();
+    if (_groupMembers.isEmpty) {
+      return SizedBox(height: _wasShownOnce);
+    }
 
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: _groupMembers
-              .map(
-                (member) => Padding(
-                  key: Key('typing_indicator_${member.contactId}'),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!widget.group.isDirectChat)
-                        GestureDetector(
-                          onTap: () => context.push(
-                            Routes.profileContact(member.contactId),
+    final height =
+        (widget.group.isDirectChat ? 20 : 24) * _groupMembers.length.toDouble();
+    _wasShownOnce = height;
+
+    return SizedBox(
+      height: height,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _groupMembers
+                .map(
+                  (member) => Padding(
+                    key: Key('typing_indicator_${member.contactId}'),
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!widget.group.isDirectChat)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: GestureDetector(
+                              onTap: () => context.push(
+                                Routes.profileContact(member.contactId),
+                              ),
+                              child: AvatarIcon(
+                                contactId: member.contactId,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          child: AvatarIcon(
-                            contactId: member.contactId,
-                            fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: getMessageColor(true),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: AnimatedTypingDots(
+                            isTyping: isTyping(member),
                           ),
                         ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: getMessageColor(true),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: AnimatedTypingDots(
-                          isTyping: isTyping(member),
-                        ),
-                      ),
-                      Expanded(child: Container()),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
+          ),
         ),
       ),
     );

@@ -19,6 +19,7 @@ analyzer:
     - "lib/core/**"
     - "lib/src/localization/**"
     - "rust_builder/"
+    - "scripts/"
     - "build/"
     - "dependencies/**"
     - "pubspec.yaml"

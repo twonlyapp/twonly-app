@@ -37,6 +37,7 @@ message EncryptedContent {
     /// This can be added, so the receiver can check weather he is up to date with the current profile
   optional int64 sender_profile_counter        = 4;
   optional bytes sender_user_discovery_version = 21;
+  optional bool ask_for_friend_promotions     = 25;
 
   optional MessageUpdate         message_update          = 5;
   optional Media                 media                   = 6;
@@ -63,6 +64,7 @@ message EncryptedContent {
       ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
       UNKNOWN_MESSAGE_TYPE                                     = 2;
       SESSION_OUT_OF_SYNC                                      = 3;
+      GROUP_NOT_FOUND_OR_NOT_A_MEMBER                          = 4;
     }
     Type   type               = 1;
     string related_receipt_id = 2;
@@ -70,8 +72,9 @@ message EncryptedContent {
 
   message GroupCreate {
     // key for the state stored on the server
-    bytes state_key        = 3;
-    bytes group_public_key = 4;
+    bytes state_key            = 3;
+    bytes group_public_key     = 4;
+    optional string group_name = 5;
   }
 
   message GroupJoin {

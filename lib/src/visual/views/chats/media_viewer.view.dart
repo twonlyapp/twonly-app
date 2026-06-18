@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
@@ -27,7 +28,8 @@ import 'package:twonly/src/services/notifications/background.notifications.dart'
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
-import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
+import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
@@ -40,7 +42,6 @@ class MediaViewerView extends StatefulWidget {
   final Group group;
 
   final Message? initialMessage;
-
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
@@ -81,6 +82,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   final HashSet<String> _alreadyOpenedMediaIds = HashSet();
 
   bool _isTransitioning = false;
+  bool _isZoomed = false;
+  late PageController _verticalPager;
+  final ValueNotifier<double> _backdropOpacityNotifier = ValueNotifier(1);
 
   @override
   void initState() {
@@ -90,6 +94,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
     }
+
+    _verticalPager = PageController(initialPage: 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _verticalPager.addListener(_onVerticalScrollUpdated);
+    });
 
     asyncLoadNextMedia(true);
   }
@@ -106,7 +115,31 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     _disposeVideoController();
 
+    // Persist draft message on close
+    final draftText = textMessageController.text;
+    unawaited(
+      twonlyDB.groupsDao.updateGroup(
+        widget.group.groupId,
+        GroupsCompanion(
+          draftMessage: Value(draftText.isEmpty ? null : draftText),
+        ),
+      ),
+    );
+    textMessageController.dispose();
+
+    _verticalPager
+      ..removeListener(_onVerticalScrollUpdated)
+      ..dispose();
+    _backdropOpacityNotifier.dispose();
+
     super.dispose();
+  }
+
+  void _onVerticalScrollUpdated() {
+    if (!_verticalPager.hasClients) return;
+    final page = _verticalPager.page ?? 1.0;
+    final linearFraction = min(1, max(0, page)).toDouble();
+    _backdropOpacityNotifier.value = linearFraction * linearFraction;
   }
 
   void _disposeVideoController() {
@@ -537,30 +570,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         if (currentMedia != null &&
             !currentMedia!.mediaFile.requiresAuthentication &&
             currentMedia!.mediaFile.displayLimitInMilliseconds == null)
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              iconColor: imageSaved
-                  ? Theme.of(context).colorScheme.outline
-                  : Theme.of(context).colorScheme.primary,
-              foregroundColor: imageSaved
-                  ? Theme.of(context).colorScheme.outline
-                  : Theme.of(context).colorScheme.primary,
-            ),
+          MyIconButton(
+            variant: MyIconButtonVariant.secondary,
             onPressed: (currentMedia == null) ? null : onPressedSaveToGallery,
-            child: Row(
-              children: [
-                if (imageSaving)
-                  const SizedBox(
-                    width: 10,
-                    height: 10,
-                    child: CircularProgressIndicator.adaptive(strokeWidth: 1),
+            icon: imageSaving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
                   )
-                else
-                  imageSaved
-                      ? const Icon(Icons.check)
-                      : const FaIcon(FontAwesomeIcons.floppyDisk),
-              ],
-            ),
+                : imageSaved
+                ? const Icon(Icons.check)
+                : const FaIcon(FontAwesomeIcons.floppyDisk, size: 20),
           ),
         const SizedBox(width: 10),
         IconButton(
@@ -602,23 +623,21 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           ),
         ),
         const SizedBox(width: 10),
-        IconButton.outlined(
-          icon: const FaIcon(FontAwesomeIcons.message),
+        MyIconButton(
+          variant: MyIconButtonVariant.secondary,
           onPressed: () async {
             displayShortReactions();
             setState(() {
               showSendTextMessageInput = true;
             });
           },
-          style: ButtonStyle(
-            padding: WidgetStateProperty.all<EdgeInsets>(
-              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            ),
+          icon: const FaIcon(
+            FontAwesomeIcons.message,
+            size: 20,
           ),
         ),
         const SizedBox(width: 10),
-        IconButton.outlined(
-          icon: const FaIcon(FontAwesomeIcons.camera),
+        MyIconButton(
           onPressed: () async {
             nextMediaTimer?.cancel();
             progressTimer?.cancel();
@@ -639,11 +658,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               await videoController?.play();
             }
           },
-          style: ButtonStyle(
-            padding: WidgetStateProperty.all<EdgeInsets>(
-              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            ),
-          ),
+          icon: const FaIcon(FontAwesomeIcons.camera, size: 24),
         ),
       ],
     );
@@ -676,6 +691,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Stack(
           fit: StackFit.expand,
@@ -696,6 +712,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: PhotoView.customChild(
                             initialScale: PhotoViewComputedScale.contained,
                             minScale: PhotoViewComputedScale.contained,
+                            backgroundDecoration: const BoxDecoration(
+                              color: Colors.transparent,
+                            ),
+                            scaleStateChangedCallback: (state) {
+                              final zoomed =
+                                  state != PhotoViewScaleState.initial;
+                              if (_isZoomed != zoomed) {
+                                setState(() {
+                                  _isZoomed = zoomed;
+                                });
+                              }
+                            },
                             child: VideoPlayer(
                               videoController!,
                             ),
@@ -709,8 +737,21 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                             imageProvider: FileImage(
                               currentMedia!.tempPath,
                             ),
+                            loadingBuilder: (context, event) => _loader(),
+                            backgroundDecoration: const BoxDecoration(
+                              color: Colors.transparent,
+                            ),
                             initialScale: PhotoViewComputedScale.contained,
                             minScale: PhotoViewComputedScale.contained,
+                            scaleStateChangedCallback: (state) {
+                              final zoomed =
+                                  state != PhotoViewScaleState.initial;
+                              if (_isZoomed != zoomed) {
+                                setState(() {
+                                  _isZoomed = zoomed;
+                                });
+                              }
+                            },
                             errorBuilder: (context, error, stackTrace) {
                               return const Center(
                                 child: Icon(
@@ -739,25 +780,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       ),
                       Container(
                         padding: const EdgeInsets.only(bottom: 200),
-                        child: Text(context.lang.mediaViewerTwonlyTapToOpen),
+                        child: Text(
+                          context.lang.mediaViewerTwonlyTapToOpen,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-            Positioned(
-              left: 10,
-              top: 10,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 30),
-                    color: Colors.white,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
             if (currentMedia != null &&
                 currentMedia?.mediaFile.downloadState != DownloadState.ready)
               Positioned.fill(child: _loader()),
@@ -820,48 +850,37 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.xmark),
-                        onPressed: () {
-                          setState(() {
-                            showShortReactions = false;
-                            showSendTextMessageInput = false;
-                          });
-                        },
-                      ),
                       Expanded(
-                        child: TextField(
+                        child: MyInput(
+                          dense: true,
                           autofocus: true,
                           controller: textMessageController,
-                          textCapitalization: TextCapitalization.sentences,
-                          onChanged: (value) async {
-                            await twonlyDB.groupsDao.updateGroup(
-                              widget.group.groupId,
-                              GroupsCompanion(
-                                draftMessage: Value(textMessageController.text),
-                              ),
-                            );
+                          hintText: context.lang.chatListDetailInput,
+                          onChanged: (value) {
+                            setState(() {});
                           },
-                          onEditingComplete: () {
+                          onSubmitted: (value) {
                             setState(() {
                               showSendTextMessageInput = false;
                               showShortReactions = false;
                             });
                           },
-                          decoration: inputTextMessageDeco(
-                            context,
-                            context.lang.chatListDetailInput,
-                          ),
                         ),
                       ),
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                      const SizedBox(width: 10),
+                      MyIconButton(
+                        icon: const FaIcon(
+                          FontAwesomeIcons.solidPaperPlane,
+                          size: 20,
+                        ),
                         onPressed: () async {
                           if (textMessageController.text.isNotEmpty) {
-                            await insertAndSendTextMessage(
-                              widget.group.groupId,
-                              textMessageController.text,
-                              currentMessage!.messageId,
+                            unawaited(
+                              insertAndSendTextMessage(
+                                widget.group.groupId,
+                                textMessageController.text,
+                                currentMessage!.messageId,
+                              ),
                             );
                             textMessageController.clear();
                           }

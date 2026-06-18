@@ -1,0 +1,670 @@
+// This is a generated file - do not edit.
+//
+// Generated from types.proto.
+
+// @dart = 3.3
+
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
+import 'dart:core' as $core;
+
+import 'package:fixnum/fixnum.dart' as $fixnum;
+import 'package:protobuf/protobuf.dart' as $pb;
+
+export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+/// Send from the person who tries to recover their account.
+/// This can be done via a link, which will then be opend in the app of the contact.
+/// The contact than has to manualy select from which user he got the request.
+/// -> Using this phishing is harder, as the user has to manualy select the user to recovery
+/// -> The user who wants to recover his account does not need to remember her old username
+class RecoveryRequest extends $pb.GeneratedMessage {
+  factory RecoveryRequest({
+    $fixnum.Int64? tempId,
+    $core.List<$core.int>? publicKey,
+  }) {
+    final result = create();
+    if (tempId != null) result.tempId = tempId;
+    if (publicKey != null) result.publicKey = publicKey;
+    return result;
+  }
+
+  RecoveryRequest._();
+
+  factory RecoveryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RecoveryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RecoveryRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'tempId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RecoveryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RecoveryRequest copyWith(void Function(RecoveryRequest) updates) =>
+      super.copyWith((message) => updates(message as RecoveryRequest))
+          as RecoveryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RecoveryRequest create() => RecoveryRequest._();
+  @$core.override
+  RecoveryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RecoveryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RecoveryRequest>(create);
+  static RecoveryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get tempId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set tempId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTempId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTempId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get publicKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set publicKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPublicKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPublicKey() => $_clearField(2);
+}
+
+/// Used as envelope for TrustedFriendShare and RecoveryData
+class EncryptedEnvelope extends $pb.GeneratedMessage {
+  factory EncryptedEnvelope({
+    $core.List<$core.int>? encryptedData,
+    $core.List<$core.int>? iv,
+    $core.List<$core.int>? mac,
+  }) {
+    final result = create();
+    if (encryptedData != null) result.encryptedData = encryptedData;
+    if (iv != null) result.iv = iv;
+    if (mac != null) result.mac = mac;
+    return result;
+  }
+
+  EncryptedEnvelope._();
+
+  factory EncryptedEnvelope.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedEnvelope.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedEnvelope',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'encryptedData', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'iv', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'mac', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedEnvelope clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedEnvelope copyWith(void Function(EncryptedEnvelope) updates) =>
+      super.copyWith((message) => updates(message as EncryptedEnvelope))
+          as EncryptedEnvelope;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedEnvelope create() => EncryptedEnvelope._();
+  @$core.override
+  EncryptedEnvelope createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedEnvelope getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedEnvelope>(create);
+  static EncryptedEnvelope? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get encryptedData => $_getN(0);
+  @$pb.TagNumber(1)
+  set encryptedData($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEncryptedData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEncryptedData() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get iv => $_getN(1);
+  @$pb.TagNumber(2)
+  set iv($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIv() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIv() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get mac => $_getN(2);
+  @$pb.TagNumber(3)
+  set mac($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMac() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMac() => $_clearField(3);
+}
+
+class TrustedFriendShare_User extends $pb.GeneratedMessage {
+  factory TrustedFriendShare_User({
+    $fixnum.Int64? userId,
+    $core.String? displayName,
+    $core.List<$core.int>? avatar,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (displayName != null) result.displayName = displayName;
+    if (avatar != null) result.avatar = avatar;
+    return result;
+  }
+
+  TrustedFriendShare_User._();
+
+  factory TrustedFriendShare_User.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TrustedFriendShare_User.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TrustedFriendShare.User',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'displayName')
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'avatar', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrustedFriendShare_User clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrustedFriendShare_User copyWith(
+          void Function(TrustedFriendShare_User) updates) =>
+      super.copyWith((message) => updates(message as TrustedFriendShare_User))
+          as TrustedFriendShare_User;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TrustedFriendShare_User create() => TrustedFriendShare_User._();
+  @$core.override
+  TrustedFriendShare_User createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TrustedFriendShare_User getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TrustedFriendShare_User>(create);
+  static TrustedFriendShare_User? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get displayName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set displayName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDisplayName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDisplayName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get avatar => $_getN(2);
+  @$pb.TagNumber(3)
+  set avatar($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAvatar() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAvatar() => $_clearField(3);
+}
+
+/// Send from the trusted friend to
+/// This is encrypted with the received public key.
+class TrustedFriendShare extends $pb.GeneratedMessage {
+  factory TrustedFriendShare({
+    TrustedFriendShare_User? trustedFriend,
+    TrustedFriendShare_User? shareUser,
+    $core.int? threshold,
+    $core.List<$core.int>? sharedSecretData,
+  }) {
+    final result = create();
+    if (trustedFriend != null) result.trustedFriend = trustedFriend;
+    if (shareUser != null) result.shareUser = shareUser;
+    if (threshold != null) result.threshold = threshold;
+    if (sharedSecretData != null) result.sharedSecretData = sharedSecretData;
+    return result;
+  }
+
+  TrustedFriendShare._();
+
+  factory TrustedFriendShare.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TrustedFriendShare.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TrustedFriendShare',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..aOM<TrustedFriendShare_User>(1, _omitFieldNames ? '' : 'trustedFriend',
+        subBuilder: TrustedFriendShare_User.create)
+    ..aOM<TrustedFriendShare_User>(2, _omitFieldNames ? '' : 'shareUser',
+        subBuilder: TrustedFriendShare_User.create)
+    ..aI(3, _omitFieldNames ? '' : 'threshold')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'sharedSecretData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrustedFriendShare clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrustedFriendShare copyWith(void Function(TrustedFriendShare) updates) =>
+      super.copyWith((message) => updates(message as TrustedFriendShare))
+          as TrustedFriendShare;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TrustedFriendShare create() => TrustedFriendShare._();
+  @$core.override
+  TrustedFriendShare createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TrustedFriendShare getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TrustedFriendShare>(create);
+  static TrustedFriendShare? _defaultInstance;
+
+  /// This allows to display the user which user has send him his recovery data.
+  @$pb.TagNumber(1)
+  TrustedFriendShare_User get trustedFriend => $_getN(0);
+  @$pb.TagNumber(1)
+  set trustedFriend(TrustedFriendShare_User value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTrustedFriend() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTrustedFriend() => $_clearField(1);
+  @$pb.TagNumber(1)
+  TrustedFriendShare_User ensureTrustedFriend() => $_ensure(0);
+
+  /// This allows to display the userdata, showing that he is recovering the correct person.
+  @$pb.TagNumber(2)
+  TrustedFriendShare_User get shareUser => $_getN(1);
+  @$pb.TagNumber(2)
+  set shareUser(TrustedFriendShare_User value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasShareUser() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearShareUser() => $_clearField(2);
+  @$pb.TagNumber(2)
+  TrustedFriendShare_User ensureShareUser() => $_ensure(1);
+
+  /// The minimum threshold required to decrypte the shares.
+  @$pb.TagNumber(3)
+  $core.int get threshold => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set threshold($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasThreshold() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearThreshold() => $_clearField(3);
+
+  /// The actual share which will become: SharedSecretData
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get sharedSecretData => $_getN(3);
+  @$pb.TagNumber(4)
+  set sharedSecretData($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSharedSecretData() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSharedSecretData() => $_clearField(4);
+}
+
+class SharedSecretData_SecondFactorPin extends $pb.GeneratedMessage {
+  factory SharedSecretData_SecondFactorPin({
+    $core.List<$core.int>? unlockToken,
+    $core.List<$core.int>? pinSeed,
+  }) {
+    final result = create();
+    if (unlockToken != null) result.unlockToken = unlockToken;
+    if (pinSeed != null) result.pinSeed = pinSeed;
+    return result;
+  }
+
+  SharedSecretData_SecondFactorPin._();
+
+  factory SharedSecretData_SecondFactorPin.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SharedSecretData_SecondFactorPin.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SharedSecretData.SecondFactorPin',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'unlockToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'pinSeed', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData_SecondFactorPin clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData_SecondFactorPin copyWith(
+          void Function(SharedSecretData_SecondFactorPin) updates) =>
+      super.copyWith(
+              (message) => updates(message as SharedSecretData_SecondFactorPin))
+          as SharedSecretData_SecondFactorPin;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData_SecondFactorPin create() =>
+      SharedSecretData_SecondFactorPin._();
+  @$core.override
+  SharedSecretData_SecondFactorPin createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData_SecondFactorPin getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SharedSecretData_SecondFactorPin>(
+          create);
+  static SharedSecretData_SecondFactorPin? _defaultInstance;
+
+  /// Required to try the PIN to get the share from the server.
+  /// This prevents that someone else can lock the pin, as the server only
+  /// allows 3 tries then after 1 day again 3 tries until the key is deleted.
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get unlockToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set unlockToken($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUnlockToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUnlockToken() => $_clearField(1);
+
+  /// This never is send to the server but used to hash the pin before sending it to the server.
+  /// This prevents that the server every knows the shot 4-diget PIN.
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get pinSeed => $_getN(1);
+  @$pb.TagNumber(2)
+  set pinSeed($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPinSeed() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPinSeed() => $_clearField(2);
+}
+
+class SharedSecretData_SecondFactorMail extends $pb.GeneratedMessage {
+  factory SharedSecretData_SecondFactorMail() => create();
+
+  SharedSecretData_SecondFactorMail._();
+
+  factory SharedSecretData_SecondFactorMail.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SharedSecretData_SecondFactorMail.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SharedSecretData.SecondFactorMail',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData_SecondFactorMail clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData_SecondFactorMail copyWith(
+          void Function(SharedSecretData_SecondFactorMail) updates) =>
+      super.copyWith((message) =>
+              updates(message as SharedSecretData_SecondFactorMail))
+          as SharedSecretData_SecondFactorMail;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData_SecondFactorMail create() =>
+      SharedSecretData_SecondFactorMail._();
+  @$core.override
+  SharedSecretData_SecondFactorMail createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData_SecondFactorMail getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SharedSecretData_SecondFactorMail>(
+          create);
+  static SharedSecretData_SecondFactorMail? _defaultInstance;
+}
+
+/// After received all shares this is decrypted by the user restoring its own
+class SharedSecretData extends $pb.GeneratedMessage {
+  factory SharedSecretData({
+    RecoveryData? recoveryData,
+    SharedSecretData_SecondFactorMail? secondFactorMail,
+    SharedSecretData_SecondFactorPin? secondFactorPin,
+    $core.List<$core.int>? recoveryDataEncrypted,
+  }) {
+    final result = create();
+    if (recoveryData != null) result.recoveryData = recoveryData;
+    if (secondFactorMail != null) result.secondFactorMail = secondFactorMail;
+    if (secondFactorPin != null) result.secondFactorPin = secondFactorPin;
+    if (recoveryDataEncrypted != null)
+      result.recoveryDataEncrypted = recoveryDataEncrypted;
+    return result;
+  }
+
+  SharedSecretData._();
+
+  factory SharedSecretData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SharedSecretData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SharedSecretData',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..aOM<RecoveryData>(1, _omitFieldNames ? '' : 'recoveryData',
+        subBuilder: RecoveryData.create)
+    ..aOM<SharedSecretData_SecondFactorMail>(
+        2, _omitFieldNames ? '' : 'secondFactorMail',
+        subBuilder: SharedSecretData_SecondFactorMail.create)
+    ..aOM<SharedSecretData_SecondFactorPin>(
+        3, _omitFieldNames ? '' : 'secondFactorPin',
+        subBuilder: SharedSecretData_SecondFactorPin.create)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'recoveryDataEncrypted', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SharedSecretData copyWith(void Function(SharedSecretData) updates) =>
+      super.copyWith((message) => updates(message as SharedSecretData))
+          as SharedSecretData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData create() => SharedSecretData._();
+  @$core.override
+  SharedSecretData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SharedSecretData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SharedSecretData>(create);
+  static SharedSecretData? _defaultInstance;
+
+  /// No second factor was selected
+  @$pb.TagNumber(1)
+  RecoveryData get recoveryData => $_getN(0);
+  @$pb.TagNumber(1)
+  set recoveryData(RecoveryData value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRecoveryData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRecoveryData() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RecoveryData ensureRecoveryData() => $_ensure(0);
+
+  /// Server has
+  @$pb.TagNumber(2)
+  SharedSecretData_SecondFactorMail get secondFactorMail => $_getN(1);
+  @$pb.TagNumber(2)
+  set secondFactorMail(SharedSecretData_SecondFactorMail value) =>
+      $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSecondFactorMail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSecondFactorMail() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SharedSecretData_SecondFactorMail ensureSecondFactorMail() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  SharedSecretData_SecondFactorPin get secondFactorPin => $_getN(2);
+  @$pb.TagNumber(3)
+  set secondFactorPin(SharedSecretData_SecondFactorPin value) =>
+      $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSecondFactorPin() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSecondFactorPin() => $_clearField(3);
+  @$pb.TagNumber(3)
+  SharedSecretData_SecondFactorPin ensureSecondFactorPin() => $_ensure(2);
+
+  /// The recovery data in case a second factor was used
+  /// The decryption key is loaded from the server either using the PIN or the MAIL
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get recoveryDataEncrypted => $_getN(3);
+  @$pb.TagNumber(4)
+  set recoveryDataEncrypted($core.List<$core.int> value) =>
+      $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRecoveryDataEncrypted() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRecoveryDataEncrypted() => $_clearField(4);
+}
+
+/// The data which is recovered at the end.
+/// The backup_master_key allows to recover the actual backup uploaded in the background to the server.
+/// In case the backup is not available any more the user can use its user_id and his private_key to requister as a new user.
+class RecoveryData extends $pb.GeneratedMessage {
+  factory RecoveryData({
+    $fixnum.Int64? userId,
+    $core.List<$core.int>? keyManager,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (keyManager != null) result.keyManager = keyManager;
+    return result;
+  }
+
+  RecoveryData._();
+
+  factory RecoveryData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RecoveryData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RecoveryData',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'passwordless_recovery'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'keyManager', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RecoveryData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RecoveryData copyWith(void Function(RecoveryData) updates) =>
+      super.copyWith((message) => updates(message as RecoveryData))
+          as RecoveryData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RecoveryData create() => RecoveryData._();
+  @$core.override
+  RecoveryData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RecoveryData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RecoveryData>(create);
+  static RecoveryData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get keyManager => $_getN(1);
+  @$pb.TagNumber(3)
+  set keyManager($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(3)
+  $core.bool hasKeyManager() => $_has(1);
+  @$pb.TagNumber(3)
+  void clearKeyManager() => $_clearField(3);
+}
+
+const $core.bool _omitFieldNames =
+    $core.bool.fromEnvironment('protobuf.omit_field_names');
+const $core.bool _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

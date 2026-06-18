@@ -1,17 +1,17 @@
 import 'dart:convert';
 
-import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
@@ -117,9 +117,23 @@ class _ContactRowState extends State<_ContactRow> {
       );
       if (userdata == null) return;
 
+      final username = utf8.decode(userdata.username);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (!mounted) return;
+      final shouldRequest = await AddContactDialog.show(context, username);
+      if (shouldRequest != true) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
       final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion(
-          username: Value(utf8.decode(userdata.username)),
+          username: Value(username),
           userId: Value(userdata.userId.toInt()),
           requested: const Value(false),
           blocked: const Value(false),
@@ -127,21 +141,13 @@ class _ContactRowState extends State<_ContactRow> {
         ),
       );
 
-      if (userdata.publicIdentityKey.equals(widget.contact.publicIdentityKey)) {
-        final verified = await twonlyDB.keyVerificationDao.isContactVerified(
-          widget.message.senderId!,
-        );
-
-        if (verified) {
-          Log.info('Verified a user which was shared by a verified contact');
-          await twonlyDB.keyVerificationDao.addKeyVerification(
-            userdata.userId.toInt(),
-            VerificationType.contactSharedByVerified,
-          );
-        }
-      }
-
       if (added > 0) await importSignalContactAndCreateRequest(userdata);
+
+      await KeyVerificationService.verifySharedContact(
+        contactId: userdata.userId.toInt(),
+        sharedPublicIdentityKey: widget.contact.publicIdentityKey,
+        senderId: widget.message.senderId!,
+      );
     } catch (e) {
       Log.error(e);
     } finally {
@@ -170,7 +176,6 @@ class _ContactRowState extends State<_ContactRow> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   const FaIcon(
                     FontAwesomeIcons.user,

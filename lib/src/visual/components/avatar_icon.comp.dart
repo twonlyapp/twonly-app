@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/avatars.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
 class AvatarIcon extends StatefulWidget {
@@ -28,7 +30,7 @@ class AvatarIcon extends StatefulWidget {
 
 class _AvatarIconState extends State<AvatarIcon> {
   List<Contact> _avatarContacts = [];
-  String? _avatarSvg;
+  String? _myAvatarPath;
 
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
@@ -64,6 +66,12 @@ class _AvatarIconState extends State<AvatarIcon> {
         errorBuilder: errorBuilder,
       );
     }
+
+    Log.warn(
+      'PNG avatar file for contact ${contact.userId} does not exist. Generating in background.',
+    );
+    unawaited(createPushAvatars(forceForUserId: contact.userId));
+
     if (contact.avatarSvgCompressed != null) {
       return SvgPicture.string(
         getAvatarSvg(contact.avatarSvgCompressed!),
@@ -94,19 +102,9 @@ class _AvatarIconState extends State<AvatarIcon> {
           });
     } else if (widget.myAvatar) {
       _userSub = userService.onUserUpdated.listen((_) {
-        if (mounted) {
-          setState(() {
-            if (userService.currentUser.avatarSvg != null) {
-              _avatarSvg = userService.currentUser.avatarSvg;
-            } else {
-              _avatarContacts = [];
-            }
-          });
-        }
+        unawaited(_updateMyAvatar());
       });
-      if (userService.currentUser.avatarSvg != null) {
-        _avatarSvg = userService.currentUser.avatarSvg;
-      }
+      unawaited(_updateMyAvatar());
     } else if (widget.contactId != null) {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)
@@ -120,17 +118,44 @@ class _AvatarIconState extends State<AvatarIcon> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _updateMyAvatar() async {
+    final avatarSvg = userService.currentUser.avatarSvg;
+    if (avatarSvg == null) {
+      if (mounted) {
+        setState(() {
+          _myAvatarPath = null;
+          _avatarContacts = [];
+        });
+      }
+      return;
+    }
+
+    final path = await getUserAvatar();
+
+    if (mounted) {
+      setState(() {
+        _myAvatarPath = path;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final proSize = (widget.fontSize == null) ? 40 : (widget.fontSize! * 2);
 
     Widget avatars = Container();
 
-    if (_avatarSvg != null) {
-      avatars = SvgPicture.string(
-        _avatarSvg!,
-        errorBuilder: errorBuilder,
-      );
+    if (widget.myAvatar) {
+      if (_myAvatarPath != null) {
+        avatars = Image.file(
+          File(_myAvatarPath!),
+          errorBuilder: errorBuilder,
+        );
+      } else {
+        avatars = const SvgPicture(
+          AssetBytesLoader('assets/images/default_avatar.svg.vec'),
+        );
+      }
     } else if (_avatarContacts.length == 1) {
       avatars = getAvatarForContact(_avatarContacts.first);
     } else if (_avatarContacts.length >= 2) {

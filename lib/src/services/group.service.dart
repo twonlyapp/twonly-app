@@ -139,6 +139,7 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
       groupCreate: EncryptedContent_GroupCreate(
         stateKey: stateEncryptionKey,
         groupPublicKey: myGroupKey.getPublicKey().serialize(),
+        groupName: group.groupName,
       ),
     ),
   );
@@ -770,6 +771,7 @@ Future<bool> addNewGroupMembers(
         groupCreate: EncryptedContent_GroupCreate(
           stateKey: group.stateEncryptionKey,
           groupPublicKey: keyPair.getPublicKey().serialize(),
+          groupName: group.groupName,
         ),
       ),
     );

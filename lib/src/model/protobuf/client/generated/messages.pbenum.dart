@@ -79,16 +79,20 @@ class EncryptedContent_ErrorMessages_Type extends $pb.ProtobufEnum {
   static const EncryptedContent_ErrorMessages_Type SESSION_OUT_OF_SYNC =
       EncryptedContent_ErrorMessages_Type._(
           3, _omitEnumNames ? '' : 'SESSION_OUT_OF_SYNC');
+  static const EncryptedContent_ErrorMessages_Type
+      GROUP_NOT_FOUND_OR_NOT_A_MEMBER = EncryptedContent_ErrorMessages_Type._(
+          4, _omitEnumNames ? '' : 'GROUP_NOT_FOUND_OR_NOT_A_MEMBER');
 
   static const $core.List<EncryptedContent_ErrorMessages_Type> values =
       <EncryptedContent_ErrorMessages_Type>[
     ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
     UNKNOWN_MESSAGE_TYPE,
     SESSION_OUT_OF_SYNC,
+    GROUP_NOT_FOUND_OR_NOT_A_MEMBER,
   ];
 
   static final $core.List<EncryptedContent_ErrorMessages_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
   static EncryptedContent_ErrorMessages_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -368,10 +368,12 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
   factory EncryptedContent_GroupCreate({
     $core.List<$core.int>? stateKey,
     $core.List<$core.int>? groupPublicKey,
+    $core.String? groupName,
   }) {
     final result = create();
     if (stateKey != null) result.stateKey = stateKey;
     if (groupPublicKey != null) result.groupPublicKey = groupPublicKey;
+    if (groupName != null) result.groupName = groupName;
     return result;
   }
 
@@ -391,6 +393,7 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
         3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY)
+    ..aOS(5, _omitFieldNames ? '' : 'groupName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -433,6 +436,15 @@ class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
   $core.bool hasGroupPublicKey() => $_has(1);
   @$pb.TagNumber(4)
   void clearGroupPublicKey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get groupName => $_getSZ(2);
+  @$pb.TagNumber(5)
+  set groupName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(5)
+  $core.bool hasGroupName() => $_has(2);
+  @$pb.TagNumber(5)
+  void clearGroupName() => $_clearField(5);
 }
 
 class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
@@ -1852,6 +1864,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_UserDiscoveryRequest? userDiscoveryRequest,
     EncryptedContent_UserDiscoveryUpdate? userDiscoveryUpdate,
     EncryptedContent_KeyVerificationProof? keyVerificationProof,
+    $core.bool? askForFriendPromotions,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1884,6 +1897,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
       result.userDiscoveryUpdate = userDiscoveryUpdate;
     if (keyVerificationProof != null)
       result.keyVerificationProof = keyVerificationProof;
+    if (askForFriendPromotions != null)
+      result.askForFriendPromotions = askForFriendPromotions;
     return result;
   }
 
@@ -1955,6 +1970,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_KeyVerificationProof>(
         24, _omitFieldNames ? '' : 'keyVerificationProof',
         subBuilder: EncryptedContent_KeyVerificationProof.create)
+    ..aOB(25, _omitFieldNames ? '' : 'askForFriendPromotions')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2238,6 +2254,15 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(24)
   EncryptedContent_KeyVerificationProof ensureKeyVerificationProof() =>
       $_ensure(22);
+
+  @$pb.TagNumber(25)
+  $core.bool get askForFriendPromotions => $_getBF(23);
+  @$pb.TagNumber(25)
+  set askForFriendPromotions($core.bool value) => $_setBool(23, value);
+  @$pb.TagNumber(25)
+  $core.bool hasAskForFriendPromotions() => $_has(23);
+  @$pb.TagNumber(25)
+  void clearAskForFriendPromotions() => $_clearField(25);
 }
 
 const $core.bool _omitFieldNames =

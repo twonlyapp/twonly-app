@@ -66,6 +66,25 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return query.map((row) => row.readTable(messages)).watch();
   }
 
+  Stream<List<MediaFile>> watchUnopenedMediaFiles() {
+    final query =
+        select(messages).join([
+          leftOuterJoin(
+            mediaFiles,
+            mediaFiles.mediaId.equalsExp(messages.mediaId),
+          ),
+        ])
+        ..where(
+          messages.openedAt.isNull() &
+              messages.mediaId.isNotNull() &
+              messages.type.equals(MessageType.media.name) &
+              mediaFiles.downloadState.equals(DownloadState.ready.name) &
+              (mediaFiles.type.equals(MediaType.image.name) |
+                  mediaFiles.type.equals(MediaType.gif.name)),
+        );
+    return query.map((row) => row.readTable(mediaFiles)).watch();
+  }
+
   Future<Stream<Message?>> watchLastMessage(String groupId) async {
     final group = await twonlyDB.groupsDao.getGroup(groupId);
     final deletionTime = clock.now().subtract(

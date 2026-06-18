@@ -215,6 +215,57 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
         defaultValue: const Constant(false),
       );
+  static const VerificationMeta _recoveryIsTrustedFriendMeta =
+      const VerificationMeta('recoveryIsTrustedFriend');
+  @override
+  late final GeneratedColumn<bool> recoveryIsTrustedFriend =
+      GeneratedColumn<bool>(
+        'recovery_is_trusted_friend',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("recovery_is_trusted_friend" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _recoveryLastHeartbeatMeta =
+      const VerificationMeta('recoveryLastHeartbeat');
+  @override
+  late final GeneratedColumn<DateTime> recoveryLastHeartbeat =
+      GeneratedColumn<DateTime>(
+        'recovery_last_heartbeat',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recoverySecretShareMeta =
+      const VerificationMeta('recoverySecretShare');
+  @override
+  late final GeneratedColumn<Uint8List> recoverySecretShare =
+      GeneratedColumn<Uint8List>(
+        'recovery_secret_share',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _askForFriendPromotionsMeta =
+      const VerificationMeta('askForFriendPromotions');
+  @override
+  late final GeneratedColumn<bool> askForFriendPromotions =
+      GeneratedColumn<bool>(
+        'ask_for_friend_promotions',
+        aliasedName,
+        true,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("ask_for_friend_promotions" IN (0, 1))',
+        ),
+      );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -256,6 +307,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     userDiscoveryVersion,
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
+    recoveryIsTrustedFriend,
+    recoveryLastHeartbeat,
+    recoverySecretShare,
+    askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -393,6 +448,42 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('recovery_is_trusted_friend')) {
+      context.handle(
+        _recoveryIsTrustedFriendMeta,
+        recoveryIsTrustedFriend.isAcceptableOrUnknown(
+          data['recovery_is_trusted_friend']!,
+          _recoveryIsTrustedFriendMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recovery_last_heartbeat')) {
+      context.handle(
+        _recoveryLastHeartbeatMeta,
+        recoveryLastHeartbeat.isAcceptableOrUnknown(
+          data['recovery_last_heartbeat']!,
+          _recoveryLastHeartbeatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recovery_secret_share')) {
+      context.handle(
+        _recoverySecretShareMeta,
+        recoverySecretShare.isAcceptableOrUnknown(
+          data['recovery_secret_share']!,
+          _recoverySecretShareMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ask_for_friend_promotions')) {
+      context.handle(
+        _askForFriendPromotionsMeta,
+        askForFriendPromotions.isAcceptableOrUnknown(
+          data['ask_for_friend_promotions']!,
+          _askForFriendPromotionsMeta,
+        ),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -484,6 +575,22 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.bool,
         data['${effectivePrefix}user_discovery_manual_approved'],
       ),
+      recoveryIsTrustedFriend: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}recovery_is_trusted_friend'],
+      )!,
+      recoveryLastHeartbeat: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recovery_last_heartbeat'],
+      ),
+      recoverySecretShare: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}recovery_secret_share'],
+      ),
+      askForFriendPromotions: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ask_for_friend_promotions'],
+      ),
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -518,6 +625,10 @@ class Contact extends DataClass implements Insertable<Contact> {
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
   final bool? userDiscoveryManualApproved;
+  final bool recoveryIsTrustedFriend;
+  final DateTime? recoveryLastHeartbeat;
+  final Uint8List? recoverySecretShare;
+  final bool? askForFriendPromotions;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -537,6 +648,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
     this.userDiscoveryManualApproved,
+    required this.recoveryIsTrustedFriend,
+    this.recoveryLastHeartbeat,
+    this.recoverySecretShare,
+    this.askForFriendPromotions,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -570,6 +685,18 @@ class Contact extends DataClass implements Insertable<Contact> {
       map['user_discovery_manual_approved'] = Variable<bool>(
         userDiscoveryManualApproved,
       );
+    }
+    map['recovery_is_trusted_friend'] = Variable<bool>(recoveryIsTrustedFriend);
+    if (!nullToAbsent || recoveryLastHeartbeat != null) {
+      map['recovery_last_heartbeat'] = Variable<DateTime>(
+        recoveryLastHeartbeat,
+      );
+    }
+    if (!nullToAbsent || recoverySecretShare != null) {
+      map['recovery_secret_share'] = Variable<Uint8List>(recoverySecretShare);
+    }
+    if (!nullToAbsent || askForFriendPromotions != null) {
+      map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
     }
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
@@ -605,6 +732,16 @@ class Contact extends DataClass implements Insertable<Contact> {
           userDiscoveryManualApproved == null && nullToAbsent
           ? const Value.absent()
           : Value(userDiscoveryManualApproved),
+      recoveryIsTrustedFriend: Value(recoveryIsTrustedFriend),
+      recoveryLastHeartbeat: recoveryLastHeartbeat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recoveryLastHeartbeat),
+      recoverySecretShare: recoverySecretShare == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recoverySecretShare),
+      askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(askForFriendPromotions),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -642,6 +779,18 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryManualApproved: serializer.fromJson<bool?>(
         json['userDiscoveryManualApproved'],
       ),
+      recoveryIsTrustedFriend: serializer.fromJson<bool>(
+        json['recoveryIsTrustedFriend'],
+      ),
+      recoveryLastHeartbeat: serializer.fromJson<DateTime?>(
+        json['recoveryLastHeartbeat'],
+      ),
+      recoverySecretShare: serializer.fromJson<Uint8List?>(
+        json['recoverySecretShare'],
+      ),
+      askForFriendPromotions: serializer.fromJson<bool?>(
+        json['askForFriendPromotions'],
+      ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -672,6 +821,16 @@ class Contact extends DataClass implements Insertable<Contact> {
       'userDiscoveryManualApproved': serializer.toJson<bool?>(
         userDiscoveryManualApproved,
       ),
+      'recoveryIsTrustedFriend': serializer.toJson<bool>(
+        recoveryIsTrustedFriend,
+      ),
+      'recoveryLastHeartbeat': serializer.toJson<DateTime?>(
+        recoveryLastHeartbeat,
+      ),
+      'recoverySecretShare': serializer.toJson<Uint8List?>(recoverySecretShare),
+      'askForFriendPromotions': serializer.toJson<bool?>(
+        askForFriendPromotions,
+      ),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -694,6 +853,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
     Value<bool?> userDiscoveryManualApproved = const Value.absent(),
+    bool? recoveryIsTrustedFriend,
+    Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
+    Value<Uint8List?> recoverySecretShare = const Value.absent(),
+    Value<bool?> askForFriendPromotions = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -719,6 +882,17 @@ class Contact extends DataClass implements Insertable<Contact> {
     userDiscoveryManualApproved: userDiscoveryManualApproved.present
         ? userDiscoveryManualApproved.value
         : this.userDiscoveryManualApproved,
+    recoveryIsTrustedFriend:
+        recoveryIsTrustedFriend ?? this.recoveryIsTrustedFriend,
+    recoveryLastHeartbeat: recoveryLastHeartbeat.present
+        ? recoveryLastHeartbeat.value
+        : this.recoveryLastHeartbeat,
+    recoverySecretShare: recoverySecretShare.present
+        ? recoverySecretShare.value
+        : this.recoverySecretShare,
+    askForFriendPromotions: askForFriendPromotions.present
+        ? askForFriendPromotions.value
+        : this.askForFriendPromotions,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -756,6 +930,18 @@ class Contact extends DataClass implements Insertable<Contact> {
       userDiscoveryManualApproved: data.userDiscoveryManualApproved.present
           ? data.userDiscoveryManualApproved.value
           : this.userDiscoveryManualApproved,
+      recoveryIsTrustedFriend: data.recoveryIsTrustedFriend.present
+          ? data.recoveryIsTrustedFriend.value
+          : this.recoveryIsTrustedFriend,
+      recoveryLastHeartbeat: data.recoveryLastHeartbeat.present
+          ? data.recoveryLastHeartbeat.value
+          : this.recoveryLastHeartbeat,
+      recoverySecretShare: data.recoverySecretShare.present
+          ? data.recoverySecretShare.value
+          : this.recoverySecretShare,
+      askForFriendPromotions: data.askForFriendPromotions.present
+          ? data.askForFriendPromotions.value
+          : this.askForFriendPromotions,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -784,6 +970,10 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
+          ..write('recoveryIsTrustedFriend: $recoveryIsTrustedFriend, ')
+          ..write('recoveryLastHeartbeat: $recoveryLastHeartbeat, ')
+          ..write('recoverySecretShare: $recoverySecretShare, ')
+          ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -791,7 +981,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     userId,
     username,
     displayName,
@@ -808,9 +998,13 @@ class Contact extends DataClass implements Insertable<Contact> {
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
+    recoveryIsTrustedFriend,
+    recoveryLastHeartbeat,
+    $driftBlobEquality.hash(recoverySecretShare),
+    askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -838,6 +1032,13 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.userDiscoveryExcluded == this.userDiscoveryExcluded &&
           other.userDiscoveryManualApproved ==
               this.userDiscoveryManualApproved &&
+          other.recoveryIsTrustedFriend == this.recoveryIsTrustedFriend &&
+          other.recoveryLastHeartbeat == this.recoveryLastHeartbeat &&
+          $driftBlobEquality.equals(
+            other.recoverySecretShare,
+            this.recoverySecretShare,
+          ) &&
+          other.askForFriendPromotions == this.askForFriendPromotions &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -859,6 +1060,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
   final Value<bool?> userDiscoveryManualApproved;
+  final Value<bool> recoveryIsTrustedFriend;
+  final Value<DateTime?> recoveryLastHeartbeat;
+  final Value<Uint8List?> recoverySecretShare;
+  final Value<bool?> askForFriendPromotions;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -878,6 +1083,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
+    this.recoveryIsTrustedFriend = const Value.absent(),
+    this.recoveryLastHeartbeat = const Value.absent(),
+    this.recoverySecretShare = const Value.absent(),
+    this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -898,6 +1107,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
+    this.recoveryIsTrustedFriend = const Value.absent(),
+    this.recoveryLastHeartbeat = const Value.absent(),
+    this.recoverySecretShare = const Value.absent(),
+    this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -918,6 +1131,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<Uint8List>? userDiscoveryVersion,
     Expression<bool>? userDiscoveryExcluded,
     Expression<bool>? userDiscoveryManualApproved,
+    Expression<bool>? recoveryIsTrustedFriend,
+    Expression<DateTime>? recoveryLastHeartbeat,
+    Expression<Uint8List>? recoverySecretShare,
+    Expression<bool>? askForFriendPromotions,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -943,6 +1160,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'user_discovery_excluded': userDiscoveryExcluded,
       if (userDiscoveryManualApproved != null)
         'user_discovery_manual_approved': userDiscoveryManualApproved,
+      if (recoveryIsTrustedFriend != null)
+        'recovery_is_trusted_friend': recoveryIsTrustedFriend,
+      if (recoveryLastHeartbeat != null)
+        'recovery_last_heartbeat': recoveryLastHeartbeat,
+      if (recoverySecretShare != null)
+        'recovery_secret_share': recoverySecretShare,
+      if (askForFriendPromotions != null)
+        'ask_for_friend_promotions': askForFriendPromotions,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -966,6 +1191,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
     Value<bool?>? userDiscoveryManualApproved,
+    Value<bool>? recoveryIsTrustedFriend,
+    Value<DateTime?>? recoveryLastHeartbeat,
+    Value<Uint8List?>? recoverySecretShare,
+    Value<bool?>? askForFriendPromotions,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -988,6 +1217,13 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
       userDiscoveryManualApproved:
           userDiscoveryManualApproved ?? this.userDiscoveryManualApproved,
+      recoveryIsTrustedFriend:
+          recoveryIsTrustedFriend ?? this.recoveryIsTrustedFriend,
+      recoveryLastHeartbeat:
+          recoveryLastHeartbeat ?? this.recoveryLastHeartbeat,
+      recoverySecretShare: recoverySecretShare ?? this.recoverySecretShare,
+      askForFriendPromotions:
+          askForFriendPromotions ?? this.askForFriendPromotions,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -1052,6 +1288,26 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         userDiscoveryManualApproved.value,
       );
     }
+    if (recoveryIsTrustedFriend.present) {
+      map['recovery_is_trusted_friend'] = Variable<bool>(
+        recoveryIsTrustedFriend.value,
+      );
+    }
+    if (recoveryLastHeartbeat.present) {
+      map['recovery_last_heartbeat'] = Variable<DateTime>(
+        recoveryLastHeartbeat.value,
+      );
+    }
+    if (recoverySecretShare.present) {
+      map['recovery_secret_share'] = Variable<Uint8List>(
+        recoverySecretShare.value,
+      );
+    }
+    if (askForFriendPromotions.present) {
+      map['ask_for_friend_promotions'] = Variable<bool>(
+        askForFriendPromotions.value,
+      );
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -1080,6 +1336,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
+          ..write('recoveryIsTrustedFriend: $recoveryIsTrustedFriend, ')
+          ..write('recoveryLastHeartbeat: $recoveryLastHeartbeat, ')
+          ..write('recoverySecretShare: $recoverySecretShare, ')
+          ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -9699,6 +9959,20 @@ class $KeyVerificationsTable extends KeyVerifications
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<VerificationType>($KeyVerificationsTable.$convertertype);
+  static const VerificationMeta _verifiedByMeta = const VerificationMeta(
+    'verifiedBy',
+  );
+  @override
+  late final GeneratedColumn<int> verifiedBy = GeneratedColumn<int>(
+    'verified_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -9716,6 +9990,7 @@ class $KeyVerificationsTable extends KeyVerifications
     verificationId,
     contactId,
     type,
+    verifiedBy,
     createdAt,
   ];
   @override
@@ -9747,6 +10022,12 @@ class $KeyVerificationsTable extends KeyVerifications
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
+    if (data.containsKey('verified_by')) {
+      context.handle(
+        _verifiedByMeta,
+        verifiedBy.isAcceptableOrUnknown(data['verified_by']!, _verifiedByMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -9776,6 +10057,10 @@ class $KeyVerificationsTable extends KeyVerifications
           data['${effectivePrefix}type'],
         )!,
       ),
+      verifiedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verified_by'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -9796,11 +10081,13 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
   final int verificationId;
   final int contactId;
   final VerificationType type;
+  final int? verifiedBy;
   final DateTime createdAt;
   const KeyVerification({
     required this.verificationId,
     required this.contactId,
     required this.type,
+    this.verifiedBy,
     required this.createdAt,
   });
   @override
@@ -9813,6 +10100,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
         $KeyVerificationsTable.$convertertype.toSql(type),
       );
     }
+    if (!nullToAbsent || verifiedBy != null) {
+      map['verified_by'] = Variable<int>(verifiedBy);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -9822,6 +10112,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       verificationId: Value(verificationId),
       contactId: Value(contactId),
       type: Value(type),
+      verifiedBy: verifiedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(verifiedBy),
       createdAt: Value(createdAt),
     );
   }
@@ -9837,6 +10130,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       type: $KeyVerificationsTable.$convertertype.fromJson(
         serializer.fromJson<String>(json['type']),
       ),
+      verifiedBy: serializer.fromJson<int?>(json['verifiedBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -9849,6 +10143,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
       'type': serializer.toJson<String>(
         $KeyVerificationsTable.$convertertype.toJson(type),
       ),
+      'verifiedBy': serializer.toJson<int?>(verifiedBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -9857,11 +10152,13 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
     int? verificationId,
     int? contactId,
     VerificationType? type,
+    Value<int?> verifiedBy = const Value.absent(),
     DateTime? createdAt,
   }) => KeyVerification(
     verificationId: verificationId ?? this.verificationId,
     contactId: contactId ?? this.contactId,
     type: type ?? this.type,
+    verifiedBy: verifiedBy.present ? verifiedBy.value : this.verifiedBy,
     createdAt: createdAt ?? this.createdAt,
   );
   KeyVerification copyWithCompanion(KeyVerificationsCompanion data) {
@@ -9871,6 +10168,9 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           : this.verificationId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       type: data.type.present ? data.type.value : this.type,
+      verifiedBy: data.verifiedBy.present
+          ? data.verifiedBy.value
+          : this.verifiedBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -9881,13 +10181,15 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
+          ..write('verifiedBy: $verifiedBy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(verificationId, contactId, type, createdAt);
+  int get hashCode =>
+      Object.hash(verificationId, contactId, type, verifiedBy, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -9895,6 +10197,7 @@ class KeyVerification extends DataClass implements Insertable<KeyVerification> {
           other.verificationId == this.verificationId &&
           other.contactId == this.contactId &&
           other.type == this.type &&
+          other.verifiedBy == this.verifiedBy &&
           other.createdAt == this.createdAt);
 }
 
@@ -9902,17 +10205,20 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
   final Value<int> verificationId;
   final Value<int> contactId;
   final Value<VerificationType> type;
+  final Value<int?> verifiedBy;
   final Value<DateTime> createdAt;
   const KeyVerificationsCompanion({
     this.verificationId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.type = const Value.absent(),
+    this.verifiedBy = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   KeyVerificationsCompanion.insert({
     this.verificationId = const Value.absent(),
     required int contactId,
     required VerificationType type,
+    this.verifiedBy = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : contactId = Value(contactId),
        type = Value(type);
@@ -9920,12 +10226,14 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
     Expression<int>? verificationId,
     Expression<int>? contactId,
     Expression<String>? type,
+    Expression<int>? verifiedBy,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (verificationId != null) 'verification_id': verificationId,
       if (contactId != null) 'contact_id': contactId,
       if (type != null) 'type': type,
+      if (verifiedBy != null) 'verified_by': verifiedBy,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -9934,12 +10242,14 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
     Value<int>? verificationId,
     Value<int>? contactId,
     Value<VerificationType>? type,
+    Value<int?>? verifiedBy,
     Value<DateTime>? createdAt,
   }) {
     return KeyVerificationsCompanion(
       verificationId: verificationId ?? this.verificationId,
       contactId: contactId ?? this.contactId,
       type: type ?? this.type,
+      verifiedBy: verifiedBy ?? this.verifiedBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -9958,6 +10268,9 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
         $KeyVerificationsTable.$convertertype.toSql(type.value),
       );
     }
+    if (verifiedBy.present) {
+      map['verified_by'] = Variable<int>(verifiedBy.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -9970,6 +10283,7 @@ class KeyVerificationsCompanion extends UpdateCompanion<KeyVerification> {
           ..write('verificationId: $verificationId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
+          ..write('verifiedBy: $verifiedBy, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -12721,6 +13035,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('key_verifications', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'user_discovery_announced_users',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -12797,6 +13118,10 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
+      Value<bool> recoveryIsTrustedFriend,
+      Value<DateTime?> recoveryLastHeartbeat,
+      Value<Uint8List?> recoverySecretShare,
+      Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -12818,6 +13143,10 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
+      Value<bool> recoveryIsTrustedFriend,
+      Value<DateTime?> recoveryLastHeartbeat,
+      Value<Uint8List?> recoverySecretShare,
+      Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -12962,29 +13291,6 @@ final class $$ContactsTableReferences
         );
 
     final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$KeyVerificationsTable, List<KeyVerification>>
-  _keyVerificationsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.keyVerifications,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.keyVerifications.contactId,
-    ),
-  );
-
-  $$KeyVerificationsTableProcessedTableManager get keyVerificationsRefs {
-    final manager =
-        $$KeyVerificationsTableTableManager($_db, $_db.keyVerifications).filter(
-          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
-        );
-
-    final cache = $_typedResult.readTableOrNull(
-      _keyVerificationsRefsTable($_db),
-    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -13204,6 +13510,26 @@ class $$ContactsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get recoveryIsTrustedFriend => $composableBuilder(
+    column: $table.recoveryIsTrustedFriend,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get recoveryLastHeartbeat => $composableBuilder(
+    column: $table.recoveryLastHeartbeat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get recoverySecretShare => $composableBuilder(
+    column: $table.recoverySecretShare,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnFilters(column),
@@ -13380,31 +13706,6 @@ class $$ContactsTableFilterComposer
           }) => $$GroupHistoriesTableFilterComposer(
             $db: $db,
             $table: $db.groupHistories,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> keyVerificationsRefs(
-    Expression<bool> Function($$KeyVerificationsTableFilterComposer f) f,
-  ) {
-    final $$KeyVerificationsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.keyVerifications,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$KeyVerificationsTableFilterComposer(
-            $db: $db,
-            $table: $db.keyVerifications,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -13612,6 +13913,26 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get recoveryIsTrustedFriend => $composableBuilder(
+    column: $table.recoveryIsTrustedFriend,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get recoveryLastHeartbeat => $composableBuilder(
+    column: $table.recoveryLastHeartbeat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get recoverySecretShare => $composableBuilder(
+    column: $table.recoverySecretShare,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -13693,6 +14014,26 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get userDiscoveryManualApproved => $composableBuilder(
     column: $table.userDiscoveryManualApproved,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get recoveryIsTrustedFriend => $composableBuilder(
+    column: $table.recoveryIsTrustedFriend,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get recoveryLastHeartbeat => $composableBuilder(
+    column: $table.recoveryLastHeartbeat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get recoverySecretShare => $composableBuilder(
+    column: $table.recoverySecretShare,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get askForFriendPromotions => $composableBuilder(
+    column: $table.askForFriendPromotions,
     builder: (column) => column,
   );
 
@@ -13881,31 +14222,6 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> keyVerificationsRefs<T extends Object>(
-    Expression<T> Function($$KeyVerificationsTableAnnotationComposer a) f,
-  ) {
-    final $$KeyVerificationsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.keyVerifications,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$KeyVerificationsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.keyVerifications,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<T> userDiscoveryUserRelationsRefs<T extends Object>(
     Expression<T> Function(
       $$UserDiscoveryUserRelationsTableAnnotationComposer a,
@@ -14041,7 +14357,6 @@ class $$ContactsTableTableManager
             bool receiptsRefs,
             bool messageActionsRefs,
             bool groupHistoriesRefs,
-            bool keyVerificationsRefs,
             bool userDiscoveryUserRelationsRefs,
             bool userDiscoveryOtherPromotionsRefs,
             bool userDiscoveryOwnPromotionsRefs,
@@ -14077,6 +14392,10 @@ class $$ContactsTableTableManager
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
+                Value<bool> recoveryIsTrustedFriend = const Value.absent(),
+                Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
+                Value<Uint8List?> recoverySecretShare = const Value.absent(),
+                Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -14096,6 +14415,10 @@ class $$ContactsTableTableManager
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
+                recoveryIsTrustedFriend: recoveryIsTrustedFriend,
+                recoveryLastHeartbeat: recoveryLastHeartbeat,
+                recoverySecretShare: recoverySecretShare,
+                askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -14117,6 +14440,10 @@ class $$ContactsTableTableManager
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
+                Value<bool> recoveryIsTrustedFriend = const Value.absent(),
+                Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
+                Value<Uint8List?> recoverySecretShare = const Value.absent(),
+                Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -14136,6 +14463,10 @@ class $$ContactsTableTableManager
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
+                recoveryIsTrustedFriend: recoveryIsTrustedFriend,
+                recoveryLastHeartbeat: recoveryLastHeartbeat,
+                recoverySecretShare: recoverySecretShare,
+                askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -14156,7 +14487,6 @@ class $$ContactsTableTableManager
                 receiptsRefs = false,
                 messageActionsRefs = false,
                 groupHistoriesRefs = false,
-                keyVerificationsRefs = false,
                 userDiscoveryUserRelationsRefs = false,
                 userDiscoveryOtherPromotionsRefs = false,
                 userDiscoveryOwnPromotionsRefs = false,
@@ -14172,7 +14502,6 @@ class $$ContactsTableTableManager
                     if (receiptsRefs) db.receipts,
                     if (messageActionsRefs) db.messageActions,
                     if (groupHistoriesRefs) db.groupHistories,
-                    if (keyVerificationsRefs) db.keyVerifications,
                     if (userDiscoveryUserRelationsRefs)
                       db.userDiscoveryUserRelations,
                     if (userDiscoveryOtherPromotionsRefs)
@@ -14331,27 +14660,6 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (keyVerificationsRefs)
-                        await $_getPrefetchedData<
-                          Contact,
-                          $ContactsTable,
-                          KeyVerification
-                        >(
-                          currentTable: table,
-                          referencedTable: $$ContactsTableReferences
-                              ._keyVerificationsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ContactsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).keyVerificationsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.userId,
-                              ),
-                          typedResults: items,
-                        ),
                       if (userDiscoveryUserRelationsRefs)
                         await $_getPrefetchedData<
                           Contact,
@@ -14464,7 +14772,6 @@ typedef $$ContactsTableProcessedTableManager =
         bool receiptsRefs,
         bool messageActionsRefs,
         bool groupHistoriesRefs,
-        bool keyVerificationsRefs,
         bool userDiscoveryUserRelationsRefs,
         bool userDiscoveryOtherPromotionsRefs,
         bool userDiscoveryOwnPromotionsRefs,
@@ -21114,6 +21421,7 @@ typedef $$KeyVerificationsTableCreateCompanionBuilder =
       Value<int> verificationId,
       required int contactId,
       required VerificationType type,
+      Value<int?> verifiedBy,
       Value<DateTime> createdAt,
     });
 typedef $$KeyVerificationsTableUpdateCompanionBuilder =
@@ -21121,6 +21429,7 @@ typedef $$KeyVerificationsTableUpdateCompanionBuilder =
       Value<int> verificationId,
       Value<int> contactId,
       Value<VerificationType> type,
+      Value<int?> verifiedBy,
       Value<DateTime> createdAt,
     });
 
@@ -21146,6 +21455,28 @@ final class $$KeyVerificationsTableReferences
       $_db.contacts,
     ).filter((f) => f.userId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ContactsTable _verifiedByTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(
+          db.keyVerifications.verifiedBy,
+          db.contacts.userId,
+        ),
+      );
+
+  $$ContactsTableProcessedTableManager? get verifiedBy {
+    final $_column = $_itemColumn<int>('verified_by');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_verifiedByTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -21182,6 +21513,29 @@ class $$KeyVerificationsTableFilterComposer
     final $$ContactsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get verifiedBy {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
       referencedTable: $db.contacts,
       getReferencedColumn: (t) => t.userId,
       builder:
@@ -21248,6 +21602,29 @@ class $$KeyVerificationsTableOrderingComposer
     );
     return composer;
   }
+
+  $$ContactsTableOrderingComposer get verifiedBy {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KeyVerificationsTableAnnotationComposer
@@ -21292,6 +21669,29 @@ class $$KeyVerificationsTableAnnotationComposer
     );
     return composer;
   }
+
+  $$ContactsTableAnnotationComposer get verifiedBy {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.verifiedBy,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KeyVerificationsTableTableManager
@@ -21307,7 +21707,7 @@ class $$KeyVerificationsTableTableManager
           $$KeyVerificationsTableUpdateCompanionBuilder,
           (KeyVerification, $$KeyVerificationsTableReferences),
           KeyVerification,
-          PrefetchHooks Function({bool contactId})
+          PrefetchHooks Function({bool contactId, bool verifiedBy})
         > {
   $$KeyVerificationsTableTableManager(
     _$TwonlyDB db,
@@ -21327,11 +21727,13 @@ class $$KeyVerificationsTableTableManager
                 Value<int> verificationId = const Value.absent(),
                 Value<int> contactId = const Value.absent(),
                 Value<VerificationType> type = const Value.absent(),
+                Value<int?> verifiedBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion(
                 verificationId: verificationId,
                 contactId: contactId,
                 type: type,
+                verifiedBy: verifiedBy,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -21339,11 +21741,13 @@ class $$KeyVerificationsTableTableManager
                 Value<int> verificationId = const Value.absent(),
                 required int contactId,
                 required VerificationType type,
+                Value<int?> verifiedBy = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => KeyVerificationsCompanion.insert(
                 verificationId: verificationId,
                 contactId: contactId,
                 type: type,
+                verifiedBy: verifiedBy,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -21354,7 +21758,7 @@ class $$KeyVerificationsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: ({contactId = false, verifiedBy = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -21389,6 +21793,21 @@ class $$KeyVerificationsTableTableManager
                               )
                               as T;
                     }
+                    if (verifiedBy) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.verifiedBy,
+                                referencedTable:
+                                    $$KeyVerificationsTableReferences
+                                        ._verifiedByTable(db),
+                                referencedColumn:
+                                    $$KeyVerificationsTableReferences
+                                        ._verifiedByTable(db)
+                                        .userId,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -21413,7 +21832,7 @@ typedef $$KeyVerificationsTableProcessedTableManager =
       $$KeyVerificationsTableUpdateCompanionBuilder,
       (KeyVerification, $$KeyVerificationsTableReferences),
       KeyVerification,
-      PrefetchHooks Function({bool contactId})
+      PrefetchHooks Function({bool contactId, bool verifiedBy})
     >;
 typedef $$VerificationTokensTableCreateCompanionBuilder =
     VerificationTokensCompanion Function({

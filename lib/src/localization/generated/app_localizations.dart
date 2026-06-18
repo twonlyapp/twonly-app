@@ -914,6 +914,12 @@ abstract class AppLocalizations {
   /// **'Verified by {username}'**
   String contactVerifiedBy(Object username);
 
+  /// No description provided for @contactSharedByUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by a verified contact (username not available)'**
+  String get contactSharedByUnknown;
+
   /// No description provided for @verificationTypeQrScanned.
   ///
   /// In en, this message translates to:
@@ -1922,6 +1928,12 @@ abstract class AppLocalizations {
   /// **'Already in Group'**
   String get alreadyInGroup;
 
+  /// No description provided for @contactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get contactNotVerified;
+
   /// No description provided for @removeContactFromGroupTitle.
   ///
   /// In en, this message translates to:
@@ -2567,7 +2579,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifiedPublicKey.
   ///
   /// In en, this message translates to:
-  /// **'The public key of {username} has been verified and is valid.'**
+  /// **'The identity of {username} has been successfully verified.'**
   String verifiedPublicKey(Object username);
 
   /// No description provided for @memoriesAYearAgo.
@@ -2717,7 +2729,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The checkmark gives you the certainty that you are messaging the right person. You can verify contacts at any time by scanning their QR code.'**
+  /// **'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
@@ -2767,6 +2779,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{username} has scanned your QR code and is now verified.'**
   String secretQrTokenVerifiedSnackbar(Object username);
+
+  /// No description provided for @askForFriendPromotionsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Help {username} find familiar faces on twonly by sharing mutual friends.'**
+  String askForFriendPromotionsPrompt(Object username);
 
   /// No description provided for @mutualGroupsTitle.
   ///

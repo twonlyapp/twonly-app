@@ -29,10 +29,11 @@ class VerificationExpansionTileComp extends StatefulWidget {
 
 class _VerificationExpansionTileCompState
     extends State<VerificationExpansionTileComp> {
-  List<KeyVerification> _keyVerifications = [];
+  List<(KeyVerification, Contact?)> _keyVerifications = [];
   List<(Contact, DateTime)> _transferredTrust = [];
 
-  late StreamSubscription<List<KeyVerification>> _streamKeyVerifications;
+  late StreamSubscription<List<(KeyVerification, Contact?)>>
+  _streamKeyVerifications;
   late StreamSubscription<List<(Contact, DateTime)>> _streamTransferredTrust;
 
   @override
@@ -63,7 +64,11 @@ class _VerificationExpansionTileCompState
     super.dispose();
   }
 
-  String _verificationTypeLabel(BuildContext context, VerificationType type) {
+  String _verificationTypeLabel(
+    BuildContext context,
+    VerificationType type,
+    Contact? verifier,
+  ) {
     return switch (type) {
       VerificationType.qrScanned => context.lang.verificationTypeQrScanned,
       VerificationType.secretQrToken =>
@@ -72,7 +77,9 @@ class _VerificationExpansionTileCompState
         ),
       VerificationType.link => context.lang.verificationTypeLink,
       VerificationType.contactSharedByVerified =>
-        context.lang.verificationTypeContactSharedByVerified,
+        verifier != null
+            ? context.lang.contactVerifiedBy(getContactDisplayName(verifier))
+            : context.lang.contactSharedByUnknown,
       VerificationType.migratedFromOldVersion =>
         context.lang.verificationTypeMigratedFromOldVersion,
     };
@@ -94,6 +101,17 @@ class _VerificationExpansionTileCompState
       );
     }
 
+    final sharedVerifierIds = _keyVerifications
+        .where((pair) =>
+            pair.$1.type == VerificationType.contactSharedByVerified &&
+            pair.$1.verifiedBy != null)
+        .map((pair) => pair.$1.verifiedBy!)
+        .toSet();
+
+    final filteredTransferredTrust = _transferredTrust
+        .where((tt) => !sharedVerifierIds.contains(tt.$1.userId))
+        .toList();
+
     return ExpansionTile(
       shape: const RoundedRectangleBorder(),
       backgroundColor: context.color.surfaceContainer,
@@ -108,65 +126,62 @@ class _VerificationExpansionTileCompState
       title: Text(context.lang.userVerifiedTitle),
       children: [
         ..._keyVerifications.map(
-          (kv) => ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.only(left: 16),
-            title: Text(_verificationTypeLabel(context, kv.type)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  DateFormat.yMd(
-                    Localizations.localeOf(context).toString(),
-                  ).format(kv.createdAt),
-                  style: TextStyle(
-                    color: context.color.onSurfaceVariant,
-                    fontSize: 13,
+          (pair) {
+            final kv = pair.$1;
+            final verifier = pair.$2;
+            return ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.only(left: 16),
+              title:
+                  kv.type == VerificationType.contactSharedByVerified &&
+                      verifier != null
+                  ? _VerifiedByContactRow(contact: verifier)
+                  : Text(_verificationTypeLabel(context, kv.type, verifier)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    DateFormat.yMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(kv.createdAt),
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  iconSize: 8,
-                  icon: FaIcon(
-                    FontAwesomeIcons.trash,
-                    size: 8,
-                    color: context.color.onSurfaceVariant,
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    iconSize: 8,
+                    icon: FaIcon(
+                      FontAwesomeIcons.trash,
+                      size: 8,
+                      color: context.color.onSurfaceVariant,
+                    ),
+                    onPressed: () async {
+                      final confirm = await showAlertDialog(
+                        context,
+                        context.lang.deleteVerificationTitle,
+                        context.lang.deleteVerificationBody,
+                      );
+                      if (confirm) {
+                        await twonlyDB.keyVerificationDao
+                            .deleteKeyVerificationById(
+                              kv.verificationId,
+                              widget.contact.userId,
+                            );
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    final confirm = await showAlertDialog(
-                      context,
-                      context.lang.deleteVerificationTitle,
-                      context.lang.deleteVerificationBody,
-                    );
-                    if (confirm) {
-                      await twonlyDB.keyVerificationDao
-                          .deleteKeyVerificationById(
-                            kv.verificationId,
-                            widget.contact.userId,
-                          );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
         ),
-        ..._transferredTrust.map(
+        ...filteredTransferredTrust.map(
           (tt) => ListTile(
             dense: true,
-            title: Row(
-              children: [
-                Text(
-                  context.lang.contactVerifiedBy(
-                    getContactDisplayName(tt.$1),
-                  ),
-                ),
-                VerificationBadgeComp(
-                  contact: tt.$1,
-                ),
-              ],
-            ),
+            title: _VerifiedByContactRow(contact: tt.$1),
             trailing: Text(
               DateFormat.yMd(
                 Localizations.localeOf(context).toString(),
@@ -179,6 +194,30 @@ class _VerificationExpansionTileCompState
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A reusable row that shows "Verified by [contact name]" with the contact's
+/// [VerificationBadgeComp] and navigates to their profile on tap.
+class _VerifiedByContactRow extends StatelessWidget {
+  const _VerifiedByContactRow({required this.contact});
+
+  final Contact contact;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(Routes.profileContact(contact.userId)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.lang.contactVerifiedBy(getContactDisplayName(contact)),
+          ),
+          VerificationBadgeComp(contact: contact),
+        ],
+      ),
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:twonly/src/services/api/mediafiles/download.api.dart'
     as received;
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/themes/colors.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
@@ -93,16 +94,8 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     if ((widget.mediaService.mediaFile.downloadState == DownloadState.ready) &&
         widget.message.openedAt == null) {
       if (!mounted) return;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return MediaViewerView(
-              widget.group,
-              initialMessage: widget.message,
-            );
-          },
-        ),
+      await context.navPush(
+        MediaViewerView(widget.group, initialMessage: widget.message),
       );
     } else if (widget.mediaService.mediaFile.downloadState ==
         DownloadState.pending) {

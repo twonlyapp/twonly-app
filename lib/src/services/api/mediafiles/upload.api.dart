@@ -227,46 +227,54 @@ Future<void> finishStartedPreprocessing() async {
           if (!service.originalPath.existsSync() &&
               !service.uploadRequestPath.existsSync()) {
             if (service.storedPath.existsSync()) {
-              // media files was just stored..
-              continue;
-            }
-            if (mediaFile.reuploadRequestedBy != null) {
-              Log.warn(
-                'Reupload requested for ${mediaFile.mediaId} but files are missing. Cancelling reupload but keeping record.',
-              );
-              await twonlyDB.mediaFilesDao.updateMedia(
-                mediaFile.mediaId,
-                const MediaFilesCompanion(
-                  uploadState: Value(UploadState.uploaded),
-                  reuploadRequestedBy: Value(null),
-                ),
-              );
-              continue;
-            }
-
-            final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
-              mediaFile.mediaId,
-            );
-
-            if (messages.isEmpty) {
-              Log.info(
-                'Deleted media files ${mediaFile.mediaId} as originalPath and uploadRequestPath both do not exists and no messages reference it.',
-              );
-              // the file does not exists anymore and no messages reference it.
-              await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+              // media file was stored, we can recover tempPath from storedPath and upload it.
+              try {
+                if (!service.tempPath.existsSync()) {
+                  service.storedPath.copySync(service.tempPath.path);
+                }
+              } catch (e) {
+                Log.error('Error recovering tempPath from storedPath: $e');
+                continue;
+              }
             } else {
-              Log.warn(
-                'Media files ${mediaFile.mediaId} missing but messages still reference it. Keeping record to avoid broken chat history.',
-              );
-              // Just mark as uploaded to stop preprocessing attempts
-              await twonlyDB.mediaFilesDao.updateMedia(
+              if (mediaFile.reuploadRequestedBy != null) {
+                Log.warn(
+                  'Reupload requested for ${mediaFile.mediaId} but files are missing. Cancelling reupload but keeping record.',
+                );
+                await twonlyDB.mediaFilesDao.updateMedia(
+                  mediaFile.mediaId,
+                  const MediaFilesCompanion(
+                    uploadState: Value(UploadState.uploaded),
+                    reuploadRequestedBy: Value(null),
+                  ),
+                );
+                continue;
+              }
+
+              final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
                 mediaFile.mediaId,
-                const MediaFilesCompanion(
-                  uploadState: Value(UploadState.uploaded),
-                ),
               );
+
+              if (messages.isEmpty) {
+                Log.info(
+                  'Deleted media files ${mediaFile.mediaId} as originalPath and uploadRequestPath both do not exists and no messages reference it.',
+                );
+                // the file does not exists anymore and no messages reference it.
+                await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+              } else {
+                Log.warn(
+                  'Media files ${mediaFile.mediaId} missing but messages still reference it. Keeping record to avoid broken chat history.',
+                );
+                // Just mark as uploaded to stop preprocessing attempts
+                await twonlyDB.mediaFilesDao.updateMedia(
+                  mediaFile.mediaId,
+                  const MediaFilesCompanion(
+                    uploadState: Value(UploadState.uploaded),
+                  ),
+                );
+              }
+              continue;
             }
-            continue;
           }
           Log.info(
             'Finishing started preprocessing of ${mediaFile.mediaId} in state ${mediaFile.uploadState}.',
@@ -434,14 +442,38 @@ Future<void> _startBackgroundMediaUploadInternal(
   if (mediaService.mediaFile.uploadState == UploadState.initialized ||
       mediaService.mediaFile.uploadState == UploadState.preprocessing) {
     Log.info(
-      'Hanlding media file ${mediaService.mediaFile.mediaId} in ${mediaService.mediaFile.uploadState}',
+      'Handling media file ${mediaService.mediaFile.mediaId} in ${mediaService.mediaFile.uploadState}',
     );
 
     await mediaService.setUploadState(UploadState.preprocessing);
 
     if (!mediaService.tempPath.existsSync()) {
-      await mediaService.compressMedia();
+      if (mediaService.storedPath.existsSync()) {
+        try {
+          mediaService.storedPath.copySync(mediaService.tempPath.path);
+        } catch (e) {
+          Log.error('Error copying storedPath to tempPath: $e');
+        }
+      } else {
+        await mediaService.compressMedia();
+      }
       if (!mediaService.tempPath.existsSync()) {
+        final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+          mediaService.mediaFile.mediaId,
+        );
+        if (messages.isEmpty) {
+          Log.warn(
+            'Media files ${mediaService.mediaFile.mediaId} has no original, temp, or stored path. Removing it from DB as files are not existent.',
+          );
+          await twonlyDB.mediaFilesDao.deleteMediaFile(
+            mediaService.mediaFile.mediaId,
+          );
+        } else {
+          Log.warn(
+            'Media files ${mediaService.mediaFile.mediaId} has no original, temp, or stored path, but messages still reference it. Marking as uploaded to stop retries.',
+          );
+          await mediaService.setUploadState(UploadState.uploaded);
+        }
         return;
       }
     }

@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -13,6 +13,7 @@ import 'package:twonly/src/localization/generated/app_localizations_de.dart';
 import 'package:twonly/src/localization/generated/app_localizations_en.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
+import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -70,69 +71,6 @@ Future<void> showPushNotificationFromServerMessages(
   }
 }
 
-Future<void> handlePushData(String pushDataB64) async {
-  try {
-    final pushData = EncryptedPushNotification.fromBuffer(
-      base64.decode(pushDataB64),
-    );
-
-    PushNotification? pushNotification;
-    PushUser? foundPushUser;
-
-    if (pushData.keyId == 0) {
-      final key = 'InsecureOnlyUsedForAddingContact'.codeUnits;
-      pushNotification = await tryDecryptMessage(key, pushData);
-    } else {
-      final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
-      for (final pushUser in pushUsers) {
-        for (final key in pushUser.pushKeys) {
-          if (key.id == pushData.keyId) {
-            pushNotification = await tryDecryptMessage(key.key, pushData);
-            if (pushNotification != null) {
-              foundPushUser = pushUser;
-              break;
-            }
-          }
-        }
-        // found correct key and user
-        if (foundPushUser != null) break;
-      }
-    }
-
-    if (pushNotification != null) {
-      if (pushNotification.kind == PushKind.TEST_NOTIFICATION) {
-        await customLocalPushNotification(
-          'Test notification',
-          'This is a test notification.',
-        );
-      } else if (foundPushUser != null) {
-        if (pushNotification.hasMessageId()) {
-          if (isUUIDNewer(
-            foundPushUser.lastMessageId,
-            pushNotification.messageId,
-          )) {
-            Log.info(
-              'Got a push notification for a message which was already opened.',
-            );
-            return;
-          }
-        }
-
-        await showLocalPushNotification(foundPushUser, pushNotification);
-      } else {
-        await showLocalPushNotificationWithoutUserId(pushNotification);
-      }
-    }
-  } catch (e) {
-    Log.error(e);
-    final lang = getLocalizations();
-    await customLocalPushNotification(
-      lang.notificationTitleUnknown,
-      lang.notificationBodyUnknown,
-    );
-  }
-}
-
 Future<PushNotification?> tryDecryptMessage(
   List<int> key,
   EncryptedPushNotification push,
@@ -170,6 +108,32 @@ Future<void> showLocalPushNotification(
   if (pushUser.blocked) {
     Log.info('Blocked a message from a blocked user!');
     return;
+  }
+
+  var targetGroupId = groupId;
+  if (targetGroupId == null) {
+    try {
+      if (userService.isUserCreated) {
+        targetGroupId = getUUIDforDirectChat(
+          userService.currentUser.userId,
+          pushUser.userId.toInt(),
+        );
+      }
+    } catch (_) {}
+  }
+
+  if (targetGroupId != null) {
+    try {
+      final currentUri = routerProvider.routerDelegate.currentConfiguration.uri;
+      if (currentUri.path.contains(targetGroupId)) {
+        Log.info(
+          'Suppressing local push notification because chat with group $targetGroupId is currently open.',
+        );
+        return;
+      }
+    } catch (e) {
+      Log.error('Error checking current route: $e');
+    }
   }
 
   title = pushUser.displayName;

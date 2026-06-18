@@ -19,6 +19,7 @@ import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/services/user.service.dart' show UserService;
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -176,7 +177,17 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
         Uint8List.fromList(message.encryptedContent),
       );
       if (cipherText == null) {
-        Log.error('Could not encrypt the message. Aborting and trying again.');
+        Log.error(
+          '[${receipt.receiptId}] Could not encrypt the message for user ${receipt.contactId}. Aborting and trying again.',
+        );
+        if (receipt.messageId != null) {
+          await twonlyDB.messagesDao.handleMessageAckByServer(
+            receipt.contactId,
+            receipt.messageId!,
+            clock.now(),
+          );
+        }
+        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         return null;
       }
       message.encryptedContent = cipherText.serialize();
@@ -434,7 +445,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
       contactId,
     );
-    if (openReceipts > 6) {
+    if (openReceipts > 10) {
       // this prevents that these types of messages are send in case the receiver is offline
       return null;
     }
@@ -443,12 +454,26 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     userService.currentUser.avatarCounter,
   );
 
-  if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
-    final contact = await twonlyDB.contactsDao.getContactById(contactId);
-    if (UserDiscoveryService.isContactAllowed(contact)) {
-      final version = await UserDiscoveryService.getCurrentVersion();
-      if (version != null) {
-        encryptedContent.senderUserDiscoveryVersion = version;
+  {
+    if (userService.currentUser.askForFriendPromotions) {
+      final contacts = await twonlyDB.contactsDao.getAllContacts();
+      final contactCount = contacts.where((c) => c.accepted).length;
+      if (contactCount > 5) {
+        await UserService.update((u) {
+          u.askForFriendPromotions = false;
+        });
+      } else {
+        encryptedContent.askForFriendPromotions = true;
+      }
+    }
+
+    if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
+      final contact = await twonlyDB.contactsDao.getContactById(contactId);
+      if (UserDiscoveryService.isContactAllowed(contact)) {
+        final version = await UserDiscoveryService.getCurrentVersion();
+        if (version != null) {
+          encryptedContent.senderUserDiscoveryVersion = version;
+        }
       }
     }
   }

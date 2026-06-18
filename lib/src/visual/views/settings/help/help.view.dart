@@ -96,6 +96,7 @@ class _HelpViewState extends State<HelpView> {
                 title: const Text('Open Source'),
                 onTap: () => launchUrl(
                   Uri.parse('https://github.com/twonlyapp/twonly-app'),
+                  mode: LaunchMode.externalApplication,
                 ),
                 trailing: const FaIcon(
                   FontAwesomeIcons.arrowUpRightFromSquare,
@@ -104,8 +105,10 @@ class _HelpViewState extends State<HelpView> {
               ),
               ListTile(
                 title: Text(context.lang.settingsHelpImprint),
-                onTap: () =>
-                    launchUrl(Uri.parse('https://twonly.eu/de/legal/')),
+                onTap: () => launchUrl(
+                  Uri.parse('https://twonly.eu/de/legal/'),
+                  mode: LaunchMode.externalApplication,
+                ),
                 trailing: const FaIcon(
                   FontAwesomeIcons.arrowUpRightFromSquare,
                   size: 15,
@@ -113,8 +116,10 @@ class _HelpViewState extends State<HelpView> {
               ),
               ListTile(
                 title: Text(context.lang.settingsHelpTerms),
-                onTap: () =>
-                    launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html')),
+                onTap: () => launchUrl(
+                  Uri.parse('https://twonly.eu/de/legal/agb.html'),
+                  mode: LaunchMode.externalApplication,
+                ),
                 trailing: const FaIcon(
                   FontAwesomeIcons.arrowUpRightFromSquare,
                   size: 15,
