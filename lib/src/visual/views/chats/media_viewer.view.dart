@@ -42,31 +42,6 @@ class MediaViewerView extends StatefulWidget {
   final Group group;
 
   final Message? initialMessage;
-
-  static Page<T> buildPage<T>({
-    required Group group,
-    LocalKey? key,
-    Message? initialMessage,
-  }) {
-    return CustomTransitionPage<T>(
-      key: key,
-      opaque: false,
-      barrierColor: Colors.transparent,
-      transitionDuration: const Duration(milliseconds: 250),
-      reverseTransitionDuration: const Duration(milliseconds: 250),
-      child: MediaViewerView(
-        group,
-        initialMessage: initialMessage,
-      ),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
-    );
-  }
-
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
 }
@@ -165,14 +140,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     final page = _verticalPager.page ?? 1.0;
     final linearFraction = min(1, max(0, page)).toDouble();
     _backdropOpacityNotifier.value = linearFraction * linearFraction;
-  }
-
-  void _onPageSnapped(int index) {
-    if (index == 0) {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    }
   }
 
   void _disposeVideoController() {
@@ -725,254 +692,227 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: ValueListenableBuilder<double>(
-        valueListenable: _backdropOpacityNotifier,
-        builder: (context, opacity, child) {
-          final baseColor = isDarkMode(context) ? Colors.black : Colors.white;
-          return ColoredBox(
-            color: baseColor.withValues(alpha: opacity),
-            child: child,
-          );
-        },
-        child: PageView(
-          controller: _verticalPager,
-          scrollDirection: Axis.vertical,
-          physics: _isZoomed
-              ? const NeverScrollableScrollPhysics()
-              : const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-          onPageChanged: _onPageSnapped,
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            const SizedBox.expand(),
-            SafeArea(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (_showDownloadingLoader) _loader(),
-                  if ((currentMedia != null || videoController != null) &&
-                      (canBeSeenUntil == null || progress.value >= 0))
-                    GestureDetector(
-                      onTap: onTap,
-                      onDoubleTap: (videoController == null) ? null : onTap,
-                      child: MediaViewSizingHelper(
-                        bottomNavigation: bottomNavigation(),
-                        requiredHeight: 55,
-                        child: Stack(
-                          children: [
-                            if (videoController != null)
-                              Positioned.fill(
-                                child: PhotoView.customChild(
-                                  initialScale:
-                                      PhotoViewComputedScale.contained,
-                                  minScale: PhotoViewComputedScale.contained,
-                                  backgroundDecoration: const BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  scaleStateChangedCallback: (state) {
-                                    final zoomed =
-                                        state != PhotoViewScaleState.initial;
-                                    if (_isZoomed != zoomed) {
-                                      setState(() {
-                                        _isZoomed = zoomed;
-                                      });
-                                    }
-                                  },
-                                  child: VideoPlayer(
-                                    videoController!,
-                                  ),
-                                ),
-                              )
-                            else if (currentMedia != null &&
-                                (currentMedia!.mediaFile.type ==
-                                        MediaType.image ||
-                                    currentMedia!.mediaFile.type ==
-                                        MediaType.gif))
-                              Positioned.fill(
-                                child: PhotoView(
-                                  imageProvider: FileImage(
-                                    currentMedia!.tempPath,
-                                  ),
-                                  loadingBuilder: (context, event) => _loader(),
-                                  backgroundDecoration: const BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  initialScale:
-                                      PhotoViewComputedScale.contained,
-                                  minScale: PhotoViewComputedScale.contained,
-                                  scaleStateChangedCallback: (state) {
-                                    final zoomed =
-                                        state != PhotoViewScaleState.initial;
-                                    if (_isZoomed != zoomed) {
-                                      setState(() {
-                                        _isZoomed = zoomed;
-                                      });
-                                    }
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.broken_image_outlined,
-                                        color: Colors.white38,
-                                        size: 64,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (displayTwonlyPresent)
-                    Positioned.fill(
-                      child: GestureDetector(
-                        onTap: () => loadCurrentMediaFile(showTwonly: true),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Lottie.asset(
-                                'assets/animations/present.lottie.lottie',
-                              ),
+            if (_showDownloadingLoader) _loader(),
+            if ((currentMedia != null || videoController != null) &&
+                (canBeSeenUntil == null || progress.value >= 0))
+              GestureDetector(
+                onTap: onTap,
+                onDoubleTap: (videoController == null) ? null : onTap,
+                child: MediaViewSizingHelper(
+                  bottomNavigation: bottomNavigation(),
+                  requiredHeight: 55,
+                  child: Stack(
+                    children: [
+                      if (videoController != null)
+                        Positioned.fill(
+                          child: PhotoView.customChild(
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
+                            backgroundDecoration: const BoxDecoration(
+                              color: Colors.transparent,
                             ),
-                            Container(
-                              padding: const EdgeInsets.only(bottom: 200),
-                              child: Text(
-                                context.lang.mediaViewerTwonlyTapToOpen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (currentMedia != null &&
-                      currentMedia?.mediaFile.downloadState !=
-                          DownloadState.ready)
-                    Positioned.fill(child: _loader()),
-                  if (canBeSeenUntil != null || progress.value >= 0)
-                    Positioned(
-                      right: 20,
-                      top: 27,
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: progress,
-                              builder: (context, value, child) {
-                                return CircularProgressIndicator(
-                                  value: value,
-                                  strokeWidth: 2,
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  Positioned(
-                    top: 10,
-                    left: showSendTextMessageInput ? 0 : null,
-                    right: showSendTextMessageInput ? 0 : 15,
-                    child: Text(
-                      _currentMediaSender,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: showSendTextMessageInput ? 24 : 14,
-                        fontWeight: FontWeight.bold,
-                        color: showSendTextMessageInput
-                            ? null
-                            : const Color.fromARGB(255, 126, 126, 126),
-                        shadows: const [
-                          Shadow(
-                            color: Color.fromARGB(122, 0, 0, 0),
-                            blurRadius: 5,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (showSendTextMessageInput)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        color: context.color.surface,
-                        padding: const EdgeInsets.only(
-                          bottom: 10,
-                          left: 20,
-                          right: 20,
-                          top: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: MyInput(
-                                dense: true,
-                                autofocus: true,
-                                controller: textMessageController,
-                                hintText: context.lang.chatListDetailInput,
-                                onChanged: (value) {
-                                  setState(() {});
-                                },
-                                onSubmitted: (value) {
-                                  setState(() {
-                                    showSendTextMessageInput = false;
-                                    showShortReactions = false;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            MyIconButton(
-                              icon: const FaIcon(
-                                FontAwesomeIcons.solidPaperPlane,
-                                size: 20,
-                              ),
-                              onPressed: () async {
-                                if (textMessageController.text.isNotEmpty) {
-                                  await insertAndSendTextMessage(
-                                    widget.group.groupId,
-                                    textMessageController.text,
-                                    currentMessage!.messageId,
-                                  );
-                                  textMessageController.clear();
-                                }
+                            scaleStateChangedCallback: (state) {
+                              final zoomed =
+                                  state != PhotoViewScaleState.initial;
+                              if (_isZoomed != zoomed) {
                                 setState(() {
-                                  showSendTextMessageInput = false;
-                                  showShortReactions = false;
+                                  _isZoomed = zoomed;
                                 });
-                              },
+                              }
+                            },
+                            child: VideoPlayer(
+                              videoController!,
                             ),
-                          ],
+                          ),
+                        )
+                      else if (currentMedia != null &&
+                          (currentMedia!.mediaFile.type == MediaType.image ||
+                              currentMedia!.mediaFile.type == MediaType.gif))
+                        Positioned.fill(
+                          child: PhotoView(
+                            imageProvider: FileImage(
+                              currentMedia!.tempPath,
+                            ),
+                            loadingBuilder: (context, event) => _loader(),
+                            backgroundDecoration: const BoxDecoration(
+                              color: Colors.transparent,
+                            ),
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
+                            scaleStateChangedCallback: (state) {
+                              final zoomed =
+                                  state != PhotoViewScaleState.initial;
+                              if (_isZoomed != zoomed) {
+                                setState(() {
+                                  _isZoomed = zoomed;
+                                });
+                              }
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: Colors.white38,
+                                  size: 64,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            if (displayTwonlyPresent)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () => loadCurrentMediaFile(showTwonly: true),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Lottie.asset(
+                          'assets/animations/present.lottie.lottie',
                         ),
                       ),
-                    ),
-                  if (currentMessage != null)
-                    AdditionalMessageContent(currentMessage!),
-                  if (currentMedia != null)
-                    ReactionButtons(
-                      show: showShortReactions,
-                      textInputFocused: showSendTextMessageInput,
-                      mediaViewerDistanceFromBottom:
-                          mediaViewerDistanceFromBottom,
-                      groupId: widget.group.groupId,
-                      messageId: currentMessage!.messageId,
-                      emojiKey: emojiKey,
-                      hide: () {
-                        setState(() {
-                          showShortReactions = false;
-                          showSendTextMessageInput = false;
-                        });
-                      },
-                    ),
-                  Positioned.fill(
-                    child: EmojiFloatWidget(key: emojiKey),
+                      Container(
+                        padding: const EdgeInsets.only(bottom: 200),
+                        child: Text(
+                          context.lang.mediaViewerTwonlyTapToOpen,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
+            if (currentMedia != null &&
+                currentMedia?.mediaFile.downloadState != DownloadState.ready)
+              Positioned.fill(child: _loader()),
+            if (canBeSeenUntil != null || progress.value >= 0)
+              Positioned(
+                right: 20,
+                top: 27,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: ValueListenableBuilder<double>(
+                        valueListenable: progress,
+                        builder: (context, value, child) {
+                          return CircularProgressIndicator(
+                            value: value,
+                            strokeWidth: 2,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Positioned(
+              top: 10,
+              left: showSendTextMessageInput ? 0 : null,
+              right: showSendTextMessageInput ? 0 : 15,
+              child: Text(
+                _currentMediaSender,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: showSendTextMessageInput ? 24 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: showSendTextMessageInput
+                      ? null
+                      : const Color.fromARGB(255, 126, 126, 126),
+                  shadows: const [
+                    Shadow(
+                      color: Color.fromARGB(122, 0, 0, 0),
+                      blurRadius: 5,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (showSendTextMessageInput)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: context.color.surface,
+                  padding: const EdgeInsets.only(
+                    bottom: 10,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: MyInput(
+                          dense: true,
+                          autofocus: true,
+                          controller: textMessageController,
+                          hintText: context.lang.chatListDetailInput,
+                          onChanged: (value) {
+                            setState(() {});
+                          },
+                          onSubmitted: (value) {
+                            setState(() {
+                              showSendTextMessageInput = false;
+                              showShortReactions = false;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      MyIconButton(
+                        icon: const FaIcon(
+                          FontAwesomeIcons.solidPaperPlane,
+                          size: 20,
+                        ),
+                        onPressed: () async {
+                          if (textMessageController.text.isNotEmpty) {
+                            unawaited(
+                              insertAndSendTextMessage(
+                                widget.group.groupId,
+                                textMessageController.text,
+                                currentMessage!.messageId,
+                              ),
+                            );
+                            textMessageController.clear();
+                          }
+                          setState(() {
+                            showSendTextMessageInput = false;
+                            showShortReactions = false;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (currentMessage != null)
+              AdditionalMessageContent(currentMessage!),
+            if (currentMedia != null)
+              ReactionButtons(
+                show: showShortReactions,
+                textInputFocused: showSendTextMessageInput,
+                mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
+                groupId: widget.group.groupId,
+                messageId: currentMessage!.messageId,
+                emojiKey: emojiKey,
+                hide: () {
+                  setState(() {
+                    showShortReactions = false;
+                    showSendTextMessageInput = false;
+                  });
+                },
+              ),
+            Positioned.fill(
+              child: EmojiFloatWidget(key: emojiKey),
             ),
           ],
         ),

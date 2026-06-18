@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
@@ -10,8 +13,6 @@ import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/co
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/threshold_picker.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/trusted_friends_card.comp.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
-
-enum SecondFactorType { none, pin, email }
 
 class PasswordLessRecoverySetup extends StatefulWidget {
   const PasswordLessRecoverySetup({super.key});
@@ -30,6 +31,49 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
   int _threshold = 2;
 
   @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future<List<int>> _loadVerifiedContacts() async {
+    final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
+    final urs = await (twonlyDB.select(
+      twonlyDB.userDiscoveryUserRelations,
+    )..where((u) => u.publicKeyVerifiedTimestamp.isNotNull())).get();
+
+    return [
+      ...kvs.map((row) => row.contactId),
+      ...urs.map((row) => row.announcedUserId),
+    ];
+  }
+
+  Future<void> initAsync() async {
+    final contacts = await twonlyDB.contactsDao.getAllContacts();
+    if (!mounted) return;
+
+    final verified = await _loadVerifiedContacts();
+
+    contacts.sortBy((c) => c.mediaSendCounter);
+    final verifiedContacts = contacts
+        .where(
+          (c) =>
+              verified.contains(c.userId) &
+              c.accepted &
+              !c.blocked &
+              !c.accountDeleted &
+              !c.deletedByUser,
+        )
+        .toList();
+    setState(() {
+      _selectedContacts = verifiedContacts.sublist(
+        0,
+        min(8, verifiedContacts.length),
+      );
+    });
+  }
+
+  @override
   void dispose() {
     _pinController.dispose();
     _emailController.dispose();
@@ -41,10 +85,10 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
   int get _minThreshold => _secondFactor == SecondFactorType.none ? 4 : 2;
 
   int get _validThreshold => ThresholdPicker.clampThreshold(
-        value: _threshold,
-        minThreshold: _minThreshold,
-        contactCount: _selectedContacts.length,
-      );
+    value: _threshold,
+    minThreshold: _minThreshold,
+    contactCount: _selectedContacts.length,
+  );
 
   int get _minSelectedFriends => _validThreshold + 2;
 
@@ -55,9 +99,9 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
     return switch (_secondFactor) {
       SecondFactorType.none => true,
       SecondFactorType.pin => _pinController.text.length >= 4,
-      SecondFactorType.email =>
-        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-            .hasMatch(_emailController.text),
+      SecondFactorType.email => RegExp(
+        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+      ).hasMatch(_emailController.text),
     };
   }
 
@@ -105,11 +149,11 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
 
     final success =
         await PasswordlessRecoveryService.enablePasswordlessRecovery(
-      trustedFriendIds: _selectedContacts.map((c) => c.userId).toList(),
-      secondFactorType: _secondFactor.name,
-      secondFactorValue: secondFactorValue,
-      threshold: _validThreshold,
-    );
+          trustedFriendIds: _selectedContacts.map((c) => c.userId).toList(),
+          secondFactorType: _secondFactor,
+          secondFactorValue: secondFactorValue,
+          threshold: _validThreshold,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);

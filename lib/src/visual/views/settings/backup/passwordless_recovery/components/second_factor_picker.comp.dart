@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
-import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
 
 class _FactorOption {
   const _FactorOption({
@@ -62,7 +62,7 @@ class SecondFactorPicker extends StatelessWidget {
         const SizedBox(height: 8),
         _buildSegmentedControl(context),
         const SizedBox(height: 16),
-        _buildInputField(),
+        _buildInputField(context),
       ],
     );
   }
@@ -138,29 +138,52 @@ class SecondFactorPicker extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField() {
+  Widget _buildInputField(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child: switch (selected) {
-        SecondFactorType.none => const SizedBox.shrink(
-            key: ValueKey('none_input'),
-          ),
-        SecondFactorType.pin => MyInput(
-            key: const ValueKey('pin_input'),
-            controller: pinController,
-            hintText: 'Enter PIN',
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => onInputChanged(),
-          ),
-        SecondFactorType.email => MyInput(
-            key: const ValueKey('email_input'),
-            controller: emailController,
-            hintText: 'Enter recovery email address',
-            keyboardType: TextInputType.emailAddress,
-            onChanged: (_) => onInputChanged(),
-          ),
-      },
+      child: Column(
+        children: switch (selected) {
+          SecondFactorType.none => [
+            const Text(
+              'Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+          SecondFactorType.pin => [
+            MyInput(
+              key: const ValueKey('pin_input'),
+              controller: pinController,
+              hintText: 'Enter PIN',
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (_) => onInputChanged(),
+            ),
+          ],
+          SecondFactorType.email => [
+            MyInput(
+              key: const ValueKey('email_input'),
+              controller: emailController,
+              hintText: 'Enter recovery email address',
+              keyboardType: TextInputType.emailAddress,
+              onChanged: (_) => onInputChanged(),
+            ),
+            const SizedBox(height: 6),
+            RichText(
+              text: TextSpan(
+                children: formattedText(
+                  context,
+                  'Your email address is *never stored on the server* and is only sent to it in the event of a recovery.',
+                ),
+                style: TextStyle(
+                  color: context.color.onSurface,
+                  fontSize: 11,
+                ),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        },
+      ),
     );
   }
 }

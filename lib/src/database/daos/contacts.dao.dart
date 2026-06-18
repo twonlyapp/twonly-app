@@ -56,6 +56,18 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return (delete(contacts)..where((t) => t.userId.equals(userId))).go();
   }
 
+  Future<void> resetRecoveryDataForAllContacts() async {
+    await update(
+      contacts,
+    ).write(
+      const ContactsCompanion(
+        recoveryIsTrustedFriend: Value(false),
+        recoveryLastHeartbeat: Value(null),
+        recoverySecretShare: Value(null),
+      ),
+    );
+  }
+
   Future<void> updateContact(
     int userId,
     ContactsCompanion updatedValues,

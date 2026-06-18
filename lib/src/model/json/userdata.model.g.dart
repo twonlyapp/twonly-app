@@ -245,16 +245,20 @@ PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
 ) => PasswordLessRecovery(
   email: json['email'] as String?,
-  pinSeed: json['pin_seed'] as String?,
-  pinUnlockToken: json['pin_unlock_token'] as String?,
+  pinSeed: json['pinSeed'] as String?,
+  pinUnlockToken: json['pinUnlockToken'] as String?,
   threshold: (json['threshold'] as num?)?.toInt(),
+  lastHeartbeat: json['lastHeartbeat'] == null
+      ? null
+      : DateTime.parse(json['lastHeartbeat'] as String),
 );
 
 Map<String, dynamic> _$PasswordLessRecoveryToJson(
   PasswordLessRecovery instance,
 ) => <String, dynamic>{
   'email': instance.email,
-  'pin_seed': instance.pinSeed,
-  'pin_unlock_token': instance.pinUnlockToken,
+  'pinSeed': instance.pinSeed,
+  'pinUnlockToken': instance.pinUnlockToken,
   'threshold': instance.threshold,
+  'lastHeartbeat': instance.lastHeartbeat?.toIso8601String(),
 };

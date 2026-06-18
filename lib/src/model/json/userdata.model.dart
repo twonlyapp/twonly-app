@@ -213,6 +213,7 @@ class PasswordLessRecovery {
     this.pinSeed,
     this.pinUnlockToken,
     this.threshold,
+    this.lastHeartbeat,
   });
 
   factory PasswordLessRecovery.fromJson(Map<String, dynamic> json) =>
@@ -222,6 +223,7 @@ class PasswordLessRecovery {
   String? pinSeed;
   String? pinUnlockToken;
   int? threshold;
+  DateTime? lastHeartbeat;
 
   Map<String, dynamic> toJson() => _$PasswordLessRecoveryToJson(this);
 }

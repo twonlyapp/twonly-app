@@ -104,8 +104,8 @@ class _MyInputState extends State<MyInput> with SingleTickerProviderStateMixin {
         : Colors.black.withValues(alpha: 0.05);
 
     final inputBorderColor = isDark
-        ? Colors.white.withValues(alpha: 0.15)
-        : Colors.black.withValues(alpha: 0.15);
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.05);
 
     final inputHintColor = isDark
         ? Colors.white.withValues(alpha: 0.5)
@@ -162,7 +162,7 @@ class _MyInputState extends State<MyInput> with SingleTickerProviderStateMixin {
           autofocus: widget.autofocus,
           obscureText: widget.obscureText,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: widget.dense ? 16 : 18,
             fontWeight: FontWeight.w500,
             color: isDark ? Colors.white : Colors.black87,
           ),
@@ -171,40 +171,41 @@ class _MyInputState extends State<MyInput> with SingleTickerProviderStateMixin {
             hintText: widget.hintText,
             hintStyle: TextStyle(
               color: inputHintColor,
+              fontSize: widget.dense ? 16 : 18,
             ),
             filled: true,
             fillColor: inputFillColor,
             contentPadding: EdgeInsets.symmetric(
-              vertical: widget.dense ? 14 : 18,
-              horizontal: 24,
+              vertical: widget.dense ? 13 : 18,
+              horizontal: widget.dense ? 13 : 24,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
               borderSide: BorderSide(
                 color: inputBorderColor,
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
               borderSide: BorderSide(
                 color: inputBorderColor,
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
               borderSide: BorderSide(
                 color: isDark ? Colors.white : Colors.black87,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
               borderSide: const BorderSide(
                 color: Colors.redAccent,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(widget.dense ? 12 : 18),
               borderSide: const BorderSide(
                 color: Colors.redAccent,
                 width: 2,
