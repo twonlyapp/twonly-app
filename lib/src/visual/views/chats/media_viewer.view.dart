@@ -691,7 +691,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Stack(
           fit: StackFit.expand,

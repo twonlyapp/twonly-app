@@ -81,7 +81,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       layers.add(FilterLayerData(key: GlobalKey()));
     }
 
-    if (widget.previewLink != null && widget.previewLink!.shouldGeneratePreview) {
+    if (widget.previewLink != null &&
+        widget.previewLink!.shouldGeneratePreview) {
       layers.add(
         LinkPreviewLayerData(key: GlobalKey(), link: widget.previewLink!.url),
       );
@@ -724,7 +725,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       if (widget.sendToGroup != null) const SizedBox(width: 10),
                       if (widget.sendToGroup != null)
                         MyButton(
-                          variant: MyButtonVariant.secondaryDense,
+                          variant: MyButtonVariant.secondaryMiddle,
                           onPressed: pushShareImageView,
                           child: const FaIcon(
                             FontAwesomeIcons.userPlus,

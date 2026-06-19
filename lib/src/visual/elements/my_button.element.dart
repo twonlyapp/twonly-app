@@ -10,6 +10,7 @@ enum MyButtonVariant {
   primaryMiddle,
   primaryDense,
   secondaryDense,
+  secondaryMiddle,
   error,
 }
 
@@ -209,6 +210,25 @@ class _MyButtonState extends State<MyButton>
           elevation: 0,
           textStyle: const TextStyle(
             fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      case MyButtonVariant.secondaryMiddle:
+        buttonStyle = FilledButton.styleFrom(
+          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+          foregroundColor: isDark ? Colors.white : Colors.black87,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         );

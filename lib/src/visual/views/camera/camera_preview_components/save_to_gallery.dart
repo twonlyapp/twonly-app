@@ -36,7 +36,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
   Widget build(BuildContext context) {
     final isEnabled = !widget.isLoading && !_imageSaving;
     return MyButton(
-      variant: MyButtonVariant.secondaryDense,
+      variant: MyButtonVariant.secondaryMiddle,
       onPressed: isEnabled
           ? () async {
               setState(() {
