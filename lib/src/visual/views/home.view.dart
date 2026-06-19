@@ -7,6 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
@@ -102,8 +104,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
 
     if (initialPage == 1) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isViewActive()) {
+      Permission.camera.isGranted.then((hasPermission) {
+        if (hasPermission && mounted) {
           unawaited(_mainCameraController.selectCamera(0, true));
         }
       });
@@ -219,7 +221,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (_offsetRatio < 1 &&
+      if (AppState.hasCameraPermissions &&
+          _offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
           _isViewActive() &&
           _mainCameraController.cameraController == null &&
@@ -284,7 +287,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
     }
 
-    if (_mainCameraController.cameraController == null &&
+    if (AppState.hasCameraPermissions &&
+        _mainCameraController.cameraController == null &&
         !_mainCameraController.initCameraStarted &&
         _offsetRatio < 1 &&
         _isViewActive()) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
@@ -19,7 +20,11 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
     _mainCameraController.setState = () {
       if (mounted) setState(() {});
     };
-    unawaited(_mainCameraController.selectCamera(0, true));
+    Permission.camera.isGranted.then((hasPermission) {
+      if (hasPermission && mounted) {
+        unawaited(_mainCameraController.selectCamera(0, true));
+      }
+    });
   }
 
   @override
@@ -44,10 +49,12 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
               onTapDown: _mainCameraController.onTapDown,
             ),
           ),
-          CameraPreviewControllerView(
-            mainController: _mainCameraController,
-            hideControllers: true,
-            isVisible: true,
+          Positioned.fill(
+            child: CameraPreviewControllerView(
+              mainController: _mainCameraController,
+              hideControllers: true,
+              isVisible: true,
+            ),
           ),
         ],
       ),

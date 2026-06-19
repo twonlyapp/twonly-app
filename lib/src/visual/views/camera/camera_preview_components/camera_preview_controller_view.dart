@@ -108,6 +108,7 @@ class _CameraPreviewControllerViewState
             );
           } else {
             return PermissionHandlerView(
+              triggerPermissionRequest: widget.isVisible,
               onSuccess: () {
                 setState(() {
                   AppState.hasCameraPermissions = true;
