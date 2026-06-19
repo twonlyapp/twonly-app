@@ -73,7 +73,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
       setState(() {
         _activePageIdx = index;
+        _offsetFromOne = 1.0 - index;
+        _offsetRatio = _offsetFromOne.abs();
       });
+      if (index != 1) {
+        unawaited(_mainCameraController.closeCamera());
+      }
     });
 
     _selectNotificationSub = selectNotificationStream.stream.listen((
@@ -104,20 +109,26 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     unawaited(_initAsync());
 
+    void handleShareLink(Uri uri) {
+      routerProvider.go(Routes.home);
+      streamHomeViewPageIndex.add(1);
+      _mainCameraController.setSharedLinkForPreview(uri);
+    }
+
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
       if (!mounted) return;
       Log.info('Got link via app links: ${uri.scheme}');
       if (!await handleIntentUrl(context, uri)) {
         if (uri.scheme.startsWith('http')) {
-          _mainCameraController.setSharedLinkForPreview(uri);
+          handleShareLink(uri);
         }
       }
     });
 
     _intentStreamSub = initIntentStreams(
       context,
-      _mainCameraController.setSharedLinkForPreview,
+      handleShareLink,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -253,7 +264,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
     }
 
-    if (notification.depth == 0 && notification is ScrollUpdateNotification) {
+    if (notification.depth == 0) {
       setState(() {
         _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
         _offsetRatio = _offsetFromOne.abs();
