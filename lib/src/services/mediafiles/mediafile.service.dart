@@ -314,11 +314,15 @@ class MediaFileService {
       await tempPath.copy(storedPath.path);
       if (userService.currentUser.storeMediaFilesInGallery) {
         if (mediaFile.type == MediaType.video) {
-          await saveVideoToGallery(storedPath.path);
+          await saveVideoToGallery(
+            storedPath.path,
+            name: mediaFile.mediaId,
+          );
         } else {
           await saveImageToGallery(
             storedPath.readAsBytesSync(),
             createdAt: mediaFile.createdAt,
+            name: mediaFile.mediaId,
           );
         }
       }

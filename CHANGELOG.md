@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- Fix: Multiple UI issues
+- Fix: Camera initialization issue
+
 ## 0.3.2
 
 - Fix: Multiple smaller performance and UI issues

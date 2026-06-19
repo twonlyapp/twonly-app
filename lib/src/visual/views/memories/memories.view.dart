@@ -310,11 +310,18 @@ class MemoriesViewState extends State<MemoriesView> with AutomaticKeepAliveClien
             if (item != null) {
               final media = item.mediaService;
               if (media.mediaFile.type == MediaType.video) {
-                await saveVideoToGallery(media.storedPath.path);
+                await saveVideoToGallery(
+                  media.storedPath.path,
+                  name: media.mediaFile.mediaId,
+                );
               } else if (media.mediaFile.type == MediaType.image ||
                   media.mediaFile.type == MediaType.gif) {
                 final imageBytes = await media.storedPath.readAsBytes();
-                await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
+                await saveImageToGallery(
+                  imageBytes,
+                  createdAt: media.mediaFile.createdAt,
+                  name: media.mediaFile.mediaId,
+                );
               }
             }
             setProgress((i + 1) / selectedList.length);

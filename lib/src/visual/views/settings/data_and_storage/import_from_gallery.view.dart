@@ -13,6 +13,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/android_photo_picker.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart' show ShortCutsExtension, sha256File;
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -84,8 +85,8 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final hash = Uint8List.fromList(sha256.convert(bytes).bytes);
 
-        final exsits = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
-        if (exsits.isNotEmpty) {
+        final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
+        if (exists.isNotEmpty) {
           duplicated += 1;
           continue;
         }
@@ -345,8 +346,8 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final hash = Uint8List.fromList(await sha256File(file));
 
-        final exsits = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
-        if (exsits.isNotEmpty) {
+        final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
+        if (exists.isNotEmpty) {
           duplicated += 1;
           continue;
         }
@@ -363,14 +364,50 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           type = MediaType.image;
         }
 
-        final mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
-          MediaFilesCompanion(
-            type: Value(type),
-            createdAt: Value(createdAt),
-            storedFileHash: Value(hash),
-            stored: const Value(true),
-          ),
-        );
+        MediaFile? mediaFile;
+        var isRestored = false;
+
+        if (Platform.isIOS) {
+          try {
+            final assetName = await asset.titleAsync;
+            final dotIndex = assetName.lastIndexOf('.');
+            final baseName = dotIndex != -1 ? assetName.substring(0, dotIndex) : assetName;
+
+            final uuidRegex = RegExp(
+              r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+            );
+            if (uuidRegex.hasMatch(baseName)) {
+              final existing = await twonlyDB.mediaFilesDao.getMediaFileById(baseName);
+              if (existing != null) {
+                final mediaService = MediaFileService(existing);
+                if (!mediaService.storedPath.existsSync()) {
+                  await twonlyDB.mediaFilesDao.updateMedia(
+                    baseName,
+                    MediaFilesCompanion(
+                      storedFileHash: Value(hash),
+                      stored: const Value(true),
+                    ),
+                  );
+                  mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(baseName);
+                  isRestored = true;
+                }
+              }
+            }
+          } catch (e) {
+            Log.error('Error checking iOS asset UUID name: $e');
+          }
+        }
+
+        if (!isRestored) {
+          mediaFile = await twonlyDB.mediaFilesDao.insertOrUpdateMedia(
+            MediaFilesCompanion(
+              type: Value(type),
+              createdAt: Value(createdAt),
+              storedFileHash: Value(hash),
+              stored: const Value(true),
+            ),
+          );
+        }
 
         if (mediaFile != null) {
           final mediaService = MediaFileService(mediaFile);

@@ -11,6 +11,7 @@ import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
@@ -36,6 +37,7 @@ extension ShortCutsExtension on BuildContext {
 Future<String?> saveImageToGallery(
   Uint8List imageBytes, {
   DateTime? createdAt,
+  String? name,
 }) async {
   var bytesToProcess = imageBytes;
 
@@ -75,7 +77,7 @@ Future<String?> saveImageToGallery(
     await Gal.requestAccess(toAlbum: true);
   }
   try {
-    await Gal.putImageBytes(jpgImages, album: 'twonly');
+    await Gal.putImageBytes(jpgImages, album: 'twonly', name: name ?? 'image');
     return null;
   } on GalException catch (e) {
     Log.error(e);
@@ -83,17 +85,45 @@ Future<String?> saveImageToGallery(
   }
 }
 
-Future<String?> saveVideoToGallery(String videoPath) async {
+Future<String?> saveVideoToGallery(
+  String videoPath, {
+  String? name,
+}) async {
   final hasAccess = await Gal.hasAccess(toAlbum: true);
   if (!hasAccess) {
     await Gal.requestAccess(toAlbum: true);
   }
+  
+  var pathToSave = videoPath;
+  File? tempFile;
+  
   try {
-    await Gal.putVideo(videoPath, album: 'twonly');
+    if (name != null) {
+      final file = File(videoPath);
+      final extension = file.path.split('.').last;
+      final tempDir = Directory.systemTemp;
+      tempFile = File(join(tempDir.path, '$name.$extension'));
+      if (tempFile.existsSync()) {
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
+      }
+      file.copySync(tempFile.path);
+      pathToSave = tempFile.path;
+    }
+    await Gal.putVideo(pathToSave, album: 'twonly');
     return null;
   } on GalException catch (e) {
     Log.error(e);
     return e.type.message;
+  } finally {
+    if (tempFile != null && tempFile.existsSync()) {
+      try {
+        tempFile.deleteSync();
+      } catch (e) {
+        Log.error('Failed to delete temp video file: $e');
+      }
+    }
   }
 }
 

@@ -33,7 +33,7 @@ import 'package:twonly/src/utils/startup_guard.dart';
 
 final _initMutex = Mutex();
 
-/// This function is used to initialized the absolute minimum so it
+/// This function is used to initialize the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
 Future<bool> twonlyMinimumInitialization() async {
   Log.info('twonlyMinimumInitialization: called');
