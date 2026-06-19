@@ -662,6 +662,25 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
   }
 
+  void _sendTextMessage() {
+    if (textMessageController.text.isNotEmpty) {
+      unawaited(
+        insertAndSendTextMessage(
+          widget.group.groupId,
+          textMessageController.text,
+          currentMessage!.messageId,
+        ),
+      );
+      textMessageController.clear();
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      showSendTextMessageInput = false;
+      showShortReactions = false;
+      _lastTimeInputClosed = clock.now();
+    });
+  }
+
   void onScreenTapped() {
     if (_lastTimeInputClosed != null &&
         clock.now().difference(_lastTimeInputClosed!) <
@@ -774,30 +793,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (showSendTextMessageInput)
               MediaViewerMessageInput(
                 controller: textMessageController,
-                onSubmitted: (value) {
-                  setState(() {
-                    showSendTextMessageInput = false;
-                    showShortReactions = false;
-                    _lastTimeInputClosed = clock.now();
-                  });
-                },
-                onSendPressed: () {
-                  if (textMessageController.text.isNotEmpty) {
-                    unawaited(
-                      insertAndSendTextMessage(
-                        widget.group.groupId,
-                        textMessageController.text,
-                        currentMessage!.messageId,
-                      ),
-                    );
-                    textMessageController.clear();
-                  }
-                  setState(() {
-                    showSendTextMessageInput = false;
-                    showShortReactions = false;
-                    _lastTimeInputClosed = clock.now();
-                  });
-                },
+                onSubmitted: (value) => _sendTextMessage(),
+                onSendPressed: _sendTextMessage,
               ),
             if (currentMessage != null)
               AdditionalMessageContent(currentMessage!),

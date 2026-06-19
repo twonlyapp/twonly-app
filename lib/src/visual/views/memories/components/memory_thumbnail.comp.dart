@@ -4,6 +4,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_transition_painter.dart';
+
 class MemoriesThumbnailComp extends StatefulWidget {
   const MemoriesThumbnailComp({
     required this.galleryItem,
@@ -28,14 +29,7 @@ class MemoriesThumbnailComp extends StatefulWidget {
   State<MemoriesThumbnailComp> createState() => _MemoriesThumbnailCompState();
 }
 
-final Set<String> _alreadyAnimatedIds = {};
-
-class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _scaleController;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<Offset> _slideAnimation;
-
+class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   ImageProvider? _imageProvider;
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
@@ -44,40 +38,6 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
   @override
   void initState() {
     super.initState();
-    _scaleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.94, end: 1).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutCubic),
-    );
-    _slideAnimation =
-        Tween<Offset>(
-          begin: const Offset(0, 0.125),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(parent: _scaleController, curve: Curves.easeOutCubic),
-        );
-
-    final mediaId = widget.galleryItem.mediaService.mediaFile.mediaId;
-    final shouldAnimate =
-        widget.index < 20 && !_alreadyAnimatedIds.contains(mediaId);
-
-    if (shouldAnimate) {
-      _alreadyAnimatedIds.add(mediaId);
-      final delayMs = widget.index * 10;
-      if (delayMs > 0) {
-        Future.delayed(Duration(milliseconds: delayMs), () {
-          if (mounted) {
-            _scaleController.forward();
-          }
-        });
-      } else {
-        _scaleController.forward();
-      }
-    } else {
-      _scaleController.value = 1.0;
-    }
 
     _listener = ImageStreamListener(
       (info, _) {
@@ -101,8 +61,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
 
   void _resolveImage() {
     final media = widget.galleryItem.mediaService;
-    final hasThumbnail = media.thumbnailPath.existsSync() && media.thumbnailPath.lengthSync() > 0;
-    final hasStored = media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
+    final hasThumbnail =
+        media.thumbnailPath.existsSync() &&
+        media.thumbnailPath.lengthSync() > 0;
+    final hasStored =
+        media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
     final isImageOrGif =
         media.mediaFile.type == MediaType.image ||
         media.mediaFile.type == MediaType.gif;
@@ -136,7 +99,6 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
 
   @override
   void dispose() {
-    _scaleController.dispose();
     _imageStream?.removeListener(_listener);
     super.dispose();
   }
@@ -169,80 +131,71 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp>
                 );
               }
             : null,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: FadeTransition(
-              opacity: _scaleController,
-              child: SelectableThumbnailComp(
-                isSelected: widget.isSelected,
-                selectionMode: widget.selectionMode,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (cachedInfo != null)
-                      RawImage(
-                        image: cachedInfo.image,
-                        fit: BoxFit.cover,
-                      )
-                    else if (_imageProvider != null)
-                      Image(
-                        image: _imageProvider!,
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
-                        errorBuilder: (context, error, stackTrace) {
-                          return ColoredBox(
-                            color: Colors.grey.shade200,
-                            child: const Center(
-                              child: FaIcon(
-                                FontAwesomeIcons.image,
-                                color: Colors.black26,
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      ColoredBox(
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                          child: FaIcon(
-                            FontAwesomeIcons.image,
-                            color: Colors.black26,
-                          ),
+        child: SelectableThumbnailComp(
+          isSelected: widget.isSelected,
+          selectionMode: widget.selectionMode,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (cachedInfo != null)
+                RawImage(
+                  image: cachedInfo.image,
+                  fit: BoxFit.cover,
+                )
+              else if (_imageProvider != null)
+                Image(
+                  image: _imageProvider!,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                  errorBuilder: (context, error, stackTrace) {
+                    return ColoredBox(
+                      color: Colors.grey.shade200,
+                      child: const Center(
+                        child: FaIcon(
+                          FontAwesomeIcons.image,
+                          color: Colors.black26,
                         ),
                       ),
-                    if (isVideo)
-                      const Positioned.fill(
-                        child: Center(
-                          child: FaIcon(
-                            FontAwesomeIcons.circlePlay,
-                            color: Colors.white,
-                            size: 32,
-                            shadows: [
-                              Shadow(color: Colors.black54, blurRadius: 6),
-                            ],
-                          ),
-                        ),
-                      ),
-                    if (media.mediaFile.isFavorite)
-                      const Positioned(
-                        bottom: 6,
-                        left: 6,
-                        child: Icon(
-                          Icons.favorite,
-                          color: Colors.redAccent,
-                          size: 16,
-                          shadows: [
-                            Shadow(color: Colors.black54, blurRadius: 4),
-                          ],
-                        ),
-                      ),
-                  ],
+                    );
+                  },
+                )
+              else
+                ColoredBox(
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.image,
+                      color: Colors.black26,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              if (isVideo)
+                const Positioned.fill(
+                  child: Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.circlePlay,
+                      color: Colors.white,
+                      size: 32,
+                      shadows: [
+                        Shadow(color: Colors.black54, blurRadius: 6),
+                      ],
+                    ),
+                  ),
+                ),
+              if (media.mediaFile.isFavorite)
+                const Positioned(
+                  bottom: 6,
+                  left: 6,
+                  child: Icon(
+                    Icons.favorite,
+                    color: Colors.redAccent,
+                    size: 16,
+                    shadows: [
+                      Shadow(color: Colors.black54, blurRadius: 4),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
       );

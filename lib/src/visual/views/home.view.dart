@@ -39,6 +39,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   double _offsetFromOne = 0;
   bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
+  bool _startPreloading = false;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -138,6 +139,13 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           widget.initialPage == 0) {
         streamHomeViewPageIndex.add(0);
       }
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            _startPreloading = true;
+          });
+        }
+      });
     });
   }
 
@@ -319,7 +327,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 scrollDirection: Axis.horizontal,
                 physics: const PageScrollPhysics(),
                 controller: _homeViewPageController,
-                scrollCacheExtent: const ScrollCacheExtent.viewport(1),
+                scrollCacheExtent: _startPreloading
+                    ? const ScrollCacheExtent.viewport(1)
+                    : null,
                 slivers: [
                   SliverFillViewport(
                     delegate: SliverChildListDelegate([
