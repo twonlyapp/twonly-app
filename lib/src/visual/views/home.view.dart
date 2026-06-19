@@ -204,7 +204,9 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       if (_offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
-          _isViewActive()) {
+          _isViewActive() &&
+          _mainCameraController.cameraController == null &&
+          !_mainCameraController.initCameraStarted) {
         unawaited(
           _mainCameraController.selectCamera(
             _mainCameraController.selectedCameraDetails.cameraId,
@@ -212,8 +214,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
         );
       }
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
+    } else if (state == AppLifecycleState.paused) {
       unawaited(_mainCameraController.closeCamera());
     }
   }
