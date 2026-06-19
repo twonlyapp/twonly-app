@@ -159,6 +159,7 @@ Future<void> showLocalPushNotification(
     ticker: 'You got a new message.',
     largeIcon: styleInformation,
     icon: 'ic_launcher_foreground',
+    groupKey: 'com.twonly.messages',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
@@ -190,43 +191,29 @@ Future<void> showLocalPushNotification(
     notificationDetails,
     payload: payload,
   );
-}
 
-Future<void> showLocalPushNotificationWithoutUserId(
-  PushNotification pushNotification,
-) async {
-  final lang = getLocalizations();
-
-  var title = lang.notificationTitleUnknown;
-  var body = lang.notificationBodyUnknown;
-
-  if (pushNotification.kind == PushKind.CONTACT_REQUEST) {
-    title = lang.you;
-    body = lang.notificationContactRequestUnknownUser;
+  if (Platform.isAndroid) {
+    final summaryAndroidDetails = AndroidNotificationDetails(
+      '0',
+      lang.notificationCategoryMessageTitle,
+      channelDescription: lang.notificationCategoryMessageDesc,
+      importance: Importance.max,
+      priority: Priority.max,
+      groupKey: 'com.twonly.messages',
+      setAsGroupSummary: true,
+      icon: 'ic_launcher_foreground',
+    );
+    final summaryNotificationDetails = NotificationDetails(
+      android: summaryAndroidDetails,
+    );
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      lang.notificationCategoryMessageTitle,
+      '',
+      summaryNotificationDetails,
+      payload: Routes.chats,
+    );
   }
-
-  final androidNotificationDetails = AndroidNotificationDetails(
-    '0',
-    lang.notificationCategoryMessageTitle,
-    channelDescription: lang.notificationCategoryMessageDesc,
-    importance: Importance.max,
-    priority: Priority.max,
-    ticker: 'You got a new message.',
-  );
-
-  const darwinNotificationDetails = DarwinNotificationDetails();
-  final notificationDetails = NotificationDetails(
-    android: androidNotificationDetails,
-    iOS: darwinNotificationDetails,
-  );
-
-  await flutterLocalNotificationsPlugin.show(
-    2,
-    title,
-    body,
-    notificationDetails,
-    payload: pushNotification.kind.name,
-  );
 }
 
 Future<String?> getAvatarIcon(int contactId) async {

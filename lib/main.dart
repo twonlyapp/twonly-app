@@ -74,6 +74,7 @@ void main() async {
 
   var storageError = await twonlyMinimumInitialization();
   await FcmNotificationService.initStartup();
+  await setupPushNotification();
 
   var userExists = false;
 
@@ -163,7 +164,6 @@ Future<void> postStartupTasks() async {
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
-  unawaited(setupPushNotification());
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
 

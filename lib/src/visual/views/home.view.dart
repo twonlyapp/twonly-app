@@ -156,11 +156,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             payload.startsWith(Routes.chats) &&
             payload != Routes.chats) {
           routerProvider.go(payload);
-          streamHomeViewPageIndex.add(0);
         }
-        if (payload == Routes.chats) {
-          streamHomeViewPageIndex.add(0);
-        }
+        streamHomeViewPageIndex.add(0);
       }
     }
 

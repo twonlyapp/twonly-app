@@ -197,17 +197,15 @@ class MainCameraController {
         if (!isVideoRecording) {
           await cameraController?.stopImageStream();
         }
-      } catch (e) {
-        Log.info(e);
-      }
-      if (cameraController == null) return;
-      selectedCameraDetails.scaleFactor = 1;
+        if (cameraController == null) return;
+        selectedCameraDetails.scaleFactor = 1;
 
-      await cameraController?.setZoomLevel(1);
-      if (cameraController == null) return;
-      await cameraController?.setDescription(AppEnvironment.cameras[cameraId]);
-      if (cameraController == null) return;
-      try {
+        await cameraController?.setZoomLevel(1);
+        if (cameraController == null) return;
+        await cameraController?.setDescription(
+          AppEnvironment.cameras[cameraId],
+        );
+        if (cameraController == null) return;
         if (!isVideoRecording) {
           await cameraController?.startImageStream(_processCameraImage);
         }
@@ -462,7 +460,10 @@ class MainCameraController {
           scannedUrl = link;
           if (sharedLinkForPreview == null) {
             timeSharedLinkWasSetWithQr = clock.now();
-            setSharedLinkForPreview(Uri.parse(scannedUrl!), generatePreview: false);
+            setSharedLinkForPreview(
+              Uri.parse(scannedUrl!),
+              generatePreview: false,
+            );
           }
         }
       }
