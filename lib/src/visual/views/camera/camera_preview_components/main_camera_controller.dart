@@ -134,14 +134,25 @@ class MainCameraController {
   }
 
   Future<void> selectCamera(int sCameraId, bool init) async {
+    if (initCameraStarted) return;
     initCameraStarted = true;
     final sessionId = ++_cameraSessionId;
-    await _pendingDisposal;
-    if (sessionId != _cameraSessionId) return;
 
-    if (AppEnvironment.cameras.isEmpty) {
-      AppEnvironment.cameras = await availableCameras();
+    // Start checking microphone permission concurrently
+    final micPermissionFuture = Permission.microphone.isGranted;
+
+    try {
+      await _pendingDisposal;
       if (sessionId != _cameraSessionId) return;
+
+      if (AppEnvironment.cameras.isEmpty) {
+        AppEnvironment.cameras = await availableCameras();
+        if (sessionId != _cameraSessionId) return;
+      }
+    } catch (e) {
+      Log.error('Error querying available cameras: $e');
+      initCameraStarted = false;
+      return;
     }
 
     var cameraId = sCameraId;
@@ -149,6 +160,7 @@ class MainCameraController {
       Log.warn(
         'Trying to select a non existing camera $cameraId >= ${AppEnvironment.cameras.length}',
       );
+      initCameraStarted = false;
       return;
     }
 
@@ -159,12 +171,21 @@ class MainCameraController {
           break;
         }
       }
+      if (cameraId >= AppEnvironment.cameras.length) {
+        cameraId = sCameraId;
+      }
     }
 
     selectedCameraDetails.isZoomAble = false;
 
-    if (cameraController == null) {
-      final hasMic = await Permission.microphone.isGranted;
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      final controllerToDispose = cameraController;
+      cameraController = null;
+      if (controllerToDispose != null) {
+        unawaited(controllerToDispose.dispose());
+      }
+
+      final hasMic = await micPermissionFuture;
       if (sessionId != _cameraSessionId) return;
 
       cameraController = CameraController(
@@ -178,58 +199,55 @@ class MainCameraController {
       try {
         _initializeFuture = cameraController?.initialize();
         await _initializeFuture;
-        if (cameraController == null) return;
-        await cameraController?.startImageStream(_processCameraImage);
-        if (cameraController == null) return;
-        await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
-        if (cameraController == null) return;
+        await cameraController!.startImageStream(_processCameraImage);
+        await cameraController!.setZoomLevel(selectedCameraDetails.scaleFactor);
         if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
-          await cameraController?.setVideoStabilizationMode(
+          await cameraController!.setVideoStabilizationMode(
             VideoStabilizationMode.level1,
           );
         }
       } catch (e) {
+        Log.error('Error initializing camera: $e');
+        final controllerToDispose = cameraController;
         cameraController = null;
+        if (controllerToDispose != null) {
+          unawaited(controllerToDispose.dispose());
+        }
+        initCameraStarted = false;
         return;
       }
     } else {
       try {
         if (!isVideoRecording) {
-          await cameraController?.stopImageStream();
+          await cameraController!.stopImageStream();
         }
-      } catch (e) {
-        Log.info(e);
-      }
-      if (cameraController == null) return;
-      selectedCameraDetails.scaleFactor = 1;
+        selectedCameraDetails.scaleFactor = 1;
 
-      await cameraController?.setZoomLevel(1);
-      if (cameraController == null) return;
-      await cameraController?.setDescription(AppEnvironment.cameras[cameraId]);
-      if (cameraController == null) return;
-      try {
+        await cameraController!.setZoomLevel(1);
+        await cameraController!.setDescription(
+          AppEnvironment.cameras[cameraId],
+        );
         if (!isVideoRecording) {
-          await cameraController?.startImageStream(_processCameraImage);
+          await cameraController!.startImageStream(_processCameraImage);
         }
       } catch (e) {
-        Log.info(e);
+        Log.error('Error switching camera description: $e');
+        initCameraStarted = false;
+        return;
       }
     }
 
     try {
-      if (cameraController == null) return;
-      await cameraController?.lockCaptureOrientation(
+      await cameraController!.lockCaptureOrientation(
         DeviceOrientation.portraitUp,
       );
-      if (cameraController == null) return;
-      await cameraController?.setFlashMode(
+      await cameraController!.setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
       );
-      if (cameraController == null) return;
-      selectedCameraDetails.maxAvailableZoom =
-          await cameraController?.getMaxZoomLevel() ?? 1;
-      selectedCameraDetails.minAvailableZoom =
-          await cameraController?.getMinZoomLevel() ?? 1;
+      selectedCameraDetails.maxAvailableZoom = await cameraController!
+          .getMaxZoomLevel();
+      selectedCameraDetails.minAvailableZoom = await cameraController!
+          .getMinZoomLevel();
       selectedCameraDetails
         ..isZoomAble =
             selectedCameraDetails.maxAvailableZoom !=
@@ -242,10 +260,16 @@ class MainCameraController {
       isSelectingFaceFilters = false;
       setFilter(FaceFilterType.none);
       zoomButtonKey = GlobalKey();
+      initCameraStarted = false;
       setState?.call();
     } catch (e) {
-      Log.error(e);
+      Log.error('Error post-initializing camera: $e');
+      final controllerToDispose = cameraController;
       cameraController = null;
+      if (controllerToDispose != null) {
+        unawaited(controllerToDispose.dispose());
+      }
+      initCameraStarted = false;
       return;
     }
   }
@@ -312,7 +336,6 @@ class MainCameraController {
     }
     final inputImage = _inputImageFromCameraImage(image);
     if (inputImage == null) return;
-    _processBarcode(inputImage);
     // check if front camera is selected
     if (cameraController?.description.lensDirection ==
         CameraLensDirection.front) {
@@ -462,7 +485,10 @@ class MainCameraController {
           scannedUrl = link;
           if (sharedLinkForPreview == null) {
             timeSharedLinkWasSetWithQr = clock.now();
-            setSharedLinkForPreview(Uri.parse(scannedUrl!), generatePreview: false);
+            setSharedLinkForPreview(
+              Uri.parse(scannedUrl!),
+              generatePreview: false,
+            );
           }
         }
       }

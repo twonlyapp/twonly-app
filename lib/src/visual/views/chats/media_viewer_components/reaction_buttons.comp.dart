@@ -37,7 +37,6 @@ class ReactionButtons extends StatefulWidget {
 }
 
 class _ReactionButtonsState extends State<ReactionButtons> {
-  int selectedShortReaction = -1;
   final GlobalKey _keyEmojiPicker = GlobalKey();
   bool _renderAnimations = false;
 
@@ -74,23 +73,40 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         ? selectedEmojis.skip(6).toList()
         : [];
 
+    final show = widget.show;
+
+    final targetBottom = widget.textInputFocused
+        ? 50.0
+        : widget.mediaViewerDistanceFromBottom;
+
+    final bottomPosition = show
+        ? targetBottom
+        : widget.mediaViewerDistanceFromBottom - 20;
+
+    final targetOpacity = show ? 1.0 : 0.0;
+    final isIgnoring = !show;
+
+    final positionDuration = show
+        ? const Duration(milliseconds: 200)
+        : Duration.zero;
+
+    final opacityDuration = show
+        ? const Duration(milliseconds: 150)
+        : Duration.zero;
+
     return AnimatedPositioned(
-      duration: const Duration(milliseconds: 200), // Animation duration
-      bottom: widget.show
-          ? (widget.textInputFocused
-                ? 50
-                : widget.mediaViewerDistanceFromBottom)
-          : widget.mediaViewerDistanceFromBottom - 20,
+      duration: positionDuration, // Animation duration
+      bottom: bottomPosition,
       left: 0,
       right: 0,
       curve: Curves.linearToEaseOut,
       child: IgnorePointer(
-        ignoring: !widget.show,
+        ignoring: isIgnoring,
         child: AnimatedOpacity(
-          opacity: widget.show ? 1.0 : 0.0, // Fade in/out
-          duration: Duration(milliseconds: widget.show ? 150 : 50),
+          opacity: targetOpacity, // Fade in/out
+          duration: opacityDuration,
           child: Container(
-            color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
+            color: Colors.transparent,
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: Column(
               children: [

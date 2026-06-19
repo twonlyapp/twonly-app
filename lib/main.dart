@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -32,7 +33,7 @@ import 'package:twonly/src/utils/startup_guard.dart';
 
 final _initMutex = Mutex();
 
-/// This function is used to initialized the absolute minimum so it
+/// This function is used to initialize the absolute minimum so it
 /// can also be used by the backend without the UI was loaded.
 Future<bool> twonlyMinimumInitialization() async {
   Log.info('twonlyMinimumInitialization: called');
@@ -68,12 +69,21 @@ Future<bool> twonlyMinimumInitialization() async {
 void main() async {
   final binding = SentryWidgetsFlutterBinding.ensureInitialized();
   await AppEnvironment.init();
+
+  // Preload available cameras in the background to speed up camera tab startup
+  unawaited(
+    availableCameras().then((cameras) {
+      AppEnvironment.cameras = cameras;
+    }),
+  );
+
   final stopwatch = Stopwatch()..start();
 
   unawaited(StartupGuard.markAppStartup());
 
   var storageError = await twonlyMinimumInitialization();
   await FcmNotificationService.initStartup();
+  await setupPushNotification();
 
   var userExists = false;
 
@@ -163,7 +173,6 @@ Future<void> postStartupTasks() async {
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
-  unawaited(setupPushNotification());
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
 

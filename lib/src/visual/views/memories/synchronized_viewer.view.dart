@@ -193,11 +193,18 @@ class _SynchronizedImageViewerScreenState
 
     try {
       if (item.mediaFile.type == MediaType.video) {
-        await saveVideoToGallery(item.storedPath.path);
+        await saveVideoToGallery(
+          item.storedPath.path,
+          name: item.mediaFile.mediaId,
+        );
       } else if (item.mediaFile.type == MediaType.image ||
           item.mediaFile.type == MediaType.gif) {
         final imageBytes = await item.storedPath.readAsBytes();
-        await saveImageToGallery(imageBytes, createdAt: item.mediaFile.createdAt);
+        await saveImageToGallery(
+          imageBytes,
+          createdAt: item.mediaFile.createdAt,
+          name: item.mediaFile.mediaId,
+        );
       }
       if (!mounted) return;
       showSnackbar(

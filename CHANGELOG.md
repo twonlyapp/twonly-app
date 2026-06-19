@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.3
+
+- Fix: Multiple UI issues
+- Fix: Camera initialization issue
+
+## 0.3.2
+
+- Fix: Multiple smaller performance and UI issues
+
 ## 0.3.1
 
 - New: Promotion of sharing contacts when contact is new to twonly

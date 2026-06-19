@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
@@ -38,6 +41,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   double _offsetFromOne = 0;
   bool _isBottomNavVisible = true;
   Timer? _disableCameraTimer;
+  bool _startPreloading = false;
 
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
@@ -73,7 +77,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
       setState(() {
         _activePageIdx = index;
+        _offsetFromOne = 1.0 - index;
+        _offsetRatio = _offsetFromOne.abs();
       });
+      if (index != 1) {
+        unawaited(_mainCameraController.closeCamera());
+      }
     });
 
     _selectNotificationSub = selectNotificationStream.stream.listen((
@@ -95,8 +104,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
 
     if (initialPage == 1) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_isViewActive()) {
+      Permission.camera.isGranted.then((hasPermission) {
+        if (hasPermission && mounted) {
           unawaited(_mainCameraController.selectCamera(0, true));
         }
       });
@@ -104,20 +113,26 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     unawaited(_initAsync());
 
+    void handleShareLink(Uri uri) {
+      routerProvider.go(Routes.home);
+      streamHomeViewPageIndex.add(1);
+      _mainCameraController.setSharedLinkForPreview(uri);
+    }
+
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
       if (!mounted) return;
       Log.info('Got link via app links: ${uri.scheme}');
       if (!await handleIntentUrl(context, uri)) {
         if (uri.scheme.startsWith('http')) {
-          _mainCameraController.setSharedLinkForPreview(uri);
+          handleShareLink(uri);
         }
       }
     });
 
     _intentStreamSub = initIntentStreams(
       context,
-      _mainCameraController.setSharedLinkForPreview,
+      handleShareLink,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -126,6 +141,13 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           widget.initialPage == 0) {
         streamHomeViewPageIndex.add(0);
       }
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            _startPreloading = true;
+          });
+        }
+      });
     });
   }
 
@@ -156,11 +178,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             payload.startsWith(Routes.chats) &&
             payload != Routes.chats) {
           routerProvider.go(payload);
-          streamHomeViewPageIndex.add(0);
         }
-        if (payload == Routes.chats) {
-          streamHomeViewPageIndex.add(0);
-        }
+        streamHomeViewPageIndex.add(0);
       }
     }
 
@@ -202,9 +221,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (_offsetRatio < 1 &&
+      if (AppState.hasCameraPermissions &&
+          _offsetRatio < 1 &&
           !_mainCameraController.isSharePreviewIsShown &&
-          _isViewActive()) {
+          _isViewActive() &&
+          _mainCameraController.cameraController == null &&
+          !_mainCameraController.initCameraStarted) {
         unawaited(
           _mainCameraController.selectCamera(
             _mainCameraController.selectedCameraDetails.cameraId,
@@ -212,8 +234,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
         );
       }
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
+    } else if (state == AppLifecycleState.paused) {
       unawaited(_mainCameraController.closeCamera());
     }
   }
@@ -255,14 +276,19 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       }
     }
 
-    if (notification.depth == 0 && notification is ScrollUpdateNotification) {
+    if (notification.depth == 0) {
       setState(() {
         _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
         _offsetRatio = _offsetFromOne.abs();
+        final pageIndex = _homeViewPageController.page?.round();
+        if (pageIndex != null && pageIndex != _activePageIdx) {
+          _activePageIdx = pageIndex;
+        }
       });
     }
 
-    if (_mainCameraController.cameraController == null &&
+    if (AppState.hasCameraPermissions &&
+        _mainCameraController.cameraController == null &&
         !_mainCameraController.initCameraStarted &&
         _offsetRatio < 1 &&
         _isViewActive()) {
@@ -301,17 +327,21 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           NotificationListener<ScrollNotification>(
             onNotification: _onPageView,
             child: Positioned.fill(
-              child: PageView(
+              child: CustomScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const PageScrollPhysics(),
                 controller: _homeViewPageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _activePageIdx = index;
-                  });
-                },
-                children: [
-                  const ChatListView(),
-                  Container(),
-                  const MemoriesView(),
+                scrollCacheExtent: _startPreloading
+                    ? const ScrollCacheExtent.viewport(1)
+                    : null,
+                slivers: [
+                  SliverFillViewport(
+                    delegate: SliverChildListDelegate([
+                      const ChatListView(),
+                      Container(),
+                      const MemoriesView(),
+                    ]),
+                  ),
                 ],
               ),
             ),

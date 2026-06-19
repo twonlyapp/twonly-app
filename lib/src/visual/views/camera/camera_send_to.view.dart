@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
@@ -21,7 +22,11 @@ class CameraSendToViewState extends State<CameraSendToView> {
     _mainCameraController.setState = () {
       if (mounted) setState(() {});
     };
-    unawaited(_mainCameraController.selectCamera(0, true));
+    Permission.camera.isGranted.then((hasPermission) {
+      if (hasPermission && mounted) {
+        unawaited(_mainCameraController.selectCamera(0, true));
+      }
+    });
   }
 
   @override
@@ -46,10 +51,12 @@ class CameraSendToViewState extends State<CameraSendToView> {
               onTapDown: _mainCameraController.onTapDown,
             ),
           ),
-          CameraPreviewControllerView(
-            mainController: _mainCameraController,
-            sendToGroup: widget.sendToGroup,
-            isVisible: true,
+          Positioned.fill(
+            child: CameraPreviewControllerView(
+              mainController: _mainCameraController,
+              sendToGroup: widget.sendToGroup,
+              isVisible: true,
+            ),
           ),
         ],
       ),

@@ -21,7 +21,7 @@ class MemoriesView extends StatefulWidget {
   State<MemoriesView> createState() => MemoriesViewState();
 }
 
-class MemoriesViewState extends State<MemoriesView> {
+class MemoriesViewState extends State<MemoriesView> with AutomaticKeepAliveClientMixin<MemoriesView> {
   late final MemoriesService _service;
   final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(null);
   final ScrollController _scrollController = ScrollController();
@@ -37,6 +37,9 @@ class MemoriesViewState extends State<MemoriesView> {
     _service = MemoriesService();
     _activeMediaIdNotifier.addListener(_onActiveMediaChanged);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -307,11 +310,18 @@ class MemoriesViewState extends State<MemoriesView> {
             if (item != null) {
               final media = item.mediaService;
               if (media.mediaFile.type == MediaType.video) {
-                await saveVideoToGallery(media.storedPath.path);
+                await saveVideoToGallery(
+                  media.storedPath.path,
+                  name: media.mediaFile.mediaId,
+                );
               } else if (media.mediaFile.type == MediaType.image ||
                   media.mediaFile.type == MediaType.gif) {
                 final imageBytes = await media.storedPath.readAsBytes();
-                await saveImageToGallery(imageBytes, createdAt: media.mediaFile.createdAt);
+                await saveImageToGallery(
+                  imageBytes,
+                  createdAt: media.mediaFile.createdAt,
+                  name: media.mediaFile.mediaId,
+                );
               }
             }
             setProgress((i + 1) / selectedList.length);
@@ -369,6 +379,7 @@ class MemoriesViewState extends State<MemoriesView> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,

@@ -1,9 +1,6 @@
 import 'dart:async';
 
-import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +10,6 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -32,7 +28,7 @@ class ChatListView extends StatefulWidget {
   State<ChatListView> createState() => _ChatListViewState();
 }
 
-class _ChatListViewState extends State<ChatListView> {
+class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClientMixin<ChatListView> {
   StreamSubscription<void>? _userSub;
   StreamSubscription<List<Group>>? _contactsSub;
   StreamSubscription<List<Contact>>? _contactsCountSub;
@@ -126,31 +122,10 @@ class _ChatListViewState extends State<ChatListView> {
         }
       }
     });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final changeLog = await rootBundle.loadString('CHANGELOG.md');
-      final changeLogHash = (await compute(
-        Sha256().hash,
-        changeLog.codeUnits,
-      )).bytes;
-      if (!userService.currentUser.hideChangeLog &&
-          userService.currentUser.lastChangeLogHash.toString() !=
-              changeLogHash.toString()) {
-        await UserService.update((u) {
-          u.lastChangeLogHash = changeLogHash;
-        });
-        if (!mounted) return;
-        // only show changelog to people who already have contacts
-        // this prevents that this is shown directly after the user registered
-        if (_groupsNotPinned.isNotEmpty) {
-          await context.push(
-            Routes.settingsHelpChangelog,
-            extra: changeLog,
-          );
-        }
-      }
-    });
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -165,6 +140,7 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final plan = context.watch<PurchasesProvider>().plan;
     return Scaffold(
       appBar: AppBar(
