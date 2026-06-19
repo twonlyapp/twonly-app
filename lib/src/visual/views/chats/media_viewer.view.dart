@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import 'package:mutex/mutex.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:screen_protector/screen_protector.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -29,12 +26,14 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
-import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/additional_message_content.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/media_content_renderer.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_message_input.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/twonly_present_overlay.comp.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaViewerView extends StatefulWidget {
@@ -64,6 +63,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   DateTime? canBeSeenUntil;
   final ValueNotifier<double> progress = ValueNotifier(0);
   bool showSendTextMessageInput = false;
+  double maxBottomInset = 0;
+  DateTime? _lastTimeInputClosed;
   final GlobalKey mediaWidgetKey = GlobalKey();
 
   bool imageSaved = false;
@@ -82,9 +83,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   final HashSet<String> _alreadyOpenedMediaIds = HashSet();
 
   bool _isTransitioning = false;
-  bool _isZoomed = false;
-  late PageController _verticalPager;
-  final ValueNotifier<double> _backdropOpacityNotifier = ValueNotifier(1);
 
   @override
   void initState() {
@@ -95,12 +93,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       allMediaFiles = [widget.initialMessage!];
     }
 
-    _verticalPager = PageController(initialPage: 1);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _verticalPager.addListener(_onVerticalScrollUpdated);
-    });
-
-    asyncLoadNextMedia(true);
+    listenForUnopenedMedia(true);
   }
 
   @override
@@ -127,19 +120,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
     textMessageController.dispose();
 
-    _verticalPager
-      ..removeListener(_onVerticalScrollUpdated)
-      ..dispose();
-    _backdropOpacityNotifier.dispose();
-
     super.dispose();
-  }
-
-  void _onVerticalScrollUpdated() {
-    if (!_verticalPager.hasClients) return;
-    final page = _verticalPager.page ?? 1.0;
-    final linearFraction = min(1, max(0, page)).toDouble();
-    _backdropOpacityNotifier.value = linearFraction * linearFraction;
   }
 
   void _disposeVideoController() {
@@ -160,7 +141,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         (ModalRoute.of(context)?.isCurrent ?? false);
   }
 
-  Future<void> asyncLoadNextMedia(bool firstRun) async {
+  Future<void> listenForUnopenedMedia(bool firstRun) async {
     _subscription = twonlyDB.messagesDao
         .watchMediaNotOpened(widget.group.groupId)
         .listen((messages) async {
@@ -174,7 +155,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               }
 
               if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
-                // The update of the current Media in case of a download is done in loadCurrentMediaFile
+                // The update of the current Media in case of a download is done in loadAndDownloadCurrentMedia
                 continue;
               }
 
@@ -207,13 +188,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (mounted) setState(() {});
             if (firstRun) {
               firstRun = false;
-              await loadCurrentMediaFile();
+              await loadAndDownloadCurrentMedia();
             }
           });
         });
   }
 
-  Future<void> nextMediaOrExit() async {
+  Future<void> advanceToNextMediaOrExit() async {
     if (_isTransitioning) return;
     _isTransitioning = true;
 
@@ -245,17 +226,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           }
         }
       } else {
-        await loadCurrentMediaFile();
+        await loadAndDownloadCurrentMedia();
       }
     } finally {
       if (mounted) _isTransitioning = false;
     }
   }
 
-  Future<void> loadCurrentMediaFile({bool showTwonly = false}) async {
+  Future<void> loadAndDownloadCurrentMedia({bool showTwonly = false}) async {
     if (!mounted || !context.mounted) return;
     if (allMediaFiles.isEmpty || allMediaFiles.first.mediaId == null) {
-      return nextMediaOrExit();
+      return advanceToNextMediaOrExit();
     }
 
     try {
@@ -293,7 +274,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         // Media file record no longer exists — skip to next or exit rather
         // than leaving the screen permanently black with no content/loader.
         await downloadStateListener?.cancel();
-        await nextMediaOrExit();
+        await advanceToNextMediaOrExit();
         return;
       }
       if (updated.downloadState != DownloadState.ready) {
@@ -308,7 +289,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           if (mediaFile == null) {
             // DB record gone — skip to next or exit.
             await downloadStateListener?.cancel();
-            await nextMediaOrExit();
+            await advanceToNextMediaOrExit();
             return;
           }
           await startDownloadMedia(mediaFile, true);
@@ -319,18 +300,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
       await downloadStateListener?.cancel();
       try {
-        await handleNextDownloadedMedia(showTwonly);
+        await initializeAndDisplayCurrentMedia(showTwonly);
       } catch (e, st) {
-        Log.error('handleNextDownloadedMedia failed: $e\n$st');
-        await nextMediaOrExit();
+        Log.error('initializeAndDisplayCurrentMedia failed: $e\n$st');
+        await advanceToNextMediaOrExit();
       }
       // start downloading all the other possible missing media files.
     });
   }
 
-  Future<void> handleNextDownloadedMedia(
-    bool showTwonly,
-  ) async {
+  Future<void> initializeAndDisplayCurrentMedia(bool showTwonly) async {
     if (allMediaFiles.isEmpty) return;
     setState(() {
       _showDownloadingLoader = false;
@@ -355,7 +334,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       if (!mounted) return;
 
       if (!isAuth) {
-        await nextMediaOrExit();
+        await advanceToNextMediaOrExit();
         if (mounted) {
           setState(() {
             displayTwonlyPresent = false;
@@ -372,25 +351,55 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       displayTwonlyPresent = false;
     });
 
-    if (!widget.group.isDirectChat) {
-      final sender = await twonlyDB.contactsDao.getContactById(
-        currentMessage!.senderId!,
-      );
+    await _updateSenderInfo();
+    if (!mounted) return;
 
-      if (!mounted) return;
+    await _notifyMessageOpened(currentMediaLocal);
+    if (!mounted) return;
 
-      if (sender != null) {
-        _currentMediaSender =
-            '${getContactDisplayName(sender)} (${widget.group.groupName})';
-      }
+    if (!currentMediaLocal.tempPath.existsSync()) {
+      Log.error('Temp media file not found...');
+      await handleMediaError(currentMediaLocal.mediaFile);
+      return advanceToNextMediaOrExit();
     }
 
+    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    unawaited(
+      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
+    );
+
+    if (currentMediaLocal.mediaFile.type == MediaType.video) {
+      await _setupVideoPlayer(currentMediaLocal);
+    } else {
+      _setupImageTimer(currentMediaLocal);
+    }
+
+    if (mounted) {
+      setState(() {
+        currentMedia = currentMediaLocal;
+      });
+    }
+  }
+
+  Future<void> _updateSenderInfo() async {
+    if (currentMessage == null || widget.group.isDirectChat) return;
+    final sender = await twonlyDB.contactsDao.getContactById(
+      currentMessage!.senderId!,
+    );
+    if (mounted && sender != null) {
+      _currentMediaSender =
+          '${getContactDisplayName(sender)} (${widget.group.groupName})';
+    }
+  }
+
+  Future<void> _notifyMessageOpened(MediaFileService mediaLocal) async {
+    if (currentMessage == null) return;
     var markAsOpenMessageIDs = [currentMessage!.messageId];
 
     if (userService.currentUser.automaticallyMarkEqualMediaFilesAsOpened &&
-        currentMediaLocal.mediaFile.storedFileHash != null) {
+        mediaLocal.mediaFile.storedFileHash != null) {
       final messageIds = await twonlyDB.mediaFilesDao.getMessageIdsByMediaHash(
-        currentMediaLocal.mediaFile.storedFileHash!,
+        mediaLocal.mediaFile.storedFileHash!,
         currentMessage!.senderId!,
       );
 
@@ -408,106 +417,82 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       currentMessage!.senderId!,
       markAsOpenMessageIDs,
     );
+  }
 
-    if (!mounted) return;
-
-    if (!currentMediaLocal.tempPath.existsSync()) {
-      Log.error('Temp media file not found...');
-      await handleMediaError(currentMediaLocal.mediaFile);
-      return nextMediaOrExit();
-    }
-
-    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
-    unawaited(
-      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
+  Future<void> _setupVideoPlayer(MediaFileService mediaLocal) async {
+    final controller = VideoPlayerController.file(
+      mediaLocal.tempPath,
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: mediaLocal.mediaFile.displayLimitInMilliseconds == null,
+      ),
     );
 
-    var timerRequired = false;
+    await controller.setLooping(
+      mediaLocal.mediaFile.displayLimitInMilliseconds == null,
+    );
 
-    if (currentMediaLocal.mediaFile.type == MediaType.video) {
-      final controller = VideoPlayerController.file(
-        currentMediaLocal.tempPath,
-        videoPlayerOptions: VideoPlayerOptions(
-          // only mix in case the video can be played multiple times,
-          // otherwise stop the background music in case the video contains audio
-          mixWithOthers:
-              currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
+
+    await controller
+        .initialize()
+        .then((_) {
+          if (!mounted || videoController != null) {
+            controller.dispose();
+            return;
+          }
+
+          void listener() {
+            if (!mounted) return;
+            final ctrl = videoController;
+            if (ctrl == null) return;
+
+            final duration = ctrl.value.duration.inSeconds;
+            if (duration > 0) {
+              progress.value = 1 - ctrl.value.position.inSeconds / duration;
+            }
+
+            if (mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
+              if (ctrl.value.position == ctrl.value.duration) {
+                advanceToNextMediaOrExit();
+              }
+            }
+          }
+
+          _videoListener = listener;
+          videoController = controller;
+          controller
+            ..addListener(listener)
+            ..play();
+        })
+        .catchError((Object err, StackTrace st) {
+          Log.error('Video player initialization error', err, st);
+          return null;
+        });
+  }
+
+  void _setupImageTimer(MediaFileService mediaLocal) {
+    if (mediaLocal.mediaFile.displayLimitInMilliseconds != null) {
+      canBeSeenUntil = clock.now().add(
+        Duration(
+          milliseconds: mediaLocal.mediaFile.displayLimitInMilliseconds!,
         ),
       );
-
-      await controller.setLooping(
-        currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
-      );
-
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
-
-      await controller
-          .initialize()
-          .then((_) {
-            if (!mounted || videoController != null) {
-              controller.dispose();
-              return;
-            }
-
-            void listener() {
-              if (!mounted) return;
-              final ctrl = videoController;
-              if (ctrl == null) return;
-
-              final duration = ctrl.value.duration.inSeconds;
-              if (duration > 0) {
-                progress.value = 1 - ctrl.value.position.inSeconds / duration;
-              }
-
-              if (currentMediaLocal.mediaFile.displayLimitInMilliseconds !=
-                  null) {
-                if (ctrl.value.position == ctrl.value.duration) {
-                  nextMediaOrExit();
-                }
-              }
-            }
-
-            _videoListener = listener;
-            videoController = controller;
-            controller
-              ..addListener(listener)
-              ..play();
-          })
-          // ignore: argument_type_not_assignable_to_error_handler, invalid_return_type_for_catch_error
-          .catchError(Log.error);
-
-      if (!mounted) return;
-    } else {
-      if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
-        canBeSeenUntil = clock.now().add(
-          Duration(
-            milliseconds:
-                currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
-          ),
-        );
-        timerRequired = true;
-      }
-    }
-    if (mounted) {
-      setState(() {
-        currentMedia = currentMediaLocal;
-      });
-      if (timerRequired) {
-        startTimer();
+      if (mounted) {
+        startProgressTimer();
       }
     }
   }
 
-  void startTimer() {
+  void startProgressTimer() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     if (canBeSeenUntil != null) {
       nextMediaTimer = Timer(canBeSeenUntil!.difference(clock.now()), () {
         if (context.mounted) {
-          nextMediaOrExit();
+          advanceToNextMediaOrExit();
         }
       });
       progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
@@ -653,7 +638,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             );
             if (mounted &&
                 currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
-              await nextMediaOrExit();
+              await advanceToNextMediaOrExit();
             } else {
               await videoController?.play();
             }
@@ -677,19 +662,43 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
   }
 
-  void onTap() {
+  void onScreenTapped() {
+    if (_lastTimeInputClosed != null &&
+        clock.now().difference(_lastTimeInputClosed!) <
+            const Duration(milliseconds: 300)) {
+      return;
+    }
     if (showSendTextMessageInput) {
       setState(() {
         showShortReactions = false;
         showSendTextMessageInput = false;
+        _lastTimeInputClosed = clock.now();
       });
       return;
     }
-    nextMediaOrExit();
+    advanceToNextMediaOrExit();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    if (bottomInset > maxBottomInset) {
+      maxBottomInset = bottomInset;
+    } else if (bottomInset == 0 && maxBottomInset > 0) {
+      maxBottomInset = 0;
+      if (showSendTextMessageInput) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              showSendTextMessageInput = false;
+              showShortReactions = false;
+              _lastTimeInputClosed = clock.now();
+            });
+          }
+        });
+      }
+    }
+
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -699,93 +708,21 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if ((currentMedia != null || videoController != null) &&
                 (canBeSeenUntil == null || progress.value >= 0))
               GestureDetector(
-                onTap: onTap,
-                onDoubleTap: (videoController == null) ? null : onTap,
+                onTap: onScreenTapped,
+                onDoubleTap: (videoController == null) ? null : onScreenTapped,
                 child: MediaViewSizingHelper(
                   bottomNavigation: bottomNavigation(),
                   requiredHeight: 55,
-                  child: Stack(
-                    children: [
-                      if (videoController != null)
-                        Positioned.fill(
-                          child: PhotoView.customChild(
-                            initialScale: PhotoViewComputedScale.contained,
-                            minScale: PhotoViewComputedScale.contained,
-                            backgroundDecoration: const BoxDecoration(
-                              color: Colors.transparent,
-                            ),
-                            scaleStateChangedCallback: (state) {
-                              final zoomed =
-                                  state != PhotoViewScaleState.initial;
-                              if (_isZoomed != zoomed) {
-                                setState(() {
-                                  _isZoomed = zoomed;
-                                });
-                              }
-                            },
-                            child: VideoPlayer(
-                              videoController!,
-                            ),
-                          ),
-                        )
-                      else if (currentMedia != null &&
-                          (currentMedia!.mediaFile.type == MediaType.image ||
-                              currentMedia!.mediaFile.type == MediaType.gif))
-                        Positioned.fill(
-                          child: PhotoView(
-                            imageProvider: FileImage(
-                              currentMedia!.tempPath,
-                            ),
-                            loadingBuilder: (context, event) => _loader(),
-                            backgroundDecoration: const BoxDecoration(
-                              color: Colors.transparent,
-                            ),
-                            initialScale: PhotoViewComputedScale.contained,
-                            minScale: PhotoViewComputedScale.contained,
-                            scaleStateChangedCallback: (state) {
-                              final zoomed =
-                                  state != PhotoViewScaleState.initial;
-                              if (_isZoomed != zoomed) {
-                                setState(() {
-                                  _isZoomed = zoomed;
-                                });
-                              }
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.broken_image_outlined,
-                                  color: Colors.white38,
-                                  size: 64,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
+                  child: MediaContentRenderer(
+                    currentMedia: currentMedia,
+                    videoController: videoController,
+                    loader: _loader(),
                   ),
                 ),
               ),
             if (displayTwonlyPresent)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: () => loadCurrentMediaFile(showTwonly: true),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Lottie.asset(
-                          'assets/animations/present.lottie.lottie',
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.only(bottom: 200),
-                        child: Text(
-                          context.lang.mediaViewerTwonlyTapToOpen,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              TwonlyPresentOverlay(
+                onTap: () => loadAndDownloadCurrentMedia(showTwonly: true),
               ),
             if (currentMedia != null &&
                 currentMedia?.mediaFile.downloadState != DownloadState.ready)
@@ -835,63 +772,32 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ),
             ),
             if (showSendTextMessageInput)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  color: context.color.surface,
-                  padding: const EdgeInsets.only(
-                    bottom: 10,
-                    left: 20,
-                    right: 20,
-                    top: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: MyInput(
-                          dense: true,
-                          autofocus: true,
-                          controller: textMessageController,
-                          hintText: context.lang.chatListDetailInput,
-                          onChanged: (value) {
-                            setState(() {});
-                          },
-                          onSubmitted: (value) {
-                            setState(() {
-                              showSendTextMessageInput = false;
-                              showShortReactions = false;
-                            });
-                          },
-                        ),
+              MediaViewerMessageInput(
+                controller: textMessageController,
+                onSubmitted: (value) {
+                  setState(() {
+                    showSendTextMessageInput = false;
+                    showShortReactions = false;
+                    _lastTimeInputClosed = clock.now();
+                  });
+                },
+                onSendPressed: () {
+                  if (textMessageController.text.isNotEmpty) {
+                    unawaited(
+                      insertAndSendTextMessage(
+                        widget.group.groupId,
+                        textMessageController.text,
+                        currentMessage!.messageId,
                       ),
-                      const SizedBox(width: 10),
-                      MyIconButton(
-                        icon: const FaIcon(
-                          FontAwesomeIcons.solidPaperPlane,
-                          size: 20,
-                        ),
-                        onPressed: () async {
-                          if (textMessageController.text.isNotEmpty) {
-                            unawaited(
-                              insertAndSendTextMessage(
-                                widget.group.groupId,
-                                textMessageController.text,
-                                currentMessage!.messageId,
-                              ),
-                            );
-                            textMessageController.clear();
-                          }
-                          setState(() {
-                            showSendTextMessageInput = false;
-                            showShortReactions = false;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                    );
+                    textMessageController.clear();
+                  }
+                  setState(() {
+                    showSendTextMessageInput = false;
+                    showShortReactions = false;
+                    _lastTimeInputClosed = clock.now();
+                  });
+                },
               ),
             if (currentMessage != null)
               AdditionalMessageContent(currentMessage!),
@@ -907,6 +813,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   setState(() {
                     showShortReactions = false;
                     showSendTextMessageInput = false;
+                    _lastTimeInputClosed = clock.now();
                   });
                 },
               ),
