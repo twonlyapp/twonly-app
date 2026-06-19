@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 List<Widget> parseMarkdown(BuildContext context, String markdown) {
@@ -105,20 +104,6 @@ class _ChangeLogViewState extends State<ChangeLogView> {
               child: ListView(
                 children: parseMarkdown(context, changeLog),
               ),
-            ),
-          ),
-          bottomNavigationBar: BottomAppBar(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(context.lang.openChangeLog),
-                Switch.adaptive(
-                  value: !userService.currentUser.hideChangeLog,
-                  onChanged: (_) => UserService.update(
-                    (u) => u.hideChangeLog = !u.hideChangeLog,
-                  ),
-                ),
-              ],
             ),
           ),
         );

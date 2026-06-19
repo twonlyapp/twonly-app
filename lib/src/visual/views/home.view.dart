@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -268,6 +269,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       setState(() {
         _offsetFromOne = 1.0 - (_homeViewPageController.page ?? 0);
         _offsetRatio = _offsetFromOne.abs();
+        final pageIndex = _homeViewPageController.page?.round();
+        if (pageIndex != null && pageIndex != _activePageIdx) {
+          _activePageIdx = pageIndex;
+        }
       });
     }
 
@@ -310,17 +315,19 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           NotificationListener<ScrollNotification>(
             onNotification: _onPageView,
             child: Positioned.fill(
-              child: PageView(
+              child: CustomScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const PageScrollPhysics(),
                 controller: _homeViewPageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _activePageIdx = index;
-                  });
-                },
-                children: [
-                  const ChatListView(),
-                  Container(),
-                  const MemoriesView(),
+                scrollCacheExtent: const ScrollCacheExtent.viewport(1),
+                slivers: [
+                  SliverFillViewport(
+                    delegate: SliverChildListDelegate([
+                      const ChatListView(),
+                      Container(),
+                      const MemoriesView(),
+                    ]),
+                  ),
                 ],
               ),
             ),

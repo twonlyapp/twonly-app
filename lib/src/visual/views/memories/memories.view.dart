@@ -21,7 +21,7 @@ class MemoriesView extends StatefulWidget {
   State<MemoriesView> createState() => MemoriesViewState();
 }
 
-class MemoriesViewState extends State<MemoriesView> {
+class MemoriesViewState extends State<MemoriesView> with AutomaticKeepAliveClientMixin<MemoriesView> {
   late final MemoriesService _service;
   final ValueNotifier<String?> _activeMediaIdNotifier = ValueNotifier(null);
   final ScrollController _scrollController = ScrollController();
@@ -37,6 +37,9 @@ class MemoriesViewState extends State<MemoriesView> {
     _service = MemoriesService();
     _activeMediaIdNotifier.addListener(_onActiveMediaChanged);
   }
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -369,6 +372,7 @@ class MemoriesViewState extends State<MemoriesView> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
