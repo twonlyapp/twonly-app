@@ -36,13 +36,13 @@ class _UserListItem extends State<GroupListItemComp> {
   Message? _currentMessage;
 
   List<Message> _messagesNotOpened = [];
-  late StreamSubscription<List<Message>> _messagesNotOpenedStream;
+  StreamSubscription<List<Message>>? _messagesNotOpenedStream;
 
   Message? _lastMessage;
   Reaction? _lastReaction;
-  late StreamSubscription<Message?> _lastMessageStream;
-  late StreamSubscription<Reaction?> _lastReactionStream;
-  late StreamSubscription<List<MediaFile>> _lastMediaFilesStream;
+  StreamSubscription<Message?>? _lastMessageStream;
+  StreamSubscription<Reaction?>? _lastReactionStream;
+  StreamSubscription<List<MediaFile>>? _lastMediaFilesStream;
 
   List<Message> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
@@ -57,22 +57,23 @@ class _UserListItem extends State<GroupListItemComp> {
 
   @override
   void dispose() {
-    _messagesNotOpenedStream.cancel();
-    _lastReactionStream.cancel();
-    _lastMessageStream.cancel();
-    _lastMediaFilesStream.cancel();
+    _messagesNotOpenedStream?.cancel();
+    _lastReactionStream?.cancel();
+    _lastMessageStream?.cancel();
+    _lastMediaFilesStream?.cancel();
     super.dispose();
   }
 
   Future<void> initStreams() async {
-    _lastMessageStream =
-        (await twonlyDB.messagesDao.watchLastMessage(
-          widget.group.groupId,
-        )).listen((update) {
-          protectUpdateState.protect(() async {
-            await updateState(update, _messagesNotOpened);
-          });
-        });
+    final lastMsgStream = await twonlyDB.messagesDao.watchLastMessage(
+      widget.group.groupId,
+    );
+    if (!mounted) return;
+    _lastMessageStream = lastMsgStream.listen((update) {
+      protectUpdateState.protect(() async {
+        await updateState(update, _messagesNotOpened);
+      });
+    });
 
     _lastReactionStream = twonlyDB.reactionsDao.watchLastReactions(widget.group.groupId).listen((update) {
       if (!mounted) return;
@@ -103,6 +104,7 @@ class _UserListItem extends State<GroupListItemComp> {
     final groupContacts = await twonlyDB.groupsDao.getGroupContact(
       widget.group.groupId,
     );
+    if (!mounted) return;
     if (groupContacts.length == 1) {
       _receiverDeletedAccount = groupContacts.first.accountDeleted;
     }

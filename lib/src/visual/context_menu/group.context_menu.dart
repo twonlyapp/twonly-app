@@ -20,6 +20,7 @@ class GroupContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
     return ContextMenu(
       items: [
         if (!group.archived)
@@ -27,9 +28,7 @@ class GroupContextMenu extends StatelessWidget {
             title: context.lang.contextMenuArchiveUser,
             onTap: () async {
               const update = GroupsCompanion(archived: Value(true));
-              if (context.mounted) {
-                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
-              }
+              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
             },
             icon: Icons.archive_outlined,
           ),
@@ -38,15 +37,13 @@ class GroupContextMenu extends StatelessWidget {
             title: context.lang.contextMenuUndoArchiveUser,
             onTap: () async {
               const update = GroupsCompanion(archived: Value(false));
-              if (context.mounted) {
-                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
-              }
+              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
             },
             icon: Icons.unarchive_outlined,
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
-          onTap: () => context.push(Routes.chatsMessages(group.groupId)),
+          onTap: () => navigator.context.push(Routes.chatsMessages(group.groupId)),
           icon: FontAwesomeIcons.comments,
         ),
         if (!group.archived)
@@ -56,9 +53,7 @@ class GroupContextMenu extends StatelessWidget {
                 : context.lang.contextMenuPin,
             onTap: () async {
               final update = GroupsCompanion(pinned: Value(!group.pinned));
-              if (context.mounted) {
-                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
-              }
+              await twonlyDB.groupsDao.updateGroup(group.groupId, update);
             },
             icon: group.pinned
                 ? FontAwesomeIcons.thumbtackSlash
@@ -69,9 +64,9 @@ class GroupContextMenu extends StatelessWidget {
           icon: FontAwesomeIcons.trashCan,
           onTap: () async {
             final ok = await showAlertDialog(
-              context,
-              context.lang.deleteTitle,
-              context.lang.groupContextMenuDeleteGroup,
+              navigator.context,
+              navigator.context.lang.deleteTitle,
+              navigator.context.lang.groupContextMenuDeleteGroup,
             );
             if (ok) {
               await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);

@@ -29,7 +29,7 @@ impl Database {
             .journal_mode(sqlx::sqlite::SqliteJournalMode::Delete)
             .foreign_keys(true)
             .read_only(read_only)
-            .busy_timeout(Duration::from_millis(5000))
+            .busy_timeout(Duration::from_secs(30))
             .pragma("synchronous", "FULL")
             .pragma("recursive_triggers", "ON")
             .log_slow_statements(tracing::log::LevelFilter::Warn, Duration::from_millis(500));
@@ -39,7 +39,7 @@ impl Database {
         }
 
         let pool = SqlitePoolOptions::new()
-            .acquire_timeout(Duration::from_secs(5))
+            .acquire_timeout(Duration::from_secs(30))
             .max_connections(10)
             .connect_with(connect_options)
             .await?;

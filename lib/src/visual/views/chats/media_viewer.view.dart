@@ -137,6 +137,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   final Mutex _messageUpdateLock = Mutex();
 
   bool _isViewActive() {
+    if (!mounted) return false;
     return !AppState.isAppInBackground &&
         (ModalRoute.of(context)?.isCurrent ?? false);
   }
@@ -358,7 +359,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (!mounted) return;
 
     if (!currentMediaLocal.tempPath.existsSync()) {
-      Log.error('Temp media file not found...');
+      Log.warn('Temp media file not found for media ID: ${currentMediaLocal.mediaFile.mediaId}');
       await handleMediaError(currentMediaLocal.mediaFile);
       return advanceToNextMediaOrExit();
     }
@@ -468,7 +469,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ..play();
         })
         .catchError((Object err, StackTrace st) {
-          Log.error('Video player initialization error', err, st);
+          Log.error('Video player initialization error', error: err, stackTrace: st);
           return null;
         });
   }
@@ -511,12 +512,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> onPressedSaveToGallery() async {
+    final media = currentMedia;
+    final msg = currentMessage;
+    if (media == null || msg == null) return;
+
     setState(() {
       imageSaving = true;
     });
-    await currentMedia!.storeMediaFile();
+    await media.storeMediaFile();
     await twonlyDB.messagesDao.updateMessageId(
-      currentMessage!.messageId,
+      msg.messageId,
       const MessagesCompanion(
         mediaStored: Value(true),
       ),
@@ -526,7 +531,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       pb.EncryptedContent(
         mediaUpdate: pb.EncryptedContent_MediaUpdate(
           type: pb.EncryptedContent_MediaUpdate_Type.STORED,
-          targetMessageId: currentMessage!.messageId,
+          targetMessageId: msg.messageId,
         ),
       ),
     );
@@ -553,11 +558,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (currentMedia != null &&
+            currentMessage != null &&
             !currentMedia!.mediaFile.requiresAuthentication &&
             currentMedia!.mediaFile.displayLimitInMilliseconds == null)
           MyIconButton(
             variant: MyIconButtonVariant.secondary,
-            onPressed: (currentMedia == null) ? null : onPressedSaveToGallery,
+            onPressed: (currentMedia == null || currentMessage == null) ? null : onPressedSaveToGallery,
             icon: imageSaving
                 ? const SizedBox(
                     width: 16,

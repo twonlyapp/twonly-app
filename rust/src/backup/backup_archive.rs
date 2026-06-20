@@ -57,7 +57,7 @@ impl BackupArchive {
 
             if is_db {
                 // To avoid write-lock conflicts with Dart (which has the live database open in write mode),
-                // we copy the database file first, then open the copy in write mode to perform the backup.
+                // we copy the database file first, then open the copy to perform the backup.
                 let temp_copy_path = backup_data_dir.join(format!("{}.temp_copy", file_name));
                 std::fs::copy(&file_path, &temp_copy_path)?;
 
@@ -72,13 +72,14 @@ impl BackupArchive {
                     .await?;
 
                 // Close database connection to release file lock before removing it
-                drop(db);
+                db.pool.close().await;
                 remove_file(&temp_copy_path)?;
 
                 // Perform integrity check of the new database file
                 let backup_db =
-                    Database::new(&backup_database_file, encryption_key.as_deref(), false).await?;
+                    Database::new(&backup_database_file, encryption_key.as_deref(), true).await?;
                 backup_db.check_integrity().await?;
+                backup_db.pool.close().await;
             } else {
                 let file_backup = backup_data_dir.join(file_name);
                 std::fs::copy(file_path, file_backup)?;

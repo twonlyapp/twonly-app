@@ -439,6 +439,10 @@ Future<void> _startBackgroundMediaUploadInternal(
   // Refresh the media file state inside the mutex
   await mediaService.updateFromDB();
 
+  if (mediaService.mediaFile.uploadState == UploadState.uploading) {
+    await _checkAndRecoverMissingUploadRequest(mediaService);
+  }
+
   if (mediaService.mediaFile.uploadState == UploadState.initialized ||
       mediaService.mediaFile.uploadState == UploadState.preprocessing) {
     Log.info(
@@ -672,7 +676,31 @@ Future<void> _createUploadRequest(MediaFileService media) async {
   await media.uploadRequestPath.writeAsBytes(uploadRequestBytes);
 }
 
+Future<bool> _checkAndRecoverMissingUploadRequest(
+  MediaFileService media, {
+  bool triggerBackgroundUpload = false,
+}) async {
+  if (!media.uploadRequestPath.existsSync()) {
+    Log.warn(
+      'UploadRequestPath for media ${media.mediaFile.mediaId} does not exist. Reverting to preprocessing.',
+    );
+    await media.setUploadState(UploadState.preprocessing);
+    if (triggerBackgroundUpload) {
+      unawaited(startBackgroundMediaUpload(media));
+    }
+    return true;
+  }
+  return false;
+}
+
 Future<void> _uploadUploadRequest(MediaFileService media) async {
+  if (await _checkAndRecoverMissingUploadRequest(
+    media,
+    triggerBackgroundUpload: true,
+  )) {
+    return;
+  }
+
   final currentMedia = await twonlyDB.mediaFilesDao.getMediaFileById(
     media.mediaFile.mediaId,
   );
@@ -722,6 +750,13 @@ Future<void> uploadFileFastOrEnqueue(
   UploadTask task,
   MediaFileService media,
 ) async {
+  if (await _checkAndRecoverMissingUploadRequest(
+    media,
+    triggerBackgroundUpload: true,
+  )) {
+    return;
+  }
+
   final requestMultipart = http.MultipartRequest(
     'POST',
     Uri.parse(task.url),

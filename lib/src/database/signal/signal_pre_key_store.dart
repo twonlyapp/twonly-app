@@ -42,7 +42,9 @@ class SignalPreKeyStore extends PreKeyStore {
     );
 
     try {
-      await twonlyDB.into(twonlyDB.signalPreKeyStores).insert(preKeyCompanion);
+      await twonlyDB
+          .into(twonlyDB.signalPreKeyStores)
+          .insert(preKeyCompanion, mode: InsertMode.insertOrReplace);
     } catch (e) {
       Log.error('$e');
     }

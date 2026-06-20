@@ -252,7 +252,7 @@ class MediaFileService {
 
   Future<void> compressMedia() async {
     if (!originalPath.existsSync()) {
-      Log.error('Could not compress as original media does not exists.');
+      Log.warn('Could not compress as original media does not exists.');
       return;
     }
 
@@ -296,7 +296,8 @@ class MediaFileService {
       (thumbnailPath.existsSync() && thumbnailPath.lengthSync() > 0) ||
       mediaFile.type == MediaType.audio ||
       ((mediaFile.type == MediaType.image || mediaFile.type == MediaType.gif) &&
-          storedPath.existsSync() && storedPath.lengthSync() > 0);
+          storedPath.existsSync() &&
+          storedPath.lengthSync() > 0);
 
   Future<void> storeMediaFile() async {
     Log.info('Storing media file ${mediaFile.mediaId}');
@@ -327,8 +328,8 @@ class MediaFileService {
         }
       }
     } else {
-      Log.error(
-        'Could not store image neither as ${tempPath.path} does not exists.',
+      Log.warn(
+        'Could not store image locally as ${tempPath.path} does not exist.',
       );
     }
     unawaited(createThumbnail());
@@ -469,7 +470,7 @@ class MediaFileService {
             format: CompressFormat.webp,
             quality: 90,
           );
-          
+
           if (webpBytes.isNotEmpty) {
             await storedPath.writeAsBytes(webpBytes);
           } else {
@@ -503,7 +504,7 @@ class MediaFileService {
       );
       await updateFromDB();
     } catch (e) {
-      Log.error(
+      Log.warn(
         'Error auto-cropping transparent borders for mediaId ${mediaFile.mediaId}: $e',
       );
       await twonlyDB.mediaFilesDao.updateMedia(

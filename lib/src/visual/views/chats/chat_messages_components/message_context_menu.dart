@@ -99,6 +99,7 @@ class MessageContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
     return ContextMenu(
       items: [
         if (!message.isDeletedFromSender)
@@ -107,7 +108,7 @@ class MessageContextMenu extends StatelessWidget {
             onTap: () async {
               final layer =
                   await showModalBottomSheet(
-                        context: context,
+                        context: navigator.context,
                         backgroundColor: Colors.black,
                         builder: (context) {
                           return const EmojiPickerBottom();
@@ -138,7 +139,7 @@ class MessageContextMenu extends StatelessWidget {
         if (mediaFileService?.canBeOpenedAgain ?? false)
           ContextMenuItem(
             title: context.lang.contextMenuViewAgain,
-            onTap: () => reopenMediaFile(context),
+            onTap: () => reopenMediaFile(navigator.context),
             icon: FontAwesomeIcons.clockRotateLeft,
           ),
         if (!message.isDeletedFromSender)
@@ -155,7 +156,7 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.edit,
             onTap: () async {
-              await editTextMessage(context, message);
+              await editTextMessage(navigator.context, message);
             },
             icon: FontAwesomeIcons.pencil,
           ),
@@ -172,13 +173,13 @@ class MessageContextMenu extends StatelessWidget {
           title: context.lang.delete,
           onTap: () async {
             final delete = await showAlertDialog(
-              context,
-              context.lang.deleteTitle,
+              navigator.context,
+              navigator.context.lang.deleteTitle,
               null,
               customOk:
                   (message.senderId == null && !message.isDeletedFromSender)
-                  ? context.lang.deleteOkBtnForAll
-                  : context.lang.deleteOkBtnForMe,
+                  ? navigator.context.lang.deleteOkBtnForAll
+                  : navigator.context.lang.deleteOkBtnForMe,
             );
             if (delete) {
               if (message.senderId == null && !message.isDeletedFromSender) {
@@ -209,8 +210,7 @@ class MessageContextMenu extends StatelessWidget {
           ContextMenuItem(
             title: context.lang.info,
             onTap: () async {
-              await Navigator.push(
-                context,
+              await navigator.push(
                 MaterialPageRoute(
                   builder: (context) {
                     return MessageInfoView(
