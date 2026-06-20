@@ -30,10 +30,6 @@ class _SetupBackupViewState extends State<SetupBackupView> {
   final TextEditingController _repeatedController = TextEditingController();
 
   Future<void> _updateBackupPassword() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     if (!await isSecurePassword(_passwordController.text)) {
       if (!mounted) return;
       final ignore = await showAlertDialog(
@@ -44,14 +40,12 @@ class _SetupBackupViewState extends State<SetupBackupView> {
         customOk: context.lang.backupInsecurePasswordCancel,
       );
       if (ignore) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
         return;
       }
     }
+    setState(() {
+      _isLoading = true;
+    });
 
     if (!mounted) return;
     final verified = await authenticateUser(

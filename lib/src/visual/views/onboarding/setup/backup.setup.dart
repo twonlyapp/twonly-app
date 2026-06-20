@@ -22,10 +22,6 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
   final TextEditingController _repeatedPasswordCtrl = TextEditingController();
 
   Future<bool> onPressedEnableTwonlySafe() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     if (!await isSecurePassword(_passwordCtrl.text)) {
       if (!mounted) return true;
       final ignore = await showAlertDialog(
@@ -37,12 +33,13 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
       );
       if (!mounted) return true;
       if (ignore) {
-        setState(() {
-          _isLoading = false;
-        });
         return true;
       }
     }
+
+    setState(() {
+      _isLoading = true;
+    });
 
     await Future.delayed(const Duration(milliseconds: 100));
     await BackupService.updateBackupPassword(_passwordCtrl.text);
