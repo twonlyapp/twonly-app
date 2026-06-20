@@ -841,7 +841,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupTwonlySaveNow => 'Jetzt speichern';
 
   @override
-  String get backupChangePassword => 'Password ändern';
+  String get backupChangePassword => 'Passwort ändern';
+
+  @override
+  String get backupChangePasswordAuthReason => 'Backup-Passwort ändern';
+
+  @override
+  String get backupChangePasswordAuthFailed =>
+      'Du kannst dein Passwort nur ändern, wenn du dich authentifiziert hast!';
 
   @override
   String get twonlySafeRecoverTitle => 'Backup wiederherstellen';

@@ -1604,6 +1604,18 @@ abstract class AppLocalizations {
   /// **'Change password'**
   String get backupChangePassword;
 
+  /// No description provided for @backupChangePasswordAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing backup password'**
+  String get backupChangePasswordAuthReason;
+
+  /// No description provided for @backupChangePasswordAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only change your password after you have authenticated!'**
+  String get backupChangePasswordAuthFailed;
+
   /// No description provided for @twonlySafeRecoverTitle.
   ///
   /// In en, this message translates to:

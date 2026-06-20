@@ -839,6 +839,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupChangePassword => 'Change password';
 
   @override
+  String get backupChangePasswordAuthReason => 'Changing backup password';
+
+  @override
+  String get backupChangePasswordAuthFailed =>
+      'You can only change your password after you have authenticated!';
+
+  @override
   String get twonlySafeRecoverTitle => 'Restore backup';
 
   @override
