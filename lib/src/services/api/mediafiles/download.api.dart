@@ -143,8 +143,12 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
       failed = false;
     } else {
       failed = true;
+      Log.warn(
+        '[$mediaId] Got invalid response status code: ${update.responseStatusCode}',
+      );
       Log.error(
         'Got invalid response status code: ${update.responseStatusCode}',
+        onlyIfSentryEnabled: true,
       );
     }
   } else {
@@ -227,7 +231,7 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
     try {
       await downloadFileFast(media, apiUrl, mediaService.encryptedPath);
     } catch (e) {
-      Log.error('Fast download failed: $e');
+      Log.warn('Fast download failed: $e');
       await FileDownloader().enqueue(task);
     }
   } catch (e) {
@@ -251,8 +255,12 @@ Future<void> downloadFileFast(
     return;
   } else {
     if (response.statusCode == 404 || response.statusCode == 403) {
-      Log.error(
+      Log.warn(
         'Got ${response.statusCode} from server for media ID ${media.mediaId}. Requesting upload again',
+      );
+      Log.error(
+        'Got ${response.statusCode} from server for media ID.',
+        onlyIfSentryEnabled: true,
       );
       // Message was deleted from the server. Requesting it again from the sender to upload it again...
       await requestMediaReupload(media.mediaId);
@@ -293,7 +301,7 @@ Future<void> handleEncryptedFile(String mediaId) async {
     action: () async {
       final mediaService = await MediaFileService.fromMediaId(mediaId);
       if (mediaService == null) {
-        Log.error('Media file not found in database.');
+        Log.warn('[$mediaId] Media file not found in database.');
         return;
       }
 

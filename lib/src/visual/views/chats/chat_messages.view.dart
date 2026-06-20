@@ -99,6 +99,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   // }
 
   bool _isViewActive() {
+    if (!mounted) return false;
     return !AppState.isAppInBackground &&
         (ModalRoute.of(context)?.isCurrent ?? false);
   }

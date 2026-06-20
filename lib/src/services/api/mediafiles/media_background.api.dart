@@ -80,8 +80,12 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
       await markUploadAsSuccessful(media);
       return;
     }
-    Log.error(
+    Log.warn(
       'Got HTTP error ${update.responseStatusCode} for $mediaId',
+    );
+    Log.error(
+      'Got HTTP error ${update.responseStatusCode} for media.',
+      onlyIfSentryEnabled: true,
     );
   }
 
@@ -118,8 +122,12 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
 
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    Log.error(
+    Log.warn(
       'Background upload failed for $mediaId with status ${update.status} and ${update.responseStatusCode}. ',
+    );
+    Log.error(
+      'Background upload failed with status ${update.status} and ${update.responseStatusCode}.',
+      onlyIfSentryEnabled: true,
     );
     final mediaService = MediaFileService(media);
 

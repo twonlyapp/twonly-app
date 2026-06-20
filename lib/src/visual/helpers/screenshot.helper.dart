@@ -28,7 +28,7 @@ class ScreenshotImageHelper {
       try {
         return imageBytes = await imageBytesFuture;
       } catch (e) {
-        Log.error('Could not resolve imageBytesFuture: $e');
+        Log.warn('Could not resolve imageBytesFuture: $e');
         return null;
       }
     }
@@ -36,14 +36,14 @@ class ScreenshotImageHelper {
       try {
         return imageBytes = await file!.readAsBytes();
       } catch (e) {
-        Log.error('Could not read bytes from file: $e');
+        Log.warn('Could not read bytes from file: $e');
         return null;
       }
     }
     if (image == null) return null;
     final img = await image!.toByteData(format: io.ImageByteFormat.png);
     if (img == null) {
-      Log.error('Got no image');
+      Log.warn('Got no image');
       return null;
     }
     return imageBytes = img.buffer.asUint8List();
@@ -94,7 +94,7 @@ class ScreenshotController {
         });
         return completer.future;
       }
-      Log.error(e);
+      Log.warn('Could not capture screenshot: $e');
     }
     return null;
   }

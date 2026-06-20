@@ -46,6 +46,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         additionalOwnerName = ownerId.toString();
       }
     }
+    if (!mounted) return;
     setState(() {});
     await apiService.forceIpaCheck();
   }
@@ -224,6 +225,7 @@ class _PlanCardState extends State<PlanCard> {
     });
     await context.read<PurchasesProvider>().buy(product);
     await widget.onPurchase!();
+    if (!mounted) return;
     setState(() {
       _isLoading = null;
     });

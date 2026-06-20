@@ -81,6 +81,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   }
 
   Future<void> _checkAndTriggerSuccess() async {
+    if (!mounted) return;
     if (_isSuccessTriggered) return;
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) {

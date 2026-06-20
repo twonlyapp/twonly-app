@@ -53,7 +53,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         ))
         .go();
   }
-  
+
   Future<void> deleteReceiptsByMessageId(String messageId) async {
     await (delete(receipts)..where(
           (t) => t.messageId.equals(messageId),
@@ -201,8 +201,8 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     );
     final updatedReceipt = await getReceiptById(newReceiptId);
     if (updatedReceipt == null) {
-      Log.error(
-        'Tried to change the receipt ID, but could not get the updated receipt...',
+      Log.warn(
+        '[$oldReceiptId] Tried to change the receipt ID to $newReceiptId, but could not get the updated receipt...',
       );
     }
     return updatedReceipt;
@@ -253,6 +253,9 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   Future<void> gotReceipt(String receiptId) async {
     await into(
       receivedReceipts,
-    ).insert(ReceivedReceiptsCompanion(receiptId: Value(receiptId)));
+    ).insert(
+      ReceivedReceiptsCompanion(receiptId: Value(receiptId)),
+      mode: InsertMode.insertOrIgnore,
+    );
   }
 }

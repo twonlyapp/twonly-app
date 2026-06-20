@@ -289,12 +289,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         mc.cameraController == null) {
       return;
     }
-    await mc.cameraController?.setZoomLevel(
-      newScale.clamp(
-        mc.selectedCameraDetails.minAvailableZoom,
-        mc.selectedCameraDetails.maxAvailableZoom,
-      ),
-    );
+    try {
+      if (mc.cameraController!.value.isInitialized) {
+        await mc.cameraController!.setZoomLevel(
+          newScale.clamp(
+            mc.selectedCameraDetails.minAvailableZoom,
+            mc.selectedCameraDetails.maxAvailableZoom,
+          ),
+        );
+      }
+    } on CameraException catch (e) {
+      Log.warn('Failed to set zoom level: $e');
+    }
     setState(() {
       mc.selectedCameraDetails.scaleFactor = newScale;
     });
@@ -491,9 +497,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   (_basePanY - (details.localPosition.dy as double)) / 30)
               .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
     });
-    await mc.cameraController!.setZoomLevel(
-      mc.selectedCameraDetails.scaleFactor,
-    );
+    try {
+      if (mc.cameraController != null &&
+          mc.cameraController!.value.isInitialized) {
+        await mc.cameraController!.setZoomLevel(
+          mc.selectedCameraDetails.scaleFactor,
+        );
+      }
+    } on CameraException catch (e) {
+      Log.warn('Failed to set zoom level: $e');
+    }
     if (!userService.currentUser.hasZoomed) {
       await UserService.update((u) => u.hasZoomed = true);
     }

@@ -17,7 +17,7 @@ Future<void> handleErrorMessage(
   String receiptId, {
   String? groupId,
 }) async {
-  Log.error('[$receiptId] Got error from $fromUserId: $error');
+  Log.warn('[$receiptId] Got error from $fromUserId: $error');
 
   switch (error.type) {
     case EncryptedContent_ErrorMessages_Type
@@ -38,14 +38,14 @@ Future<void> handleErrorMessage(
       break; // The other user initiated a new signal session, so ignore the error in this case, as the new session works...
     case EncryptedContent_ErrorMessages_Type.GROUP_NOT_FOUND_OR_NOT_A_MEMBER:
       if (groupId == null) {
-        Log.error(
+        Log.warn(
           '[$receiptId] GROUP_NOT_FOUND_OR_NOT_A_MEMBER error received, but groupId is null.',
         );
         return;
       }
       final group = await twonlyDB.groupsDao.getGroup(groupId);
       if (group == null) {
-        Log.error(
+        Log.warn(
           '[$receiptId] GROUP_NOT_FOUND_OR_NOT_A_MEMBER error received, but group $groupId is not found in database.',
         );
         return;

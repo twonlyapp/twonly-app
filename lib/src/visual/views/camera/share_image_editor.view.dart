@@ -499,7 +499,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       pixelRatio: pixelRatio,
     );
     if (image == null) {
-      Log.error('screenshotController did not return image bytes');
+      Log.warn('screenshotController did not return image bytes');
       return null;
     }
 
@@ -544,7 +544,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (image == null) return null;
       final bytes = await image.getBytes();
       if (bytes == null) {
-        Log.error('imageBytes are empty');
+        Log.warn('imageBytes are empty');
         return null;
       }
       if (media.type == MediaType.image || media.type == MediaType.gif) {

@@ -105,8 +105,9 @@ class BackupService {
               ))) {
         final backupId = await RustBackupIdentity.getBackupId();
         if (backupId == null) {
-          Log.error('No backup password was set by the user.');
+          Log.warn('No backup password was set by the user.');
           backup.identityState = LastBackupUploadState.failed;
+          await UserService.update((u) => u.isBackupEnabled = false);
         } else {
           Log.info('Performing a identity backup.');
           final encryptedBackup =
@@ -162,7 +163,7 @@ class BackupService {
           (backupDownloadToken, backupArchive) =
               await RustBackupArchive.createBackupArchive();
         } catch (e) {
-          Log.error(e);
+          Log.warn('Creating archive backup failed: $e');
           return;
         }
         Log.info(
@@ -337,7 +338,7 @@ class BackupService {
         },
       );
     } catch (e) {
-      Log.error('Error fetching backup: $e');
+      Log.warn('Error fetching backup: $e');
       return (null, RecoveryError.noInternet);
     }
 

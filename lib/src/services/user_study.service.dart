@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:twonly/locator.dart';
@@ -128,6 +130,12 @@ Future<void> handleUserStudyUpload() async {
       });
     }
   } catch (e) {
-    Log.error(e);
+    if (e is http.ClientException ||
+        e is SocketException ||
+        e is TimeoutException) {
+      Log.warn('Error uploading user study data: $e');
+    } else {
+      Log.error(e);
+    }
   }
 }

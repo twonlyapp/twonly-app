@@ -252,7 +252,11 @@ Future<void> _handleClient2ClientMessage(
     await twonlyDB.receiptsDao.gotReceipt(receiptId);
     Log.info('[$receiptId] Finished processing');
   } catch (e) {
-    Log.error('[$receiptId] Error marking message as received: $e');
+    Log.warn('[$receiptId] Error marking message as received: $e');
+    Log.error(
+      'Error marking message as received: $e',
+      onlyIfSentryEnabled: true,
+    );
   }
 }
 
@@ -426,7 +430,14 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
   }
 
   if (!content.hasGroupId()) {
-    Log.error('[$receiptId] Messages should have a groupId $fromUserId.');
+    final type = _getEncryptedContentType(content);
+    Log.warn(
+      '[$receiptId] Messages should have a groupId $fromUserId. Type: $type',
+    );
+    Log.error(
+      'Messages should have a groupId. Type: $type',
+      onlyIfSentryEnabled: true,
+    );
     return (null, null);
   }
 
@@ -453,7 +464,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       );
       if (contact == null || !contact.accepted || contact.deletedByUser) {
         await handleNewContactRequest(fromUserId);
-        Log.error(
+        Log.warn(
           '[$receiptId] User tries to send message to direct chat while the user does not exist!',
         );
         return (
@@ -478,7 +489,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       );
     } else {
       if (content.hasGroupJoin()) {
-        Log.error(
+        Log.warn(
           '[$receiptId] Got group join message, but group does not exist yet, retry later. As probably the GroupCreate was not yet received.',
         );
         // In case the group join was received before the GroupCreate the sender should send it later again.
@@ -489,7 +500,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
         );
       }
 
-      Log.error(
+      Log.warn(
         '[$receiptId] User $fromUserId tried to access group ${content.groupId}. Sending GROUP_NOT_FOUND_OR_NOT_A_MEMBER error.',
       );
       return (
@@ -597,4 +608,27 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
   }
 
   return (null, null);
+}
+
+String _getEncryptedContentType(EncryptedContent content) {
+  if (content.hasMessageUpdate()) return 'messageUpdate';
+  if (content.hasMedia()) return 'media';
+  if (content.hasMediaUpdate()) return 'mediaUpdate';
+  if (content.hasContactUpdate()) return 'contactUpdate';
+  if (content.hasContactRequest()) return 'contactRequest';
+  if (content.hasFlameSync()) return 'flameSync';
+  if (content.hasPushKeys()) return 'pushKeys';
+  if (content.hasReaction()) return 'reaction';
+  if (content.hasTextMessage()) return 'textMessage';
+  if (content.hasGroupCreate()) return 'groupCreate';
+  if (content.hasGroupJoin()) return 'groupJoin';
+  if (content.hasGroupUpdate()) return 'groupUpdate';
+  if (content.hasResendGroupPublicKey()) return 'resendGroupPublicKey';
+  if (content.hasErrorMessages()) return 'errorMessages';
+  if (content.hasAdditionalDataMessage()) return 'additionalDataMessage';
+  if (content.hasTypingIndicator()) return 'typingIndicator';
+  if (content.hasUserDiscoveryRequest()) return 'userDiscoveryRequest';
+  if (content.hasUserDiscoveryUpdate()) return 'userDiscoveryUpdate';
+  if (content.hasKeyVerificationProof()) return 'keyVerificationProof';
+  return 'unknown';
 }

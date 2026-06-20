@@ -684,11 +684,11 @@ class ApiService {
     final req = createClientToServerFromHandshake(handshake);
     final result = await sendRequestSync(req, authenticated: false);
     if (result.isError) {
-      Log.error('could not request proof of work params', result);
+      Log.error('could not request proof of work params', error: result);
       if (result.error == ErrorCode.RegistrationDisabled) {
         return (null, true);
       }
-      Log.error('could not request proof of work params', result);
+      Log.error('could not request proof of work params', error: result);
       return (null, false);
     }
     return (result.value.proofOfWork as Response_ProofOfWork, false);
