@@ -435,7 +435,6 @@ class SharedSecretData extends $pb.GeneratedMessage {
     $core.List<$core.int>? pinUnlockToken,
     $core.String? emailHint,
     $core.List<$core.int>? encryptedServerKeyNonce,
-    $core.List<$core.int>? encryptedServerKeyMac,
   }) {
     final result = create();
     if (recoveryData != null) result.recoveryData = recoveryData;
@@ -444,8 +443,6 @@ class SharedSecretData extends $pb.GeneratedMessage {
     if (emailHint != null) result.emailHint = emailHint;
     if (encryptedServerKeyNonce != null)
       result.encryptedServerKeyNonce = encryptedServerKeyNonce;
-    if (encryptedServerKeyMac != null)
-      result.encryptedServerKeyMac = encryptedServerKeyMac;
     return result;
   }
 
@@ -472,8 +469,6 @@ class SharedSecretData extends $pb.GeneratedMessage {
     ..aOS(4, _omitFieldNames ? '' : 'emailHint')
     ..a<$core.List<$core.int>>(
         5, _omitFieldNames ? '' : 'encryptedServerKeyNonce', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        6, _omitFieldNames ? '' : 'encryptedServerKeyMac', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -541,16 +536,6 @@ class SharedSecretData extends $pb.GeneratedMessage {
   $core.bool hasEncryptedServerKeyNonce() => $_has(4);
   @$pb.TagNumber(5)
   void clearEncryptedServerKeyNonce() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.List<$core.int> get encryptedServerKeyMac => $_getN(5);
-  @$pb.TagNumber(6)
-  set encryptedServerKeyMac($core.List<$core.int> value) =>
-      $_setBytes(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasEncryptedServerKeyMac() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearEncryptedServerKeyMac() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

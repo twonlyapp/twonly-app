@@ -225,11 +225,11 @@ class PasswordLessRecovery {
   // Stored not on the server, so the server is unable to link a email to a user until the actuall recovery or can
   // brute-force the pin
   List<int>? encryptedServerKeyNonce;
-  List<int>? encryptedServerKeyMac;
   // --->
 
   // Checking with the server that the server data is valid and not delted throug the pin protection for example.
   DateTime? lastServerHeartbeat;
+  DateTime? lastContactHeartbeat;
   List<int>? encryptedServerKey;
 
   Map<String, dynamic> toJson() => _$PasswordLessRecoveryToJson(this);

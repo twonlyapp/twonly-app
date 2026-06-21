@@ -151,22 +151,12 @@ const SharedSecretData$json = {
       '10': 'encryptedServerKeyNonce',
       '17': true
     },
-    {
-      '1': 'encrypted_server_key_mac',
-      '3': 6,
-      '4': 1,
-      '5': 12,
-      '9': 4,
-      '10': 'encryptedServerKeyMac',
-      '17': true
-    },
   ],
   '8': [
     {'1': '_pin_seed'},
     {'1': '_pin_unlock_token'},
     {'1': '_email_hint'},
     {'1': '_encrypted_server_key_nonce'},
-    {'1': '_encrypted_server_key_mac'},
   ],
 };
 
@@ -176,7 +166,5 @@ final $typed_data.Uint8List sharedSecretDataDescriptor = $convert.base64Decode(
     'IeCghwaW5fc2VlZBgCIAEoDEgAUgdwaW5TZWVkiAEBEi0KEHBpbl91bmxvY2tfdG9rZW4YAyAB'
     'KAxIAVIOcGluVW5sb2NrVG9rZW6IAQESIgoKZW1haWxfaGludBgEIAEoCUgCUgllbWFpbEhpbn'
     'SIAQESQAoaZW5jcnlwdGVkX3NlcnZlcl9rZXlfbm9uY2UYBSABKAxIA1IXZW5jcnlwdGVkU2Vy'
-    'dmVyS2V5Tm9uY2WIAQESPAoYZW5jcnlwdGVkX3NlcnZlcl9rZXlfbWFjGAYgASgMSARSFWVuY3'
-    'J5cHRlZFNlcnZlcktleU1hY4gBAUILCglfcGluX3NlZWRCEwoRX3Bpbl91bmxvY2tfdG9rZW5C'
-    'DQoLX2VtYWlsX2hpbnRCHQobX2VuY3J5cHRlZF9zZXJ2ZXJfa2V5X25vbmNlQhsKGV9lbmNyeX'
-    'B0ZWRfc2VydmVyX2tleV9tYWM=');
+    'dmVyS2V5Tm9uY2WIAQFCCwoJX3Bpbl9zZWVkQhMKEV9waW5fdW5sb2NrX3Rva2VuQg0KC19lbW'
+    'FpbF9oaW50Qh0KG19lbmNyeXB0ZWRfc2VydmVyX2tleV9ub25jZQ==');

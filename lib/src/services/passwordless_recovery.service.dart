@@ -4,10 +4,8 @@ import 'dart:convert' show utf8;
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' hide Hmac;
-import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart'
-    show FlutterChacha20;
 import 'package:cryptography_plus/cryptography_plus.dart'
-    show Hmac, Mac, SecretBox, SecretKey;
+    show Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/core/bridge/wrapper.dart';
@@ -61,7 +59,7 @@ class PasswordlessRecoveryService {
     await UserService.update((u) => u.passwordLessRecovery = null);
 
     final config = PasswordLessRecovery();
-    final chacha20 = FlutterChacha20.poly1305Aead();
+    final xchacha20 = Xchacha20.poly1305Aead();
 
     // 2. If enabled, handle the second factor and create serverKey
 
@@ -99,7 +97,10 @@ class PasswordlessRecoveryService {
 
         // Brute-force protection for the user's pin:
         //  - Server: Does not know the seed.
-        //  - Trusted friends: Can only check the result X times before the server deletes the key.
+        //  - Trusted friends:
+        //  Can only check the result X times before the server deletes the key. As they do not have
+        //  the mac and the cypher text they are unable to brute-force the pin localy. And the server only allows 10
+        //  tries.
         final pinProtectionKey = await Hmac.sha256().calculateMac(
           Uint8List.fromList(utf8.encode(secondFactorValue)),
           secretKey: SecretKey(config.pinSeed!),
@@ -118,21 +119,24 @@ class PasswordlessRecoveryService {
       // colaberate, they additional need the serverKey to decrypt the user's key.
       serverKey = getRandomUint8List(32);
 
-      final secretBox = await chacha20.encrypt(
+      final secretBox = await xchacha20.encrypt(
         serverKey,
         secretKey: secondFactorEncryptedServerKeyKey,
-        nonce: chacha20.newNonce(),
+        nonce: xchacha20.newNonce(),
       );
 
-      // This is send to the server and then deleted localy
-      encryptedServerKey = Uint8List.fromList(secretBox.cipherText);
+      // The server only gets the encrypted server key and the mac. Because the server does not know the nonce (192-bit
+      // because of XChaCha), he is unable to decrypt the server key without the help of the trusted friends. This
+      // ensures that the server never learns the users orginal pin, as he is missing the pin_seed and also unable to
+      // brute-force the email of the user as he does not have the nonce.
+      encryptedServerKey = Uint8List.fromList([
+        ...secretBox.cipherText,
+        ...secretBox.mac.bytes,
+      ]);
 
-      // Because the server does not know the nonce and the mac, he is unable to link a email to the user and also
-      // unable to brute-force the pin.
       config
         ..encryptedServerKeyNonce = secretBox.nonce
-        ..encryptedServerKey = encryptedServerKey
-        ..encryptedServerKeyMac = secretBox.mac.bytes;
+        ..encryptedServerKey = encryptedServerKey;
     }
 
     // 3. Using shamir's secret to generate the shares for the users.
@@ -147,10 +151,10 @@ class PasswordlessRecoveryService {
     if (serverKey != null) {
       // Second factor was enabled, so encrypt the recoveryData using the serverKey.
 
-      final secretBox = await chacha20.encrypt(
+      final secretBox = await xchacha20.encrypt(
         recoveryData,
         secretKey: SecretKey(serverKey),
-        nonce: chacha20.newNonce(),
+        nonce: xchacha20.newNonce(),
       );
 
       recoveryData = EncryptedEnvelope(
@@ -165,7 +169,6 @@ class PasswordlessRecoveryService {
       pinSeed: config.pinSeed,
       pinUnlockToken: config.pinUnlockToken,
       emailHint: emailHint,
-      encryptedServerKeyMac: config.encryptedServerKeyMac,
       encryptedServerKeyNonce: config.encryptedServerKeyNonce,
     ).writeToBuffer();
 
@@ -224,15 +227,19 @@ class PasswordlessRecoveryService {
         pinProtectionKey.bytes,
       );
 
-      final chacha20 = FlutterChacha20.poly1305Aead();
+      final xchacha20 = Xchacha20.poly1305Aead();
+
+      final combined = config.encryptedServerKey!;
+      final cipherText = combined.sublist(0, combined.length - 16);
+      final macBytes = combined.sublist(combined.length - 16);
 
       final secretBox = SecretBox(
-        config.encryptedServerKey!,
+        cipherText,
         nonce: config.encryptedServerKeyNonce!,
-        mac: Mac(config.encryptedServerKeyMac!),
+        mac: Mac(macBytes),
       );
 
-      await chacha20.decrypt(
+      await xchacha20.decrypt(
         secretBox,
         secretKey: secondFactorEncryptedServerKeyKey,
       );
@@ -251,7 +258,7 @@ class PasswordlessRecoveryService {
       final lastHeartbeat = config.lastServerHeartbeat;
       final isOlderThanAMonth =
           lastHeartbeat != null &&
-          clock.now().difference(lastHeartbeat).inDays > 30;
+          clock.now().difference(lastHeartbeat).inDays > 20;
 
       if ((lastHeartbeat == null || isOlderThanAMonth) &&
           config.encryptedServerKey != null) {
@@ -267,39 +274,43 @@ class PasswordlessRecoveryService {
         }
       }
 
-      // Get all contacts where recoveryLastHeartbeat is NULL. Then for each contacts send
-      final pendingShares =
-          await (twonlyDB.select(twonlyDB.contacts)..where(
-                (t) =>
-                    t.recoveryIsTrustedFriend.equals(true) &
-                    t.recoveryLastHeartbeat.isNull() &
-                    t.recoverySecretShare.isNotNull(),
-              ))
-              .get();
+      final lastContactHeartbeat = config.lastContactHeartbeat;
+      final isContactHeartbeatOlderThan24h =
+          lastContactHeartbeat == null ||
+          clock.now().difference(lastContactHeartbeat).inHours >= 24;
 
-      for (final contact in pendingShares) {
-        try {
-          await sendCipherText(
-            contact.userId,
-            pb.EncryptedContent(
-              passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
-                recoverySecretShare: contact.recoverySecretShare,
-                delete: false,
+      if (isContactHeartbeatOlderThan24h) {
+        // Get all contacts where recoveryLastHeartbeat is NULL. Then for each contacts send
+        final pendingShares =
+            await (twonlyDB.select(twonlyDB.contacts)..where(
+                  (t) =>
+                      t.recoveryIsTrustedFriend.equals(true) &
+                      t.recoveryLastHeartbeat.isNull() &
+                      t.recoverySecretShare.isNotNull(),
+                ))
+                .get();
+
+        for (final contact in pendingShares) {
+          try {
+            await sendCipherText(
+              contact.userId,
+              pb.EncryptedContent(
+                passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
+                  recoverySecretShare: contact.recoverySecretShare,
+                  delete: false,
+                ),
               ),
-            ),
-          );
-
-          await twonlyDB.contactsDao.updateContact(
-            contact.userId,
-            ContactsCompanion(
-              recoveryLastHeartbeat: Value(clock.now()),
-            ),
-          );
-        } catch (e) {
-          Log.error(
-            'Failed to send PasswordLessRecovery share to contact ${contact.userId}: $e',
-          );
+            );
+          } catch (e) {
+            Log.error(
+              'Failed to send PasswordLessRecovery share to contact ${contact.userId}: $e',
+            );
+          }
         }
+
+        await UserService.update((u) {
+          u.passwordLessRecovery?.lastContactHeartbeat = clock.now();
+        });
       }
     }
 

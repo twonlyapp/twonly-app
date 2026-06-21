@@ -2159,15 +2159,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoverySecondFactor => 'Zweiter Faktor';
 
   @override
-  String get passwordlessRecoveryNoFriendsFound =>
-      'Keine vertrauenswürdigen Freunde gefunden.';
+  String get passwordlessRecoveryNoFriendsFound => 'Keine Freunde gefunden.';
 
   @override
   String get passwordlessRecoveryActiveFriends => 'Aktive Freunde';
 
   @override
   String get passwordlessRecoveryActiveFriendsDesc =>
-      'Diese vertrauenswürdigen Freunde nutzen twonly aktiv und können dir wahrscheinlich helfen, dein Konto wiederherzustellen.';
+      'Diese Freunde nutzen twonly aktiv und können dir wahrscheinlich helfen, dein Konto wiederherzustellen.';
 
   @override
   String get passwordlessRecoveryInactiveFriends => 'Inaktive Freunde';
@@ -2193,7 +2192,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryNeedAtLeast3 =>
-      'Du brauchst mindestens 3 vertrauenswürdige Freunde.';
+      'Du brauchst mindestens 3 Freunde.';
 
   @override
   String get passwordlessRecoveryInvalidPin => 'Ungültige PIN';
@@ -2217,7 +2216,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String passwordlessRecoveryStatusEnabled(num count) {
-    return 'Aktiviert • $count vertrauenswürdige Freunde';
+    return 'Aktiviert • $count Freunde';
   }
 
   @override
@@ -2225,7 +2224,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoHowItWorksDesc =>
-      'Da twonly ohne zentrale Benutzerkonten oder Telefonnummern funktioniert, um deine Privatsphäre zu maximieren, setzen wir auf einen dezentralen Wiederherstellungsmechanismus. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine vertrauenswürdigen Freunde verteilt. Um den Zugriff wiederherzustellen, muss ein vorher festgelegter Schwellenwert dieser Freunde ihre Teile kombinieren.';
+      'Da twonly ohne zentrale Benutzerkonten oder Telefonnummern funktioniert, um deine Privatsphäre zu maximieren, setzen wir auf einen dezentralen Wiederherstellungsmechanismus. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine Freunde verteilt. Um den Zugriff wiederherzustellen, muss ein vorher festgelegter Schwellenwert dieser Freunde ihre Teile kombinieren.';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactor =>
@@ -2233,7 +2232,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactorDesc =>
-      'Der zweite Faktor (E-Mail oder PIN) dient als wichtiger kryptografischer Schutz vor bösartiger Absprache. Wenn sich deine vertrauenswürdigen Freunde hinter deinem Rücken absprechen würden, könnten sie deine Identität ohne den Schlüssel für den zweiten Faktor trotzdem nicht entschlüsseln.';
+      'Der zweite Faktor (E-Mail oder PIN) dient als wichtiger kryptografischer Schutz vor bösartiger Absprache. Wenn sich deine Freunde hinter deinem Rücken absprechen würden, könnten sie deine Identität ohne den Schlüssel für den zweiten Faktor trotzdem nicht entschlüsseln.';
 
   @override
   String get passwordlessRecoveryInfoGotIt => 'Verstanden';
@@ -2258,12 +2257,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String passwordlessRecoveryThresholdDesc(num count) {
-    return 'Um dein Konto wiederherzustellen, brauchst du $count deiner ausgewählten vertrauenswürdigen Freunde.';
+    return 'Um dein Konto wiederherzustellen, brauchst du $count deiner ausgewählten Freunde.';
   }
 
   @override
   String get passwordlessRecoveryThresholdTitle =>
-      'Benötigte vertrauenswürdige Freunde für das Backup';
+      'Benötigte Freunde für das Backup';
 
   @override
   String passwordlessRecoverySelectFriendsNeeded(num count) {
@@ -2271,12 +2270,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get passwordlessRecoverySelectFriends =>
-      'Vertrauenswürdige Freunde auswählen';
+  String get passwordlessRecoverySelectFriends => 'Freunde auswählen';
 
   @override
   String get passwordlessRecoveryNoFriendsSelected =>
-      'Noch keine vertrauenswürdigen Freunde ausgewählt';
+      'Noch keine Freunde ausgewählt';
 
   @override
   String get passwordlessRecoverySubtitle =>

@@ -255,12 +255,12 @@ PasswordLessRecovery _$PasswordLessRecoveryFromJson(
       (json['encryptedServerKeyNonce'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
           .toList()
-  ..encryptedServerKeyMac = (json['encryptedServerKeyMac'] as List<dynamic>?)
-      ?.map((e) => (e as num).toInt())
-      .toList()
   ..lastServerHeartbeat = json['lastServerHeartbeat'] == null
       ? null
       : DateTime.parse(json['lastServerHeartbeat'] as String)
+  ..lastContactHeartbeat = json['lastContactHeartbeat'] == null
+      ? null
+      : DateTime.parse(json['lastContactHeartbeat'] as String)
   ..encryptedServerKey = (json['encryptedServerKey'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
       .toList();
@@ -272,7 +272,7 @@ Map<String, dynamic> _$PasswordLessRecoveryToJson(
   'pinSeed': instance.pinSeed,
   'pinUnlockToken': instance.pinUnlockToken,
   'encryptedServerKeyNonce': instance.encryptedServerKeyNonce,
-  'encryptedServerKeyMac': instance.encryptedServerKeyMac,
   'lastServerHeartbeat': instance.lastServerHeartbeat?.toIso8601String(),
+  'lastContactHeartbeat': instance.lastContactHeartbeat?.toIso8601String(),
   'encryptedServerKey': instance.encryptedServerKey,
 };
