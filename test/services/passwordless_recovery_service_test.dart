@@ -350,7 +350,7 @@ void main() {
         final mockApi = apiService as MockApiService;
         mockApi.sentTextMessages.clear();
 
-        final baseTime = DateTime(2026, 6, 20, 12, 0);
+        final baseTime = DateTime(2026, 6, 20, 12);
 
         await withClock(Clock.fixed(baseTime), () async {
           await PasswordlessRecoveryService.performHeartbeat();
@@ -394,7 +394,7 @@ void main() {
         final mockApi = apiService as MockApiService;
         mockApi.sentTextMessages.clear();
 
-        final baseTime = DateTime(2026, 6, 20, 12, 0);
+        final baseTime = DateTime(2026, 6, 20, 12);
 
         // Case 1: recoveryContactsLastHeartbeat is null -> should send
         await withClock(Clock.fixed(baseTime), () async {
@@ -449,7 +449,7 @@ void main() {
         final mockApi = apiService as MockApiService;
         mockApi.sentTextMessages.clear();
 
-        final baseTime = DateTime(2026, 6, 20, 12, 0);
+        final baseTime = DateTime(2026, 6, 20, 12);
 
         await withClock(Clock.fixed(baseTime), () async {
           await PasswordlessRecoveryService.performHeartbeat();
@@ -563,7 +563,7 @@ void main() {
         final msg = pb.EncryptedContent_PasswordLessRecoveryHeartbeat()
           ..hash = hashBytes;
 
-        final now = DateTime(2026, 6, 20, 12, 0);
+        final now = DateTime(2026, 6, 20, 12);
 
         await withClock(Clock.fixed(now), () async {
           await PasswordlessRecoveryService.handlePasswordlessRecoveryHeartbeat(

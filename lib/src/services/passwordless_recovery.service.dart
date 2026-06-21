@@ -6,7 +6,8 @@ import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart'
     show FlutterChacha20;
-import 'package:cryptography_plus/cryptography_plus.dart' show Hmac, SecretKey;
+import 'package:cryptography_plus/cryptography_plus.dart'
+    show Hmac, Mac, SecretBox, SecretKey;
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/core/bridge/wrapper.dart';
@@ -84,7 +85,7 @@ class PasswordlessRecoveryService {
         // - Server can only learn the email during recovery. Ensured as the server gets the NONCE and MAC to decrpyt during recovery.
         // - Trusted-friends: Server key is send to the mail, they whould need access to the user's mail account.
         secondFactorEncryptedServerKeyKey = SecretKey(
-          Uint8List.fromList(utf8.encode(config.email!)),
+          Uint8List.fromList(sha256.convert(utf8.encode(config.email!)).bytes),
         );
 
       case SecondFactorType.pin:
@@ -187,6 +188,8 @@ class PasswordlessRecoveryService {
       return false;
     }
 
+    await UserService.update((u) => u.passwordLessRecovery = config);
+
     // 3.4. Store the shares in the contact's rows
     for (final contactId in trustedFriendIds) {
       await twonlyDB.contactsDao.updateContact(
@@ -198,8 +201,47 @@ class PasswordlessRecoveryService {
         ),
       );
     }
+
+    unawaited(performHeartbeat());
+
     // The passwordless is configured sucessfully.
     return true;
+  }
+
+  static Future<bool> testPin(String pin) async {
+    final config = userService.currentUser.passwordLessRecovery;
+    if (config?.pinSeed == null || config?.encryptedServerKey == null) {
+      return false;
+    }
+
+    try {
+      final pinProtectionKey = await Hmac.sha256().calculateMac(
+        Uint8List.fromList(utf8.encode(pin)),
+        secretKey: SecretKey(config!.pinSeed!),
+      );
+
+      final secondFactorEncryptedServerKeyKey = SecretKey(
+        pinProtectionKey.bytes,
+      );
+
+      final chacha20 = FlutterChacha20.poly1305Aead();
+
+      final secretBox = SecretBox(
+        config.encryptedServerKey!,
+        nonce: config.encryptedServerKeyNonce!,
+        mac: Mac(config.encryptedServerKeyMac!),
+      );
+
+      await chacha20.decrypt(
+        secretBox,
+        secretKey: secondFactorEncryptedServerKeyKey,
+      );
+
+      return true;
+    } catch (e) {
+      Log.error('Failed to test pin: $e');
+      return false;
+    }
   }
 
   static Future<void> performHeartbeat() async {
@@ -335,6 +377,7 @@ class PasswordlessRecoveryService {
         ),
       );
     }
+    unawaited(performHeartbeat());
   }
 
   static Future<void> handlePasswordlessRecoveryHeartbeat(

@@ -2094,4 +2094,172 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarCustomizeReset => 'Reset';
+
+  @override
+  String get passwordlessRecovery => 'Passwordless Recovery';
+
+  @override
+  String get passwordlessRecoveryNotConfigured => 'Not configured';
+
+  @override
+  String get passwordlessRecoveryTestPin => 'Test PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinTitle => 'Test PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinHint => 'Enter your PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinCorrect => 'PIN is correct!';
+
+  @override
+  String get passwordlessRecoveryTestPinIncorrect => 'Incorrect PIN.';
+
+  @override
+  String get passwordlessRecoveryTest => 'Test';
+
+  @override
+  String get passwordlessRecoverySecondFactorNone => 'None';
+
+  @override
+  String passwordlessRecoverySecondFactorEmailLabel(Object email) {
+    return 'Email ($email)';
+  }
+
+  @override
+  String get passwordlessRecoverySecondFactorPin => 'PIN';
+
+  @override
+  String get passwordlessRecoverySecondFactorEmail => 'Email';
+
+  @override
+  String get passwordlessRecoveryModify => 'Modify Recovery Settings';
+
+  @override
+  String get passwordlessRecoveryModifyDesc =>
+      'Update your recovery configuration';
+
+  @override
+  String get passwordlessRecoverySecondFactor => 'Second Factor';
+
+  @override
+  String get passwordlessRecoveryNoFriendsFound => 'No trusted friends found.';
+
+  @override
+  String get passwordlessRecoveryActiveFriends => 'Active Friends';
+
+  @override
+  String get passwordlessRecoveryActiveFriendsDesc =>
+      'These trusted friends are actively using twonly and can probably help you recover your account.';
+
+  @override
+  String get passwordlessRecoveryInactiveFriends => 'Inactive Friends';
+
+  @override
+  String get passwordlessRecoveryInactiveFriendsDesc =>
+      'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.';
+
+  @override
+  String get passwordlessRecoveryNotEnoughFriends =>
+      'Not enough friends selected. You need at least 3.';
+
+  @override
+  String get passwordlessRecoveryLoading => 'Loading...';
+
+  @override
+  String get passwordlessRecoveryEnableSuccess =>
+      'Passwordless recovery successfully enabled!';
+
+  @override
+  String get passwordlessRecoveryEnableFailed =>
+      'Failed to enable passwordless recovery.';
+
+  @override
+  String get passwordlessRecoveryNeedAtLeast3 =>
+      'You need at least 3 trusted friends.';
+
+  @override
+  String get passwordlessRecoveryInvalidPin => 'Invalid PIN';
+
+  @override
+  String get passwordlessRecoveryEnterPin => 'Please enter a PIN.';
+
+  @override
+  String get passwordlessRecoveryPinMinLength =>
+      'PIN must be at least 4 digits.';
+
+  @override
+  String get passwordlessRecoveryEnterEmail => 'Please enter an email address.';
+
+  @override
+  String get passwordlessRecoveryEnableBtn => 'Enable Passwordless Recovery';
+
+  @override
+  String get passwordlessRecoveryModifyBtn => 'Modify Passwordless Recovery';
+
+  @override
+  String passwordlessRecoveryStatusEnabled(num count) {
+    return 'Enabled • $count trusted friends';
+  }
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorks => 'How it works';
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorksDesc =>
+      'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactor => 'Why a Second Factor?';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactorDesc =>
+      'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.';
+
+  @override
+  String get passwordlessRecoveryInfoGotIt => 'Got it';
+
+  @override
+  String get passwordlessRecoveryMethod => 'Second factor method';
+
+  @override
+  String get passwordlessRecoveryMethodNoneDesc =>
+      'Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.';
+
+  @override
+  String get passwordlessRecoveryMethodPinHint => 'Enter PIN';
+
+  @override
+  String get passwordlessRecoveryMethodEmailHint =>
+      'Enter recovery email address';
+
+  @override
+  String get passwordlessRecoveryMethodEmailDesc =>
+      'Your email address is *never stored on the server* and is only sent to it in the event of a recovery.';
+
+  @override
+  String passwordlessRecoveryThresholdDesc(num count) {
+    return 'To recover your account you need $count of your selected trusted friends.';
+  }
+
+  @override
+  String get passwordlessRecoveryThresholdTitle =>
+      'Required trusted friends for recovery';
+
+  @override
+  String passwordlessRecoverySelectFriendsNeeded(num count) {
+    return 'Select friends ($count more needed)';
+  }
+
+  @override
+  String get passwordlessRecoverySelectFriends => 'Select trusted friends';
+
+  @override
+  String get passwordlessRecoveryNoFriendsSelected =>
+      'No trusted friends selected yet';
+
+  @override
+  String get passwordlessRecoverySubtitle =>
+      'Recover your identity without a password.';
 }

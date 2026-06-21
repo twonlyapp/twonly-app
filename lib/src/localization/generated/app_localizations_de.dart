@@ -2109,4 +2109,176 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get avatarCustomizeReset => 'Zurücksetzen';
+
+  @override
+  String get passwordlessRecovery => 'Passwortloses Backup';
+
+  @override
+  String get passwordlessRecoveryNotConfigured => 'Nicht konfiguriert';
+
+  @override
+  String get passwordlessRecoveryTestPin => 'PIN testen';
+
+  @override
+  String get passwordlessRecoveryTestPinTitle => 'PIN testen';
+
+  @override
+  String get passwordlessRecoveryTestPinHint => 'Gib deine PIN ein';
+
+  @override
+  String get passwordlessRecoveryTestPinCorrect => 'PIN ist korrekt!';
+
+  @override
+  String get passwordlessRecoveryTestPinIncorrect => 'Falsche PIN.';
+
+  @override
+  String get passwordlessRecoveryTest => 'Testen';
+
+  @override
+  String get passwordlessRecoverySecondFactorNone => 'Keiner';
+
+  @override
+  String passwordlessRecoverySecondFactorEmailLabel(Object email) {
+    return 'E-Mail ($email)';
+  }
+
+  @override
+  String get passwordlessRecoverySecondFactorPin => 'PIN';
+
+  @override
+  String get passwordlessRecoverySecondFactorEmail => 'E-Mail';
+
+  @override
+  String get passwordlessRecoveryModify => 'Einstellungen bearbeiten';
+
+  @override
+  String get passwordlessRecoveryModifyDesc =>
+      'Aktualisiere deine Backupkonfiguration';
+
+  @override
+  String get passwordlessRecoverySecondFactor => 'Zweiter Faktor';
+
+  @override
+  String get passwordlessRecoveryNoFriendsFound =>
+      'Keine vertrauenswürdigen Freunde gefunden.';
+
+  @override
+  String get passwordlessRecoveryActiveFriends => 'Aktive Freunde';
+
+  @override
+  String get passwordlessRecoveryActiveFriendsDesc =>
+      'Diese vertrauenswürdigen Freunde nutzen twonly aktiv und können dir wahrscheinlich helfen, dein Konto wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryInactiveFriends => 'Inaktive Freunde';
+
+  @override
+  String get passwordlessRecoveryInactiveFriendsDesc =>
+      'Diese Freunde haben entweder ihren Teil noch nicht erhalten oder nutzen twonly nicht mehr aktiv, was bedeutet, dass sie möglicherweise nicht helfen können.';
+
+  @override
+  String get passwordlessRecoveryNotEnoughFriends =>
+      'Nicht genügend Freunde ausgewählt. Du brauchst mindestens 3.';
+
+  @override
+  String get passwordlessRecoveryLoading => 'Wird geladen...';
+
+  @override
+  String get passwordlessRecoveryEnableSuccess =>
+      'Passwortloses Backup erfolgreich aktiviert!';
+
+  @override
+  String get passwordlessRecoveryEnableFailed =>
+      'Fehler beim Aktivieren des passwortlosen Backups.';
+
+  @override
+  String get passwordlessRecoveryNeedAtLeast3 =>
+      'Du brauchst mindestens 3 vertrauenswürdige Freunde.';
+
+  @override
+  String get passwordlessRecoveryInvalidPin => 'Ungültige PIN';
+
+  @override
+  String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
+
+  @override
+  String get passwordlessRecoveryPinMinLength =>
+      'Die PIN muss mindestens 4 Ziffern lang sein.';
+
+  @override
+  String get passwordlessRecoveryEnterEmail =>
+      'Bitte gib eine E-Mail-Adresse ein.';
+
+  @override
+  String get passwordlessRecoveryEnableBtn => 'Passwortloses Backup aktivieren';
+
+  @override
+  String get passwordlessRecoveryModifyBtn => 'Passwortloses Backup bearbeiten';
+
+  @override
+  String passwordlessRecoveryStatusEnabled(num count) {
+    return 'Aktiviert • $count vertrauenswürdige Freunde';
+  }
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorks => 'Wie es funktioniert';
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorksDesc =>
+      'Da twonly ohne zentrale Benutzerkonten oder Telefonnummern funktioniert, um deine Privatsphäre zu maximieren, setzen wir auf einen dezentralen Wiederherstellungsmechanismus. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine vertrauenswürdigen Freunde verteilt. Um den Zugriff wiederherzustellen, muss ein vorher festgelegter Schwellenwert dieser Freunde ihre Teile kombinieren.';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactor =>
+      'Warum ein zweiter Faktor?';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactorDesc =>
+      'Der zweite Faktor (E-Mail oder PIN) dient als wichtiger kryptografischer Schutz vor bösartiger Absprache. Wenn sich deine vertrauenswürdigen Freunde hinter deinem Rücken absprechen würden, könnten sie deine Identität ohne den Schlüssel für den zweiten Faktor trotzdem nicht entschlüsseln.';
+
+  @override
+  String get passwordlessRecoveryInfoGotIt => 'Verstanden';
+
+  @override
+  String get passwordlessRecoveryMethod => 'Methode für den zweiten Faktor';
+
+  @override
+  String get passwordlessRecoveryMethodNoneDesc =>
+      'Ohne zweiten Faktor könnten sich deine Freunde absprechen, um dein Konto wiederherzustellen. Daher wird empfohlen, einen zweiten Faktor zu konfigurieren.';
+
+  @override
+  String get passwordlessRecoveryMethodPinHint => 'PIN eingeben';
+
+  @override
+  String get passwordlessRecoveryMethodEmailHint =>
+      'Wiederherstellungs-E-Mail-Adresse eingeben';
+
+  @override
+  String get passwordlessRecoveryMethodEmailDesc =>
+      'Deine E-Mail-Adresse wird *niemals auf dem Server gespeichert* und nur im Falle einer Wiederherstellung an ihn gesendet.';
+
+  @override
+  String passwordlessRecoveryThresholdDesc(num count) {
+    return 'Um dein Konto wiederherzustellen, brauchst du $count deiner ausgewählten vertrauenswürdigen Freunde.';
+  }
+
+  @override
+  String get passwordlessRecoveryThresholdTitle =>
+      'Benötigte vertrauenswürdige Freunde für das Backup';
+
+  @override
+  String passwordlessRecoverySelectFriendsNeeded(num count) {
+    return 'Freunde auswählen ($count weitere benötigt)';
+  }
+
+  @override
+  String get passwordlessRecoverySelectFriends =>
+      'Vertrauenswürdige Freunde auswählen';
+
+  @override
+  String get passwordlessRecoveryNoFriendsSelected =>
+      'Noch keine vertrauenswürdigen Freunde ausgewählt';
+
+  @override
+  String get passwordlessRecoverySubtitle =>
+      'Stelle deine Identität ohne Passwort wieder her.';
 }

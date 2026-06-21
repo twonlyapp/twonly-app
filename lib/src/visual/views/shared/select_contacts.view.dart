@@ -14,6 +14,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 
 class SelectedContactView {
   const SelectedContactView({
@@ -86,9 +87,9 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
 
   Future<void> _loadVerifiedContacts() async {
     final kvs = await twonlyDB.select(twonlyDB.keyVerifications).get();
-    final urs = await (twonlyDB.select(twonlyDB.userDiscoveryUserRelations)
-          ..where((u) => u.publicKeyVerifiedTimestamp.isNotNull()))
-        .get();
+    final urs = await (twonlyDB.select(
+      twonlyDB.userDiscoveryUserRelations,
+    )..where((u) => u.publicKeyVerifiedTimestamp.isNotNull())).get();
 
     if (!mounted) return;
     setState(() {
@@ -223,7 +224,7 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                                       if (contact == null) {
                                         return const SizedBox.shrink();
                                       }
-                                      return _Chip(
+                                      return ContactChip(
                                         key: ValueKey(contact.userId),
                                         contact: contact,
                                         onTap: toggleSelectedUser,
@@ -242,7 +243,8 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                       }
                       final user = contacts[i];
                       final isVerified = verifiedUserIds.contains(user.userId);
-                      final isSelectionDisabled = widget.onlyVerified && !isVerified;
+                      final isSelectionDisabled =
+                          widget.onlyVerified && !isVerified;
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
@@ -270,16 +272,18 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
                           ),
                           subtitle: (_alreadySelected.contains(user.userId))
                               ? (widget.text.alreadySelectedSubtitle != null
-                                  ? Text(widget.text.alreadySelectedSubtitle!)
-                                  : Text(context.lang.alreadyInGroup))
+                                    ? Text(widget.text.alreadySelectedSubtitle!)
+                                    : Text(context.lang.alreadyInGroup))
                               : (isSelectionDisabled
-                                  ? Text(
-                                      context.lang.contactNotVerified,
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.error,
-                                      ),
-                                    )
-                                  : null),
+                                    ? Text(
+                                        context.lang.contactNotVerified,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
+                                        ),
+                                      )
+                                    : null),
                           leading: AvatarIcon(
                             contactId: user.userId,
                             fontSize: 13,
@@ -317,51 +321,6 @@ class _SelectAdditionalUsers extends State<SelectContactsView> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.contact,
-    required this.onTap,
-    super.key,
-  });
-  final Contact contact;
-  final void Function(int) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap(contact.userId),
-      child: Chip(
-        avatar: AvatarIcon(
-          contactId: contact.userId,
-          fontSize: 10,
-        ),
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              getContactDisplayName(contact),
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(width: 4),
-            VerificationBadgeComp(
-              contact: contact,
-              size: 12,
-              clickable: false,
-            ),
-            const SizedBox(width: 15),
-            const FaIcon(
-              FontAwesomeIcons.xmark,
-              color: Colors.grey,
-              size: 12,
-            ),
-          ],
         ),
       ),
     );

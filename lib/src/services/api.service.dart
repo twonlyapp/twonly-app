@@ -34,6 +34,7 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
@@ -139,6 +140,7 @@ class ApiService {
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());
+      unawaited(PasswordlessRecoveryService.performHeartbeat());
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 

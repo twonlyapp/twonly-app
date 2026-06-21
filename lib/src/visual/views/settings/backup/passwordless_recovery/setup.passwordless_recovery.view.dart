@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
@@ -9,6 +10,7 @@ import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/passwordless_recovery_info_sheet.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/second_factor_picker.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/threshold_picker.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/trusted_friends_card.comp.dart';
@@ -29,6 +31,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
   int _threshold = 2;
+  bool _isModify = false;
 
   @override
   void initState() {
@@ -53,24 +56,45 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
     if (!mounted) return;
 
     final verified = await _loadVerifiedContacts();
+    final config = userService.currentUser.passwordLessRecovery;
 
-    contacts.sortBy((c) => c.mediaSendCounter);
-    final verifiedContacts = contacts
-        .where(
-          (c) =>
-              verified.contains(c.userId) &
-              c.accepted &
-              !c.blocked &
-              !c.accountDeleted &
-              !c.deletedByUser,
-        )
-        .toList();
-    setState(() {
-      _selectedContacts = verifiedContacts.sublist(
-        0,
-        min(8, verifiedContacts.length),
-      );
-    });
+    if (config != null) {
+      final selectedContacts = contacts
+          .where((c) => c.recoveryIsTrustedFriend)
+          .toList();
+
+      setState(() {
+        _isModify = true;
+        _selectedContacts = selectedContacts;
+        if (config.email != null) {
+          _secondFactor = SecondFactorType.email;
+          _emailController.text = config.email!;
+        } else if (config.pinSeed != null) {
+          _secondFactor = SecondFactorType.pin;
+        } else {
+          _secondFactor = SecondFactorType.none;
+        }
+        _threshold = max(2, (selectedContacts.length / 2).ceil());
+      });
+    } else {
+      contacts.sortBy((c) => c.mediaSendCounter);
+      final verifiedContacts = contacts
+          .where(
+            (c) =>
+                verified.contains(c.userId) &
+                c.accepted &
+                !c.blocked &
+                !c.accountDeleted &
+                !c.deletedByUser,
+          )
+          .toList();
+      setState(() {
+        _selectedContacts = verifiedContacts.sublist(
+          0,
+          min(8, verifiedContacts.length),
+        );
+      });
+    }
   }
 
   @override
@@ -90,7 +114,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
     contactCount: _selectedContacts.length,
   );
 
-  int get _minSelectedFriends => _validThreshold + 2;
+  int get _minSelectedFriends => _validThreshold + (kReleaseMode ? 2 : 0);
 
   // --- Validation ---
 
@@ -161,7 +185,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
     if (success) {
       showSnackbar(
         context,
-        'Passwordless recovery enabled successfully!',
+        context.lang.passwordlessRecoveryEnableSuccess,
         level: SnackbarLevel.success,
       );
       Navigator.pop(context);
@@ -178,14 +202,20 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Passwordless Recovery'),
+          title: Text(context.lang.passwordlessRecovery),
+          actions: [
+            IconButton(
+              onPressed: () => showPasswordlessRecoveryInfoSheet(context),
+              icon: const Icon(Icons.info_outline_rounded),
+            ),
+          ],
         ),
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             children: [
               Text(
-                'Recover your identity without a password.',
+                context.lang.passwordlessRecoverySubtitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: context.color.onSurfaceVariant,
@@ -242,9 +272,15 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
                         ),
                       )
                     else
-                      const Icon(Icons.check_circle_outline_rounded, size: 20),
+                      const FaIcon(
+                        FontAwesomeIcons.shieldHeart,
+                      ),
                     const SizedBox(width: 8),
-                    const Text('Enable Passwordless Recovery'),
+                    Text(
+                      _isModify
+                          ? context.lang.passwordlessRecoveryModifyBtn
+                          : context.lang.passwordlessRecoveryEnableBtn,
+                    ),
                   ],
                 ),
               ),
