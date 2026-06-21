@@ -33,6 +33,7 @@ import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -366,6 +367,24 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.errorMessages,
       receiptId,
       groupId: content.hasGroupId() ? content.groupId : null,
+    );
+    return (null, null);
+  }
+
+  if (content.hasPasswordlessRecovery()) {
+    await PasswordlessRecoveryService.handlePasswordlessRecovery(
+      fromUserId,
+      content.passwordlessRecovery,
+      receiptId,
+    );
+    return (null, null);
+  }
+
+  if (content.hasPasswordlessRecoveryHeartbeat()) {
+    await PasswordlessRecoveryService.handlePasswordlessRecoveryHeartbeat(
+      fromUserId,
+      content.passwordlessRecoveryHeartbeat,
+      receiptId,
     );
     return (null, null);
   }

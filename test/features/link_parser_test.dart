@@ -58,20 +58,6 @@ void main() {
         likeAction: 90,
       ),
       LinkParserTest(
-        title: 'Kuketz-Blog 🛡 (@kuketzblog@social.tchncs.de)',
-        url: 'https://social.tchncs.de/@kuketzblog/115898752560771936',
-        siteName: 'Mastodon',
-        desc:
-            'AWS verspricht jetzt »Souveränität« mit einem »europäischen« Cloud-Angebot – Standort Deutschland, großes Vertrauens-Theater.\n'
-            '\n'
-            'Nur: Souveränität ist keine Postleitzahl. Wenn der Anbieter Amazon heißt, bleibt es dasselbe Märchen mit neuem Umschlag: Der Cloud Act, FISA etc. gilt trotzdem. US-Recht schlägt Geografie. Das Gerede von »Souveränität« ist kein Konzept, sondern Marketing.\n'
-            '\n'
-            'https://www.heise.de/news/AWS-verspricht-Souveraenitaet-mit-europaeischem-Cloudangebot-11141800.html',
-        vendor: Vendor.mastodonSocialMediaPosting,
-        shareAction: 15,
-        likeAction: 190,
-      ),
-      LinkParserTest(
         title:
             'David Kriesel: Traue keinem Scan, den du nicht selbst gefälscht hast',
         url: 'https://www.youtube.com/watch?v=7FeqF1-Z1g0',

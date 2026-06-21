@@ -758,6 +758,22 @@ class ApiService {
     return sendRequestSync(req, contactId: userId.toInt());
   }
 
+  Future<Result> registerPasswordLessRecovery(
+    List<int> encryptedServerKey,
+    List<int>? pinUnlockToken,
+  ) async {
+    final req = createClientToServerFromApplicationData(
+      ApplicationData(
+        registerPasswordlessRecovery:
+            ApplicationData_RegisterPasswordLessRecovery(
+              encryptedServerKey: encryptedServerKey,
+              pinUnlockToken: pinUnlockToken,
+            ),
+      ),
+    );
+    return sendRequestSync(req);
+  }
+
   Future<Result> addAdditionalUser(Int64 userId) async {
     final get = ApplicationData_AddAdditionalUser()..userId = userId;
     final appData = ApplicationData()..addAdditionalUser = get;

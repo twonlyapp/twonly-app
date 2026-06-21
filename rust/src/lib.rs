@@ -6,7 +6,6 @@ mod error;
 mod frb_generated;
 mod keys;
 mod log;
-mod passwordless_recovery;
 mod secure_storage;
 mod standalone;
 mod user_discovery;

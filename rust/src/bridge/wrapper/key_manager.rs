@@ -108,4 +108,12 @@ impl RustKeyManager {
         crate::keys::KeyManager::remove_from_keychain(&ctx.secure_storage)?;
         Ok(())
     }
+
+    /// Serialize the key_manager. Needed for the passwordless_recovery feature.
+    pub async fn serialize() -> Result<Vec<u8>> {
+        let ctx = get_twonly_flutter()?;
+        let key_manager = ctx.key_manager.lock().await;
+        let serialized_bytes = postcard::to_allocvec(&*key_manager)?;
+        Ok(serialized_bytes)
+    }
 }

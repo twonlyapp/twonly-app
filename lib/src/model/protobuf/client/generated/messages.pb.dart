@@ -1839,6 +1839,142 @@ class EncryptedContent_KeyVerificationProof extends $pb.GeneratedMessage {
   void clearCalculatedMac() => $_clearField(1);
 }
 
+class EncryptedContent_PasswordLessRecovery extends $pb.GeneratedMessage {
+  factory EncryptedContent_PasswordLessRecovery({
+    $core.List<$core.int>? recoverySecretShare,
+    $core.bool? delete,
+  }) {
+    final result = create();
+    if (recoverySecretShare != null)
+      result.recoverySecretShare = recoverySecretShare;
+    if (delete != null) result.delete = delete;
+    return result;
+  }
+
+  EncryptedContent_PasswordLessRecovery._();
+
+  factory EncryptedContent_PasswordLessRecovery.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_PasswordLessRecovery.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.PasswordLessRecovery',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'recoverySecretShare', $pb.PbFieldType.OY,
+        protoName: 'recoverySecretShare')
+    ..aOB(2, _omitFieldNames ? '' : 'delete')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_PasswordLessRecovery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_PasswordLessRecovery copyWith(
+          void Function(EncryptedContent_PasswordLessRecovery) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_PasswordLessRecovery))
+          as EncryptedContent_PasswordLessRecovery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_PasswordLessRecovery create() =>
+      EncryptedContent_PasswordLessRecovery._();
+  @$core.override
+  EncryptedContent_PasswordLessRecovery createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_PasswordLessRecovery getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_PasswordLessRecovery>(create);
+  static EncryptedContent_PasswordLessRecovery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get recoverySecretShare => $_getN(0);
+  @$pb.TagNumber(1)
+  set recoverySecretShare($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRecoverySecretShare() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRecoverySecretShare() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get delete => $_getBF(1);
+  @$pb.TagNumber(2)
+  set delete($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDelete() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDelete() => $_clearField(2);
+}
+
+class EncryptedContent_PasswordLessRecoveryHeartbeat
+    extends $pb.GeneratedMessage {
+  factory EncryptedContent_PasswordLessRecoveryHeartbeat({
+    $core.List<$core.int>? hash,
+  }) {
+    final result = create();
+    if (hash != null) result.hash = hash;
+    return result;
+  }
+
+  EncryptedContent_PasswordLessRecoveryHeartbeat._();
+
+  factory EncryptedContent_PasswordLessRecoveryHeartbeat.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_PasswordLessRecoveryHeartbeat.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.PasswordLessRecoveryHeartbeat',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'hash', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_PasswordLessRecoveryHeartbeat clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_PasswordLessRecoveryHeartbeat copyWith(
+          void Function(EncryptedContent_PasswordLessRecoveryHeartbeat)
+              updates) =>
+      super.copyWith((message) => updates(
+              message as EncryptedContent_PasswordLessRecoveryHeartbeat))
+          as EncryptedContent_PasswordLessRecoveryHeartbeat;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_PasswordLessRecoveryHeartbeat create() =>
+      EncryptedContent_PasswordLessRecoveryHeartbeat._();
+  @$core.override
+  EncryptedContent_PasswordLessRecoveryHeartbeat createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_PasswordLessRecoveryHeartbeat getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_PasswordLessRecoveryHeartbeat>(create);
+  static EncryptedContent_PasswordLessRecoveryHeartbeat? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get hash => $_getN(0);
+  @$pb.TagNumber(1)
+  set hash($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasHash() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHash() => $_clearField(1);
+}
+
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
@@ -1865,6 +2001,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_UserDiscoveryUpdate? userDiscoveryUpdate,
     EncryptedContent_KeyVerificationProof? keyVerificationProof,
     $core.bool? askForFriendPromotions,
+    EncryptedContent_PasswordLessRecovery? passwordlessRecovery,
+    EncryptedContent_PasswordLessRecoveryHeartbeat?
+        passwordlessRecoveryHeartbeat,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1899,6 +2038,10 @@ class EncryptedContent extends $pb.GeneratedMessage {
       result.keyVerificationProof = keyVerificationProof;
     if (askForFriendPromotions != null)
       result.askForFriendPromotions = askForFriendPromotions;
+    if (passwordlessRecovery != null)
+      result.passwordlessRecovery = passwordlessRecovery;
+    if (passwordlessRecoveryHeartbeat != null)
+      result.passwordlessRecoveryHeartbeat = passwordlessRecoveryHeartbeat;
     return result;
   }
 
@@ -1971,6 +2114,12 @@ class EncryptedContent extends $pb.GeneratedMessage {
         24, _omitFieldNames ? '' : 'keyVerificationProof',
         subBuilder: EncryptedContent_KeyVerificationProof.create)
     ..aOB(25, _omitFieldNames ? '' : 'askForFriendPromotions')
+    ..aOM<EncryptedContent_PasswordLessRecovery>(
+        26, _omitFieldNames ? '' : 'passwordlessRecovery',
+        subBuilder: EncryptedContent_PasswordLessRecovery.create)
+    ..aOM<EncryptedContent_PasswordLessRecoveryHeartbeat>(
+        27, _omitFieldNames ? '' : 'passwordlessRecoveryHeartbeat',
+        subBuilder: EncryptedContent_PasswordLessRecoveryHeartbeat.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2263,6 +2412,34 @@ class EncryptedContent extends $pb.GeneratedMessage {
   $core.bool hasAskForFriendPromotions() => $_has(23);
   @$pb.TagNumber(25)
   void clearAskForFriendPromotions() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  EncryptedContent_PasswordLessRecovery get passwordlessRecovery => $_getN(24);
+  @$pb.TagNumber(26)
+  set passwordlessRecovery(EncryptedContent_PasswordLessRecovery value) =>
+      $_setField(26, value);
+  @$pb.TagNumber(26)
+  $core.bool hasPasswordlessRecovery() => $_has(24);
+  @$pb.TagNumber(26)
+  void clearPasswordlessRecovery() => $_clearField(26);
+  @$pb.TagNumber(26)
+  EncryptedContent_PasswordLessRecovery ensurePasswordlessRecovery() =>
+      $_ensure(24);
+
+  @$pb.TagNumber(27)
+  EncryptedContent_PasswordLessRecoveryHeartbeat
+      get passwordlessRecoveryHeartbeat => $_getN(25);
+  @$pb.TagNumber(27)
+  set passwordlessRecoveryHeartbeat(
+          EncryptedContent_PasswordLessRecoveryHeartbeat value) =>
+      $_setField(27, value);
+  @$pb.TagNumber(27)
+  $core.bool hasPasswordlessRecoveryHeartbeat() => $_has(25);
+  @$pb.TagNumber(27)
+  void clearPasswordlessRecoveryHeartbeat() => $_clearField(27);
+  @$pb.TagNumber(27)
+  EncryptedContent_PasswordLessRecoveryHeartbeat
+      ensurePasswordlessRecoveryHeartbeat() => $_ensure(25);
 }
 
 const $core.bool _omitFieldNames =

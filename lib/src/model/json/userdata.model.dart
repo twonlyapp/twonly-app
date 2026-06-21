@@ -208,22 +208,29 @@ class TwonlySafeBackup {
 
 @JsonSerializable()
 class PasswordLessRecovery {
-  PasswordLessRecovery({
-    this.email,
-    this.pinSeed,
-    this.pinUnlockToken,
-    this.threshold,
-    this.lastHeartbeat,
-  });
+  PasswordLessRecovery();
 
   factory PasswordLessRecovery.fromJson(Map<String, dynamic> json) =>
       _$PasswordLessRecoveryFromJson(json);
 
+  // Only stored, so the user can see his deposit email address...
   String? email;
-  String? pinSeed;
-  String? pinUnlockToken;
-  int? threshold;
-  DateTime? lastHeartbeat;
+
+  // <--
+  // Data shared with trusted friends
+  // Trusted friends are able to brute-force the pin -> Server delets after X tries
+  List<int>? pinSeed;
+  List<int>? pinUnlockToken;
+
+  // Stored not on the server, so the server is unable to link a email to a user until the actuall recovery or can
+  // brute-force the pin
+  List<int>? encryptedServerKeyNonce;
+  List<int>? encryptedServerKeyMac;
+  // --->
+
+  // Checking with the server that the server data is valid and not delted throug the pin protection for example.
+  DateTime? lastServerHeartbeat;
+  List<int>? encryptedServerKey;
 
   Map<String, dynamic> toJson() => _$PasswordLessRecoveryToJson(this);
 }

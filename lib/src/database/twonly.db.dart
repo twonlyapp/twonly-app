@@ -82,7 +82,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   static QueryExecutor _openConnection() {
     final connection = driftDatabase(
@@ -257,6 +257,16 @@ class TwonlyDB extends _$TwonlyDB {
             await m.addColumn(
               schema.contacts,
               schema.contacts.recoverySecretShare,
+            );
+          },
+          from20To21: (m, schema) async {
+            await m.addColumn(
+              schema.contacts,
+              schema.contacts.recoveryContactsSecretShare,
+            );
+            await m.addColumn(
+              schema.contacts,
+              schema.contacts.recoveryContactsLastHeartbeat,
             );
           },
         )(m, from, to);

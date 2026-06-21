@@ -2182,6 +2182,87 @@ class ApplicationData_Deprecated extends $pb.GeneratedMessage {
   static ApplicationData_Deprecated? _defaultInstance;
 }
 
+class ApplicationData_RegisterPasswordLessRecovery
+    extends $pb.GeneratedMessage {
+  factory ApplicationData_RegisterPasswordLessRecovery({
+    $core.List<$core.int>? pinUnlockToken,
+    $core.List<$core.int>? encryptedServerKey,
+  }) {
+    final result = create();
+    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
+    if (encryptedServerKey != null)
+      result.encryptedServerKey = encryptedServerKey;
+    return result;
+  }
+
+  ApplicationData_RegisterPasswordLessRecovery._();
+
+  factory ApplicationData_RegisterPasswordLessRecovery.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_RegisterPasswordLessRecovery.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.RegisterPasswordLessRecovery',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY,
+        protoName: 'pinUnlockToken')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedServerKey', $pb.PbFieldType.OY,
+        protoName: 'encryptedServerKey')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RegisterPasswordLessRecovery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RegisterPasswordLessRecovery copyWith(
+          void Function(ApplicationData_RegisterPasswordLessRecovery)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_RegisterPasswordLessRecovery))
+          as ApplicationData_RegisterPasswordLessRecovery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RegisterPasswordLessRecovery create() =>
+      ApplicationData_RegisterPasswordLessRecovery._();
+  @$core.override
+  ApplicationData_RegisterPasswordLessRecovery createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RegisterPasswordLessRecovery getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_RegisterPasswordLessRecovery>(create);
+  static ApplicationData_RegisterPasswordLessRecovery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get pinUnlockToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPinUnlockToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPinUnlockToken() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedServerKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedServerKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedServerKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedServerKey() => $_clearField(2);
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -2209,6 +2290,7 @@ enum ApplicationData_ApplicationData {
   ipaForceCheck,
   addAdditionalUser,
   setLoginToken,
+  registerPasswordlessRecovery,
   notSet
 }
 
@@ -2240,6 +2322,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_IPAForceCheck? ipaForceCheck,
     ApplicationData_AddAdditionalUser? addAdditionalUser,
     ApplicationData_SetLoginToken? setLoginToken,
+    ApplicationData_RegisterPasswordLessRecovery? registerPasswordlessRecovery,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2274,6 +2357,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (ipaForceCheck != null) result.ipaForceCheck = ipaForceCheck;
     if (addAdditionalUser != null) result.addAdditionalUser = addAdditionalUser;
     if (setLoginToken != null) result.setLoginToken = setLoginToken;
+    if (registerPasswordlessRecovery != null)
+      result.registerPasswordlessRecovery = registerPasswordlessRecovery;
     return result;
   }
 
@@ -2314,6 +2399,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     28: ApplicationData_ApplicationData.ipaForceCheck,
     29: ApplicationData_ApplicationData.addAdditionalUser,
     30: ApplicationData_ApplicationData.setLoginToken,
+    31: ApplicationData_ApplicationData.registerPasswordlessRecovery,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2347,7 +2433,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       27,
       28,
       29,
-      30
+      30,
+      31
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2439,6 +2526,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_SetLoginToken>(
         30, _omitFieldNames ? '' : 'setLoginToken',
         subBuilder: ApplicationData_SetLoginToken.create)
+    ..aOM<ApplicationData_RegisterPasswordLessRecovery>(
+        31, _omitFieldNames ? '' : 'registerPasswordlessRecovery',
+        subBuilder: ApplicationData_RegisterPasswordLessRecovery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2486,6 +2576,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2514,6 +2605,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2819,6 +2911,21 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearSetLoginToken() => $_clearField(30);
   @$pb.TagNumber(30)
   ApplicationData_SetLoginToken ensureSetLoginToken() => $_ensure(25);
+
+  @$pb.TagNumber(31)
+  ApplicationData_RegisterPasswordLessRecovery
+      get registerPasswordlessRecovery => $_getN(26);
+  @$pb.TagNumber(31)
+  set registerPasswordlessRecovery(
+          ApplicationData_RegisterPasswordLessRecovery value) =>
+      $_setField(31, value);
+  @$pb.TagNumber(31)
+  $core.bool hasRegisterPasswordlessRecovery() => $_has(26);
+  @$pb.TagNumber(31)
+  void clearRegisterPasswordlessRecovery() => $_clearField(31);
+  @$pb.TagNumber(31)
+  ApplicationData_RegisterPasswordLessRecovery
+      ensureRegisterPasswordlessRecovery() => $_ensure(26);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

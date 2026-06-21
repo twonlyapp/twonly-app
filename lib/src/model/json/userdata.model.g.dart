@@ -243,15 +243,27 @@ const _$LastBackupUploadStateEnumMap = {
 
 PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
-) => PasswordLessRecovery(
-  email: json['email'] as String?,
-  pinSeed: json['pinSeed'] as String?,
-  pinUnlockToken: json['pinUnlockToken'] as String?,
-  threshold: (json['threshold'] as num?)?.toInt(),
-  lastHeartbeat: json['lastHeartbeat'] == null
+) => PasswordLessRecovery()
+  ..email = json['email'] as String?
+  ..pinSeed = (json['pinSeed'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList()
+  ..pinUnlockToken = (json['pinUnlockToken'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList()
+  ..encryptedServerKeyNonce =
+      (json['encryptedServerKeyNonce'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList()
+  ..encryptedServerKeyMac = (json['encryptedServerKeyMac'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList()
+  ..lastServerHeartbeat = json['lastServerHeartbeat'] == null
       ? null
-      : DateTime.parse(json['lastHeartbeat'] as String),
-);
+      : DateTime.parse(json['lastServerHeartbeat'] as String)
+  ..encryptedServerKey = (json['encryptedServerKey'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList();
 
 Map<String, dynamic> _$PasswordLessRecoveryToJson(
   PasswordLessRecovery instance,
@@ -259,6 +271,8 @@ Map<String, dynamic> _$PasswordLessRecoveryToJson(
   'email': instance.email,
   'pinSeed': instance.pinSeed,
   'pinUnlockToken': instance.pinUnlockToken,
-  'threshold': instance.threshold,
-  'lastHeartbeat': instance.lastHeartbeat?.toIso8601String(),
+  'encryptedServerKeyNonce': instance.encryptedServerKeyNonce,
+  'encryptedServerKeyMac': instance.encryptedServerKeyMac,
+  'lastServerHeartbeat': instance.lastServerHeartbeat?.toIso8601String(),
+  'encryptedServerKey': instance.encryptedServerKey,
 };

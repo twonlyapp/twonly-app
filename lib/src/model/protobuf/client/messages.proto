@@ -58,6 +58,8 @@ message EncryptedContent {
   optional UserDiscoveryRequest  user_discovery_request  = 22;
   optional UserDiscoveryUpdate   user_discovery_update   = 23;
   optional KeyVerificationProof  key_verification_proof  = 24;
+  optional PasswordLessRecovery  passwordless_recovery   = 26;
+  optional PasswordLessRecoveryHeartbeat  passwordless_recovery_heartbeat  = 27;
 
   message ErrorMessages {
     enum Type {
@@ -82,9 +84,7 @@ message EncryptedContent {
     bytes group_public_key = 1;
   }
 
-  message ResendGroupPublicKey {
-
-  }
+  message ResendGroupPublicKey {}
 
   message GroupUpdate {
     string          group_action_type                      = 1; // GroupActionType.name
@@ -215,6 +215,15 @@ message EncryptedContent {
 
   message KeyVerificationProof {
     bytes calculated_mac = 1;
+  }
+
+  message PasswordLessRecovery {
+    optional bytes recoverySecretShare = 1;
+    bool delete = 2;
+  }
+
+  message PasswordLessRecoveryHeartbeat {
+    bytes hash = 1;
   }
 
 }

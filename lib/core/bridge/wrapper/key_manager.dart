@@ -53,6 +53,10 @@ class RustKeyManager {
         signedPreKeyId: signedPreKeyId,
       );
 
+  /// Serialize the key_manager. Needed for the passwordless_recovery feature.
+  static Future<Uint8List> serialize() => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerSerialize();
+
   static Future<void> setUserId({required PlatformInt64 userId}) => RustLib
       .instance
       .api

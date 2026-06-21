@@ -26,6 +26,8 @@
 
 // Section: imports
 
+use crate::user_discovery::traits::UserDiscoveryStore;
+use crate::user_discovery::traits::UserDiscoveryUtils;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -38,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1867463121;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -508562557;
 
 // Section: executor
 
@@ -544,6 +546,43 @@ fn wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_signed_pre
                     })().await)
                 } })
 }
+fn wire__crate__bridge__wrapper__key_manager__rust_key_manager_serialize_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_key_manager_serialize",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::key_manager::RustKeyManager::serialize()
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -597,6 +636,349 @@ fn wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prek
 let api_record = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
                     transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
                          let output_ok = crate::bridge::wrapper::key_manager::RustKeyManager::store_signed_prekey(api_signed_pre_key_id, api_record).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_utils_generate_shares",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_secret = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_total = <u8>::sse_decode(&mut deserializer);
+            let api_threshold = <u8>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::bridge::wrapper::RustUtils::generate_shares(
+                            api_secret,
+                            api_total,
+                            api_threshold,
+                        )?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_utils_recover_secret",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_shares = <Vec<Vec<u8>>>::sse_decode(&mut deserializer);
+            let api_threshold = <u8>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::bridge::wrapper::RustUtils::recover_secret(
+                            api_shares,
+                            api_threshold,
+                        )?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_announced_user_by_public_id", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_public_id = <i64>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_announced_user_by_public_id(&api_that, api_public_id).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_config", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_config(&api_that).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_contact_promotion", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_contact_promotion(&api_that, api_contact_id).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_contact_version", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_contact_version(&api_that, api_contact_id).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_other_promotions_by_public_id", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_public_id = <i64>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_other_promotions_by_public_id(&api_that, api_public_id).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_own_promotions_after_version", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_version = <u32>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_own_promotions_after_version(&api_that, api_version).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_get_share_for_contact", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::get_share_for_contact(&api_that, api_contact_id).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_push_new_user_relation", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_from_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_announced_user = <crate::bridge::AnnouncedUser>::sse_decode(&mut deserializer);
+let api_public_key_verified_timestamp = <Option<i64>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::push_new_user_relation(&api_that, api_from_contact_id, api_announced_user, api_public_key_verified_timestamp).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_push_own_promotion_and_clear_old_version", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_version = <u32>::sse_decode(&mut deserializer);
+let api_promotion = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::push_own_promotion_and_clear_old_version(&api_that, api_contact_id, api_version, api_promotion).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_set_contact_version", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_update = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::set_contact_version(&api_that, api_contact_id, api_update).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_set_shares", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_shares = <Vec<Vec<u8>>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::set_shares(&api_that, api_shares).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_store_other_promotion", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_promotion = <crate::bridge::OtherPromotion>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::store_other_promotion(&api_that, api_promotion).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_store_flutter_update_config", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter>::sse_decode(&mut deserializer);
+let api_update = <String>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter::update_config(&api_that, api_update).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_utils_flutter_sign_data", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter>::sse_decode(&mut deserializer);
+let api_input_data = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter::sign_data(&api_that, &api_input_data).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_utils_flutter_verify_signature", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter>::sse_decode(&mut deserializer);
+let api_input_data = <Vec<u8>>::sse_decode(&mut deserializer);
+let api_pubkey = <Vec<u8>>::sse_decode(&mut deserializer);
+let api_signature = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter::verify_signature(&api_that, &api_input_data, &api_pubkey, &api_signature).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
+fn wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "user_discovery_utils_flutter_verify_stored_pubkey", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter>::sse_decode(&mut deserializer);
+let api_from_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_pubkey = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter::verify_stored_pubkey(&api_that, api_from_contact_id, &api_pubkey).await?;   Ok(output_ok)
                     })().await)
                 } })
 }
@@ -1356,6 +1738,13 @@ impl SseDecode for crate::bridge::wrapper::key_manager::RustKeyManager {
     }
 }
 
+impl SseDecode for crate::bridge::wrapper::RustUtils {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::bridge::wrapper::RustUtils {};
+    }
+}
+
 impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1381,6 +1770,20 @@ impl SseDecode for [u8; 32] {
 impl SseDecode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
+}
+
+impl SseDecode for crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter {};
+    }
+}
+
+impl SseDecode for crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter {};
+    }
 }
 
 impl SseDecode for usize {
@@ -1431,8 +1834,27 @@ fn pde_ffi_dispatcher_primary_impl(
 23 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_load_signed_prekeys_impl(port, ptr, rust_vec_len, data_len),
 24 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_key_manager_impl(port, ptr, rust_vec_len, data_len),
 25 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_serialize_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
+30 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
+31 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(port, ptr, rust_vec_len, data_len),
+45 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+46 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -1605,6 +2027,65 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::key_manager::Rust
     for crate::bridge::wrapper::key_manager::RustKeyManager
 {
     fn into_into_dart(self) -> crate::bridge::wrapper::key_manager::RustKeyManager {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::wrapper::RustUtils {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::wrapper::RustUtils
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::RustUtils>
+    for crate::bridge::wrapper::RustUtils
+{
+    fn into_into_dart(self) -> crate::bridge::wrapper::RustUtils {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
+    for crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter
+{
+}
+impl
+    flutter_rust_bridge::IntoIntoDart<
+        crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter,
+    > for crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter
+{
+    fn into_into_dart(self) -> crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart
+    for crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter
+{
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter
+{
+}
+impl
+    flutter_rust_bridge::IntoIntoDart<
+        crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter,
+    > for crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter
+{
+    fn into_into_dart(self) -> crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter {
         self
     }
 }
@@ -1849,6 +2330,11 @@ impl SseEncode for crate::bridge::wrapper::key_manager::RustKeyManager {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::bridge::wrapper::RustUtils {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
 impl SseEncode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1881,6 +2367,16 @@ impl SseEncode for () {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::bridge::callbacks::user_discovery::UserDiscoveryStoreFlutter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for crate::bridge::callbacks::user_discovery::UserDiscoveryUtilsFlutter {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
 impl SseEncode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1906,6 +2402,8 @@ mod io {
     // Section: imports
 
     use super::*;
+    use crate::user_discovery::traits::UserDiscoveryStore;
+    use crate::user_discovery::traits::UserDiscoveryUtils;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
@@ -1928,6 +2426,8 @@ mod web {
     // Section: imports
 
     use super::*;
+    use crate::user_discovery::traits::UserDiscoveryStore;
+    use crate::user_discovery::traits::UserDiscoveryUtils;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };

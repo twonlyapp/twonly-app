@@ -5,6 +5,8 @@
 
 import 'bridge.dart';
 import 'bridge/callbacks.dart';
+import 'bridge/callbacks/user_discovery.dart';
+import 'bridge/wrapper.dart';
 import 'bridge/wrapper/backup.dart';
 import 'bridge/wrapper/key_manager.dart';
 import 'bridge/wrapper/user_discovery.dart';
@@ -74,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -1867463121;
+  int get rustContentHash => -508562557;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -230,6 +232,8 @@ abstract class RustLibApi extends BaseApi {
     required PlatformInt64 signedPreKeyId,
   });
 
+  Future<Uint8List> crateBridgeWrapperKeyManagerRustKeyManagerSerialize();
+
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
     required PlatformInt64 userId,
   });
@@ -237,6 +241,120 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
     required PlatformInt64 signedPreKeyId,
     required List<int> record,
+  });
+
+  Future<List<Uint8List>> crateBridgeWrapperRustUtilsGenerateShares({
+    required List<int> secret,
+    required int total,
+    required int threshold,
+  });
+
+  Future<Uint8List> crateBridgeWrapperRustUtilsRecoverSecret({
+    required List<Uint8List> shares,
+    required int threshold,
+  });
+
+  Future<AnnouncedUser?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetAnnouncedUserByPublicId({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 publicId,
+  });
+
+  Future<String>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetConfig({
+    required UserDiscoveryStoreFlutter that,
+  });
+
+  Future<Uint8List?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactPromotion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  });
+
+  Future<Uint8List?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  });
+
+  Future<List<OtherPromotion>>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOtherPromotionsByPublicId({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 publicId,
+  });
+
+  Future<List<Uint8List>>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOwnPromotionsAfterVersion({
+    required UserDiscoveryStoreFlutter that,
+    required int version,
+  });
+
+  Future<Uint8List>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetShareForContact({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushNewUserRelation({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 fromContactId,
+    required AnnouncedUser announcedUser,
+    PlatformInt64? publicKeyVerifiedTimestamp,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushOwnPromotionAndClearOldVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+    required int version,
+    required List<int> promotion,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetContactVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+    required List<int> update,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetShares({
+    required UserDiscoveryStoreFlutter that,
+    required List<Uint8List> shares,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterStoreOtherPromotion({
+    required UserDiscoveryStoreFlutter that,
+    required OtherPromotion promotion,
+  });
+
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterUpdateConfig({
+    required UserDiscoveryStoreFlutter that,
+    required String update,
+  });
+
+  Future<Uint8List>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterSignData({
+    required UserDiscoveryUtilsFlutter that,
+    required List<int> inputData,
+  });
+
+  Future<bool>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifySignature({
+    required UserDiscoveryUtilsFlutter that,
+    required List<int> inputData,
+    required List<int> pubkey,
+    required List<int> signature,
+  });
+
+  Future<bool>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifyStoredPubkey({
+    required UserDiscoveryUtilsFlutter that,
+    required PlatformInt64 fromContactId,
+    required List<int> pubkey,
   });
 }
 
@@ -1303,6 +1421,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<Uint8List> crateBridgeWrapperKeyManagerRustKeyManagerSerialize() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 26,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperKeyManagerRustKeyManagerSerializeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_key_manager_serialize",
+        argNames: [],
+      );
+
+  @override
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerSetUserId({
     required PlatformInt64 userId,
   }) {
@@ -1314,7 +1464,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1351,7 +1501,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1372,6 +1522,717 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "rust_key_manager_store_signed_prekey",
         argNames: ["signedPreKeyId", "record"],
+      );
+
+  @override
+  Future<List<Uint8List>> crateBridgeWrapperRustUtilsGenerateShares({
+    required List<int> secret,
+    required int total,
+    required int threshold,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(secret, serializer);
+          sse_encode_u_8(total, serializer);
+          sse_encode_u_8(threshold, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 29,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeWrapperRustUtilsGenerateSharesConstMeta,
+        argValues: [secret, total, threshold],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeWrapperRustUtilsGenerateSharesConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_utils_generate_shares",
+        argNames: ["secret", "total", "threshold"],
+      );
+
+  @override
+  Future<Uint8List> crateBridgeWrapperRustUtilsRecoverSecret({
+    required List<Uint8List> shares,
+    required int threshold,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_list_prim_u_8_strict(shares, serializer);
+          sse_encode_u_8(threshold, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 30,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeWrapperRustUtilsRecoverSecretConstMeta,
+        argValues: [shares, threshold],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeWrapperRustUtilsRecoverSecretConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_utils_recover_secret",
+        argNames: ["shares", "threshold"],
+      );
+
+  @override
+  Future<AnnouncedUser?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetAnnouncedUserByPublicId({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 publicId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(publicId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 31,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_announced_user,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetAnnouncedUserByPublicIdConstMeta,
+        argValues: [that, publicId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetAnnouncedUserByPublicIdConstMeta =>
+      const TaskConstMeta(
+        debugName:
+            "user_discovery_store_flutter_get_announced_user_by_public_id",
+        argNames: ["that", "publicId"],
+      );
+
+  @override
+  Future<String>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetConfig({
+    required UserDiscoveryStoreFlutter that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetConfigConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetConfigConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_get_config",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<Uint8List?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactPromotion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(contactId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactPromotionConstMeta,
+        argValues: [that, contactId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactPromotionConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_get_contact_promotion",
+        argNames: ["that", "contactId"],
+      );
+
+  @override
+  Future<Uint8List?>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(contactId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactVersionConstMeta,
+        argValues: [that, contactId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetContactVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_get_contact_version",
+        argNames: ["that", "contactId"],
+      );
+
+  @override
+  Future<List<OtherPromotion>>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOtherPromotionsByPublicId({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 publicId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(publicId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 35,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_other_promotion,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOtherPromotionsByPublicIdConstMeta,
+        argValues: [that, publicId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOtherPromotionsByPublicIdConstMeta =>
+      const TaskConstMeta(
+        debugName:
+            "user_discovery_store_flutter_get_other_promotions_by_public_id",
+        argNames: ["that", "publicId"],
+      );
+
+  @override
+  Future<List<Uint8List>>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOwnPromotionsAfterVersion({
+    required UserDiscoveryStoreFlutter that,
+    required int version,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_u_32(version, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOwnPromotionsAfterVersionConstMeta,
+        argValues: [that, version],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetOwnPromotionsAfterVersionConstMeta =>
+      const TaskConstMeta(
+        debugName:
+            "user_discovery_store_flutter_get_own_promotions_after_version",
+        argNames: ["that", "version"],
+      );
+
+  @override
+  Future<Uint8List>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetShareForContact({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(contactId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 37,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetShareForContactConstMeta,
+        argValues: [that, contactId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterGetShareForContactConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_get_share_for_contact",
+        argNames: ["that", "contactId"],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushNewUserRelation({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 fromContactId,
+    required AnnouncedUser announcedUser,
+    PlatformInt64? publicKeyVerifiedTimestamp,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(fromContactId, serializer);
+          sse_encode_box_autoadd_announced_user(announcedUser, serializer);
+          sse_encode_opt_box_autoadd_i_64(
+            publicKeyVerifiedTimestamp,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 38,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushNewUserRelationConstMeta,
+        argValues: [
+          that,
+          fromContactId,
+          announcedUser,
+          publicKeyVerifiedTimestamp,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushNewUserRelationConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_push_new_user_relation",
+        argNames: [
+          "that",
+          "fromContactId",
+          "announcedUser",
+          "publicKeyVerifiedTimestamp",
+        ],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushOwnPromotionAndClearOldVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+    required int version,
+    required List<int> promotion,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_u_32(version, serializer);
+          sse_encode_list_prim_u_8_loose(promotion, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 39,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushOwnPromotionAndClearOldVersionConstMeta,
+        argValues: [that, contactId, version, promotion],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterPushOwnPromotionAndClearOldVersionConstMeta =>
+      const TaskConstMeta(
+        debugName:
+            "user_discovery_store_flutter_push_own_promotion_and_clear_old_version",
+        argNames: ["that", "contactId", "version", "promotion"],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetContactVersion({
+    required UserDiscoveryStoreFlutter that,
+    required PlatformInt64 contactId,
+    required List<int> update,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_i_64(contactId, serializer);
+          sse_encode_list_prim_u_8_loose(update, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 40,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetContactVersionConstMeta,
+        argValues: [that, contactId, update],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetContactVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_set_contact_version",
+        argNames: ["that", "contactId", "update"],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetShares({
+    required UserDiscoveryStoreFlutter that,
+    required List<Uint8List> shares,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_list_list_prim_u_8_strict(shares, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 41,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetSharesConstMeta,
+        argValues: [that, shares],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterSetSharesConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_set_shares",
+        argNames: ["that", "shares"],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterStoreOtherPromotion({
+    required UserDiscoveryStoreFlutter that,
+    required OtherPromotion promotion,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_box_autoadd_other_promotion(promotion, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 42,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterStoreOtherPromotionConstMeta,
+        argValues: [that, promotion],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterStoreOtherPromotionConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_store_other_promotion",
+        argNames: ["that", "promotion"],
+      );
+
+  @override
+  Future<void>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterUpdateConfig({
+    required UserDiscoveryStoreFlutter that,
+    required String update,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_store_flutter(that, serializer);
+          sse_encode_String(update, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 43,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterUpdateConfigConstMeta,
+        argValues: [that, update],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryStoreFlutterUpdateConfigConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_store_flutter_update_config",
+        argNames: ["that", "update"],
+      );
+
+  @override
+  Future<Uint8List>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterSignData({
+    required UserDiscoveryUtilsFlutter that,
+    required List<int> inputData,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_utils_flutter(that, serializer);
+          sse_encode_list_prim_u_8_loose(inputData, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 44,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterSignDataConstMeta,
+        argValues: [that, inputData],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterSignDataConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_utils_flutter_sign_data",
+        argNames: ["that", "inputData"],
+      );
+
+  @override
+  Future<bool>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifySignature({
+    required UserDiscoveryUtilsFlutter that,
+    required List<int> inputData,
+    required List<int> pubkey,
+    required List<int> signature,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_utils_flutter(that, serializer);
+          sse_encode_list_prim_u_8_loose(inputData, serializer);
+          sse_encode_list_prim_u_8_loose(pubkey, serializer);
+          sse_encode_list_prim_u_8_loose(signature, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 45,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifySignatureConstMeta,
+        argValues: [that, inputData, pubkey, signature],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifySignatureConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_utils_flutter_verify_signature",
+        argNames: ["that", "inputData", "pubkey", "signature"],
+      );
+
+  @override
+  Future<bool>
+  crateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifyStoredPubkey({
+    required UserDiscoveryUtilsFlutter that,
+    required PlatformInt64 fromContactId,
+    required List<int> pubkey,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_user_discovery_utils_flutter(that, serializer);
+          sse_encode_i_64(fromContactId, serializer);
+          sse_encode_list_prim_u_8_loose(pubkey, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 46,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifyStoredPubkeyConstMeta,
+        argValues: [that, fromContactId, pubkey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeCallbacksUserDiscoveryUserDiscoveryUtilsFlutterVerifyStoredPubkeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "user_discovery_utils_flutter_verify_stored_pubkey",
+        argNames: ["that", "fromContactId", "pubkey"],
       );
 
   Future<void> Function(
@@ -2003,6 +2864,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  OtherPromotion dco_decode_box_autoadd_other_promotion(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_other_promotion(raw);
+  }
+
+  @protected
+  UserDiscoveryStoreFlutter dco_decode_box_autoadd_user_discovery_store_flutter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_user_discovery_store_flutter(raw);
+  }
+
+  @protected
+  UserDiscoveryUtilsFlutter dco_decode_box_autoadd_user_discovery_utils_flutter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_user_discovery_utils_flutter(raw);
+  }
+
+  @protected
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2191,6 +3074,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustUtils dco_decode_rust_utils(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return RustUtils();
+  }
+
+  @protected
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -2212,6 +3104,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void dco_decode_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return;
+  }
+
+  @protected
+  UserDiscoveryStoreFlutter dco_decode_user_discovery_store_flutter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return UserDiscoveryStoreFlutter();
+  }
+
+  @protected
+  UserDiscoveryUtilsFlutter dco_decode_user_discovery_utils_flutter(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return UserDiscoveryUtilsFlutter();
   }
 
   @protected
@@ -2316,6 +3230,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_init_config(deserializer));
+  }
+
+  @protected
+  OtherPromotion sse_decode_box_autoadd_other_promotion(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_other_promotion(deserializer));
+  }
+
+  @protected
+  UserDiscoveryStoreFlutter sse_decode_box_autoadd_user_discovery_store_flutter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_user_discovery_store_flutter(deserializer));
+  }
+
+  @protected
+  UserDiscoveryUtilsFlutter sse_decode_box_autoadd_user_discovery_utils_flutter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_user_discovery_utils_flutter(deserializer));
   }
 
   @protected
@@ -2549,6 +3487,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustUtils sse_decode_rust_utils(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RustUtils();
+  }
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
@@ -2570,6 +3514,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  UserDiscoveryStoreFlutter sse_decode_user_discovery_store_flutter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return UserDiscoveryStoreFlutter();
+  }
+
+  @protected
+  UserDiscoveryUtilsFlutter sse_decode_user_discovery_utils_flutter(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return UserDiscoveryUtilsFlutter();
   }
 
   @protected
@@ -2878,6 +3838,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_other_promotion(
+    OtherPromotion self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_other_promotion(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_user_discovery_store_flutter(
+    UserDiscoveryStoreFlutter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_user_discovery_store_flutter(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_user_discovery_utils_flutter(
+    UserDiscoveryUtilsFlutter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_user_discovery_utils_flutter(self, serializer);
+  }
+
+  @protected
   void sse_encode_flutter_user_discovery(
     FlutterUserDiscovery self,
     SseSerializer serializer,
@@ -3109,6 +4096,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_rust_utils(RustUtils self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
@@ -3128,6 +4120,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_user_discovery_store_flutter(
+    UserDiscoveryStoreFlutter self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_user_discovery_utils_flutter(
+    UserDiscoveryUtilsFlutter self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
   }
 

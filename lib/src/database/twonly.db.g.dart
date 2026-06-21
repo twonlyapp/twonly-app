@@ -252,6 +252,28 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.blob,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _recoveryContactsSecretShareMeta =
+      const VerificationMeta('recoveryContactsSecretShare');
+  @override
+  late final GeneratedColumn<Uint8List> recoveryContactsSecretShare =
+      GeneratedColumn<Uint8List>(
+        'recovery_contacts_secret_share',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _recoveryContactsLastHeartbeatMeta =
+      const VerificationMeta('recoveryContactsLastHeartbeat');
+  @override
+  late final GeneratedColumn<DateTime> recoveryContactsLastHeartbeat =
+      GeneratedColumn<DateTime>(
+        'recovery_contacts_last_heartbeat',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _askForFriendPromotionsMeta =
       const VerificationMeta('askForFriendPromotions');
   @override
@@ -310,6 +332,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     recoveryIsTrustedFriend,
     recoveryLastHeartbeat,
     recoverySecretShare,
+    recoveryContactsSecretShare,
+    recoveryContactsLastHeartbeat,
     askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -475,6 +499,24 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('recovery_contacts_secret_share')) {
+      context.handle(
+        _recoveryContactsSecretShareMeta,
+        recoveryContactsSecretShare.isAcceptableOrUnknown(
+          data['recovery_contacts_secret_share']!,
+          _recoveryContactsSecretShareMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recovery_contacts_last_heartbeat')) {
+      context.handle(
+        _recoveryContactsLastHeartbeatMeta,
+        recoveryContactsLastHeartbeat.isAcceptableOrUnknown(
+          data['recovery_contacts_last_heartbeat']!,
+          _recoveryContactsLastHeartbeatMeta,
+        ),
+      );
+    }
     if (data.containsKey('ask_for_friend_promotions')) {
       context.handle(
         _askForFriendPromotionsMeta,
@@ -587,6 +629,14 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.blob,
         data['${effectivePrefix}recovery_secret_share'],
       ),
+      recoveryContactsSecretShare: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}recovery_contacts_secret_share'],
+      ),
+      recoveryContactsLastHeartbeat: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}recovery_contacts_last_heartbeat'],
+      ),
       askForFriendPromotions: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}ask_for_friend_promotions'],
@@ -628,6 +678,8 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool recoveryIsTrustedFriend;
   final DateTime? recoveryLastHeartbeat;
   final Uint8List? recoverySecretShare;
+  final Uint8List? recoveryContactsSecretShare;
+  final DateTime? recoveryContactsLastHeartbeat;
   final bool? askForFriendPromotions;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
@@ -651,6 +703,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.recoveryIsTrustedFriend,
     this.recoveryLastHeartbeat,
     this.recoverySecretShare,
+    this.recoveryContactsSecretShare,
+    this.recoveryContactsLastHeartbeat,
     this.askForFriendPromotions,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
@@ -694,6 +748,16 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     if (!nullToAbsent || recoverySecretShare != null) {
       map['recovery_secret_share'] = Variable<Uint8List>(recoverySecretShare);
+    }
+    if (!nullToAbsent || recoveryContactsSecretShare != null) {
+      map['recovery_contacts_secret_share'] = Variable<Uint8List>(
+        recoveryContactsSecretShare,
+      );
+    }
+    if (!nullToAbsent || recoveryContactsLastHeartbeat != null) {
+      map['recovery_contacts_last_heartbeat'] = Variable<DateTime>(
+        recoveryContactsLastHeartbeat,
+      );
     }
     if (!nullToAbsent || askForFriendPromotions != null) {
       map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
@@ -739,6 +803,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       recoverySecretShare: recoverySecretShare == null && nullToAbsent
           ? const Value.absent()
           : Value(recoverySecretShare),
+      recoveryContactsSecretShare:
+          recoveryContactsSecretShare == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recoveryContactsSecretShare),
+      recoveryContactsLastHeartbeat:
+          recoveryContactsLastHeartbeat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recoveryContactsLastHeartbeat),
       askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
           ? const Value.absent()
           : Value(askForFriendPromotions),
@@ -788,6 +860,12 @@ class Contact extends DataClass implements Insertable<Contact> {
       recoverySecretShare: serializer.fromJson<Uint8List?>(
         json['recoverySecretShare'],
       ),
+      recoveryContactsSecretShare: serializer.fromJson<Uint8List?>(
+        json['recoveryContactsSecretShare'],
+      ),
+      recoveryContactsLastHeartbeat: serializer.fromJson<DateTime?>(
+        json['recoveryContactsLastHeartbeat'],
+      ),
       askForFriendPromotions: serializer.fromJson<bool?>(
         json['askForFriendPromotions'],
       ),
@@ -828,6 +906,12 @@ class Contact extends DataClass implements Insertable<Contact> {
         recoveryLastHeartbeat,
       ),
       'recoverySecretShare': serializer.toJson<Uint8List?>(recoverySecretShare),
+      'recoveryContactsSecretShare': serializer.toJson<Uint8List?>(
+        recoveryContactsSecretShare,
+      ),
+      'recoveryContactsLastHeartbeat': serializer.toJson<DateTime?>(
+        recoveryContactsLastHeartbeat,
+      ),
       'askForFriendPromotions': serializer.toJson<bool?>(
         askForFriendPromotions,
       ),
@@ -856,6 +940,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? recoveryIsTrustedFriend,
     Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
     Value<Uint8List?> recoverySecretShare = const Value.absent(),
+    Value<Uint8List?> recoveryContactsSecretShare = const Value.absent(),
+    Value<DateTime?> recoveryContactsLastHeartbeat = const Value.absent(),
     Value<bool?> askForFriendPromotions = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
@@ -890,6 +976,12 @@ class Contact extends DataClass implements Insertable<Contact> {
     recoverySecretShare: recoverySecretShare.present
         ? recoverySecretShare.value
         : this.recoverySecretShare,
+    recoveryContactsSecretShare: recoveryContactsSecretShare.present
+        ? recoveryContactsSecretShare.value
+        : this.recoveryContactsSecretShare,
+    recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat.present
+        ? recoveryContactsLastHeartbeat.value
+        : this.recoveryContactsLastHeartbeat,
     askForFriendPromotions: askForFriendPromotions.present
         ? askForFriendPromotions.value
         : this.askForFriendPromotions,
@@ -939,6 +1031,12 @@ class Contact extends DataClass implements Insertable<Contact> {
       recoverySecretShare: data.recoverySecretShare.present
           ? data.recoverySecretShare.value
           : this.recoverySecretShare,
+      recoveryContactsSecretShare: data.recoveryContactsSecretShare.present
+          ? data.recoveryContactsSecretShare.value
+          : this.recoveryContactsSecretShare,
+      recoveryContactsLastHeartbeat: data.recoveryContactsLastHeartbeat.present
+          ? data.recoveryContactsLastHeartbeat.value
+          : this.recoveryContactsLastHeartbeat,
       askForFriendPromotions: data.askForFriendPromotions.present
           ? data.askForFriendPromotions.value
           : this.askForFriendPromotions,
@@ -973,6 +1071,10 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('recoveryIsTrustedFriend: $recoveryIsTrustedFriend, ')
           ..write('recoveryLastHeartbeat: $recoveryLastHeartbeat, ')
           ..write('recoverySecretShare: $recoverySecretShare, ')
+          ..write('recoveryContactsSecretShare: $recoveryContactsSecretShare, ')
+          ..write(
+            'recoveryContactsLastHeartbeat: $recoveryContactsLastHeartbeat, ',
+          )
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -1001,6 +1103,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     recoveryIsTrustedFriend,
     recoveryLastHeartbeat,
     $driftBlobEquality.hash(recoverySecretShare),
+    $driftBlobEquality.hash(recoveryContactsSecretShare),
+    recoveryContactsLastHeartbeat,
     askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -1038,6 +1142,12 @@ class Contact extends DataClass implements Insertable<Contact> {
             other.recoverySecretShare,
             this.recoverySecretShare,
           ) &&
+          $driftBlobEquality.equals(
+            other.recoveryContactsSecretShare,
+            this.recoveryContactsSecretShare,
+          ) &&
+          other.recoveryContactsLastHeartbeat ==
+              this.recoveryContactsLastHeartbeat &&
           other.askForFriendPromotions == this.askForFriendPromotions &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
@@ -1063,6 +1173,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> recoveryIsTrustedFriend;
   final Value<DateTime?> recoveryLastHeartbeat;
   final Value<Uint8List?> recoverySecretShare;
+  final Value<Uint8List?> recoveryContactsSecretShare;
+  final Value<DateTime?> recoveryContactsLastHeartbeat;
   final Value<bool?> askForFriendPromotions;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
@@ -1086,6 +1198,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryIsTrustedFriend = const Value.absent(),
     this.recoveryLastHeartbeat = const Value.absent(),
     this.recoverySecretShare = const Value.absent(),
+    this.recoveryContactsSecretShare = const Value.absent(),
+    this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -1110,6 +1224,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryIsTrustedFriend = const Value.absent(),
     this.recoveryLastHeartbeat = const Value.absent(),
     this.recoverySecretShare = const Value.absent(),
+    this.recoveryContactsSecretShare = const Value.absent(),
+    this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -1134,6 +1250,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? recoveryIsTrustedFriend,
     Expression<DateTime>? recoveryLastHeartbeat,
     Expression<Uint8List>? recoverySecretShare,
+    Expression<Uint8List>? recoveryContactsSecretShare,
+    Expression<DateTime>? recoveryContactsLastHeartbeat,
     Expression<bool>? askForFriendPromotions,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
@@ -1166,6 +1284,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'recovery_last_heartbeat': recoveryLastHeartbeat,
       if (recoverySecretShare != null)
         'recovery_secret_share': recoverySecretShare,
+      if (recoveryContactsSecretShare != null)
+        'recovery_contacts_secret_share': recoveryContactsSecretShare,
+      if (recoveryContactsLastHeartbeat != null)
+        'recovery_contacts_last_heartbeat': recoveryContactsLastHeartbeat,
       if (askForFriendPromotions != null)
         'ask_for_friend_promotions': askForFriendPromotions,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
@@ -1194,6 +1316,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? recoveryIsTrustedFriend,
     Value<DateTime?>? recoveryLastHeartbeat,
     Value<Uint8List?>? recoverySecretShare,
+    Value<Uint8List?>? recoveryContactsSecretShare,
+    Value<DateTime?>? recoveryContactsLastHeartbeat,
     Value<bool?>? askForFriendPromotions,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
@@ -1222,6 +1346,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       recoveryLastHeartbeat:
           recoveryLastHeartbeat ?? this.recoveryLastHeartbeat,
       recoverySecretShare: recoverySecretShare ?? this.recoverySecretShare,
+      recoveryContactsSecretShare:
+          recoveryContactsSecretShare ?? this.recoveryContactsSecretShare,
+      recoveryContactsLastHeartbeat:
+          recoveryContactsLastHeartbeat ?? this.recoveryContactsLastHeartbeat,
       askForFriendPromotions:
           askForFriendPromotions ?? this.askForFriendPromotions,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
@@ -1303,6 +1431,16 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         recoverySecretShare.value,
       );
     }
+    if (recoveryContactsSecretShare.present) {
+      map['recovery_contacts_secret_share'] = Variable<Uint8List>(
+        recoveryContactsSecretShare.value,
+      );
+    }
+    if (recoveryContactsLastHeartbeat.present) {
+      map['recovery_contacts_last_heartbeat'] = Variable<DateTime>(
+        recoveryContactsLastHeartbeat.value,
+      );
+    }
     if (askForFriendPromotions.present) {
       map['ask_for_friend_promotions'] = Variable<bool>(
         askForFriendPromotions.value,
@@ -1339,6 +1477,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('recoveryIsTrustedFriend: $recoveryIsTrustedFriend, ')
           ..write('recoveryLastHeartbeat: $recoveryLastHeartbeat, ')
           ..write('recoverySecretShare: $recoverySecretShare, ')
+          ..write('recoveryContactsSecretShare: $recoveryContactsSecretShare, ')
+          ..write(
+            'recoveryContactsLastHeartbeat: $recoveryContactsLastHeartbeat, ',
+          )
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -13121,6 +13263,8 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> recoveryIsTrustedFriend,
       Value<DateTime?> recoveryLastHeartbeat,
       Value<Uint8List?> recoverySecretShare,
+      Value<Uint8List?> recoveryContactsSecretShare,
+      Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -13146,6 +13290,8 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> recoveryIsTrustedFriend,
       Value<DateTime?> recoveryLastHeartbeat,
       Value<Uint8List?> recoverySecretShare,
+      Value<Uint8List?> recoveryContactsSecretShare,
+      Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -13524,6 +13670,18 @@ class $$ContactsTableFilterComposer
     column: $table.recoverySecretShare,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<Uint8List> get recoveryContactsSecretShare =>
+      $composableBuilder(
+        column: $table.recoveryContactsSecretShare,
+        builder: (column) => ColumnFilters(column),
+      );
+
+  ColumnFilters<DateTime> get recoveryContactsLastHeartbeat =>
+      $composableBuilder(
+        column: $table.recoveryContactsLastHeartbeat,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
@@ -13928,6 +14086,18 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<Uint8List> get recoveryContactsSecretShare =>
+      $composableBuilder(
+        column: $table.recoveryContactsSecretShare,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<DateTime> get recoveryContactsLastHeartbeat =>
+      $composableBuilder(
+        column: $table.recoveryContactsLastHeartbeat,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
     builder: (column) => ColumnOrderings(column),
@@ -14031,6 +14201,18 @@ class $$ContactsTableAnnotationComposer
     column: $table.recoverySecretShare,
     builder: (column) => column,
   );
+
+  GeneratedColumn<Uint8List> get recoveryContactsSecretShare =>
+      $composableBuilder(
+        column: $table.recoveryContactsSecretShare,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get recoveryContactsLastHeartbeat =>
+      $composableBuilder(
+        column: $table.recoveryContactsLastHeartbeat,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
@@ -14395,6 +14577,10 @@ class $$ContactsTableTableManager
                 Value<bool> recoveryIsTrustedFriend = const Value.absent(),
                 Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
                 Value<Uint8List?> recoverySecretShare = const Value.absent(),
+                Value<Uint8List?> recoveryContactsSecretShare =
+                    const Value.absent(),
+                Value<DateTime?> recoveryContactsLastHeartbeat =
+                    const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14418,6 +14604,8 @@ class $$ContactsTableTableManager
                 recoveryIsTrustedFriend: recoveryIsTrustedFriend,
                 recoveryLastHeartbeat: recoveryLastHeartbeat,
                 recoverySecretShare: recoverySecretShare,
+                recoveryContactsSecretShare: recoveryContactsSecretShare,
+                recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
@@ -14443,6 +14631,10 @@ class $$ContactsTableTableManager
                 Value<bool> recoveryIsTrustedFriend = const Value.absent(),
                 Value<DateTime?> recoveryLastHeartbeat = const Value.absent(),
                 Value<Uint8List?> recoverySecretShare = const Value.absent(),
+                Value<Uint8List?> recoveryContactsSecretShare =
+                    const Value.absent(),
+                Value<DateTime?> recoveryContactsLastHeartbeat =
+                    const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14466,6 +14658,8 @@ class $$ContactsTableTableManager
                 recoveryIsTrustedFriend: recoveryIsTrustedFriend,
                 recoveryLastHeartbeat: recoveryLastHeartbeat,
                 recoverySecretShare: recoverySecretShare,
+                recoveryContactsSecretShare: recoveryContactsSecretShare,
+                recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,

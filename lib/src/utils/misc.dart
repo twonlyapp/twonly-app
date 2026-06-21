@@ -405,3 +405,26 @@ String joinWithAnd(List<String> items, String andWord) {
   if (items.length == 1) return items.first;
   return '${items.sublist(0, items.length - 1).join(', ')} $andWord ${items.last}';
 }
+
+String createEmailHint(String email) {
+  final parts = email.split('@');
+  if (parts.length != 2) return email;
+
+  final local = parts[0];
+  final domain = parts[1];
+
+  final localMasked = local.length > 2
+      ? '${local[0]}${'*' * (local.length - 2)}${local[local.length - 1]}'
+      : local;
+
+  final domainParts = domain.split('.');
+  if (domainParts.isEmpty) return '$localMasked@$domain';
+
+  final domainName = domainParts[0];
+  final domainNameMasked = domainName.length > 1
+      ? '${domainName[0]}${'*' * (domainName.length - 1)}'
+      : domainName;
+
+  final restDomain = domainParts.skip(1).join('.');
+  return '$localMasked@$domainNameMasked${restDomain.isNotEmpty ? '.$restDomain' : ''}';
+}
