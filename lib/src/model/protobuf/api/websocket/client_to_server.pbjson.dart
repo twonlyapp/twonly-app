@@ -152,6 +152,15 @@ const Handshake$json = {
       '9': 0,
       '10': 'getUseridByUsername'
     },
+    {
+      '1': 'get_server_key_for_passwordless_recovery',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.GetServerKeyForPasswordLessRecovery',
+      '9': 0,
+      '10': 'getServerKeyForPasswordlessRecovery'
+    },
   ],
   '3': [
     Handshake_RequestPOW$json,
@@ -160,7 +169,8 @@ const Handshake$json = {
     Handshake_GetUserIdByUsername$json,
     Handshake_GetAuthToken$json,
     Handshake_Authenticate$json,
-    Handshake_AuthenticateWithLoginToken$json
+    Handshake_AuthenticateWithLoginToken$json,
+    Handshake_GetServerKeyForPasswordLessRecovery$json
   ],
   '8': [
     {'1': 'Handshake'},
@@ -303,6 +313,52 @@ const Handshake_AuthenticateWithLoginToken$json = {
   ],
 };
 
+@$core.Deprecated('Use handshakeDescriptor instead')
+const Handshake_GetServerKeyForPasswordLessRecovery$json = {
+  '1': 'GetServerKeyForPasswordLessRecovery',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
+    {
+      '1': 'encrypted_server_key_mac',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedServerKeyMac'
+    },
+    {
+      '1': 'encrypted_server_key_none',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedServerKeyNone'
+    },
+    {
+      '1': 'pin_unlock_token',
+      '3': 4,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'pinUnlockToken',
+      '17': true
+    },
+    {
+      '1': 'pin_protection_key',
+      '3': 5,
+      '4': 1,
+      '5': 12,
+      '9': 1,
+      '10': 'pinProtectionKey',
+      '17': true
+    },
+    {'1': 'email', '3': 6, '4': 1, '5': 9, '9': 2, '10': 'email', '17': true},
+  ],
+  '8': [
+    {'1': '_pin_unlock_token'},
+    {'1': '_pin_protection_key'},
+    {'1': '_email'},
+  ],
+};
+
 /// Descriptor for `Handshake`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'CglIYW5kc2hha2USQgoIcmVnaXN0ZXIYASABKAsyJC5jbGllbnRfdG9fc2VydmVyLkhhbmRzaG'
@@ -316,26 +372,35 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'MjYuY2xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuQXV0aGVudGljYXRlV2l0aExvZ2luVG9rZW'
     '5IAFIaYXV0aGVudGljYXRlV2l0aExvZ2luVG9rZW4SZgoWZ2V0X3VzZXJpZF9ieV91c2VybmFt'
     'ZRgHIAEoCzIvLmNsaWVudF90b19zZXJ2ZXIuSGFuZHNoYWtlLkdldFVzZXJJZEJ5VXNlcm5hbW'
-    'VIAFITZ2V0VXNlcmlkQnlVc2VybmFtZRoMCgpSZXF1ZXN0UE9XGsoDCghSZWdpc3RlchIaCgh1'
-    'c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUSJAoLaW52aXRlX2NvZGUYAiABKAlIAFIKaW52aXRlQ2'
-    '9kZYgBARIuChNwdWJsaWNfaWRlbnRpdHlfa2V5GAMgASgMUhFwdWJsaWNJZGVudGl0eUtleRIj'
-    'Cg1zaWduZWRfcHJla2V5GAQgASgMUgxzaWduZWRQcmVrZXkSNgoXc2lnbmVkX3ByZWtleV9zaW'
-    'duYXR1cmUYBSABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRIoChBzaWduZWRfcHJla2V5X2lk'
-    'GAYgASgDUg5zaWduZWRQcmVrZXlJZBInCg9yZWdpc3RyYXRpb25faWQYByABKANSDnJlZ2lzdH'
-    'JhdGlvbklkEhUKBmlzX2lvcxgIIAEoCFIFaXNJb3MSGwoJbGFuZ19jb2RlGAkgASgJUghsYW5n'
-    'Q29kZRIiCg1wcm9vZl9vZl93b3JrGAogASgDUgtwcm9vZk9mV29yaxIkCgtsb2dpbl90b2tlbh'
-    'gLIAEoDEgBUgpsb2dpblRva2VuiAEBQg4KDF9pbnZpdGVfY29kZUIOCgxfbG9naW5fdG9rZW4a'
-    'EgoQR2V0QXV0aENoYWxsZW5nZRoxChNHZXRVc2VySWRCeVVzZXJuYW1lEhoKCHVzZXJuYW1lGA'
-    'EgASgJUgh1c2VybmFtZRpDCgxHZXRBdXRoVG9rZW4SFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklk'
-    'EhoKCHJlc3BvbnNlGAIgASgMUghyZXNwb25zZRroAQoMQXV0aGVudGljYXRlEhcKB3VzZXJfaW'
-    'QYASABKANSBnVzZXJJZBIdCgphdXRoX3Rva2VuGAIgASgMUglhdXRoVG9rZW4SJAoLYXBwX3Zl'
-    'cnNpb24YAyABKAlIAFIKYXBwVmVyc2lvbogBARIgCglkZXZpY2VfaWQYBCABKANIAVIIZGV2aW'
-    'NlSWSIAQESKAoNaW5fYmFja2dyb3VuZBgFIAEoCEgCUgxpbkJhY2tncm91bmSIAQFCDgoMX2Fw'
-    'cF92ZXJzaW9uQgwKCl9kZXZpY2VfaWRCEAoOX2luX2JhY2tncm91bmQaxgEKGkF1dGhlbnRpY2'
-    'F0ZVdpdGhMb2dpblRva2VuEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBIsChJzZWNyZXRfbG9n'
-    'aW5fdG9rZW4YAiABKAxSEHNlY3JldExvZ2luVG9rZW4SHwoLYXBwX3ZlcnNpb24YAyABKAlSCm'
-    'FwcFZlcnNpb24SGwoJZGV2aWNlX2lkGAQgASgDUghkZXZpY2VJZBIjCg1pbl9iYWNrZ3JvdW5k'
-    'GAUgASgIUgxpbkJhY2tncm91bmRCCwoJSGFuZHNoYWtl');
+    'VIAFITZ2V0VXNlcmlkQnlVc2VybmFtZRKYAQooZ2V0X3NlcnZlcl9rZXlfZm9yX3Bhc3N3b3Jk'
+    'bGVzc19yZWNvdmVyeRgIIAEoCzI/LmNsaWVudF90b19zZXJ2ZXIuSGFuZHNoYWtlLkdldFNlcn'
+    'ZlcktleUZvclBhc3N3b3JkTGVzc1JlY292ZXJ5SABSI2dldFNlcnZlcktleUZvclBhc3N3b3Jk'
+    'bGVzc1JlY292ZXJ5GgwKClJlcXVlc3RQT1caygMKCFJlZ2lzdGVyEhoKCHVzZXJuYW1lGAEgAS'
+    'gJUgh1c2VybmFtZRIkCgtpbnZpdGVfY29kZRgCIAEoCUgAUgppbnZpdGVDb2RliAEBEi4KE3B1'
+    'YmxpY19pZGVudGl0eV9rZXkYAyABKAxSEXB1YmxpY0lkZW50aXR5S2V5EiMKDXNpZ25lZF9wcm'
+    'VrZXkYBCABKAxSDHNpZ25lZFByZWtleRI2ChdzaWduZWRfcHJla2V5X3NpZ25hdHVyZRgFIAEo'
+    'DFIVc2lnbmVkUHJla2V5U2lnbmF0dXJlEigKEHNpZ25lZF9wcmVrZXlfaWQYBiABKANSDnNpZ2'
+    '5lZFByZWtleUlkEicKD3JlZ2lzdHJhdGlvbl9pZBgHIAEoA1IOcmVnaXN0cmF0aW9uSWQSFQoG'
+    'aXNfaW9zGAggASgIUgVpc0lvcxIbCglsYW5nX2NvZGUYCSABKAlSCGxhbmdDb2RlEiIKDXByb2'
+    '9mX29mX3dvcmsYCiABKANSC3Byb29mT2ZXb3JrEiQKC2xvZ2luX3Rva2VuGAsgASgMSAFSCmxv'
+    'Z2luVG9rZW6IAQFCDgoMX2ludml0ZV9jb2RlQg4KDF9sb2dpbl90b2tlbhoSChBHZXRBdXRoQ2'
+    'hhbGxlbmdlGjEKE0dldFVzZXJJZEJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJu'
+    'YW1lGkMKDEdldEF1dGhUb2tlbhIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSGgoIcmVzcG9uc2'
+    'UYAiABKAxSCHJlc3BvbnNlGugBCgxBdXRoZW50aWNhdGUSFwoHdXNlcl9pZBgBIAEoA1IGdXNl'
+    'cklkEh0KCmF1dGhfdG9rZW4YAiABKAxSCWF1dGhUb2tlbhIkCgthcHBfdmVyc2lvbhgDIAEoCU'
+    'gAUgphcHBWZXJzaW9uiAEBEiAKCWRldmljZV9pZBgEIAEoA0gBUghkZXZpY2VJZIgBARIoCg1p'
+    'bl9iYWNrZ3JvdW5kGAUgASgISAJSDGluQmFja2dyb3VuZIgBAUIOCgxfYXBwX3ZlcnNpb25CDA'
+    'oKX2RldmljZV9pZEIQCg5faW5fYmFja2dyb3VuZBrGAQoaQXV0aGVudGljYXRlV2l0aExvZ2lu'
+    'VG9rZW4SFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEiwKEnNlY3JldF9sb2dpbl90b2tlbhgCIA'
+    'EoDFIQc2VjcmV0TG9naW5Ub2tlbhIfCgthcHBfdmVyc2lvbhgDIAEoCVIKYXBwVmVyc2lvbhIb'
+    'CglkZXZpY2VfaWQYBCABKANSCGRldmljZUlkEiMKDWluX2JhY2tncm91bmQYBSABKAhSDGluQm'
+    'Fja2dyb3VuZBrlAgojR2V0U2VydmVyS2V5Rm9yUGFzc3dvcmRMZXNzUmVjb3ZlcnkSFwoHdXNl'
+    'cl9pZBgBIAEoA1IGdXNlcklkEjcKGGVuY3J5cHRlZF9zZXJ2ZXJfa2V5X21hYxgCIAEoDFIVZW'
+    '5jcnlwdGVkU2VydmVyS2V5TWFjEjkKGWVuY3J5cHRlZF9zZXJ2ZXJfa2V5X25vbmUYAyABKAxS'
+    'FmVuY3J5cHRlZFNlcnZlcktleU5vbmUSLQoQcGluX3VubG9ja190b2tlbhgEIAEoDEgAUg5waW'
+    '5VbmxvY2tUb2tlbogBARIxChJwaW5fcHJvdGVjdGlvbl9rZXkYBSABKAxIAVIQcGluUHJvdGVj'
+    'dGlvbktleYgBARIZCgVlbWFpbBgGIAEoCUgCUgVlbWFpbIgBAUITChFfcGluX3VubG9ja190b2'
+    'tlbkIVChNfcGluX3Byb3RlY3Rpb25fa2V5QggKBl9lbWFpbEILCglIYW5kc2hha2U=');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {
@@ -790,27 +855,24 @@ const ApplicationData_RegisterPasswordLessRecovery$json = {
   '1': 'RegisterPasswordLessRecovery',
   '2': [
     {
-      '1': 'pinUnlockToken',
+      '1': 'encryptedServerKey',
       '3': 1,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedServerKey'
+    },
+    {
+      '1': 'pinUnlockToken',
+      '3': 2,
       '4': 1,
       '5': 12,
       '9': 0,
       '10': 'pinUnlockToken',
       '17': true
     },
-    {
-      '1': 'encryptedServerKey',
-      '3': 2,
-      '4': 1,
-      '5': 12,
-      '9': 1,
-      '10': 'encryptedServerKey',
-      '17': true
-    },
   ],
   '8': [
     {'1': '_pinUnlockToken'},
-    {'1': '_encryptedServerKey'},
   ],
 };
 
@@ -881,10 +943,10 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Y2USKwoRdmVyaWZpY2F0aW9uX2RhdGEYAyABKAlSEHZlcmlmaWNhdGlvbkRhdGEaDwoNSVBBRm'
     '9yY2VDaGVjaxoPCg1EZWxldGVBY2NvdW50GiwKEUFkZEFkZGl0aW9uYWxVc2VyEhcKB3VzZXJf'
     'aWQYASABKANSBnVzZXJJZBowCg1TZXRMb2dpblRva2VuEh8KC2xvZ2luX3Rva2VuGAEgASgMUg'
-    'psb2dpblRva2VuGgwKCkRlcHJlY2F0ZWQaqgEKHFJlZ2lzdGVyUGFzc3dvcmRMZXNzUmVjb3Zl'
-    'cnkSKwoOcGluVW5sb2NrVG9rZW4YASABKAxIAFIOcGluVW5sb2NrVG9rZW6IAQESMwoSZW5jcn'
-    'lwdGVkU2VydmVyS2V5GAIgASgMSAFSEmVuY3J5cHRlZFNlcnZlcktleYgBAUIRCg9fcGluVW5s'
-    'b2NrVG9rZW5CFQoTX2VuY3J5cHRlZFNlcnZlcktleUIRCg9BcHBsaWNhdGlvbkRhdGE=');
+    'psb2dpblRva2VuGgwKCkRlcHJlY2F0ZWQajgEKHFJlZ2lzdGVyUGFzc3dvcmRMZXNzUmVjb3Zl'
+    'cnkSLgoSZW5jcnlwdGVkU2VydmVyS2V5GAEgASgMUhJlbmNyeXB0ZWRTZXJ2ZXJLZXkSKwoOcG'
+    'luVW5sb2NrVG9rZW4YAiABKAxIAFIOcGluVW5sb2NrVG9rZW6IAQFCEQoPX3BpblVubG9ja1Rv'
+    'a2VuQhEKD0FwcGxpY2F0aW9uRGF0YQ==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

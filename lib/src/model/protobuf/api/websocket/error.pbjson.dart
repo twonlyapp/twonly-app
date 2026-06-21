@@ -58,6 +58,8 @@ const ErrorCode$json = {
     {'1': 'IPAPaymentExpired', '2': 1034},
     {'1': 'UserIsNotInFreePlan', '2': 1035},
     {'1': 'ForegroundSessionConnected', '2': 1036},
+    {'1': 'NoRecoveryData', '2': 1037},
+    {'1': 'InvalidRecoveryData', '2': 1038},
   ],
 };
 
@@ -80,4 +82,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcIEh'
     'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCBIWChFJ'
     'UEFQYXltZW50RXhwaXJlZBCKCBIYChNVc2VySXNOb3RJbkZyZWVQbGFuEIsIEh8KGkZvcmVncm'
-    '91bmRTZXNzaW9uQ29ubmVjdGVkEIwI');
+    '91bmRTZXNzaW9uQ29ubmVjdGVkEIwIEhMKDk5vUmVjb3ZlcnlEYXRhEI0IEhgKE0ludmFsaWRS'
+    'ZWNvdmVyeURhdGEQjgg=');

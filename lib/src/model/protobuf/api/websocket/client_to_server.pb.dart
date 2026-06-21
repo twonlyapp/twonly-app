@@ -809,6 +809,138 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
   void clearInBackground() => $_clearField(5);
 }
 
+class Handshake_GetServerKeyForPasswordLessRecovery
+    extends $pb.GeneratedMessage {
+  factory Handshake_GetServerKeyForPasswordLessRecovery({
+    $fixnum.Int64? userId,
+    $core.List<$core.int>? encryptedServerKeyMac,
+    $core.List<$core.int>? encryptedServerKeyNone,
+    $core.List<$core.int>? pinUnlockToken,
+    $core.List<$core.int>? pinProtectionKey,
+    $core.String? email,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (encryptedServerKeyMac != null)
+      result.encryptedServerKeyMac = encryptedServerKeyMac;
+    if (encryptedServerKeyNone != null)
+      result.encryptedServerKeyNone = encryptedServerKeyNone;
+    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
+    if (pinProtectionKey != null) result.pinProtectionKey = pinProtectionKey;
+    if (email != null) result.email = email;
+    return result;
+  }
+
+  Handshake_GetServerKeyForPasswordLessRecovery._();
+
+  factory Handshake_GetServerKeyForPasswordLessRecovery.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_GetServerKeyForPasswordLessRecovery.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.GetServerKeyForPasswordLessRecovery',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedServerKeyMac', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'encryptedServerKeyNone', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'pinProtectionKey', $pb.PbFieldType.OY)
+    ..aOS(6, _omitFieldNames ? '' : 'email')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetServerKeyForPasswordLessRecovery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetServerKeyForPasswordLessRecovery copyWith(
+          void Function(Handshake_GetServerKeyForPasswordLessRecovery)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_GetServerKeyForPasswordLessRecovery))
+          as Handshake_GetServerKeyForPasswordLessRecovery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetServerKeyForPasswordLessRecovery create() =>
+      Handshake_GetServerKeyForPasswordLessRecovery._();
+  @$core.override
+  Handshake_GetServerKeyForPasswordLessRecovery createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetServerKeyForPasswordLessRecovery getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Handshake_GetServerKeyForPasswordLessRecovery>(create);
+  static Handshake_GetServerKeyForPasswordLessRecovery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedServerKeyMac => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedServerKeyMac($core.List<$core.int> value) =>
+      $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedServerKeyMac() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedServerKeyMac() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get encryptedServerKeyNone => $_getN(2);
+  @$pb.TagNumber(3)
+  set encryptedServerKeyNone($core.List<$core.int> value) =>
+      $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEncryptedServerKeyNone() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEncryptedServerKeyNone() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get pinUnlockToken => $_getN(3);
+  @$pb.TagNumber(4)
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPinUnlockToken() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPinUnlockToken() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get pinProtectionKey => $_getN(4);
+  @$pb.TagNumber(5)
+  set pinProtectionKey($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPinProtectionKey() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPinProtectionKey() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get email => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set email($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasEmail() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearEmail() => $_clearField(6);
+}
+
 enum Handshake_Handshake {
   register,
   getAuthChallenge,
@@ -817,6 +949,7 @@ enum Handshake_Handshake {
   requestPOW,
   authenticateWithLoginToken,
   getUseridByUsername,
+  getServerKeyForPasswordlessRecovery,
   notSet
 }
 
@@ -829,6 +962,8 @@ class Handshake extends $pb.GeneratedMessage {
     Handshake_RequestPOW? requestPOW,
     Handshake_AuthenticateWithLoginToken? authenticateWithLoginToken,
     Handshake_GetUserIdByUsername? getUseridByUsername,
+    Handshake_GetServerKeyForPasswordLessRecovery?
+        getServerKeyForPasswordlessRecovery,
   }) {
     final result = create();
     if (register != null) result.register = register;
@@ -840,6 +975,9 @@ class Handshake extends $pb.GeneratedMessage {
       result.authenticateWithLoginToken = authenticateWithLoginToken;
     if (getUseridByUsername != null)
       result.getUseridByUsername = getUseridByUsername;
+    if (getServerKeyForPasswordlessRecovery != null)
+      result.getServerKeyForPasswordlessRecovery =
+          getServerKeyForPasswordlessRecovery;
     return result;
   }
 
@@ -861,6 +999,7 @@ class Handshake extends $pb.GeneratedMessage {
     5: Handshake_Handshake.requestPOW,
     6: Handshake_Handshake.authenticateWithLoginToken,
     7: Handshake_Handshake.getUseridByUsername,
+    8: Handshake_Handshake.getServerKeyForPasswordlessRecovery,
     0: Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -868,7 +1007,7 @@ class Handshake extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register',
         subBuilder: Handshake_Register.create)
     ..aOM<Handshake_GetAuthChallenge>(
@@ -887,6 +1026,9 @@ class Handshake extends $pb.GeneratedMessage {
     ..aOM<Handshake_GetUserIdByUsername>(
         7, _omitFieldNames ? '' : 'getUseridByUsername',
         subBuilder: Handshake_GetUserIdByUsername.create)
+    ..aOM<Handshake_GetServerKeyForPasswordLessRecovery>(
+        8, _omitFieldNames ? '' : 'getServerKeyForPasswordlessRecovery',
+        subBuilder: Handshake_GetServerKeyForPasswordLessRecovery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -914,6 +1056,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   Handshake_Handshake whichHandshake() =>
       _Handshake_HandshakeByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -923,6 +1066,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   void clearHandshake() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1006,6 +1150,21 @@ class Handshake extends $pb.GeneratedMessage {
   void clearGetUseridByUsername() => $_clearField(7);
   @$pb.TagNumber(7)
   Handshake_GetUserIdByUsername ensureGetUseridByUsername() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  Handshake_GetServerKeyForPasswordLessRecovery
+      get getServerKeyForPasswordlessRecovery => $_getN(7);
+  @$pb.TagNumber(8)
+  set getServerKeyForPasswordlessRecovery(
+          Handshake_GetServerKeyForPasswordLessRecovery value) =>
+      $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasGetServerKeyForPasswordlessRecovery() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearGetServerKeyForPasswordlessRecovery() => $_clearField(8);
+  @$pb.TagNumber(8)
+  Handshake_GetServerKeyForPasswordLessRecovery
+      ensureGetServerKeyForPasswordlessRecovery() => $_ensure(7);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {
@@ -2185,13 +2344,13 @@ class ApplicationData_Deprecated extends $pb.GeneratedMessage {
 class ApplicationData_RegisterPasswordLessRecovery
     extends $pb.GeneratedMessage {
   factory ApplicationData_RegisterPasswordLessRecovery({
-    $core.List<$core.int>? pinUnlockToken,
     $core.List<$core.int>? encryptedServerKey,
+    $core.List<$core.int>? pinUnlockToken,
   }) {
     final result = create();
-    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
     if (encryptedServerKey != null)
       result.encryptedServerKey = encryptedServerKey;
+    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
     return result;
   }
 
@@ -2212,11 +2371,11 @@ class ApplicationData_RegisterPasswordLessRecovery
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
     ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY,
-        protoName: 'pinUnlockToken')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'encryptedServerKey', $pb.PbFieldType.OY,
+        1, _omitFieldNames ? '' : 'encryptedServerKey', $pb.PbFieldType.OY,
         protoName: 'encryptedServerKey')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY,
+        protoName: 'pinUnlockToken')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2245,22 +2404,22 @@ class ApplicationData_RegisterPasswordLessRecovery
   static ApplicationData_RegisterPasswordLessRecovery? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get pinUnlockToken => $_getN(0);
+  $core.List<$core.int> get encryptedServerKey => $_getN(0);
   @$pb.TagNumber(1)
-  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(0, value);
+  set encryptedServerKey($core.List<$core.int> value) => $_setBytes(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasPinUnlockToken() => $_has(0);
+  $core.bool hasEncryptedServerKey() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPinUnlockToken() => $_clearField(1);
+  void clearEncryptedServerKey() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.int> get encryptedServerKey => $_getN(1);
+  $core.List<$core.int> get pinUnlockToken => $_getN(1);
   @$pb.TagNumber(2)
-  set encryptedServerKey($core.List<$core.int> value) => $_setBytes(1, value);
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasEncryptedServerKey() => $_has(1);
+  $core.bool hasPinUnlockToken() => $_has(1);
   @$pb.TagNumber(2)
-  void clearEncryptedServerKey() => $_clearField(2);
+  void clearPinUnlockToken() => $_clearField(2);
 }
 
 enum ApplicationData_ApplicationData {

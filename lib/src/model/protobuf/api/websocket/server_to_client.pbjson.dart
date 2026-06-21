@@ -623,6 +623,14 @@ const Response_Ok$json = {
       '9': 0,
       '10': 'proofOfWork'
     },
+    {
+      '1': 'passwordless_recovery_server_key',
+      '3': 16,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'passwordlessRecoveryServerKey'
+    },
   ],
   '8': [
     {'1': 'Ok'},
@@ -677,7 +685,7 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'cKD2Rvd25sb2FkX3Rva2VucxgCIAMoDFIOZG93bmxvYWRUb2tlbnMaOQoORG93bmxvYWRUb2tl'
     'bnMSJwoPZG93bmxvYWRfdG9rZW5zGAEgAygMUg5kb3dubG9hZFRva2VucxpFCgtQcm9vZk9mV2'
     '9yaxIWCgZwcmVmaXgYASABKAlSBnByZWZpeBIeCgpkaWZmaWN1bHR5GAIgASgDUgpkaWZmaWN1'
-    'bHR5GtcHCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGAIgASgDSABSBnVzZX'
+    'bHR5GqIICgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGAIgASgDSABSBnVzZX'
     'JpZBImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDWF1dGhjaGFsbGVuZ2USSgoLdXBsb2FkdG9r'
     'ZW4YBCABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVwbG9hZFRva2VuSABSC3VwbG'
     '9hZHRva2VuEkEKCHVzZXJkYXRhGAUgASgLMiMuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5V'
@@ -694,5 +702,6 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'dG9fY2xpZW50LlJlc3BvbnNlLkRvd25sb2FkVG9rZW5zSABSDmRvd25sb2FkdG9rZW5zEk0KDH'
     'NpZ25lZHByZWtleRgOIAEoCzInLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuU2lnbmVkUHJl'
     'S2V5SABSDHNpZ25lZHByZWtleRJKCgtwcm9vZk9mV29yaxgPIAEoCzImLnNlcnZlcl90b19jbG'
-    'llbnQuUmVzcG9uc2UuUHJvb2ZPZldvcmtIAFILcHJvb2ZPZldvcmtCBAoCT2tCCgoIUmVzcG9u'
-    'c2U=');
+    'llbnQuUmVzcG9uc2UuUHJvb2ZPZldvcmtIAFILcHJvb2ZPZldvcmsSSQogcGFzc3dvcmRsZXNz'
+    'X3JlY292ZXJ5X3NlcnZlcl9rZXkYECABKAxIAFIdcGFzc3dvcmRsZXNzUmVjb3ZlcnlTZXJ2ZX'
+    'JLZXlCBAoCT2tCCgoIUmVzcG9uc2U=');
