@@ -13,6 +13,8 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart'
+    show PasswordlessRecoveryService;
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -29,6 +31,11 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
 
   // Check if this is the QR code link which was
   // therefore scanned with the system camera
+
+  if (uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
+    await PasswordlessRecoveryService.handleRecoveryLink(uri.toString());
+    return true;
+  }
 
   if (uri.toString().startsWith(QrCodeUtils.linkPrefix)) {
     final result = await QrCodeUtils.handleQrCodeLink(uri.toString());

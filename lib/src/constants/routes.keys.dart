@@ -16,6 +16,7 @@ class Routes {
   static String profileContact(int contactId) => '/profile/contact/$contactId';
 
   static const String cameraQRScanner = '/camera/qr_scanner';
+  static const String recoverPasswordless = '/recover/passwordless';
 
   static const String settings = '/settings';
   static const String settingsProfile = '/settings/profile';

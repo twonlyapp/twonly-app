@@ -38,7 +38,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly wird durch Spenden und ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
+      'twonly wird durch ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
 
   @override
   String get registerUsernameSlogan => 'Konto erstellen';
@@ -404,7 +404,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactUsLastWarning =>
-      'Dies sind die Informationen, die an uns gesendet werden. Bitte prüfen Sie sie und klicke dann auf „Abschicken“.';
+      'Dies sind die Informationen, die an uns gesendet werden. Bitte prüfe sie und klicke dann auf „Abschicken“.';
 
   @override
   String get contactUsSuccess => 'Feedback erfolgreich übermittelt!';
@@ -2212,6 +2212,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoveryEnableBtn => 'Passwortloses Backup aktivieren';
 
   @override
+  String get passwordlessRecoveryRecoverBtn => 'Passwortlos wiederherstellen';
+
+  @override
   String get passwordlessRecoveryModifyBtn => 'Passwortloses Backup bearbeiten';
 
   @override
@@ -2279,4 +2282,94 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get passwordlessRecoverySubtitle =>
       'Stelle deine Identität ohne Passwort wieder her.';
+
+  @override
+  String get recoverPasswordlessExplanation =>
+      'Wenn du die passwortlose Wiederherstellung aktiviert hast, kannst du dein Konto mithilfe deiner Freunde wiederherstellen.';
+
+  @override
+  String get recoverPasswordlessNotificationCardTitle =>
+      'Benachrichtigungen aktivieren';
+
+  @override
+  String get recoverPasswordlessNotificationCardSubtitle =>
+      'Lass dich benachrichtigen, wenn ein Freund dir geholfen hat, dein Konto wiederherzustellen.';
+
+  @override
+  String get recoverPasswordlessNotificationCardBtn =>
+      'Push-Benachrichtigungen aktivieren';
+
+  @override
+  String get recoverPasswordlessQrInstructions =>
+      'Lass deine Freunde den QR-Code scannen oder teile den Link.';
+
+  @override
+  String get recoverPasswordlessShareBtn => 'Wiederherstellungs-Link teilen';
+
+  @override
+  String get recoverPasswordlessCopyBtn => 'Kopieren';
+
+  @override
+  String get recoverPasswordlessCopiedSnackbar =>
+      'Link in die Zwischenablage kopiert!';
+
+  @override
+  String get passwordlessRecoveryNoShareStored =>
+      'Kein Wiederherstellungs-Teil für diesen Kontakt gespeichert.';
+
+  @override
+  String get passwordlessRecoveryShareSent =>
+      'Wiederherstellungs-Teil erfolgreich gesendet!';
+
+  @override
+  String get passwordlessRecoveryNetworkError =>
+      'Netzwerkfehler, bitte stelle sicher, dass du Internet hast';
+
+  @override
+  String get passwordlessRecoveryHelpAFriend => 'Einem Freund helfen';
+
+  @override
+  String get passwordlessRecoverySelectContactDesc =>
+      'Wähle den Kontakt aus, dem du helfen möchtest.';
+
+  @override
+  String get passwordlessRecoverySearchContacts => 'Kontakte suchen...';
+
+  @override
+  String get passwordlessRecoveryNoContactsFound => 'Keine Kontakte gefunden';
+
+  @override
+  String get passwordlessRecoveryCantHelpHim => 'Du kannst ihm nicht helfen';
+
+  @override
+  String passwordlessRecoveryDoesAskedYou(Object username) {
+    return 'Hat $username dich gefragt?';
+  }
+
+  @override
+  String get passwordlessRecoveryVerifySourceDesc =>
+      'Bitte stelle sicher, dass du den Link/QR-Code tatsächlich von deinem Freund erhalten hast! Wenn du dir unsicher bist, verifiziere dies bitte erneut und klicke dann noch einmal auf den Link oder kehre zurück.';
+
+  @override
+  String get passwordlessRecoveryNo => 'Nein';
+
+  @override
+  String get passwordlessRecoveryYes => 'Ja';
+
+  @override
+  String passwordlessRecoveryYesWithTimer(Object seconds) {
+    return 'Ja (${seconds}s)';
+  }
+
+  @override
+  String get recoverPasswordlessBeingRecoveredLabel =>
+      'Konto wird wiederhergestellt';
+
+  @override
+  String recoverPasswordlessSharesReceived(Object received, Object threshold) {
+    return '$received von $threshold Freunden haben geteilt';
+  }
+
+  @override
+  String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
 }

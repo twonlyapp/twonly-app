@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert' show utf8;
+import 'dart:convert' show base64Url, utf8;
 
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
@@ -11,20 +11,124 @@ import 'package:fixnum/fixnum.dart';
 import 'package:twonly/core/bridge/wrapper.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart'
+    show getContactDisplayName;
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/json/userdata.model.dart'
     show PasswordLessRecovery;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
+import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user.service.dart';
+import 'package:twonly/src/utils/avatars.dart' show getAvatarSvg;
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/help_a_friend.passwordless_recovery.view.dart';
 
-enum SecondFactorType { none, pin, email }
+enum SecondFactorType { email, pin, none }
 
 class PasswordlessRecoveryService {
+  static String linkPrefix = 'https://me.twonly.eu/r/#';
+
+  static final Set<String> _handledNotificationIds = {};
+
+  static Future<void> handleRecoveryLink(String link) async {
+    final hashIndex = link.indexOf('#');
+    if (hashIndex == -1) return;
+
+    final fragment = link.substring(hashIndex + 1);
+    final parts = fragment.split('/');
+    if (parts.length < 2) return;
+
+    final notificationId = parts[0];
+    final base64Key = parts[1];
+
+    if (_handledNotificationIds.contains(notificationId)) {
+      Log.info(
+        'Notification ID $notificationId was already handled, skipping.',
+      );
+      return;
+    }
+    _handledNotificationIds.add(notificationId);
+
+    final encryptionKey = base64Url.decode(base64Url.normalize(base64Key));
+
+    final context = rootNavigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      unawaited(
+        context.navPush(
+          HelpAFriendPasswordlessRecoveryView(
+            notificationId: notificationId,
+            encryptionKey: encryptionKey,
+          ),
+        ),
+      );
+    }
+  }
+
+  static Future<bool> submitRecoveryShare(
+    String notificationId,
+    List<int> encryptionKey,
+    Contact contact,
+  ) async {
+    try {
+      final share = contact.recoveryContactsSecretShare;
+      if (share == null) {
+        return false;
+      }
+
+      final trustedFriend = TrustedFriendShare_User(
+        userId: Int64(userService.currentUser.userId),
+        displayName: userService.currentUser.displayName,
+        avatar: userService.currentUser.avatarSvg != null
+            ? utf8.encode(userService.currentUser.avatarSvg!)
+            : null,
+      );
+
+      final shareUser = TrustedFriendShare_User(
+        userId: Int64(contact.userId),
+        displayName: getContactDisplayName(contact),
+        avatar: contact.avatarSvgCompressed != null
+            ? utf8.encode(getAvatarSvg(contact.avatarSvgCompressed!))
+            : null,
+      );
+
+      final trustedFriendShare = TrustedFriendShare(
+        trustedFriend: trustedFriend,
+        shareUser: shareUser,
+        threshold: 0,
+        sharedSecretData: share,
+      );
+
+      final xchacha20 = Xchacha20.poly1305Aead();
+      final secretBox = await xchacha20.encrypt(
+        trustedFriendShare.writeToBuffer(),
+        secretKey: SecretKey(encryptionKey),
+        nonce: xchacha20.newNonce(),
+      );
+
+      final envelope = EncryptedEnvelope(
+        encryptedData: secretBox.cipherText,
+        iv: secretBox.nonce,
+        mac: secretBox.mac.bytes,
+      );
+
+      final res = await apiService.submitRecoveryShare(
+        notificationId: notificationId,
+        encryptedMessage: envelope.writeToBuffer(),
+      );
+      return res.isSuccess;
+    } catch (e) {
+      Log.error('Failed to submit recovery share', error: e);
+      return false;
+    }
+  }
+
   static Future<bool> enablePasswordlessRecovery({
     required List<int> trustedFriendIds,
     required SecondFactorType secondFactorType,
@@ -433,5 +537,86 @@ class PasswordlessRecoveryService {
         recoveryLastHeartbeat: Value(recoveryLastHeartbeat),
       ),
     );
+  }
+
+  static Future<bool> checkAndStorePasswordlessMessages(
+    OnboardingState state,
+  ) async {
+    if (!state.serverRegistered ||
+        state.notificationId == null ||
+        state.downloadAuthToken == null ||
+        state.encryptionKey == null) {
+      return false;
+    }
+
+    final alreadyReceivedIds = state.receivedShares
+        .map((s) => Int64(s.messageId))
+        .toList();
+
+    final response = await apiService.checkForPasswordlessNotification(
+      notificationId: state.notificationId!,
+      downloadAuthToken: state.downloadAuthToken!,
+      alreadyReceivedIds: alreadyReceivedIds,
+    );
+
+    if (response == null || response.messages.isEmpty) {
+      return false;
+    }
+
+    final xchacha20 = Xchacha20.poly1305Aead();
+    final secretKey = SecretKey(state.encryptionKey!);
+    var didUpdate = false;
+
+    for (final msg in response.messages) {
+      final msgId = msg.id.toInt();
+
+      try {
+        final envelope = EncryptedEnvelope.fromBuffer(msg.encryptedMessage);
+        final secretBox = SecretBox(
+          envelope.encryptedData,
+          nonce: envelope.iv,
+          mac: Mac(envelope.mac),
+        );
+        final plaintext = await xchacha20.decrypt(
+          secretBox,
+          secretKey: secretKey,
+        );
+
+        final share = TrustedFriendShare.fromBuffer(plaintext);
+
+        final receivedShare = ReceivedRecoveryShare(
+          messageId: msgId,
+          trustedFriendDisplayName: share.trustedFriend.displayName,
+          myDisplayName: share.shareUser.displayName,
+          myUserId: share.shareUser.userId.toInt(),
+          myAvatarSvg: share.shareUser.hasAvatar()
+              ? share.shareUser.avatar
+              : null,
+          threshold: share.threshold,
+          sharedSecretDataBytes: share.sharedSecretData,
+        );
+
+        state.receivedShares.add(receivedShare);
+        didUpdate = true;
+
+        Log.info(
+          'Received recovery share from ${share.trustedFriend.displayName} '
+          'for user ${share.shareUser.displayName}',
+        );
+      } catch (e) {
+        Log.error(
+          'Failed to decrypt/parse passwordless notification message $msgId: $e',
+        );
+      }
+    }
+
+    if (didUpdate) {
+      await KeyValueStore.update<OnboardingState>(
+        key: KeyValueKeys.onboardingState,
+        update: (s) => s.receivedShares = state.receivedShares,
+      );
+    }
+
+    return didUpdate;
   }
 }

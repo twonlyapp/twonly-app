@@ -26,7 +26,7 @@ class PasswordLessRecoverySetup extends StatefulWidget {
 
 class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
   List<Contact> _selectedContacts = [];
-  SecondFactorType _secondFactor = SecondFactorType.pin;
+  SecondFactorType _secondFactor = SecondFactorType.email;
   final _pinController = TextEditingController();
   final _emailController = TextEditingController();
   bool _isLoading = false;

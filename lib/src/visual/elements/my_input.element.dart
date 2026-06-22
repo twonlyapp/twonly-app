@@ -18,6 +18,7 @@ class MyInput extends StatefulWidget {
     this.errorText,
     this.obscureText = false,
     this.dense = false,
+    this.readOnly = false,
     super.key,
   });
 
@@ -33,6 +34,7 @@ class MyInput extends StatefulWidget {
   final String? errorText;
   final bool obscureText;
   final bool dense;
+  final bool readOnly;
 
   @override
   State<MyInput> createState() => _MyInputState();
@@ -64,6 +66,7 @@ class _MyInputState extends State<MyInput> {
       alwaysAnimate: true,
       child: TextField(
         controller: widget.controller,
+        readOnly: widget.readOnly,
         onChanged: widget.onChanged,
         onSubmitted: widget.onSubmitted,
         onTapOutside: (event) {

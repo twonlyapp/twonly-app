@@ -37,7 +37,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly is financed by donations and an optional subscription. Your data will never be sold.';
+      'twonly is financed by an optional subscription. Your data will never be sold.';
 
   @override
   String get registerUsernameSlogan => 'Create your account';
@@ -2196,6 +2196,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryEnableBtn => 'Enable Passwordless Recovery';
 
   @override
+  String get passwordlessRecoveryRecoverBtn => 'Recover passwordless';
+
+  @override
   String get passwordlessRecoveryModifyBtn => 'Modify Passwordless Recovery';
 
   @override
@@ -2262,4 +2265,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get passwordlessRecoverySubtitle =>
       'Recover your identity without a password.';
+
+  @override
+  String get recoverPasswordlessExplanation =>
+      'If enabled, you can recover your account by asking your selected friends to help you.';
+
+  @override
+  String get recoverPasswordlessNotificationCardTitle => 'Enable notifications';
+
+  @override
+  String get recoverPasswordlessNotificationCardSubtitle =>
+      'Get notified when a friend has helped you recover your account.';
+
+  @override
+  String get recoverPasswordlessNotificationCardBtn =>
+      'Enable push notifications';
+
+  @override
+  String get recoverPasswordlessQrInstructions =>
+      'Let friends scan the QR code or share the link.';
+
+  @override
+  String get recoverPasswordlessShareBtn => 'Share Recovery Link';
+
+  @override
+  String get recoverPasswordlessCopyBtn => 'Copy';
+
+  @override
+  String get recoverPasswordlessCopiedSnackbar => 'Link copied to clipboard!';
+
+  @override
+  String get passwordlessRecoveryNoShareStored =>
+      'No recovery share stored for this contact.';
+
+  @override
+  String get passwordlessRecoveryShareSent =>
+      'Recovery share successfully sent!';
+
+  @override
+  String get passwordlessRecoveryNetworkError =>
+      'Network error, please ensure you have internet';
+
+  @override
+  String get passwordlessRecoveryHelpAFriend => 'Help a Friend';
+
+  @override
+  String get passwordlessRecoverySelectContactDesc =>
+      'Please select the contact who requested recovery below to send them their recovery key.';
+
+  @override
+  String get passwordlessRecoverySearchContacts => 'Search contacts...';
+
+  @override
+  String get passwordlessRecoveryNoContactsFound => 'No contacts found';
+
+  @override
+  String get passwordlessRecoveryCantHelpHim => 'You can\'t help him';
+
+  @override
+  String passwordlessRecoveryDoesAskedYou(Object username) {
+    return 'Does $username has asked you?';
+  }
+
+  @override
+  String get passwordlessRecoveryVerifySourceDesc =>
+      'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.';
+
+  @override
+  String get passwordlessRecoveryNo => 'No';
+
+  @override
+  String get passwordlessRecoveryYes => 'Yes';
+
+  @override
+  String passwordlessRecoveryYesWithTimer(Object seconds) {
+    return 'Yes (${seconds}s)';
+  }
+
+  @override
+  String get recoverPasswordlessBeingRecoveredLabel =>
+      'Account being recovered';
+
+  @override
+  String recoverPasswordlessSharesReceived(Object received, Object threshold) {
+    return '$received of $threshold friends have shared';
+  }
+
+  @override
+  String get recoverPasswordlessRecoverNowBtn => 'Recover now';
 }

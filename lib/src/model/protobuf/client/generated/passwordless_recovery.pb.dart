@@ -24,11 +24,11 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 /// -> The user who wants to recover his account does not need to remember her old username
 class RecoveryRequest extends $pb.GeneratedMessage {
   factory RecoveryRequest({
-    $fixnum.Int64? tempId,
+    $core.String? notificationId,
     $core.List<$core.int>? publicKey,
   }) {
     final result = create();
-    if (tempId != null) result.tempId = tempId;
+    if (notificationId != null) result.notificationId = notificationId;
     if (publicKey != null) result.publicKey = publicKey;
     return result;
   }
@@ -47,7 +47,7 @@ class RecoveryRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'passwordless_recovery'),
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'tempId')
+    ..aOS(1, _omitFieldNames ? '' : 'notificationId')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
@@ -72,13 +72,13 @@ class RecoveryRequest extends $pb.GeneratedMessage {
   static RecoveryRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $fixnum.Int64 get tempId => $_getI64(0);
+  $core.String get notificationId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set tempId($fixnum.Int64 value) => $_setInt64(0, value);
+  set notificationId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasTempId() => $_has(0);
+  $core.bool hasNotificationId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTempId() => $_clearField(1);
+  void clearNotificationId() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.List<$core.int> get publicKey => $_getN(1);

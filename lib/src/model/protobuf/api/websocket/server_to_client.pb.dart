@@ -1505,6 +1505,136 @@ class Response_ProofOfWork extends $pb.GeneratedMessage {
   void clearDifficulty() => $_clearField(2);
 }
 
+class Response_PasswordlessNotificationMessage extends $pb.GeneratedMessage {
+  factory Response_PasswordlessNotificationMessage({
+    $fixnum.Int64? id,
+    $core.List<$core.int>? encryptedMessage,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (encryptedMessage != null) result.encryptedMessage = encryptedMessage;
+    return result;
+  }
+
+  Response_PasswordlessNotificationMessage._();
+
+  factory Response_PasswordlessNotificationMessage.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PasswordlessNotificationMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PasswordlessNotificationMessage',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'id')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedMessage', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PasswordlessNotificationMessage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PasswordlessNotificationMessage copyWith(
+          void Function(Response_PasswordlessNotificationMessage) updates) =>
+      super.copyWith((message) =>
+              updates(message as Response_PasswordlessNotificationMessage))
+          as Response_PasswordlessNotificationMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PasswordlessNotificationMessage create() =>
+      Response_PasswordlessNotificationMessage._();
+  @$core.override
+  Response_PasswordlessNotificationMessage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PasswordlessNotificationMessage getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Response_PasswordlessNotificationMessage>(create);
+  static Response_PasswordlessNotificationMessage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get id => $_getI64(0);
+  @$pb.TagNumber(1)
+  set id($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedMessage => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedMessage($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedMessage() => $_clearField(2);
+}
+
+class Response_PasswordlessNotificationMessages extends $pb.GeneratedMessage {
+  factory Response_PasswordlessNotificationMessages({
+    $core.Iterable<Response_PasswordlessNotificationMessage>? messages,
+  }) {
+    final result = create();
+    if (messages != null) result.messages.addAll(messages);
+    return result;
+  }
+
+  Response_PasswordlessNotificationMessages._();
+
+  factory Response_PasswordlessNotificationMessages.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PasswordlessNotificationMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PasswordlessNotificationMessages',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..pPM<Response_PasswordlessNotificationMessage>(
+        1, _omitFieldNames ? '' : 'messages',
+        subBuilder: Response_PasswordlessNotificationMessage.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PasswordlessNotificationMessages clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PasswordlessNotificationMessages copyWith(
+          void Function(Response_PasswordlessNotificationMessages) updates) =>
+      super.copyWith((message) =>
+              updates(message as Response_PasswordlessNotificationMessages))
+          as Response_PasswordlessNotificationMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PasswordlessNotificationMessages create() =>
+      Response_PasswordlessNotificationMessages._();
+  @$core.override
+  Response_PasswordlessNotificationMessages createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PasswordlessNotificationMessages getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Response_PasswordlessNotificationMessages>(create);
+  static Response_PasswordlessNotificationMessages? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<Response_PasswordlessNotificationMessage> get messages =>
+      $_getList(0);
+}
+
 enum Response_Ok_Ok {
   none,
   userid,
@@ -1522,6 +1652,7 @@ enum Response_Ok_Ok {
   signedprekey,
   proofOfWork,
   passwordlessRecoveryServerKey,
+  passwordlessNotificationMessages,
   notSet
 }
 
@@ -1543,6 +1674,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_SignedPreKey? signedprekey,
     Response_ProofOfWork? proofOfWork,
     $core.List<$core.int>? passwordlessRecoveryServerKey,
+    Response_PasswordlessNotificationMessages? passwordlessNotificationMessages,
   }) {
     final result = create();
     if (none != null) result.none = none;
@@ -1563,6 +1695,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (proofOfWork != null) result.proofOfWork = proofOfWork;
     if (passwordlessRecoveryServerKey != null)
       result.passwordlessRecoveryServerKey = passwordlessRecoveryServerKey;
+    if (passwordlessNotificationMessages != null)
+      result.passwordlessNotificationMessages =
+          passwordlessNotificationMessages;
     return result;
   }
 
@@ -1592,6 +1727,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     14: Response_Ok_Ok.signedprekey,
     15: Response_Ok_Ok.proofOfWork,
     16: Response_Ok_Ok.passwordlessRecoveryServerKey,
+    17: Response_Ok_Ok.passwordlessNotificationMessages,
     0: Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -1599,7 +1735,7 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(
@@ -1633,6 +1769,9 @@ class Response_Ok extends $pb.GeneratedMessage {
         16,
         _omitFieldNames ? '' : 'passwordlessRecoveryServerKey',
         $pb.PbFieldType.OY)
+    ..aOM<Response_PasswordlessNotificationMessages>(
+        17, _omitFieldNames ? '' : 'passwordlessNotificationMessages',
+        subBuilder: Response_PasswordlessNotificationMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1670,6 +1809,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
@@ -1687,6 +1827,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1856,6 +1997,21 @@ class Response_Ok extends $pb.GeneratedMessage {
   $core.bool hasPasswordlessRecoveryServerKey() => $_has(15);
   @$pb.TagNumber(16)
   void clearPasswordlessRecoveryServerKey() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  Response_PasswordlessNotificationMessages
+      get passwordlessNotificationMessages => $_getN(16);
+  @$pb.TagNumber(17)
+  set passwordlessNotificationMessages(
+          Response_PasswordlessNotificationMessages value) =>
+      $_setField(17, value);
+  @$pb.TagNumber(17)
+  $core.bool hasPasswordlessNotificationMessages() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearPasswordlessNotificationMessages() => $_clearField(17);
+  @$pb.TagNumber(17)
+  Response_PasswordlessNotificationMessages
+      ensurePasswordlessNotificationMessages() => $_ensure(16);
 }
 
 enum Response_Response { ok, error, notSet }

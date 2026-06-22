@@ -16,12 +16,14 @@ class AvatarIcon extends StatefulWidget {
     this.contactId,
     this.myAvatar = false,
     this.fontSize = 20,
+    this.svg,
     this.color,
   });
   final Group? group;
   final int? contactId;
   final bool myAvatar;
   final double? fontSize;
+  final String? svg;
   final Color? color;
 
   @override
@@ -145,7 +147,12 @@ class _AvatarIconState extends State<AvatarIcon> {
 
     Widget avatars = Container();
 
-    if (widget.myAvatar) {
+    if (widget.svg != null) {
+      avatars = SvgPicture.string(
+        widget.svg!,
+        errorBuilder: errorBuilder,
+      );
+    } else if (widget.myAvatar) {
       if (_myAvatarPath != null) {
         avatars = Image.file(
           File(_myAvatarPath!),

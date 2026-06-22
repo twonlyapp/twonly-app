@@ -776,6 +776,41 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<Result> submitRecoveryShare({
+    required String notificationId,
+    required List<int> encryptedMessage,
+  }) async {
+    final req = createClientToServerFromApplicationData(
+      ApplicationData(
+        passwordlessNotification: ApplicationData_PasswordlessNotification(
+          notificationId: notificationId,
+          encryptedMessage: encryptedMessage,
+        ),
+      ),
+    );
+    return sendRequestSync(req);
+  }
+
+  Future<Result> registerPasswordlessNotification({
+    required String notificationId,
+    required List<int> downloadAuthToken,
+    required String langCode,
+    required String? googleFcm,
+  }) async {
+    final registerNotif = Handshake_RegisterPasswordlessNotification()
+      ..notificationId = notificationId
+      ..downloadAuthToken = downloadAuthToken
+      ..langCode = langCode;
+    if (googleFcm != null) {
+      registerNotif.googleFcm = googleFcm;
+    }
+
+    final handshake = Handshake()
+      ..registerPasswordlessNotification = registerNotif;
+    final req = createClientToServerFromHandshake(handshake);
+    return sendRequestSync(req, authenticated: false);
+  }
+
   Future<Result> addAdditionalUser(Int64 userId) async {
     final get = ApplicationData_AddAdditionalUser()..userId = userId;
     final appData = ApplicationData()..addAdditionalUser = get;
@@ -887,5 +922,31 @@ class ApiService {
     final appData = ApplicationData()..textMessage = testMessage;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: target);
+  }
+
+  /// Polls the server for new passwordless recovery notification messages.
+  /// [alreadyReceivedIds] prevents the server from sending duplicates.
+  Future<server.Response_PasswordlessNotificationMessages?> checkForPasswordlessNotification({
+    required String notificationId,
+    required List<int> downloadAuthToken,
+    List<Int64>? alreadyReceivedIds,
+  }) async {
+    final check = Handshake_CheckForPasswordlessNotification()
+      ..notificationId = notificationId
+      ..downloadAuthToken = downloadAuthToken;
+    if (alreadyReceivedIds != null && alreadyReceivedIds.isNotEmpty) {
+      check.alreadyReceivedMessageIds.addAll(alreadyReceivedIds);
+    }
+
+    final handshake = Handshake()..checkForPasswordlessNotification = check;
+    final req = createClientToServerFromHandshake(handshake);
+    final res = await sendRequestSync(req, authenticated: false);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasPasswordlessNotificationMessages()) {
+        return ok.passwordlessNotificationMessages;
+      }
+    }
+    return null;
   }
 }

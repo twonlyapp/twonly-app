@@ -149,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingNotProductBody.
   ///
   /// In en, this message translates to:
-  /// **'twonly is financed by donations and an optional subscription. Your data will never be sold.'**
+  /// **'twonly is financed by an optional subscription. Your data will never be sold.'**
   String get onboardingNotProductBody;
 
   /// No description provided for @registerUsernameSlogan.
@@ -3852,6 +3852,12 @@ abstract class AppLocalizations {
   /// **'Enable Passwordless Recovery'**
   String get passwordlessRecoveryEnableBtn;
 
+  /// No description provided for @passwordlessRecoveryRecoverBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover passwordless'**
+  String get passwordlessRecoveryRecoverBtn;
+
   /// No description provided for @passwordlessRecoveryModifyBtn.
   ///
   /// In en, this message translates to:
@@ -3959,6 +3965,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recover your identity without a password.'**
   String get passwordlessRecoverySubtitle;
+
+  /// No description provided for @recoverPasswordlessExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, you can recover your account by asking your selected friends to help you.'**
+  String get recoverPasswordlessExplanation;
+
+  /// No description provided for @recoverPasswordlessNotificationCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get recoverPasswordlessNotificationCardTitle;
+
+  /// No description provided for @recoverPasswordlessNotificationCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a friend has helped you recover your account.'**
+  String get recoverPasswordlessNotificationCardSubtitle;
+
+  /// No description provided for @recoverPasswordlessNotificationCardBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable push notifications'**
+  String get recoverPasswordlessNotificationCardBtn;
+
+  /// No description provided for @recoverPasswordlessQrInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Let friends scan the QR code or share the link.'**
+  String get recoverPasswordlessQrInstructions;
+
+  /// No description provided for @recoverPasswordlessShareBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Recovery Link'**
+  String get recoverPasswordlessShareBtn;
+
+  /// No description provided for @recoverPasswordlessCopyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get recoverPasswordlessCopyBtn;
+
+  /// No description provided for @recoverPasswordlessCopiedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard!'**
+  String get recoverPasswordlessCopiedSnackbar;
+
+  /// No description provided for @passwordlessRecoveryNoShareStored.
+  ///
+  /// In en, this message translates to:
+  /// **'No recovery share stored for this contact.'**
+  String get passwordlessRecoveryNoShareStored;
+
+  /// No description provided for @passwordlessRecoveryShareSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery share successfully sent!'**
+  String get passwordlessRecoveryShareSent;
+
+  /// No description provided for @passwordlessRecoveryNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, please ensure you have internet'**
+  String get passwordlessRecoveryNetworkError;
+
+  /// No description provided for @passwordlessRecoveryHelpAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Help a Friend'**
+  String get passwordlessRecoveryHelpAFriend;
+
+  /// No description provided for @passwordlessRecoverySelectContactDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select the contact who requested recovery below to send them their recovery key.'**
+  String get passwordlessRecoverySelectContactDesc;
+
+  /// No description provided for @passwordlessRecoverySearchContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get passwordlessRecoverySearchContacts;
+
+  /// No description provided for @passwordlessRecoveryNoContactsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts found'**
+  String get passwordlessRecoveryNoContactsFound;
+
+  /// No description provided for @passwordlessRecoveryCantHelpHim.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t help him'**
+  String get passwordlessRecoveryCantHelpHim;
+
+  /// No description provided for @passwordlessRecoveryDoesAskedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Does {username} has asked you?'**
+  String passwordlessRecoveryDoesAskedYou(Object username);
+
+  /// No description provided for @passwordlessRecoveryVerifySourceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.'**
+  String get passwordlessRecoveryVerifySourceDesc;
+
+  /// No description provided for @passwordlessRecoveryNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get passwordlessRecoveryNo;
+
+  /// No description provided for @passwordlessRecoveryYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get passwordlessRecoveryYes;
+
+  /// No description provided for @passwordlessRecoveryYesWithTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes ({seconds}s)'**
+  String passwordlessRecoveryYesWithTimer(Object seconds);
+
+  /// No description provided for @recoverPasswordlessBeingRecoveredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Account being recovered'**
+  String get recoverPasswordlessBeingRecoveredLabel;
+
+  /// No description provided for @recoverPasswordlessSharesReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'{received} of {threshold} friends have shared'**
+  String recoverPasswordlessSharesReceived(Object received, Object threshold);
+
+  /// No description provided for @recoverPasswordlessRecoverNowBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover now'**
+  String get recoverPasswordlessRecoverNowBtn;
 }
 
 class _AppLocalizationsDelegate

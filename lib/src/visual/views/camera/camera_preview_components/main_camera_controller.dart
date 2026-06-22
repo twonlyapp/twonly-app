@@ -14,6 +14,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart'
+    show PasswordlessRecoveryService;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -503,6 +505,11 @@ class MainCameraController {
       for (final barcode in barcodes) {
         if (barcode.displayValue == null) continue;
         final link = barcode.displayValue!;
+
+        if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
+          await PasswordlessRecoveryService.handleRecoveryLink(link);
+          continue;
+        }
 
         if (link.startsWith(QrCodeUtils.linkPrefix)) {
           if (_handledProfileLinks.contains(link)) continue;

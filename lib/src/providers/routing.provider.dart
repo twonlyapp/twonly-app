@@ -13,7 +13,8 @@ import 'package:twonly/src/visual/views/contact/add_new_contact.view.dart';
 import 'package:twonly/src/visual/views/contact/contact.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
-import 'package:twonly/src/visual/views/onboarding/recover.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover_password.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover_passwordless.view.dart';
 import 'package:twonly/src/visual/views/public_profile.view.dart';
 import 'package:twonly/src/visual/views/settings/account.view.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
@@ -57,6 +58,10 @@ final routerProvider = GoRouter(
     GoRoute(
       path: Routes.home,
       builder: (context, state) => const AppMainWidget(initialPage: 1),
+    ),
+    GoRoute(
+      path: Routes.recoverPasswordless,
+      builder: (context, state) => const RecoverPasswordless(),
     ),
 
     // Chats
