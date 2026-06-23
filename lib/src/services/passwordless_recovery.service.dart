@@ -93,6 +93,7 @@ class PasswordlessRecoveryService {
     try {
       final share = contact.recoveryContactsSecretShare;
       if (share == null) {
+        Log.warn('Contact does not have a recovery share stored.');
         return false;
       }
 
@@ -115,7 +116,7 @@ class PasswordlessRecoveryService {
       final trustedFriendShare = TrustedFriendShare(
         trustedFriend: trustedFriend,
         shareUser: shareUser,
-        threshold: 0,
+        threshold: contact.recoveryContactsThreshold,
         sharedSecretData: share,
       );
 
@@ -176,7 +177,7 @@ class PasswordlessRecoveryService {
     await twonlyDB.contactsDao.resetRecoveryDataForAllContacts();
     await UserService.update((u) => u.passwordLessRecovery = null);
 
-    final config = PasswordLessRecovery();
+    final config = PasswordLessRecovery(threshold);
     final xchacha20 = Xchacha20.poly1305Aead();
 
     // 2. If enabled, handle the second factor and create serverKey
@@ -417,6 +418,7 @@ class PasswordlessRecoveryService {
                 passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
                   recoverySecretShare: contact.recoverySecretShare,
                   delete: false,
+                  threshold: Int64(config.threshold),
                 ),
               ),
             );
@@ -491,7 +493,7 @@ class PasswordlessRecoveryService {
           recoveryContactsLastHeartbeat: Value(null),
         ),
       );
-    } else if (msg.hasRecoverySecretShare()) {
+    } else if (msg.hasRecoverySecretShare() && msg.hasThreshold()) {
       Log.info(
         '[$receiptId] Received new passwordless recovery share from contact $fromUserId',
       );
@@ -501,6 +503,7 @@ class PasswordlessRecoveryService {
           recoveryContactsSecretShare: Value(
             Uint8List.fromList(msg.recoverySecretShare),
           ),
+          recoveryContactsThreshold: Value(msg.threshold.toInt()),
           recoveryContactsLastHeartbeat: const Value(
             null, // this will trigger that a heartbeat will be send...
           ),

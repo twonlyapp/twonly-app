@@ -208,7 +208,7 @@ class TwonlySafeBackup {
 
 @JsonSerializable()
 class PasswordLessRecovery {
-  PasswordLessRecovery();
+  PasswordLessRecovery(this.threshold);
 
   factory PasswordLessRecovery.fromJson(Map<String, dynamic> json) =>
       _$PasswordLessRecoveryFromJson(json);
@@ -218,6 +218,8 @@ class PasswordLessRecovery {
 
   // <--
   // Data shared with trusted friends
+
+  int threshold;
   // Trusted friends are able to brute-force the pin -> Server delets after X tries
   List<int>? pinSeed;
   List<int>? pinUnlockToken;

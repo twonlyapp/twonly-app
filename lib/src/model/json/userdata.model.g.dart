@@ -243,7 +243,7 @@ const _$LastBackupUploadStateEnumMap = {
 
 PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
-) => PasswordLessRecovery()
+) => PasswordLessRecovery((json['threshold'] as num).toInt())
   ..email = json['email'] as String?
   ..pinSeed = (json['pinSeed'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
@@ -269,6 +269,7 @@ Map<String, dynamic> _$PasswordLessRecoveryToJson(
   PasswordLessRecovery instance,
 ) => <String, dynamic>{
   'email': instance.email,
+  'threshold': instance.threshold,
   'pinSeed': instance.pinSeed,
   'pinUnlockToken': instance.pinUnlockToken,
   'encryptedServerKeyNonce': instance.encryptedServerKeyNonce,

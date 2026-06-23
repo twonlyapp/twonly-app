@@ -274,6 +274,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _recoveryContactsThresholdMeta =
+      const VerificationMeta('recoveryContactsThreshold');
+  @override
+  late final GeneratedColumn<int> recoveryContactsThreshold =
+      GeneratedColumn<int>(
+        'recovery_contacts_threshold',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _askForFriendPromotionsMeta =
       const VerificationMeta('askForFriendPromotions');
   @override
@@ -334,6 +345,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     recoverySecretShare,
     recoveryContactsSecretShare,
     recoveryContactsLastHeartbeat,
+    recoveryContactsThreshold,
     askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -517,6 +529,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('recovery_contacts_threshold')) {
+      context.handle(
+        _recoveryContactsThresholdMeta,
+        recoveryContactsThreshold.isAcceptableOrUnknown(
+          data['recovery_contacts_threshold']!,
+          _recoveryContactsThresholdMeta,
+        ),
+      );
+    }
     if (data.containsKey('ask_for_friend_promotions')) {
       context.handle(
         _askForFriendPromotionsMeta,
@@ -637,6 +658,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}recovery_contacts_last_heartbeat'],
       ),
+      recoveryContactsThreshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recovery_contacts_threshold'],
+      ),
       askForFriendPromotions: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}ask_for_friend_promotions'],
@@ -680,6 +705,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final Uint8List? recoverySecretShare;
   final Uint8List? recoveryContactsSecretShare;
   final DateTime? recoveryContactsLastHeartbeat;
+  final int? recoveryContactsThreshold;
   final bool? askForFriendPromotions;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
@@ -705,6 +731,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.recoverySecretShare,
     this.recoveryContactsSecretShare,
     this.recoveryContactsLastHeartbeat,
+    this.recoveryContactsThreshold,
     this.askForFriendPromotions,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
@@ -759,6 +786,11 @@ class Contact extends DataClass implements Insertable<Contact> {
         recoveryContactsLastHeartbeat,
       );
     }
+    if (!nullToAbsent || recoveryContactsThreshold != null) {
+      map['recovery_contacts_threshold'] = Variable<int>(
+        recoveryContactsThreshold,
+      );
+    }
     if (!nullToAbsent || askForFriendPromotions != null) {
       map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
     }
@@ -811,6 +843,10 @@ class Contact extends DataClass implements Insertable<Contact> {
           recoveryContactsLastHeartbeat == null && nullToAbsent
           ? const Value.absent()
           : Value(recoveryContactsLastHeartbeat),
+      recoveryContactsThreshold:
+          recoveryContactsThreshold == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recoveryContactsThreshold),
       askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
           ? const Value.absent()
           : Value(askForFriendPromotions),
@@ -866,6 +902,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       recoveryContactsLastHeartbeat: serializer.fromJson<DateTime?>(
         json['recoveryContactsLastHeartbeat'],
       ),
+      recoveryContactsThreshold: serializer.fromJson<int?>(
+        json['recoveryContactsThreshold'],
+      ),
       askForFriendPromotions: serializer.fromJson<bool?>(
         json['askForFriendPromotions'],
       ),
@@ -912,6 +951,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'recoveryContactsLastHeartbeat': serializer.toJson<DateTime?>(
         recoveryContactsLastHeartbeat,
       ),
+      'recoveryContactsThreshold': serializer.toJson<int?>(
+        recoveryContactsThreshold,
+      ),
       'askForFriendPromotions': serializer.toJson<bool?>(
         askForFriendPromotions,
       ),
@@ -942,6 +984,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<Uint8List?> recoverySecretShare = const Value.absent(),
     Value<Uint8List?> recoveryContactsSecretShare = const Value.absent(),
     Value<DateTime?> recoveryContactsLastHeartbeat = const Value.absent(),
+    Value<int?> recoveryContactsThreshold = const Value.absent(),
     Value<bool?> askForFriendPromotions = const Value.absent(),
     int? mediaSendCounter,
     int? mediaReceivedCounter,
@@ -982,6 +1025,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat.present
         ? recoveryContactsLastHeartbeat.value
         : this.recoveryContactsLastHeartbeat,
+    recoveryContactsThreshold: recoveryContactsThreshold.present
+        ? recoveryContactsThreshold.value
+        : this.recoveryContactsThreshold,
     askForFriendPromotions: askForFriendPromotions.present
         ? askForFriendPromotions.value
         : this.askForFriendPromotions,
@@ -1037,6 +1083,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       recoveryContactsLastHeartbeat: data.recoveryContactsLastHeartbeat.present
           ? data.recoveryContactsLastHeartbeat.value
           : this.recoveryContactsLastHeartbeat,
+      recoveryContactsThreshold: data.recoveryContactsThreshold.present
+          ? data.recoveryContactsThreshold.value
+          : this.recoveryContactsThreshold,
       askForFriendPromotions: data.askForFriendPromotions.present
           ? data.askForFriendPromotions.value
           : this.askForFriendPromotions,
@@ -1075,6 +1124,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write(
             'recoveryContactsLastHeartbeat: $recoveryContactsLastHeartbeat, ',
           )
+          ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -1105,6 +1155,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     $driftBlobEquality.hash(recoverySecretShare),
     $driftBlobEquality.hash(recoveryContactsSecretShare),
     recoveryContactsLastHeartbeat,
+    recoveryContactsThreshold,
     askForFriendPromotions,
     mediaSendCounter,
     mediaReceivedCounter,
@@ -1148,6 +1199,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ) &&
           other.recoveryContactsLastHeartbeat ==
               this.recoveryContactsLastHeartbeat &&
+          other.recoveryContactsThreshold == this.recoveryContactsThreshold &&
           other.askForFriendPromotions == this.askForFriendPromotions &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
@@ -1175,6 +1227,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<Uint8List?> recoverySecretShare;
   final Value<Uint8List?> recoveryContactsSecretShare;
   final Value<DateTime?> recoveryContactsLastHeartbeat;
+  final Value<int?> recoveryContactsThreshold;
   final Value<bool?> askForFriendPromotions;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
@@ -1200,6 +1253,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoverySecretShare = const Value.absent(),
     this.recoveryContactsSecretShare = const Value.absent(),
     this.recoveryContactsLastHeartbeat = const Value.absent(),
+    this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -1226,6 +1280,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoverySecretShare = const Value.absent(),
     this.recoveryContactsSecretShare = const Value.absent(),
     this.recoveryContactsLastHeartbeat = const Value.absent(),
+    this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
@@ -1252,6 +1307,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<Uint8List>? recoverySecretShare,
     Expression<Uint8List>? recoveryContactsSecretShare,
     Expression<DateTime>? recoveryContactsLastHeartbeat,
+    Expression<int>? recoveryContactsThreshold,
     Expression<bool>? askForFriendPromotions,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
@@ -1288,6 +1344,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'recovery_contacts_secret_share': recoveryContactsSecretShare,
       if (recoveryContactsLastHeartbeat != null)
         'recovery_contacts_last_heartbeat': recoveryContactsLastHeartbeat,
+      if (recoveryContactsThreshold != null)
+        'recovery_contacts_threshold': recoveryContactsThreshold,
       if (askForFriendPromotions != null)
         'ask_for_friend_promotions': askForFriendPromotions,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
@@ -1318,6 +1376,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<Uint8List?>? recoverySecretShare,
     Value<Uint8List?>? recoveryContactsSecretShare,
     Value<DateTime?>? recoveryContactsLastHeartbeat,
+    Value<int?>? recoveryContactsThreshold,
     Value<bool?>? askForFriendPromotions,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
@@ -1350,6 +1409,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           recoveryContactsSecretShare ?? this.recoveryContactsSecretShare,
       recoveryContactsLastHeartbeat:
           recoveryContactsLastHeartbeat ?? this.recoveryContactsLastHeartbeat,
+      recoveryContactsThreshold:
+          recoveryContactsThreshold ?? this.recoveryContactsThreshold,
       askForFriendPromotions:
           askForFriendPromotions ?? this.askForFriendPromotions,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
@@ -1441,6 +1502,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         recoveryContactsLastHeartbeat.value,
       );
     }
+    if (recoveryContactsThreshold.present) {
+      map['recovery_contacts_threshold'] = Variable<int>(
+        recoveryContactsThreshold.value,
+      );
+    }
     if (askForFriendPromotions.present) {
       map['ask_for_friend_promotions'] = Variable<bool>(
         askForFriendPromotions.value,
@@ -1481,6 +1547,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write(
             'recoveryContactsLastHeartbeat: $recoveryContactsLastHeartbeat, ',
           )
+          ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
@@ -13265,6 +13332,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<Uint8List?> recoverySecretShare,
       Value<Uint8List?> recoveryContactsSecretShare,
       Value<DateTime?> recoveryContactsLastHeartbeat,
+      Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -13292,6 +13360,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<Uint8List?> recoverySecretShare,
       Value<Uint8List?> recoveryContactsSecretShare,
       Value<DateTime?> recoveryContactsLastHeartbeat,
+      Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
@@ -13682,6 +13751,11 @@ class $$ContactsTableFilterComposer
         column: $table.recoveryContactsLastHeartbeat,
         builder: (column) => ColumnFilters(column),
       );
+
+  ColumnFilters<int> get recoveryContactsThreshold => $composableBuilder(
+    column: $table.recoveryContactsThreshold,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
@@ -14098,6 +14172,11 @@ class $$ContactsTableOrderingComposer
         builder: (column) => ColumnOrderings(column),
       );
 
+  ColumnOrderings<int> get recoveryContactsThreshold => $composableBuilder(
+    column: $table.recoveryContactsThreshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
     builder: (column) => ColumnOrderings(column),
@@ -14213,6 +14292,11 @@ class $$ContactsTableAnnotationComposer
         column: $table.recoveryContactsLastHeartbeat,
         builder: (column) => column,
       );
+
+  GeneratedColumn<int> get recoveryContactsThreshold => $composableBuilder(
+    column: $table.recoveryContactsThreshold,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
@@ -14581,6 +14665,7 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<DateTime?> recoveryContactsLastHeartbeat =
                     const Value.absent(),
+                Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14606,6 +14691,7 @@ class $$ContactsTableTableManager
                 recoverySecretShare: recoverySecretShare,
                 recoveryContactsSecretShare: recoveryContactsSecretShare,
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
+                recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
@@ -14635,6 +14721,7 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<DateTime?> recoveryContactsLastHeartbeat =
                     const Value.absent(),
+                Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
@@ -14660,6 +14747,7 @@ class $$ContactsTableTableManager
                 recoverySecretShare: recoverySecretShare,
                 recoveryContactsSecretShare: recoveryContactsSecretShare,
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
+                recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,

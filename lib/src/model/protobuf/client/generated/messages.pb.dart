@@ -1843,11 +1843,13 @@ class EncryptedContent_PasswordLessRecovery extends $pb.GeneratedMessage {
   factory EncryptedContent_PasswordLessRecovery({
     $core.List<$core.int>? recoverySecretShare,
     $core.bool? delete,
+    $fixnum.Int64? threshold,
   }) {
     final result = create();
     if (recoverySecretShare != null)
       result.recoverySecretShare = recoverySecretShare;
     if (delete != null) result.delete = delete;
+    if (threshold != null) result.threshold = threshold;
     return result;
   }
 
@@ -1868,6 +1870,7 @@ class EncryptedContent_PasswordLessRecovery extends $pb.GeneratedMessage {
         1, _omitFieldNames ? '' : 'recoverySecretShare', $pb.PbFieldType.OY,
         protoName: 'recoverySecretShare')
     ..aOB(2, _omitFieldNames ? '' : 'delete')
+    ..aInt64(3, _omitFieldNames ? '' : 'threshold')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1910,6 +1913,15 @@ class EncryptedContent_PasswordLessRecovery extends $pb.GeneratedMessage {
   $core.bool hasDelete() => $_has(1);
   @$pb.TagNumber(2)
   void clearDelete() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get threshold => $_getI64(2);
+  @$pb.TagNumber(3)
+  set threshold($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasThreshold() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearThreshold() => $_clearField(3);
 }
 
 class EncryptedContent_PasswordLessRecoveryHeartbeat

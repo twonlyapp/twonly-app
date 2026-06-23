@@ -220,6 +220,7 @@ message EncryptedContent {
   message PasswordLessRecovery {
     optional bytes recoverySecretShare = 1;
     bool delete = 2;
+    int64 threshold = 3;
   }
 
   message PasswordLessRecoveryHeartbeat {

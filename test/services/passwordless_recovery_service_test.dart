@@ -282,7 +282,7 @@ void main() {
     test(
       'triggers server registration based on lastServerHeartbeat time',
       () async {
-        final config = PasswordLessRecovery()
+        final config = PasswordLessRecovery(3)
           ..encryptedServerKey = Uint8List.fromList([1, 2, 3])
           ..pinUnlockToken = Uint8List.fromList([4, 5, 6]);
 
@@ -330,7 +330,7 @@ void main() {
     test(
       'sends secret shares to trusted friends with null recoveryLastHeartbeat',
       () async {
-        final config = PasswordLessRecovery()
+        final config = PasswordLessRecovery(3)
           ..encryptedServerKey = Uint8List.fromList([1, 2, 3])
           ..pinUnlockToken = Uint8List.fromList([4, 5, 6]);
         await UserService.update((u) => u.passwordLessRecovery = config);
@@ -376,7 +376,7 @@ void main() {
     test(
       'sends heartbeat to friends who chose us as a trusted friend based on time',
       () async {
-        final config = PasswordLessRecovery()
+        final config = PasswordLessRecovery(3)
           ..encryptedServerKey = Uint8List.fromList([1, 2, 3])
           ..pinUnlockToken = Uint8List.fromList([4, 5, 6]);
         await UserService.update((u) => u.passwordLessRecovery = config);

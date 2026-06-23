@@ -431,18 +431,18 @@ class RecoveryData extends $pb.GeneratedMessage {
 class SharedSecretData extends $pb.GeneratedMessage {
   factory SharedSecretData({
     $core.List<$core.int>? recoveryData,
+    $core.List<$core.int>? encryptedServerKeyNonce,
     $core.List<$core.int>? pinSeed,
     $core.List<$core.int>? pinUnlockToken,
     $core.String? emailHint,
-    $core.List<$core.int>? encryptedServerKeyNonce,
   }) {
     final result = create();
     if (recoveryData != null) result.recoveryData = recoveryData;
+    if (encryptedServerKeyNonce != null)
+      result.encryptedServerKeyNonce = encryptedServerKeyNonce;
     if (pinSeed != null) result.pinSeed = pinSeed;
     if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
     if (emailHint != null) result.emailHint = emailHint;
-    if (encryptedServerKeyNonce != null)
-      result.encryptedServerKeyNonce = encryptedServerKeyNonce;
     return result;
   }
 
@@ -463,12 +463,12 @@ class SharedSecretData extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         1, _omitFieldNames ? '' : 'recoveryData', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'pinSeed', $pb.PbFieldType.OY)
+        3, _omitFieldNames ? '' : 'encryptedServerKeyNonce', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY)
-    ..aOS(4, _omitFieldNames ? '' : 'emailHint')
+        4, _omitFieldNames ? '' : 'pinSeed', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
-        5, _omitFieldNames ? '' : 'encryptedServerKeyNonce', $pb.PbFieldType.OY)
+        5, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY)
+    ..aOS(6, _omitFieldNames ? '' : 'emailHint')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -500,42 +500,42 @@ class SharedSecretData extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearRecoveryData() => $_clearField(1);
 
-  @$pb.TagNumber(2)
-  $core.List<$core.int> get pinSeed => $_getN(1);
-  @$pb.TagNumber(2)
-  set pinSeed($core.List<$core.int> value) => $_setBytes(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPinSeed() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPinSeed() => $_clearField(2);
-
   @$pb.TagNumber(3)
-  $core.List<$core.int> get pinUnlockToken => $_getN(2);
+  $core.List<$core.int> get encryptedServerKeyNonce => $_getN(1);
   @$pb.TagNumber(3)
-  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPinUnlockToken() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPinUnlockToken() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get emailHint => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set emailHint($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasEmailHint() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearEmailHint() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.List<$core.int> get encryptedServerKeyNonce => $_getN(4);
-  @$pb.TagNumber(5)
   set encryptedServerKeyNonce($core.List<$core.int> value) =>
-      $_setBytes(4, value);
+      $_setBytes(1, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEncryptedServerKeyNonce() => $_has(1);
+  @$pb.TagNumber(3)
+  void clearEncryptedServerKeyNonce() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get pinSeed => $_getN(2);
+  @$pb.TagNumber(4)
+  set pinSeed($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPinSeed() => $_has(2);
+  @$pb.TagNumber(4)
+  void clearPinSeed() => $_clearField(4);
+
   @$pb.TagNumber(5)
-  $core.bool hasEncryptedServerKeyNonce() => $_has(4);
+  $core.List<$core.int> get pinUnlockToken => $_getN(3);
   @$pb.TagNumber(5)
-  void clearEncryptedServerKeyNonce() => $_clearField(5);
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPinUnlockToken() => $_has(3);
+  @$pb.TagNumber(5)
+  void clearPinUnlockToken() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get emailHint => $_getSZ(4);
+  @$pb.TagNumber(6)
+  set emailHint($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(6)
+  $core.bool hasEmailHint() => $_has(4);
+  @$pb.TagNumber(6)
+  void clearEmailHint() => $_clearField(6);
 }
 
 const $core.bool _omitFieldNames =

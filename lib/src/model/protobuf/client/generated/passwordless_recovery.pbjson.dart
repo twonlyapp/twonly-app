@@ -116,55 +116,55 @@ const SharedSecretData$json = {
   '2': [
     {'1': 'recovery_data', '3': 1, '4': 1, '5': 12, '10': 'recoveryData'},
     {
-      '1': 'pin_seed',
-      '3': 2,
+      '1': 'encrypted_server_key_nonce',
+      '3': 3,
       '4': 1,
       '5': 12,
       '9': 0,
+      '10': 'encryptedServerKeyNonce',
+      '17': true
+    },
+    {
+      '1': 'pin_seed',
+      '3': 4,
+      '4': 1,
+      '5': 12,
+      '9': 1,
       '10': 'pinSeed',
       '17': true
     },
     {
       '1': 'pin_unlock_token',
-      '3': 3,
+      '3': 5,
       '4': 1,
       '5': 12,
-      '9': 1,
+      '9': 2,
       '10': 'pinUnlockToken',
       '17': true
     },
     {
       '1': 'email_hint',
-      '3': 4,
+      '3': 6,
       '4': 1,
       '5': 9,
-      '9': 2,
-      '10': 'emailHint',
-      '17': true
-    },
-    {
-      '1': 'encrypted_server_key_nonce',
-      '3': 5,
-      '4': 1,
-      '5': 12,
       '9': 3,
-      '10': 'encryptedServerKeyNonce',
+      '10': 'emailHint',
       '17': true
     },
   ],
   '8': [
+    {'1': '_encrypted_server_key_nonce'},
     {'1': '_pin_seed'},
     {'1': '_pin_unlock_token'},
     {'1': '_email_hint'},
-    {'1': '_encrypted_server_key_nonce'},
   ],
 };
 
 /// Descriptor for `SharedSecretData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sharedSecretDataDescriptor = $convert.base64Decode(
     'ChBTaGFyZWRTZWNyZXREYXRhEiMKDXJlY292ZXJ5X2RhdGEYASABKAxSDHJlY292ZXJ5RGF0YR'
-    'IeCghwaW5fc2VlZBgCIAEoDEgAUgdwaW5TZWVkiAEBEi0KEHBpbl91bmxvY2tfdG9rZW4YAyAB'
-    'KAxIAVIOcGluVW5sb2NrVG9rZW6IAQESIgoKZW1haWxfaGludBgEIAEoCUgCUgllbWFpbEhpbn'
-    'SIAQESQAoaZW5jcnlwdGVkX3NlcnZlcl9rZXlfbm9uY2UYBSABKAxIA1IXZW5jcnlwdGVkU2Vy'
-    'dmVyS2V5Tm9uY2WIAQFCCwoJX3Bpbl9zZWVkQhMKEV9waW5fdW5sb2NrX3Rva2VuQg0KC19lbW'
-    'FpbF9oaW50Qh0KG19lbmNyeXB0ZWRfc2VydmVyX2tleV9ub25jZQ==');
+    'JAChplbmNyeXB0ZWRfc2VydmVyX2tleV9ub25jZRgDIAEoDEgAUhdlbmNyeXB0ZWRTZXJ2ZXJL'
+    'ZXlOb25jZYgBARIeCghwaW5fc2VlZBgEIAEoDEgBUgdwaW5TZWVkiAEBEi0KEHBpbl91bmxvY2'
+    'tfdG9rZW4YBSABKAxIAlIOcGluVW5sb2NrVG9rZW6IAQESIgoKZW1haWxfaGludBgGIAEoCUgD'
+    'UgllbWFpbEhpbnSIAQFCHQobX2VuY3J5cHRlZF9zZXJ2ZXJfa2V5X25vbmNlQgsKCV9waW5fc2'
+    'VlZEITChFfcGluX3VubG9ja190b2tlbkINCgtfZW1haWxfaGludA==');
