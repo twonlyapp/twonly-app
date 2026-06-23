@@ -47,6 +47,8 @@ OnboardingState _$OnboardingStateFromJson(Map<String, dynamic> json) =>
         encryptionKey: (json['encryptionKey'] as List<dynamic>?)
             ?.map((e) => (e as num).toInt())
             .toList(),
+        emailRecoveryRequested:
+            json['emailRecoveryRequested'] as bool? ?? false,
       )
       ..receivedShares = (json['receivedShares'] as List<dynamic>)
           .map((e) => ReceivedRecoveryShare.fromJson(e as Map<String, dynamic>))
@@ -60,5 +62,6 @@ Map<String, dynamic> _$OnboardingStateToJson(OnboardingState instance) =>
       'downloadAuthToken': instance.downloadAuthToken,
       'serverRegistered': instance.serverRegistered,
       'encryptionKey': instance.encryptionKey,
+      'emailRecoveryRequested': instance.emailRecoveryRequested,
       'receivedShares': instance.receivedShares,
     };

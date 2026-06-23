@@ -191,7 +191,8 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         _proofOfWork = (null, disabled);
       }
 
-      if (onboardingState.hasStartedPasswordlessRecovery) {
+      if (onboardingState.hasStartedPasswordlessRecovery ||
+          onboardingState.emailRecoveryRequested) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           routerProvider.push(Routes.recoverPasswordless);
         });
@@ -199,7 +200,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     }
 
     await PasswordlessRecoveryService.handleRecoveryLink(
-      'https://me.twonly.eu/r/#d0e204fa-3d1e-4e53-a6a5-53aadf1e2ee5/oHeAEPp_CivU3QO67L0AkSlM94E5klbP8XDLbNgsGmA',
+      'https://me.twonly.eu/r/#7fdb8f08-0927-4e44-8761-038993414e48/1p7SKEzpxE3wSW9FQw60EUI4OpSW2U4EskdXLw8xg48',
     );
 
     setState(() {

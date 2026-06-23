@@ -4032,6 +4032,18 @@ abstract class AppLocalizations {
   /// **'Network error, please ensure you have internet'**
   String get passwordlessRecoveryNetworkError;
 
+  /// No description provided for @passwordlessRecoveryInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'The email address is invalid.'**
+  String get passwordlessRecoveryInvalidEmail;
+
+  /// No description provided for @passwordlessRecoveryResendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend recovery email'**
+  String get passwordlessRecoveryResendEmail;
+
   /// No description provided for @passwordlessRecoveryHelpAFriend.
   ///
   /// In en, this message translates to:

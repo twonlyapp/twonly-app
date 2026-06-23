@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -93,10 +94,10 @@ Future<String?> saveVideoToGallery(
   if (!hasAccess) {
     await Gal.requestAccess(toAlbum: true);
   }
-  
+
   var pathToSave = videoPath;
   File? tempFile;
-  
+
   try {
     if (name != null) {
       final file = File(videoPath);
@@ -427,4 +428,21 @@ String createEmailHint(String email) {
 
   final restDomain = domainParts.skip(1).join('.');
   return '$localMasked@$domainNameMasked${restDomain.isNotEmpty ? '.$restDomain' : ''}';
+}
+
+extension RecoveryErrorLocalization on RecoveryError {
+  String toLocalizedString(BuildContext context) {
+    switch (this) {
+      case RecoveryError.noInternet:
+        return context.lang.recoverErrorNoInternet;
+      case RecoveryError.usernameNotValid:
+        return context.lang.recoverErrorUsernameNotValid;
+      case RecoveryError.passwordInvalid:
+        return context.lang.recoverErrorPasswordInvalid;
+      case RecoveryError.tryAgainLater:
+        return context.lang.recoverErrorTryAgainLater;
+      case RecoveryError.unkownError:
+        return context.lang.recoverErrorUnknown;
+    }
+  }
 }

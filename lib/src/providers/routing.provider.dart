@@ -61,7 +61,10 @@ final routerProvider = GoRouter(
     ),
     GoRoute(
       path: Routes.recoverPasswordless,
-      builder: (context, state) => const RecoverPasswordless(),
+      builder: (context, state) {
+        final token = state.extra as String?;
+        return RecoverPasswordless(initialEmailToken: token);
+      },
     ),
 
     // Chats

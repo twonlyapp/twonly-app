@@ -2326,6 +2326,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Netzwerkfehler, bitte stelle sicher, dass du Internet hast';
 
   @override
+  String get passwordlessRecoveryInvalidEmail =>
+      'Die E-Mail-Adresse ist ungültig.';
+
+  @override
+  String get passwordlessRecoveryResendEmail => 'E-Mail erneut senden';
+
+  @override
   String get passwordlessRecoveryHelpAFriend => 'Einem Freund helfen';
 
   @override

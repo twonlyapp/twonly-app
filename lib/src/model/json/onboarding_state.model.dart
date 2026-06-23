@@ -43,6 +43,7 @@ class OnboardingState {
     this.downloadAuthToken,
     this.serverRegistered = false,
     this.encryptionKey,
+    this.emailRecoveryRequested = false,
   });
 
   factory OnboardingState.fromJson(Map<String, dynamic> json) =>
@@ -55,6 +56,8 @@ class OnboardingState {
   List<int>? downloadAuthToken;
   bool serverRegistered;
   List<int>? encryptionKey;
+  bool emailRecoveryRequested;
+
 
   List<ReceivedRecoveryShare> receivedShares = [];
 

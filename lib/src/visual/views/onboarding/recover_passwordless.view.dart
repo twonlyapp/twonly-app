@@ -1,16 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cryptography_plus/cryptography_plus.dart'
+    show Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hashlib/random.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
+    as server;
+import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -22,7 +31,9 @@ import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/animated_bell_icon.comp.dart';
 
 class RecoverPasswordless extends StatefulWidget {
-  const RecoverPasswordless({super.key});
+  const RecoverPasswordless({this.initialEmailToken, super.key});
+
+  final String? initialEmailToken;
 
   @override
   State<RecoverPasswordless> createState() => _RecoverPasswordlessState();
@@ -36,15 +47,45 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   OnboardingState? _onboardingState;
   Timer? _pollTimer;
 
+  SharedSecretData? _reconstructedSecret;
+  bool _isReconstructing = false;
+  String? _reconstructionError;
+
+  bool _isRecovering = false;
+  final TextEditingController _secondFactorController = TextEditingController();
+
+  StreamSubscription<String>? _emailTokenSubscription;
+
   @override
   void initState() {
     super.initState();
+    _secondFactorController.text = widget.initialEmailToken ?? '';
+    _emailTokenSubscription = PasswordlessRecoveryService
+        .onEmailTokenReceived
+        .stream
+        .listen((token) async {
+          if (mounted) {
+            final state = _onboardingState;
+            if (state != null && !state.emailRecoveryRequested) {
+              state.emailRecoveryRequested = true;
+              await KeyValueStore.update<OnboardingState>(
+                key: KeyValueKeys.onboardingState,
+                update: (s) => s.emailRecoveryRequested = true,
+              );
+            }
+            setState(() {
+              _secondFactorController.text = token;
+            });
+          }
+        });
     _initAsync();
   }
 
   @override
   void dispose() {
+    _emailTokenSubscription?.cancel();
     _pollTimer?.cancel();
+    _secondFactorController.dispose();
     super.dispose();
   }
 
@@ -54,6 +95,14 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
       final state = await KeyValueStore.getModel<OnboardingState>(
         KeyValueKeys.onboardingState,
       );
+
+      if (widget.initialEmailToken != null && !state.emailRecoveryRequested) {
+        state.emailRecoveryRequested = true;
+        await KeyValueStore.update<OnboardingState>(
+          key: KeyValueKeys.onboardingState,
+          update: (s) => s.emailRecoveryRequested = true,
+        );
+      }
 
       // 2. Generate fields if they are missing
       if (state.notificationId == null) {
@@ -94,6 +143,8 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
       // 6. If already registered, do an immediate check and start the poll timer
       if (state.serverRegistered) _startPollTimer();
+
+      _checkAndReconstruct();
     } catch (e) {
       Log.warn('Error during passwordless recovery initialization: $e');
     } finally {
@@ -116,7 +167,280 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           _onboardingState!,
         );
     // _onboardingState was changed in checkAndStorePasswordlessMessages
-    if (didUpdate && mounted) setState(() => ());
+    if (didUpdate && mounted) {
+      setState(() => ());
+      _checkAndReconstruct();
+    }
+  }
+
+  void _checkAndReconstruct() {
+    final state = _onboardingState;
+    if (state != null) {
+      final shares = state.receivedShares;
+      if (shares.isNotEmpty) {
+        final threshold = shares.first.threshold;
+        if (shares.length >= threshold &&
+            _reconstructedSecret == null &&
+            !_isReconstructing) {
+          unawaited(_reconstructSecret());
+        }
+      }
+    }
+  }
+
+  Future<void> _reconstructSecret() async {
+    final state = _onboardingState;
+    if (state == null) return;
+    final shares = state.receivedShares;
+    if (shares.isEmpty) return;
+    final threshold = shares.first.threshold;
+    if (shares.length < threshold) return;
+
+    setState(() {
+      _isReconstructing = true;
+      _reconstructionError = null;
+    });
+
+    try {
+      final shareBytesList = shares
+          .map((s) => Uint8List.fromList(s.sharedSecretDataBytes))
+          .toList();
+      final secretBytes = await RustUtils.recoverSecret(
+        shares: shareBytesList,
+        threshold: threshold,
+      );
+      final sharedSecretData = SharedSecretData.fromBuffer(secretBytes);
+      if (mounted) {
+        setState(() {
+          _reconstructedSecret = sharedSecretData;
+        });
+      }
+    } catch (e) {
+      Log.error('Failed to reconstruct secret: $e');
+      if (mounted) {
+        setState(() {
+          _reconstructionError = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReconstructing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _recoverNow(List<ReceivedRecoveryShare> shares) async {
+    final reconstructed = _reconstructedSecret;
+    if (reconstructed == null) return;
+
+    setState(() {
+      _isRecovering = true;
+    });
+
+    try {
+      final userId = shares.first.myUserId;
+      Uint8List? serverKey;
+
+      if (reconstructed.hasPinSeed()) {
+        final pin = _secondFactorController.text.trim();
+        if (pin.isEmpty) {
+          showSnackbar(
+            context,
+            context.lang.passwordlessRecoveryEnterPin,
+          );
+          setState(() {
+            _isRecovering = false;
+          });
+          return;
+        }
+
+        // Calculate pinProtectionKey
+        final pinProtectionKey = await Hmac.sha256().calculateMac(
+          Uint8List.fromList(utf8.encode(pin)),
+          secretKey: SecretKey(reconstructed.pinSeed),
+        );
+
+        // Fetch serverKey
+        final res = await apiService.getServerKeyForPasswordlessRecovery(
+          userId: userId,
+          pinUnlockToken: reconstructed.pinUnlockToken,
+          pinProtectionKey: pinProtectionKey.bytes,
+          encryptedServerKeyNone: reconstructed.encryptedServerKeyNonce,
+        );
+
+        if (res.isError) {
+          if (mounted) {
+            showSnackbar(
+              context,
+              context.lang.passwordlessRecoveryTestPinIncorrect,
+            );
+          }
+          setState(() {
+            _isRecovering = false;
+          });
+          return;
+        }
+
+        final ok = res.value as server.Response_Ok;
+        serverKey = Uint8List.fromList(ok.passwordlessRecoveryServerKey);
+      } else if (reconstructed.hasEmailHint()) {
+        final state = _onboardingState;
+        if (state == null) return;
+
+        if (!state.emailRecoveryRequested) {
+          // Stage 1: Send Email
+          final email = _secondFactorController.text.trim();
+          if (email.isEmpty) {
+            showSnackbar(
+              context,
+              context.lang.passwordlessRecoveryEnterEmail,
+            );
+            setState(() {
+              _isRecovering = false;
+            });
+            return;
+          }
+
+          // Fetch serverKey (sends recovery email)
+          final res = await apiService.getServerKeyForPasswordlessRecovery(
+            userId: userId,
+            email: email,
+            encryptedServerKeyNone: reconstructed.encryptedServerKeyNonce,
+          );
+
+          if (res.isError) {
+            if (mounted) {
+              final isInternalError = res.error == ErrorCode.InternalError;
+              showSnackbar(
+                context,
+                isInternalError
+                    ? context.lang.passwordlessRecoveryNetworkError
+                    : context.lang.passwordlessRecoveryInvalidEmail,
+              );
+            }
+            setState(() {
+              _isRecovering = false;
+            });
+            return;
+          }
+
+          // Success - server sent recovery email. Store in state
+          state.emailRecoveryRequested = true;
+          await KeyValueStore.update<OnboardingState>(
+            key: KeyValueKeys.onboardingState,
+            update: (s) => s.emailRecoveryRequested = true,
+          );
+
+          _secondFactorController.clear();
+          if (mounted) {
+            showSnackbar(
+              context,
+              context.lang.passwordlessRecoveryShareSent,
+              level: SnackbarLevel.success,
+            );
+          }
+          setState(() {
+            _isRecovering = false;
+          });
+          return;
+        } else {
+          // Stage 2: Token verification
+          final token = _secondFactorController.text.trim();
+          if (token.isEmpty) {
+            if (mounted) {
+              showSnackbar(
+                context,
+                'Please enter the recovery token from your email.',
+              );
+            }
+            setState(() {
+              _isRecovering = false;
+            });
+            return;
+          }
+
+          try {
+            serverKey = base64Url.decode(base64Url.normalize(token));
+          } catch (e) {
+            if (mounted) {
+              showSnackbar(
+                context,
+                'Invalid verification token format.',
+              );
+            }
+            setState(() {
+              _isRecovering = false;
+            });
+            return;
+          }
+        }
+      }
+
+      // Decrypt recoveryData using serverKey if present
+      List<int> recoveryDataBytes;
+      if (serverKey != null) {
+        final envelope = EncryptedEnvelope.fromBuffer(
+          reconstructed.recoveryData,
+        );
+        final secretBox = SecretBox(
+          envelope.encryptedData,
+          nonce: envelope.iv,
+          mac: Mac(envelope.mac),
+        );
+        final xchacha20 = Xchacha20.poly1305Aead();
+        recoveryDataBytes = await xchacha20.decrypt(
+          secretBox,
+          secretKey: SecretKey(serverKey),
+        );
+      } else {
+        recoveryDataBytes = reconstructed.recoveryData;
+      }
+
+      final recoveryData = RecoveryData.fromBuffer(recoveryDataBytes);
+
+      // Start full passwordless recovery
+      final error = await BackupService.startPasswordlessBackupRecovery(
+        recoveryData.userId.toInt(),
+        shares.first.myDisplayName,
+        Uint8List.fromList(recoveryData.keyManager),
+      );
+
+      if (!mounted) return;
+
+      if (error != null) {
+        showSnackbar(
+          context,
+          error.toLocalizedString(context),
+        );
+        setState(() {
+          _isRecovering = false;
+        });
+        return;
+      }
+
+      // Successful! Restart the app to apply restored keymanager/archive database
+      await Restart.restartApp(
+        notificationTitle: context.lang.recoverSuccessTitle,
+        notificationBody: context.lang.recoverSuccessBody,
+        forceKill: true,
+      );
+    } catch (e) {
+      Log.error('Failed to recover passwordless: $e');
+      if (mounted) {
+        showSnackbar(
+          context,
+          '${context.lang.recoverErrorUnknown}: $e',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRecovering = false;
+        });
+      }
+    }
   }
 
   Future<void> _registerPasswordlessNotification(OnboardingState state) async {
@@ -233,14 +557,93 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         const SizedBox(height: 24),
 
         if (thresholdReached) ...[
-          MyButton(
-            onPressed: () {
-              // TODO(recovery): Navigate to the actual recovery flow with the collected shares.
-              Log.info('Recover now pressed with ${shares.length} shares');
-            },
-            child: Text(context.lang.recoverPasswordlessRecoverNowBtn),
-          ),
-          const SizedBox(height: 16),
+          if (_isReconstructing)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_reconstructionError != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Reconstruction failed: $_reconstructionError',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else if (_reconstructedSecret != null) ...[
+            if (_reconstructedSecret!.hasPinSeed()) ...[
+              MyInput(
+                controller: _secondFactorController,
+                hintText: context.lang.passwordlessRecoveryMethodPinHint,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+            ] else if (_reconstructedSecret!.hasEmailHint()) ...[
+              if (_onboardingState != null &&
+                  !_onboardingState!.emailRecoveryRequested) ...[
+                MyInput(
+                  controller: _secondFactorController,
+                  hintText: _reconstructedSecret!.emailHint,
+                  prefixIcon: const Icon(Icons.email_rounded),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                MyInput(
+                  controller: _secondFactorController,
+                  hintText: 'Enter recovery token',
+                  prefixIcon: const Icon(Icons.key_rounded),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ],
+            MyButton(
+              onPressed: _isRecovering ? null : () => _recoverNow(shares),
+              child: _isRecovering
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.black87,
+                      ),
+                    )
+                  : Text(
+                      _reconstructedSecret!.hasEmailHint() &&
+                              _onboardingState != null &&
+                              !_onboardingState!.emailRecoveryRequested
+                          ? 'Send recovery email'
+                          : context.lang.recoverPasswordlessRecoverNowBtn,
+                    ),
+            ),
+            const SizedBox(height: 16),
+            if (_reconstructedSecret!.hasEmailHint() &&
+                _onboardingState != null &&
+                _onboardingState!.emailRecoveryRequested) ...[
+              MyButton(
+                onPressed: _isRecovering
+                    ? null
+                    : () async {
+                        final state = _onboardingState;
+                        if (state == null) return;
+                        setState(() {
+                          state.emailRecoveryRequested = false;
+                          _secondFactorController.clear();
+                        });
+                        await KeyValueStore.update<OnboardingState>(
+                          key: KeyValueKeys.onboardingState,
+                          update: (s) => s.emailRecoveryRequested = false,
+                        );
+                      },
+                variant: MyButtonVariant.secondary,
+                child: Text(context.lang.passwordlessRecoveryResendEmail),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ],
         ],
       ],
     );

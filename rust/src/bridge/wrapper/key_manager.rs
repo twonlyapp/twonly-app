@@ -116,4 +116,13 @@ impl RustKeyManager {
         let serialized_bytes = postcard::to_allocvec(&*key_manager)?;
         Ok(serialized_bytes)
     }
+
+    pub async fn import_serialized(serialized_bytes: Vec<u8>) -> Result<()> {
+        let ctx = get_twonly_flutter()?;
+        let key_manager: crate::keys::KeyManager = postcard::from_bytes(&serialized_bytes)?;
+        key_manager.store_to_keychain(&ctx.secure_storage)?;
+        *ctx.key_manager.lock().await = key_manager;
+        Ok(())
+    }
 }
+

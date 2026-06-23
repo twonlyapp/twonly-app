@@ -776,6 +776,34 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<Result> getServerKeyForPasswordlessRecovery({
+    required int userId,
+    List<int>? encryptedServerKeyNone,
+    List<int>? pinUnlockToken,
+    List<int>? pinProtectionKey,
+    String? email,
+  }) async {
+    final get = Handshake_GetServerKeyForPasswordLessRecovery()
+      ..userId = Int64(userId);
+    if (encryptedServerKeyNone != null) {
+      get.encryptedServerKeyNone = encryptedServerKeyNone;
+    }
+    if (pinUnlockToken != null) {
+      get.pinUnlockToken = pinUnlockToken;
+    }
+    if (pinProtectionKey != null) {
+      get.pinProtectionKey = pinProtectionKey;
+    }
+    if (email != null) {
+      get.email = email;
+    }
+
+    final handshake = Handshake()..getServerKeyForPasswordlessRecovery = get;
+    final req = createClientToServerFromHandshake(handshake);
+    return sendRequestSync(req, authenticated: false);
+  }
+
+
   Future<Result> submitRecoveryShare({
     required String notificationId,
     required List<int> encryptedMessage,

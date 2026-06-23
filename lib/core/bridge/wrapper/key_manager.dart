@@ -20,6 +20,12 @@ class RustKeyManager {
   static Future<PlatformInt64?> getUserId() => RustLib.instance.api
       .crateBridgeWrapperKeyManagerRustKeyManagerGetUserId();
 
+  static Future<void> importSerialized({required List<int> serializedBytes}) =>
+      RustLib.instance.api
+          .crateBridgeWrapperKeyManagerRustKeyManagerImportSerialized(
+            serializedBytes: serializedBytes,
+          );
+
   static Future<void> importSignalIdentity({
     required List<int> identityKeyPairStructure,
     required PlatformInt64 registrationId,

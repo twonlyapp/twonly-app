@@ -39,23 +39,10 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
     if (!mounted) return;
 
     if (error != null) {
-      String errorMessage;
-      switch (error) {
-        case RecoveryError.noInternet:
-          errorMessage = context.lang.recoverErrorNoInternet;
-        case RecoveryError.usernameNotValid:
-          errorMessage = context.lang.recoverErrorUsernameNotValid;
-        case RecoveryError.passwordInvalid:
-          errorMessage = context.lang.recoverErrorPasswordInvalid;
-        case RecoveryError.tryAgainLater:
-          errorMessage = context.lang.recoverErrorTryAgainLater;
-        case RecoveryError.unkownError:
-          errorMessage = context.lang.recoverErrorUnknown;
-      }
       setState(() {
         isLoading = false;
       });
-      return showSnackbar(context, errorMessage);
+      return showSnackbar(context, error.toLocalizedString(context));
     }
 
     await Restart.restartApp(

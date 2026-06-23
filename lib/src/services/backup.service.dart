@@ -325,6 +325,26 @@ class BackupService {
     return _nextBackupStage();
   }
 
+  static Future<RecoveryError?> startPasswordlessBackupRecovery(
+    int userId,
+    String username,
+    Uint8List keyManagerBytes,
+  ) async {
+    final state = BackupRecovery(
+      username: username,
+      password: '',
+      userId: userId,
+    )..state = BackupRecoveryState.archiveBackupStarted;
+
+    await deleteLocalUserData();
+
+    // Import KeyManager keys into secure storage & in-memory key manager
+    await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
+
+    await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
+    return _nextBackupStage();
+  }
+
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
     String backupServerUrl,
   ) async {

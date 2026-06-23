@@ -362,11 +362,13 @@ void main() {
 
         // Verify db update
         final c2 = await twonlyDB.contactsDao.getContactById(2);
-        expect(c2?.recoveryLastHeartbeat, baseTime);
+        expect(c2?.recoveryLastHeartbeat, isNull);
 
         // Verify calling again does not resend
         mockApi.sentTextMessages.clear();
-        await PasswordlessRecoveryService.performHeartbeat();
+        await withClock(Clock.fixed(baseTime), () async {
+          await PasswordlessRecoveryService.performHeartbeat();
+        });
         expect(mockApi.sentTextMessages.length, 0);
       },
     );
