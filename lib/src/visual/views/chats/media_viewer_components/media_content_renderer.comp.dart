@@ -21,16 +21,14 @@ class MediaContentRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        if (videoController != null)
+        if (videoController != null && videoController!.value.isInitialized)
           Positioned.fill(
-            child: PhotoView.customChild(
-              initialScale: PhotoViewComputedScale.contained,
-              minScale: PhotoViewComputedScale.contained,
-              backgroundDecoration: const BoxDecoration(
-                color: Colors.transparent,
-              ),
-              child: VideoPlayer(
-                videoController!,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: videoController!.value.aspectRatio,
+                child: VideoPlayer(
+                  videoController!,
+                ),
               ),
             ),
           )
