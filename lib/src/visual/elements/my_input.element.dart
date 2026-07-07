@@ -19,6 +19,7 @@ class MyInput extends StatefulWidget {
     this.obscureText = false,
     this.dense = false,
     this.readOnly = false,
+    this.fontWeight,
     super.key,
   });
 
@@ -35,6 +36,7 @@ class MyInput extends StatefulWidget {
   final bool obscureText;
   final bool dense;
   final bool readOnly;
+  final FontWeight? fontWeight;
 
   @override
   State<MyInput> createState() => _MyInputState();
@@ -106,7 +108,7 @@ class _MyInputState extends State<MyInput> {
         obscureText: widget.obscureText,
         style: TextStyle(
           fontSize: widget.dense ? 16 : 18,
-          fontWeight: FontWeight.w500,
+          fontWeight: widget.fontWeight ?? FontWeight.w500,
           color: isDark ? Colors.white : Colors.black87,
         ),
         decoration: InputDecoration(
