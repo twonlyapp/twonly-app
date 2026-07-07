@@ -91,19 +91,28 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         milliseconds: group!.deleteMessagesAfterMilliseconds,
       ),
     );
-    return (select(messages)
-          ..where(
-            (t) =>
-                t.groupId.equals(groupId) &
-                // messages in groups will only be removed in case all members have received it...
-                // so ensuring that this message is not shown in the messages anymore
-                (t.openedAt.isBiggerThanValue(deletionTime) |
-                    t.openedAt.isNull() |
-                    t.mediaStored.equals(true)),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(1))
-        .watchSingleOrNull();
+    final query = select(messages).join([
+      leftOuterJoin(
+        mediaFiles,
+        mediaFiles.mediaId.equalsExp(messages.mediaId),
+      ),
+    ])
+      ..where(
+        messages.groupId.equals(groupId) &
+            // messages in groups will only be removed in case all members have received it...
+            // so ensuring that this message is not shown in the messages anymore
+            (messages.openedAt.isBiggerThanValue(deletionTime) |
+                messages.openedAt.isNull() |
+                messages.mediaStored.equals(true)) &
+            (mediaFiles.downloadState
+                    .equals(DownloadState.reuploadRequested.name)
+                    .not() |
+                mediaFiles.downloadState.isNull()),
+      )
+      ..orderBy([OrderingTerm.desc(messages.createdAt)])
+      ..limit(1);
+
+    return query.map((row) => row.readTable(messages)).watchSingleOrNull();
   }
 
   Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
