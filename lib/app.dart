@@ -199,9 +199,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       }
     }
 
-    await PasswordlessRecoveryService.handleRecoveryLink(
-      'https://me.twonly.eu/r/#7fdb8f08-0927-4e44-8761-038993414e48/1p7SKEzpxE3wSW9FQw60EUI4OpSW2U4EskdXLw8xg48',
-    );
+    // await PasswordlessRecoveryService.handleRecoveryLink(
+    //   'https://me.twonly.eu/r/#7fdb8f08-0927-4e44-8761-038993414e48/1p7SKEzpxE3wSW9FQw60EUI4OpSW2U4EskdXLw8xg48',
+    // );
 
     setState(() {
       _isLoaded = true;
