@@ -14,7 +14,7 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future<void> handleMedia(
+Future<bool> handleMedia(
   int fromUserId,
   String groupId,
   EncryptedContent_Media media,
@@ -36,7 +36,7 @@ Future<void> handleMedia(
         Log.warn(
           '[$receiptId] Got reupload for a message that either does not exists (${message == null}) or senderId = ${message?.senderId}',
         );
-        return;
+        return false;
       }
 
       // in case there was already a downloaded file delete it...
@@ -64,7 +64,7 @@ Future<void> handleMedia(
         unawaited(startDownloadMedia(mediaFile, false));
       }
 
-      return;
+      return true;
     case EncryptedContent_Media_Type.IMAGE:
       mediaType = MediaType.image;
     case EncryptedContent_Media_Type.VIDEO:
@@ -85,13 +85,13 @@ Future<void> handleMedia(
       Log.warn(
         '[$receiptId] $fromUserId tried to modify the message from ${messageTmp.senderId}.',
       );
-      return;
+      return false;
     }
     if (messageTmp.mediaId == null) {
       Log.warn(
         '[$receiptId] This message already exit without a mediaId. Message is dropped.',
       );
-      return;
+      return false;
     }
     final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
       messageTmp.mediaId!,
@@ -100,7 +100,7 @@ Future<void> handleMedia(
       Log.warn(
         '[$receiptId] This message and media file already exit and was not requested again. Dropping it.',
       );
-      return;
+      return false;
     }
 
     if (mediaFile != null) {
@@ -145,7 +145,7 @@ Future<void> handleMedia(
 
     if (mediaFile == null) {
       Log.error('[$receiptId] Could not insert media file into database');
-      return;
+      return false;
     }
 
     message = await twonlyDB.messagesDao.insertMessage(
@@ -186,6 +186,7 @@ Future<void> handleMedia(
     );
 
     unawaited(startDownloadMedia(mediaFile!, false));
+    return true;
   } else {
     if (mediaFile == null && message == null) {
       Log.error(
@@ -200,6 +201,7 @@ Future<void> handleMedia(
         '[$receiptId] Could not insert new message as the message is empty.',
       );
     }
+    return false;
   }
 }
 

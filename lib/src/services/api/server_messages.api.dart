@@ -288,7 +288,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
 
   Log.info('[$receiptId] Calling handleEncryptedMessage');
 
-  final (a, b) = await handleEncryptedMessage(
+  final result = await handleEncryptedMessage(
     fromUserId,
     encryptedContent,
     messageType,
@@ -297,9 +297,9 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
 
   Log.info('[$receiptId] Finished handleEncryptedMessage');
 
-  if (a == null && b == null) {
+  if (result.responseCipherText == null && result.responsePlaintext == null) {
     unawaited(FcmNotificationService.updateLastServerMessageTimestamp());
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid && result.showPushNotification) {
       // Message was handled without any error. Show push notification to the user for Android.
       await showPushNotificationFromServerMessages(
         fromUserId,
@@ -308,10 +308,10 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
     }
   }
 
-  return (a, b);
+  return (result.responseCipherText, result.responsePlaintext);
 }
 
-Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
+Future<DecryptedMessageResult> handleEncryptedMessage(
   int fromUserId,
   EncryptedContent content,
   Message_Type messageType,
@@ -352,13 +352,12 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.contactRequest,
       receiptId,
     )) {
-      return (
-        null,
-        PlaintextContent()
+      return DecryptedMessageResult(
+        responsePlaintext: PlaintextContent()
           ..retryControlError = PlaintextContent_RetryErrorMessage(),
       );
     }
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasErrorMessages()) {
@@ -368,7 +367,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       receiptId,
       groupId: content.hasGroupId() ? content.groupId : null,
     );
-    return (null, null);
+    return const DecryptedMessageResult(showPushNotification: false);
   }
 
   if (content.hasPasswordlessRecovery()) {
@@ -377,7 +376,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.passwordlessRecovery,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasPasswordlessRecoveryHeartbeat()) {
@@ -386,7 +385,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.passwordlessRecoveryHeartbeat,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasContactUpdate()) {
@@ -396,7 +395,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       senderProfileCounter,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult(showPushNotification: false);
   }
 
   if (content.hasUserDiscoveryRequest()) {
@@ -405,7 +404,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.userDiscoveryRequest,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult(showPushNotification: false);
   }
 
   if (content.hasUserDiscoveryUpdate()) {
@@ -414,12 +413,12 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.userDiscoveryUpdate,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasPushKeys()) {
     await handlePushKey(fromUserId, content.pushKeys, receiptId);
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasMessageUpdate()) {
@@ -428,7 +427,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.messageUpdate,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasKeyVerificationProof()) {
@@ -436,7 +435,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.keyVerificationProof.calculatedMac,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasMediaUpdate()) {
@@ -445,7 +444,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.mediaUpdate,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (!content.hasGroupId()) {
@@ -457,7 +456,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       'Messages should have a groupId. Type: $type',
       onlyIfSentryEnabled: true,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasGroupCreate()) {
@@ -467,7 +466,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.groupCreate,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   /// Verify that the user is (still) in that group...
@@ -486,15 +485,14 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
         Log.warn(
           '[$receiptId] User tries to send message to direct chat while the user does not exist!',
         );
-        return (
-          EncryptedContent(
+        return DecryptedMessageResult(
+          responseCipherText: EncryptedContent(
             errorMessages: EncryptedContent_ErrorMessages(
               type: EncryptedContent_ErrorMessages_Type
                   .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
               relatedReceiptId: receiptId,
             ),
           ),
-          null,
         );
       }
       Log.info(
@@ -512,9 +510,8 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
           '[$receiptId] Got group join message, but group does not exist yet, retry later. As probably the GroupCreate was not yet received.',
         );
         // In case the group join was received before the GroupCreate the sender should send it later again.
-        return (
-          null,
-          PlaintextContent()
+        return DecryptedMessageResult(
+          responsePlaintext: PlaintextContent()
             ..retryControlError = PlaintextContent_RetryErrorMessage(),
         );
       }
@@ -522,8 +519,8 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       Log.warn(
         '[$receiptId] User $fromUserId tried to access group ${content.groupId}. Sending GROUP_NOT_FOUND_OR_NOT_A_MEMBER error.',
       );
-      return (
-        EncryptedContent(
+      return DecryptedMessageResult(
+        responseCipherText: EncryptedContent(
           groupId: content.groupId,
           errorMessages: EncryptedContent_ErrorMessages(
             type: EncryptedContent_ErrorMessages_Type
@@ -531,14 +528,13 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
             relatedReceiptId: receiptId,
           ),
         ),
-        null,
       );
     }
   }
 
   if (content.hasFlameSync()) {
     await handleFlameSync(content.groupId, content.flameSync, receiptId);
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasGroupUpdate()) {
@@ -548,7 +544,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.groupUpdate,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasGroupJoin()) {
@@ -558,13 +554,12 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.groupJoin,
       receiptId,
     )) {
-      return (
-        null,
-        PlaintextContent()
+      return DecryptedMessageResult(
+        responsePlaintext: PlaintextContent()
           ..retryControlError = PlaintextContent_RetryErrorMessage(),
       );
     }
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasResendGroupPublicKey()) {
@@ -574,7 +569,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.groupJoin,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasAdditionalDataMessage()) {
@@ -584,17 +579,17 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.additionalDataMessage,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasTextMessage()) {
-    await handleTextMessage(
+    final isNewText = await handleTextMessage(
       fromUserId,
       content.groupId,
       content.textMessage,
       receiptId,
     );
-    return (null, null);
+    return DecryptedMessageResult(showPushNotification: isNewText);
   }
 
   if (content.hasReaction()) {
@@ -604,17 +599,17 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       content.reaction,
       receiptId,
     );
-    return (null, null);
+    return const DecryptedMessageResult();
   }
 
   if (content.hasMedia()) {
-    await handleMedia(
+    final isNewMedia = await handleMedia(
       fromUserId,
       content.groupId,
       content.media,
       receiptId,
     );
-    return (null, null);
+    return DecryptedMessageResult(showPushNotification: isNewMedia);
   }
 
   if (content.hasTypingIndicator()) {
@@ -626,7 +621,7 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     );
   }
 
-  return (null, null);
+  return const DecryptedMessageResult();
 }
 
 String _getEncryptedContentType(EncryptedContent content) {
@@ -650,4 +645,15 @@ String _getEncryptedContentType(EncryptedContent content) {
   if (content.hasUserDiscoveryUpdate()) return 'userDiscoveryUpdate';
   if (content.hasKeyVerificationProof()) return 'keyVerificationProof';
   return 'unknown';
+}
+
+class DecryptedMessageResult {
+  const DecryptedMessageResult({
+    this.responseCipherText,
+    this.responsePlaintext,
+    this.showPushNotification = true,
+  });
+  final EncryptedContent? responseCipherText;
+  final PlaintextContent? responsePlaintext;
+  final bool showPushNotification;
 }
