@@ -112,7 +112,7 @@ Future<bool> createThumbnailsForImage(
       );
       return true;
     } else {
-      Log.error('Compressed image thumbnail is empty or missing.');
+      Log.warn('Compressed image thumbnail is empty or missing.');
       try {
         if (destinationFile.existsSync()) {
           destinationFile.deleteSync();

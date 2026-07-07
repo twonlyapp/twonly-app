@@ -263,26 +263,28 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String text,
     DateTime timestamp,
   ) async {
-    final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null || msg.content == null || msg.senderId != contactId) {
-      return;
-    }
-    await into(messageHistories).insert(
-      MessageHistoriesCompanion(
-        messageId: Value(messageId),
-        content: Value(msg.content),
-        createdAt: Value(timestamp),
-      ),
-    );
-    await (update(messages)..where(
-          (t) => t.messageId.equals(messageId),
-        ))
-        .write(
-          MessagesCompanion(
-            content: Value(text),
-            modifiedAt: Value(timestamp),
-          ),
-        );
+    await transaction(() async {
+      final msg = await getMessageById(messageId).getSingleOrNull();
+      if (msg == null || msg.content == null || msg.senderId != contactId) {
+        return;
+      }
+      await into(messageHistories).insert(
+        MessageHistoriesCompanion(
+          messageId: Value(messageId),
+          content: Value(msg.content),
+          createdAt: Value(timestamp),
+        ),
+      );
+      await (update(messages)..where(
+            (t) => t.messageId.equals(messageId),
+          ))
+          .write(
+            MessagesCompanion(
+              content: Value(text),
+              modifiedAt: Value(timestamp),
+            ),
+          );
+    });
   }
 
   Future<void> handleMessagesOpened(
@@ -291,7 +293,9 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     DateTime timestamp,
   ) async {
     if (contactId.present) {
-      final contactExists = await twonlyDB.contactsDao.getContactById(contactId.value);
+      final contactExists = await twonlyDB.contactsDao.getContactById(
+        contactId.value,
+      );
       if (contactExists == null) {
         Log.info(
           'handleMessagesOpened: Contact ${contactId.value} does not exist in database, ignoring messages opened action.',
@@ -301,25 +305,24 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
     for (final messageId in messageIds) {
       try {
-        var actionTimestamp = timestamp;
-        final msg = await getMessageById(messageId).getSingleOrNull();
-        if (msg == null) {
-          Log.info(
-            'handleMessagesOpened: Message $messageId does not exist in database, skipping.',
-          );
-          continue;
-        }
-        if (actionTimestamp.isBefore(msg.createdAt)) {
-          Log.warn(
-            'Receiver clock skew detected for message $messageId. '
-            'Action timestamp $actionTimestamp is before message creation ${msg.createdAt}. '
-            'Clamping to creation time.',
-          );
-          actionTimestamp = msg.createdAt;
-        }
-
-        final ts = actionTimestamp;
         await transaction(() async {
+          final msg = await getMessageById(messageId).getSingleOrNull();
+          if (msg == null) {
+            Log.info(
+              'handleMessagesOpened: Message $messageId does not exist in database, skipping.',
+            );
+            return;
+          }
+          var ts = timestamp;
+          if (ts.isBefore(msg.createdAt)) {
+            Log.warn(
+              'Receiver clock skew detected for message $messageId. '
+              'Action timestamp $ts is before message creation ${msg.createdAt}. '
+              'Clamping to creation time.',
+            );
+            ts = msg.createdAt;
+          }
+
           await into(messageActions).insertOnConflictUpdate(
             MessageActionsCompanion(
               messageId: Value(messageId),
@@ -353,7 +356,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             messages,
           )..where((tbl) => tbl.messageId.equals(messageId))).write(
             MessagesCompanion(
-              openedAt: Value(actionTimestamp),
+              openedAt: Value(timestamp),
             ),
           );
         }
@@ -383,14 +386,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       );
       return;
     }
-    final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null) {
-      Log.info(
-        'handleMessageAckByServer: Message $messageId does not exist in database, skipping.',
-      );
-      return;
-    }
     await transaction(() async {
+      final msg = await getMessageById(messageId).getSingleOrNull();
+      if (msg == null) {
+        Log.info(
+          'handleMessageAckByServer: Message $messageId does not exist in database, skipping.',
+        );
+        return;
+      }
       await into(messageActions).insertOnConflictUpdate(
         MessageActionsCompanion(
           messageId: Value(messageId),
