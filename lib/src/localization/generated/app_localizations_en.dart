@@ -432,11 +432,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactVerifyNumberTitle => 'Verify contacts';
 
   @override
+  String verifyUserIdentity(Object username) {
+    return 'Verify $username\'s identity';
+  }
+
+  @override
   String get contactVerifyNumberSubtitle =>
       'Verify the identity of your contacts to make sure you are texting the right person.';
 
   @override
+  String get inChatContactNotVerified => 'Contact not verified.';
+
+  @override
+  String groupMembersNotVerified(Object count) {
+    return '$count members are not verified.';
+  }
+
+  @override
   String get userVerifiedTitle => 'Contact verified';
+
+  @override
+  String scanUserQrCode(Object username) {
+    return 'Scan $username\'s QR code';
+  }
+
+  @override
+  String get openOwnQrCode => 'Open your own QR code';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -1310,6 +1331,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Let a friend scan this QR code to add you';
 
   @override
+  String letUserScanQrCode(Object username) {
+    return 'Let $username scan this QR code';
+  }
+
+  @override
   String get finishSetupCardTitle => 'Complete your profile';
 
   @override
@@ -1529,7 +1555,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.';
+      'The badge gives you the peace of mind that you are messaging the *right person* and your *messages remain confidential*.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1545,6 +1571,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanNow => 'Scan now';
+
+  @override
+  String get qrScannerVerifyHint =>
+      'To verify a contact ask them to open their QR code (Chat Lists > QR code button at the bottom right)';
+
+  @override
+  String qrScannerVerifyUserHint(Object username) {
+    return 'To verify $username ask them to open their QR code (Chat Lists > QR code button at the bottom right)';
+  }
 
   @override
   String get openQrCode => 'Open QR code';

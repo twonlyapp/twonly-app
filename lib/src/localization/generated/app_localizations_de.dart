@@ -436,11 +436,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactVerifyNumberTitle => 'Kontakte verifizieren';
 
   @override
+  String verifyUserIdentity(Object username) {
+    return 'Identität von $username verifizieren';
+  }
+
+  @override
   String get contactVerifyNumberSubtitle =>
       'Überprüfe die Identität deiner Kontakte, um sicherzugehen, dass du mit der richtigen Person schreibst.';
 
   @override
+  String get inChatContactNotVerified => 'Kontakt nicht verifiziert.';
+
+  @override
+  String groupMembersNotVerified(Object count) {
+    return '$count Mitglieder sind nicht verifiziert.';
+  }
+
+  @override
   String get userVerifiedTitle => 'Kontakt verifiziert';
+
+  @override
+  String scanUserQrCode(Object username) {
+    return 'QR-Code von $username scannen';
+  }
+
+  @override
+  String get openOwnQrCode => 'Eigenen QR-Code öffnen';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -1318,6 +1339,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lass einen Freund diesen QR-Code scannen, um dich hinzuzufügen';
 
   @override
+  String letUserScanQrCode(Object username) {
+    return 'Lass $username diesen QR-Code scannen';
+  }
+
+  @override
   String get finishSetupCardTitle => 'Profil vervollständigen';
 
   @override
@@ -1542,7 +1568,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der Haken *schützt dich vor Betrügern und Angreifern*. Es wird neben einem Kontakt angezeigt, der von dir oder einem Freund *manuell überprüft* wurde.';
+      'Der Haken gibt dir die Sicherheit, dass du mit der *richtigen Person* schreibst und deine *Nachrichten vertraulich* bleiben.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1558,6 +1584,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scanNow => 'Jetzt scannen';
+
+  @override
+  String get qrScannerVerifyHint =>
+      'Um einen Kontakt zu verifizieren, bitte ihn, seinen QR-Code zu öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+
+  @override
+  String qrScannerVerifyUserHint(Object username) {
+    return 'Um $username zu verifizieren, bitte ihn, seinen QR-Code zu öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+  }
 
   @override
   String get openQrCode => 'QR-Code öffnen';

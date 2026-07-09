@@ -896,17 +896,47 @@ abstract class AppLocalizations {
   /// **'Verify contacts'**
   String get contactVerifyNumberTitle;
 
+  /// No description provided for @verifyUserIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify {username}\'s identity'**
+  String verifyUserIdentity(Object username);
+
   /// No description provided for @contactVerifyNumberSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Verify the identity of your contacts to make sure you are texting the right person.'**
   String get contactVerifyNumberSubtitle;
 
+  /// No description provided for @inChatContactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact not verified.'**
+  String get inChatContactNotVerified;
+
+  /// No description provided for @groupMembersNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members are not verified.'**
+  String groupMembersNotVerified(Object count);
+
   /// No description provided for @userVerifiedTitle.
   ///
   /// In en, this message translates to:
   /// **'Contact verified'**
   String get userVerifiedTitle;
+
+  /// No description provided for @scanUserQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan {username}\'s QR code'**
+  String scanUserQrCode(Object username);
+
+  /// No description provided for @openOwnQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your own QR code'**
+  String get openOwnQrCode;
 
   /// No description provided for @contactVerifiedBy.
   ///
@@ -2384,6 +2414,12 @@ abstract class AppLocalizations {
   /// **'Let a friend scan this QR code to add you'**
   String get addContactQrSheetSubtext;
 
+  /// No description provided for @letUserScanQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Let {username} scan this QR code'**
+  String letUserScanQrCode(Object username);
+
   /// No description provided for @finishSetupCardTitle.
   ///
   /// In en, this message translates to:
@@ -2741,7 +2777,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.'**
+  /// **'The badge gives you the peace of mind that you are messaging the *right person* and your *messages remain confidential*.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
@@ -2767,6 +2803,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan now'**
   String get scanNow;
+
+  /// No description provided for @qrScannerVerifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To verify a contact ask them to open their QR code (Chat Lists > QR code button at the bottom right)'**
+  String get qrScannerVerifyHint;
+
+  /// No description provided for @qrScannerVerifyUserHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To verify {username} ask them to open their QR code (Chat Lists > QR code button at the bottom right)'**
+  String qrScannerVerifyUserHint(Object username);
 
   /// No description provided for @openQrCode.
   ///

@@ -143,7 +143,13 @@ final routerProvider = GoRouter(
     GoRoute(
       path: Routes.cameraQRScanner,
       builder: (context, state) {
-        return const QrCodeScannerView();
+        final extra = state.extra as Map<String, dynamic>?;
+        final contact = extra?['contact'] as Contact?;
+        final openToVerify = extra?['openToVerify'] as bool? ?? false;
+        return QrCodeScannerView(
+          contact: contact,
+          openToVerify: openToVerify,
+        );
       },
     ),
 
@@ -248,7 +254,9 @@ final routerProvider = GoRouter(
               routes: [
                 GoRoute(
                   path: 'verifybadge',
-                  builder: (context, state) => const VerificationBadeFaqView(),
+                  builder: (context, state) => VerificationBadeFaqView(
+                    contact: state.extra as Contact?,
+                  ),
                 ),
               ],
             ),

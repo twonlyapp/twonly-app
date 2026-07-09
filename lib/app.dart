@@ -11,8 +11,6 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/passwordless_recovery.service.dart'
-    show PasswordlessRecoveryService;
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';

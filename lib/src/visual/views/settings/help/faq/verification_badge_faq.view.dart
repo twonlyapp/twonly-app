@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_badge_info.comp.dart';
 
 class VerificationBadeFaqView extends StatefulWidget {
-  const VerificationBadeFaqView({super.key});
+  const VerificationBadeFaqView({super.key, this.contact});
+
+  final Contact? contact;
 
   @override
   State<VerificationBadeFaqView> createState() =>
@@ -19,9 +22,10 @@ class _VerificationBadeFaqViewState extends State<VerificationBadeFaqView> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(40),
-        children: const [
+        children: [
           VerificationBadgeInfo(
             displayButtons: true,
+            contact: widget.contact,
           ),
         ],
       ),

@@ -25,6 +25,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.com
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_date_chip.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_group_overview.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
@@ -88,15 +89,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   }
 
   Mutex protectMessageUpdating = Mutex();
-
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   if (state == AppLifecycleState.resumed) {
-  //     protectMessageUpdating.protect(() async {
-  //       await setMessages(allMessages, groupActions);
-  //     });
-  //   }
-  // }
 
   bool _isViewActive() {
     if (!mounted) return false;
@@ -326,11 +318,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
           child: Column(
             children: [
               Expanded(
-                child: ScrollablePositionedList.builder(
-                  reverse: true,
-                  itemCount: messages.length + 1 + 1,
-                  itemScrollController: itemScrollController,
-                  itemBuilder: (context, i) {
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ScrollablePositionedList.builder(
+                    shrinkWrap: true,
+                    reverse: true,
+                    itemCount: messages.length + 1 + 1,
+                    itemScrollController: itemScrollController,
+                    itemBuilder: (context, i) {
                     if (i == 0) {
                       return userService.currentUser.typingIndicators
                           ? TypingIndicator(group: group)
@@ -338,8 +333,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                     }
                     i -= 1;
                     if (i == messages.length) {
-                      return const Padding(
-                        padding: EdgeInsetsGeometry.only(top: 10),
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: InChatGroupOverview(group: group),
                       );
                     }
                     if (messages[i].isDate) {
@@ -386,6 +382,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                   },
                 ),
               ),
+            ),
               if (quotesMessage != null)
                 Container(
                   padding: const EdgeInsets.only(

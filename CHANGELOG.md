@@ -2,6 +2,7 @@
 
 ## 0.3.5
 
+- Improve: Visibility of the verification badge
 - Fix: Performance issue caused by an out-of-sync Signal session
 - Fix: Multiple smaller bug fixes
 

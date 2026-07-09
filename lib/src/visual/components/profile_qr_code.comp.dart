@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -15,6 +17,55 @@ class ProfileQrCodeComp extends StatefulWidget {
 
   final double size;
   final bool showAvatar;
+
+  static Future<void> showSheet(BuildContext context, {Contact? contact}) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: context.color.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: double.infinity),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: context.color.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                contact != null
+                    ? context.lang.letUserScanQrCode(
+                        getContactDisplayName(contact),
+                      )
+                    : context.lang.addContactQrSheetSubtext,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.color.onSurface.withValues(alpha: 0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              const ProfileQrCodeComp(),
+              const SizedBox(height: 34),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   State<ProfileQrCodeComp> createState() => _ProfileQrCodeCompState();

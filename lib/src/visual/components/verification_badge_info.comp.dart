@@ -4,8 +4,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart'
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -15,12 +18,60 @@ const colorVerificationBadgeYellow = Color.fromARGB(255, 0, 182, 238);
 class VerificationBadgeInfo extends StatelessWidget {
   const VerificationBadgeInfo({
     this.displayButtons = false,
+    this.contact,
     super.key,
   });
   final bool displayButtons;
+  final Contact? contact;
 
   @override
   Widget build(BuildContext context) {
+    final scanButton = MyButton(
+      variant: MyButtonVariant.primaryDense,
+      onPressed: () => context.push(
+        Routes.cameraQRScanner,
+        extra: contact != null
+            ? {
+                'contact': contact,
+                'openToVerify': true,
+              }
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const FaIcon(FontAwesomeIcons.camera),
+          const SizedBox(width: 6),
+          Text(
+            contact != null
+                ? context.lang.scanUserQrCode(
+                    getContactDisplayName(contact!),
+                  )
+                : context.lang.scanNow,
+          ),
+        ],
+      ),
+    );
+
+    final openButton = MyButton(
+      variant: MyButtonVariant.primaryDense,
+      onPressed: () => ProfileQrCodeComp.showSheet(context, contact: contact),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const FaIcon(FontAwesomeIcons.qrcode),
+          const SizedBox(width: 6),
+          Text(
+            contact != null
+                ? context.lang.openOwnQrCode
+                : context.lang.openQrCode,
+          ),
+        ],
+      ),
+    );
+
     return Column(
       children: [
         RichText(
@@ -40,43 +91,36 @@ class VerificationBadgeInfo extends StatelessWidget {
           icon: const SvgIcon(assetPath: SvgIcons.verifiedGreen, size: 40),
           description: context.lang.verificationBadgeGreenDesc,
           boldTextColor: primaryColor,
-          onTap: () => context.push(Routes.cameraQRScanner),
+          onTap: () => context.push(
+            Routes.cameraQRScanner,
+            extra: contact != null
+                ? {
+                    'contact': contact,
+                    'openToVerify': true,
+                  }
+                : null,
+          ),
         ),
         if (displayButtons)
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IntrinsicWidth(
-                  child: MyButton(
-                    variant: MyButtonVariant.primaryDense,
-                    onPressed: () => context.push(Routes.cameraQRScanner),
-                    child: Row(
-                      children: [
-                        const FaIcon(FontAwesomeIcons.camera),
-                        const SizedBox(width: 6),
-                        Text(context.lang.scanNow),
-                      ],
-                    ),
+            child: contact != null
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      scanButton,
+                      const SizedBox(height: 8),
+                      openButton,
+                    ],
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IntrinsicWidth(child: scanButton),
+                      const SizedBox(width: 8),
+                      IntrinsicWidth(child: openButton),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                IntrinsicWidth(
-                  child: MyButton(
-                    variant: MyButtonVariant.primaryDense,
-                    onPressed: () => context.push(Routes.settingsPublicProfile),
-                    child: Row(
-                      children: [
-                        const FaIcon(FontAwesomeIcons.qrcode),
-                        const SizedBox(width: 6),
-                        Text(context.lang.openQrCode),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         if (userService.currentUser.securityProfile != SecurityProfile.strict ||
             userService.currentUser.isUserDiscoveryEnabled)

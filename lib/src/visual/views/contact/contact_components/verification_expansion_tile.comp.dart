@@ -93,18 +93,25 @@ class _VerificationExpansionTileCompState
           contact: widget.contact,
           size: 20,
         ),
-        text: context.lang.contactVerifyNumberTitle,
+        text: context.lang.verifyUserIdentity(
+          getContactDisplayName(widget.contact),
+        ),
         onTap: () async {
-          await context.push(Routes.settingsHelpFaqVerifyBadge);
+          await context.push(
+            Routes.settingsHelpFaqVerifyBadge,
+            extra: widget.contact,
+          );
           if (mounted) setState(() {});
         },
       );
     }
 
     final sharedVerifierIds = _keyVerifications
-        .where((pair) =>
-            pair.$1.type == VerificationType.contactSharedByVerified &&
-            pair.$1.verifiedBy != null)
+        .where(
+          (pair) =>
+              pair.$1.type == VerificationType.contactSharedByVerified &&
+              pair.$1.verifiedBy != null,
+        )
         .map((pair) => pair.$1.verifiedBy!)
         .toSet();
 

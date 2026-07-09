@@ -102,52 +102,6 @@ class _SearchUsernameView extends State<AddNewUserView> {
     await SharePlus.instance.share(params);
   }
 
-  void _showMyQrCode() {
-    // ignore: inference_failure_on_function_invocation
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: context.color.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: double.infinity),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.color.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const ProfileQrCodeComp(),
-              const SizedBox(height: 24),
-              Text(
-                context.lang.addContactQrSheetSubtext,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: context.color.onSurface.withValues(alpha: 0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   void dispose() {
     _contactsStream.cancel();
@@ -344,7 +298,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
                   Expanded(
                     child: MyButton(
                       variant: MyButtonVariant.secondaryDense,
-                      onPressed: _showMyQrCode,
+                      onPressed: () => ProfileQrCodeComp.showSheet(context),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
