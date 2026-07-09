@@ -31,6 +31,17 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
     _mainCameraController.setState = () {
       if (mounted) setState(() {});
     };
+    if (widget.openToVerify && widget.contact != null) {
+      _mainCameraController.onVerificationSuccessDismissed = (contact) {
+        if (mounted) {
+          Navigator.popUntil(context, (route) {
+            final name = route.settings.name;
+            if (name == null) return true;
+            return !name.contains('qr_scanner') && !name.contains('verifybadge');
+          });
+        }
+      };
+    }
     Permission.camera.isGranted.then((hasPermission) {
       if (hasPermission && mounted) {
         unawaited(_mainCameraController.selectCamera(0, true));

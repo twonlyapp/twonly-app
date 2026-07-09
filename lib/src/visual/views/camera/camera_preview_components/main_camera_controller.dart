@@ -54,6 +54,7 @@ class ScannedNewProfile {
 
 class MainCameraController {
   void Function()? setState;
+  void Function(Contact contact)? onVerificationSuccessDismissed;
   CameraController? cameraController;
   ScreenshotController screenshotController = ScreenshotController();
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
@@ -556,6 +557,7 @@ class MainCameraController {
             final context = cameraPreviewKey.currentContext;
             if (verificationOk && context != null && context.mounted) {
               await VerificationSuccessDialog.show(context, contact);
+              onVerificationSuccessDismissed?.call(contact);
             }
           }
           continue;
