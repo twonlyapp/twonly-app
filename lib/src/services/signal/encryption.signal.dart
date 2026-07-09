@@ -38,8 +38,9 @@ Future<(EncryptedContent?, PlaintextContent_DecryptionErrorMessage_Type?)>
 signalDecryptMessage(
   int fromUserId,
   Uint8List encryptedContentRaw,
-  int type,
-) async {
+  int type, {
+  Set<int>? brokenSessionsInCurrentBatch,
+}) async {
   // Hold the lock only for the cryptographic operation, not for network I/O
   Log.info('Acquiring lockingSignalProtocol for $fromUserId');
   final (
@@ -74,6 +75,7 @@ signalDecryptMessage(
           );
       }
 
+      recordResyncAttempt(fromUserId, success: true);
       return (EncryptedContent.fromBuffer(plaintext), null, false);
     } on InvalidKeyIdException catch (e) {
       Log.warn(e);
@@ -113,22 +115,25 @@ signalDecryptMessage(
 
   // Handle session resync OUTSIDE the lock to avoid holding it during
   // network round-trips (which can block for up to 60 seconds)
-  if (needsResync && !resyncedUsers.contains(fromUserId)) {
-    if (await handleSessionResync(fromUserId)) {
-      // This flag prevents from resyncing the session the client received
-      // multiple new messages from the server he could not decrypt
-      resyncedUsers.add(fromUserId);
+  if (needsResync) {
+    brokenSessionsInCurrentBatch?.add(fromUserId);
+    if (shouldAttemptResync(fromUserId)) {
+      if (await handleSessionResync(fromUserId)) {
+        // This flag prevents from resyncing the session the client received
+        // multiple new messages from the server he could not decrypt
+        recordResyncAttempt(fromUserId, success: false);
 
-      // This message contains a new PreKeyBundle establishing a new signal
-      // session
-      await sendCipherText(
-        fromUserId,
-        EncryptedContent(
-          errorMessages: EncryptedContent_ErrorMessages(
-            type: EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC,
+        // This message contains a new PreKeyBundle establishing a new signal
+        // session
+        await sendCipherText(
+          fromUserId,
+          EncryptedContent(
+            errorMessages: EncryptedContent_ErrorMessages(
+              type: EncryptedContent_ErrorMessages_Type.SESSION_OUT_OF_SYNC,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 

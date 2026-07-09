@@ -516,6 +516,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .getSingleOrNull();
   }
 
+  Stream<MessageAction?> watchLastMessageAction(String messageId) {
+    return (((select(messageActions)..where(
+              (t) => t.messageId.equals(messageId),
+            ))
+            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
+          ..limit(1))
+        .watchSingleOrNull();
+  }
+
   Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }

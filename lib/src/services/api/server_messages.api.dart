@@ -56,9 +56,13 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
       Log.info(
         'Got ${msg.v0.newMessages.newMessages.length} messages from the server.',
       );
+      final brokenSessionsInCurrentBatch = <int>{};
       for (final newMessage in msg.v0.newMessages.newMessages) {
         try {
-          await handleClient2ClientMessage(newMessage);
+          await handleClient2ClientMessage(
+            newMessage,
+            brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
+          );
         } catch (e) {
           Log.error(e);
         }
@@ -83,7 +87,10 @@ DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
 
 final Map<String, Mutex> _messageLocks = {};
 
-Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
+Future<void> handleClient2ClientMessage(
+  NewMessage newMessage, {
+  Set<int>? brokenSessionsInCurrentBatch,
+}) async {
   final body = Uint8List.fromList(newMessage.body);
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
@@ -97,7 +104,11 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   }
   await mutex.protect(() async {
     try {
-      await _handleClient2ClientMessage(newMessage, message);
+      await _handleClient2ClientMessage(
+        newMessage,
+        message,
+        brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
+      );
     } finally {
       _messageLocks.remove(receiptId);
     }
@@ -106,10 +117,26 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
 
 Future<void> _handleClient2ClientMessage(
   NewMessage newMessage,
-  Message message,
-) async {
+  Message message, {
+  Set<int>? brokenSessionsInCurrentBatch,
+}) async {
   final fromUserId = newMessage.fromUserId.toInt();
   final receiptId = message.receiptId;
+
+  if (brokenSessionsInCurrentBatch?.contains(fromUserId) == true) {
+    // This happens when a session goes out of sync (e.g. wrong message order).
+    // We skip the remaining messages in the batch because each failed decryption
+    // attempt is extremely slow (~1.2s) and would otherwise freeze the app.
+    // By returning early, we skip gotReceipt() and error responses.
+    // The server still deletes the batch since we ACK the entire batch later.
+    // The sender keeps the message unacknowledged. Once they process our SESSION_OUT_OF_SYNC
+    // error and establish a new session, their retry logic will automatically re-encrypt
+    // and re-send these messages with the new keys.
+    Log.info(
+      'Skipping message from $fromUserId - session known broken in this batch',
+    );
+    return;
+  }
 
   if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
     return;
@@ -200,6 +227,7 @@ Future<void> _handleClient2ClientMessage(
             encryptedContentRaw,
             message.type,
             receiptId,
+            brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
           );
           if (plainTextContent != null) {
             response = Message(
@@ -265,13 +293,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   int fromUserId,
   Uint8List encryptedContentRaw,
   Message_Type messageType,
-  String receiptId,
-) async {
+  String receiptId, {
+  Set<int>? brokenSessionsInCurrentBatch,
+}) async {
   Log.info('[$receiptId] calling signalDecryptMessage');
   var (encryptedContent, decryptionErrorType) = await signalDecryptMessage(
     fromUserId,
     encryptedContentRaw,
     messageType.value,
+    brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
   );
 
   if (encryptedContent == null) {
