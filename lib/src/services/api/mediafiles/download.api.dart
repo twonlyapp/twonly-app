@@ -272,6 +272,13 @@ Future<void> downloadFileFast(
 }
 
 Future<void> requestMediaReupload(String mediaId) async {
+  await twonlyDB.mediaFilesDao.updateMedia(
+    mediaId,
+    const MediaFilesCompanion(
+      downloadState: Value(DownloadState.reuploadRequested),
+    ),
+  );
+
   final messages = await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
 
   for (final message in messages) {
@@ -283,12 +290,6 @@ Future<void> requestMediaReupload(String mediaId) async {
           type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
           targetMessageId: message.messageId,
         ),
-      ),
-    );
-    await twonlyDB.mediaFilesDao.updateMedia(
-      mediaId,
-      const MediaFilesCompanion(
-        downloadState: Value(DownloadState.reuploadRequested),
       ),
     );
   }

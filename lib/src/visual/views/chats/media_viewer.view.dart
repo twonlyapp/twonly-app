@@ -359,12 +359,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (!mounted) return;
 
     if (!currentMediaLocal.tempPath.existsSync()) {
-      Log.warn('Temp media file not found for media ID: ${currentMediaLocal.mediaFile.mediaId}');
+      Log.warn(
+        'Temp media file not found for media ID: ${currentMediaLocal.mediaFile.mediaId}',
+      );
       await handleMediaError(currentMediaLocal.mediaFile);
       return advanceToNextMediaOrExit();
     }
 
     // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    Log.info(
+      'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
+    );
     unawaited(
       apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
     );
@@ -469,7 +474,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ..play();
         })
         .catchError((Object err, StackTrace st) {
-          Log.error('Video player initialization error', error: err, stackTrace: st);
+          Log.error(
+            'Video player initialization error',
+            error: err,
+            stackTrace: st,
+          );
           return null;
         });
   }
@@ -563,7 +572,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             currentMedia!.mediaFile.displayLimitInMilliseconds == null)
           MyIconButton(
             variant: MyIconButtonVariant.secondary,
-            onPressed: (currentMedia == null || currentMessage == null) ? null : onPressedSaveToGallery,
+            onPressed: (currentMedia == null || currentMessage == null)
+                ? null
+                : onPressedSaveToGallery,
             icon: imageSaving
                 ? const SizedBox(
                     width: 16,

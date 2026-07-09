@@ -148,6 +148,10 @@ Future<bool> handleMedia(
       return false;
     }
 
+    Log.info(
+      '[$receiptId] Inserting media message: messageId=${media.senderMessageId}, mediaId=${mediaFile!.mediaId}',
+    );
+
     message = await twonlyDB.messagesDao.insertMessage(
       MessagesCompanion(
         messageId: Value(media.senderMessageId),
