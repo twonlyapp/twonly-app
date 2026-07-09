@@ -259,6 +259,7 @@ class _UserListItem extends State<GroupListItemComp> {
                       : Row(
                           children: [
                             LastMessageTimeComp(
+                              key: ValueKey(widget.group.groupId),
                               dateTime: widget.group.lastMessageExchange,
                             ),
                             FlameCounterWidget(
@@ -281,7 +282,10 @@ class _UserListItem extends State<GroupListItemComp> {
                       const Text('•'),
                       const SizedBox(width: 5),
                       if (_currentMessage != null)
-                        LastMessageTimeComp(message: _currentMessage),
+                        LastMessageTimeComp(
+                          key: ValueKey(widget.group.groupId),
+                          message: _currentMessage,
+                        ),
                       FlameCounterWidget(
                         groupId: widget.group.groupId,
                         prefix: true,

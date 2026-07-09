@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5
+
+- Fix: Performance issue caused by an out-of-sync Signal session
+- Fix: Multiple smaller bug fixes
+
 ## 0.3.3
 
 - Fix: Multiple UI issues

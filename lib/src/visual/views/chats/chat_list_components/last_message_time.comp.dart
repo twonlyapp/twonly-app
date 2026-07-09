@@ -19,41 +19,59 @@ class LastMessageTimeComp extends StatefulWidget {
 class _LastMessageTimeCompState extends State<LastMessageTimeComp> {
   Timer? updateTime;
   int lastMessageInSeconds = 0;
+  DateTime? targetTime;
+  StreamSubscription<MessageAction?>? _actionSubscription;
 
   @override
   void initState() {
     super.initState();
-    // Change the color every 200 milliseconds
-    updateTime = Timer.periodic(const Duration(milliseconds: 500), (
-      timer,
-    ) async {
-      if (widget.message != null) {
-        final lastAction = await twonlyDB.messagesDao.getLastMessageAction(
-          widget.message!.messageId,
-        );
-        lastMessageInSeconds = clock
-            .now()
-            .difference(lastAction?.actionAt ?? widget.message!.createdAt)
-            .inSeconds;
-      } else if (widget.dateTime != null) {
-        lastMessageInSeconds = clock
-            .now()
-            .difference(widget.dateTime!)
-            .inSeconds;
-      }
-      if (mounted) {
-        setState(() {
-          if (lastMessageInSeconds < 0) {
-            lastMessageInSeconds = 0;
-          }
-        });
-      }
+    _loadTargetTime();
+
+    updateTime = Timer.periodic(
+      const Duration(milliseconds: 500),
+      (_) => _updateSeconds(),
+    );
+  }
+
+  @override
+  void didUpdateWidget(LastMessageTimeComp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message?.messageId != widget.message?.messageId ||
+        oldWidget.dateTime != widget.dateTime) {
+      _loadTargetTime();
+    }
+  }
+
+  void _loadTargetTime() {
+    _actionSubscription?.cancel();
+    _actionSubscription = null;
+
+    if (widget.message != null) {
+      _actionSubscription = twonlyDB.messagesDao
+          .watchLastMessageAction(widget.message!.messageId)
+          .listen((lastAction) {
+            targetTime = lastAction?.actionAt ?? widget.message!.createdAt;
+            _updateSeconds();
+          });
+    } else if (widget.dateTime != null) {
+      targetTime = widget.dateTime;
+      _updateSeconds();
+    }
+  }
+
+  void _updateSeconds() {
+    if (targetTime == null || !mounted) return;
+
+    final seconds = clock.now().difference(targetTime!).inSeconds;
+    setState(() {
+      lastMessageInSeconds = seconds < 0 ? 0 : seconds;
     });
   }
 
   @override
   void dispose() {
     updateTime?.cancel();
+    _actionSubscription?.cancel();
     super.dispose();
   }
 
