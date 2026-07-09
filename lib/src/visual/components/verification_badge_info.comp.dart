@@ -30,12 +30,10 @@ class VerificationBadgeInfo extends StatelessWidget {
       variant: MyButtonVariant.primaryDense,
       onPressed: () => context.push(
         Routes.cameraQRScanner,
-        extra: contact != null
-            ? {
-                'contact': contact,
-                'openToVerify': true,
-              }
-            : null,
+        extra: {
+          if (contact != null) 'contact': contact,
+          'openToVerify': true,
+        },
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -56,7 +54,11 @@ class VerificationBadgeInfo extends StatelessWidget {
 
     final openButton = MyButton(
       variant: MyButtonVariant.primaryDense,
-      onPressed: () => ProfileQrCodeComp.showSheet(context, contact: contact),
+      onPressed: () => ProfileQrCodeComp.showSheet(
+        context,
+        contact: contact,
+        openToVerify: true,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -93,12 +95,10 @@ class VerificationBadgeInfo extends StatelessWidget {
           boldTextColor: primaryColor,
           onTap: () => context.push(
             Routes.cameraQRScanner,
-            extra: contact != null
-                ? {
-                    'contact': contact,
-                    'openToVerify': true,
-                  }
-                : null,
+            extra: {
+              if (contact != null) 'contact': contact,
+              'openToVerify': true,
+            },
           ),
         ),
         if (displayButtons)

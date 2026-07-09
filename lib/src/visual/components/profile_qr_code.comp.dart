@@ -18,7 +18,11 @@ class ProfileQrCodeComp extends StatefulWidget {
   final double size;
   final bool showAvatar;
 
-  static Future<void> showSheet(BuildContext context, {Contact? contact}) {
+  static Future<void> showSheet(
+    BuildContext context, {
+    Contact? contact,
+    bool openToVerify = false,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -46,11 +50,17 @@ class ProfileQrCodeComp extends StatefulWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                contact != null
-                    ? context.lang.letUserScanQrCode(
-                        getContactDisplayName(contact),
-                      )
-                    : context.lang.addContactQrSheetSubtext,
+                openToVerify
+                    ? (contact != null
+                        ? context.lang.letUserScanQrCode(
+                            getContactDisplayName(contact),
+                          )
+                        : context.lang.letFriendScanQrToVerify)
+                    : (contact != null
+                        ? context.lang.letUserScanQrCode(
+                            getContactDisplayName(contact),
+                          )
+                        : context.lang.addContactQrSheetSubtext),
                 style: TextStyle(
                   fontSize: 14,
                   color: context.color.onSurface.withValues(alpha: 0.6),

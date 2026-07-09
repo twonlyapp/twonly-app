@@ -2822,6 +2822,12 @@ abstract class AppLocalizations {
   /// **'Open QR code'**
   String get openQrCode;
 
+  /// No description provided for @letFriendScanQrToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Let a friend scan this QR code to verify you'**
+  String get letFriendScanQrToVerify;
+
   /// No description provided for @deleteVerificationTitle.
   ///
   /// In en, this message translates to:

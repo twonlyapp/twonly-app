@@ -1585,6 +1585,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openQrCode => 'Open QR code';
 
   @override
+  String get letFriendScanQrToVerify =>
+      'Let a friend scan this QR code to verify you';
+
+  @override
   String get deleteVerificationTitle => 'Delete verification?';
 
   @override
