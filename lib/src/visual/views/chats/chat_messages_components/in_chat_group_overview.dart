@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -27,14 +26,28 @@ class InChatGroupOverview extends StatefulWidget {
 class _InChatGroupOverviewState extends State<InChatGroupOverview> {
   Contact? _directContact;
   StreamSubscription<dynamic>? _verificationSub;
+  StreamSubscription<List<(Contact, DateTime)>>? _transferredTrustSub;
   StreamSubscription<int>? _unverifiedCountSub;
   bool _isVerified = true;
   int _unverifiedCount = 0;
+  List<(KeyVerification, Contact?)> _verifications = [];
+  List<(Contact, DateTime)> _transferredTrust = [];
 
   @override
   void initState() {
     super.initState();
     _initVerificationCheck();
+  }
+
+  void _updateVerificationState() {
+    if (mounted) {
+      setState(() {
+        _isVerified =
+            _directContact?.verified == true ||
+            _verifications.isNotEmpty ||
+            _transferredTrust.isNotEmpty;
+      });
+    }
   }
 
   Future<void> _initVerificationCheck() async {
@@ -47,14 +60,14 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview> {
         _verificationSub = twonlyDB.keyVerificationDao
             .watchContactVerification(_directContact!.userId)
             .listen((verifications) {
-              if (mounted) {
-                setState(() {
-                  _isVerified = verifications.any(
-                    (v) =>
-                        v.$1.type != VerificationType.contactSharedByVerified,
-                  );
-                });
-              }
+              _verifications = verifications;
+              _updateVerificationState();
+            });
+        _transferredTrustSub = twonlyDB.keyVerificationDao
+            .watchTransferredTrustVerifications(_directContact!.userId)
+            .listen((transferredTrust) {
+              _transferredTrust = transferredTrust;
+              _updateVerificationState();
             });
       }
     } else {
@@ -82,6 +95,7 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview> {
   @override
   void dispose() {
     _verificationSub?.cancel();
+    _transferredTrustSub?.cancel();
     _unverifiedCountSub?.cancel();
     super.dispose();
   }
