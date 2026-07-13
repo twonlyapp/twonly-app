@@ -44,6 +44,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                 messages.groupId.equals(groupId) &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
+                    mediaFiles.downloadState.isNull() |
                     mediaFiles.downloadState
                         .equals(DownloadState.reuploadRequested.name)
                         .not()),
@@ -61,9 +62,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             ),
           ])
           ..where(
-            mediaFiles.downloadState
-                    .equals(DownloadState.reuploadRequested.name)
-                    .not() &
+            (mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()) &
                 mediaFiles.type.equals(MediaType.audio.name).not() &
                 messages.openedAt.isNull() &
                 messages.groupId.equals(groupId) &
