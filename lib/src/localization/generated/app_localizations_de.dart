@@ -1587,11 +1587,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get qrScannerVerifyHint =>
-      'Um einen Kontakt zu verifizieren, bitte ihn, seinen QR-Code zu öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+      'Zum Verifizieren muss die andere Person ihren QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)';
 
   @override
   String qrScannerVerifyUserHint(Object username) {
-    return 'Um $username zu verifizieren, bitte ihn, seinen QR-Code zu öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+    return 'Zum Verifizieren muss $username seinen QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)';
   }
 
   @override

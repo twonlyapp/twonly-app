@@ -2807,13 +2807,13 @@ abstract class AppLocalizations {
   /// No description provided for @qrScannerVerifyHint.
   ///
   /// In en, this message translates to:
-  /// **'To verify a contact ask them to open their QR code (Chat Lists > QR code button at the bottom right)'**
+  /// **'To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)'**
   String get qrScannerVerifyHint;
 
   /// No description provided for @qrScannerVerifyUserHint.
   ///
   /// In en, this message translates to:
-  /// **'To verify {username} ask them to open their QR code (Chat Lists > QR code button at the bottom right)'**
+  /// **'To verify, {username} must open their QR code (Chat Lists > QR code button at the bottom right)'**
   String qrScannerVerifyUserHint(Object username);
 
   /// No description provided for @openQrCode.

@@ -1574,11 +1574,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get qrScannerVerifyHint =>
-      'To verify a contact ask them to open their QR code (Chat Lists > QR code button at the bottom right)';
+      'To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)';
 
   @override
   String qrScannerVerifyUserHint(Object username) {
-    return 'To verify $username ask them to open their QR code (Chat Lists > QR code button at the bottom right)';
+    return 'To verify, $username must open their QR code (Chat Lists > QR code button at the bottom right)';
   }
 
   @override
