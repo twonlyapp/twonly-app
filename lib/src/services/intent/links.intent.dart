@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
@@ -32,7 +32,8 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   // Check if this is the QR code link which was
   // therefore scanned with the system camera
 
-  if (uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
+  if (kDebugMode &&
+      uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
     await PasswordlessRecoveryService.handleRecoveryLink(uri.toString());
     return true;
   }

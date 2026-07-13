@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.7
+
+- Fix: Multiple UI issues
+
 ## 0.3.6
 
 - Improve: Visibility of the verification badge

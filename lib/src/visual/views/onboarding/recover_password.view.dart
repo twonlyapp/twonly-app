@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -167,22 +168,23 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                               : Text(context.lang.twonlySafeRecoverBtn),
                         ),
                         const SizedBox(height: 16),
-                        MyButton(
-                          variant: MyButtonVariant.secondary,
-                          onPressed: () async {
-                            await KeyValueStore.update<OnboardingState>(
-                              key: KeyValueKeys.onboardingState,
-                              update: (state) =>
-                                  state.hasStartedPasswordlessRecovery = true,
-                            );
-                            if (context.mounted) {
-                              await context.push(Routes.recoverPasswordless);
-                            }
-                          },
-                          child: Text(
-                            context.lang.passwordlessRecoveryRecoverBtn,
+                        if (kDebugMode)
+                          MyButton(
+                            variant: MyButtonVariant.secondary,
+                            onPressed: () async {
+                              await KeyValueStore.update<OnboardingState>(
+                                key: KeyValueKeys.onboardingState,
+                                update: (state) =>
+                                    state.hasStartedPasswordlessRecovery = true,
+                              );
+                              if (context.mounted) {
+                                await context.push(Routes.recoverPasswordless);
+                              }
+                            },
+                            child: Text(
+                              context.lang.passwordlessRecoveryRecoverBtn,
+                            ),
                           ),
-                        ),
                         const Spacer(),
                         const SizedBox(height: 40),
                       ],
