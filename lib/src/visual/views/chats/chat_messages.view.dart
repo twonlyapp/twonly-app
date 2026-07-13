@@ -4,7 +4,6 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mutex/mutex.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -88,8 +87,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     super.dispose();
   }
 
-  Mutex protectMessageUpdating = Mutex();
-
   bool _isViewActive() {
     if (!mounted) return false;
     return !AppState.isAppInBackground &&
@@ -105,33 +102,29 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         _group = newGroup;
       });
 
-      protectMessageUpdating.protect(() async {
-        if (groupActionsSub == null) {
-          final actionsStream = twonlyDB.groupsDao.watchGroupActions(
-            newGroup.groupId,
-          );
-          groupActionsSub = actionsStream.listen((update) async {
-            groupActions = update;
-            await setMessages(allMessages, update);
-          });
+      if (groupActionsSub == null) {
+        final actionsStream = twonlyDB.groupsDao.watchGroupActions(
+          newGroup.groupId,
+        );
+        groupActionsSub = actionsStream.listen((update) async {
+          groupActions = update;
+          await setMessages(allMessages, update);
+        });
 
-          final contactsStream = twonlyDB.contactsDao.watchAllContacts();
-          contactSub = contactsStream.listen((contacts) {
-            for (final contact in contacts) {
-              userIdToContact[contact.userId] = contact;
-            }
-          });
-        }
-      });
+        final contactsStream = twonlyDB.contactsDao.watchAllContacts();
+        contactSub = contactsStream.listen((contacts) {
+          for (final contact in contacts) {
+            userIdToContact[contact.userId] = contact;
+          }
+        });
+      }
     });
 
     final msgStream = await twonlyDB.messagesDao.watchByGroupId(widget.groupId);
     messageSub = msgStream.listen((update) async {
       allMessages = update;
-      await protectMessageUpdating.protect(() async {
-        await setMessages(update, groupActions);
-        _hasReceivedFirstMessageBatch = true;
-      });
+      await setMessages(update, groupActions);
+      _hasReceivedFirstMessageBatch = true;
     });
 
     final groupContacts = await twonlyDB.groupsDao.getGroupContact(
@@ -158,7 +151,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     List<GroupHistory> groupActions,
   ) async {
     if (_isViewActive()) {
-      await flutterLocalNotificationsPlugin.cancelAll();
+      unawaited(flutterLocalNotificationsPlugin.cancelAll());
     }
 
     for (final msg in newMessages) {
@@ -222,17 +215,33 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
     if (_isViewActive()) {
       for (final contactId in openedMessages.keys) {
-        await notifyContactAboutOpeningMessage(
-          contactId,
-          openedMessages[contactId]!,
+        unawaited(
+          notifyContactAboutOpeningMessage(
+            contactId,
+            openedMessages[contactId]!,
+          ),
         );
       }
     }
+
+    final wasSentByMe =
+        _hasReceivedFirstMessageBatch &&
+        newMessages.isNotEmpty &&
+        newMessages.last.senderId == null;
 
     if (!mounted) return;
     setState(() {
       messages = chatItems.reversed.toList();
     });
+
+    if (wasSentByMe && itemScrollController.isAttached) {
+      unawaited(
+        itemScrollController.scrollTo(
+          index: 0,
+          duration: const Duration(milliseconds: 150),
+        ),
+      );
+    }
 
     final items = await MemoryItem.convertFromMessages(storedMediaFiles);
     if (!mounted) return;
@@ -326,63 +335,66 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                     itemCount: messages.length + 1 + 1,
                     itemScrollController: itemScrollController,
                     itemBuilder: (context, i) {
-                    if (i == 0) {
-                      return userService.currentUser.typingIndicators
-                          ? TypingIndicator(group: group)
-                          : Container();
-                    }
-                    i -= 1;
-                    if (i == messages.length) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: InChatGroupOverview(group: group),
-                      );
-                    }
-                    if (messages[i].isDate) {
-                      return ChatDateChip(
-                        item: messages[i],
-                      );
-                    } else if (messages[i].isGroupAction) {
-                      return ChatGroupAction(
-                        key: Key(messages[i].groupAction!.groupHistoryId),
-                        action: messages[i].groupAction!,
-                      );
-                    } else {
-                      final chatMessage = messages[i].message!;
-                      return BlinkWidget(
-                        key: Key('blink_${chatMessage.messageId}'),
-                        enabled: focusedScrollItem == i,
-                        child: AnimatedNewMessage(
-                          key: Key('anim_${chatMessage.messageId}'),
-                          messageId: chatMessage.messageId,
-                          animateIds: _animateMessageIds,
-                          child: ChatListEntry(
-                            key: Key(chatMessage.messageId),
-                            message: messages[i].message!,
-                            nextMessage: (i > 0)
-                                ? messages[i - 1].message
-                                : null,
-                            prevMessage: ((i + 1) < messages.length)
-                                ? messages[i + 1].message
-                                : null,
+                      if (i == 0) {
+                        return userService.currentUser.typingIndicators
+                            ? TypingIndicator(group: group)
+                            : Container();
+                      }
+                      i -= 1;
+                      if (i == messages.length) {
+                        return Padding(
+                          key: Key('overview_${group.groupId}'),
+                          padding: const EdgeInsets.only(top: 10),
+                          child: InChatGroupOverview(
                             group: group,
-                            galleryItems: galleryItems,
-                            userIdToContact: userIdToContact,
-                            scrollToMessage: scrollToMessage,
-                            onResponseTriggered: () {
-                              setState(() {
-                                quotesMessage = chatMessage;
-                              });
-                              textFieldFocus?.requestFocus();
-                            },
                           ),
-                        ),
-                      );
-                    }
-                  },
+                        );
+                      }
+                      if (messages[i].isDate) {
+                        return ChatDateChip(
+                          item: messages[i],
+                        );
+                      } else if (messages[i].isGroupAction) {
+                        return ChatGroupAction(
+                          key: Key(messages[i].groupAction!.groupHistoryId),
+                          action: messages[i].groupAction!,
+                        );
+                      } else {
+                        final chatMessage = messages[i].message!;
+                        return BlinkWidget(
+                          key: Key('blink_${chatMessage.messageId}'),
+                          enabled: focusedScrollItem == i,
+                          child: AnimatedNewMessage(
+                            key: Key('anim_${chatMessage.messageId}'),
+                            messageId: chatMessage.messageId,
+                            animateIds: _animateMessageIds,
+                            child: ChatListEntry(
+                              key: Key(chatMessage.messageId),
+                              message: messages[i].message!,
+                              nextMessage: (i > 0)
+                                  ? messages[i - 1].message
+                                  : null,
+                              prevMessage: ((i + 1) < messages.length)
+                                  ? messages[i + 1].message
+                                  : null,
+                              group: group,
+                              galleryItems: galleryItems,
+                              userIdToContact: userIdToContact,
+                              scrollToMessage: scrollToMessage,
+                              onResponseTriggered: () {
+                                setState(() {
+                                  quotesMessage = chatMessage;
+                                });
+                                textFieldFocus?.requestFocus();
+                              },
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
-            ),
               if (quotesMessage != null)
                 Container(
                   padding: const EdgeInsets.only(

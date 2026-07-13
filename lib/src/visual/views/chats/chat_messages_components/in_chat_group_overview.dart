@@ -23,7 +23,10 @@ class InChatGroupOverview extends StatefulWidget {
   State<InChatGroupOverview> createState() => _InChatGroupOverviewState();
 }
 
-class _InChatGroupOverviewState extends State<InChatGroupOverview> {
+class _InChatGroupOverviewState extends State<InChatGroupOverview>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   Contact? _directContact;
   StreamSubscription<dynamic>? _verificationSub;
   StreamSubscription<List<(Contact, DateTime)>>? _transferredTrustSub;
@@ -113,6 +116,7 @@ class _InChatGroupOverviewState extends State<InChatGroupOverview> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Center(
