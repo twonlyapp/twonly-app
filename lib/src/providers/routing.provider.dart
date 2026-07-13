@@ -40,7 +40,6 @@ import 'package:twonly/src/visual/views/settings/help/help.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
-import 'package:twonly/src/visual/views/settings/privacy/profile_selection.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
@@ -219,10 +218,6 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'user_discovery',
               builder: (context, state) => const UserDiscoverySettingsView(),
-            ),
-            GoRoute(
-              path: 'profile_selection',
-              builder: (context, state) => const ProfileSelectionSettingsView(),
             ),
           ],
         ),

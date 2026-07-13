@@ -11,7 +11,6 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
-import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
@@ -242,10 +241,7 @@ class _UserListItem extends State<GroupListItemComp> {
                 const SizedBox(width: 3),
                 VerificationBadgeComp(
                   group: widget.group,
-                  showOnlyIfVerified: userService
-                      .currentUser
-                      .securityProfile
-                      .showOnlyVerifiedInChatViewList,
+                  showOnlyIfVerified: true,
                   clickable: false,
                   size: 12,
                 ),

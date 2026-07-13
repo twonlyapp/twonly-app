@@ -21,11 +21,6 @@ class _ProfileSelectionSetupState extends State<ProfileSelectionSetup> {
   Future<void> _onProfileTapped(SetupProfile profile) async {
     await UserService.update((user) {
       user.setupProfile = profile;
-      if (profile == SetupProfile.standard) {
-        user.securityProfile = SecurityProfile.normal;
-      } else if (profile == SetupProfile.maximum) {
-        user.securityProfile = SecurityProfile.strict;
-      }
     });
   }
 
@@ -76,16 +71,7 @@ class _ProfileSelectionSetupState extends State<ProfileSelectionSetup> {
               }),
               onTap: () => _onProfileTapped(SetupProfile.customized),
             ),
-            const SizedBox(height: 16),
-            SafetyProfileCard(
-              profile: SetupProfile.maximum,
-              isSelected: selectedProfile == SetupProfile.maximum,
-              isHovered: _hoveredProfile == SetupProfile.maximum,
-              onHover: (hovered) => setState(() {
-                _hoveredProfile = hovered ? SetupProfile.maximum : null;
-              }),
-              onTap: () => _onProfileTapped(SetupProfile.maximum),
-            ),
+
             const SizedBox(height: 40),
             NextButtonComp(
               key: ValueKey(selectedProfile),

@@ -590,48 +590,6 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
-  /// No description provided for @settingsPrivacyProfileSelectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Security Profile'**
-  String get settingsPrivacyProfileSelectionTitle;
-
-  /// No description provided for @securityProfileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Security Profile'**
-  String get securityProfileTitle;
-
-  /// No description provided for @securityProfileSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.'**
-  String get securityProfileSubtitle;
-
-  /// No description provided for @securityProfileNormalTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Normal Protection'**
-  String get securityProfileNormalTitle;
-
-  /// No description provided for @securityProfileNormalDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Good balance between a convenient mode without bothering you too much.'**
-  String get securityProfileNormalDesc;
-
-  /// No description provided for @securityProfileStrictTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Strict Protection'**
-  String get securityProfileStrictTitle;
-
-  /// No description provided for @securityProfileStrictDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum anti-phishing protection but may be inconvenient.'**
-  String get securityProfileStrictDesc;
-
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:

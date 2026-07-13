@@ -23,12 +23,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..setupProfile =
           $enumDecodeNullable(_$SetupProfileEnumMap, json['setupProfile']) ??
           SetupProfile.standard
-      ..securityProfile =
-          $enumDecodeNullable(
-            _$SecurityProfileEnumMap,
-            json['securityProfile'],
-          ) ??
-          SecurityProfile.normal
       ..subscriptionPlanIdStore = json['subscriptionPlanIdStore'] as String?
       ..lastImageSend = json['lastImageSend'] == null
           ? null
@@ -132,7 +126,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'isDeveloper': instance.isDeveloper,
   'deviceId': instance.deviceId,
   'setupProfile': _$SetupProfileEnumMap[instance.setupProfile]!,
-  'securityProfile': _$SecurityProfileEnumMap[instance.securityProfile]!,
   'subscriptionPlan': instance.subscriptionPlan,
   'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
   'lastImageSend': instance.lastImageSend?.toIso8601String(),
@@ -192,12 +185,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
 const _$SetupProfileEnumMap = {
   SetupProfile.standard: 'standard',
   SetupProfile.customized: 'customized',
-  SetupProfile.maximum: 'maximum',
-};
-
-const _$SecurityProfileEnumMap = {
-  SecurityProfile.normal: 'normal',
-  SecurityProfile.strict: 'strict',
 };
 
 const _$ThemeModeEnumMap = {

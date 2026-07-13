@@ -10,7 +10,6 @@ import 'package:twonly/src/visual/views/onboarding/setup/backup.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/let_your_friends_find_you.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/profile_selection.setup.dart';
-import 'package:twonly/src/visual/views/onboarding/setup/security_profile.setup.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/share_your_friends.setup.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery/components/user_discovery_setup.comp.dart';
 
@@ -18,7 +17,6 @@ enum SetupPages {
   profile,
   backup,
   profileSelection,
-  securityProfile,
   shareYourFriends,
   letYourFriendsFindYou,
 }
@@ -40,18 +38,11 @@ extension SetupPagesExtension on SetupPages {
           SetupPages.backup,
           SetupPages.profileSelection,
         ];
-      case SetupProfile.maximum:
-        return [
-          SetupPages.profile,
-          SetupPages.backup,
-          SetupPages.profileSelection,
-        ];
       case SetupProfile.customized:
         return [
           SetupPages.profile,
           SetupPages.backup,
           SetupPages.profileSelection,
-          SetupPages.securityProfile,
           SetupPages.shareYourFriends,
           SetupPages.letYourFriendsFindYou,
         ];
@@ -218,8 +209,6 @@ class _SetupViewState extends State<SetupView> {
         return const BackupSetupPage();
       case SetupPages.profileSelection:
         return const ProfileSelectionSetup();
-      case SetupPages.securityProfile:
-        return const SecurityProfileSetup();
       case SetupPages.shareYourFriends:
         return ShareYourFriendsSetupPage(state: state);
       case SetupPages.letYourFriendsFindYou:

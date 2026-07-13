@@ -40,9 +40,6 @@ class UserData {
   @JsonKey(defaultValue: SetupProfile.standard)
   SetupProfile setupProfile = SetupProfile.standard;
 
-  @JsonKey(defaultValue: SecurityProfile.normal)
-  SecurityProfile securityProfile = SecurityProfile.normal;
-
   // --- SUBSCRIPTION DTA ---
 
   @JsonKey(defaultValue: 'Free')

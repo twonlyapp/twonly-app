@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'
     show FaIcon, FontAwesomeIcons;
 import 'package:go_router/go_router.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -122,18 +120,16 @@ class VerificationBadgeInfo extends StatelessWidget {
                     ],
                   ),
           ),
-        if (userService.currentUser.securityProfile != SecurityProfile.strict ||
-            userService.currentUser.isUserDiscoveryEnabled)
-          _buildItem(
-            context,
-            icon: const SvgIcon(
-              assetPath: SvgIcons.verifiedGreen,
-              size: 40,
-              color: colorVerificationBadgeYellow,
-            ),
-            description: context.lang.verificationBadgeYellowDesc,
-            boldTextColor: colorVerificationBadgeYellow,
+        _buildItem(
+          context,
+          icon: const SvgIcon(
+            assetPath: SvgIcons.verifiedGreen,
+            size: 40,
+            color: colorVerificationBadgeYellow,
           ),
+          description: context.lang.verificationBadgeYellowDesc,
+          boldTextColor: colorVerificationBadgeYellow,
+        ),
         _buildItem(
           context,
           icon: const SvgIcon(assetPath: SvgIcons.verifiedRed, size: 40),

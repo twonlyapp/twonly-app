@@ -266,30 +266,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsPrivacyProfileSelectionTitle => 'Security Profile';
-
-  @override
-  String get securityProfileTitle => 'Security Profile';
-
-  @override
-  String get securityProfileSubtitle =>
-      'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.';
-
-  @override
-  String get securityProfileNormalTitle => 'Normal Protection';
-
-  @override
-  String get securityProfileNormalDesc =>
-      'Good balance between a convenient mode without bothering you too much.';
-
-  @override
-  String get securityProfileStrictTitle => 'Strict Protection';
-
-  @override
-  String get securityProfileStrictDesc =>
-      'Maximum anti-phishing protection but may be inconvenient.';
-
-  @override
   String get settingsNotification => 'Notification';
 
   @override
