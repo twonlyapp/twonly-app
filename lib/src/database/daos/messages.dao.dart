@@ -32,15 +32,25 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   MessagesDao(super.db);
 
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
-    return (select(messages)
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
           ..where(
-            (t) =>
-                t.openedAt.isNull() &
-                t.groupId.equals(groupId) &
-                t.isDeletedFromSender.equals(false),
+            messages.openedAt.isNull() &
+                messages.groupId.equals(groupId) &
+                messages.isDeletedFromSender.equals(false) &
+                (messages.mediaId.isNull() |
+                    mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()),
           )
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
-        .watch();
+          ..orderBy([OrderingTerm.desc(messages.createdAt)]);
+    return query.map((row) => row.readTable(messages)).watch();
   }
 
   Stream<List<Message>> watchMediaNotOpened(String groupId) {
@@ -52,9 +62,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             ),
           ])
           ..where(
-            mediaFiles.downloadState
-                    .equals(DownloadState.reuploadRequested.name)
-                    .not() &
+            (mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()) &
                 mediaFiles.type.equals(MediaType.audio.name).not() &
                 messages.openedAt.isNull() &
                 messages.groupId.equals(groupId) &
@@ -73,8 +84,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             mediaFiles,
             mediaFiles.mediaId.equalsExp(messages.mediaId),
           ),
-        ])
-        ..where(
+        ])..where(
           messages.openedAt.isNull() &
               messages.mediaId.isNotNull() &
               messages.type.equals(MessageType.media.name) &
@@ -92,19 +102,29 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         milliseconds: group!.deleteMessagesAfterMilliseconds,
       ),
     );
-    return (select(messages)
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
           ..where(
-            (t) =>
-                t.groupId.equals(groupId) &
+            messages.groupId.equals(groupId) &
                 // messages in groups will only be removed in case all members have received it...
                 // so ensuring that this message is not shown in the messages anymore
-                (t.openedAt.isBiggerThanValue(deletionTime) |
-                    t.openedAt.isNull() |
-                    t.mediaStored.equals(true)),
+                (messages.openedAt.isBiggerThanValue(deletionTime) |
+                    messages.openedAt.isNull() |
+                    messages.mediaStored.equals(true)) &
+                (mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not() |
+                    mediaFiles.downloadState.isNull()),
           )
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(1))
-        .watchSingleOrNull();
+          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..limit(1);
+
+    return query.map((row) => row.readTable(messages)).watchSingleOrNull();
   }
 
   Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
@@ -264,26 +284,28 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String text,
     DateTime timestamp,
   ) async {
-    final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null || msg.content == null || msg.senderId != contactId) {
-      return;
-    }
-    await into(messageHistories).insert(
-      MessageHistoriesCompanion(
-        messageId: Value(messageId),
-        content: Value(msg.content),
-        createdAt: Value(timestamp),
-      ),
-    );
-    await (update(messages)..where(
-          (t) => t.messageId.equals(messageId),
-        ))
-        .write(
-          MessagesCompanion(
-            content: Value(text),
-            modifiedAt: Value(timestamp),
-          ),
-        );
+    await transaction(() async {
+      final msg = await getMessageById(messageId).getSingleOrNull();
+      if (msg == null || msg.content == null || msg.senderId != contactId) {
+        return;
+      }
+      await into(messageHistories).insert(
+        MessageHistoriesCompanion(
+          messageId: Value(messageId),
+          content: Value(msg.content),
+          createdAt: Value(timestamp),
+        ),
+      );
+      await (update(messages)..where(
+            (t) => t.messageId.equals(messageId),
+          ))
+          .write(
+            MessagesCompanion(
+              content: Value(text),
+              modifiedAt: Value(timestamp),
+            ),
+          );
+    });
   }
 
   Future<void> handleMessagesOpened(
@@ -291,21 +313,37 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     List<String> messageIds,
     DateTime timestamp,
   ) async {
+    if (contactId.present) {
+      final contactExists = await twonlyDB.contactsDao.getContactById(
+        contactId.value,
+      );
+      if (contactExists == null) {
+        Log.info(
+          'handleMessagesOpened: Contact ${contactId.value} does not exist in database, ignoring messages opened action.',
+        );
+        return;
+      }
+    }
     for (final messageId in messageIds) {
       try {
-        var actionTimestamp = timestamp;
-        final msg = await getMessageById(messageId).getSingleOrNull();
-        if (msg != null && actionTimestamp.isBefore(msg.createdAt)) {
-          Log.warn(
-            'Receiver clock skew detected for message $messageId. '
-            'Action timestamp $actionTimestamp is before message creation ${msg.createdAt}. '
-            'Clamping to creation time.',
-          );
-          actionTimestamp = msg.createdAt;
-        }
-
-        final ts = actionTimestamp;
         await transaction(() async {
+          final msg = await getMessageById(messageId).getSingleOrNull();
+          if (msg == null) {
+            Log.info(
+              'handleMessagesOpened: Message $messageId does not exist in database, skipping.',
+            );
+            return;
+          }
+          var ts = timestamp;
+          if (ts.isBefore(msg.createdAt)) {
+            Log.warn(
+              'Receiver clock skew detected for message $messageId. '
+              'Action timestamp $ts is before message creation ${msg.createdAt}. '
+              'Clamping to creation time.',
+            );
+            ts = msg.createdAt;
+          }
+
           await into(messageActions).insertOnConflictUpdate(
             MessageActionsCompanion(
               messageId: Value(messageId),
@@ -339,7 +377,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             messages,
           )..where((tbl) => tbl.messageId.equals(messageId))).write(
             MessagesCompanion(
-              openedAt: Value(actionTimestamp),
+              openedAt: Value(timestamp),
             ),
           );
         }
@@ -348,7 +386,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           'handleMessagesOpened completed for message $messageId',
         );
       } catch (e) {
-        Log.error('handleMessagesOpened failed for $messageId: $e');
+        Log.warn('handleMessagesOpened failed for $messageId: $e');
+        Log.error(
+          'handleMessagesOpened failed for: $e',
+          onlyIfSentryEnabled: true,
+        );
       }
     }
   }
@@ -358,7 +400,21 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     DateTime timestamp,
   ) async {
+    final contactExists = await twonlyDB.contactsDao.getContactById(contactId);
+    if (contactExists == null) {
+      Log.info(
+        'handleMessageAckByServer: Contact $contactId does not exist in database, ignoring message ack.',
+      );
+      return;
+    }
     await transaction(() async {
+      final msg = await getMessageById(messageId).getSingleOrNull();
+      if (msg == null) {
+        Log.info(
+          'handleMessageAckByServer: Message $messageId does not exist in database, skipping.',
+        );
+        return;
+      }
       await into(messageActions).insertOnConflictUpdate(
         MessageActionsCompanion(
           messageId: Value(messageId),
@@ -470,6 +526,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  Stream<MessageAction?> watchLastMessageAction(String messageId) {
+    return (((select(messageActions)..where(
+              (t) => t.messageId.equals(messageId),
+            ))
+            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
+          ..limit(1))
+        .watchSingleOrNull();
   }
 
   Future<void> deleteMessagesById(String messageId) {

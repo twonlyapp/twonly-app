@@ -50,7 +50,13 @@ Future<List<Sticker>> getStickerIndex() async {
       return res;
     }
   } catch (e) {
-    Log.error('$e');
+    if (e is http.ClientException ||
+        e is SocketException ||
+        e is TimeoutException) {
+      Log.warn('Could not load stickers index: $e');
+    } else {
+      Log.error('Could not load stickers index: $e');
+    }
     return res;
   }
 }

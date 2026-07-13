@@ -38,7 +38,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly wird durch Spenden und ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
+      'twonly wird durch ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
 
   @override
   String get registerUsernameSlogan => 'Konto erstellen';
@@ -269,30 +269,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get settingsPrivacyProfileSelectionTitle => 'Sicherheitsprofil';
-
-  @override
-  String get securityProfileTitle => 'Sicherheitsprofil';
-
-  @override
-  String get securityProfileSubtitle =>
-      'Wähle das Schutzniveau, das zu deiner täglichen Nutzung passt. Dies kann jederzeit in den Einstellungen geändert werden.';
-
-  @override
-  String get securityProfileNormalTitle => 'Normaler Schutz';
-
-  @override
-  String get securityProfileNormalDesc =>
-      'Gute Balance zwischen Komfort und Sicherheit, ohne dich zu sehr einzuschränken.';
-
-  @override
-  String get securityProfileStrictTitle => 'Strikter Schutz';
-
-  @override
-  String get securityProfileStrictDesc =>
-      'Maximaler Schutz vor Phishing, kann aber unkomfortabel sein.';
-
-  @override
   String get settingsNotification => 'Benachrichtigung';
 
   @override
@@ -404,7 +380,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactUsLastWarning =>
-      'Dies sind die Informationen, die an uns gesendet werden. Bitte prüfen Sie sie und klicke dann auf „Abschicken“.';
+      'Dies sind die Informationen, die an uns gesendet werden. Bitte prüfe sie und klicke dann auf „Abschicken“.';
 
   @override
   String get contactUsSuccess => 'Feedback erfolgreich übermittelt!';
@@ -436,11 +412,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactVerifyNumberTitle => 'Kontakte verifizieren';
 
   @override
+  String verifyUserIdentity(Object username) {
+    return 'Identität von $username verifizieren';
+  }
+
+  @override
   String get contactVerifyNumberSubtitle =>
       'Überprüfe die Identität deiner Kontakte, um sicherzugehen, dass du mit der richtigen Person schreibst.';
 
   @override
+  String get inChatContactNotVerified => 'Kontakt nicht verifiziert.';
+
+  @override
+  String groupMembersNotVerified(Object count) {
+    return '$count Mitglieder sind nicht verifiziert.';
+  }
+
+  @override
   String get userVerifiedTitle => 'Kontakt verifiziert';
+
+  @override
+  String scanUserQrCode(Object username) {
+    return 'QR-Code von $username scannen';
+  }
+
+  @override
+  String get openOwnQrCode => 'Eigenen QR-Code öffnen';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -841,7 +838,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupTwonlySaveNow => 'Jetzt speichern';
 
   @override
-  String get backupChangePassword => 'Password ändern';
+  String get backupChangePassword => 'Passwort ändern';
+
+  @override
+  String get backupChangePasswordAuthReason => 'Backup-Passwort ändern';
+
+  @override
+  String get backupChangePasswordAuthFailed =>
+      'Du kannst dein Passwort nur ändern, wenn du dich authentifiziert hast!';
 
   @override
   String get twonlySafeRecoverTitle => 'Backup wiederherstellen';
@@ -1311,6 +1315,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lass einen Freund diesen QR-Code scannen, um dich hinzuzufügen';
 
   @override
+  String letUserScanQrCode(Object username) {
+    return 'Lass $username diesen QR-Code scannen';
+  }
+
+  @override
   String get finishSetupCardTitle => 'Profil vervollständigen';
 
   @override
@@ -1535,7 +1544,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'Der Haken *schützt dich vor Betrügern und Angreifern*. Es wird neben einem Kontakt angezeigt, der von dir oder einem Freund *manuell überprüft* wurde.';
+      'Der Haken gibt dir die Sicherheit, dass du mit der *richtigen Person* schreibst und deine *Nachrichten vertraulich* bleiben.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1553,7 +1562,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get scanNow => 'Jetzt scannen';
 
   @override
+  String get qrScannerVerifyHint =>
+      'Zum Verifizieren muss die andere Person ihren QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+
+  @override
+  String qrScannerVerifyUserHint(Object username) {
+    return 'Zum Verifizieren muss $username seinen QR-Code öffnen (Chat-Liste > QR-Code-Button unten rechts)';
+  }
+
+  @override
   String get openQrCode => 'QR-Code öffnen';
+
+  @override
+  String get letFriendScanQrToVerify =>
+      'Lass einen Freund diesen QR-Code scannen, um euch zu verifizieren';
 
   @override
   String get deleteVerificationTitle => 'Verifizierung löschen?';
@@ -2102,4 +2124,274 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get avatarCustomizeReset => 'Zurücksetzen';
+
+  @override
+  String get passwordlessRecovery => 'Passwortloses Backup';
+
+  @override
+  String get passwordlessRecoveryNotConfigured => 'Nicht konfiguriert';
+
+  @override
+  String get passwordlessRecoveryTestPin => 'PIN testen';
+
+  @override
+  String get passwordlessRecoveryTestPinTitle => 'PIN testen';
+
+  @override
+  String get passwordlessRecoveryTestPinHint => 'Gib deine PIN ein';
+
+  @override
+  String get passwordlessRecoveryTestPinCorrect => 'PIN ist korrekt!';
+
+  @override
+  String get passwordlessRecoveryTestPinIncorrect => 'Falsche PIN.';
+
+  @override
+  String get passwordlessRecoveryTest => 'Testen';
+
+  @override
+  String get passwordlessRecoverySecondFactorNone => 'Keiner';
+
+  @override
+  String passwordlessRecoverySecondFactorEmailLabel(Object email) {
+    return 'E-Mail ($email)';
+  }
+
+  @override
+  String get passwordlessRecoverySecondFactorPin => 'PIN';
+
+  @override
+  String get passwordlessRecoverySecondFactorEmail => 'E-Mail';
+
+  @override
+  String get passwordlessRecoveryModify => 'Einstellungen bearbeiten';
+
+  @override
+  String get passwordlessRecoveryModifyDesc =>
+      'Aktualisiere deine Backupkonfiguration';
+
+  @override
+  String get passwordlessRecoverySecondFactor => 'Zweiter Faktor';
+
+  @override
+  String get passwordlessRecoveryNoFriendsFound => 'Keine Freunde gefunden.';
+
+  @override
+  String get passwordlessRecoveryActiveFriends => 'Aktive Freunde';
+
+  @override
+  String get passwordlessRecoveryActiveFriendsDesc =>
+      'Diese Freunde nutzen twonly aktiv und können dir wahrscheinlich helfen, dein Konto wiederherzustellen.';
+
+  @override
+  String get passwordlessRecoveryInactiveFriends => 'Inaktive Freunde';
+
+  @override
+  String get passwordlessRecoveryInactiveFriendsDesc =>
+      'Diese Freunde haben entweder ihren Teil noch nicht erhalten oder nutzen twonly nicht mehr aktiv, was bedeutet, dass sie möglicherweise nicht helfen können.';
+
+  @override
+  String get passwordlessRecoveryNotEnoughFriends =>
+      'Nicht genügend Freunde ausgewählt. Du brauchst mindestens 3.';
+
+  @override
+  String get passwordlessRecoveryLoading => 'Wird geladen...';
+
+  @override
+  String get passwordlessRecoveryEnableSuccess =>
+      'Passwortloses Backup erfolgreich aktiviert!';
+
+  @override
+  String get passwordlessRecoveryEnableFailed =>
+      'Fehler beim Aktivieren des passwortlosen Backups.';
+
+  @override
+  String get passwordlessRecoveryNeedAtLeast3 =>
+      'Du brauchst mindestens 3 Freunde.';
+
+  @override
+  String get passwordlessRecoveryInvalidPin => 'Ungültige PIN';
+
+  @override
+  String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
+
+  @override
+  String get passwordlessRecoveryPinMinLength =>
+      'Die PIN muss mindestens 4 Ziffern lang sein.';
+
+  @override
+  String get passwordlessRecoveryEnterEmail =>
+      'Bitte gib eine E-Mail-Adresse ein.';
+
+  @override
+  String get passwordlessRecoveryEnableBtn => 'Passwortloses Backup aktivieren';
+
+  @override
+  String get passwordlessRecoveryRecoverBtn => 'Passwortlos wiederherstellen';
+
+  @override
+  String get passwordlessRecoveryModifyBtn => 'Passwortloses Backup bearbeiten';
+
+  @override
+  String passwordlessRecoveryStatusEnabled(num count) {
+    return 'Aktiviert • $count Freunde';
+  }
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorks => 'Wie es funktioniert';
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorksDesc =>
+      'Da twonly ohne zentrale Benutzerkonten oder Telefonnummern funktioniert, um deine Privatsphäre zu maximieren, setzen wir auf einen dezentralen Wiederherstellungsmechanismus. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine Freunde verteilt. Um den Zugriff wiederherzustellen, muss ein vorher festgelegter Schwellenwert dieser Freunde ihre Teile kombinieren.';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactor =>
+      'Warum ein zweiter Faktor?';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactorDesc =>
+      'Der zweite Faktor (E-Mail oder PIN) dient als wichtiger kryptografischer Schutz vor bösartiger Absprache. Wenn sich deine Freunde hinter deinem Rücken absprechen würden, könnten sie deine Identität ohne den Schlüssel für den zweiten Faktor trotzdem nicht entschlüsseln.';
+
+  @override
+  String get passwordlessRecoveryInfoGotIt => 'Verstanden';
+
+  @override
+  String get passwordlessRecoveryMethod => 'Methode für den zweiten Faktor';
+
+  @override
+  String get passwordlessRecoveryMethodNoneDesc =>
+      'Ohne zweiten Faktor könnten sich deine Freunde absprechen, um dein Konto wiederherzustellen. Daher wird empfohlen, einen zweiten Faktor zu konfigurieren.';
+
+  @override
+  String get passwordlessRecoveryMethodPinHint => 'PIN eingeben';
+
+  @override
+  String get passwordlessRecoveryMethodEmailHint =>
+      'Wiederherstellungs-E-Mail-Adresse eingeben';
+
+  @override
+  String get passwordlessRecoveryMethodEmailDesc =>
+      'Deine E-Mail-Adresse wird *niemals auf dem Server gespeichert* und nur im Falle einer Wiederherstellung an ihn gesendet.';
+
+  @override
+  String passwordlessRecoveryThresholdDesc(num count) {
+    return 'Um dein Konto wiederherzustellen, brauchst du $count deiner ausgewählten Freunde.';
+  }
+
+  @override
+  String get passwordlessRecoveryThresholdTitle =>
+      'Benötigte Freunde für das Backup';
+
+  @override
+  String passwordlessRecoverySelectFriendsNeeded(num count) {
+    return 'Freunde auswählen ($count weitere benötigt)';
+  }
+
+  @override
+  String get passwordlessRecoverySelectFriends => 'Freunde auswählen';
+
+  @override
+  String get passwordlessRecoveryNoFriendsSelected =>
+      'Noch keine Freunde ausgewählt';
+
+  @override
+  String get passwordlessRecoverySubtitle =>
+      'Stelle deine Identität ohne Passwort wieder her.';
+
+  @override
+  String get recoverPasswordlessExplanation =>
+      'Wenn du die passwortlose Wiederherstellung aktiviert hast, kannst du dein Konto mithilfe deiner Freunde wiederherstellen.';
+
+  @override
+  String get recoverPasswordlessNotificationCardTitle =>
+      'Benachrichtigungen aktivieren';
+
+  @override
+  String get recoverPasswordlessNotificationCardSubtitle =>
+      'Lass dich benachrichtigen, wenn ein Freund dir geholfen hat, dein Konto wiederherzustellen.';
+
+  @override
+  String get recoverPasswordlessNotificationCardBtn =>
+      'Push-Benachrichtigungen aktivieren';
+
+  @override
+  String get recoverPasswordlessQrInstructions =>
+      'Lass deine Freunde den QR-Code scannen oder teile den Link.';
+
+  @override
+  String get recoverPasswordlessShareBtn => 'Wiederherstellungs-Link teilen';
+
+  @override
+  String get recoverPasswordlessCopyBtn => 'Kopieren';
+
+  @override
+  String get recoverPasswordlessCopiedSnackbar =>
+      'Link in die Zwischenablage kopiert!';
+
+  @override
+  String get passwordlessRecoveryNoShareStored =>
+      'Kein Wiederherstellungs-Teil für diesen Kontakt gespeichert.';
+
+  @override
+  String get passwordlessRecoveryShareSent =>
+      'Wiederherstellungs-Teil erfolgreich gesendet!';
+
+  @override
+  String get passwordlessRecoveryNetworkError =>
+      'Netzwerkfehler, bitte stelle sicher, dass du Internet hast';
+
+  @override
+  String get passwordlessRecoveryInvalidEmail =>
+      'Die E-Mail-Adresse ist ungültig.';
+
+  @override
+  String get passwordlessRecoveryResendEmail => 'E-Mail erneut senden';
+
+  @override
+  String get passwordlessRecoveryHelpAFriend => 'Einem Freund helfen';
+
+  @override
+  String get passwordlessRecoverySelectContactDesc =>
+      'Wähle den Kontakt aus, dem du helfen möchtest.';
+
+  @override
+  String get passwordlessRecoverySearchContacts => 'Kontakte suchen...';
+
+  @override
+  String get passwordlessRecoveryNoContactsFound => 'Keine Kontakte gefunden';
+
+  @override
+  String get passwordlessRecoveryCantHelpHim => 'Du kannst ihm nicht helfen';
+
+  @override
+  String passwordlessRecoveryDoesAskedYou(Object username) {
+    return 'Hat $username dich gefragt?';
+  }
+
+  @override
+  String get passwordlessRecoveryVerifySourceDesc =>
+      'Bitte stelle sicher, dass du den Link/QR-Code tatsächlich von deinem Freund erhalten hast! Wenn du dir unsicher bist, verifiziere dies bitte erneut und klicke dann noch einmal auf den Link oder kehre zurück.';
+
+  @override
+  String get passwordlessRecoveryNo => 'Nein';
+
+  @override
+  String get passwordlessRecoveryYes => 'Ja';
+
+  @override
+  String passwordlessRecoveryYesWithTimer(Object seconds) {
+    return 'Ja (${seconds}s)';
+  }
+
+  @override
+  String get recoverPasswordlessBeingRecoveredLabel =>
+      'Konto wird wiederhergestellt';
+
+  @override
+  String recoverPasswordlessSharesReceived(Object received, Object threshold) {
+    return '$received von $threshold Freunden haben geteilt';
+  }
+
+  @override
+  String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
 }

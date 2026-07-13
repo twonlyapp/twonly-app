@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
@@ -56,6 +58,7 @@ class OnboardingView extends StatelessWidget {
             ),
             PageViewModel(
               title: context.lang.onboardingNotProductTitle,
+              useScrollView: false,
               bodyWidget: Column(
                 children: [
                   Text(
@@ -67,20 +70,41 @@ class OnboardingView extends StatelessWidget {
                     padding: const EdgeInsets.only(
                       left: 50,
                       right: 50,
-                      top: 20,
+                      top: 10,
                     ),
                     child: MyButton(
+                      variant: MyButtonVariant.primaryMiddle,
                       onPressed: callbackOnSuccess,
                       child: Text(context.lang.registerSubmitButton),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 50,
+                      right: 50,
+                      top: 10,
+                    ),
+                    child: MyButton(
+                      onPressed: () {
+                        callbackOnSuccess();
+                        context.push(Routes.settingsBackupRecovery);
+                      },
+                      variant: MyButtonVariant.secondaryDense,
+                      child: Text(
+                        context.lang.twonlySafeRecoverBtn,
+                      ),
                     ),
                   ),
                 ],
               ),
               image: Center(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 60),
-                  child: Lottie.asset(
-                    'assets/animations/donation.lottie',
+                  padding: const EdgeInsets.only(top: 40),
+                  child: SizedBox(
+                    height: 200,
+                    child: Lottie.asset(
+                      'assets/animations/donation.lottie',
+                    ),
                   ),
                 ),
               ),

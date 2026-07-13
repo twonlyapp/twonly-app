@@ -13,7 +13,8 @@ import 'package:twonly/src/visual/views/contact/add_new_contact.view.dart';
 import 'package:twonly/src/visual/views/contact/contact.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
-import 'package:twonly/src/visual/views/onboarding/recover.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover_password.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover_passwordless.view.dart';
 import 'package:twonly/src/visual/views/public_profile.view.dart';
 import 'package:twonly/src/visual/views/settings/account.view.dart';
 import 'package:twonly/src/visual/views/settings/appearance.view.dart';
@@ -39,7 +40,6 @@ import 'package:twonly/src/visual/views/settings/help/help.view.dart';
 import 'package:twonly/src/visual/views/settings/notification.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/block_users.view.dart';
-import 'package:twonly/src/visual/views/settings/privacy/profile_selection.view.dart';
 import 'package:twonly/src/visual/views/settings/privacy/user_discovery.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/modify_avatar.view.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
@@ -57,6 +57,13 @@ final routerProvider = GoRouter(
     GoRoute(
       path: Routes.home,
       builder: (context, state) => const AppMainWidget(initialPage: 1),
+    ),
+    GoRoute(
+      path: Routes.recoverPasswordless,
+      builder: (context, state) {
+        final token = state.extra as String?;
+        return RecoverPasswordless(initialEmailToken: token);
+      },
     ),
 
     // Chats
@@ -135,7 +142,13 @@ final routerProvider = GoRouter(
     GoRoute(
       path: Routes.cameraQRScanner,
       builder: (context, state) {
-        return const QrCodeScannerView();
+        final extra = state.extra as Map<String, dynamic>?;
+        final contact = extra?['contact'] as Contact?;
+        final openToVerify = extra?['openToVerify'] as bool? ?? false;
+        return QrCodeScannerView(
+          contact: contact,
+          openToVerify: openToVerify,
+        );
       },
     ),
 
@@ -206,10 +219,6 @@ final routerProvider = GoRouter(
               path: 'user_discovery',
               builder: (context, state) => const UserDiscoverySettingsView(),
             ),
-            GoRoute(
-              path: 'profile_selection',
-              builder: (context, state) => const ProfileSelectionSettingsView(),
-            ),
           ],
         ),
         GoRoute(
@@ -240,7 +249,9 @@ final routerProvider = GoRouter(
               routes: [
                 GoRoute(
                   path: 'verifybadge',
-                  builder: (context, state) => const VerificationBadeFaqView(),
+                  builder: (context, state) => VerificationBadeFaqView(
+                    contact: state.extra as Contact?,
+                  ),
                 ),
               ],
             ),

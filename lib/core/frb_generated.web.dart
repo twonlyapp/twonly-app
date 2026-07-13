@@ -8,6 +8,8 @@
 
 import 'bridge.dart';
 import 'bridge/callbacks.dart';
+import 'bridge/callbacks/user_discovery.dart';
+import 'bridge/wrapper.dart';
 import 'bridge/wrapper/backup.dart';
 import 'bridge/wrapper/key_manager.dart';
 import 'bridge/wrapper/user_discovery.dart';
@@ -137,6 +139,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   InitConfig dco_decode_box_autoadd_init_config(dynamic raw);
 
   @protected
+  OtherPromotion dco_decode_box_autoadd_other_promotion(dynamic raw);
+
+  @protected
+  UserDiscoveryStoreFlutter dco_decode_box_autoadd_user_discovery_store_flutter(
+    dynamic raw,
+  );
+
+  @protected
+  UserDiscoveryUtilsFlutter dco_decode_box_autoadd_user_discovery_utils_flutter(
+    dynamic raw,
+  );
+
+  @protected
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
 
   @protected
@@ -208,6 +223,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustKeyManager dco_decode_rust_key_manager(dynamic raw);
 
   @protected
+  RustUtils dco_decode_rust_utils(dynamic raw);
+
+  @protected
   int dco_decode_u_32(dynamic raw);
 
   @protected
@@ -218,6 +236,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  UserDiscoveryStoreFlutter dco_decode_user_discovery_store_flutter(
+    dynamic raw,
+  );
+
+  @protected
+  UserDiscoveryUtilsFlutter dco_decode_user_discovery_utils_flutter(
+    dynamic raw,
+  );
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
@@ -267,6 +295,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer);
+
+  @protected
+  OtherPromotion sse_decode_box_autoadd_other_promotion(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UserDiscoveryStoreFlutter sse_decode_box_autoadd_user_discovery_store_flutter(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UserDiscoveryUtilsFlutter sse_decode_box_autoadd_user_discovery_utils_flutter(
+    SseDeserializer deserializer,
+  );
 
   @protected
   FlutterUserDiscovery sse_decode_flutter_user_discovery(
@@ -360,6 +403,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer);
 
   @protected
+  RustUtils sse_decode_rust_utils(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
@@ -370,6 +416,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  UserDiscoveryStoreFlutter sse_decode_user_discovery_store_flutter(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UserDiscoveryUtilsFlutter sse_decode_user_discovery_utils_flutter(
+    SseDeserializer deserializer,
+  );
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
@@ -520,6 +576,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_other_promotion(
+    OtherPromotion self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_user_discovery_store_flutter(
+    UserDiscoveryStoreFlutter self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_user_discovery_utils_flutter(
+    UserDiscoveryUtilsFlutter self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_flutter_user_discovery(
     FlutterUserDiscovery self,
     SseSerializer serializer,
@@ -637,6 +711,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_rust_utils(RustUtils self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -647,6 +724,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_user_discovery_store_flutter(
+    UserDiscoveryStoreFlutter self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_user_discovery_utils_flutter(
+    UserDiscoveryUtilsFlutter self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);

@@ -1,7 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -34,23 +40,10 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
     if (!mounted) return;
 
     if (error != null) {
-      String errorMessage;
-      switch (error) {
-        case RecoveryError.noInternet:
-          errorMessage = context.lang.recoverErrorNoInternet;
-        case RecoveryError.usernameNotValid:
-          errorMessage = context.lang.recoverErrorUsernameNotValid;
-        case RecoveryError.passwordInvalid:
-          errorMessage = context.lang.recoverErrorPasswordInvalid;
-        case RecoveryError.tryAgainLater:
-          errorMessage = context.lang.recoverErrorTryAgainLater;
-        case RecoveryError.unkownError:
-          errorMessage = context.lang.recoverErrorUnknown;
-      }
       setState(() {
         isLoading = false;
       });
-      return showSnackbar(context, errorMessage);
+      return showSnackbar(context, error.toLocalizedString(context));
     }
 
     await Restart.restartApp(
@@ -63,7 +56,6 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
       isLoading = false;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +167,24 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                                 )
                               : Text(context.lang.twonlySafeRecoverBtn),
                         ),
+                        const SizedBox(height: 16),
+                        if (kDebugMode)
+                          MyButton(
+                            variant: MyButtonVariant.secondary,
+                            onPressed: () async {
+                              await KeyValueStore.update<OnboardingState>(
+                                key: KeyValueKeys.onboardingState,
+                                update: (state) =>
+                                    state.hasStartedPasswordlessRecovery = true,
+                              );
+                              if (context.mounted) {
+                                await context.push(Routes.recoverPasswordless);
+                              }
+                            },
+                            child: Text(
+                              context.lang.passwordlessRecoveryRecoverBtn,
+                            ),
+                          ),
                         const Spacer(),
                         const SizedBox(height: 40),
                       ],

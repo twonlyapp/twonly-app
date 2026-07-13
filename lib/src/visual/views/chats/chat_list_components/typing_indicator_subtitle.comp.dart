@@ -20,9 +20,9 @@ class _TypingIndicatorSubtitleCompState
     extends State<TypingIndicatorSubtitleComp> {
   List<GroupMember> _groupMembers = [];
 
-  late StreamSubscription<List<(Contact, GroupMember)>> membersSub;
+  StreamSubscription<List<(Contact, GroupMember)>>? membersSub;
 
-  late Timer _periodicUpdate;
+  Timer? _periodicUpdate;
 
   @override
   void initState() {
@@ -50,8 +50,8 @@ class _TypingIndicatorSubtitleCompState
 
   @override
   void dispose() {
-    membersSub.cancel();
-    _periodicUpdate.cancel();
+    membersSub?.cancel();
+    _periodicUpdate?.cancel();
     super.dispose();
   }
 

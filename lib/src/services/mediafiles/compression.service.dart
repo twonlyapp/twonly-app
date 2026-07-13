@@ -33,17 +33,18 @@ Future<void> compressImage(
 
     Log.info('Compressed images size in bytes: ${compressedBytes.length}');
 
-    if (compressedBytes.length >= 1 * 1000 * 1000) {
+    if (compressedBytes.length >= 2 * 1000 * 1000) {
       // if the media file is over 1MB compress it with 60%
       final tmpCompressedBytes = await FlutterImageCompress.compressWithFile(
         sourceFile.path,
         format: CompressFormat.webp,
         quality: 60,
       );
-      if (tmpCompressedBytes != null) {
+      if (tmpCompressedBytes == null) {
         Log.error(
           'Could not compress media file with 60%: $sourceFile. Sending original 90% compressed file.',
         );
+      } else {
         compressedBytes = tmpCompressedBytes;
       }
     }
@@ -106,11 +107,11 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
           },
         );
       } catch (e) {
-        Log.error('during video compression: $e');
+        Log.warn('during video compression: $e');
       }
 
       if (compressedPath == null) {
-        Log.error('Could not compress video using original video.');
+        Log.warn('Could not compress video using original video.');
         // as a fall back use the non compressed version
         media.ffmpegOutputPath.copySync(media.tempPath.path);
       }

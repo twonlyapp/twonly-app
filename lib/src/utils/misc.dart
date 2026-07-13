@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -93,10 +94,10 @@ Future<String?> saveVideoToGallery(
   if (!hasAccess) {
     await Gal.requestAccess(toAlbum: true);
   }
-  
+
   var pathToSave = videoPath;
   File? tempFile;
-  
+
   try {
     if (name != null) {
       final file = File(videoPath);
@@ -404,4 +405,44 @@ String joinWithAnd(List<String> items, String andWord) {
   if (items.isEmpty) return '';
   if (items.length == 1) return items.first;
   return '${items.sublist(0, items.length - 1).join(', ')} $andWord ${items.last}';
+}
+
+String createEmailHint(String email) {
+  final parts = email.split('@');
+  if (parts.length != 2) return email;
+
+  final local = parts[0];
+  final domain = parts[1];
+
+  final localMasked = local.length > 2
+      ? '${local[0]}${'*' * (local.length - 2)}${local[local.length - 1]}'
+      : local;
+
+  final domainParts = domain.split('.');
+  if (domainParts.isEmpty) return '$localMasked@$domain';
+
+  final domainName = domainParts[0];
+  final domainNameMasked = domainName.length > 1
+      ? '${domainName[0]}${'*' * (domainName.length - 1)}'
+      : domainName;
+
+  final restDomain = domainParts.skip(1).join('.');
+  return '$localMasked@$domainNameMasked${restDomain.isNotEmpty ? '.$restDomain' : ''}';
+}
+
+extension RecoveryErrorLocalization on RecoveryError {
+  String toLocalizedString(BuildContext context) {
+    switch (this) {
+      case RecoveryError.noInternet:
+        return context.lang.recoverErrorNoInternet;
+      case RecoveryError.usernameNotValid:
+        return context.lang.recoverErrorUsernameNotValid;
+      case RecoveryError.passwordInvalid:
+        return context.lang.recoverErrorPasswordInvalid;
+      case RecoveryError.tryAgainLater:
+        return context.lang.recoverErrorTryAgainLater;
+      case RecoveryError.unkownError:
+        return context.lang.recoverErrorUnknown;
+    }
+  }
 }

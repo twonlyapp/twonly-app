@@ -30,22 +30,9 @@ class _RecoveryViewState extends State<RecoveryView> {
     if (!mounted) return;
 
     if (error != null) {
-      String msg;
-      switch (error) {
-        case RecoveryError.noInternet:
-          msg = context.lang.recoverErrorNoInternet;
-        case RecoveryError.usernameNotValid:
-          msg = context.lang.recoverErrorUsernameNotValid;
-        case RecoveryError.passwordInvalid:
-          msg = context.lang.recoverErrorPasswordInvalid;
-        case RecoveryError.tryAgainLater:
-          msg = context.lang.recoverErrorTryAgainLater;
-        case RecoveryError.unkownError:
-          msg = context.lang.recoverErrorUnknown;
-      }
       setState(() {
         _isLoading = false;
-        _errorMessage = msg;
+        _errorMessage = error.toLocalizedString(context);
         _showRegisterNewPrompt = true;
       });
       return;

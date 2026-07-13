@@ -7,7 +7,7 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future<void> handleTextMessage(
+Future<bool> handleTextMessage(
   int fromUserId,
   String groupId,
   EncryptedContent_TextMessage textMessage,
@@ -26,7 +26,7 @@ Future<void> handleTextMessage(
     Log.warn(
       '[$receiptId] $fromUserId tried to overwrite message from ${existing.senderId}. Dropping.',
     );
-    return;
+    return false;
   }
 
   final message = await twonlyDB.messagesDao.insertMessage(
@@ -50,4 +50,5 @@ Future<void> handleTextMessage(
   if (message != null) {
     Log.info('[$receiptId] Inserted a new text message with ID: ${message.messageId}');
   }
+  return message != null;
 }

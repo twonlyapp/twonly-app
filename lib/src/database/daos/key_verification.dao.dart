@@ -259,6 +259,54 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     });
   }
 
+  Stream<int> watchUnverifiedGroupMembersCount(String groupId) {
+    final gm = groupMembers;
+    final directKv = alias(keyVerifications, 'directKv');
+    final ur = userDiscoveryUserRelations;
+    final verifierKv = alias(keyVerifications, 'verifierKv');
+
+    final query = select(gm).join([
+      leftOuterJoin(directKv, directKv.contactId.equalsExp(gm.contactId)),
+      leftOuterJoin(
+        ur,
+        ur.announcedUserId.equalsExp(gm.contactId) &
+            ur.publicKeyVerifiedTimestamp.isNotNull() &
+            ur.fromContactId.equalsExp(gm.contactId).not(),
+      ),
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(ur.fromContactId),
+      ),
+    ])..where(gm.groupId.equals(groupId));
+
+    return query.watch().map((rows) {
+      if (rows.isEmpty) return 0;
+
+      final memberTrustMap = <int, ({bool direct, bool partial})>{};
+
+      for (final row in rows) {
+        final contactId = row.readTable(gm).contactId;
+        final isDirect = row.readTableOrNull(directKv) != null;
+        final isPartial = row.readTableOrNull(verifierKv) != null;
+
+        final current =
+            memberTrustMap[contactId] ?? (direct: false, partial: false);
+        memberTrustMap[contactId] = (
+          direct: current.direct || isDirect,
+          partial: current.partial || isPartial,
+        );
+      }
+
+      var count = 0;
+      for (final trust in memberTrustMap.values) {
+        if (!trust.direct && !trust.partial) {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
+
   Future<void> addKeyVerification(
     int contactId,
     VerificationType type, {

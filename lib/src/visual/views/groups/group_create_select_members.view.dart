@@ -14,6 +14,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_group_name.view.dart';
 
 class GroupCreateSelectMembersView extends StatefulWidget {
@@ -184,10 +185,12 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                                   return Wrap(
                                     spacing: 8,
                                     children: selected.map((w) {
-                                      return _Chip(
-                                        contact: allContacts.firstWhere(
-                                          (t) => t.userId == w,
-                                        ),
+                                      final contact = allContacts.firstWhere(
+                                        (t) => t.userId == w,
+                                      );
+                                      return ContactChip(
+                                        key: ValueKey(contact.userId),
+                                        contact: contact,
                                         onTap: toggleSelectedUser,
                                       );
                                     }).toList(),
@@ -252,44 +255,6 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.contact,
-    required this.onTap,
-  });
-  final Contact contact;
-  final void Function(int) onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onTap(contact.userId),
-      child: Chip(
-        avatar: AvatarIcon(
-          contactId: contact.userId,
-          fontSize: 10,
-        ),
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              getContactDisplayName(contact),
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(width: 15),
-            const FaIcon(
-              FontAwesomeIcons.xmark,
-              color: Colors.grey,
-              size: 12,
-            ),
-          ],
         ),
       ),
     );

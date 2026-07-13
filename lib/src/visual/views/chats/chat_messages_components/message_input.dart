@@ -21,7 +21,6 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sh
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/ask_for_friend_promotions.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/sparks.comp.dart';
-import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/unverified_contact_warning.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/user_discovery_manual_approval.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 
@@ -283,11 +282,9 @@ class _MessageInputState extends State<MessageInput> {
               flameOnRightSide: true,
             ),
           ),
-        UnverifiedContactWarningComp(
-          group: widget.group,
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, bottom: 10),
-            child: Row(
+        Padding(
+          padding: const EdgeInsets.only(left: 10, bottom: 10),
+          child: Row(
               children: [
                 Expanded(
                   child: Container(
@@ -589,7 +586,6 @@ class _MessageInputState extends State<MessageInput> {
               ],
             ),
           ),
-        ),
         Offstage(
           offstage: !_emojiShowing,
           child: EmojiPicker(

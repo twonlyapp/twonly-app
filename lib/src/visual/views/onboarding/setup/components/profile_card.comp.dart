@@ -12,7 +12,7 @@ class SafetyProfileCard extends StatelessWidget {
     super.key,
   });
 
-  final Object profile;
+  final SetupProfile profile;
   final bool isSelected;
   final VoidCallback onTap;
   final bool isHovered;
@@ -32,60 +32,24 @@ class SafetyProfileCard extends StatelessWidget {
     final IconData icon;
     final String? badgeText;
 
-    if (profile is SetupProfile) {
-      switch (profile as SetupProfile) {
-        case SetupProfile.standard:
-          title = context.lang.onboardingProfileSelectionDefaultTitle;
-          subtitle = Text(
-            context.lang.onboardingProfileSelectionDefaultDesc,
-            style: bodyMediumStyle,
-          );
-          icon = Icons.bolt_rounded;
-          badgeText = context.lang.onboardingProfileSelectionDefaultBadge;
-        case SetupProfile.customized:
-          title = context.lang.onboardingProfileSelectionCustomizeTitle;
-          subtitle = Text(
-            context.lang.onboardingProfileSelectionCustomizeDesc,
-            style: bodyMediumStyle,
-          );
-          icon = Icons.tune_rounded;
-          badgeText = null;
-        case SetupProfile.maximum:
-          title = context.lang.onboardingProfileSelectionStrictTitle;
-          subtitle = RichText(
-            text: TextSpan(
-              style: bodyMediumStyle,
-              children: formattedText(
-                context,
-                context.lang.onboardingProfileSelectionStrictDesc,
-                boldTextColor: context.color.onSurface,
-              ),
-            ),
-          );
-          icon = Icons.lock_outline_rounded;
-          badgeText = null;
-      }
-    } else if (profile is SecurityProfile) {
-      switch (profile as SecurityProfile) {
-        case SecurityProfile.normal:
-          title = context.lang.securityProfileNormalTitle;
-          subtitle = Text(
-            context.lang.securityProfileNormalDesc,
-            style: bodyMediumStyle,
-          );
-          icon = Icons.shield_outlined;
-          badgeText = null;
-        case SecurityProfile.strict:
-          title = context.lang.securityProfileStrictTitle;
-          subtitle = Text(
-            context.lang.securityProfileStrictDesc,
-            style: bodyMediumStyle,
-          );
-          icon = Icons.verified_user_outlined;
-          badgeText = null;
-      }
-    } else {
-      throw ArgumentError('Invalid profile type: $profile');
+    switch (profile) {
+      case SetupProfile.standard:
+        title = context.lang.onboardingProfileSelectionDefaultTitle;
+        subtitle = Text(
+          context.lang.onboardingProfileSelectionDefaultDesc,
+          style: bodyMediumStyle,
+        );
+        icon = Icons.bolt_rounded;
+        badgeText = context.lang.onboardingProfileSelectionDefaultBadge;
+      case SetupProfile.customized:
+        title = context.lang.onboardingProfileSelectionCustomizeTitle;
+        subtitle = Text(
+          context.lang.onboardingProfileSelectionCustomizeDesc,
+          style: bodyMediumStyle,
+        );
+        icon = Icons.tune_rounded;
+        badgeText = null;
+
     }
 
     return MouseRegion(

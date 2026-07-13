@@ -208,10 +208,16 @@ class EmojiFloatWidgetState extends State<EmojiFloatWidget>
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker(_tick)..start();
+    _ticker = createTicker(_tick);
   }
 
   void _tick(Duration elapsed) {
+    if (_particles.isEmpty) {
+      _ticker.stop();
+      _lastTick = Duration.zero;
+      return;
+    }
+
     final dt = (_lastTick == Duration.zero)
         ? 0.016
         : (elapsed - _lastTick).inMicroseconds / 1e6;
@@ -258,7 +264,12 @@ class EmojiFloatWidgetState extends State<EmojiFloatWidget>
         ),
       );
     }
-    setState(() {});
+    if (!_ticker.isActive) {
+      _lastTick = Duration.zero;
+      _ticker.start();
+    } else {
+      if (mounted) setState(() {});
+    }
   }
 
   @override

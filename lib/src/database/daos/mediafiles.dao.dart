@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'mediafiles.dao.g.dart';
 
-@DriftAccessor(tables: [MediaFiles])
+@DriftAccessor(tables: [MediaFiles, Messages])
 class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     with _$MediaFilesDaoMixin {
   // this constructor is required so that the main database can create an instance
@@ -142,7 +143,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     final query =
         (select(mediaFiles)..where((t) => t.stored.equals(true))).join([])
           ..groupBy([
-            const CustomExpression<Object>('COALESCE(stored_file_hash, media_id)')
+            const CustomExpression<Object>(
+              'COALESCE(stored_file_hash, media_id)',
+            ),
           ]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
@@ -152,6 +155,17 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(100))
         .watch();
+  }
+
+  Stream<List<MediaFile>> watchMediaFilesForGroup(String groupId) {
+    final query = select(mediaFiles).join([
+      innerJoin(
+        db.messages,
+        db.messages.mediaId.equalsExp(mediaFiles.mediaId),
+        useColumns: false,
+      ),
+    ])..where(db.messages.groupId.equals(groupId));
+    return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
   Future<void> updateAllRetransmissionUploadingState() async {

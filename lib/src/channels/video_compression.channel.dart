@@ -36,7 +36,7 @@ abstract class VideoCompressionChannel {
       });
       return outputPath;
     } on PlatformException catch (e) {
-      Log.error('Failed to compress video: $e');
+      Log.warn('Failed to compress video: $e');
       return null;
     } finally {
       _currentProgressCallback = null;

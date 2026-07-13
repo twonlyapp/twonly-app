@@ -5,9 +5,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/visual/components/app_outdated.comp.dart';
@@ -18,7 +22,7 @@ import 'package:twonly/src/visual/views/home.view.dart';
 import 'package:twonly/src/visual/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/visual/views/onboarding/register.view.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
-import 'package:twonly/src/visual/views/recovery.view.dart';
+import 'package:twonly/src/visual/views/recovery_from_secure_storage.view.dart';
 import 'package:twonly/src/visual/views/unlock_twonly.view.dart';
 
 class App extends StatefulWidget {
@@ -151,6 +155,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
 
   Future<void> initAsync() async {
     Log.info('AppWidgetState: initAsync started');
+    final onboardingState = await KeyValueStore.getModel<OnboardingState>(
+      KeyValueKeys.onboardingState,
+    );
+    _showOnboarding = !onboardingState.hasOnboardingFinished;
     if (userService.isUserCreated) {
       if (_initialPage != 0) {
         final count = await twonlyDB.contactsDao.getContactsCount();
@@ -180,7 +188,18 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       } else {
         _proofOfWork = (null, disabled);
       }
+
+      if (onboardingState.hasStartedPasswordlessRecovery ||
+          onboardingState.emailRecoveryRequested) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          routerProvider.push(Routes.recoverPasswordless);
+        });
+      }
     }
+
+    // await PasswordlessRecoveryService.handleRecoveryLink(
+    //   'https://me.twonly.eu/r/#7fdb8f08-0927-4e44-8761-038993414e48/1p7SKEzpxE3wSW9FQw60EUI4OpSW2U4EskdXLw8xg48',
+    // );
 
     setState(() {
       _isLoaded = true;
@@ -223,9 +242,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       }
     } else if (_showOnboarding) {
       child = OnboardingView(
-        callbackOnSuccess: () => setState(() {
-          _showOnboarding = false;
-        }),
+        callbackOnSuccess: () async {
+          await KeyValueStore.update<OnboardingState>(
+            key: KeyValueKeys.onboardingState,
+            update: (state) => state.hasOnboardingFinished = true,
+          );
+          if (mounted) setState(() => _showOnboarding = false);
+        },
       );
     } else {
       child = RegisterView(

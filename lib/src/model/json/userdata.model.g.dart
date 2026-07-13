@@ -23,12 +23,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..setupProfile =
           $enumDecodeNullable(_$SetupProfileEnumMap, json['setupProfile']) ??
           SetupProfile.standard
-      ..securityProfile =
-          $enumDecodeNullable(
-            _$SecurityProfileEnumMap,
-            json['securityProfile'],
-          ) ??
-          SecurityProfile.normal
       ..subscriptionPlanIdStore = json['subscriptionPlanIdStore'] as String?
       ..lastImageSend = json['lastImageSend'] == null
           ? null
@@ -132,7 +126,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'isDeveloper': instance.isDeveloper,
   'deviceId': instance.deviceId,
   'setupProfile': _$SetupProfileEnumMap[instance.setupProfile]!,
-  'securityProfile': _$SecurityProfileEnumMap[instance.securityProfile]!,
   'subscriptionPlan': instance.subscriptionPlan,
   'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
   'lastImageSend': instance.lastImageSend?.toIso8601String(),
@@ -192,12 +185,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
 const _$SetupProfileEnumMap = {
   SetupProfile.standard: 'standard',
   SetupProfile.customized: 'customized',
-  SetupProfile.maximum: 'maximum',
-};
-
-const _$SecurityProfileEnumMap = {
-  SecurityProfile.normal: 'normal',
-  SecurityProfile.strict: 'strict',
 };
 
 const _$ThemeModeEnumMap = {
@@ -243,22 +230,37 @@ const _$LastBackupUploadStateEnumMap = {
 
 PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
-) => PasswordLessRecovery(
-  email: json['email'] as String?,
-  pinSeed: json['pinSeed'] as String?,
-  pinUnlockToken: json['pinUnlockToken'] as String?,
-  threshold: (json['threshold'] as num?)?.toInt(),
-  lastHeartbeat: json['lastHeartbeat'] == null
+) => PasswordLessRecovery((json['threshold'] as num).toInt())
+  ..email = json['email'] as String?
+  ..pinSeed = (json['pinSeed'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList()
+  ..pinUnlockToken = (json['pinUnlockToken'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList()
+  ..encryptedServerKeyNonce =
+      (json['encryptedServerKeyNonce'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList()
+  ..lastServerHeartbeat = json['lastServerHeartbeat'] == null
       ? null
-      : DateTime.parse(json['lastHeartbeat'] as String),
-);
+      : DateTime.parse(json['lastServerHeartbeat'] as String)
+  ..lastContactHeartbeat = json['lastContactHeartbeat'] == null
+      ? null
+      : DateTime.parse(json['lastContactHeartbeat'] as String)
+  ..encryptedServerKey = (json['encryptedServerKey'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList();
 
 Map<String, dynamic> _$PasswordLessRecoveryToJson(
   PasswordLessRecovery instance,
 ) => <String, dynamic>{
   'email': instance.email,
+  'threshold': instance.threshold,
   'pinSeed': instance.pinSeed,
   'pinUnlockToken': instance.pinUnlockToken,
-  'threshold': instance.threshold,
-  'lastHeartbeat': instance.lastHeartbeat?.toIso8601String(),
+  'encryptedServerKeyNonce': instance.encryptedServerKeyNonce,
+  'lastServerHeartbeat': instance.lastServerHeartbeat?.toIso8601String(),
+  'lastContactHeartbeat': instance.lastContactHeartbeat?.toIso8601String(),
+  'encryptedServerKey': instance.encryptedServerKey,
 };

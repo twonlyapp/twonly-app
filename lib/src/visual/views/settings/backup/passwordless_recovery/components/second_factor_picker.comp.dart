@@ -9,31 +9,37 @@ class _FactorOption {
   const _FactorOption({
     required this.type,
     required this.icon,
-    required this.label,
   });
 
   final SecondFactorType type;
   final IconData icon;
-  final String label;
 }
 
 const _options = [
   _FactorOption(
     type: SecondFactorType.none,
     icon: Icons.block_rounded,
-    label: 'None',
   ),
   _FactorOption(
     type: SecondFactorType.pin,
     icon: Icons.dialpad_rounded,
-    label: 'PIN',
   ),
   _FactorOption(
     type: SecondFactorType.email,
     icon: Icons.email_rounded,
-    label: 'Email',
   ),
 ];
+
+String _getLabel(BuildContext context, SecondFactorType type) {
+  switch (type) {
+    case SecondFactorType.none:
+      return context.lang.passwordlessRecoverySecondFactorNone;
+    case SecondFactorType.pin:
+      return context.lang.passwordlessRecoverySecondFactorPin;
+    case SecondFactorType.email:
+      return context.lang.passwordlessRecoverySecondFactorEmail;
+  }
+}
 
 class SecondFactorPicker extends StatelessWidget {
   const SecondFactorPicker({
@@ -55,8 +61,8 @@ class SecondFactorPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text(
-          'Second factor method',
+        Text(
+          context.lang.passwordlessRecoveryMethod,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -120,7 +126,7 @@ class SecondFactorPicker extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      option.label,
+                      _getLabel(context, option.type),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isSelected
@@ -144,8 +150,8 @@ class SecondFactorPicker extends StatelessWidget {
       child: Column(
         children: switch (selected) {
           SecondFactorType.none => [
-            const Text(
-              'Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.',
+            Text(
+              context.lang.passwordlessRecoveryMethodNoneDesc,
               textAlign: TextAlign.center,
             ),
           ],
@@ -153,7 +159,7 @@ class SecondFactorPicker extends StatelessWidget {
             MyInput(
               key: const ValueKey('pin_input'),
               controller: pinController,
-              hintText: 'Enter PIN',
+              hintText: context.lang.passwordlessRecoveryMethodPinHint,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               onChanged: (_) => onInputChanged(),
@@ -163,7 +169,7 @@ class SecondFactorPicker extends StatelessWidget {
             MyInput(
               key: const ValueKey('email_input'),
               controller: emailController,
-              hintText: 'Enter recovery email address',
+              hintText: context.lang.passwordlessRecoveryMethodEmailHint,
               keyboardType: TextInputType.emailAddress,
               onChanged: (_) => onInputChanged(),
             ),
@@ -172,7 +178,7 @@ class SecondFactorPicker extends StatelessWidget {
               text: TextSpan(
                 children: formattedText(
                   context,
-                  'Your email address is *never stored on the server* and is only sent to it in the event of a recovery.',
+                  context.lang.passwordlessRecoveryMethodEmailDesc,
                 ),
                 style: TextStyle(
                   color: context.color.onSurface,

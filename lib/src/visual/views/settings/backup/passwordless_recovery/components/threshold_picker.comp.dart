@@ -44,7 +44,7 @@ class ThresholdPicker extends StatelessWidget {
 
     if (options.length == 1) {
       return Text(
-        'To recover your account you need ${options.first} of your selected trusted friends.',
+        context.lang.passwordlessRecoveryThresholdDesc(options.first),
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           color: context.color.onSurfaceVariant,
@@ -56,7 +56,7 @@ class ThresholdPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Required trusted friends for recovery',
+          context.lang.passwordlessRecoveryThresholdTitle,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: context.color.onSurfaceVariant,

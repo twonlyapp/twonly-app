@@ -37,7 +37,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly is financed by donations and an optional subscription. Your data will never be sold.';
+      'twonly is financed by an optional subscription. Your data will never be sold.';
 
   @override
   String get registerUsernameSlogan => 'Create your account';
@@ -266,30 +266,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsPrivacyProfileSelectionTitle => 'Security Profile';
-
-  @override
-  String get securityProfileTitle => 'Security Profile';
-
-  @override
-  String get securityProfileSubtitle =>
-      'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.';
-
-  @override
-  String get securityProfileNormalTitle => 'Normal Protection';
-
-  @override
-  String get securityProfileNormalDesc =>
-      'Good balance between a convenient mode without bothering you too much.';
-
-  @override
-  String get securityProfileStrictTitle => 'Strict Protection';
-
-  @override
-  String get securityProfileStrictDesc =>
-      'Maximum anti-phishing protection but may be inconvenient.';
-
-  @override
   String get settingsNotification => 'Notification';
 
   @override
@@ -432,11 +408,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactVerifyNumberTitle => 'Verify contacts';
 
   @override
+  String verifyUserIdentity(Object username) {
+    return 'Verify $username\'s identity';
+  }
+
+  @override
   String get contactVerifyNumberSubtitle =>
       'Verify the identity of your contacts to make sure you are texting the right person.';
 
   @override
+  String get inChatContactNotVerified => 'Contact not verified.';
+
+  @override
+  String groupMembersNotVerified(Object count) {
+    return '$count members are not verified.';
+  }
+
+  @override
   String get userVerifiedTitle => 'Contact verified';
+
+  @override
+  String scanUserQrCode(Object username) {
+    return 'Scan $username\'s QR code';
+  }
+
+  @override
+  String get openOwnQrCode => 'Open your own QR code';
 
   @override
   String contactVerifiedBy(Object username) {
@@ -837,6 +834,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupChangePassword => 'Change password';
+
+  @override
+  String get backupChangePasswordAuthReason => 'Changing backup password';
+
+  @override
+  String get backupChangePasswordAuthFailed =>
+      'You can only change your password after you have authenticated!';
 
   @override
   String get twonlySafeRecoverTitle => 'Restore backup';
@@ -1303,6 +1307,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Let a friend scan this QR code to add you';
 
   @override
+  String letUserScanQrCode(Object username) {
+    return 'Let $username scan this QR code';
+  }
+
+  @override
   String get finishSetupCardTitle => 'Complete your profile';
 
   @override
@@ -1522,7 +1531,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationBadgeGeneralDesc =>
-      'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.';
+      'The badge gives you the peace of mind that you are messaging the *right person* and your *messages remain confidential*.';
 
   @override
   String get verificationBadgeGreenDesc =>
@@ -1540,7 +1549,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanNow => 'Scan now';
 
   @override
+  String get qrScannerVerifyHint =>
+      'To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)';
+
+  @override
+  String qrScannerVerifyUserHint(Object username) {
+    return 'To verify, $username must open their QR code (Chat Lists > QR code button at the bottom right)';
+  }
+
+  @override
   String get openQrCode => 'Open QR code';
+
+  @override
+  String get letFriendScanQrToVerify =>
+      'Let a friend scan this QR code to verify you';
 
   @override
   String get deleteVerificationTitle => 'Delete verification?';
@@ -2087,4 +2109,270 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarCustomizeReset => 'Reset';
+
+  @override
+  String get passwordlessRecovery => 'Passwordless Recovery';
+
+  @override
+  String get passwordlessRecoveryNotConfigured => 'Not configured';
+
+  @override
+  String get passwordlessRecoveryTestPin => 'Test PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinTitle => 'Test PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinHint => 'Enter your PIN';
+
+  @override
+  String get passwordlessRecoveryTestPinCorrect => 'PIN is correct!';
+
+  @override
+  String get passwordlessRecoveryTestPinIncorrect => 'Incorrect PIN.';
+
+  @override
+  String get passwordlessRecoveryTest => 'Test';
+
+  @override
+  String get passwordlessRecoverySecondFactorNone => 'None';
+
+  @override
+  String passwordlessRecoverySecondFactorEmailLabel(Object email) {
+    return 'Email ($email)';
+  }
+
+  @override
+  String get passwordlessRecoverySecondFactorPin => 'PIN';
+
+  @override
+  String get passwordlessRecoverySecondFactorEmail => 'Email';
+
+  @override
+  String get passwordlessRecoveryModify => 'Modify Recovery Settings';
+
+  @override
+  String get passwordlessRecoveryModifyDesc =>
+      'Update your recovery configuration';
+
+  @override
+  String get passwordlessRecoverySecondFactor => 'Second Factor';
+
+  @override
+  String get passwordlessRecoveryNoFriendsFound => 'No trusted friends found.';
+
+  @override
+  String get passwordlessRecoveryActiveFriends => 'Active Friends';
+
+  @override
+  String get passwordlessRecoveryActiveFriendsDesc =>
+      'These trusted friends are actively using twonly and can probably help you recover your account.';
+
+  @override
+  String get passwordlessRecoveryInactiveFriends => 'Inactive Friends';
+
+  @override
+  String get passwordlessRecoveryInactiveFriendsDesc =>
+      'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.';
+
+  @override
+  String get passwordlessRecoveryNotEnoughFriends =>
+      'Not enough friends selected. You need at least 3.';
+
+  @override
+  String get passwordlessRecoveryLoading => 'Loading...';
+
+  @override
+  String get passwordlessRecoveryEnableSuccess =>
+      'Passwordless recovery successfully enabled!';
+
+  @override
+  String get passwordlessRecoveryEnableFailed =>
+      'Failed to enable passwordless recovery.';
+
+  @override
+  String get passwordlessRecoveryNeedAtLeast3 =>
+      'You need at least 3 trusted friends.';
+
+  @override
+  String get passwordlessRecoveryInvalidPin => 'Invalid PIN';
+
+  @override
+  String get passwordlessRecoveryEnterPin => 'Please enter a PIN.';
+
+  @override
+  String get passwordlessRecoveryPinMinLength =>
+      'PIN must be at least 4 digits.';
+
+  @override
+  String get passwordlessRecoveryEnterEmail => 'Please enter an email address.';
+
+  @override
+  String get passwordlessRecoveryEnableBtn => 'Enable Passwordless Recovery';
+
+  @override
+  String get passwordlessRecoveryRecoverBtn => 'Recover passwordless';
+
+  @override
+  String get passwordlessRecoveryModifyBtn => 'Modify Passwordless Recovery';
+
+  @override
+  String passwordlessRecoveryStatusEnabled(num count) {
+    return 'Enabled • $count trusted friends';
+  }
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorks => 'How it works';
+
+  @override
+  String get passwordlessRecoveryInfoHowItWorksDesc =>
+      'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactor => 'Why a Second Factor?';
+
+  @override
+  String get passwordlessRecoveryInfoWhySecondFactorDesc =>
+      'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.';
+
+  @override
+  String get passwordlessRecoveryInfoGotIt => 'Got it';
+
+  @override
+  String get passwordlessRecoveryMethod => 'Second factor method';
+
+  @override
+  String get passwordlessRecoveryMethodNoneDesc =>
+      'Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.';
+
+  @override
+  String get passwordlessRecoveryMethodPinHint => 'Enter PIN';
+
+  @override
+  String get passwordlessRecoveryMethodEmailHint =>
+      'Enter recovery email address';
+
+  @override
+  String get passwordlessRecoveryMethodEmailDesc =>
+      'Your email address is *never stored on the server* and is only sent to it in the event of a recovery.';
+
+  @override
+  String passwordlessRecoveryThresholdDesc(num count) {
+    return 'To recover your account you need $count of your selected trusted friends.';
+  }
+
+  @override
+  String get passwordlessRecoveryThresholdTitle =>
+      'Required trusted friends for recovery';
+
+  @override
+  String passwordlessRecoverySelectFriendsNeeded(num count) {
+    return 'Select friends ($count more needed)';
+  }
+
+  @override
+  String get passwordlessRecoverySelectFriends => 'Select trusted friends';
+
+  @override
+  String get passwordlessRecoveryNoFriendsSelected =>
+      'No trusted friends selected yet';
+
+  @override
+  String get passwordlessRecoverySubtitle =>
+      'Recover your identity without a password.';
+
+  @override
+  String get recoverPasswordlessExplanation =>
+      'If enabled, you can recover your account by asking your selected friends to help you.';
+
+  @override
+  String get recoverPasswordlessNotificationCardTitle => 'Enable notifications';
+
+  @override
+  String get recoverPasswordlessNotificationCardSubtitle =>
+      'Get notified when a friend has helped you recover your account.';
+
+  @override
+  String get recoverPasswordlessNotificationCardBtn =>
+      'Enable push notifications';
+
+  @override
+  String get recoverPasswordlessQrInstructions =>
+      'Let friends scan the QR code or share the link.';
+
+  @override
+  String get recoverPasswordlessShareBtn => 'Share Recovery Link';
+
+  @override
+  String get recoverPasswordlessCopyBtn => 'Copy';
+
+  @override
+  String get recoverPasswordlessCopiedSnackbar => 'Link copied to clipboard!';
+
+  @override
+  String get passwordlessRecoveryNoShareStored =>
+      'No recovery share stored for this contact.';
+
+  @override
+  String get passwordlessRecoveryShareSent =>
+      'Recovery share successfully sent!';
+
+  @override
+  String get passwordlessRecoveryNetworkError =>
+      'Network error, please ensure you have internet';
+
+  @override
+  String get passwordlessRecoveryInvalidEmail =>
+      'The email address is invalid.';
+
+  @override
+  String get passwordlessRecoveryResendEmail => 'Resend recovery email';
+
+  @override
+  String get passwordlessRecoveryHelpAFriend => 'Help a Friend';
+
+  @override
+  String get passwordlessRecoverySelectContactDesc =>
+      'Please select the contact who requested recovery below to send them their recovery key.';
+
+  @override
+  String get passwordlessRecoverySearchContacts => 'Search contacts...';
+
+  @override
+  String get passwordlessRecoveryNoContactsFound => 'No contacts found';
+
+  @override
+  String get passwordlessRecoveryCantHelpHim => 'You can\'t help him';
+
+  @override
+  String passwordlessRecoveryDoesAskedYou(Object username) {
+    return 'Does $username has asked you?';
+  }
+
+  @override
+  String get passwordlessRecoveryVerifySourceDesc =>
+      'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.';
+
+  @override
+  String get passwordlessRecoveryNo => 'No';
+
+  @override
+  String get passwordlessRecoveryYes => 'Yes';
+
+  @override
+  String passwordlessRecoveryYesWithTimer(Object seconds) {
+    return 'Yes (${seconds}s)';
+  }
+
+  @override
+  String get recoverPasswordlessBeingRecoveredLabel =>
+      'Account being recovered';
+
+  @override
+  String recoverPasswordlessSharesReceived(Object received, Object threshold) {
+    return '$received of $threshold friends have shared';
+  }
+
+  @override
+  String get recoverPasswordlessRecoverNowBtn => 'Recover now';
 }

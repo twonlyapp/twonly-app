@@ -41,10 +41,14 @@ class Log {
   }
 
   static void error(
-    Object? messageInput, [
+    Object? messageInput, {
     Object? error,
     StackTrace? stackTrace,
-  ]) {
+    bool onlyIfSentryEnabled = false,
+  }) {
+    if (!AppState.allowErrorTrackingViaSentry && onlyIfSentryEnabled) {
+      return;
+    }
     final message = filterLogMessage('$messageInput');
     if (AppState.allowErrorTrackingViaSentry) {
       try {

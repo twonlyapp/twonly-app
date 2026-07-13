@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/views/onboarding/recover.view.dart';
+import 'package:twonly/src/visual/views/onboarding/recover_password.view.dart';
 import 'package:twonly/src/visual/views/settings/help/contact_us.view.dart';
 
 class CriticalErrorView extends StatelessWidget {

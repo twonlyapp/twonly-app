@@ -36,6 +36,11 @@ class Contacts extends Table {
   DateTimeColumn get recoveryLastHeartbeat => dateTime().nullable()();
   BlobColumn get recoverySecretShare => blob().nullable()();
 
+  // This is the share from the contact in case the contact has selected this user as his trusted friend.
+  BlobColumn get recoveryContactsSecretShare => blob().nullable()();
+  DateTimeColumn get recoveryContactsLastHeartbeat => dateTime().nullable()();
+  IntColumn get recoveryContactsThreshold => integer().nullable()();
+
   BoolColumn get askForFriendPromotions => boolean().nullable()();
 
   IntColumn get mediaSendCounter => integer().withDefault(const Constant(0))();

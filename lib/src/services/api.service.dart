@@ -34,6 +34,7 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
@@ -139,6 +140,7 @@ class ApiService {
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());
+      unawaited(PasswordlessRecoveryService.performHeartbeat());
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
 
@@ -684,11 +686,11 @@ class ApiService {
     final req = createClientToServerFromHandshake(handshake);
     final result = await sendRequestSync(req, authenticated: false);
     if (result.isError) {
-      Log.error('could not request proof of work params', result);
+      Log.error('could not request proof of work params', error: result);
       if (result.error == ErrorCode.RegistrationDisabled) {
         return (null, true);
       }
-      Log.error('could not request proof of work params', result);
+      Log.error('could not request proof of work params', error: result);
       return (null, false);
     }
     return (result.value.proofOfWork as Response_ProofOfWork, false);
@@ -756,6 +758,85 @@ class ApiService {
     final appData = ApplicationData()..removeAdditionalUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: userId.toInt());
+  }
+
+  Future<Result> registerPasswordLessRecovery(
+    List<int> encryptedServerKey,
+    List<int>? pinUnlockToken,
+  ) async {
+    final req = createClientToServerFromApplicationData(
+      ApplicationData(
+        registerPasswordlessRecovery:
+            ApplicationData_RegisterPasswordLessRecovery(
+              encryptedServerKey: encryptedServerKey,
+              pinUnlockToken: pinUnlockToken,
+            ),
+      ),
+    );
+    return sendRequestSync(req);
+  }
+
+  Future<Result> getServerKeyForPasswordlessRecovery({
+    required int userId,
+    List<int>? encryptedServerKeyNone,
+    List<int>? pinUnlockToken,
+    List<int>? pinProtectionKey,
+    String? email,
+  }) async {
+    final get = Handshake_GetServerKeyForPasswordLessRecovery()
+      ..userId = Int64(userId);
+    if (encryptedServerKeyNone != null) {
+      get.encryptedServerKeyNone = encryptedServerKeyNone;
+    }
+    if (pinUnlockToken != null) {
+      get.pinUnlockToken = pinUnlockToken;
+    }
+    if (pinProtectionKey != null) {
+      get.pinProtectionKey = pinProtectionKey;
+    }
+    if (email != null) {
+      get.email = email;
+    }
+
+    final handshake = Handshake()..getServerKeyForPasswordlessRecovery = get;
+    final req = createClientToServerFromHandshake(handshake);
+    return sendRequestSync(req, authenticated: false);
+  }
+
+
+  Future<Result> submitRecoveryShare({
+    required String notificationId,
+    required List<int> encryptedMessage,
+  }) async {
+    final req = createClientToServerFromApplicationData(
+      ApplicationData(
+        passwordlessNotification: ApplicationData_PasswordlessNotification(
+          notificationId: notificationId,
+          encryptedMessage: encryptedMessage,
+        ),
+      ),
+    );
+    return sendRequestSync(req);
+  }
+
+  Future<Result> registerPasswordlessNotification({
+    required String notificationId,
+    required List<int> downloadAuthToken,
+    required String langCode,
+    required String? googleFcm,
+  }) async {
+    final registerNotif = Handshake_RegisterPasswordlessNotification()
+      ..notificationId = notificationId
+      ..downloadAuthToken = downloadAuthToken
+      ..langCode = langCode;
+    if (googleFcm != null) {
+      registerNotif.googleFcm = googleFcm;
+    }
+
+    final handshake = Handshake()
+      ..registerPasswordlessNotification = registerNotif;
+    final req = createClientToServerFromHandshake(handshake);
+    return sendRequestSync(req, authenticated: false);
   }
 
   Future<Result> addAdditionalUser(Int64 userId) async {
@@ -869,5 +950,31 @@ class ApiService {
     final appData = ApplicationData()..textMessage = testMessage;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: target);
+  }
+
+  /// Polls the server for new passwordless recovery notification messages.
+  /// [alreadyReceivedIds] prevents the server from sending duplicates.
+  Future<server.Response_PasswordlessNotificationMessages?> checkForPasswordlessNotification({
+    required String notificationId,
+    required List<int> downloadAuthToken,
+    List<Int64>? alreadyReceivedIds,
+  }) async {
+    final check = Handshake_CheckForPasswordlessNotification()
+      ..notificationId = notificationId
+      ..downloadAuthToken = downloadAuthToken;
+    if (alreadyReceivedIds != null && alreadyReceivedIds.isNotEmpty) {
+      check.alreadyReceivedMessageIds.addAll(alreadyReceivedIds);
+    }
+
+    final handshake = Handshake()..checkForPasswordlessNotification = check;
+    final req = createClientToServerFromHandshake(handshake);
+    final res = await sendRequestSync(req, authenticated: false);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasPasswordlessNotificationMessages()) {
+        return ok.passwordlessNotificationMessages;
+      }
+    }
+    return null;
   }
 }

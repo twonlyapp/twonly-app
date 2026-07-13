@@ -101,14 +101,18 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
   if (receiptId == null && receipt == null) return null;
 
   try {
-    if (receipt == null) {
-      // ignore: parameter_assignments
-      receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
-      if (receipt == null) {
-        Log.warn('[$receiptId] Receipt not found.');
-        return null;
-      }
+    final targetReceiptId = receipt?.receiptId ?? receiptId!;
+    final loadedReceipt = await twonlyDB.receiptsDao.getReceiptById(
+      targetReceiptId,
+    );
+    if (loadedReceipt == null) {
+      Log.info(
+        '[$targetReceiptId] Receipt not found (might have been processed or deleted).',
+      );
+      return null;
     }
+    // ignore: parameter_assignments
+    receipt = loadedReceipt;
 
     if (receipt.retryCount >= 2) {
       // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received,
@@ -138,7 +142,7 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
     if (!onlyReturnEncryptedData &&
         receipt.ackByServerAt != null &&
         receipt.markForRetry == null) {
-      Log.error('Message already uploaded and mark for retry is not set!');
+      Log.info('Message already uploaded and mark for retry is not set.');
       return null;
     }
 

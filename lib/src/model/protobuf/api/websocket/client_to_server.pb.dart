@@ -809,6 +809,301 @@ class Handshake_AuthenticateWithLoginToken extends $pb.GeneratedMessage {
   void clearInBackground() => $_clearField(5);
 }
 
+class Handshake_GetServerKeyForPasswordLessRecovery
+    extends $pb.GeneratedMessage {
+  factory Handshake_GetServerKeyForPasswordLessRecovery({
+    $fixnum.Int64? userId,
+    $core.List<$core.int>? encryptedServerKeyNone,
+    $core.List<$core.int>? pinUnlockToken,
+    $core.List<$core.int>? pinProtectionKey,
+    $core.String? email,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (encryptedServerKeyNone != null)
+      result.encryptedServerKeyNone = encryptedServerKeyNone;
+    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
+    if (pinProtectionKey != null) result.pinProtectionKey = pinProtectionKey;
+    if (email != null) result.email = email;
+    return result;
+  }
+
+  Handshake_GetServerKeyForPasswordLessRecovery._();
+
+  factory Handshake_GetServerKeyForPasswordLessRecovery.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_GetServerKeyForPasswordLessRecovery.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.GetServerKeyForPasswordLessRecovery',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedServerKeyNone', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'pinProtectionKey', $pb.PbFieldType.OY)
+    ..aOS(5, _omitFieldNames ? '' : 'email')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetServerKeyForPasswordLessRecovery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_GetServerKeyForPasswordLessRecovery copyWith(
+          void Function(Handshake_GetServerKeyForPasswordLessRecovery)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_GetServerKeyForPasswordLessRecovery))
+          as Handshake_GetServerKeyForPasswordLessRecovery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetServerKeyForPasswordLessRecovery create() =>
+      Handshake_GetServerKeyForPasswordLessRecovery._();
+  @$core.override
+  Handshake_GetServerKeyForPasswordLessRecovery createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_GetServerKeyForPasswordLessRecovery getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Handshake_GetServerKeyForPasswordLessRecovery>(create);
+  static Handshake_GetServerKeyForPasswordLessRecovery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedServerKeyNone => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedServerKeyNone($core.List<$core.int> value) =>
+      $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedServerKeyNone() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedServerKeyNone() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get pinUnlockToken => $_getN(2);
+  @$pb.TagNumber(3)
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPinUnlockToken() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPinUnlockToken() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get pinProtectionKey => $_getN(3);
+  @$pb.TagNumber(4)
+  set pinProtectionKey($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPinProtectionKey() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPinProtectionKey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get email => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set email($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEmail() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEmail() => $_clearField(5);
+}
+
+class Handshake_RegisterPasswordlessNotification extends $pb.GeneratedMessage {
+  factory Handshake_RegisterPasswordlessNotification({
+    $core.String? notificationId,
+    $core.List<$core.int>? downloadAuthToken,
+    $core.String? langCode,
+    $core.String? googleFcm,
+  }) {
+    final result = create();
+    if (notificationId != null) result.notificationId = notificationId;
+    if (downloadAuthToken != null) result.downloadAuthToken = downloadAuthToken;
+    if (langCode != null) result.langCode = langCode;
+    if (googleFcm != null) result.googleFcm = googleFcm;
+    return result;
+  }
+
+  Handshake_RegisterPasswordlessNotification._();
+
+  factory Handshake_RegisterPasswordlessNotification.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_RegisterPasswordlessNotification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.RegisterPasswordlessNotification',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'notificationId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'downloadAuthToken', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'langCode')
+    ..aOS(4, _omitFieldNames ? '' : 'googleFcm')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_RegisterPasswordlessNotification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_RegisterPasswordlessNotification copyWith(
+          void Function(Handshake_RegisterPasswordlessNotification) updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_RegisterPasswordlessNotification))
+          as Handshake_RegisterPasswordlessNotification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_RegisterPasswordlessNotification create() =>
+      Handshake_RegisterPasswordlessNotification._();
+  @$core.override
+  Handshake_RegisterPasswordlessNotification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_RegisterPasswordlessNotification getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Handshake_RegisterPasswordlessNotification>(create);
+  static Handshake_RegisterPasswordlessNotification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get notificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set notificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNotificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNotificationId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get downloadAuthToken => $_getN(1);
+  @$pb.TagNumber(2)
+  set downloadAuthToken($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDownloadAuthToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDownloadAuthToken() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get langCode => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set langCode($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLangCode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLangCode() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get googleFcm => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set googleFcm($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasGoogleFcm() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearGoogleFcm() => $_clearField(4);
+}
+
+class Handshake_CheckForPasswordlessNotification extends $pb.GeneratedMessage {
+  factory Handshake_CheckForPasswordlessNotification({
+    $core.String? notificationId,
+    $core.List<$core.int>? downloadAuthToken,
+    $core.Iterable<$fixnum.Int64>? alreadyReceivedMessageIds,
+  }) {
+    final result = create();
+    if (notificationId != null) result.notificationId = notificationId;
+    if (downloadAuthToken != null) result.downloadAuthToken = downloadAuthToken;
+    if (alreadyReceivedMessageIds != null)
+      result.alreadyReceivedMessageIds.addAll(alreadyReceivedMessageIds);
+    return result;
+  }
+
+  Handshake_CheckForPasswordlessNotification._();
+
+  factory Handshake_CheckForPasswordlessNotification.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Handshake_CheckForPasswordlessNotification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Handshake.CheckForPasswordlessNotification',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'notificationId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'downloadAuthToken', $pb.PbFieldType.OY)
+    ..p<$fixnum.Int64>(3, _omitFieldNames ? '' : 'alreadyReceivedMessageIds',
+        $pb.PbFieldType.K6)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_CheckForPasswordlessNotification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Handshake_CheckForPasswordlessNotification copyWith(
+          void Function(Handshake_CheckForPasswordlessNotification) updates) =>
+      super.copyWith((message) =>
+              updates(message as Handshake_CheckForPasswordlessNotification))
+          as Handshake_CheckForPasswordlessNotification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_CheckForPasswordlessNotification create() =>
+      Handshake_CheckForPasswordlessNotification._();
+  @$core.override
+  Handshake_CheckForPasswordlessNotification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_CheckForPasswordlessNotification getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          Handshake_CheckForPasswordlessNotification>(create);
+  static Handshake_CheckForPasswordlessNotification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get notificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set notificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNotificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNotificationId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get downloadAuthToken => $_getN(1);
+  @$pb.TagNumber(2)
+  set downloadAuthToken($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDownloadAuthToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDownloadAuthToken() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<$fixnum.Int64> get alreadyReceivedMessageIds => $_getList(2);
+}
+
 enum Handshake_Handshake {
   register,
   getAuthChallenge,
@@ -817,6 +1112,9 @@ enum Handshake_Handshake {
   requestPOW,
   authenticateWithLoginToken,
   getUseridByUsername,
+  getServerKeyForPasswordlessRecovery,
+  registerPasswordlessNotification,
+  checkForPasswordlessNotification,
   notSet
 }
 
@@ -829,6 +1127,12 @@ class Handshake extends $pb.GeneratedMessage {
     Handshake_RequestPOW? requestPOW,
     Handshake_AuthenticateWithLoginToken? authenticateWithLoginToken,
     Handshake_GetUserIdByUsername? getUseridByUsername,
+    Handshake_GetServerKeyForPasswordLessRecovery?
+        getServerKeyForPasswordlessRecovery,
+    Handshake_RegisterPasswordlessNotification?
+        registerPasswordlessNotification,
+    Handshake_CheckForPasswordlessNotification?
+        checkForPasswordlessNotification,
   }) {
     final result = create();
     if (register != null) result.register = register;
@@ -840,6 +1144,15 @@ class Handshake extends $pb.GeneratedMessage {
       result.authenticateWithLoginToken = authenticateWithLoginToken;
     if (getUseridByUsername != null)
       result.getUseridByUsername = getUseridByUsername;
+    if (getServerKeyForPasswordlessRecovery != null)
+      result.getServerKeyForPasswordlessRecovery =
+          getServerKeyForPasswordlessRecovery;
+    if (registerPasswordlessNotification != null)
+      result.registerPasswordlessNotification =
+          registerPasswordlessNotification;
+    if (checkForPasswordlessNotification != null)
+      result.checkForPasswordlessNotification =
+          checkForPasswordlessNotification;
     return result;
   }
 
@@ -861,6 +1174,9 @@ class Handshake extends $pb.GeneratedMessage {
     5: Handshake_Handshake.requestPOW,
     6: Handshake_Handshake.authenticateWithLoginToken,
     7: Handshake_Handshake.getUseridByUsername,
+    8: Handshake_Handshake.getServerKeyForPasswordlessRecovery,
+    9: Handshake_Handshake.registerPasswordlessNotification,
+    10: Handshake_Handshake.checkForPasswordlessNotification,
     0: Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -868,7 +1184,7 @@ class Handshake extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register',
         subBuilder: Handshake_Register.create)
     ..aOM<Handshake_GetAuthChallenge>(
@@ -887,6 +1203,15 @@ class Handshake extends $pb.GeneratedMessage {
     ..aOM<Handshake_GetUserIdByUsername>(
         7, _omitFieldNames ? '' : 'getUseridByUsername',
         subBuilder: Handshake_GetUserIdByUsername.create)
+    ..aOM<Handshake_GetServerKeyForPasswordLessRecovery>(
+        8, _omitFieldNames ? '' : 'getServerKeyForPasswordlessRecovery',
+        subBuilder: Handshake_GetServerKeyForPasswordLessRecovery.create)
+    ..aOM<Handshake_RegisterPasswordlessNotification>(
+        9, _omitFieldNames ? '' : 'registerPasswordlessNotification',
+        subBuilder: Handshake_RegisterPasswordlessNotification.create)
+    ..aOM<Handshake_CheckForPasswordlessNotification>(
+        10, _omitFieldNames ? '' : 'checkForPasswordlessNotification',
+        subBuilder: Handshake_CheckForPasswordlessNotification.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -914,6 +1239,9 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   Handshake_Handshake whichHandshake() =>
       _Handshake_HandshakeByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -923,6 +1251,9 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   void clearHandshake() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1006,6 +1337,51 @@ class Handshake extends $pb.GeneratedMessage {
   void clearGetUseridByUsername() => $_clearField(7);
   @$pb.TagNumber(7)
   Handshake_GetUserIdByUsername ensureGetUseridByUsername() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  Handshake_GetServerKeyForPasswordLessRecovery
+      get getServerKeyForPasswordlessRecovery => $_getN(7);
+  @$pb.TagNumber(8)
+  set getServerKeyForPasswordlessRecovery(
+          Handshake_GetServerKeyForPasswordLessRecovery value) =>
+      $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasGetServerKeyForPasswordlessRecovery() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearGetServerKeyForPasswordlessRecovery() => $_clearField(8);
+  @$pb.TagNumber(8)
+  Handshake_GetServerKeyForPasswordLessRecovery
+      ensureGetServerKeyForPasswordlessRecovery() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  Handshake_RegisterPasswordlessNotification
+      get registerPasswordlessNotification => $_getN(8);
+  @$pb.TagNumber(9)
+  set registerPasswordlessNotification(
+          Handshake_RegisterPasswordlessNotification value) =>
+      $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasRegisterPasswordlessNotification() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearRegisterPasswordlessNotification() => $_clearField(9);
+  @$pb.TagNumber(9)
+  Handshake_RegisterPasswordlessNotification
+      ensureRegisterPasswordlessNotification() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  Handshake_CheckForPasswordlessNotification
+      get checkForPasswordlessNotification => $_getN(9);
+  @$pb.TagNumber(10)
+  set checkForPasswordlessNotification(
+          Handshake_CheckForPasswordlessNotification value) =>
+      $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCheckForPasswordlessNotification() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCheckForPasswordlessNotification() => $_clearField(10);
+  @$pb.TagNumber(10)
+  Handshake_CheckForPasswordlessNotification
+      ensureCheckForPasswordlessNotification() => $_ensure(9);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {
@@ -2182,6 +2558,160 @@ class ApplicationData_Deprecated extends $pb.GeneratedMessage {
   static ApplicationData_Deprecated? _defaultInstance;
 }
 
+class ApplicationData_RegisterPasswordLessRecovery
+    extends $pb.GeneratedMessage {
+  factory ApplicationData_RegisterPasswordLessRecovery({
+    $core.List<$core.int>? encryptedServerKey,
+    $core.List<$core.int>? pinUnlockToken,
+  }) {
+    final result = create();
+    if (encryptedServerKey != null)
+      result.encryptedServerKey = encryptedServerKey;
+    if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
+    return result;
+  }
+
+  ApplicationData_RegisterPasswordLessRecovery._();
+
+  factory ApplicationData_RegisterPasswordLessRecovery.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_RegisterPasswordLessRecovery.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.RegisterPasswordLessRecovery',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'encryptedServerKey', $pb.PbFieldType.OY,
+        protoName: 'encryptedServerKey')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY,
+        protoName: 'pinUnlockToken')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RegisterPasswordLessRecovery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RegisterPasswordLessRecovery copyWith(
+          void Function(ApplicationData_RegisterPasswordLessRecovery)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_RegisterPasswordLessRecovery))
+          as ApplicationData_RegisterPasswordLessRecovery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RegisterPasswordLessRecovery create() =>
+      ApplicationData_RegisterPasswordLessRecovery._();
+  @$core.override
+  ApplicationData_RegisterPasswordLessRecovery createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RegisterPasswordLessRecovery getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_RegisterPasswordLessRecovery>(create);
+  static ApplicationData_RegisterPasswordLessRecovery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get encryptedServerKey => $_getN(0);
+  @$pb.TagNumber(1)
+  set encryptedServerKey($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEncryptedServerKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEncryptedServerKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get pinUnlockToken => $_getN(1);
+  @$pb.TagNumber(2)
+  set pinUnlockToken($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPinUnlockToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPinUnlockToken() => $_clearField(2);
+}
+
+class ApplicationData_PasswordlessNotification extends $pb.GeneratedMessage {
+  factory ApplicationData_PasswordlessNotification({
+    $core.String? notificationId,
+    $core.List<$core.int>? encryptedMessage,
+  }) {
+    final result = create();
+    if (notificationId != null) result.notificationId = notificationId;
+    if (encryptedMessage != null) result.encryptedMessage = encryptedMessage;
+    return result;
+  }
+
+  ApplicationData_PasswordlessNotification._();
+
+  factory ApplicationData_PasswordlessNotification.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_PasswordlessNotification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.PasswordlessNotification',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'notificationId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedMessage', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_PasswordlessNotification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_PasswordlessNotification copyWith(
+          void Function(ApplicationData_PasswordlessNotification) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_PasswordlessNotification))
+          as ApplicationData_PasswordlessNotification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_PasswordlessNotification create() =>
+      ApplicationData_PasswordlessNotification._();
+  @$core.override
+  ApplicationData_PasswordlessNotification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_PasswordlessNotification getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_PasswordlessNotification>(create);
+  static ApplicationData_PasswordlessNotification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get notificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set notificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNotificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNotificationId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedMessage => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedMessage($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedMessage() => $_clearField(2);
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -2209,6 +2739,8 @@ enum ApplicationData_ApplicationData {
   ipaForceCheck,
   addAdditionalUser,
   setLoginToken,
+  registerPasswordlessRecovery,
+  passwordlessNotification,
   notSet
 }
 
@@ -2240,6 +2772,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_IPAForceCheck? ipaForceCheck,
     ApplicationData_AddAdditionalUser? addAdditionalUser,
     ApplicationData_SetLoginToken? setLoginToken,
+    ApplicationData_RegisterPasswordLessRecovery? registerPasswordlessRecovery,
+    ApplicationData_PasswordlessNotification? passwordlessNotification,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2274,6 +2808,10 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (ipaForceCheck != null) result.ipaForceCheck = ipaForceCheck;
     if (addAdditionalUser != null) result.addAdditionalUser = addAdditionalUser;
     if (setLoginToken != null) result.setLoginToken = setLoginToken;
+    if (registerPasswordlessRecovery != null)
+      result.registerPasswordlessRecovery = registerPasswordlessRecovery;
+    if (passwordlessNotification != null)
+      result.passwordlessNotification = passwordlessNotification;
     return result;
   }
 
@@ -2314,6 +2852,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     28: ApplicationData_ApplicationData.ipaForceCheck,
     29: ApplicationData_ApplicationData.addAdditionalUser,
     30: ApplicationData_ApplicationData.setLoginToken,
+    31: ApplicationData_ApplicationData.registerPasswordlessRecovery,
+    32: ApplicationData_ApplicationData.passwordlessNotification,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2347,7 +2887,9 @@ class ApplicationData extends $pb.GeneratedMessage {
       27,
       28,
       29,
-      30
+      30,
+      31,
+      32
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2439,6 +2981,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_SetLoginToken>(
         30, _omitFieldNames ? '' : 'setLoginToken',
         subBuilder: ApplicationData_SetLoginToken.create)
+    ..aOM<ApplicationData_RegisterPasswordLessRecovery>(
+        31, _omitFieldNames ? '' : 'registerPasswordlessRecovery',
+        subBuilder: ApplicationData_RegisterPasswordLessRecovery.create)
+    ..aOM<ApplicationData_PasswordlessNotification>(
+        32, _omitFieldNames ? '' : 'passwordlessNotification',
+        subBuilder: ApplicationData_PasswordlessNotification.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2486,6 +3034,8 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2514,6 +3064,8 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
+  @$pb.TagNumber(31)
+  @$pb.TagNumber(32)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2819,6 +3371,36 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearSetLoginToken() => $_clearField(30);
   @$pb.TagNumber(30)
   ApplicationData_SetLoginToken ensureSetLoginToken() => $_ensure(25);
+
+  @$pb.TagNumber(31)
+  ApplicationData_RegisterPasswordLessRecovery
+      get registerPasswordlessRecovery => $_getN(26);
+  @$pb.TagNumber(31)
+  set registerPasswordlessRecovery(
+          ApplicationData_RegisterPasswordLessRecovery value) =>
+      $_setField(31, value);
+  @$pb.TagNumber(31)
+  $core.bool hasRegisterPasswordlessRecovery() => $_has(26);
+  @$pb.TagNumber(31)
+  void clearRegisterPasswordlessRecovery() => $_clearField(31);
+  @$pb.TagNumber(31)
+  ApplicationData_RegisterPasswordLessRecovery
+      ensureRegisterPasswordlessRecovery() => $_ensure(26);
+
+  @$pb.TagNumber(32)
+  ApplicationData_PasswordlessNotification get passwordlessNotification =>
+      $_getN(27);
+  @$pb.TagNumber(32)
+  set passwordlessNotification(
+          ApplicationData_PasswordlessNotification value) =>
+      $_setField(32, value);
+  @$pb.TagNumber(32)
+  $core.bool hasPasswordlessNotification() => $_has(27);
+  @$pb.TagNumber(32)
+  void clearPasswordlessNotification() => $_clearField(32);
+  @$pb.TagNumber(32)
+  ApplicationData_PasswordlessNotification ensurePasswordlessNotification() =>
+      $_ensure(27);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

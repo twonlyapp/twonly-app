@@ -9,6 +9,7 @@ import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
 
 class BackupView extends StatefulWidget {
@@ -103,6 +104,10 @@ class _BackupViewState extends State<BackupView> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
+
+                if (userService.currentUser.passwordLessRecovery != null)
+                  const PasswordLessRecoveryStatus(),
+
                 if (userService.currentUser.isBackupEnabled)
                   Column(
                     children: [

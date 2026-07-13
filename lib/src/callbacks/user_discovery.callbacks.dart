@@ -314,9 +314,11 @@ class UserDiscoveryCallbacks {
 
   static Future<Uint8List?> getContactPromotion(int contactId) async {
     try {
-      final row = await (twonlyDB.select(
-        twonlyDB.userDiscoveryOwnPromotions,
-      )..where((tbl) => tbl.contactId.equals(contactId))).getSingleOrNull();
+      final query = twonlyDB.select(twonlyDB.userDiscoveryOwnPromotions)
+        ..where((tbl) => tbl.contactId.equals(contactId))
+        ..orderBy([(tbl) => OrderingTerm.desc(tbl.versionId)])
+        ..limit(1);
+      final row = await query.getSingleOrNull();
       return row?.promotion;
     } catch (e) {
       Log.error(e);

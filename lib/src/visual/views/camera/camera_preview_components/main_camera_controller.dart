@@ -14,6 +14,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart'
+    show PasswordlessRecoveryService;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -52,6 +54,7 @@ class ScannedNewProfile {
 
 class MainCameraController {
   void Function()? setState;
+  void Function(Contact contact)? onVerificationSuccessDismissed;
   CameraController? cameraController;
   ScreenshotController screenshotController = ScreenshotController();
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
@@ -178,7 +181,8 @@ class MainCameraController {
 
     selectedCameraDetails.isZoomAble = false;
 
-    if (cameraController == null || !cameraController!.value.isInitialized) {
+    final currentController = cameraController;
+    if (currentController == null || !currentController.value.isInitialized) {
       final controllerToDispose = cameraController;
       cameraController = null;
       if (controllerToDispose != null) {
@@ -188,7 +192,7 @@ class MainCameraController {
       final hasMic = await micPermissionFuture;
       if (sessionId != _cameraSessionId) return;
 
-      cameraController = CameraController(
+      final controller = CameraController(
         AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
         enableAudio: hasMic,
@@ -196,22 +200,60 @@ class MainCameraController {
             ? ImageFormatGroup.nv21
             : ImageFormatGroup.bgra8888,
       );
+
+      var assignedToGlobal = false;
       try {
-        _initializeFuture = cameraController?.initialize();
+        _initializeFuture = controller.initialize();
         await _initializeFuture;
-        await cameraController!.startImageStream(_processCameraImage);
-        await cameraController!.setZoomLevel(selectedCameraDetails.scaleFactor);
-        if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
-          await cameraController!.setVideoStabilizationMode(
-            VideoStabilizationMode.level1,
+        if (sessionId != _cameraSessionId) {
+          unawaited(controller.dispose());
+          return;
+        }
+
+        if (!controller.value.isInitialized) {
+          throw CameraException(
+            'Uninitialized CameraController',
+            'CameraController was not initialized after initialize() completed.',
           );
         }
+
+        await controller.startImageStream(_processCameraImage);
+        if (sessionId != _cameraSessionId) {
+          unawaited(controller.dispose());
+          return;
+        }
+
+        await controller.setZoomLevel(selectedCameraDetails.scaleFactor);
+        if (sessionId != _cameraSessionId) {
+          unawaited(controller.dispose());
+          return;
+        }
+
+        if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
+          await controller.setVideoStabilizationMode(
+            VideoStabilizationMode.level1,
+          );
+          if (sessionId != _cameraSessionId) {
+            unawaited(controller.dispose());
+            return;
+          }
+        }
+
+        cameraController = controller;
+        assignedToGlobal = true;
       } catch (e) {
-        Log.error('Error initializing camera: $e');
-        final controllerToDispose = cameraController;
-        cameraController = null;
-        if (controllerToDispose != null) {
-          unawaited(controllerToDispose.dispose());
+        if (e is CameraException) {
+          Log.warn('Camera initialization failed (CameraException): $e');
+        } else {
+          Log.error('Error initializing camera: $e');
+        }
+        if (!assignedToGlobal) {
+          unawaited(controller.dispose());
+        } else {
+          if (cameraController == controller) {
+            cameraController = null;
+          }
+          unawaited(controller.dispose());
         }
         initCameraStarted = false;
         return;
@@ -219,35 +261,64 @@ class MainCameraController {
     } else {
       try {
         if (!isVideoRecording) {
-          await cameraController!.stopImageStream();
+          try {
+            await currentController.stopImageStream();
+          } catch (e) {
+            Log.warn('Could not stop image stream: $e');
+          }
         }
+        if (sessionId != _cameraSessionId) return;
+
         selectedCameraDetails.scaleFactor = 1;
 
-        await cameraController!.setZoomLevel(1);
-        await cameraController!.setDescription(
+        await currentController.setZoomLevel(1);
+        if (sessionId != _cameraSessionId) return;
+
+        await currentController.setDescription(
           AppEnvironment.cameras[cameraId],
         );
+        if (sessionId != _cameraSessionId) return;
+
         if (!isVideoRecording) {
-          await cameraController!.startImageStream(_processCameraImage);
+          await currentController.startImageStream(_processCameraImage);
         }
       } catch (e) {
-        Log.error('Error switching camera description: $e');
+        if (e is CameraException) {
+          Log.warn('Camera description switch failed (CameraException): $e');
+        } else {
+          Log.error('Error switching camera description: $e');
+        }
         initCameraStarted = false;
         return;
       }
     }
 
+    if (sessionId != _cameraSessionId) return;
+    final controller = cameraController;
+    if (controller == null) {
+      initCameraStarted = false;
+      return;
+    }
+
     try {
-      await cameraController!.lockCaptureOrientation(
+      await controller.lockCaptureOrientation(
         DeviceOrientation.portraitUp,
       );
-      await cameraController!.setFlashMode(
+      if (sessionId != _cameraSessionId) return;
+
+      await controller.setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
       );
-      selectedCameraDetails.maxAvailableZoom = await cameraController!
+      if (sessionId != _cameraSessionId) return;
+
+      selectedCameraDetails.maxAvailableZoom = await controller
           .getMaxZoomLevel();
-      selectedCameraDetails.minAvailableZoom = await cameraController!
+      if (sessionId != _cameraSessionId) return;
+
+      selectedCameraDetails.minAvailableZoom = await controller
           .getMinZoomLevel();
+      if (sessionId != _cameraSessionId) return;
+
       selectedCameraDetails
         ..isZoomAble =
             selectedCameraDetails.maxAvailableZoom !=
@@ -263,12 +334,15 @@ class MainCameraController {
       initCameraStarted = false;
       setState?.call();
     } catch (e) {
-      Log.error('Error post-initializing camera: $e');
-      final controllerToDispose = cameraController;
-      cameraController = null;
-      if (controllerToDispose != null) {
-        unawaited(controllerToDispose.dispose());
+      if (e is CameraException) {
+        Log.warn('Camera post-initialization failed (CameraException): $e');
+      } else {
+        Log.error('Error post-initializing camera: $e');
       }
+      if (cameraController == controller) {
+        cameraController = null;
+      }
+      unawaited(controller.dispose());
       initCameraStarted = false;
       return;
     }
@@ -348,8 +422,9 @@ class MainCameraController {
   }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
-    if (cameraController == null) return null;
-    final camera = cameraController!.description;
+    final controller = cameraController;
+    if (controller == null) return null;
+    final camera = controller.description;
     final sensorOrientation = camera.sensorOrientation;
 
     InputImageRotation? rotation;
@@ -358,7 +433,7 @@ class MainCameraController {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
       var rotationCompensation =
-          _orientations[cameraController!.value.deviceOrientation];
+          _orientations[controller.value.deviceOrientation];
       if (rotationCompensation == null) return null;
       if (camera.lensDirection == CameraLensDirection.front) {
         // front-facing
@@ -408,14 +483,15 @@ class MainCameraController {
     if (_isBusy) return;
     _isBusy = true;
     final barcodes = await _barcodeScanner.processImage(inputImage);
+    final controller = cameraController;
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null &&
-        cameraController != null) {
+        controller != null) {
       final painter = BarcodeDetectorPainter(
         barcodes,
         inputImage.metadata!.size,
         inputImage.metadata!.rotation,
-        cameraController!.description.lensDirection,
+        controller.description.lensDirection,
       );
       qrCodePain = CustomPaint(painter: painter);
 
@@ -430,6 +506,11 @@ class MainCameraController {
       for (final barcode in barcodes) {
         if (barcode.displayValue == null) continue;
         final link = barcode.displayValue!;
+
+        if (link.startsWith(PasswordlessRecoveryService.linkPrefix)) {
+          await PasswordlessRecoveryService.handleRecoveryLink(link);
+          continue;
+        }
 
         if (link.startsWith(QrCodeUtils.linkPrefix)) {
           if (_handledProfileLinks.contains(link)) continue;
@@ -476,6 +557,7 @@ class MainCameraController {
             final context = cameraPreviewKey.currentContext;
             if (verificationOk && context != null && context.mounted) {
               await VerificationSuccessDialog.show(context, contact);
+              onVerificationSuccessDismissed?.call(contact);
             }
           }
           continue;
@@ -501,9 +583,10 @@ class MainCameraController {
     if (_isBusyFaces) return;
     _isBusyFaces = true;
     final faces = await _faceDetector.processImage(inputImage);
+    final controller = cameraController;
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null &&
-        cameraController != null) {
+        controller != null) {
       if (faces.isNotEmpty) {
         CustomPainter? painter;
         switch (_currentFilterType) {
@@ -512,7 +595,7 @@ class MainCameraController {
               faces,
               inputImage.metadata!.size,
               inputImage.metadata!.rotation,
-              cameraController!.description.lensDirection,
+              controller.description.lensDirection,
             );
           case FaceFilterType.beardUpperLipGreen:
             painter = BeardFilterPainter(
@@ -520,7 +603,7 @@ class MainCameraController {
               faces,
               inputImage.metadata!.size,
               inputImage.metadata!.rotation,
-              cameraController!.description.lensDirection,
+              controller.description.lensDirection,
             );
           case FaceFilterType.none:
             break;

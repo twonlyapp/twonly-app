@@ -499,7 +499,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       pixelRatio: pixelRatio,
     );
     if (image == null) {
-      Log.error('screenshotController did not return image bytes');
+      Log.warn('screenshotController did not return image bytes');
       return null;
     }
 
@@ -544,7 +544,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (image == null) return null;
       final bytes = await image.getBytes();
       if (bytes == null) {
-        Log.error('imageBytes are empty');
+        Log.warn('imageBytes are empty');
         return null;
       }
       if (media.type == MediaType.image || media.type == MediaType.gif) {
@@ -667,6 +667,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
+  Widget _buildScreenshotViewer() {
+    return Screenshot(
+      controller: screenshotController,
+      child: LayersViewer(
+        layers: layers.where((x) => !x.isDeleted).toList(),
+        onUpdate: () {
+          for (final layer in layers) {
+            layer.isEditing = false;
+            if (layer.isDeleted) {
+              removedLayers.add(layer);
+            }
+          }
+          layers = layers.where((x) => !x.isDeleted).toList();
+          setState(() {});
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
@@ -784,26 +803,27 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   width: currentImage.width / pixelRatio,
                   child: Stack(
                     children: [
-                      if (videoController != null)
+                      if (videoController != null &&
+                          videoController!.value.isInitialized)
                         Positioned.fill(
-                          child: VideoPlayer(videoController!),
-                        ),
-                      Screenshot(
-                        controller: screenshotController,
-                        child: LayersViewer(
-                          layers: layers.where((x) => !x.isDeleted).toList(),
-                          onUpdate: () {
-                            for (final layer in layers) {
-                              layer.isEditing = false;
-                              if (layer.isDeleted) {
-                                removedLayers.add(layer);
-                              }
-                            }
-                            layers = layers.where((x) => !x.isDeleted).toList();
-                            setState(() {});
-                          },
-                        ),
-                      ),
+                          child: Center(
+                            child: AspectRatio(
+                              aspectRatio: videoController!.value.aspectRatio,
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: VideoPlayer(videoController!),
+                                  ),
+                                  Positioned.fill(
+                                    child: _buildScreenshotViewer(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        _buildScreenshotViewer(),
                     ],
                   ),
                 ),

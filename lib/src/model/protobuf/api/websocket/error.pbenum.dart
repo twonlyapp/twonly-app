@@ -93,6 +93,10 @@ class ErrorCode extends $pb.ProtobufEnum {
       ErrorCode._(1035, _omitEnumNames ? '' : 'UserIsNotInFreePlan');
   static const ErrorCode ForegroundSessionConnected =
       ErrorCode._(1036, _omitEnumNames ? '' : 'ForegroundSessionConnected');
+  static const ErrorCode NoRecoveryData =
+      ErrorCode._(1037, _omitEnumNames ? '' : 'NoRecoveryData');
+  static const ErrorCode InvalidRecoveryData =
+      ErrorCode._(1038, _omitEnumNames ? '' : 'InvalidRecoveryData');
 
   static const $core.List<ErrorCode> values = <ErrorCode>[
     Unknown,
@@ -134,6 +138,8 @@ class ErrorCode extends $pb.ProtobufEnum {
     IPAPaymentExpired,
     UserIsNotInFreePlan,
     ForegroundSessionConnected,
+    NoRecoveryData,
+    InvalidRecoveryData,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue =

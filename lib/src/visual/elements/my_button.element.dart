@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/reactive_tap_feedback.element.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 
 enum MyButtonVariant {
@@ -32,72 +32,10 @@ class MyButton extends StatefulWidget {
   State<MyButton> createState() => _MyButtonState();
 }
 
-class _MyButtonState extends State<MyButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller =
-        AnimationController(
-          vsync: this,
-          lowerBound: double.negativeInfinity,
-          upperBound: double.infinity,
-          value: 0,
-        )..addListener(() {
-          setState(() {});
-        });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) {
-    if (widget.onPressed != null || widget.onLongPress != null) {
-      _controller.animateTo(
-        1,
-        duration: const Duration(milliseconds: 60),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
-  void _onTapUp(TapUpDetails details) {
-    if (widget.onPressed != null || widget.onLongPress != null) {
-      _bounce();
-    }
-  }
-
-  void _onTapCancel() {
-    if (widget.onPressed != null || widget.onLongPress != null) {
-      _bounce();
-    }
-  }
-
-  void _bounce() {
-    const spring = SpringDescription(
-      mass: 1,
-      stiffness: 400,
-      damping: 15,
-    );
-    final simulation = SpringSimulation(
-      spring,
-      _controller.value,
-      0,
-      _controller.velocity,
-    );
-    _controller.animateWith(simulation);
-  }
+class _MyButtonState extends State<MyButton> {
 
   @override
   Widget build(BuildContext context) {
-    // 0 (unpressed) -> scale 1.0
-    // 1 (pressed) -> scale 0.98 (subtle bounce)
-    final scale = 1.0 - (_controller.value * 0.02);
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;
     final isDark = isDarkMode(context);
     final disabledBgColor = isDark
@@ -265,18 +203,11 @@ class _MyButtonState extends State<MyButton>
             child: widget.child,
           );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: isEnabled ? _onTapDown : null,
-      onTapUp: isEnabled ? _onTapUp : null,
-      onTapCancel: isEnabled ? _onTapCancel : null,
+    return ReactiveTapFeedback(
       onTap: widget.onPressed,
       onLongPress: widget.onLongPress,
-      child: Transform.scale(
-        scale: scale,
-        child: AbsorbPointer(
-          child: childButton,
-        ),
+      child: AbsorbPointer(
+        child: childButton,
       ),
     );
   }

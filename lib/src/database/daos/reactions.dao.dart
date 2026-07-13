@@ -30,11 +30,15 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .getMessageById(messageId)
         .getSingleOrNull();
     if (msg == null) {
-      Log.error('updateReaction: Message $messageId not found!');
+      Log.warn('updateReaction: Message $messageId not found!');
       return;
     }
     if (msg.groupId != groupId) {
-      Log.error('updateReaction: Message groupId ${msg.groupId} != $groupId');
+      Log.warn('updateReaction: Message groupId ${msg.groupId} != $groupId');
+      Log.error(
+        'updateReaction: Message groupId mismatch',
+        onlyIfSentryEnabled: true,
+      );
       return;
     }
 

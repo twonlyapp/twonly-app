@@ -36,6 +36,7 @@ class MediaViewerMessageInput extends StatelessWidget {
               child: MyInput(
                 dense: true,
                 autofocus: true,
+                fontWeight: FontWeight.normal,
                 controller: controller,
                 hintText: context.lang.chatListDetailInput,
                 onChanged: (value) {},

@@ -118,6 +118,7 @@ class GroupMemberContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
     return ContextMenu(
       items: [
         if (contact.accepted)
@@ -131,15 +132,15 @@ class GroupMemberContextMenu extends StatelessWidget {
                 // create
                 return;
               }
-              if (!context.mounted) return;
-              await context.push(Routes.chatsMessages(directChat.groupId));
+              if (!navigator.mounted) return;
+              await navigator.context.push(Routes.chatsMessages(directChat.groupId));
             },
             icon: FontAwesomeIcons.message,
           ),
         if (!contact.accepted)
           ContextMenuItem(
             title: context.lang.createContactRequest,
-            onTap: () => _makeContactRequest(context),
+            onTap: () => _makeContactRequest(navigator.context),
             icon: FontAwesomeIcons.userPlus,
           ),
         if (member.groupPublicKey != null &&
@@ -147,7 +148,7 @@ class GroupMemberContextMenu extends StatelessWidget {
             member.memberState == MemberState.normal)
           ContextMenuItem(
             title: context.lang.makeAdmin,
-            onTap: () => _makeContactAdmin(context),
+            onTap: () => _makeContactAdmin(navigator.context),
             icon: FontAwesomeIcons.key,
           ),
         if (member.groupPublicKey != null &&
@@ -155,13 +156,13 @@ class GroupMemberContextMenu extends StatelessWidget {
             member.memberState == MemberState.admin)
           ContextMenuItem(
             title: context.lang.removeAdmin,
-            onTap: () => _removeContactAsAdmin(context),
+            onTap: () => _removeContactAsAdmin(navigator.context),
             icon: FontAwesomeIcons.key,
           ),
         if (group.isGroupAdmin && member.groupPublicKey != null)
           ContextMenuItem(
             title: context.lang.removeFromGroup,
-            onTap: () => _removeContactFromGroup(context),
+            onTap: () => _removeContactFromGroup(navigator.context),
             icon: FontAwesomeIcons.rightFromBracket,
           ),
       ],

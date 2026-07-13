@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/verification_badge.comp.dart';
+import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class TrustedFriendsCard extends StatelessWidget {
@@ -44,10 +41,10 @@ class TrustedFriendsCard extends StatelessWidget {
               spacing: 4,
               alignment: WrapAlignment.center,
               children: selectedContacts.map((contact) {
-                return _ContactChip(
+                return ContactChip(
                   key: ValueKey(contact.userId),
                   contact: contact,
-                  onRemove: onRemoveContact,
+                  onTap: onRemoveContact,
                 );
               }).toList(),
             ),
@@ -64,8 +61,10 @@ class TrustedFriendsCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   needsMoreFriends
-                      ? 'Select friends ($missingCount more needed)'
-                      : 'Select trusted friends',
+                      ? context.lang.passwordlessRecoverySelectFriendsNeeded(
+                          missingCount,
+                        )
+                      : context.lang.passwordlessRecoverySelectFriends,
                 ),
               ],
             ),
@@ -87,7 +86,7 @@ class TrustedFriendsCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No trusted friends selected yet',
+            context.lang.passwordlessRecoveryNoFriendsSelected,
             style: TextStyle(
               fontSize: 14,
               color: context.color.onSurfaceVariant,
@@ -96,52 +95,6 @@ class TrustedFriendsCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ContactChip extends StatelessWidget {
-  const _ContactChip({
-    required this.contact,
-    required this.onRemove,
-    super.key,
-  });
-
-  final Contact contact;
-  final void Function(int) onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onRemove(contact.userId),
-      child: Chip(
-        avatar: AvatarIcon(
-          contactId: contact.userId,
-          fontSize: 10,
-        ),
-        label: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              getContactDisplayName(contact),
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(width: 6),
-            VerificationBadgeComp(
-              contact: contact,
-              size: 12,
-              clickable: false,
-            ),
-            const SizedBox(width: 15),
-            const FaIcon(
-              FontAwesomeIcons.xmark,
-              color: Colors.grey,
-              size: 12,
-            ),
-          ],
-        ),
       ),
     );
   }

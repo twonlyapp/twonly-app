@@ -152,6 +152,33 @@ const Handshake$json = {
       '9': 0,
       '10': 'getUseridByUsername'
     },
+    {
+      '1': 'get_server_key_for_passwordless_recovery',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.GetServerKeyForPasswordLessRecovery',
+      '9': 0,
+      '10': 'getServerKeyForPasswordlessRecovery'
+    },
+    {
+      '1': 'register_passwordless_notification',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.RegisterPasswordlessNotification',
+      '9': 0,
+      '10': 'registerPasswordlessNotification'
+    },
+    {
+      '1': 'check_for_passwordless_notification',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.CheckForPasswordlessNotification',
+      '9': 0,
+      '10': 'checkForPasswordlessNotification'
+    },
   ],
   '3': [
     Handshake_RequestPOW$json,
@@ -160,7 +187,10 @@ const Handshake$json = {
     Handshake_GetUserIdByUsername$json,
     Handshake_GetAuthToken$json,
     Handshake_Authenticate$json,
-    Handshake_AuthenticateWithLoginToken$json
+    Handshake_AuthenticateWithLoginToken$json,
+    Handshake_GetServerKeyForPasswordLessRecovery$json,
+    Handshake_RegisterPasswordlessNotification$json,
+    Handshake_CheckForPasswordlessNotification$json
   ],
   '8': [
     {'1': 'Handshake'},
@@ -303,6 +333,95 @@ const Handshake_AuthenticateWithLoginToken$json = {
   ],
 };
 
+@$core.Deprecated('Use handshakeDescriptor instead')
+const Handshake_GetServerKeyForPasswordLessRecovery$json = {
+  '1': 'GetServerKeyForPasswordLessRecovery',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
+    {
+      '1': 'encrypted_server_key_none',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedServerKeyNone'
+    },
+    {
+      '1': 'pin_unlock_token',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'pinUnlockToken',
+      '17': true
+    },
+    {
+      '1': 'pin_protection_key',
+      '3': 4,
+      '4': 1,
+      '5': 12,
+      '9': 1,
+      '10': 'pinProtectionKey',
+      '17': true
+    },
+    {'1': 'email', '3': 5, '4': 1, '5': 9, '9': 2, '10': 'email', '17': true},
+  ],
+  '8': [
+    {'1': '_pin_unlock_token'},
+    {'1': '_pin_protection_key'},
+    {'1': '_email'},
+  ],
+};
+
+@$core.Deprecated('Use handshakeDescriptor instead')
+const Handshake_RegisterPasswordlessNotification$json = {
+  '1': 'RegisterPasswordlessNotification',
+  '2': [
+    {'1': 'notification_id', '3': 1, '4': 1, '5': 9, '10': 'notificationId'},
+    {
+      '1': 'download_auth_token',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'downloadAuthToken'
+    },
+    {'1': 'lang_code', '3': 3, '4': 1, '5': 9, '10': 'langCode'},
+    {
+      '1': 'google_fcm',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'googleFcm',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_google_fcm'},
+  ],
+};
+
+@$core.Deprecated('Use handshakeDescriptor instead')
+const Handshake_CheckForPasswordlessNotification$json = {
+  '1': 'CheckForPasswordlessNotification',
+  '2': [
+    {'1': 'notification_id', '3': 1, '4': 1, '5': 9, '10': 'notificationId'},
+    {
+      '1': 'download_auth_token',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'downloadAuthToken'
+    },
+    {
+      '1': 'already_received_message_ids',
+      '3': 3,
+      '4': 3,
+      '5': 3,
+      '10': 'alreadyReceivedMessageIds'
+    },
+  ],
+};
+
 /// Descriptor for `Handshake`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'CglIYW5kc2hha2USQgoIcmVnaXN0ZXIYASABKAsyJC5jbGllbnRfdG9fc2VydmVyLkhhbmRzaG'
@@ -316,26 +435,47 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'MjYuY2xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuQXV0aGVudGljYXRlV2l0aExvZ2luVG9rZW'
     '5IAFIaYXV0aGVudGljYXRlV2l0aExvZ2luVG9rZW4SZgoWZ2V0X3VzZXJpZF9ieV91c2VybmFt'
     'ZRgHIAEoCzIvLmNsaWVudF90b19zZXJ2ZXIuSGFuZHNoYWtlLkdldFVzZXJJZEJ5VXNlcm5hbW'
-    'VIAFITZ2V0VXNlcmlkQnlVc2VybmFtZRoMCgpSZXF1ZXN0UE9XGsoDCghSZWdpc3RlchIaCgh1'
-    'c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUSJAoLaW52aXRlX2NvZGUYAiABKAlIAFIKaW52aXRlQ2'
-    '9kZYgBARIuChNwdWJsaWNfaWRlbnRpdHlfa2V5GAMgASgMUhFwdWJsaWNJZGVudGl0eUtleRIj'
-    'Cg1zaWduZWRfcHJla2V5GAQgASgMUgxzaWduZWRQcmVrZXkSNgoXc2lnbmVkX3ByZWtleV9zaW'
-    'duYXR1cmUYBSABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRIoChBzaWduZWRfcHJla2V5X2lk'
-    'GAYgASgDUg5zaWduZWRQcmVrZXlJZBInCg9yZWdpc3RyYXRpb25faWQYByABKANSDnJlZ2lzdH'
-    'JhdGlvbklkEhUKBmlzX2lvcxgIIAEoCFIFaXNJb3MSGwoJbGFuZ19jb2RlGAkgASgJUghsYW5n'
-    'Q29kZRIiCg1wcm9vZl9vZl93b3JrGAogASgDUgtwcm9vZk9mV29yaxIkCgtsb2dpbl90b2tlbh'
-    'gLIAEoDEgBUgpsb2dpblRva2VuiAEBQg4KDF9pbnZpdGVfY29kZUIOCgxfbG9naW5fdG9rZW4a'
-    'EgoQR2V0QXV0aENoYWxsZW5nZRoxChNHZXRVc2VySWRCeVVzZXJuYW1lEhoKCHVzZXJuYW1lGA'
-    'EgASgJUgh1c2VybmFtZRpDCgxHZXRBdXRoVG9rZW4SFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklk'
-    'EhoKCHJlc3BvbnNlGAIgASgMUghyZXNwb25zZRroAQoMQXV0aGVudGljYXRlEhcKB3VzZXJfaW'
-    'QYASABKANSBnVzZXJJZBIdCgphdXRoX3Rva2VuGAIgASgMUglhdXRoVG9rZW4SJAoLYXBwX3Zl'
-    'cnNpb24YAyABKAlIAFIKYXBwVmVyc2lvbogBARIgCglkZXZpY2VfaWQYBCABKANIAVIIZGV2aW'
-    'NlSWSIAQESKAoNaW5fYmFja2dyb3VuZBgFIAEoCEgCUgxpbkJhY2tncm91bmSIAQFCDgoMX2Fw'
-    'cF92ZXJzaW9uQgwKCl9kZXZpY2VfaWRCEAoOX2luX2JhY2tncm91bmQaxgEKGkF1dGhlbnRpY2'
-    'F0ZVdpdGhMb2dpblRva2VuEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBIsChJzZWNyZXRfbG9n'
-    'aW5fdG9rZW4YAiABKAxSEHNlY3JldExvZ2luVG9rZW4SHwoLYXBwX3ZlcnNpb24YAyABKAlSCm'
-    'FwcFZlcnNpb24SGwoJZGV2aWNlX2lkGAQgASgDUghkZXZpY2VJZBIjCg1pbl9iYWNrZ3JvdW5k'
-    'GAUgASgIUgxpbkJhY2tncm91bmRCCwoJSGFuZHNoYWtl');
+    'VIAFITZ2V0VXNlcmlkQnlVc2VybmFtZRKYAQooZ2V0X3NlcnZlcl9rZXlfZm9yX3Bhc3N3b3Jk'
+    'bGVzc19yZWNvdmVyeRgIIAEoCzI/LmNsaWVudF90b19zZXJ2ZXIuSGFuZHNoYWtlLkdldFNlcn'
+    'ZlcktleUZvclBhc3N3b3JkTGVzc1JlY292ZXJ5SABSI2dldFNlcnZlcktleUZvclBhc3N3b3Jk'
+    'bGVzc1JlY292ZXJ5EowBCiJyZWdpc3Rlcl9wYXNzd29yZGxlc3Nfbm90aWZpY2F0aW9uGAkgAS'
+    'gLMjwuY2xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuUmVnaXN0ZXJQYXNzd29yZGxlc3NOb3Rp'
+    'ZmljYXRpb25IAFIgcmVnaXN0ZXJQYXNzd29yZGxlc3NOb3RpZmljYXRpb24SjQEKI2NoZWNrX2'
+    'Zvcl9wYXNzd29yZGxlc3Nfbm90aWZpY2F0aW9uGAogASgLMjwuY2xpZW50X3RvX3NlcnZlci5I'
+    'YW5kc2hha2UuQ2hlY2tGb3JQYXNzd29yZGxlc3NOb3RpZmljYXRpb25IAFIgY2hlY2tGb3JQYX'
+    'Nzd29yZGxlc3NOb3RpZmljYXRpb24aDAoKUmVxdWVzdFBPVxrKAwoIUmVnaXN0ZXISGgoIdXNl'
+    'cm5hbWUYASABKAlSCHVzZXJuYW1lEiQKC2ludml0ZV9jb2RlGAIgASgJSABSCmludml0ZUNvZG'
+    'WIAQESLgoTcHVibGljX2lkZW50aXR5X2tleRgDIAEoDFIRcHVibGljSWRlbnRpdHlLZXkSIwoN'
+    'c2lnbmVkX3ByZWtleRgEIAEoDFIMc2lnbmVkUHJla2V5EjYKF3NpZ25lZF9wcmVrZXlfc2lnbm'
+    'F0dXJlGAUgASgMUhVzaWduZWRQcmVrZXlTaWduYXR1cmUSKAoQc2lnbmVkX3ByZWtleV9pZBgG'
+    'IAEoA1IOc2lnbmVkUHJla2V5SWQSJwoPcmVnaXN0cmF0aW9uX2lkGAcgASgDUg5yZWdpc3RyYX'
+    'Rpb25JZBIVCgZpc19pb3MYCCABKAhSBWlzSW9zEhsKCWxhbmdfY29kZRgJIAEoCVIIbGFuZ0Nv'
+    'ZGUSIgoNcHJvb2Zfb2Zfd29yaxgKIAEoA1ILcHJvb2ZPZldvcmsSJAoLbG9naW5fdG9rZW4YCy'
+    'ABKAxIAVIKbG9naW5Ub2tlbogBAUIOCgxfaW52aXRlX2NvZGVCDgoMX2xvZ2luX3Rva2VuGhIK'
+    'EEdldEF1dGhDaGFsbGVuZ2UaMQoTR2V0VXNlcklkQnlVc2VybmFtZRIaCgh1c2VybmFtZRgBIA'
+    'EoCVIIdXNlcm5hbWUaQwoMR2V0QXV0aFRva2VuEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBIa'
+    'CghyZXNwb25zZRgCIAEoDFIIcmVzcG9uc2Ua6AEKDEF1dGhlbnRpY2F0ZRIXCgd1c2VyX2lkGA'
+    'EgASgDUgZ1c2VySWQSHQoKYXV0aF90b2tlbhgCIAEoDFIJYXV0aFRva2VuEiQKC2FwcF92ZXJz'
+    'aW9uGAMgASgJSABSCmFwcFZlcnNpb26IAQESIAoJZGV2aWNlX2lkGAQgASgDSAFSCGRldmljZU'
+    'lkiAEBEigKDWluX2JhY2tncm91bmQYBSABKAhIAlIMaW5CYWNrZ3JvdW5kiAEBQg4KDF9hcHBf'
+    'dmVyc2lvbkIMCgpfZGV2aWNlX2lkQhAKDl9pbl9iYWNrZ3JvdW5kGsYBChpBdXRoZW50aWNhdG'
+    'VXaXRoTG9naW5Ub2tlbhIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSLAoSc2VjcmV0X2xvZ2lu'
+    'X3Rva2VuGAIgASgMUhBzZWNyZXRMb2dpblRva2VuEh8KC2FwcF92ZXJzaW9uGAMgASgJUgphcH'
+    'BWZXJzaW9uEhsKCWRldmljZV9pZBgEIAEoA1IIZGV2aWNlSWQSIwoNaW5fYmFja2dyb3VuZBgF'
+    'IAEoCFIMaW5CYWNrZ3JvdW5kGqwCCiNHZXRTZXJ2ZXJLZXlGb3JQYXNzd29yZExlc3NSZWNvdm'
+    'VyeRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSOQoZZW5jcnlwdGVkX3NlcnZlcl9rZXlfbm9u'
+    'ZRgCIAEoDFIWZW5jcnlwdGVkU2VydmVyS2V5Tm9uZRItChBwaW5fdW5sb2NrX3Rva2VuGAMgAS'
+    'gMSABSDnBpblVubG9ja1Rva2VuiAEBEjEKEnBpbl9wcm90ZWN0aW9uX2tleRgEIAEoDEgBUhBw'
+    'aW5Qcm90ZWN0aW9uS2V5iAEBEhkKBWVtYWlsGAUgASgJSAJSBWVtYWlsiAEBQhMKEV9waW5fdW'
+    '5sb2NrX3Rva2VuQhUKE19waW5fcHJvdGVjdGlvbl9rZXlCCAoGX2VtYWlsGssBCiBSZWdpc3Rl'
+    'clBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbhInCg9ub3RpZmljYXRpb25faWQYASABKAlSDm5vdG'
+    'lmaWNhdGlvbklkEi4KE2Rvd25sb2FkX2F1dGhfdG9rZW4YAiABKAxSEWRvd25sb2FkQXV0aFRv'
+    'a2VuEhsKCWxhbmdfY29kZRgDIAEoCVIIbGFuZ0NvZGUSIgoKZ29vZ2xlX2ZjbRgEIAEoCUgAUg'
+    'lnb29nbGVGY22IAQFCDQoLX2dvb2dsZV9mY20avAEKIENoZWNrRm9yUGFzc3dvcmRsZXNzTm90'
+    'aWZpY2F0aW9uEicKD25vdGlmaWNhdGlvbl9pZBgBIAEoCVIObm90aWZpY2F0aW9uSWQSLgoTZG'
+    '93bmxvYWRfYXV0aF90b2tlbhgCIAEoDFIRZG93bmxvYWRBdXRoVG9rZW4SPwocYWxyZWFkeV9y'
+    'ZWNlaXZlZF9tZXNzYWdlX2lkcxgDIAMoA1IZYWxyZWFkeVJlY2VpdmVkTWVzc2FnZUlkc0ILCg'
+    'lIYW5kc2hha2U=');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {
@@ -575,6 +715,24 @@ const ApplicationData$json = {
       '9': 0,
       '10': 'setLoginToken'
     },
+    {
+      '1': 'register_passwordless_recovery',
+      '3': 31,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.RegisterPasswordLessRecovery',
+      '9': 0,
+      '10': 'registerPasswordlessRecovery'
+    },
+    {
+      '1': 'passwordless_notification',
+      '3': 32,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.PasswordlessNotification',
+      '9': 0,
+      '10': 'passwordlessNotification'
+    },
   ],
   '3': [
     ApplicationData_TextMessage$json,
@@ -596,7 +754,9 @@ const ApplicationData$json = {
     ApplicationData_DeleteAccount$json,
     ApplicationData_AddAdditionalUser$json,
     ApplicationData_SetLoginToken$json,
-    ApplicationData_Deprecated$json
+    ApplicationData_Deprecated$json,
+    ApplicationData_RegisterPasswordLessRecovery$json,
+    ApplicationData_PasswordlessNotification$json
   ],
   '8': [
     {'1': 'ApplicationData'},
@@ -775,6 +935,47 @@ const ApplicationData_Deprecated$json = {
   '1': 'Deprecated',
 };
 
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_RegisterPasswordLessRecovery$json = {
+  '1': 'RegisterPasswordLessRecovery',
+  '2': [
+    {
+      '1': 'encryptedServerKey',
+      '3': 1,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedServerKey'
+    },
+    {
+      '1': 'pinUnlockToken',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'pinUnlockToken',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_pinUnlockToken'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_PasswordlessNotification$json = {
+  '1': 'PasswordlessNotification',
+  '2': [
+    {'1': 'notification_id', '3': 1, '4': 1, '5': 9, '10': 'notificationId'},
+    {
+      '1': 'encrypted_message',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedMessage'
+    },
+  ],
+};
+
 /// Descriptor for `ApplicationData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Cg9BcHBsaWNhdGlvbkRhdGESUQoLdGV4dE1lc3NhZ2UYASABKAsyLS5jbGllbnRfdG9fc2Vydm'
@@ -820,27 +1021,36 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'dmVBZGRpdGlvbmFsVXNlchJjChFhZGRBZGRpdGlvbmFsVXNlchgdIAEoCzIzLmNsaWVudF90b1'
     '9zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkFkZEFkZGl0aW9uYWxVc2VySABSEWFkZEFkZGl0aW9u'
     'YWxVc2VyElkKD3NldF9sb2dpbl90b2tlbhgeIAEoCzIvLmNsaWVudF90b19zZXJ2ZXIuQXBwbG'
-    'ljYXRpb25EYXRhLlNldExvZ2luVG9rZW5IAFINc2V0TG9naW5Ub2tlbhpqCgtUZXh0TWVzc2Fn'
-    'ZRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoEYm9keRgDIAEoDFIEYm9keRIgCglwdXNoX2'
-    'RhdGEYBCABKAxIAFIIcHVzaERhdGGIAQFCDAoKX3B1c2hfZGF0YRovChFHZXRVc2VyQnlVc2Vy'
-    'bmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUaLAoOQ2hhbmdlVXNlcm5hbWUSGgoIdX'
-    'Nlcm5hbWUYASABKAlSCHVzZXJuYW1lGjUKFFVwZGF0ZUdvb2dsZUZjbVRva2VuEh0KCmdvb2ds'
-    'ZV9mY20YASABKAlSCWdvb2dsZUZjbRomCgtHZXRVc2VyQnlJZBIXCgd1c2VyX2lkGAEgASgDUg'
-    'Z1c2VySWQaEwoRR2V0QXZhaWxhYmxlUGxhbnMaFwoVR2V0QWRkQWNjb3VudHNJbnZpdGVzGhUK'
-    'E0dldEN1cnJlbnRQbGFuSW5mb3MaLwoUUmVtb3ZlQWRkaXRpb25hbFVzZXISFwoHdXNlcl9pZB'
-    'gBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2VyX2lkGAEgASgDUgZ1'
-    'c2VySWQaMgoXR2V0U2lnbmVkUHJlS2V5QnlVc2VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlck'
-    'lkGpsBChJVcGRhdGVTaWduZWRQcmVLZXkSKAoQc2lnbmVkX3ByZWtleV9pZBgBIAEoA1IOc2ln'
-    'bmVkUHJla2V5SWQSIwoNc2lnbmVkX3ByZWtleRgCIAEoDFIMc2lnbmVkUHJla2V5EjYKF3NpZ2'
-    '5lZF9wcmVrZXlfc2lnbmF0dXJlGAMgASgMUhVzaWduZWRQcmVrZXlTaWduYXR1cmUaNQoMRG93'
-    'bmxvYWREb25lEiUKDmRvd25sb2FkX3Rva2VuGAEgASgMUg1kb3dubG9hZFRva2VuGk4KClJlcG'
-    '9ydFVzZXISKAoQcmVwb3J0ZWRfdXNlcl9pZBgBIAEoA1IOcmVwb3J0ZWRVc2VySWQSFgoGcmVh'
-    'c29uGAIgASgJUgZyZWFzb24acQoLSVBBUHVyY2hhc2USHQoKcHJvZHVjdF9pZBgBIAEoCVIJcH'
-    'JvZHVjdElkEhYKBnNvdXJjZRgCIAEoCVIGc291cmNlEisKEXZlcmlmaWNhdGlvbl9kYXRhGAMg'
-    'ASgJUhB2ZXJpZmljYXRpb25EYXRhGg8KDUlQQUZvcmNlQ2hlY2saDwoNRGVsZXRlQWNjb3VudB'
-    'osChFBZGRBZGRpdGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaMAoNU2V0TG9n'
-    'aW5Ub2tlbhIfCgtsb2dpbl90b2tlbhgBIAEoDFIKbG9naW5Ub2tlbhoMCgpEZXByZWNhdGVkQh'
-    'EKD0FwcGxpY2F0aW9uRGF0YQ==');
+    'ljYXRpb25EYXRhLlNldExvZ2luVG9rZW5IAFINc2V0TG9naW5Ub2tlbhKGAQoecmVnaXN0ZXJf'
+    'cGFzc3dvcmRsZXNzX3JlY292ZXJ5GB8gASgLMj4uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdG'
+    'lvbkRhdGEuUmVnaXN0ZXJQYXNzd29yZExlc3NSZWNvdmVyeUgAUhxyZWdpc3RlclBhc3N3b3Jk'
+    'bGVzc1JlY292ZXJ5EnkKGXBhc3N3b3JkbGVzc19ub3RpZmljYXRpb24YICABKAsyOi5jbGllbn'
+    'RfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5QYXNzd29yZGxlc3NOb3RpZmljYXRpb25IAFIY'
+    'cGFzc3dvcmRsZXNzTm90aWZpY2F0aW9uGmoKC1RleHRNZXNzYWdlEhcKB3VzZXJfaWQYASABKA'
+    'NSBnVzZXJJZBISCgRib2R5GAMgASgMUgRib2R5EiAKCXB1c2hfZGF0YRgEIAEoDEgAUghwdXNo'
+    'RGF0YYgBAUIMCgpfcHVzaF9kYXRhGi8KEUdldFVzZXJCeVVzZXJuYW1lEhoKCHVzZXJuYW1lGA'
+    'EgASgJUgh1c2VybmFtZRosCg5DaGFuZ2VVc2VybmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNl'
+    'cm5hbWUaNQoUVXBkYXRlR29vZ2xlRmNtVG9rZW4SHQoKZ29vZ2xlX2ZjbRgBIAEoCVIJZ29vZ2'
+    'xlRmNtGiYKC0dldFVzZXJCeUlkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBoTChFHZXRBdmFp'
+    'bGFibGVQbGFucxoXChVHZXRBZGRBY2NvdW50c0ludml0ZXMaFQoTR2V0Q3VycmVudFBsYW5Jbm'
+    'ZvcxovChRSZW1vdmVBZGRpdGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaLQoS'
+    'R2V0UHJla2V5c0J5VXNlcklkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBoyChdHZXRTaWduZW'
+    'RQcmVLZXlCeVVzZXJJZBIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQamwEKElVwZGF0ZVNpZ25l'
+    'ZFByZUtleRIoChBzaWduZWRfcHJla2V5X2lkGAEgASgDUg5zaWduZWRQcmVrZXlJZBIjCg1zaW'
+    'duZWRfcHJla2V5GAIgASgMUgxzaWduZWRQcmVrZXkSNgoXc2lnbmVkX3ByZWtleV9zaWduYXR1'
+    'cmUYAyABKAxSFXNpZ25lZFByZWtleVNpZ25hdHVyZRo1CgxEb3dubG9hZERvbmUSJQoOZG93bm'
+    'xvYWRfdG9rZW4YASABKAxSDWRvd25sb2FkVG9rZW4aTgoKUmVwb3J0VXNlchIoChByZXBvcnRl'
+    'ZF91c2VyX2lkGAEgASgDUg5yZXBvcnRlZFVzZXJJZBIWCgZyZWFzb24YAiABKAlSBnJlYXNvbh'
+    'pxCgtJUEFQdXJjaGFzZRIdCgpwcm9kdWN0X2lkGAEgASgJUglwcm9kdWN0SWQSFgoGc291cmNl'
+    'GAIgASgJUgZzb3VyY2USKwoRdmVyaWZpY2F0aW9uX2RhdGEYAyABKAlSEHZlcmlmaWNhdGlvbk'
+    'RhdGEaDwoNSVBBRm9yY2VDaGVjaxoPCg1EZWxldGVBY2NvdW50GiwKEUFkZEFkZGl0aW9uYWxV'
+    'c2VyEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBowCg1TZXRMb2dpblRva2VuEh8KC2xvZ2luX3'
+    'Rva2VuGAEgASgMUgpsb2dpblRva2VuGgwKCkRlcHJlY2F0ZWQajgEKHFJlZ2lzdGVyUGFzc3dv'
+    'cmRMZXNzUmVjb3ZlcnkSLgoSZW5jcnlwdGVkU2VydmVyS2V5GAEgASgMUhJlbmNyeXB0ZWRTZX'
+    'J2ZXJLZXkSKwoOcGluVW5sb2NrVG9rZW4YAiABKAxIAFIOcGluVW5sb2NrVG9rZW6IAQFCEQoP'
+    'X3BpblVubG9ja1Rva2VuGnAKGFBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbhInCg9ub3RpZmljYX'
+    'Rpb25faWQYASABKAlSDm5vdGlmaWNhdGlvbklkEisKEWVuY3J5cHRlZF9tZXNzYWdlGAIgASgM'
+    'UhBlbmNyeXB0ZWRNZXNzYWdlQhEKD0FwcGxpY2F0aW9uRGF0YQ==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

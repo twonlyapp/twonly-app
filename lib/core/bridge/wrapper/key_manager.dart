@@ -20,6 +20,12 @@ class RustKeyManager {
   static Future<PlatformInt64?> getUserId() => RustLib.instance.api
       .crateBridgeWrapperKeyManagerRustKeyManagerGetUserId();
 
+  static Future<void> importSerialized({required List<int> serializedBytes}) =>
+      RustLib.instance.api
+          .crateBridgeWrapperKeyManagerRustKeyManagerImportSerialized(
+            serializedBytes: serializedBytes,
+          );
+
   static Future<void> importSignalIdentity({
     required List<int> identityKeyPairStructure,
     required PlatformInt64 registrationId,
@@ -52,6 +58,10 @@ class RustKeyManager {
       .crateBridgeWrapperKeyManagerRustKeyManagerRemoveSignedPrekey(
         signedPreKeyId: signedPreKeyId,
       );
+
+  /// Serialize the key_manager. Needed for the passwordless_recovery feature.
+  static Future<Uint8List> serialize() => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerSerialize();
 
   static Future<void> setUserId({required PlatformInt64 userId}) => RustLib
       .instance

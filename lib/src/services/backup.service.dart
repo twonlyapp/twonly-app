@@ -105,8 +105,9 @@ class BackupService {
               ))) {
         final backupId = await RustBackupIdentity.getBackupId();
         if (backupId == null) {
-          Log.error('No backup password was set by the user.');
+          Log.warn('No backup password was set by the user.');
           backup.identityState = LastBackupUploadState.failed;
+          await UserService.update((u) => u.isBackupEnabled = false);
         } else {
           Log.info('Performing a identity backup.');
           final encryptedBackup =
@@ -162,7 +163,7 @@ class BackupService {
           (backupDownloadToken, backupArchive) =
               await RustBackupArchive.createBackupArchive();
         } catch (e) {
-          Log.error(e);
+          Log.warn('Creating archive backup failed: $e');
           return;
         }
         Log.info(
@@ -324,6 +325,26 @@ class BackupService {
     return _nextBackupStage();
   }
 
+  static Future<RecoveryError?> startPasswordlessBackupRecovery(
+    int userId,
+    String username,
+    Uint8List keyManagerBytes,
+  ) async {
+    final state = BackupRecovery(
+      username: username,
+      password: '',
+      userId: userId,
+    )..state = BackupRecoveryState.archiveBackupStarted;
+
+    await deleteLocalUserData();
+
+    // Import KeyManager keys into secure storage & in-memory key manager
+    await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
+
+    await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
+    return _nextBackupStage();
+  }
+
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
     String backupServerUrl,
   ) async {
@@ -337,7 +358,7 @@ class BackupService {
         },
       );
     } catch (e) {
-      Log.error('Error fetching backup: $e');
+      Log.warn('Error fetching backup: $e');
       return (null, RecoveryError.noInternet);
     }
 

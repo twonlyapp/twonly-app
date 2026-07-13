@@ -149,7 +149,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingNotProductBody.
   ///
   /// In en, this message translates to:
-  /// **'twonly is financed by donations and an optional subscription. Your data will never be sold.'**
+  /// **'twonly is financed by an optional subscription. Your data will never be sold.'**
   String get onboardingNotProductBody;
 
   /// No description provided for @registerUsernameSlogan.
@@ -590,48 +590,6 @@ abstract class AppLocalizations {
   /// **'{len} contact(s)'**
   String settingsPrivacyBlockUsersCount(Object len);
 
-  /// No description provided for @settingsPrivacyProfileSelectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Security Profile'**
-  String get settingsPrivacyProfileSelectionTitle;
-
-  /// No description provided for @securityProfileTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Security Profile'**
-  String get securityProfileTitle;
-
-  /// No description provided for @securityProfileSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose the level of protection that fits your daily use. This can be changed at any time in your settings.'**
-  String get securityProfileSubtitle;
-
-  /// No description provided for @securityProfileNormalTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Normal Protection'**
-  String get securityProfileNormalTitle;
-
-  /// No description provided for @securityProfileNormalDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Good balance between a convenient mode without bothering you too much.'**
-  String get securityProfileNormalDesc;
-
-  /// No description provided for @securityProfileStrictTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Strict Protection'**
-  String get securityProfileStrictTitle;
-
-  /// No description provided for @securityProfileStrictDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum anti-phishing protection but may be inconvenient.'**
-  String get securityProfileStrictDesc;
-
   /// No description provided for @settingsNotification.
   ///
   /// In en, this message translates to:
@@ -896,17 +854,47 @@ abstract class AppLocalizations {
   /// **'Verify contacts'**
   String get contactVerifyNumberTitle;
 
+  /// No description provided for @verifyUserIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify {username}\'s identity'**
+  String verifyUserIdentity(Object username);
+
   /// No description provided for @contactVerifyNumberSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Verify the identity of your contacts to make sure you are texting the right person.'**
   String get contactVerifyNumberSubtitle;
 
+  /// No description provided for @inChatContactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact not verified.'**
+  String get inChatContactNotVerified;
+
+  /// No description provided for @groupMembersNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members are not verified.'**
+  String groupMembersNotVerified(Object count);
+
   /// No description provided for @userVerifiedTitle.
   ///
   /// In en, this message translates to:
   /// **'Contact verified'**
   String get userVerifiedTitle;
+
+  /// No description provided for @scanUserQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan {username}\'s QR code'**
+  String scanUserQrCode(Object username);
+
+  /// No description provided for @openOwnQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your own QR code'**
+  String get openOwnQrCode;
 
   /// No description provided for @contactVerifiedBy.
   ///
@@ -1603,6 +1591,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change password'**
   String get backupChangePassword;
+
+  /// No description provided for @backupChangePasswordAuthReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing backup password'**
+  String get backupChangePasswordAuthReason;
+
+  /// No description provided for @backupChangePasswordAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only change your password after you have authenticated!'**
+  String get backupChangePasswordAuthFailed;
 
   /// No description provided for @twonlySafeRecoverTitle.
   ///
@@ -2372,6 +2372,12 @@ abstract class AppLocalizations {
   /// **'Let a friend scan this QR code to add you'**
   String get addContactQrSheetSubtext;
 
+  /// No description provided for @letUserScanQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Let {username} scan this QR code'**
+  String letUserScanQrCode(Object username);
+
   /// No description provided for @finishSetupCardTitle.
   ///
   /// In en, this message translates to:
@@ -2729,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationBadgeGeneralDesc.
   ///
   /// In en, this message translates to:
-  /// **'The badge *protects you from scammers and attackers*. It will be displayed next to a contact that has been *manually verified* by you or a friend.'**
+  /// **'The badge gives you the peace of mind that you are messaging the *right person* and your *messages remain confidential*.'**
   String get verificationBadgeGeneralDesc;
 
   /// No description provided for @verificationBadgeGreenDesc.
@@ -2756,11 +2762,29 @@ abstract class AppLocalizations {
   /// **'Scan now'**
   String get scanNow;
 
+  /// No description provided for @qrScannerVerifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)'**
+  String get qrScannerVerifyHint;
+
+  /// No description provided for @qrScannerVerifyUserHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To verify, {username} must open their QR code (Chat Lists > QR code button at the bottom right)'**
+  String qrScannerVerifyUserHint(Object username);
+
   /// No description provided for @openQrCode.
   ///
   /// In en, this message translates to:
   /// **'Open QR code'**
   String get openQrCode;
+
+  /// No description provided for @letFriendScanQrToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Let a friend scan this QR code to verify you'**
+  String get letFriendScanQrToVerify;
 
   /// No description provided for @deleteVerificationTitle.
   ///
@@ -3659,6 +3683,456 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset'**
   String get avatarCustomizeReset;
+
+  /// No description provided for @passwordlessRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwordless Recovery'**
+  String get passwordlessRecovery;
+
+  /// No description provided for @passwordlessRecoveryNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get passwordlessRecoveryNotConfigured;
+
+  /// No description provided for @passwordlessRecoveryTestPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Test PIN'**
+  String get passwordlessRecoveryTestPin;
+
+  /// No description provided for @passwordlessRecoveryTestPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test PIN'**
+  String get passwordlessRecoveryTestPinTitle;
+
+  /// No description provided for @passwordlessRecoveryTestPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get passwordlessRecoveryTestPinHint;
+
+  /// No description provided for @passwordlessRecoveryTestPinCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN is correct!'**
+  String get passwordlessRecoveryTestPinCorrect;
+
+  /// No description provided for @passwordlessRecoveryTestPinIncorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN.'**
+  String get passwordlessRecoveryTestPinIncorrect;
+
+  /// No description provided for @passwordlessRecoveryTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get passwordlessRecoveryTest;
+
+  /// No description provided for @passwordlessRecoverySecondFactorNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get passwordlessRecoverySecondFactorNone;
+
+  /// No description provided for @passwordlessRecoverySecondFactorEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email ({email})'**
+  String passwordlessRecoverySecondFactorEmailLabel(Object email);
+
+  /// No description provided for @passwordlessRecoverySecondFactorPin.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get passwordlessRecoverySecondFactorPin;
+
+  /// No description provided for @passwordlessRecoverySecondFactorEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get passwordlessRecoverySecondFactorEmail;
+
+  /// No description provided for @passwordlessRecoveryModify.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify Recovery Settings'**
+  String get passwordlessRecoveryModify;
+
+  /// No description provided for @passwordlessRecoveryModifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your recovery configuration'**
+  String get passwordlessRecoveryModifyDesc;
+
+  /// No description provided for @passwordlessRecoverySecondFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Second Factor'**
+  String get passwordlessRecoverySecondFactor;
+
+  /// No description provided for @passwordlessRecoveryNoFriendsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No trusted friends found.'**
+  String get passwordlessRecoveryNoFriendsFound;
+
+  /// No description provided for @passwordlessRecoveryActiveFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Friends'**
+  String get passwordlessRecoveryActiveFriends;
+
+  /// No description provided for @passwordlessRecoveryActiveFriendsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'These trusted friends are actively using twonly and can probably help you recover your account.'**
+  String get passwordlessRecoveryActiveFriendsDesc;
+
+  /// No description provided for @passwordlessRecoveryInactiveFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive Friends'**
+  String get passwordlessRecoveryInactiveFriends;
+
+  /// No description provided for @passwordlessRecoveryInactiveFriendsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.'**
+  String get passwordlessRecoveryInactiveFriendsDesc;
+
+  /// No description provided for @passwordlessRecoveryNotEnoughFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough friends selected. You need at least 3.'**
+  String get passwordlessRecoveryNotEnoughFriends;
+
+  /// No description provided for @passwordlessRecoveryLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get passwordlessRecoveryLoading;
+
+  /// No description provided for @passwordlessRecoveryEnableSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwordless recovery successfully enabled!'**
+  String get passwordlessRecoveryEnableSuccess;
+
+  /// No description provided for @passwordlessRecoveryEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to enable passwordless recovery.'**
+  String get passwordlessRecoveryEnableFailed;
+
+  /// No description provided for @passwordlessRecoveryNeedAtLeast3.
+  ///
+  /// In en, this message translates to:
+  /// **'You need at least 3 trusted friends.'**
+  String get passwordlessRecoveryNeedAtLeast3;
+
+  /// No description provided for @passwordlessRecoveryInvalidPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid PIN'**
+  String get passwordlessRecoveryInvalidPin;
+
+  /// No description provided for @passwordlessRecoveryEnterPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a PIN.'**
+  String get passwordlessRecoveryEnterPin;
+
+  /// No description provided for @passwordlessRecoveryPinMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must be at least 4 digits.'**
+  String get passwordlessRecoveryPinMinLength;
+
+  /// No description provided for @passwordlessRecoveryEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an email address.'**
+  String get passwordlessRecoveryEnterEmail;
+
+  /// No description provided for @passwordlessRecoveryEnableBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Passwordless Recovery'**
+  String get passwordlessRecoveryEnableBtn;
+
+  /// No description provided for @passwordlessRecoveryRecoverBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover passwordless'**
+  String get passwordlessRecoveryRecoverBtn;
+
+  /// No description provided for @passwordlessRecoveryModifyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Modify Passwordless Recovery'**
+  String get passwordlessRecoveryModifyBtn;
+
+  /// No description provided for @passwordlessRecoveryStatusEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled • {count} trusted friends'**
+  String passwordlessRecoveryStatusEnabled(num count);
+
+  /// No description provided for @passwordlessRecoveryInfoHowItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get passwordlessRecoveryInfoHowItWorks;
+
+  /// No description provided for @passwordlessRecoveryInfoHowItWorksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.'**
+  String get passwordlessRecoveryInfoHowItWorksDesc;
+
+  /// No description provided for @passwordlessRecoveryInfoWhySecondFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Why a Second Factor?'**
+  String get passwordlessRecoveryInfoWhySecondFactor;
+
+  /// No description provided for @passwordlessRecoveryInfoWhySecondFactorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.'**
+  String get passwordlessRecoveryInfoWhySecondFactorDesc;
+
+  /// No description provided for @passwordlessRecoveryInfoGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get passwordlessRecoveryInfoGotIt;
+
+  /// No description provided for @passwordlessRecoveryMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Second factor method'**
+  String get passwordlessRecoveryMethod;
+
+  /// No description provided for @passwordlessRecoveryMethodNoneDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.'**
+  String get passwordlessRecoveryMethodNoneDesc;
+
+  /// No description provided for @passwordlessRecoveryMethodPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN'**
+  String get passwordlessRecoveryMethodPinHint;
+
+  /// No description provided for @passwordlessRecoveryMethodEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter recovery email address'**
+  String get passwordlessRecoveryMethodEmailHint;
+
+  /// No description provided for @passwordlessRecoveryMethodEmailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email address is *never stored on the server* and is only sent to it in the event of a recovery.'**
+  String get passwordlessRecoveryMethodEmailDesc;
+
+  /// No description provided for @passwordlessRecoveryThresholdDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'To recover your account you need {count} of your selected trusted friends.'**
+  String passwordlessRecoveryThresholdDesc(num count);
+
+  /// No description provided for @passwordlessRecoveryThresholdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Required trusted friends for recovery'**
+  String get passwordlessRecoveryThresholdTitle;
+
+  /// No description provided for @passwordlessRecoverySelectFriendsNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Select friends ({count} more needed)'**
+  String passwordlessRecoverySelectFriendsNeeded(num count);
+
+  /// No description provided for @passwordlessRecoverySelectFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Select trusted friends'**
+  String get passwordlessRecoverySelectFriends;
+
+  /// No description provided for @passwordlessRecoveryNoFriendsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No trusted friends selected yet'**
+  String get passwordlessRecoveryNoFriendsSelected;
+
+  /// No description provided for @passwordlessRecoverySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover your identity without a password.'**
+  String get passwordlessRecoverySubtitle;
+
+  /// No description provided for @recoverPasswordlessExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'If enabled, you can recover your account by asking your selected friends to help you.'**
+  String get recoverPasswordlessExplanation;
+
+  /// No description provided for @recoverPasswordlessNotificationCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get recoverPasswordlessNotificationCardTitle;
+
+  /// No description provided for @recoverPasswordlessNotificationCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a friend has helped you recover your account.'**
+  String get recoverPasswordlessNotificationCardSubtitle;
+
+  /// No description provided for @recoverPasswordlessNotificationCardBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable push notifications'**
+  String get recoverPasswordlessNotificationCardBtn;
+
+  /// No description provided for @recoverPasswordlessQrInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Let friends scan the QR code or share the link.'**
+  String get recoverPasswordlessQrInstructions;
+
+  /// No description provided for @recoverPasswordlessShareBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Recovery Link'**
+  String get recoverPasswordlessShareBtn;
+
+  /// No description provided for @recoverPasswordlessCopyBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get recoverPasswordlessCopyBtn;
+
+  /// No description provided for @recoverPasswordlessCopiedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard!'**
+  String get recoverPasswordlessCopiedSnackbar;
+
+  /// No description provided for @passwordlessRecoveryNoShareStored.
+  ///
+  /// In en, this message translates to:
+  /// **'No recovery share stored for this contact.'**
+  String get passwordlessRecoveryNoShareStored;
+
+  /// No description provided for @passwordlessRecoveryShareSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery share successfully sent!'**
+  String get passwordlessRecoveryShareSent;
+
+  /// No description provided for @passwordlessRecoveryNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error, please ensure you have internet'**
+  String get passwordlessRecoveryNetworkError;
+
+  /// No description provided for @passwordlessRecoveryInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'The email address is invalid.'**
+  String get passwordlessRecoveryInvalidEmail;
+
+  /// No description provided for @passwordlessRecoveryResendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend recovery email'**
+  String get passwordlessRecoveryResendEmail;
+
+  /// No description provided for @passwordlessRecoveryHelpAFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Help a Friend'**
+  String get passwordlessRecoveryHelpAFriend;
+
+  /// No description provided for @passwordlessRecoverySelectContactDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select the contact who requested recovery below to send them their recovery key.'**
+  String get passwordlessRecoverySelectContactDesc;
+
+  /// No description provided for @passwordlessRecoverySearchContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get passwordlessRecoverySearchContacts;
+
+  /// No description provided for @passwordlessRecoveryNoContactsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts found'**
+  String get passwordlessRecoveryNoContactsFound;
+
+  /// No description provided for @passwordlessRecoveryCantHelpHim.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t help him'**
+  String get passwordlessRecoveryCantHelpHim;
+
+  /// No description provided for @passwordlessRecoveryDoesAskedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Does {username} has asked you?'**
+  String passwordlessRecoveryDoesAskedYou(Object username);
+
+  /// No description provided for @passwordlessRecoveryVerifySourceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.'**
+  String get passwordlessRecoveryVerifySourceDesc;
+
+  /// No description provided for @passwordlessRecoveryNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get passwordlessRecoveryNo;
+
+  /// No description provided for @passwordlessRecoveryYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get passwordlessRecoveryYes;
+
+  /// No description provided for @passwordlessRecoveryYesWithTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes ({seconds}s)'**
+  String passwordlessRecoveryYesWithTimer(Object seconds);
+
+  /// No description provided for @recoverPasswordlessBeingRecoveredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Account being recovered'**
+  String get recoverPasswordlessBeingRecoveredLabel;
+
+  /// No description provided for @recoverPasswordlessSharesReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'{received} of {threshold} friends have shared'**
+  String recoverPasswordlessSharesReceived(Object received, Object threshold);
+
+  /// No description provided for @recoverPasswordlessRecoverNowBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Recover now'**
+  String get recoverPasswordlessRecoverNowBtn;
 }
 
 class _AppLocalizationsDelegate

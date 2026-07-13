@@ -16,6 +16,7 @@ class Routes {
   static String profileContact(int contactId) => '/profile/contact/$contactId';
 
   static const String cameraQRScanner = '/camera/qr_scanner';
+  static const String recoverPasswordless = '/recover/passwordless';
 
   static const String settings = '/settings';
   static const String settingsProfile = '/settings/profile';
@@ -35,8 +36,6 @@ class Routes {
       '/settings/privacy/block_users';
   static const String settingsPrivacyUserDiscovery =
       '/settings/privacy/user_discovery';
-  static const String settingsPrivacyProfileSelection =
-      '/settings/privacy/profile_selection';
   static const String settingsNotification = '/settings/notification';
   static const String settingsStorage = '/settings/storage_data';
   static const String settingsStorageManage = '/settings/storage_data/manage';

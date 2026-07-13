@@ -83,7 +83,12 @@ class _PublicProfileViewState extends State<PublicProfileView> {
           BetterListTile(
             leading: const FaIcon(FontAwesomeIcons.qrcode),
             text: context.lang.scanOtherProfile,
-            onTap: () => context.push(Routes.cameraQRScanner),
+            onTap: () => context.push(
+              Routes.cameraQRScanner,
+              extra: {
+                'openToVerify': true,
+              },
+            ),
           ),
           BetterListTile(
             leading: const FaIcon(
@@ -98,7 +103,8 @@ class _PublicProfileViewState extends State<PublicProfileView> {
                   ),
             onTap: () {
               final params = ShareParams(
-                text: 'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(_publicKey!)}',
+                text:
+                    'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(_publicKey!)}',
               );
               SharePlus.instance.share(params);
             },

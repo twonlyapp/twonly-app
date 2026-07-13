@@ -35,7 +35,6 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
 - Open Source and can be downloaded directly from GitHub
 - No email or phone number required to register
-- Privacy friendly - Everything is stored on the device
 - The backend is hosted exclusively in Europe
 
 ## Roadmap
@@ -43,7 +42,6 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 ### Currently
 
 - Focus on user-friendliness so that people enjoy using the app
-    - User discovery without a phone number
     - Passwordless recovery without a phone number
 - Implementation of features so that Snapchat can actually be replaced
     - E2EE cloud backup of memories
@@ -63,36 +61,9 @@ If you discover a security issue in twonly, please adhere to the coordinated vul
 us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not
 guarantee a bounty currently :/
 
-<!-- ## Contribution
+## Contribution
 
-If you have any questions or feature requests, feel free to start a new discussion. Issues are limited to bugs, and for maintainers only. -->
-
-## Development
-
-<details>
-<summary>Setup Instructions (macOS)</summary>
-
-## Building
-
-Some dependencies are downloaded directly from the source as there are some new changes which are not yet published on
-pub.dev or because they require some special installation.
-
-```bash
-git submodule update --init --recursive
-
-cd dependencies/flutter_zxing
-git submodule update --init --recursive
-./scripts/update_ios_macos_src.s
-```
-
-## Debugging files
-
-```bash
-run-as eu.twonly.testing ls /data/user/0/eu.twonly.testing/
-```
-
-</details>
-
+Currently there are still some core features and rewrites open I want to do like the switch to the MLS protocol involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
 
 ## Signing Keys
 

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -184,23 +185,51 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
         results[user]!.add(relationData);
       }
 
+      final threshold = userService.currentUser.userDiscoveryThreshold;
+      results.removeWhere((user, relations) => relations.length < threshold);
+
       return results;
     });
   }
 
   Stream<int> watchNewAnnouncementsWithDataCount() {
-    final countExp = userDiscoveryAnnouncedUsers.announcedUserId.count();
+    final announcedContact = alias(contacts, 'announcedContact');
+    final query =
+        select(userDiscoveryAnnouncedUsers).join([
+          innerJoin(
+            userDiscoveryUserRelations,
+            userDiscoveryUserRelations.announcedUserId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+          leftOuterJoin(
+            announcedContact,
+            announcedContact.userId.equalsExp(
+              userDiscoveryAnnouncedUsers.announcedUserId,
+            ),
+          ),
+        ])..where(
+          // Filters: Has a username AND has not been shown to the user yet AND is not an existing contact
+          userDiscoveryAnnouncedUsers.username.isNotNull() &
+              userDiscoveryAnnouncedUsers.wasShownToTheUser.equals(false) &
+              userDiscoveryAnnouncedUsers.isHidden.equals(false) &
+              (announcedContact.userId.isNull() |
+                  announcedContact.deletedByUser.equals(true)),
+        );
 
-    final query = selectOnly(userDiscoveryAnnouncedUsers)
-      ..addColumns([countExp])
-      ..where(
-        // Filters: Has a username AND has not been shown to the user yet
-        userDiscoveryAnnouncedUsers.username.isNotNull() &
-            userDiscoveryAnnouncedUsers.wasShownToTheUser.equals(false) &
-            userDiscoveryAnnouncedUsers.isHidden.equals(false),
-      );
+    return query.watch().map((rows) {
+      final relationCounts = <int, int>{};
+      for (final row in rows) {
+        final announcedUserId = row
+            .readTable(userDiscoveryAnnouncedUsers)
+            .announcedUserId;
+        relationCounts[announcedUserId] =
+            (relationCounts[announcedUserId] ?? 0) + 1;
+      }
 
-    return query.watchSingle().map((row) => row.read(countExp) ?? 0);
+      final threshold = userService.currentUser.userDiscoveryThreshold;
+      return relationCounts.values.where((count) => count >= threshold).length;
+    });
   }
 
   Future<void> markAllValidAnnouncedUsersAsShown() async {
@@ -235,9 +264,9 @@ class UserDiscoveryDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Stream<UserDiscoveryAnnouncedUser?> watchAnnouncedUser(int id) {
-    return (select(userDiscoveryAnnouncedUsers)
-          ..where((tbl) => tbl.announcedUserId.equals(id)))
-        .watchSingleOrNull();
+    return (select(
+      userDiscoveryAnnouncedUsers,
+    )..where((tbl) => tbl.announcedUserId.equals(id))).watchSingleOrNull();
   }
 
   Stream<List<UserDiscoveryAnnouncedUser>> watchAllAnnouncedUsers() =>

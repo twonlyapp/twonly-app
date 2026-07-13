@@ -7,6 +7,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/bridge/wrapper/backup.dart';
+import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -19,6 +20,8 @@ import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
+
+import '../mocks/platform_channels.dart';
 
 void main() {
   if (!Platform.isMacOS) {
@@ -36,6 +39,17 @@ void main() {
         .setMockMethodCallHandler(channel, (methodCall) async {
           if (methodCall.method == 'enqueue') {
             return true;
+          }
+          return null;
+        });
+
+    const pathProviderChannel = MethodChannel(
+      'plugins.flutter.io/path_provider',
+    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, (methodCall) async {
+          if (methodCall.method == 'getApplicationSupportDirectory') {
+            return tempDir.path;
           }
           return null;
         });
@@ -66,6 +80,7 @@ void main() {
   });
 
   setUp(() async {
+    setupPlatformChannelMocks();
     await locator.reset();
     final dbFile = File('${tempDir.path}/twonly.sqlite');
     locator
@@ -228,6 +243,24 @@ void main() {
           restoredUserData?['username'],
           equals(initialUserData['username']),
         );
+      },
+    );
+
+    test(
+      'startPasswordlessBackupRecovery restores identity and returns tryAgainLater on download',
+      () async {
+        final keyManagerBytes = await RustKeyManager.serialize();
+
+        final error = await BackupService.startPasswordlessBackupRecovery(
+          1,
+          'test_user',
+          keyManagerBytes,
+        );
+        expect(error, RecoveryError.tryAgainLater);
+
+        // Verify key manager was imported successfully
+        final recoveredUserId = await RustKeyManager.getUserId();
+        expect(recoveredUserId, 1);
       },
     );
   });

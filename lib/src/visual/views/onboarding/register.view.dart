@@ -169,7 +169,7 @@ class _RegisterViewState extends State<RegisterView> {
       await apiService.authenticate();
       widget.callbackOnSuccess();
     } catch (e, stack) {
-      Log.error('Error creating new user', e, stack);
+      Log.error('Error creating new user', error: e, stackTrace: stack);
       if (mounted) {
         setState(() {
           _isTryingToRegister = false;

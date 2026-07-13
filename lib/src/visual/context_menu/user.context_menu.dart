@@ -17,12 +17,13 @@ class UserContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigator = Navigator.of(context);
     return ContextMenu(
       minWidth: 150,
       items: [
         ContextMenuItem(
           title: context.lang.contextMenuUserProfile,
-          onTap: () => context.push(Routes.profileContact(contact.userId)),
+          onTap: () => navigator.context.push(Routes.profileContact(contact.userId)),
           icon: FontAwesomeIcons.user,
         ),
       ],
