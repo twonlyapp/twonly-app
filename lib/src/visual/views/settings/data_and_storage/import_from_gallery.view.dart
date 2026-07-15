@@ -87,7 +87,11 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
         if (exists.isNotEmpty) {
-          duplicated += 1;
+          final mediaFile = exists.first;
+          final mediaService = MediaFileService(mediaFile);
+          await mediaService.storedPath.parent.create(recursive: true);
+          await File(mediaService.storedPath.path).writeAsBytes(bytes);
+          importedCount++;
           continue;
         }
 
@@ -371,13 +375,17 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           try {
             final assetName = await asset.titleAsync;
             final dotIndex = assetName.lastIndexOf('.');
-            final baseName = dotIndex != -1 ? assetName.substring(0, dotIndex) : assetName;
+            final baseName = dotIndex != -1
+                ? assetName.substring(0, dotIndex)
+                : assetName;
 
             final uuidRegex = RegExp(
               r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
             );
             if (uuidRegex.hasMatch(baseName)) {
-              final existing = await twonlyDB.mediaFilesDao.getMediaFileById(baseName);
+              final existing = await twonlyDB.mediaFilesDao.getMediaFileById(
+                baseName,
+              );
               if (existing != null) {
                 final mediaService = MediaFileService(existing);
                 if (!mediaService.storedPath.existsSync()) {
@@ -388,7 +396,9 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
                       stored: const Value(true),
                     ),
                   );
-                  mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(baseName);
+                  mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+                    baseName,
+                  );
                   isRestored = true;
                 }
               }
