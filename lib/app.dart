@@ -15,7 +15,6 @@ import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
-import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -182,11 +181,6 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       context,
       handleShareLink,
     );
-
-    _emailTokenSub = PasswordlessRecoveryService.onEmailTokenReceived.stream
-        .listen((token) {
-          routerProvider.go(Routes.recoverPasswordless, extra: token);
-        });
   }
 
   Future<void> initAsync() async {

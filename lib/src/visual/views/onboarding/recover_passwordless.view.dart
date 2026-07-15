@@ -60,26 +60,21 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   @override
   void initState() {
     super.initState();
-    _secondFactorController.text = widget.initialEmailToken ?? '';
+    final token =
+        widget.initialEmailToken ?? PasswordlessRecoveryService.lastEmailToken;
+    _secondFactorController.text = token ?? '';
+
     _emailTokenSubscription = PasswordlessRecoveryService
         .onEmailTokenReceived
         .stream
         .listen((token) async {
           if (mounted) {
-            final state = _onboardingState;
-            if (state != null && !state.emailRecoveryRequested) {
-              state.emailRecoveryRequested = true;
-              await KeyValueStore.update<OnboardingState>(
-                key: KeyValueKeys.onboardingState,
-                update: (s) => s.emailRecoveryRequested = true,
-              );
-            }
             setState(() {
               _secondFactorController.text = token;
             });
           }
         });
-    _initAsync();
+    _initAsync(token);
   }
 
   @override
@@ -90,14 +85,14 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
     super.dispose();
   }
 
-  Future<void> _initAsync() async {
+  Future<void> _initAsync(String? initialToken) async {
     try {
       // 1. Load OnboardingState
       final state = await KeyValueStore.getModel<OnboardingState>(
         KeyValueKeys.onboardingState,
       );
 
-      if (widget.initialEmailToken != null && !state.emailRecoveryRequested) {
+      if (initialToken != null && !state.emailRecoveryRequested) {
         state.emailRecoveryRequested = true;
         await KeyValueStore.update<OnboardingState>(
           key: KeyValueKeys.onboardingState,

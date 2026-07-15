@@ -202,11 +202,13 @@ TwonlySafeBackup _$TwonlySafeBackupFromJson(Map<String, dynamic> json) =>
             .map((e) => (e as num).toInt())
             .toList(),
       )
-      ..lastBackupSize = (json['lastBackupSize'] as num).toInt()
-      ..backupUploadState = $enumDecode(
-        _$LastBackupUploadStateEnumMap,
-        json['backupUploadState'],
-      )
+      ..lastBackupSize = (json['lastBackupSize'] as num?)?.toInt() ?? 0
+      ..backupUploadState =
+          $enumDecodeNullable(
+            _$LastBackupUploadStateEnumMap,
+            json['backupUploadState'],
+          ) ??
+          LastBackupUploadState.none
       ..lastBackupDone = json['lastBackupDone'] == null
           ? null
           : DateTime.parse(json['lastBackupDone'] as String);
@@ -230,7 +232,7 @@ const _$LastBackupUploadStateEnumMap = {
 
 PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
-) => PasswordLessRecovery((json['threshold'] as num).toInt())
+) => PasswordLessRecovery((json['threshold'] as num?)?.toInt() ?? 2)
   ..email = json['email'] as String?
   ..pinSeed = (json['pinSeed'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())

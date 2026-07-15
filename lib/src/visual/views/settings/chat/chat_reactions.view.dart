@@ -75,10 +75,16 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
                       ? context.color.primary.withAlpha(150)
                       : context.color.surface,
                   child: Center(
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 32),
-                    ),
+                    child: isSelected
+                        ? SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: EmojiAnimationComp(emoji: emoji),
+                          )
+                        : Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 32),
+                          ),
                   ),
                 ),
               );

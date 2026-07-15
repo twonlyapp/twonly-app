@@ -245,7 +245,7 @@ class EmojiAnimationComp extends StatelessWidget {
       return Lottie.asset(
         'assets/animated_icons/${animatedIcons[emoji]}',
         repeat: repeat,
-        renderCache: RenderCache.raster,
+        renderCache: RenderCache.drawingCommands,
       );
     } else if (isOneEmoji(emoji)) {
       return Text(

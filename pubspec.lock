@@ -1266,7 +1266,7 @@ packages:
       path: "dependencies/lottie"
       relative: true
     source: path
-    version: "3.3.2"
+    version: "3.5.1"
   markdown:
     dependency: transitive
     description:

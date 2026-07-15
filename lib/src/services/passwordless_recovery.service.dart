@@ -36,6 +36,8 @@ class PasswordlessRecoveryService {
   static final StreamController<String> onEmailTokenReceived =
       StreamController<String>.broadcast();
 
+  static String? lastEmailToken;
+
   static String linkPrefix = 'https://me.twonly.eu/r/#';
 
   static final Set<String> _handledNotificationIds = {};
@@ -48,6 +50,7 @@ class PasswordlessRecoveryService {
     final parts = fragment.split('/');
     if (parts.length < 2) {
       if (fragment.isNotEmpty) {
+        lastEmailToken = fragment;
         onEmailTokenReceived.add(fragment);
       }
       return;

@@ -195,8 +195,12 @@ class TwonlySafeBackup {
   factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
       _$TwonlySafeBackupFromJson(json);
 
+  @JsonKey(defaultValue: 0)
   int lastBackupSize = 0;
+
+  @JsonKey(defaultValue: LastBackupUploadState.none)
   LastBackupUploadState backupUploadState = LastBackupUploadState.none;
+
   DateTime? lastBackupDone;
   List<int> backupId;
   List<int> encryptionKey;
@@ -216,6 +220,7 @@ class PasswordLessRecovery {
   // <--
   // Data shared with trusted friends
 
+  @JsonKey(defaultValue: 2)
   int threshold;
   // Trusted friends are able to brute-force the pin -> Server delets after X tries
   List<int>? pinSeed;
