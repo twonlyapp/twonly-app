@@ -174,18 +174,22 @@ class _UserListItem extends State<GroupListItemComp> {
   /// Fetches any media files referenced by preview messages but not yet in the
   /// local cache. Fire-and-forget; updates state when results arrive.
   Future<void> _fetchMissingMediaFiles() async {
+    final missing = <MediaFile>[];
     for (final message in _previewMessages) {
       if (message.mediaId != null &&
           !_previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
         final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
           message.mediaId!,
         );
-        if (mediaFile != null && mounted) {
-          setState(() {
-            _previewMediaFiles.add(mediaFile);
-          });
+        if (mediaFile != null) {
+          missing.add(mediaFile);
         }
       }
+    }
+    if (missing.isNotEmpty && mounted) {
+      setState(() {
+        _previewMediaFiles.addAll(missing);
+      });
     }
   }
 

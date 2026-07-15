@@ -26,11 +26,6 @@ class _LastMessageTimeCompState extends State<LastMessageTimeComp> {
   void initState() {
     super.initState();
     _loadTargetTime();
-
-    updateTime = Timer.periodic(
-      const Duration(milliseconds: 500),
-      (_) => _updateSeconds(),
-    );
   }
 
   @override
@@ -66,6 +61,16 @@ class _LastMessageTimeCompState extends State<LastMessageTimeComp> {
     setState(() {
       lastMessageInSeconds = seconds < 0 ? 0 : seconds;
     });
+
+    var nextTickMs = 1000;
+    if (lastMessageInSeconds >= 120 && lastMessageInSeconds < 3600) {
+      nextTickMs = 30000;
+    } else if (lastMessageInSeconds >= 3600) {
+      nextTickMs = 60000;
+    }
+
+    updateTime?.cancel();
+    updateTime = Timer(Duration(milliseconds: nextTickMs), _updateSeconds);
   }
 
   @override

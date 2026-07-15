@@ -98,6 +98,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
             height: 11,
             child: EmojiAnimationComp(
               emoji: '⌛',
+              repeat: false,
             ),
           ),
       ],

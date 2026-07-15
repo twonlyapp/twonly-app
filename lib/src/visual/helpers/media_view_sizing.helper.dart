@@ -22,15 +22,14 @@ class _MediaViewSizingHelperState extends State<MediaViewSizingHelper> {
   @override
   Widget build(BuildContext context) {
     var needToDownSizeImage = false;
-    var availableHeight = MediaQuery.of(context).size.height;
 
-    // Get the screen size and safe area padding
-    final screenSize = MediaQuery.of(context).size;
-    final safeAreaPadding = MediaQuery.of(context).padding;
+    // Use narrow MediaQuery selectors to avoid rebuilding on keyboard inset changes
+    final screenSize = MediaQuery.sizeOf(context);
+    final safeAreaPadding = MediaQuery.paddingOf(context);
 
     // Calculate the available width and height
     final availableWidth = screenSize.width;
-    availableHeight =
+    final availableHeight =
         screenSize.height -
         safeAreaPadding.top -
         safeAreaPadding.bottom -
