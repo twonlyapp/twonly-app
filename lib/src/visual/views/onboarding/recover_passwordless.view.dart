@@ -26,6 +26,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/animated_bell_icon.comp.dart';
@@ -337,7 +338,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           if (mounted) {
             showSnackbar(
               context,
-              context.lang.passwordlessRecoveryShareSent,
+              context.lang.passwordlessRecoveryEmailSent,
               level: SnackbarLevel.success,
             );
           }
@@ -511,29 +512,26 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         const SizedBox(height: 24),
 
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               context.lang.recoverPasswordlessSharesReceived(
                 shares.length,
                 threshold,
               ),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const Spacer(),
-            if (thresholdReached)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-                size: 20,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: LinearProgressIndicator(
             value: shares.length / threshold,
-            minHeight: 8,
+            minHeight: 12,
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.08),
@@ -542,16 +540,16 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-
-        ...shares.map(
-          (share) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              share.trustedFriendDisplayName,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
+        const SizedBox(height: 24),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: shares.map((share) {
+            return ContactChip(
+              username: share.trustedFriendDisplayName,
+            );
+          }).toList(),
         ),
 
         const SizedBox(height: 24),

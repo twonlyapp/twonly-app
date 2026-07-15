@@ -2226,14 +2226,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoHowItWorksDesc =>
-      'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.';
+      'twonly operates without phone numbers, which is why we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined number of these friends must combine their shares.';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactor => 'Why a Second Factor?';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactorDesc =>
-      'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.';
+      'The second factor (Email or PIN) provides important additional protection. Even if your friends were to secretly team up, they still couldn\'t access your account without this second factor.';
 
   @override
   String get passwordlessRecoveryInfoGotIt => 'Got it';
@@ -2272,6 +2272,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordlessRecoverySelectFriends => 'Select trusted friends';
+
+  @override
+  String get passwordlessRecoveryTrustedFriends => 'Trusted Friends';
+
+  @override
+  String passwordlessRecoveryDoneBtn(num count) {
+    return 'Done ($count)';
+  }
 
   @override
   String get passwordlessRecoveryNoFriendsSelected =>
@@ -2314,8 +2322,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No recovery share stored for this contact.';
 
   @override
-  String get passwordlessRecoveryShareSent =>
-      'Recovery share successfully sent!';
+  String get passwordlessRecoveryEmailSent => 'Recovery email sent!';
+
+  @override
+  String get passwordlessRecoveryShareSent => 'Recovery share sent!';
 
   @override
   String get passwordlessRecoveryNetworkError =>
@@ -2342,16 +2352,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryNoContactsFound => 'No contacts found';
 
   @override
-  String get passwordlessRecoveryCantHelpHim => 'You can\'t help him';
+  String get passwordlessRecoveryCantHelpHim => 'You can\'t help this person';
 
   @override
   String passwordlessRecoveryDoesAskedYou(Object username) {
-    return 'Does $username has asked you?';
+    return 'Has $username asked you?';
   }
 
   @override
   String get passwordlessRecoveryVerifySourceDesc =>
-      'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.';
+      'Please make sure this request really came from this person. If in doubt, ask them via another channel!';
 
   @override
   String get passwordlessRecoveryNo => 'No';
@@ -2370,9 +2380,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String recoverPasswordlessSharesReceived(Object received, Object threshold) {
-    return '$received of $threshold friends have shared';
+    return '$received out of $threshold friends have helped';
   }
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
+
+  @override
+  String get missingRecoveryContactsCardTitle => 'Recovery Contacts';
+
+  @override
+  String get missingRecoveryContactsCardDesc =>
+      'Select Recovery Contacts to help you recover your account without requiring a password.';
+
+  @override
+  String get missingRecoveryContactsCardAction => 'Select Contacts';
 }

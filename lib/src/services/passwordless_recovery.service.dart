@@ -8,12 +8,10 @@ import 'package:cryptography_plus/cryptography_plus.dart'
     show Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/wrapper.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart'
     show getContactDisplayName;
 import 'package:twonly/src/database/twonly.db.dart';
@@ -51,10 +49,6 @@ class PasswordlessRecoveryService {
     if (parts.length < 2) {
       if (fragment.isNotEmpty) {
         onEmailTokenReceived.add(fragment);
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && context.mounted) {
-          unawaited(context.push(Routes.recoverPasswordless, extra: fragment));
-        }
       }
       return;
     }

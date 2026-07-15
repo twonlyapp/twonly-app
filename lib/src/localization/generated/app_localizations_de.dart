@@ -2242,7 +2242,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoHowItWorksDesc =>
-      'Da twonly ohne zentrale Benutzerkonten oder Telefonnummern funktioniert, um deine Privatsphäre zu maximieren, setzen wir auf einen dezentralen Wiederherstellungsmechanismus. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine Freunde verteilt. Um den Zugriff wiederherzustellen, muss ein vorher festgelegter Schwellenwert dieser Freunde ihre Teile kombinieren.';
+      'twonly funktioniert ohne Telefonnummern, weshalb wir auf einen dezentralen Wiederherstellungsmechanismus setzen. Mit Shamir\'s Secret Sharing wird deine kryptografische Identität in unabhängige Teile aufgeteilt und an deine Freunde verteilt. Um den Zugriff wiederherzustellen, muss eine vorher festgelegte Anzahl dieser Freunde ihre Teile kombinieren.';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactor =>
@@ -2250,7 +2250,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactorDesc =>
-      'Der zweite Faktor (E-Mail oder PIN) dient als wichtiger kryptografischer Schutz vor bösartiger Absprache. Wenn sich deine Freunde hinter deinem Rücken absprechen würden, könnten sie deine Identität ohne den Schlüssel für den zweiten Faktor trotzdem nicht entschlüsseln.';
+      'Der zweite Faktor (E-Mail oder PIN) ist ein wichtiger zusätzlicher Schutz. Selbst wenn sich deine Freunde heimlich zusammentun, können sie ohne diesen zweiten Faktor nicht auf dein Konto zugreifen.';
 
   @override
   String get passwordlessRecoveryInfoGotIt => 'Verstanden';
@@ -2289,6 +2289,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoverySelectFriends => 'Freunde auswählen';
+
+  @override
+  String get passwordlessRecoveryTrustedFriends => 'Vertrauenswürdige Freunde';
+
+  @override
+  String passwordlessRecoveryDoneBtn(num count) {
+    return 'Fertig ($count)';
+  }
 
   @override
   String get passwordlessRecoveryNoFriendsSelected =>
@@ -2333,8 +2341,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kein Wiederherstellungs-Teil für diesen Kontakt gespeichert.';
 
   @override
+  String get passwordlessRecoveryEmailSent =>
+      'Wiederherstellungs-E-Mail gesendet!';
+
+  @override
   String get passwordlessRecoveryShareSent =>
-      'Wiederherstellungs-Teil erfolgreich gesendet!';
+      'Wiederherstellungs-Teil gesendet!';
 
   @override
   String get passwordlessRecoveryNetworkError =>
@@ -2361,7 +2373,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoveryNoContactsFound => 'Keine Kontakte gefunden';
 
   @override
-  String get passwordlessRecoveryCantHelpHim => 'Du kannst ihm nicht helfen';
+  String get passwordlessRecoveryCantHelpHim =>
+      'Du kannst dieser Person nicht helfen';
 
   @override
   String passwordlessRecoveryDoesAskedYou(Object username) {
@@ -2370,7 +2383,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryVerifySourceDesc =>
-      'Bitte stelle sicher, dass du den Link/QR-Code tatsächlich von deinem Freund erhalten hast! Wenn du dir unsicher bist, verifiziere dies bitte erneut und klicke dann noch einmal auf den Link oder kehre zurück.';
+      'Bitte stelle sicher, dass diese Anfrage wirklich von dieser Person stammt. Im Zweifel frage kurz über einen anderen Kanal nach!';
 
   @override
   String get passwordlessRecoveryNo => 'Nein';
@@ -2389,9 +2402,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String recoverPasswordlessSharesReceived(Object received, Object threshold) {
-    return '$received von $threshold Freunden haben geteilt';
+    return '$received von $threshold Freunden haben geholfen';
   }
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
+
+  @override
+  String get missingRecoveryContactsCardTitle => 'Vertrauenswürdige Kontakte';
+
+  @override
+  String get missingRecoveryContactsCardDesc =>
+      'Wähle Kontakte für die Kontowiederherstellung aus, die dir helfen, dein Konto ohne Passwort wiederherzustellen.';
+
+  @override
+  String get missingRecoveryContactsCardAction => 'Kontakte auswählen';
 }

@@ -21,6 +21,7 @@ import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/missing_recovery_contacts.comp.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -236,6 +237,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
           children: [
             const FinishSetupComp(),
             const MissingBackupComp(),
+            const MissingRecoveryContactsComp(),
             if (_loading)
               const Expanded(
                 child: SizedBox.shrink(),

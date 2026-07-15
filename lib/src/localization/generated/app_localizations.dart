@@ -3891,7 +3891,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryInfoHowItWorksDesc.
   ///
   /// In en, this message translates to:
-  /// **'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.'**
+  /// **'twonly operates without phone numbers, which is why we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined number of these friends must combine their shares.'**
   String get passwordlessRecoveryInfoHowItWorksDesc;
 
   /// No description provided for @passwordlessRecoveryInfoWhySecondFactor.
@@ -3903,7 +3903,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryInfoWhySecondFactorDesc.
   ///
   /// In en, this message translates to:
-  /// **'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.'**
+  /// **'The second factor (Email or PIN) provides important additional protection. Even if your friends were to secretly team up, they still couldn\'t access your account without this second factor.'**
   String get passwordlessRecoveryInfoWhySecondFactorDesc;
 
   /// No description provided for @passwordlessRecoveryInfoGotIt.
@@ -3965,6 +3965,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select trusted friends'**
   String get passwordlessRecoverySelectFriends;
+
+  /// No description provided for @passwordlessRecoveryTrustedFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted Friends'**
+  String get passwordlessRecoveryTrustedFriends;
+
+  /// No description provided for @passwordlessRecoveryDoneBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ({count})'**
+  String passwordlessRecoveryDoneBtn(num count);
 
   /// No description provided for @passwordlessRecoveryNoFriendsSelected.
   ///
@@ -4032,10 +4044,16 @@ abstract class AppLocalizations {
   /// **'No recovery share stored for this contact.'**
   String get passwordlessRecoveryNoShareStored;
 
+  /// No description provided for @passwordlessRecoveryEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery email sent!'**
+  String get passwordlessRecoveryEmailSent;
+
   /// No description provided for @passwordlessRecoveryShareSent.
   ///
   /// In en, this message translates to:
-  /// **'Recovery share successfully sent!'**
+  /// **'Recovery share sent!'**
   String get passwordlessRecoveryShareSent;
 
   /// No description provided for @passwordlessRecoveryNetworkError.
@@ -4083,19 +4101,19 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryCantHelpHim.
   ///
   /// In en, this message translates to:
-  /// **'You can\'t help him'**
+  /// **'You can\'t help this person'**
   String get passwordlessRecoveryCantHelpHim;
 
   /// No description provided for @passwordlessRecoveryDoesAskedYou.
   ///
   /// In en, this message translates to:
-  /// **'Does {username} has asked you?'**
+  /// **'Has {username} asked you?'**
   String passwordlessRecoveryDoesAskedYou(Object username);
 
   /// No description provided for @passwordlessRecoveryVerifySourceDesc.
   ///
   /// In en, this message translates to:
-  /// **'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.'**
+  /// **'Please make sure this request really came from this person. If in doubt, ask them via another channel!'**
   String get passwordlessRecoveryVerifySourceDesc;
 
   /// No description provided for @passwordlessRecoveryNo.
@@ -4125,7 +4143,7 @@ abstract class AppLocalizations {
   /// No description provided for @recoverPasswordlessSharesReceived.
   ///
   /// In en, this message translates to:
-  /// **'{received} of {threshold} friends have shared'**
+  /// **'{received} out of {threshold} friends have helped'**
   String recoverPasswordlessSharesReceived(Object received, Object threshold);
 
   /// No description provided for @recoverPasswordlessRecoverNowBtn.
@@ -4133,6 +4151,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recover now'**
   String get recoverPasswordlessRecoverNowBtn;
+
+  /// No description provided for @missingRecoveryContactsCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Contacts'**
+  String get missingRecoveryContactsCardTitle;
+
+  /// No description provided for @missingRecoveryContactsCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Recovery Contacts to help you recover your account without requiring a password.'**
+  String get missingRecoveryContactsCardDesc;
+
+  /// No description provided for @missingRecoveryContactsCardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Contacts'**
+  String get missingRecoveryContactsCardAction;
 }
 
 class _AppLocalizationsDelegate

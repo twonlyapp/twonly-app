@@ -1,7 +1,10 @@
 import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -11,6 +14,8 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/intent/links.intent.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -143,6 +148,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _wasLogged = true;
   late int _initialPage;
 
+  StreamSubscription<Uri>? _deepLinkSub;
+  StreamSubscription<List<SharedFile>>? _intentStreamSub;
+  StreamSubscription<String>? _emailTokenSub;
+
   (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
@@ -151,6 +160,33 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     _initialPage = widget.initialPage;
     Log.info('AppWidgetState: initState started');
     initAsync();
+
+    void handleShareLink(Uri uri) {
+      routerProvider.go(Routes.home);
+      HomeViewState.streamHomeViewPageIndex.add(1);
+      HomeViewState.streamSharedLink.add(uri);
+    }
+
+    // Subscribe to all events (initial link and further)
+    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
+      if (!mounted) return;
+      Log.info('Got link via app links: ${uri.scheme}');
+      if (!await handleIntentUrl(context, uri)) {
+        if (uri.scheme.startsWith('http')) {
+          handleShareLink(uri);
+        }
+      }
+    });
+
+    _intentStreamSub = initIntentStreams(
+      context,
+      handleShareLink,
+    );
+
+    _emailTokenSub = PasswordlessRecoveryService.onEmailTokenReceived.stream
+        .listen((token) {
+          routerProvider.go(Routes.recoverPasswordless, extra: token);
+        });
   }
 
   Future<void> initAsync() async {
@@ -196,10 +232,6 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         });
       }
     }
-
-    // await PasswordlessRecoveryService.handleRecoveryLink(
-    //   'https://me.twonly.eu/r/#7fdb8f08-0927-4e44-8761-038993414e48/1p7SKEzpxE3wSW9FQw60EUI4OpSW2U4EskdXLw8xg48',
-    // );
 
     setState(() {
       _isLoaded = true;
@@ -263,5 +295,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         const AppOutdatedComp(),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSub?.cancel();
+    _intentStreamSub?.cancel();
+    _emailTokenSub?.cancel();
+    super.dispose();
   }
 }

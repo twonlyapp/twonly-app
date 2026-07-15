@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- New: Passwordless Backup
+- Fix: Performance issues
+
 ## 0.3.7
 
 - Fix: Multiple UI issues
