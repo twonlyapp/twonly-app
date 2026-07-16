@@ -543,6 +543,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           children: shares.map((share) {
             return ContactChip(
               username: share.trustedFriendDisplayName,
+              avatarSvg: share.trustedFriendAvatarSvg,
             );
           }).toList(),
         ),

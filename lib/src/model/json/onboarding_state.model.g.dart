@@ -11,6 +11,9 @@ ReceivedRecoveryShare _$ReceivedRecoveryShareFromJson(
 ) => ReceivedRecoveryShare(
   messageId: (json['messageId'] as num).toInt(),
   trustedFriendDisplayName: json['trustedFriendDisplayName'] as String,
+  trustedFriendAvatarSvg: (json['trustedFriendAvatarSvg'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
   myDisplayName: json['myDisplayName'] as String,
   myUserId: (json['myUserId'] as num).toInt(),
   myAvatarSvg: (json['myAvatarSvg'] as List<dynamic>?)
@@ -27,6 +30,7 @@ Map<String, dynamic> _$ReceivedRecoveryShareToJson(
 ) => <String, dynamic>{
   'messageId': instance.messageId,
   'trustedFriendDisplayName': instance.trustedFriendDisplayName,
+  'trustedFriendAvatarSvg': instance.trustedFriendAvatarSvg,
   'myDisplayName': instance.myDisplayName,
   'myUserId': instance.myUserId,
   'myAvatarSvg': instance.myAvatarSvg,

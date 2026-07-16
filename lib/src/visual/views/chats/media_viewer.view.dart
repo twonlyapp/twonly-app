@@ -364,7 +364,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       return advanceToNextMediaOrExit();
     }
 
-    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    // The server can now delete the encrypted bytes, as the user has successfully opened it.
     Log.info(
       'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
     );

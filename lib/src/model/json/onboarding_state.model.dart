@@ -14,6 +14,7 @@ class ReceivedRecoveryShare {
     required this.myAvatarSvg,
     required this.threshold,
     required this.sharedSecretDataBytes,
+    this.trustedFriendAvatarSvg,
   });
 
   factory ReceivedRecoveryShare.fromJson(Map<String, dynamic> json) =>
@@ -22,6 +23,7 @@ class ReceivedRecoveryShare {
   final int messageId;
 
   final String trustedFriendDisplayName;
+  final List<int>? trustedFriendAvatarSvg;
 
   final String myDisplayName;
   final int myUserId;
@@ -57,7 +59,6 @@ class OnboardingState {
   bool serverRegistered;
   List<int>? encryptionKey;
   bool emailRecoveryRequested;
-
 
   List<ReceivedRecoveryShare> receivedShares = [];
 

@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -12,6 +15,7 @@ class ContactChip extends StatelessWidget {
   const ContactChip({
     this.contact,
     this.username,
+    this.avatarSvg,
     this.onTap,
     super.key,
   }) : assert(
@@ -21,6 +25,7 @@ class ContactChip extends StatelessWidget {
 
   final Contact? contact;
   final String? username;
+  final List<int>? avatarSvg;
   final void Function(int)? onTap;
 
   @override
@@ -43,6 +48,9 @@ class ContactChip extends StatelessWidget {
         avatar: AvatarIcon(
           contactId: contact?.userId,
           fontSize: 10,
+          svg: avatarSvg != null
+              ? getAvatarSvg(Uint8List.fromList(avatarSvg!))
+              : null,
         ),
         label: Row(
           mainAxisSize: MainAxisSize.min,
