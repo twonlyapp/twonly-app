@@ -460,10 +460,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get verificationTypeLink => 'Per Link verifiziert.';
 
   @override
-  String get verificationTypeContactSharedByVerified =>
-      'Von einem verifizierten Kontakt geteilt bekommen.';
-
-  @override
   String get verificationTypeMigratedFromOldVersion =>
       'Von alter Version migriert';
 
@@ -884,9 +880,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get retransmissionRequested => 'Wird erneut versucht.';
 
   @override
-  String get openChangeLog => 'Changelog automatisch öffnen';
-
-  @override
   String reportUserTitle(Object username) {
     return 'Melde $username';
   }
@@ -1147,10 +1140,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationContactRequest => 'möchte sich mit dir vernetzen.';
 
   @override
-  String get notificationContactRequestUnknownUser =>
-      'hast eine neue Kontaktanfrage erhalten.';
-
-  @override
   String get notificationAcceptRequest => 'ist jetzt mit dir vernetzt.';
 
   @override
@@ -1186,12 +1175,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String notificationResponse(Object inGroup) {
     return 'hat dir$inGroup geantwortet.';
   }
-
-  @override
-  String get notificationTitleUnknown => 'Du hast eine neue Nachricht.';
-
-  @override
-  String get notificationBodyUnknown => 'Öffne twonly um mehr zu erfahren.';
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';
@@ -1352,9 +1335,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get onboardingBackupBody =>
       'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
-
-  @override
-  String get onboardingVerificationBadgeTitle => 'Verifizierungs-Haken';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Freunde teilen';
@@ -1973,29 +1953,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Schritt-für-Schritt-Einrichtung, damit du selbst entscheiden kannst.';
 
   @override
-  String get onboardingProfileSelectionStrictTitle => 'Erhöhter Schutz';
-
-  @override
-  String get onboardingProfileSelectionStrictDesc =>
-      'Maximaler Schutz vor Phishing. Empfohlen für *Journalisten & Personen des öffentlichen Lebens*.';
-
-  @override
   String get replyFlameRestored => 'Flammen wiederhergestellt';
 
   @override
   String get replyAskAFriend => 'Einen Freund fragen';
-
-  @override
-  String get unverifiedWarningDirectTitle =>
-      'Identität nicht persönlich verifiziert';
-
-  @override
-  String get unverifiedWarningGroupTitle =>
-      'Nicht alle Mitglieder sind persönlich verifiziert';
-
-  @override
-  String get unverifiedWarningBody =>
-      '*Teile keine geheimen Daten*. Jemand könnte sich *als dein Freund ausgeben*.';
 
   @override
   String get unverifiedWarningButton => 'Jetzt verifizieren';
@@ -2048,12 +2009,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get importGalleryStarting => 'Import wird gestartet...';
 
   @override
-  String importGalleryComplete(
-    Object imported,
-    Object duplicated,
-    Object failed,
-  ) {
-    return 'Import abgeschlossen: $imported erfolgreich importiert, $duplicated Duplikate und $failed fehlgeschlagen.';
+  String importGalleryComplete(Object imported, Object failed) {
+    return 'Import abgeschlossen: $imported erfolgreich importiert und $failed fehlgeschlagen.';
   }
 
   @override
@@ -2191,33 +2148,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Freunde haben entweder ihren Teil noch nicht erhalten oder nutzen twonly nicht mehr aktiv, was bedeutet, dass sie möglicherweise nicht helfen können.';
 
   @override
-  String get passwordlessRecoveryNotEnoughFriends =>
-      'Nicht genügend Freunde ausgewählt. Du brauchst mindestens 3.';
-
-  @override
-  String get passwordlessRecoveryLoading => 'Wird geladen...';
-
-  @override
   String get passwordlessRecoveryEnableSuccess =>
       'Passwortloses Backup erfolgreich aktiviert!';
 
   @override
-  String get passwordlessRecoveryEnableFailed =>
-      'Fehler beim Aktivieren des passwortlosen Backups.';
-
-  @override
-  String get passwordlessRecoveryNeedAtLeast3 =>
-      'Du brauchst mindestens 3 Freunde.';
-
-  @override
-  String get passwordlessRecoveryInvalidPin => 'Ungültige PIN';
-
-  @override
   String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
-
-  @override
-  String get passwordlessRecoveryPinMinLength =>
-      'Die PIN muss mindestens 4 Ziffern lang sein.';
 
   @override
   String get passwordlessRecoveryEnterEmail =>
@@ -2395,10 +2330,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String passwordlessRecoveryYesWithTimer(Object seconds) {
     return 'Ja (${seconds}s)';
   }
-
-  @override
-  String get recoverPasswordlessBeingRecoveredLabel =>
-      'Konto wird wiederhergestellt';
 
   @override
   String recoverPasswordlessSharesReceived(Object received, Object threshold) {

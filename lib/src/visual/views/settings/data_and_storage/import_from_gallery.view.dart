@@ -64,7 +64,6 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
     final total = uris.length;
     var importedCount = 0;
-    var duplicated = 0;
     var failedCount = 0;
 
     for (final uri in uris) {
@@ -137,7 +136,6 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
         context,
         context.lang.importGalleryComplete(
           importedCount,
-          duplicated,
           failedCount,
         ),
         level: SnackbarLevel.success,
@@ -329,7 +327,6 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
         .toList();
     final total = selectedAssets.length;
     var importedCount = 0;
-    var duplicated = 0;
     var failedCount = 0;
 
     for (final asset in selectedAssets) {
@@ -352,7 +349,11 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
 
         final exists = await twonlyDB.mediaFilesDao.getMediaByHash(hash);
         if (exists.isNotEmpty) {
-          duplicated += 1;
+          final mediaFile = exists.first;
+          final mediaService = MediaFileService(mediaFile);
+          await mediaService.storedPath.parent.create(recursive: true);
+          await file.copy(mediaService.storedPath.path);
+          importedCount++;
           continue;
         }
 
@@ -446,7 +447,6 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
         context,
         context.lang.importGalleryComplete(
           importedCount,
-          duplicated,
           failedCount,
         ),
         level: SnackbarLevel.success,

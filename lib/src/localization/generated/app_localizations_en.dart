@@ -456,10 +456,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationTypeLink => 'Verified via link.';
 
   @override
-  String get verificationTypeContactSharedByVerified =>
-      'Contact received from a verified contact.';
-
-  @override
   String get verificationTypeMigratedFromOldVersion =>
       'Migrated from old version.';
 
@@ -879,9 +875,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retransmissionRequested => 'Retransmission requested';
 
   @override
-  String get openChangeLog => 'Open changelog automatically';
-
-  @override
   String reportUserTitle(Object username) {
     return 'Report $username';
   }
@@ -1141,10 +1134,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationContactRequest => 'wants to connect with you.';
 
   @override
-  String get notificationContactRequestUnknownUser =>
-      'have received a new contact request.';
-
-  @override
   String get notificationAcceptRequest => 'is now connected with you.';
 
   @override
@@ -1180,12 +1169,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationResponse(Object inGroup) {
     return 'has responded$inGroup.';
   }
-
-  @override
-  String get notificationTitleUnknown => 'You have a new message.';
-
-  @override
-  String get notificationBodyUnknown => 'Open twonly to learn more.';
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';
@@ -1344,9 +1327,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingBackupBody =>
       'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
-
-  @override
-  String get onboardingVerificationBadgeTitle => 'Verification Badge';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
@@ -1959,28 +1939,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Step-by-step setup so you can decide for yourself.';
 
   @override
-  String get onboardingProfileSelectionStrictTitle => 'Enhanced Protection';
-
-  @override
-  String get onboardingProfileSelectionStrictDesc =>
-      'Maximum anti-phishing defense. Recommended for *journalists & public figures*.';
-
-  @override
   String get replyFlameRestored => 'Flames restored';
 
   @override
   String get replyAskAFriend => 'Ask a friend';
-
-  @override
-  String get unverifiedWarningDirectTitle => 'Identity not verified in person';
-
-  @override
-  String get unverifiedWarningGroupTitle =>
-      'Not all members are verified in person';
-
-  @override
-  String get unverifiedWarningBody =>
-      '*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.';
 
   @override
   String get unverifiedWarningButton => 'Verify now';
@@ -2033,12 +1995,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importGalleryStarting => 'Starting import...';
 
   @override
-  String importGalleryComplete(
-    Object imported,
-    Object duplicated,
-    Object failed,
-  ) {
-    return 'Import complete: $imported successfully imported, $duplicated duplicated and $failed failed.';
+  String importGalleryComplete(Object imported, Object failed) {
+    return 'Import complete: $imported successfully imported and $failed failed.';
   }
 
   @override
@@ -2176,33 +2134,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.';
 
   @override
-  String get passwordlessRecoveryNotEnoughFriends =>
-      'Not enough friends selected. You need at least 3.';
-
-  @override
-  String get passwordlessRecoveryLoading => 'Loading...';
-
-  @override
   String get passwordlessRecoveryEnableSuccess =>
       'Passwordless recovery successfully enabled!';
 
   @override
-  String get passwordlessRecoveryEnableFailed =>
-      'Failed to enable passwordless recovery.';
-
-  @override
-  String get passwordlessRecoveryNeedAtLeast3 =>
-      'You need at least 3 trusted friends.';
-
-  @override
-  String get passwordlessRecoveryInvalidPin => 'Invalid PIN';
-
-  @override
   String get passwordlessRecoveryEnterPin => 'Please enter a PIN.';
-
-  @override
-  String get passwordlessRecoveryPinMinLength =>
-      'PIN must be at least 4 digits.';
 
   @override
   String get passwordlessRecoveryEnterEmail => 'Please enter an email address.';
@@ -2373,10 +2309,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String passwordlessRecoveryYesWithTimer(Object seconds) {
     return 'Yes (${seconds}s)';
   }
-
-  @override
-  String get recoverPasswordlessBeingRecoveredLabel =>
-      'Account being recovered';
 
   @override
   String recoverPasswordlessSharesReceived(Object received, Object threshold) {

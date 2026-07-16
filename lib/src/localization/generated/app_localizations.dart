@@ -926,12 +926,6 @@ abstract class AppLocalizations {
   /// **'Verified via link.'**
   String get verificationTypeLink;
 
-  /// No description provided for @verificationTypeContactSharedByVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact received from a verified contact.'**
-  String get verificationTypeContactSharedByVerified;
-
   /// No description provided for @verificationTypeMigratedFromOldVersion.
   ///
   /// In en, this message translates to:
@@ -1670,12 +1664,6 @@ abstract class AppLocalizations {
   /// **'Retransmission requested'**
   String get retransmissionRequested;
 
-  /// No description provided for @openChangeLog.
-  ///
-  /// In en, this message translates to:
-  /// **'Open changelog automatically'**
-  String get openChangeLog;
-
   /// No description provided for @reportUserTitle.
   ///
   /// In en, this message translates to:
@@ -2084,12 +2072,6 @@ abstract class AppLocalizations {
   /// **'wants to connect with you.'**
   String get notificationContactRequest;
 
-  /// No description provided for @notificationContactRequestUnknownUser.
-  ///
-  /// In en, this message translates to:
-  /// **'have received a new contact request.'**
-  String get notificationContactRequestUnknownUser;
-
   /// No description provided for @notificationAcceptRequest.
   ///
   /// In en, this message translates to:
@@ -2143,18 +2125,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'has responded{inGroup}.'**
   String notificationResponse(Object inGroup);
-
-  /// No description provided for @notificationTitleUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'You have a new message.'**
-  String get notificationTitleUnknown;
-
-  /// No description provided for @notificationBodyUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Open twonly to learn more.'**
-  String get notificationBodyUnknown;
 
   /// No description provided for @notificationCategoryMessageTitle.
   ///
@@ -2437,12 +2407,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
   String get onboardingBackupBody;
-
-  /// No description provided for @onboardingVerificationBadgeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification Badge'**
-  String get onboardingVerificationBadgeTitle;
 
   /// No description provided for @onboardingUserDiscoveryShareFriends.
   ///
@@ -3434,18 +3398,6 @@ abstract class AppLocalizations {
   /// **'Step-by-step setup so you can decide for yourself.'**
   String get onboardingProfileSelectionCustomizeDesc;
 
-  /// No description provided for @onboardingProfileSelectionStrictTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Enhanced Protection'**
-  String get onboardingProfileSelectionStrictTitle;
-
-  /// No description provided for @onboardingProfileSelectionStrictDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum anti-phishing defense. Recommended for *journalists & public figures*.'**
-  String get onboardingProfileSelectionStrictDesc;
-
   /// No description provided for @replyFlameRestored.
   ///
   /// In en, this message translates to:
@@ -3457,24 +3409,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask a friend'**
   String get replyAskAFriend;
-
-  /// No description provided for @unverifiedWarningDirectTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity not verified in person'**
-  String get unverifiedWarningDirectTitle;
-
-  /// No description provided for @unverifiedWarningGroupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Not all members are verified in person'**
-  String get unverifiedWarningGroupTitle;
-
-  /// No description provided for @unverifiedWarningBody.
-  ///
-  /// In en, this message translates to:
-  /// **'*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.'**
-  String get unverifiedWarningBody;
 
   /// No description provided for @unverifiedWarningButton.
   ///
@@ -3563,12 +3497,8 @@ abstract class AppLocalizations {
   /// No description provided for @importGalleryComplete.
   ///
   /// In en, this message translates to:
-  /// **'Import complete: {imported} successfully imported, {duplicated} duplicated and {failed} failed.'**
-  String importGalleryComplete(
-    Object imported,
-    Object duplicated,
-    Object failed,
-  );
+  /// **'Import complete: {imported} successfully imported and {failed} failed.'**
+  String importGalleryComplete(Object imported, Object failed);
 
   /// No description provided for @importGalleryGrantAccess.
   ///
@@ -3804,53 +3734,17 @@ abstract class AppLocalizations {
   /// **'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.'**
   String get passwordlessRecoveryInactiveFriendsDesc;
 
-  /// No description provided for @passwordlessRecoveryNotEnoughFriends.
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough friends selected. You need at least 3.'**
-  String get passwordlessRecoveryNotEnoughFriends;
-
-  /// No description provided for @passwordlessRecoveryLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading...'**
-  String get passwordlessRecoveryLoading;
-
   /// No description provided for @passwordlessRecoveryEnableSuccess.
   ///
   /// In en, this message translates to:
   /// **'Passwordless recovery successfully enabled!'**
   String get passwordlessRecoveryEnableSuccess;
 
-  /// No description provided for @passwordlessRecoveryEnableFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to enable passwordless recovery.'**
-  String get passwordlessRecoveryEnableFailed;
-
-  /// No description provided for @passwordlessRecoveryNeedAtLeast3.
-  ///
-  /// In en, this message translates to:
-  /// **'You need at least 3 trusted friends.'**
-  String get passwordlessRecoveryNeedAtLeast3;
-
-  /// No description provided for @passwordlessRecoveryInvalidPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid PIN'**
-  String get passwordlessRecoveryInvalidPin;
-
   /// No description provided for @passwordlessRecoveryEnterPin.
   ///
   /// In en, this message translates to:
   /// **'Please enter a PIN.'**
   String get passwordlessRecoveryEnterPin;
-
-  /// No description provided for @passwordlessRecoveryPinMinLength.
-  ///
-  /// In en, this message translates to:
-  /// **'PIN must be at least 4 digits.'**
-  String get passwordlessRecoveryPinMinLength;
 
   /// No description provided for @passwordlessRecoveryEnterEmail.
   ///
@@ -4133,12 +4027,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes ({seconds}s)'**
   String passwordlessRecoveryYesWithTimer(Object seconds);
-
-  /// No description provided for @recoverPasswordlessBeingRecoveredLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Account being recovered'**
-  String get recoverPasswordlessBeingRecoveredLabel;
 
   /// No description provided for @recoverPasswordlessSharesReceived.
   ///
