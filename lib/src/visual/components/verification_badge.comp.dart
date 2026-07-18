@@ -33,7 +33,9 @@ class VerificationBadgeComp extends StatefulWidget {
 }
 
 class _VerificationBadgeCompState extends State<VerificationBadgeComp> {
-  late bool _isVerified = widget.contact?.verified ?? true;
+  late bool _isVerified =
+      widget.contact?.verified ??
+      !(widget.isVerifiedByTransferredTrust ?? false);
   bool _isSharedVerified = false;
   int _verifiedByTransferredTrustCount = 0;
   int _sharedByVerifiedCount = 0;
