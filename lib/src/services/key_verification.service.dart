@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
@@ -17,6 +18,24 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 
 class KeyVerificationService {
+  static final StreamController<void> _verificationSuccessCloseController =
+      StreamController<void>.broadcast();
+
+  static Stream<void> get onVerificationSuccessClose =>
+      _verificationSuccessCloseController.stream;
+
+  static void notifyVerificationSuccessClose() {
+    _verificationSuccessCloseController.add(null);
+  }
+
+  static void closeVerificationFlows(BuildContext context) {
+    Navigator.popUntil(context, (route) {
+      final name = route.settings.name;
+      if (name == null) return false;
+      return !name.contains('qr_scanner') && !name.contains('verifybadge');
+    });
+  }
+
   static Future<List<int>> getNewSecretVerificationToken() async {
     final token = getRandomUint8List(16);
     await twonlyDB.keyVerificationDao.insertVerificationToken(token);

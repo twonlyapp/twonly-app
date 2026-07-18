@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_success_animation.comp.dart';
@@ -18,11 +19,16 @@ class VerificationSuccessDialog extends StatelessWidget {
   final String? message;
 
   /// Utility method to easily present this dialog.
-  static Future<void> show(BuildContext context, Contact contact, {String? message}) {
+  static Future<void> show(
+    BuildContext context,
+    Contact contact, {
+    String? message,
+  }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => VerificationSuccessDialog(contact: contact, message: message),
+      builder: (context) =>
+          VerificationSuccessDialog(contact: contact, message: message),
     );
   }
 
@@ -75,7 +81,10 @@ class VerificationSuccessDialog extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             MyButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                KeyVerificationService.notifyVerificationSuccessClose();
+                Navigator.pop(context);
+              },
               child: Text(context.lang.close),
             ),
           ],

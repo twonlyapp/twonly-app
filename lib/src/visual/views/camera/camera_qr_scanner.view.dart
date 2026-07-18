@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
@@ -34,11 +35,7 @@ class QrCodeScannerViewState extends State<QrCodeScannerView> {
     if (widget.openToVerify && widget.contact != null) {
       _mainCameraController.onVerificationSuccessDismissed = (contact) {
         if (mounted) {
-          Navigator.popUntil(context, (route) {
-            final name = route.settings.name;
-            if (name == null) return true;
-            return !name.contains('qr_scanner') && !name.contains('verifybadge');
-          });
+          KeyVerificationService.closeVerificationFlows(context);
         }
       };
     }
