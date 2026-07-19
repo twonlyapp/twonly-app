@@ -87,6 +87,7 @@ dependencies:
   screen_protector: ^1.5.1
   flutter_markdown_plus: ^1.0.7
   exif: ^3.3.0
+  flutter_blurhash: ^0.9.1
 
   # With high download. (But should be checked nonetheless.)
   app_links: ^7.0.0 # 1.6 mio
@@ -175,6 +176,8 @@ dependency_overrides:
     path: ./dependencies/exif
   sprintf:
     path: ./dependencies/sprintf
+  flutter_blurhash:
+    path: ./dependencies/flutter_blurhash
 
 dev_dependencies:
   build_runner: ^2.4.15

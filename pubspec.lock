@@ -613,6 +613,13 @@ packages:
       url: "https://github.com/yenchieh/flutter_android_volume_keydown.git"
     source: git
     version: "1.0.1"
+  flutter_blurhash:
+    dependency: "direct main"
+    description:
+      path: "dependencies/flutter_blurhash"
+      relative: true
+    source: path
+    version: "0.9.1"
   flutter_cache_manager:
     dependency: transitive
     description:

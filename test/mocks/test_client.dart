@@ -10,9 +10,10 @@ import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart' as pb;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
-import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
@@ -240,7 +241,12 @@ class TestClient {
     await api.sendTextMessage(target.realUserId, msg.writeToBuffer(), null);
   }
 
-  Future<void> sendReaction(TestClient target, String targetMessageId, String emoji, {bool remove = false}) async {
+  Future<void> sendReaction(
+    TestClient target,
+    String targetMessageId,
+    String emoji, {
+    bool remove = false,
+  }) async {
     final content = pb.EncryptedContent()
       ..groupId = defaultGroup!.groupId
       ..reaction = (pb.EncryptedContent_Reaction()
@@ -250,7 +256,12 @@ class TestClient {
     await sendEncryptedContent(target, content);
   }
 
-  Future<void> sendMessageUpdate(TestClient target, String targetMessageId, pb.EncryptedContent_MessageUpdate_Type type, {String? text}) async {
+  Future<void> sendMessageUpdate(
+    TestClient target,
+    String targetMessageId,
+    pb.EncryptedContent_MessageUpdate_Type type, {
+    String? text,
+  }) async {
     final update = pb.EncryptedContent_MessageUpdate()
       ..type = type
       ..senderMessageId = targetMessageId
@@ -262,7 +273,11 @@ class TestClient {
     await sendEncryptedContent(target, content);
   }
 
-  Future<void> sendMedia(TestClient target, String senderMessageId, pb.EncryptedContent_Media_Type type) async {
+  Future<void> sendMedia(
+    TestClient target,
+    String senderMessageId,
+    pb.EncryptedContent_Media_Type type,
+  ) async {
     final content = pb.EncryptedContent()
       ..groupId = defaultGroup!.groupId
       ..media = (pb.EncryptedContent_Media()
@@ -288,8 +303,10 @@ class TestClient {
   Future<Reaction> expectReaction(String messageId, String emoji) async {
     for (var i = 0; i < 500; i++) {
       final reaction = await run(() async {
-         final reactions = await (env.db.select(env.db.reactions)..where((t) => t.messageId.equals(messageId))).get();
-         return reactions.firstWhereOrNull((r) => r.emoji == emoji);
+        final reactions = await (env.db.select(
+          env.db.reactions,
+        )..where((t) => t.messageId.equals(messageId))).get();
+        return reactions.firstWhereOrNull((r) => r.emoji == emoji);
       });
       if (reaction != null) return reaction;
       await Future.delayed(const Duration(milliseconds: 10));
