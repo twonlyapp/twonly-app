@@ -2712,6 +2712,311 @@ class ApplicationData_PasswordlessNotification extends $pb.GeneratedMessage {
   void clearEncryptedMessage() => $_clearField(2);
 }
 
+class ApplicationData_RequestMemoriesUpload extends $pb.GeneratedMessage {
+  factory ApplicationData_RequestMemoriesUpload({
+    $fixnum.Int64? size,
+    $fixnum.Int64? originalDate,
+  }) {
+    final result = create();
+    if (size != null) result.size = size;
+    if (originalDate != null) result.originalDate = originalDate;
+    return result;
+  }
+
+  ApplicationData_RequestMemoriesUpload._();
+
+  factory ApplicationData_RequestMemoriesUpload.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_RequestMemoriesUpload.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.RequestMemoriesUpload',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'size')
+    ..aInt64(2, _omitFieldNames ? '' : 'originalDate')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RequestMemoriesUpload clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_RequestMemoriesUpload copyWith(
+          void Function(ApplicationData_RequestMemoriesUpload) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_RequestMemoriesUpload))
+          as ApplicationData_RequestMemoriesUpload;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RequestMemoriesUpload create() =>
+      ApplicationData_RequestMemoriesUpload._();
+  @$core.override
+  ApplicationData_RequestMemoriesUpload createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RequestMemoriesUpload getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_RequestMemoriesUpload>(create);
+  static ApplicationData_RequestMemoriesUpload? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get size => $_getI64(0);
+  @$pb.TagNumber(1)
+  set size($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSize() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSize() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get originalDate => $_getI64(1);
+  @$pb.TagNumber(2)
+  set originalDate($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOriginalDate() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOriginalDate() => $_clearField(2);
+}
+
+class ApplicationData_ConfirmMemoriesUpload extends $pb.GeneratedMessage {
+  factory ApplicationData_ConfirmMemoriesUpload({
+    $core.String? mediaId,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    return result;
+  }
+
+  ApplicationData_ConfirmMemoriesUpload._();
+
+  factory ApplicationData_ConfirmMemoriesUpload.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_ConfirmMemoriesUpload.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.ConfirmMemoriesUpload',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_ConfirmMemoriesUpload clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_ConfirmMemoriesUpload copyWith(
+          void Function(ApplicationData_ConfirmMemoriesUpload) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_ConfirmMemoriesUpload))
+          as ApplicationData_ConfirmMemoriesUpload;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_ConfirmMemoriesUpload create() =>
+      ApplicationData_ConfirmMemoriesUpload._();
+  @$core.override
+  ApplicationData_ConfirmMemoriesUpload createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_ConfirmMemoriesUpload getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_ConfirmMemoriesUpload>(create);
+  static ApplicationData_ConfirmMemoriesUpload? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+}
+
+class ApplicationData_GetMemoriesList extends $pb.GeneratedMessage {
+  factory ApplicationData_GetMemoriesList({
+    $fixnum.Int64? offsetDate,
+    $fixnum.Int64? limit,
+  }) {
+    final result = create();
+    if (offsetDate != null) result.offsetDate = offsetDate;
+    if (limit != null) result.limit = limit;
+    return result;
+  }
+
+  ApplicationData_GetMemoriesList._();
+
+  factory ApplicationData_GetMemoriesList.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_GetMemoriesList.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.GetMemoriesList',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'offsetDate')
+    ..aInt64(2, _omitFieldNames ? '' : 'limit')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesList clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesList copyWith(
+          void Function(ApplicationData_GetMemoriesList) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_GetMemoriesList))
+          as ApplicationData_GetMemoriesList;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesList create() =>
+      ApplicationData_GetMemoriesList._();
+  @$core.override
+  ApplicationData_GetMemoriesList createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesList getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetMemoriesList>(
+          create);
+  static ApplicationData_GetMemoriesList? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get offsetDate => $_getI64(0);
+  @$pb.TagNumber(1)
+  set offsetDate($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOffsetDate() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOffsetDate() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get limit => $_getI64(1);
+  @$pb.TagNumber(2)
+  set limit($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLimit() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLimit() => $_clearField(2);
+}
+
+class ApplicationData_GetMemoriesUrl extends $pb.GeneratedMessage {
+  factory ApplicationData_GetMemoriesUrl({
+    $core.String? mediaId,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    return result;
+  }
+
+  ApplicationData_GetMemoriesUrl._();
+
+  factory ApplicationData_GetMemoriesUrl.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_GetMemoriesUrl.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.GetMemoriesUrl',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesUrl clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesUrl copyWith(
+          void Function(ApplicationData_GetMemoriesUrl) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_GetMemoriesUrl))
+          as ApplicationData_GetMemoriesUrl;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesUrl create() =>
+      ApplicationData_GetMemoriesUrl._();
+  @$core.override
+  ApplicationData_GetMemoriesUrl createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesUrl getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetMemoriesUrl>(create);
+  static ApplicationData_GetMemoriesUrl? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+}
+
+class ApplicationData_GetMemoriesUsage extends $pb.GeneratedMessage {
+  factory ApplicationData_GetMemoriesUsage() => create();
+
+  ApplicationData_GetMemoriesUsage._();
+
+  factory ApplicationData_GetMemoriesUsage.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_GetMemoriesUsage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.GetMemoriesUsage',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesUsage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetMemoriesUsage copyWith(
+          void Function(ApplicationData_GetMemoriesUsage) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_GetMemoriesUsage))
+          as ApplicationData_GetMemoriesUsage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesUsage create() =>
+      ApplicationData_GetMemoriesUsage._();
+  @$core.override
+  ApplicationData_GetMemoriesUsage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetMemoriesUsage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetMemoriesUsage>(
+          create);
+  static ApplicationData_GetMemoriesUsage? _defaultInstance;
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -2741,6 +3046,11 @@ enum ApplicationData_ApplicationData {
   setLoginToken,
   registerPasswordlessRecovery,
   passwordlessNotification,
+  requestMemoriesUpload,
+  confirmMemoriesUpload,
+  getMemoriesList,
+  getMemoriesUrl,
+  getMemoriesUsage,
   notSet
 }
 
@@ -2774,6 +3084,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_SetLoginToken? setLoginToken,
     ApplicationData_RegisterPasswordLessRecovery? registerPasswordlessRecovery,
     ApplicationData_PasswordlessNotification? passwordlessNotification,
+    ApplicationData_RequestMemoriesUpload? requestMemoriesUpload,
+    ApplicationData_ConfirmMemoriesUpload? confirmMemoriesUpload,
+    ApplicationData_GetMemoriesList? getMemoriesList,
+    ApplicationData_GetMemoriesUrl? getMemoriesUrl,
+    ApplicationData_GetMemoriesUsage? getMemoriesUsage,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2812,6 +3127,13 @@ class ApplicationData extends $pb.GeneratedMessage {
       result.registerPasswordlessRecovery = registerPasswordlessRecovery;
     if (passwordlessNotification != null)
       result.passwordlessNotification = passwordlessNotification;
+    if (requestMemoriesUpload != null)
+      result.requestMemoriesUpload = requestMemoriesUpload;
+    if (confirmMemoriesUpload != null)
+      result.confirmMemoriesUpload = confirmMemoriesUpload;
+    if (getMemoriesList != null) result.getMemoriesList = getMemoriesList;
+    if (getMemoriesUrl != null) result.getMemoriesUrl = getMemoriesUrl;
+    if (getMemoriesUsage != null) result.getMemoriesUsage = getMemoriesUsage;
     return result;
   }
 
@@ -2854,6 +3176,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     30: ApplicationData_ApplicationData.setLoginToken,
     31: ApplicationData_ApplicationData.registerPasswordlessRecovery,
     32: ApplicationData_ApplicationData.passwordlessNotification,
+    33: ApplicationData_ApplicationData.requestMemoriesUpload,
+    34: ApplicationData_ApplicationData.confirmMemoriesUpload,
+    35: ApplicationData_ApplicationData.getMemoriesList,
+    36: ApplicationData_ApplicationData.getMemoriesUrl,
+    37: ApplicationData_ApplicationData.getMemoriesUsage,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2889,7 +3216,12 @@ class ApplicationData extends $pb.GeneratedMessage {
       29,
       30,
       31,
-      32
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2987,6 +3319,21 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_PasswordlessNotification>(
         32, _omitFieldNames ? '' : 'passwordlessNotification',
         subBuilder: ApplicationData_PasswordlessNotification.create)
+    ..aOM<ApplicationData_RequestMemoriesUpload>(
+        33, _omitFieldNames ? '' : 'requestMemoriesUpload',
+        subBuilder: ApplicationData_RequestMemoriesUpload.create)
+    ..aOM<ApplicationData_ConfirmMemoriesUpload>(
+        34, _omitFieldNames ? '' : 'confirmMemoriesUpload',
+        subBuilder: ApplicationData_ConfirmMemoriesUpload.create)
+    ..aOM<ApplicationData_GetMemoriesList>(
+        35, _omitFieldNames ? '' : 'getMemoriesList',
+        subBuilder: ApplicationData_GetMemoriesList.create)
+    ..aOM<ApplicationData_GetMemoriesUrl>(
+        36, _omitFieldNames ? '' : 'getMemoriesUrl',
+        subBuilder: ApplicationData_GetMemoriesUrl.create)
+    ..aOM<ApplicationData_GetMemoriesUsage>(
+        37, _omitFieldNames ? '' : 'getMemoriesUsage',
+        subBuilder: ApplicationData_GetMemoriesUsage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3036,6 +3383,11 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
   @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(36)
+  @$pb.TagNumber(37)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3066,6 +3418,11 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
   @$pb.TagNumber(32)
+  @$pb.TagNumber(33)
+  @$pb.TagNumber(34)
+  @$pb.TagNumber(35)
+  @$pb.TagNumber(36)
+  @$pb.TagNumber(37)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3401,6 +3758,68 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(32)
   ApplicationData_PasswordlessNotification ensurePasswordlessNotification() =>
       $_ensure(27);
+
+  @$pb.TagNumber(33)
+  ApplicationData_RequestMemoriesUpload get requestMemoriesUpload => $_getN(28);
+  @$pb.TagNumber(33)
+  set requestMemoriesUpload(ApplicationData_RequestMemoriesUpload value) =>
+      $_setField(33, value);
+  @$pb.TagNumber(33)
+  $core.bool hasRequestMemoriesUpload() => $_has(28);
+  @$pb.TagNumber(33)
+  void clearRequestMemoriesUpload() => $_clearField(33);
+  @$pb.TagNumber(33)
+  ApplicationData_RequestMemoriesUpload ensureRequestMemoriesUpload() =>
+      $_ensure(28);
+
+  @$pb.TagNumber(34)
+  ApplicationData_ConfirmMemoriesUpload get confirmMemoriesUpload => $_getN(29);
+  @$pb.TagNumber(34)
+  set confirmMemoriesUpload(ApplicationData_ConfirmMemoriesUpload value) =>
+      $_setField(34, value);
+  @$pb.TagNumber(34)
+  $core.bool hasConfirmMemoriesUpload() => $_has(29);
+  @$pb.TagNumber(34)
+  void clearConfirmMemoriesUpload() => $_clearField(34);
+  @$pb.TagNumber(34)
+  ApplicationData_ConfirmMemoriesUpload ensureConfirmMemoriesUpload() =>
+      $_ensure(29);
+
+  @$pb.TagNumber(35)
+  ApplicationData_GetMemoriesList get getMemoriesList => $_getN(30);
+  @$pb.TagNumber(35)
+  set getMemoriesList(ApplicationData_GetMemoriesList value) =>
+      $_setField(35, value);
+  @$pb.TagNumber(35)
+  $core.bool hasGetMemoriesList() => $_has(30);
+  @$pb.TagNumber(35)
+  void clearGetMemoriesList() => $_clearField(35);
+  @$pb.TagNumber(35)
+  ApplicationData_GetMemoriesList ensureGetMemoriesList() => $_ensure(30);
+
+  @$pb.TagNumber(36)
+  ApplicationData_GetMemoriesUrl get getMemoriesUrl => $_getN(31);
+  @$pb.TagNumber(36)
+  set getMemoriesUrl(ApplicationData_GetMemoriesUrl value) =>
+      $_setField(36, value);
+  @$pb.TagNumber(36)
+  $core.bool hasGetMemoriesUrl() => $_has(31);
+  @$pb.TagNumber(36)
+  void clearGetMemoriesUrl() => $_clearField(36);
+  @$pb.TagNumber(36)
+  ApplicationData_GetMemoriesUrl ensureGetMemoriesUrl() => $_ensure(31);
+
+  @$pb.TagNumber(37)
+  ApplicationData_GetMemoriesUsage get getMemoriesUsage => $_getN(32);
+  @$pb.TagNumber(37)
+  set getMemoriesUsage(ApplicationData_GetMemoriesUsage value) =>
+      $_setField(37, value);
+  @$pb.TagNumber(37)
+  $core.bool hasGetMemoriesUsage() => $_has(32);
+  @$pb.TagNumber(37)
+  void clearGetMemoriesUsage() => $_clearField(37);
+  @$pb.TagNumber(37)
+  ApplicationData_GetMemoriesUsage ensureGetMemoriesUsage() => $_ensure(32);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

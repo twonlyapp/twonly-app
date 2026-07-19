@@ -20,12 +20,12 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
+nonisolated enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
   typealias RawValue = Int
   case reaction // = 0
   case response // = 1
@@ -119,7 +119,7 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 }
 
-struct EncryptedPushNotification: Sendable {
+nonisolated struct EncryptedPushNotification: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -137,7 +137,7 @@ struct EncryptedPushNotification: Sendable {
   init() {}
 }
 
-struct PushNotification: Sendable {
+nonisolated struct PushNotification: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -170,7 +170,7 @@ struct PushNotification: Sendable {
   fileprivate var _additionalContent: String? = nil
 }
 
-struct PushUsers: Sendable {
+nonisolated struct PushUsers: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -182,7 +182,7 @@ struct PushUsers: Sendable {
   init() {}
 }
 
-struct PushUser: Sendable {
+nonisolated struct PushUser: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -211,7 +211,7 @@ struct PushUser: Sendable {
   fileprivate var _lastMessageID: String? = nil
 }
 
-struct PushKey: Sendable {
+nonisolated struct PushKey: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -229,11 +229,11 @@ struct PushKey: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-extension PushKind: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension PushKind: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REACTION\0\u{1}RESPONSE\0\u{1}TEXT\0\u{1}VIDEO\0\u{1}TWONLY\0\u{1}IMAGE\0\u{1}CONTACT_REQUEST\0\u{1}ACCEPT_REQUEST\0\u{1}STORED_MEDIA_FILE\0\u{1}TEST_NOTIFICATION\0\u{1}REOPENED_MEDIA\0\u{1}REACTION_TO_VIDEO\0\u{1}REACTION_TO_TEXT\0\u{1}REACTION_TO_IMAGE\0\u{1}REACTION_TO_AUDIO\0\u{1}ADDED_TO_GROUP\0\u{1}AUDIO\0")
 }
 
-extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "EncryptedPushNotification"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}key_id\0\u{1}nonce\0\u{1}ciphertext\0\u{1}mac\0")
 
@@ -278,7 +278,7 @@ extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 }
 
-extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushNotification"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}kind\0\u{3}message_id\0\u{3}additional_content\0")
 
@@ -322,7 +322,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension PushUsers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension PushUsers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushUsers"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}users\0")
 
@@ -352,7 +352,7 @@ extension PushUsers: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
   }
 }
 
-extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushUser"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_id\0\u{3}display_name\0\u{1}blocked\0\u{3}last_message_id\0\u{3}push_keys\0")
 
@@ -406,7 +406,7 @@ extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
   }
 }
 
-extension PushKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension PushKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushKey"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}key\0\u{3}created_at_unix_timestamp\0")
 
