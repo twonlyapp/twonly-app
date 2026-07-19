@@ -15,20 +15,6 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use recoveryRequestDescriptor instead')
-const RecoveryRequest$json = {
-  '1': 'RecoveryRequest',
-  '2': [
-    {'1': 'notification_id', '3': 1, '4': 1, '5': 9, '10': 'notificationId'},
-    {'1': 'public_key', '3': 2, '4': 1, '5': 12, '10': 'publicKey'},
-  ],
-};
-
-/// Descriptor for `RecoveryRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List recoveryRequestDescriptor = $convert.base64Decode(
-    'Cg9SZWNvdmVyeVJlcXVlc3QSJwoPbm90aWZpY2F0aW9uX2lkGAEgASgJUg5ub3RpZmljYXRpb2'
-    '5JZBIdCgpwdWJsaWNfa2V5GAIgASgMUglwdWJsaWNLZXk=');
-
 @$core.Deprecated('Use encryptedEnvelopeDescriptor instead')
 const EncryptedEnvelope$json = {
   '1': 'EncryptedEnvelope',

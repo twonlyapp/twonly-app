@@ -17,80 +17,8 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
-/// Send from the person who tries to recover their account.
-/// This can be done via a link, which will then be opend in the app of the contact.
-/// The contact than has to manualy select from which user he got the request.
-/// -> Using this phishing is harder, as the user has to manualy select the user to recovery
-/// -> The user who wants to recover his account does not need to remember her old username
-class RecoveryRequest extends $pb.GeneratedMessage {
-  factory RecoveryRequest({
-    $core.String? notificationId,
-    $core.List<$core.int>? publicKey,
-  }) {
-    final result = create();
-    if (notificationId != null) result.notificationId = notificationId;
-    if (publicKey != null) result.publicKey = publicKey;
-    return result;
-  }
-
-  RecoveryRequest._();
-
-  factory RecoveryRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RecoveryRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RecoveryRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'passwordless_recovery'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'notificationId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RecoveryRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RecoveryRequest copyWith(void Function(RecoveryRequest) updates) =>
-      super.copyWith((message) => updates(message as RecoveryRequest))
-          as RecoveryRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RecoveryRequest create() => RecoveryRequest._();
-  @$core.override
-  RecoveryRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RecoveryRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RecoveryRequest>(create);
-  static RecoveryRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get notificationId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set notificationId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasNotificationId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearNotificationId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.List<$core.int> get publicKey => $_getN(1);
-  @$pb.TagNumber(2)
-  set publicKey($core.List<$core.int> value) => $_setBytes(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPublicKey() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPublicKey() => $_clearField(2);
-}
-
-/// Used as envelope for TrustedFriendShare and RecoveryData
+/// Used as envelope for TrustedFriendShare and RecoveryData.
+/// Encrypted using XChaCha20-Poly1305.
 class EncryptedEnvelope extends $pb.GeneratedMessage {
   factory EncryptedEnvelope({
     $core.List<$core.int>? encryptedData,
@@ -254,8 +182,8 @@ class TrustedFriendShare_User extends $pb.GeneratedMessage {
   void clearAvatar() => $_clearField(3);
 }
 
-/// Send from the trusted friend to
-/// This is encrypted with the received public key.
+/// Sent from the trusted friend to the recovering user via the server.
+/// This is symmetrically encrypted using the encryption key received from the recovery link.
 class TrustedFriendShare extends $pb.GeneratedMessage {
   factory TrustedFriendShare({
     TrustedFriendShare_User? trustedFriend,
@@ -313,7 +241,7 @@ class TrustedFriendShare extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<TrustedFriendShare>(create);
   static TrustedFriendShare? _defaultInstance;
 
-  /// This allows to display the user which user has send him his recovery data.
+  /// This allows to display to the recovering user which trusted friend has sent their recovery data.
   @$pb.TagNumber(1)
   TrustedFriendShare_User get trustedFriend => $_getN(0);
   @$pb.TagNumber(1)
@@ -325,7 +253,7 @@ class TrustedFriendShare extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   TrustedFriendShare_User ensureTrustedFriend() => $_ensure(0);
 
-  /// This allows to display the userdata, showing that he is recovering the correct person.
+  /// This allows to display the userdata, showing that the trusted friend is recovering the correct person.
   @$pb.TagNumber(2)
   TrustedFriendShare_User get shareUser => $_getN(1);
   @$pb.TagNumber(2)
@@ -337,7 +265,7 @@ class TrustedFriendShare extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   TrustedFriendShare_User ensureShareUser() => $_ensure(1);
 
-  /// The minimum threshold required to decrypte the shares.
+  /// The minimum threshold required to reconstruct the shares.
   @$pb.TagNumber(3)
   $core.int get threshold => $_getIZ(2);
   @$pb.TagNumber(3)
@@ -347,7 +275,7 @@ class TrustedFriendShare extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearThreshold() => $_clearField(3);
 
-  /// The actual share which will become: SharedSecretData
+  /// The actual share which will be used to reconstruct SharedSecretData.
   @$pb.TagNumber(4)
   $core.List<$core.int> get sharedSecretData => $_getN(3);
   @$pb.TagNumber(4)
@@ -427,7 +355,7 @@ class RecoveryData extends $pb.GeneratedMessage {
   void clearKeyManager() => $_clearField(3);
 }
 
-/// After received all shares this is decrypted by the user restoring its own
+/// After receiving threshold shares, this is reconstructed by the recovering user.
 class SharedSecretData extends $pb.GeneratedMessage {
   factory SharedSecretData({
     $core.List<$core.int>? recoveryData,
@@ -486,7 +414,7 @@ class SharedSecretData extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<SharedSecretData>(create);
   static SharedSecretData? _defaultInstance;
 
-  /// The recovery data is encrypted in case a second factor was chosen.
+  /// The recovery data (RecoveryData). It is encrypted with the server_key in case a second factor was chosen.
   @$pb.TagNumber(1)
   $core.List<$core.int> get recoveryData => $_getN(0);
   @$pb.TagNumber(1)
@@ -496,6 +424,8 @@ class SharedSecretData extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearRecoveryData() => $_clearField(1);
 
+  /// Combined with the user's PIN/Email via HKDF to derive the key to decrypt the encrypted server_key.
+  /// The server NEVER sees this value.
   @$pb.TagNumber(3)
   $core.List<$core.int> get serverKeyProtection => $_getN(1);
   @$pb.TagNumber(3)
@@ -505,6 +435,7 @@ class SharedSecretData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearServerKeyProtection() => $_clearField(3);
 
+  /// Used to authenticate with the server to fetch the encrypted server_key.
   @$pb.TagNumber(5)
   $core.List<$core.int> get pinUnlockToken => $_getN(2);
   @$pb.TagNumber(5)
