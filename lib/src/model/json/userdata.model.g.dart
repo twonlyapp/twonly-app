@@ -96,7 +96,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           : TwonlySafeBackup.fromJson(
               json['twonlySafeBackup'] as Map<String, dynamic>,
             )
-      ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? false
+      ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? true
       ..passwordLessRecovery = json['passwordLessRecovery'] == null
           ? null
           : PasswordLessRecovery.fromJson(

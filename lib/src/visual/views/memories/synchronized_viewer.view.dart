@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -313,6 +314,9 @@ class _SynchronizedImageViewerScreenState
                       var filePath = item.mediaService.storedPath;
                       if (!filePath.existsSync()) {
                         filePath = item.mediaService.tempPath;
+                        if (!filePath.existsSync()) {
+                          filePath = item.mediaService.thumbnailPath;
+                        }
                       }
 
                       final isVideo =
@@ -335,13 +339,23 @@ class _SynchronizedImageViewerScreenState
                             return childWidget!;
                           },
                           child: !filePath.existsSync()
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    color: Colors.white38,
-                                    size: 64,
-                                  ),
-                                )
+                              ? item.mediaService.mediaFile.blurhash != null
+                                    ? BlurHash(
+                                        hash: item
+                                            .mediaService
+                                            .mediaFile
+                                            .blurhash!,
+                                        optimizationMode:
+                                            BlurHashOptimizationMode
+                                                .approximation,
+                                      )
+                                    : const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          color: Colors.white38,
+                                          size: 64,
+                                        ),
+                                      )
                               : isVideo
                               ? VideoPlayerFileHelper(videoPath: filePath)
                               : PhotoView(

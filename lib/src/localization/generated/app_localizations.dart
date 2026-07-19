@@ -1265,13 +1265,13 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'✓ 25GB Memories storage'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Support twonly'**
+  /// **'✓ Restore flames'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
@@ -1289,7 +1289,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'✓ 50GB Memories storage'**
   String get familyFeature3;
 
   /// No description provided for @familyFeature4.

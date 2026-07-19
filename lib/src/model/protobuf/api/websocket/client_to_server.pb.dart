@@ -2671,10 +2671,12 @@ class ApplicationData_RequestMemoriesUpload extends $pb.GeneratedMessage {
   factory ApplicationData_RequestMemoriesUpload({
     $fixnum.Int64? size,
     $fixnum.Int64? originalDate,
+    $core.String? mediaId,
   }) {
     final result = create();
     if (size != null) result.size = size;
     if (originalDate != null) result.originalDate = originalDate;
+    if (mediaId != null) result.mediaId = mediaId;
     return result;
   }
 
@@ -2695,6 +2697,7 @@ class ApplicationData_RequestMemoriesUpload extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'size')
     ..aInt64(2, _omitFieldNames ? '' : 'originalDate')
+    ..aOS(3, _omitFieldNames ? '' : 'mediaId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2737,6 +2740,15 @@ class ApplicationData_RequestMemoriesUpload extends $pb.GeneratedMessage {
   $core.bool hasOriginalDate() => $_has(1);
   @$pb.TagNumber(2)
   void clearOriginalDate() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get mediaId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set mediaId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMediaId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMediaId() => $_clearField(3);
 }
 
 class ApplicationData_ConfirmMemoriesUpload extends $pb.GeneratedMessage {
@@ -2873,9 +2885,11 @@ class ApplicationData_GetMemoriesList extends $pb.GeneratedMessage {
 class ApplicationData_GetMemoriesUrl extends $pb.GeneratedMessage {
   factory ApplicationData_GetMemoriesUrl({
     $core.String? mediaId,
+    $core.bool? thumbnail,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
+    if (thumbnail != null) result.thumbnail = thumbnail;
     return result;
   }
 
@@ -2894,6 +2908,7 @@ class ApplicationData_GetMemoriesUrl extends $pb.GeneratedMessage {
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aOB(2, _omitFieldNames ? '' : 'thumbnail')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2926,6 +2941,15 @@ class ApplicationData_GetMemoriesUrl extends $pb.GeneratedMessage {
   $core.bool hasMediaId() => $_has(0);
   @$pb.TagNumber(1)
   void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get thumbnail => $_getBF(1);
+  @$pb.TagNumber(2)
+  set thumbnail($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasThumbnail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearThumbnail() => $_clearField(2);
 }
 
 class ApplicationData_GetMemoriesUsage extends $pb.GeneratedMessage {
@@ -2972,6 +2996,64 @@ class ApplicationData_GetMemoriesUsage extends $pb.GeneratedMessage {
   static ApplicationData_GetMemoriesUsage? _defaultInstance;
 }
 
+class ApplicationData_DeleteMemory extends $pb.GeneratedMessage {
+  factory ApplicationData_DeleteMemory({
+    $core.String? mediaId,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    return result;
+  }
+
+  ApplicationData_DeleteMemory._();
+
+  factory ApplicationData_DeleteMemory.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_DeleteMemory.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.DeleteMemory',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_DeleteMemory clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_DeleteMemory copyWith(
+          void Function(ApplicationData_DeleteMemory) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_DeleteMemory))
+          as ApplicationData_DeleteMemory;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DeleteMemory create() =>
+      ApplicationData_DeleteMemory._();
+  @$core.override
+  ApplicationData_DeleteMemory createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DeleteMemory getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_DeleteMemory>(create);
+  static ApplicationData_DeleteMemory? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -3006,6 +3088,7 @@ enum ApplicationData_ApplicationData {
   getMemoriesList,
   getMemoriesUrl,
   getMemoriesUsage,
+  deleteMemory,
   notSet
 }
 
@@ -3044,6 +3127,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetMemoriesList? getMemoriesList,
     ApplicationData_GetMemoriesUrl? getMemoriesUrl,
     ApplicationData_GetMemoriesUsage? getMemoriesUsage,
+    ApplicationData_DeleteMemory? deleteMemory,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -3089,6 +3173,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getMemoriesList != null) result.getMemoriesList = getMemoriesList;
     if (getMemoriesUrl != null) result.getMemoriesUrl = getMemoriesUrl;
     if (getMemoriesUsage != null) result.getMemoriesUsage = getMemoriesUsage;
+    if (deleteMemory != null) result.deleteMemory = deleteMemory;
     return result;
   }
 
@@ -3136,6 +3221,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     35: ApplicationData_ApplicationData.getMemoriesList,
     36: ApplicationData_ApplicationData.getMemoriesUrl,
     37: ApplicationData_ApplicationData.getMemoriesUsage,
+    38: ApplicationData_ApplicationData.deleteMemory,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3176,7 +3262,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       34,
       35,
       36,
-      37
+      37,
+      38
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -3289,6 +3376,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_GetMemoriesUsage>(
         37, _omitFieldNames ? '' : 'getMemoriesUsage',
         subBuilder: ApplicationData_GetMemoriesUsage.create)
+    ..aOM<ApplicationData_DeleteMemory>(
+        38, _omitFieldNames ? '' : 'deleteMemory',
+        subBuilder: ApplicationData_DeleteMemory.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3343,6 +3433,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(35)
   @$pb.TagNumber(36)
   @$pb.TagNumber(37)
+  @$pb.TagNumber(38)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3378,6 +3469,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(35)
   @$pb.TagNumber(36)
   @$pb.TagNumber(37)
+  @$pb.TagNumber(38)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3775,6 +3867,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearGetMemoriesUsage() => $_clearField(37);
   @$pb.TagNumber(37)
   ApplicationData_GetMemoriesUsage ensureGetMemoriesUsage() => $_ensure(32);
+
+  @$pb.TagNumber(38)
+  ApplicationData_DeleteMemory get deleteMemory => $_getN(33);
+  @$pb.TagNumber(38)
+  set deleteMemory(ApplicationData_DeleteMemory value) => $_setField(38, value);
+  @$pb.TagNumber(38)
+  $core.bool hasDeleteMemory() => $_has(33);
+  @$pb.TagNumber(38)
+  void clearDeleteMemory() => $_clearField(38);
+  @$pb.TagNumber(38)
+  ApplicationData_DeleteMemory ensureDeleteMemory() => $_ensure(33);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

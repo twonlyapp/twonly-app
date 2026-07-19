@@ -652,10 +652,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get proFeature2 => '✓ 1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => '✓ Flammen wiederherstellen';
+  String get proFeature3 => '✓ 25GB Memories Speicher';
 
   @override
-  String get proFeature4 => '✓ twonly unterstützen';
+  String get proFeature4 => '✓ Flammen wiederherstellen';
 
   @override
   String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
@@ -664,10 +664,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get familyFeature2 => '✓ 4 zusätzliche Plus Benutzer';
 
   @override
-  String get familyFeature3 => '✓ Flammen wiederherstellen';
+  String get familyFeature3 => '50GB Memories Speicher';
 
   @override
-  String get familyFeature4 => '✓ twonly unterstützen';
+  String get familyFeature4 => '✓ Flammen wiederherstellen';
 
   @override
   String get freeFeature1 => '✓ 10 Medien-Datei-Uploads pro Tag';

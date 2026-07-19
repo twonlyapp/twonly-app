@@ -9,6 +9,24 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 class RustKeyManager {
   const RustKeyManager();
 
+  static Future<Uint8List> decryptCloudMediaKey({
+    required List<int> encryptedMediaKey,
+    required String addition,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerDecryptCloudMediaKey(
+        encryptedMediaKey: encryptedMediaKey,
+        addition: addition,
+      );
+
+  static Future<Uint8List> encryptCloudMediaKey({
+    required List<int> mediaKey,
+    required String addition,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerEncryptCloudMediaKey(
+        mediaKey: mediaKey,
+        addition: addition,
+      );
+
   static Future<Uint8List> getLoginToken() => RustLib.instance.api
       .crateBridgeWrapperKeyManagerRustKeyManagerGetLoginToken();
 

@@ -13,6 +13,8 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/compression.service.dart';
 import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart'
+    show MemoriesCloudService;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -220,6 +222,7 @@ class MediaFileService {
         } catch (_) {}
       }
       if (mediaFile.stored &&
+          mediaFile.cloudState == CloudState.none &&
           mediaFile.createdAt.isBefore(
             clock.now().subtract(const Duration(days: 30)),
           )) {
@@ -335,6 +338,7 @@ class MediaFileService {
     unawaited(createThumbnail());
     await calculateAndSaveSize();
     await hashMediaFile();
+    await MemoriesCloudService().checkUploads();
     // updateFromDb is done in hashStoredMedia()
   }
 

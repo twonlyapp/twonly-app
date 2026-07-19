@@ -101,7 +101,7 @@ Future<bool> createThumbnailsForImage(
       destinationFile.absolute.path,
       minWidth: 300,
       minHeight: 300,
-      quality: 100,
+      quality: 50,
       format: CompressFormat.webp,
     );
     stopwatch.stop();

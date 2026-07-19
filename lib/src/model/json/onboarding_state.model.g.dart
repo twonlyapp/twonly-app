@@ -11,9 +11,6 @@ ReceivedRecoveryShare _$ReceivedRecoveryShareFromJson(
 ) => ReceivedRecoveryShare(
   messageId: (json['messageId'] as num).toInt(),
   trustedFriendDisplayName: json['trustedFriendDisplayName'] as String,
-  trustedFriendAvatarSvg: (json['trustedFriendAvatarSvg'] as List<dynamic>?)
-      ?.map((e) => (e as num).toInt())
-      .toList(),
   myDisplayName: json['myDisplayName'] as String,
   myUserId: (json['myUserId'] as num).toInt(),
   myAvatarSvg: (json['myAvatarSvg'] as List<dynamic>?)
@@ -22,6 +19,9 @@ ReceivedRecoveryShare _$ReceivedRecoveryShareFromJson(
   threshold: (json['threshold'] as num).toInt(),
   sharedSecretDataBytes: (json['sharedSecretDataBytes'] as List<dynamic>)
       .map((e) => (e as num).toInt())
+      .toList(),
+  trustedFriendAvatarSvg: (json['trustedFriendAvatarSvg'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
       .toList(),
 );
 

@@ -164,6 +164,99 @@ class TwonlySafeBackupEncrypted extends $pb.GeneratedMessage {
   void clearCipherText() => $_clearField(3);
 }
 
+class CloudMediaBackupEncrypted extends $pb.GeneratedMessage {
+  factory CloudMediaBackupEncrypted({
+    $core.String? addition,
+    $core.List<$core.int>? encryptedMediaKey,
+    $core.List<$core.int>? mediaNonce,
+    $core.List<$core.int>? mediaCiphertext,
+  }) {
+    final result = create();
+    if (addition != null) result.addition = addition;
+    if (encryptedMediaKey != null) result.encryptedMediaKey = encryptedMediaKey;
+    if (mediaNonce != null) result.mediaNonce = mediaNonce;
+    if (mediaCiphertext != null) result.mediaCiphertext = mediaCiphertext;
+    return result;
+  }
+
+  CloudMediaBackupEncrypted._();
+
+  factory CloudMediaBackupEncrypted.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CloudMediaBackupEncrypted.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CloudMediaBackupEncrypted',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'addition')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'encryptedMediaKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'mediaNonce', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'mediaCiphertext', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudMediaBackupEncrypted clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudMediaBackupEncrypted copyWith(
+          void Function(CloudMediaBackupEncrypted) updates) =>
+      super.copyWith((message) => updates(message as CloudMediaBackupEncrypted))
+          as CloudMediaBackupEncrypted;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CloudMediaBackupEncrypted create() => CloudMediaBackupEncrypted._();
+  @$core.override
+  CloudMediaBackupEncrypted createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CloudMediaBackupEncrypted getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CloudMediaBackupEncrypted>(create);
+  static CloudMediaBackupEncrypted? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get addition => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set addition($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAddition() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAddition() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get encryptedMediaKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set encryptedMediaKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEncryptedMediaKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedMediaKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get mediaNonce => $_getN(2);
+  @$pb.TagNumber(3)
+  set mediaNonce($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMediaNonce() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMediaNonce() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get mediaCiphertext => $_getN(3);
+  @$pb.TagNumber(4)
+  set mediaCiphertext($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMediaCiphertext() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMediaCiphertext() => $_clearField(4);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

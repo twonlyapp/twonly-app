@@ -1647,17 +1647,82 @@ class Response_PasswordlessNotificationMessages extends $pb.GeneratedMessage {
       $_getList(0);
 }
 
+class Response_PresignedPost extends $pb.GeneratedMessage {
+  factory Response_PresignedPost({
+    $core.String? url,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? fields,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (fields != null) result.fields.addEntries(fields);
+    return result;
+  }
+
+  Response_PresignedPost._();
+
+  factory Response_PresignedPost.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PresignedPost.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PresignedPost',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..m<$core.String, $core.String>(2, _omitFieldNames ? '' : 'fields',
+        entryClassName: 'Response.PresignedPost.FieldsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('server_to_client'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PresignedPost clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PresignedPost copyWith(
+          void Function(Response_PresignedPost) updates) =>
+      super.copyWith((message) => updates(message as Response_PresignedPost))
+          as Response_PresignedPost;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PresignedPost create() => Response_PresignedPost._();
+  @$core.override
+  Response_PresignedPost createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PresignedPost getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PresignedPost>(create);
+  static Response_PresignedPost? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbMap<$core.String, $core.String> get fields => $_getMap(1);
+}
+
 class Response_MemoriesUploadUrls extends $pb.GeneratedMessage {
   factory Response_MemoriesUploadUrls({
     $core.String? mediaId,
-    $core.String? thumbnailUploadUrl,
-    $core.String? fullUploadUrl,
+    Response_PresignedPost? thumbnailUpload,
+    Response_PresignedPost? fullUpload,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
-    if (thumbnailUploadUrl != null)
-      result.thumbnailUploadUrl = thumbnailUploadUrl;
-    if (fullUploadUrl != null) result.fullUploadUrl = fullUploadUrl;
+    if (thumbnailUpload != null) result.thumbnailUpload = thumbnailUpload;
+    if (fullUpload != null) result.fullUpload = fullUpload;
     return result;
   }
 
@@ -1676,8 +1741,10 @@ class Response_MemoriesUploadUrls extends $pb.GeneratedMessage {
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
-    ..aOS(2, _omitFieldNames ? '' : 'thumbnailUploadUrl')
-    ..aOS(3, _omitFieldNames ? '' : 'fullUploadUrl')
+    ..aOM<Response_PresignedPost>(2, _omitFieldNames ? '' : 'thumbnailUpload',
+        subBuilder: Response_PresignedPost.create)
+    ..aOM<Response_PresignedPost>(3, _omitFieldNames ? '' : 'fullUpload',
+        subBuilder: Response_PresignedPost.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1712,22 +1779,26 @@ class Response_MemoriesUploadUrls extends $pb.GeneratedMessage {
   void clearMediaId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get thumbnailUploadUrl => $_getSZ(1);
+  Response_PresignedPost get thumbnailUpload => $_getN(1);
   @$pb.TagNumber(2)
-  set thumbnailUploadUrl($core.String value) => $_setString(1, value);
+  set thumbnailUpload(Response_PresignedPost value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasThumbnailUploadUrl() => $_has(1);
+  $core.bool hasThumbnailUpload() => $_has(1);
   @$pb.TagNumber(2)
-  void clearThumbnailUploadUrl() => $_clearField(2);
+  void clearThumbnailUpload() => $_clearField(2);
+  @$pb.TagNumber(2)
+  Response_PresignedPost ensureThumbnailUpload() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $core.String get fullUploadUrl => $_getSZ(2);
+  Response_PresignedPost get fullUpload => $_getN(2);
   @$pb.TagNumber(3)
-  set fullUploadUrl($core.String value) => $_setString(2, value);
+  set fullUpload(Response_PresignedPost value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasFullUploadUrl() => $_has(2);
+  $core.bool hasFullUpload() => $_has(2);
   @$pb.TagNumber(3)
-  void clearFullUploadUrl() => $_clearField(3);
+  void clearFullUpload() => $_clearField(3);
+  @$pb.TagNumber(3)
+  Response_PresignedPost ensureFullUpload() => $_ensure(2);
 }
 
 class Response_MediaItem extends $pb.GeneratedMessage {

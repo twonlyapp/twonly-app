@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
+    as server;
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
@@ -21,6 +24,7 @@ class BackupView extends StatefulWidget {
 class _BackupViewState extends State<BackupView> {
   bool _isLoading = false;
   CurrentBackupStatus? _backupStatus;
+  server.Response_MemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
 
   @override
@@ -41,9 +45,11 @@ class _BackupViewState extends State<BackupView> {
   Future<void> _loadBackupStatus() async {
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
+    final memoriesUsage = await apiService.getMemoriesUsage();
     if (!mounted) return;
     setState(() {
       _backupStatus = status;
+      _memoriesUsage = memoriesUsage;
       _isLoading = false;
     });
   }
@@ -181,6 +187,58 @@ class _BackupViewState extends State<BackupView> {
                             ),
                           ),
                         ]),
+                      ),
+                      const SizedBox(height: 24),
+                      const Center(
+                        child: Text(
+                          'Memories Backup',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Table(
+                        defaultVerticalAlignment:
+                            TableCellVerticalAlignment.middle,
+                        children: _buildTableRows([
+                          (
+                            'Usage',
+                            _memoriesUsage != null
+                                ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                                : '-',
+                          ),
+                          (
+                            'Files Backed Up',
+                            _memoriesUsage != null
+                                ? '${_memoriesUsage!.count}'
+                                : '-',
+                          ),
+                        ]),
+                      ),
+                      StreamBuilder<MemoriesBackupProgress>(
+                        initialData: memoriesCloudService.currentProgress,
+                        stream: memoriesCloudService.progressStream,
+                        builder: (context, snapshot) {
+                          final progress = snapshot.data;
+                          if (progress == null || progress.totalPending == 0) {
+                            return const SizedBox.shrink();
+                          }
+                          final percent = (progress.currentUploaded / progress.totalPending) +
+                              (progress.currentUploadProgress / progress.totalPending);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 12),
+                              Text(
+                                'Syncing: ${progress.currentUploaded} / ${progress.totalPending} files (${(percent * 100).toStringAsFixed(1)}%)',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 6),
+                              LinearProgressIndicator(
+                                value: percent.clamp(0.0, 1.0),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

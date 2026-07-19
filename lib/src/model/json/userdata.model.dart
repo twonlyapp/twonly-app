@@ -150,8 +150,8 @@ class UserData {
   @Deprecated('Use the secure storage in rust')
   TwonlySafeBackup? twonlySafeBackup;
 
-  @JsonKey(defaultValue: false)
-  bool isBackupEnabled = false;
+  @JsonKey(defaultValue: true)
+  bool isBackupEnabled = true;
 
   PasswordLessRecovery? passwordLessRecovery;
 

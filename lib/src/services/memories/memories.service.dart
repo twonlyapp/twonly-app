@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:blurhash_dart/blurhash_dart.dart' as bh;
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -190,7 +192,8 @@ class MemoriesService {
 
     return MemoriesState(
       filesToMigrate: filesToMigrate,
-      totalFilesToMigrate: filesToMigrate, // Reset total when computing new state? No, keep existing total if migrating.
+      totalFilesToMigrate:
+          filesToMigrate, // Reset total when computing new state? No, keep existing total if migrating.
       galleryItems: tempGalleryItems,
       months: tempMonths,
       orderedByMonth: tempOrderedByMonth,
@@ -279,6 +282,27 @@ class MemoriesService {
 
         if (mediaService.mediaFile.sizeInBytes == null) {
           await mediaService.calculateAndSaveSize();
+        }
+
+        if (mediaService.mediaFile.blurhash == null) {
+          try {
+            final imageFile = mediaService.thumbnailPath.existsSync()
+                ? mediaService.thumbnailPath
+                : mediaService.originalPath;
+            if (imageFile.existsSync()) {
+              final bytes = await imageFile.readAsBytes();
+              final image = img.decodeImage(bytes);
+              if (image != null) {
+                final blurhash = bh.BlurHash.encode(image).hash;
+                await twonlyDB.mediaFilesDao.updateMedia(
+                  mediaFile.mediaId,
+                  MediaFilesCompanion(blurhash: Value(blurhash)),
+                );
+              }
+            }
+          } catch (e) {
+            Log.error('Error generating blurhash for ${mediaFile.mediaId}: $e');
+          }
         }
       } catch (e) {
         Log.error(

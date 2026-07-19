@@ -120,6 +120,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           (t) =>
               t.stored.equals(true) &
               (t.storedFileHash.isNull() |
+                  t.blurhash.isNull() |
                   t.hasCropAnalyzed.equals(false) |
                   (t.hasThumbnail.equals(false) &
                       t.type.equals(MediaType.audio.name).not()) |
@@ -141,7 +142,12 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
     final query =
-        (select(mediaFiles)..where((t) => t.stored.equals(true))).join([])
+        (select(mediaFiles)..where(
+              (t) =>
+                  t.stored.equals(true) |
+                  t.cloudState.equals(CloudState.uploaded.name),
+            ))
+            .join([])
           ..groupBy([
             const CustomExpression<Object>(
               'COALESCE(stored_file_hash, media_id)',
@@ -218,5 +224,13 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     }
 
     return stats;
+  }
+
+  Future<List<MediaFile>> getMemoriesToBackup() async {
+    return (select(mediaFiles)..where(
+          (t) =>
+              t.stored.equals(true) & t.cloudState.equals(CloudState.none.name),
+        ))
+        .get();
   }
 }

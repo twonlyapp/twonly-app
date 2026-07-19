@@ -32,6 +32,7 @@ import 'package:twonly/src/services/api/server_messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
@@ -143,6 +144,7 @@ class ApiService {
       unawaited(PasswordlessRecoveryService.performHeartbeat());
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
+      memoriesCloudService.init();
 
       if (userService.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
@@ -706,6 +708,75 @@ class ApiService {
   Future<Result> _setLoginToken(List<int> token) async {
     final get = ApplicationData_SetLoginToken()..loginToken = token;
     final appData = ApplicationData()..setLoginToken = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<server.Response_MemoriesUploadUrls?> requestMemoriesUpload(
+    int sizeBytes,
+    DateTime originalDate,
+    String mediaId,
+  ) async {
+    final get = ApplicationData_RequestMemoriesUpload()
+      ..size = Int64(sizeBytes)
+      ..originalDate = Int64(originalDate.millisecondsSinceEpoch)
+      ..mediaId = mediaId;
+    final appData = ApplicationData()..requestMemoriesUpload = get;
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUploadUrls()) {
+        return ok.memoriesUploadUrls;
+      }
+    }
+    return null;
+  }
+
+  Future<server.Response_MemoriesUsage?> getMemoriesUsage() async {
+    final appData = ApplicationData()
+      ..getMemoriesUsage = ApplicationData_GetMemoriesUsage();
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUsage()) {
+        return ok.memoriesUsage;
+      }
+    }
+    return null;
+  }
+
+  Future<server.Response_MemoriesUrl?> getMemoriesUrl(
+    String mediaId,
+    bool thumbnail,
+  ) async {
+    final appData = ApplicationData()
+      ..getMemoriesUrl = ApplicationData_GetMemoriesUrl(
+        mediaId: mediaId,
+        thumbnail: thumbnail,
+      );
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUrl()) {
+        return ok.memoriesUrl;
+      }
+    }
+    return null;
+  }
+
+  Future<Result> confirmMemoriesUpload(String mediaId) async {
+    final get = ApplicationData_ConfirmMemoriesUpload()..mediaId = mediaId;
+    final appData = ApplicationData()..confirmMemoriesUpload = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> deleteMemory(String mediaId) async {
+    final get = ApplicationData_DeleteMemory()..mediaId = mediaId;
+    final appData = ApplicationData()..deleteMemory = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }

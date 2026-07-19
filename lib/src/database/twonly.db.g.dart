@@ -3094,6 +3094,27 @@ class $MediaFilesTable extends MediaFiles
     requiredDuringInsert: false,
   ).withConverter<UploadState?>($MediaFilesTable.$converteruploadStaten);
   @override
+  late final GeneratedColumnWithTypeConverter<CloudState, String> cloudState =
+      GeneratedColumn<String>(
+        'cloud_state',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('none'),
+      ).withConverter<CloudState>($MediaFilesTable.$convertercloudState);
+  static const VerificationMeta _blurhashMeta = const VerificationMeta(
+    'blurhash',
+  );
+  @override
+  late final GeneratedColumn<String> blurhash = GeneratedColumn<String>(
+    'blurhash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
   late final GeneratedColumnWithTypeConverter<DownloadState?, String>
   downloadState = GeneratedColumn<String>(
     'download_state',
@@ -3333,6 +3354,8 @@ class $MediaFilesTable extends MediaFiles
     mediaId,
     type,
     uploadState,
+    cloudState,
+    blurhash,
     downloadState,
     requiresAuthentication,
     stored,
@@ -3372,6 +3395,12 @@ class $MediaFilesTable extends MediaFiles
       );
     } else if (isInserting) {
       context.missing(_mediaIdMeta);
+    }
+    if (data.containsKey('blurhash')) {
+      context.handle(
+        _blurhashMeta,
+        blurhash.isAcceptableOrUnknown(data['blurhash']!, _blurhashMeta),
+      );
     }
     if (data.containsKey('requires_authentication')) {
       context.handle(
@@ -3542,6 +3571,16 @@ class $MediaFilesTable extends MediaFiles
           data['${effectivePrefix}upload_state'],
         ),
       ),
+      cloudState: $MediaFilesTable.$convertercloudState.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}cloud_state'],
+        )!,
+      ),
+      blurhash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}blurhash'],
+      ),
       downloadState: $MediaFilesTable.$converterdownloadStaten.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -3637,6 +3676,8 @@ class $MediaFilesTable extends MediaFiles
       const EnumNameConverter<UploadState>(UploadState.values);
   static JsonTypeConverter2<UploadState?, String?, String?>
   $converteruploadStaten = JsonTypeConverter2.asNullable($converteruploadState);
+  static JsonTypeConverter2<CloudState, String, String> $convertercloudState =
+      const EnumNameConverter<CloudState>(CloudState.values);
   static JsonTypeConverter2<DownloadState, String, String>
   $converterdownloadState = const EnumNameConverter<DownloadState>(
     DownloadState.values,
@@ -3655,6 +3696,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final String mediaId;
   final MediaType type;
   final UploadState? uploadState;
+  final CloudState cloudState;
+  final String? blurhash;
   final DownloadState? downloadState;
   final bool requiresAuthentication;
   final bool stored;
@@ -3678,6 +3721,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     required this.mediaId,
     required this.type,
     this.uploadState,
+    required this.cloudState,
+    this.blurhash,
     this.downloadState,
     required this.requiresAuthentication,
     required this.stored,
@@ -3711,6 +3756,14 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       map['upload_state'] = Variable<String>(
         $MediaFilesTable.$converteruploadStaten.toSql(uploadState),
       );
+    }
+    {
+      map['cloud_state'] = Variable<String>(
+        $MediaFilesTable.$convertercloudState.toSql(cloudState),
+      );
+    }
+    if (!nullToAbsent || blurhash != null) {
+      map['blurhash'] = Variable<String>(blurhash);
     }
     if (!nullToAbsent || downloadState != null) {
       map['download_state'] = Variable<String>(
@@ -3773,6 +3826,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       uploadState: uploadState == null && nullToAbsent
           ? const Value.absent()
           : Value(uploadState),
+      cloudState: Value(cloudState),
+      blurhash: blurhash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(blurhash),
       downloadState: downloadState == null && nullToAbsent
           ? const Value.absent()
           : Value(downloadState),
@@ -3833,6 +3890,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       uploadState: $MediaFilesTable.$converteruploadStaten.fromJson(
         serializer.fromJson<String?>(json['uploadState']),
       ),
+      cloudState: $MediaFilesTable.$convertercloudState.fromJson(
+        serializer.fromJson<String>(json['cloudState']),
+      ),
+      blurhash: serializer.fromJson<String?>(json['blurhash']),
       downloadState: $MediaFilesTable.$converterdownloadStaten.fromJson(
         serializer.fromJson<String?>(json['downloadState']),
       ),
@@ -3875,6 +3936,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'uploadState': serializer.toJson<String?>(
         $MediaFilesTable.$converteruploadStaten.toJson(uploadState),
       ),
+      'cloudState': serializer.toJson<String>(
+        $MediaFilesTable.$convertercloudState.toJson(cloudState),
+      ),
+      'blurhash': serializer.toJson<String?>(blurhash),
       'downloadState': serializer.toJson<String?>(
         $MediaFilesTable.$converterdownloadStaten.toJson(downloadState),
       ),
@@ -3905,6 +3970,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     String? mediaId,
     MediaType? type,
     Value<UploadState?> uploadState = const Value.absent(),
+    CloudState? cloudState,
+    Value<String?> blurhash = const Value.absent(),
     Value<DownloadState?> downloadState = const Value.absent(),
     bool? requiresAuthentication,
     bool? stored,
@@ -3928,6 +3995,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     mediaId: mediaId ?? this.mediaId,
     type: type ?? this.type,
     uploadState: uploadState.present ? uploadState.value : this.uploadState,
+    cloudState: cloudState ?? this.cloudState,
+    blurhash: blurhash.present ? blurhash.value : this.blurhash,
     downloadState: downloadState.present
         ? downloadState.value
         : this.downloadState,
@@ -3976,6 +4045,10 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       uploadState: data.uploadState.present
           ? data.uploadState.value
           : this.uploadState,
+      cloudState: data.cloudState.present
+          ? data.cloudState.value
+          : this.cloudState,
+      blurhash: data.blurhash.present ? data.blurhash.value : this.blurhash,
       downloadState: data.downloadState.present
           ? data.downloadState.value
           : this.downloadState,
@@ -4038,6 +4111,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('mediaId: $mediaId, ')
           ..write('type: $type, ')
           ..write('uploadState: $uploadState, ')
+          ..write('cloudState: $cloudState, ')
+          ..write('blurhash: $blurhash, ')
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
@@ -4066,6 +4141,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     mediaId,
     type,
     uploadState,
+    cloudState,
+    blurhash,
     downloadState,
     requiresAuthentication,
     stored,
@@ -4093,6 +4170,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.mediaId == this.mediaId &&
           other.type == this.type &&
           other.uploadState == this.uploadState &&
+          other.cloudState == this.cloudState &&
+          other.blurhash == this.blurhash &&
           other.downloadState == this.downloadState &&
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
@@ -4124,6 +4203,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<String> mediaId;
   final Value<MediaType> type;
   final Value<UploadState?> uploadState;
+  final Value<CloudState> cloudState;
+  final Value<String?> blurhash;
   final Value<DownloadState?> downloadState;
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
@@ -4148,6 +4229,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.mediaId = const Value.absent(),
     this.type = const Value.absent(),
     this.uploadState = const Value.absent(),
+    this.cloudState = const Value.absent(),
+    this.blurhash = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
@@ -4173,6 +4256,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     required String mediaId,
     required MediaType type,
     this.uploadState = const Value.absent(),
+    this.cloudState = const Value.absent(),
+    this.blurhash = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
@@ -4199,6 +4284,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<String>? mediaId,
     Expression<String>? type,
     Expression<String>? uploadState,
+    Expression<String>? cloudState,
+    Expression<String>? blurhash,
     Expression<String>? downloadState,
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
@@ -4224,6 +4311,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (mediaId != null) 'media_id': mediaId,
       if (type != null) 'type': type,
       if (uploadState != null) 'upload_state': uploadState,
+      if (cloudState != null) 'cloud_state': cloudState,
+      if (blurhash != null) 'blurhash': blurhash,
       if (downloadState != null) 'download_state': downloadState,
       if (requiresAuthentication != null)
         'requires_authentication': requiresAuthentication,
@@ -4255,6 +4344,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<String>? mediaId,
     Value<MediaType>? type,
     Value<UploadState?>? uploadState,
+    Value<CloudState>? cloudState,
+    Value<String?>? blurhash,
     Value<DownloadState?>? downloadState,
     Value<bool>? requiresAuthentication,
     Value<bool>? stored,
@@ -4280,6 +4371,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       mediaId: mediaId ?? this.mediaId,
       type: type ?? this.type,
       uploadState: uploadState ?? this.uploadState,
+      cloudState: cloudState ?? this.cloudState,
+      blurhash: blurhash ?? this.blurhash,
       downloadState: downloadState ?? this.downloadState,
       requiresAuthentication:
           requiresAuthentication ?? this.requiresAuthentication,
@@ -4321,6 +4414,14 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       map['upload_state'] = Variable<String>(
         $MediaFilesTable.$converteruploadStaten.toSql(uploadState.value),
       );
+    }
+    if (cloudState.present) {
+      map['cloud_state'] = Variable<String>(
+        $MediaFilesTable.$convertercloudState.toSql(cloudState.value),
+      );
+    }
+    if (blurhash.present) {
+      map['blurhash'] = Variable<String>(blurhash.value);
     }
     if (downloadState.present) {
       map['download_state'] = Variable<String>(
@@ -4403,6 +4504,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('mediaId: $mediaId, ')
           ..write('type: $type, ')
           ..write('uploadState: $uploadState, ')
+          ..write('cloudState: $cloudState, ')
+          ..write('blurhash: $blurhash, ')
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
@@ -16080,6 +16183,8 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       required String mediaId,
       required MediaType type,
       Value<UploadState?> uploadState,
+      Value<CloudState> cloudState,
+      Value<String?> blurhash,
       Value<DownloadState?> downloadState,
       Value<bool> requiresAuthentication,
       Value<bool> stored,
@@ -16106,6 +16211,8 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<String> mediaId,
       Value<MediaType> type,
       Value<UploadState?> uploadState,
+      Value<CloudState> cloudState,
+      Value<String?> blurhash,
       Value<DownloadState?> downloadState,
       Value<bool> requiresAuthentication,
       Value<bool> stored,
@@ -16175,6 +16282,17 @@ class $$MediaFilesTableFilterComposer
   get uploadState => $composableBuilder(
     column: $table.uploadState,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<CloudState, CloudState, String>
+  get cloudState => $composableBuilder(
+    column: $table.cloudState,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<String> get blurhash => $composableBuilder(
+    column: $table.blurhash,
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnWithTypeConverterFilters<DownloadState?, DownloadState, String>
@@ -16324,6 +16442,16 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cloudState => $composableBuilder(
+    column: $table.cloudState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get blurhash => $composableBuilder(
+    column: $table.blurhash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get downloadState => $composableBuilder(
     column: $table.downloadState,
     builder: (column) => ColumnOrderings(column),
@@ -16440,6 +16568,15 @@ class $$MediaFilesTableAnnotationComposer
         column: $table.uploadState,
         builder: (column) => column,
       );
+
+  GeneratedColumnWithTypeConverter<CloudState, String> get cloudState =>
+      $composableBuilder(
+        column: $table.cloudState,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get blurhash =>
+      $composableBuilder(column: $table.blurhash, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DownloadState?, String> get downloadState =>
       $composableBuilder(
@@ -16591,6 +16728,8 @@ class $$MediaFilesTableTableManager
                 Value<String> mediaId = const Value.absent(),
                 Value<MediaType> type = const Value.absent(),
                 Value<UploadState?> uploadState = const Value.absent(),
+                Value<CloudState> cloudState = const Value.absent(),
+                Value<String?> blurhash = const Value.absent(),
                 Value<DownloadState?> downloadState = const Value.absent(),
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
@@ -16615,6 +16754,8 @@ class $$MediaFilesTableTableManager
                 mediaId: mediaId,
                 type: type,
                 uploadState: uploadState,
+                cloudState: cloudState,
+                blurhash: blurhash,
                 downloadState: downloadState,
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
@@ -16641,6 +16782,8 @@ class $$MediaFilesTableTableManager
                 required String mediaId,
                 required MediaType type,
                 Value<UploadState?> uploadState = const Value.absent(),
+                Value<CloudState> cloudState = const Value.absent(),
+                Value<String?> blurhash = const Value.absent(),
                 Value<DownloadState?> downloadState = const Value.absent(),
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
@@ -16665,6 +16808,8 @@ class $$MediaFilesTableTableManager
                 mediaId: mediaId,
                 type: type,
                 uploadState: uploadState,
+                cloudState: cloudState,
+                blurhash: blurhash,
                 downloadState: downloadState,
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,

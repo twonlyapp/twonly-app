@@ -647,10 +647,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proFeature2 => '✓ 1 additional Plus user';
 
   @override
-  String get proFeature3 => '✓ Restore flames';
+  String get proFeature3 => '✓ 25GB Memories storage';
 
   @override
-  String get proFeature4 => '✓ Support twonly';
+  String get proFeature4 => '✓ Restore flames';
 
   @override
   String get familyFeature1 => '✓ Unlimited media file uploads';
@@ -659,7 +659,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature2 => '✓ 4 additional Plus user';
 
   @override
-  String get familyFeature3 => '✓ Restore flames';
+  String get familyFeature3 => '✓ 50GB Memories storage';
 
   @override
   String get familyFeature4 => '✓ Support twonly';

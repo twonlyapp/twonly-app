@@ -178,6 +178,7 @@ const Response$json = {
     Response_ProofOfWork$json,
     Response_PasswordlessNotificationMessage$json,
     Response_PasswordlessNotificationMessages$json,
+    Response_PresignedPost$json,
     Response_MemoriesUploadUrls$json,
     Response_MediaItem$json,
     Response_MemoriesList$json,
@@ -554,18 +555,53 @@ const Response_PasswordlessNotificationMessages$json = {
 };
 
 @$core.Deprecated('Use responseDescriptor instead')
+const Response_PresignedPost$json = {
+  '1': 'PresignedPost',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {
+      '1': 'fields',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.server_to_client.Response.PresignedPost.FieldsEntry',
+      '10': 'fields'
+    },
+  ],
+  '3': [Response_PresignedPost_FieldsEntry$json],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
+const Response_PresignedPost_FieldsEntry$json = {
+  '1': 'FieldsEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+  ],
+  '7': {'7': true},
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
 const Response_MemoriesUploadUrls$json = {
   '1': 'MemoriesUploadUrls',
   '2': [
     {'1': 'media_id', '3': 1, '4': 1, '5': 9, '10': 'mediaId'},
     {
-      '1': 'thumbnail_upload_url',
+      '1': 'thumbnail_upload',
       '3': 2,
       '4': 1,
-      '5': 9,
-      '10': 'thumbnailUploadUrl'
+      '5': 11,
+      '6': '.server_to_client.Response.PresignedPost',
+      '10': 'thumbnailUpload'
     },
-    {'1': 'full_upload_url', '3': 3, '4': 1, '5': 9, '10': 'fullUploadUrl'},
+    {
+      '1': 'full_upload',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.Response.PresignedPost',
+      '10': 'fullUpload'
+    },
   ],
 };
 
@@ -843,42 +879,46 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'Bhc3N3b3JkbGVzc05vdGlmaWNhdGlvbk1lc3NhZ2USDgoCaWQYASABKANSAmlkEisKEWVuY3J5'
     'cHRlZF9tZXNzYWdlGAIgASgMUhBlbmNyeXB0ZWRNZXNzYWdlGnoKIFBhc3N3b3JkbGVzc05vdG'
     'lmaWNhdGlvbk1lc3NhZ2VzElYKCG1lc3NhZ2VzGAEgAygLMjouc2VydmVyX3RvX2NsaWVudC5S'
-    'ZXNwb25zZS5QYXNzd29yZGxlc3NOb3RpZmljYXRpb25NZXNzYWdlUghtZXNzYWdlcxqJAQoSTW'
-    'Vtb3JpZXNVcGxvYWRVcmxzEhkKCG1lZGlhX2lkGAEgASgJUgdtZWRpYUlkEjAKFHRodW1ibmFp'
-    'bF91cGxvYWRfdXJsGAIgASgJUhJ0aHVtYm5haWxVcGxvYWRVcmwSJgoPZnVsbF91cGxvYWRfdX'
-    'JsGAMgASgJUg1mdWxsVXBsb2FkVXJsGoEBCglNZWRpYUl0ZW0SGQoIbWVkaWFfaWQYASABKAlS'
-    'B21lZGlhSWQSIwoNb3JpZ2luYWxfZGF0ZRgCIAEoA1IMb3JpZ2luYWxEYXRlEjQKFnRodW1ibm'
-    'FpbF9kb3dubG9hZF91cmwYAyABKAlSFHRodW1ibmFpbERvd25sb2FkVXJsGkoKDE1lbW9yaWVz'
-    'TGlzdBI6CgVpdGVtcxgBIAMoCzIkLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuTWVkaWFJdG'
-    'VtUgVpdGVtcxo5CgtNZW1vcmllc1VybBIqChFmdWxsX2Rvd25sb2FkX3VybBgBIAEoCVIPZnVs'
-    'bERvd25sb2FkVXJsGmcKDU1lbW9yaWVzVXNhZ2USGwoJbWF4X2J5dGVzGAEgASgDUghtYXhCeX'
-    'RlcxIjCg1jdXJyZW50X2J5dGVzGAIgASgDUgxjdXJyZW50Qnl0ZXMSFAoFY291bnQYAyABKANS'
-    'BWNvdW50GoMMCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGAIgASgDSABSBn'
-    'VzZXJpZBImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDWF1dGhjaGFsbGVuZ2USSgoLdXBsb2Fk'
-    'dG9rZW4YBCABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVwbG9hZFRva2VuSABSC3'
-    'VwbG9hZHRva2VuEkEKCHVzZXJkYXRhGAUgASgLMiMuc2VydmVyX3RvX2NsaWVudC5SZXNwb25z'
-    'ZS5Vc2VyRGF0YUgAUgh1c2VyZGF0YRIeCglhdXRodG9rZW4YBiABKAxIAFIJYXV0aHRva2VuEk'
-    'oKDGRlcHJlY2F0ZWRfNxgHIAEoCzIlLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuRGVwcmVj'
-    'YXRlZEgAUgtkZXByZWNhdGVkNxJQCg1hdXRoZW50aWNhdGVkGAggASgLMiguc2VydmVyX3RvX2'
-    'NsaWVudC5SZXNwb25zZS5BdXRoZW50aWNhdGVkSABSDWF1dGhlbnRpY2F0ZWQSOAoFcGxhbnMY'
-    'CSABKAsyIC5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlBsYW5zSABSBXBsYW5zEk0KDHBsYW'
-    '5iYWxsYW5jZRgKIAEoCzInLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUGxhbkJhbGxhbmNl'
-    'SABSDHBsYW5iYWxsYW5jZRJMCg1kZXByZWNhdGVkXzExGAsgASgLMiUuc2VydmVyX3RvX2NsaW'
-    'VudC5SZXNwb25zZS5EZXByZWNhdGVkSABSDGRlcHJlY2F0ZWQxMRJfChJhZGRhY2NvdW50c2lu'
-    'dml0ZXMYDCABKAsyLS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLkFkZEFjY291bnRzSW52aX'
-    'Rlc0gAUhJhZGRhY2NvdW50c2ludml0ZXMSUwoOZG93bmxvYWR0b2tlbnMYDSABKAsyKS5zZXJ2'
-    'ZXJfdG9fY2xpZW50LlJlc3BvbnNlLkRvd25sb2FkVG9rZW5zSABSDmRvd25sb2FkdG9rZW5zEk'
-    '0KDHNpZ25lZHByZWtleRgOIAEoCzInLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuU2lnbmVk'
-    'UHJlS2V5SABSDHNpZ25lZHByZWtleRJKCgtwcm9vZk9mV29yaxgPIAEoCzImLnNlcnZlcl90b1'
-    '9jbGllbnQuUmVzcG9uc2UuUHJvb2ZPZldvcmtIAFILcHJvb2ZPZldvcmsSSQogcGFzc3dvcmRs'
-    'ZXNzX3JlY292ZXJ5X3NlcnZlcl9rZXkYECABKAxIAFIdcGFzc3dvcmRsZXNzUmVjb3ZlcnlTZX'
-    'J2ZXJLZXkSiwEKInBhc3N3b3JkbGVzc19ub3RpZmljYXRpb25fbWVzc2FnZXMYESABKAsyOy5z'
-    'ZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbk1lc3NhZ2'
-    'VzSABSIHBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbk1lc3NhZ2VzEmEKFG1lbW9yaWVzX3VwbG9h'
-    'ZF91cmxzGBIgASgLMi0uc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5NZW1vcmllc1VwbG9hZF'
-    'VybHNIAFISbWVtb3JpZXNVcGxvYWRVcmxzEk4KDW1lbW9yaWVzX2xpc3QYEyABKAsyJy5zZXJ2'
-    'ZXJfdG9fY2xpZW50LlJlc3BvbnNlLk1lbW9yaWVzTGlzdEgAUgxtZW1vcmllc0xpc3QSSwoMbW'
-    'Vtb3JpZXNfdXJsGBQgASgLMiYuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5NZW1vcmllc1Vy'
-    'bEgAUgttZW1vcmllc1VybBJRCg5tZW1vcmllc191c2FnZRgVIAEoCzIoLnNlcnZlcl90b19jbG'
-    'llbnQuUmVzcG9uc2UuTWVtb3JpZXNVc2FnZUgAUg1tZW1vcmllc1VzYWdlQgQKAk9rQgoKCFJl'
-    'c3BvbnNl');
+    'ZXNwb25zZS5QYXNzd29yZGxlc3NOb3RpZmljYXRpb25NZXNzYWdlUghtZXNzYWdlcxqqAQoNUH'
+    'Jlc2lnbmVkUG9zdBIQCgN1cmwYASABKAlSA3VybBJMCgZmaWVsZHMYAiADKAsyNC5zZXJ2ZXJf'
+    'dG9fY2xpZW50LlJlc3BvbnNlLlByZXNpZ25lZFBvc3QuRmllbGRzRW50cnlSBmZpZWxkcxo5Cg'
+    'tGaWVsZHNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgB'
+    'Gs8BChJNZW1vcmllc1VwbG9hZFVybHMSGQoIbWVkaWFfaWQYASABKAlSB21lZGlhSWQSUwoQdG'
+    'h1bWJuYWlsX3VwbG9hZBgCIAEoCzIoLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUHJlc2ln'
+    'bmVkUG9zdFIPdGh1bWJuYWlsVXBsb2FkEkkKC2Z1bGxfdXBsb2FkGAMgASgLMiguc2VydmVyX3'
+    'RvX2NsaWVudC5SZXNwb25zZS5QcmVzaWduZWRQb3N0UgpmdWxsVXBsb2FkGoEBCglNZWRpYUl0'
+    'ZW0SGQoIbWVkaWFfaWQYASABKAlSB21lZGlhSWQSIwoNb3JpZ2luYWxfZGF0ZRgCIAEoA1IMb3'
+    'JpZ2luYWxEYXRlEjQKFnRodW1ibmFpbF9kb3dubG9hZF91cmwYAyABKAlSFHRodW1ibmFpbERv'
+    'd25sb2FkVXJsGkoKDE1lbW9yaWVzTGlzdBI6CgVpdGVtcxgBIAMoCzIkLnNlcnZlcl90b19jbG'
+    'llbnQuUmVzcG9uc2UuTWVkaWFJdGVtUgVpdGVtcxo5CgtNZW1vcmllc1VybBIqChFmdWxsX2Rv'
+    'd25sb2FkX3VybBgBIAEoCVIPZnVsbERvd25sb2FkVXJsGmcKDU1lbW9yaWVzVXNhZ2USGwoJbW'
+    'F4X2J5dGVzGAEgASgDUghtYXhCeXRlcxIjCg1jdXJyZW50X2J5dGVzGAIgASgDUgxjdXJyZW50'
+    'Qnl0ZXMSFAoFY291bnQYAyABKANSBWNvdW50GoMMCgJPaxIUCgROb25lGAEgASgISABSBE5vbm'
+    'USGAoGdXNlcmlkGAIgASgDSABSBnVzZXJpZBImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDWF1'
+    'dGhjaGFsbGVuZ2USSgoLdXBsb2FkdG9rZW4YBCABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlJlc3'
+    'BvbnNlLlVwbG9hZFRva2VuSABSC3VwbG9hZHRva2VuEkEKCHVzZXJkYXRhGAUgASgLMiMuc2Vy'
+    'dmVyX3RvX2NsaWVudC5SZXNwb25zZS5Vc2VyRGF0YUgAUgh1c2VyZGF0YRIeCglhdXRodG9rZW'
+    '4YBiABKAxIAFIJYXV0aHRva2VuEkoKDGRlcHJlY2F0ZWRfNxgHIAEoCzIlLnNlcnZlcl90b19j'
+    'bGllbnQuUmVzcG9uc2UuRGVwcmVjYXRlZEgAUgtkZXByZWNhdGVkNxJQCg1hdXRoZW50aWNhdG'
+    'VkGAggASgLMiguc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5BdXRoZW50aWNhdGVkSABSDWF1'
+    'dGhlbnRpY2F0ZWQSOAoFcGxhbnMYCSABKAsyIC5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLl'
+    'BsYW5zSABSBXBsYW5zEk0KDHBsYW5iYWxsYW5jZRgKIAEoCzInLnNlcnZlcl90b19jbGllbnQu'
+    'UmVzcG9uc2UuUGxhbkJhbGxhbmNlSABSDHBsYW5iYWxsYW5jZRJMCg1kZXByZWNhdGVkXzExGA'
+    'sgASgLMiUuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5EZXByZWNhdGVkSABSDGRlcHJlY2F0'
+    'ZWQxMRJfChJhZGRhY2NvdW50c2ludml0ZXMYDCABKAsyLS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3'
+    'BvbnNlLkFkZEFjY291bnRzSW52aXRlc0gAUhJhZGRhY2NvdW50c2ludml0ZXMSUwoOZG93bmxv'
+    'YWR0b2tlbnMYDSABKAsyKS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLkRvd25sb2FkVG9rZW'
+    '5zSABSDmRvd25sb2FkdG9rZW5zEk0KDHNpZ25lZHByZWtleRgOIAEoCzInLnNlcnZlcl90b19j'
+    'bGllbnQuUmVzcG9uc2UuU2lnbmVkUHJlS2V5SABSDHNpZ25lZHByZWtleRJKCgtwcm9vZk9mV2'
+    '9yaxgPIAEoCzImLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUHJvb2ZPZldvcmtIAFILcHJv'
+    'b2ZPZldvcmsSSQogcGFzc3dvcmRsZXNzX3JlY292ZXJ5X3NlcnZlcl9rZXkYECABKAxIAFIdcG'
+    'Fzc3dvcmRsZXNzUmVjb3ZlcnlTZXJ2ZXJLZXkSiwEKInBhc3N3b3JkbGVzc19ub3RpZmljYXRp'
+    'b25fbWVzc2FnZXMYESABKAsyOy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlBhc3N3b3JkbG'
+    'Vzc05vdGlmaWNhdGlvbk1lc3NhZ2VzSABSIHBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbk1lc3Nh'
+    'Z2VzEmEKFG1lbW9yaWVzX3VwbG9hZF91cmxzGBIgASgLMi0uc2VydmVyX3RvX2NsaWVudC5SZX'
+    'Nwb25zZS5NZW1vcmllc1VwbG9hZFVybHNIAFISbWVtb3JpZXNVcGxvYWRVcmxzEk4KDW1lbW9y'
+    'aWVzX2xpc3QYEyABKAsyJy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLk1lbW9yaWVzTGlzdE'
+    'gAUgxtZW1vcmllc0xpc3QSSwoMbWVtb3JpZXNfdXJsGBQgASgLMiYuc2VydmVyX3RvX2NsaWVu'
+    'dC5SZXNwb25zZS5NZW1vcmllc1VybEgAUgttZW1vcmllc1VybBJRCg5tZW1vcmllc191c2FnZR'
+    'gVIAEoCzIoLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuTWVtb3JpZXNVc2FnZUgAUg1tZW1v'
+    'cmllc1VzYWdlQgQKAk9rQgoKCFJlc3BvbnNl');
