@@ -36,15 +36,15 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - Open Source and can be downloaded directly from GitHub
 - No email or phone number required to register
 - The backend is hosted exclusively in Europe
+- [Passwordless Backup](https://twonly.eu/en/blog/2026-passwordless-backup.html) without a phone number
+- [User Discovery](https://twonly.eu/en/blog/2026-mutual-friends.html) without a phone number
+- E2EE cloud backup of memories
 
 ## Roadmap
 
 ### Currently
 
-- Focus on user-friendliness so that people enjoy using the app
-    - Passwordless recovery without a phone number
 - Implementation of features so that Snapchat can actually be replaced
-    - E2EE cloud backup of memories
     - Importing memories from Snapchat
 
 ### Next on the bucket list

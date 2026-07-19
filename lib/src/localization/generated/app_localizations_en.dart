@@ -754,6 +754,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deleteMemoriesLocalOnly => 'Local Only';
+
+  @override
+  String get deleteMemoriesCompletely => 'Completely';
+
+  @override
+  String memoriesSelectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elements',
+      one: '1 Element',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get memoriesMenuSelectAll => 'Select all';
+
+  @override
+  String get memoriesMenuDeselectAll => 'Deselect all';
+
+  @override
+  String get memoriesMenuExport => 'Export to gallery';
+
+  @override
+  String get memoriesMenuFavorite => 'Favorite';
+
+  @override
+  String get memoriesMenuDelete => 'Delete completely';
+
+  @override
+  String get memoriesMenuDeleteLocal => 'Delete locally';
+
+  @override
   String get settingsBackup => 'Backup';
 
   @override
@@ -2327,4 +2362,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get missingRecoveryContactsCardAction => 'Select Contacts';
+
+  @override
+  String get memoriesBackupLimitReached =>
+      'Cloud backup limit reached! Please upgrade your plan or free up space.';
+
+  @override
+  String get settingsStorageLocal => 'Local storage';
+
+  @override
+  String get settingsStorageNoCloudBackupTitle => 'No Cloud Backup';
+
+  @override
+  String get settingsStorageNoCloudBackupCard =>
+      'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.';
+
+  @override
+  String get galleryActionSave => 'Save';
+
+  @override
+  String get galleryActionExport => 'Export';
+
+  @override
+  String get galleryActionFavorite => 'Favorite';
+
+  @override
+  String get galleryActionUnfavorite => 'Unfavorite';
+
+  @override
+  String get galleryActionDelete => 'Delete';
+
+  @override
+  String get galleryActionShare => 'Share';
 }

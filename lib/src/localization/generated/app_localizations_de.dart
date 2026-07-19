@@ -664,7 +664,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get familyFeature2 => '✓ 4 zusätzliche Plus Benutzer';
 
   @override
-  String get familyFeature3 => '50GB Memories Speicher';
+  String get familyFeature3 => '✓ 50GB Memories Speicher';
 
   @override
   String get familyFeature4 => '✓ Flammen wiederherstellen';
@@ -757,6 +757,41 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get deleteMemoriesLocalOnly => 'Nur lokal';
+
+  @override
+  String get deleteMemoriesCompletely => 'Komplett';
+
+  @override
+  String memoriesSelectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elemente',
+      one: '1 Element',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get memoriesMenuSelectAll => 'Alles auswählen';
+
+  @override
+  String get memoriesMenuDeselectAll => 'Alle abwählen';
+
+  @override
+  String get memoriesMenuExport => 'In Gallery exportieren';
+
+  @override
+  String get memoriesMenuFavorite => 'Favorisieren';
+
+  @override
+  String get memoriesMenuDelete => 'Löschen';
+
+  @override
+  String get memoriesMenuDeleteLocal => 'Lokal löschen';
 
   @override
   String get settingsBackup => 'Backup';
@@ -2348,4 +2383,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get missingRecoveryContactsCardAction => 'Kontakte auswählen';
+
+  @override
+  String get memoriesBackupLimitReached =>
+      'Cloud-Backup-Limit erreicht! Bitte aktualisiere dein Abonnement oder gib Speicherplatz frei.';
+
+  @override
+  String get settingsStorageLocal => 'Lokaler Speicherplatz';
+
+  @override
+  String get settingsStorageNoCloudBackupTitle => 'Kein Cloud-Backup';
+
+  @override
+  String get settingsStorageNoCloudBackupCard =>
+      'Sichere deine Erinnerungen in der Cloud, um lokalen Speicherplatz freizugeben und deine Bilder nicht zu verlieren. Alles Ende-zu-Ende verschlüsselt.';
+
+  @override
+  String get galleryActionSave => 'Sichern';
+
+  @override
+  String get galleryActionExport => 'Exportieren';
+
+  @override
+  String get galleryActionFavorite => 'Favorit';
+
+  @override
+  String get galleryActionUnfavorite => 'Favorit';
+
+  @override
+  String get galleryActionDelete => 'Löschen';
+
+  @override
+  String get galleryActionShare => 'Teilen';
 }

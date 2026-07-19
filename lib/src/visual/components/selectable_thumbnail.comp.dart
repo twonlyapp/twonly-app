@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 
 class SelectableThumbnailComp extends StatelessWidget {
   const SelectableThumbnailComp({
@@ -19,7 +19,7 @@ class SelectableThumbnailComp extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: isSelected ? context.color.primary : Colors.transparent,
+        color: isSelected ? primaryColor : Colors.transparent,
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -49,9 +49,7 @@ class SelectableThumbnailComp extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? context.color.primary
-                        : Colors.black38,
+                    color: isSelected ? primaryColor : Colors.black38,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: Theme.of(context).brightness == Brightness.dark

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -91,13 +92,23 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
 
     if (!hasThumbnail) {
       if (hasStored) {
-        media.createThumbnail();
+        unawaited(
+          media.createThumbnail().then((_) {
+            if (mounted) {
+              _resolveImage();
+            }
+          }),
+        );
       } else {
-        MemoriesCloudService.downloadThumbnail(media).then((success) {
-          if (mounted && success) {
-            _resolveImage();
-          }
-        });
+        unawaited(
+          MemoriesCloudService.downloadFromCloud(media, isThumbnail: true).then(
+            (success) {
+              if (mounted && success) {
+                _resolveImage();
+              }
+            },
+          ),
+        );
       }
     }
 
@@ -117,6 +128,8 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
     if (oldWidget.galleryItem.mediaService.mediaFile.mediaId !=
         widget.galleryItem.mediaService.mediaFile.mediaId) {
       _imageStream?.removeListener(_listener);
+      _imageStream = null;
+      _imageProvider = null;
       _imageInfo = null;
       _retries = 0;
       _selectedImageFile = null;
@@ -235,32 +248,45 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                     ],
                   ),
                 ),
-              if (media.mediaFile.cloudState == CloudState.pending)
-                const Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(
-                    Icons.cloud_upload_outlined,
-                    color: Colors.white70,
-                    size: 16,
-                    shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 4),
-                    ],
-                  ),
-                )
-              else if (media.mediaFile.cloudState == CloudState.uploaded)
-                const Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(
-                    Icons.cloud_done_outlined,
-                    color: Colors.white,
-                    size: 16,
-                    shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 4),
-                    ],
-                  ),
-                ),
+              Builder(
+                builder: (context) {
+                  final hasStored =
+                      media.storedPath.existsSync() &&
+                      media.storedPath.lengthSync() > 0;
+                  final IconData iconData;
+                  final Color color;
+
+                  switch (media.mediaFile.cloudState) {
+                    case CloudState.none:
+                      iconData = Icons.cloud_off_outlined;
+                      color = Colors.white54;
+                    case CloudState.pending:
+                      iconData = Icons.cloud_upload_outlined;
+                      color = Colors.white70;
+                    case CloudState.uploaded:
+                      if (hasStored) {
+                        iconData = Icons.cloud_done_outlined;
+                        color = Colors.white;
+                      } else {
+                        iconData = Icons.cloud_outlined;
+                        color = Colors.white;
+                      }
+                  }
+
+                  return Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Icon(
+                      iconData,
+                      color: color,
+                      size: 16,
+                      shadows: const [
+                        Shadow(color: Colors.black54, blurRadius: 4),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),

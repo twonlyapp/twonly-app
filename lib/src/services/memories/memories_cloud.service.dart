@@ -6,6 +6,7 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
@@ -58,6 +59,8 @@ class ProgressMultipartRequest extends http.MultipartRequest {
 }
 
 class MemoriesCloudService {
+  static final Map<String, Mutex> _fileMutexes = {};
+
   Timer? _timer;
   bool _isProcessing = false;
 
@@ -152,24 +155,38 @@ class MemoriesCloudService {
     }
   }
 
-  static Future<bool> downloadThumbnail(MediaFileService media) async {
-    final urls = await apiService.getMemoriesUrl(media.mediaFile.mediaId, true);
-    if (urls == null || !urls.hasFullDownloadUrl()) return false;
+  static Future<bool> downloadFromCloud(
+    MediaFileService media, {
+    required bool isThumbnail,
+  }) async {
+    final mediaId = media.mediaFile.mediaId;
+    final mutex = _fileMutexes.putIfAbsent(mediaId, Mutex.new);
 
-    try {
-      final response = await http.get(Uri.parse(urls.fullDownloadUrl));
+    return mutex.protect(() async {
+      final targetPath = isThumbnail ? media.thumbnailPath : media.storedPath;
 
-      if (response.statusCode == 200) {
-        return await _decryptFile(response.bodyBytes, media.thumbnailPath);
-      } else {
-        Log.warn(
-          'Failed to download thumbnai statuscode ${response.statusCode}',
-        );
+      if (targetPath.existsSync() && targetPath.lengthSync() > 0) {
+        return true;
       }
-    } catch (e) {
-      Log.warn(e);
-    }
-    return false;
+
+      final urls = await apiService.getMemoriesUrl(mediaId, isThumbnail);
+      if (urls == null || !urls.hasFullDownloadUrl()) return false;
+
+      try {
+        final response = await http.get(Uri.parse(urls.fullDownloadUrl));
+
+        if (response.statusCode == 200) {
+          return await _decryptFile(response.bodyBytes, targetPath);
+        } else {
+          Log.warn(
+            'Failed to download ${isThumbnail ? 'thumbnail' : 'full media'} statuscode ${response.statusCode}',
+          );
+        }
+      } catch (e) {
+        Log.warn(e);
+      }
+      return false;
+    });
   }
 
   Future<bool> _backupMemory(

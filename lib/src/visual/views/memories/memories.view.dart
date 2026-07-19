@@ -7,11 +7,12 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/draggable_scrollbar.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
-import 'package:twonly/src/visual/views/memories/components/selection_toolbar.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/selection_menu.comp.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MemoriesView extends StatefulWidget {
@@ -270,57 +271,41 @@ class MemoriesViewState extends State<MemoriesView>
     }
   }
 
-  Future<void> _batchDelete() async {
+  Future<void> _batchDelete({bool? forceDeleteCompletely}) async {
     final count = _selectedMediaIds.length;
     final items = _service.currentState.galleryItems;
     final selectedList = _selectedMediaIds.toList();
 
-    var hasCloudBackup = false;
-    for (final id in selectedList) {
-      final item = items
-          .where((e) => e.mediaService.mediaFile.mediaId == id)
-          .firstOrNull;
-      if (item != null &&
-          item.mediaService.mediaFile.cloudState != CloudState.none) {
-        hasCloudBackup = true;
-        break;
+    var deleteCompletely = forceDeleteCompletely;
+    if (deleteCompletely == null) {
+      var hasCloudBackup = false;
+      for (final id in selectedList) {
+        final item = items
+            .where((e) => e.mediaService.mediaFile.mediaId == id)
+            .firstOrNull;
+        if (item != null &&
+            item.mediaService.mediaFile.cloudState != CloudState.none) {
+          hasCloudBackup = true;
+          break;
+        }
       }
-    }
 
-    bool? deleteCompletely;
-    if (hasCloudBackup) {
-      deleteCompletely = await showDialog<bool>(
+      deleteCompletely = await showDeleteMemoriesDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(context.lang.deleteImageTitle),
-          content: Text(context.lang.deleteMemoriesBody(count)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.lang.galleryCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Local Only'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Completely'),
-            ),
-          ],
-        ),
+        count: count,
+        hasCloudBackup: hasCloudBackup,
       );
-    } else {
+    } else if (deleteCompletely) {
       final confirmed = await showAlertDialog(
         context,
         context.lang.deleteImageTitle,
         context.lang.deleteMemoriesBody(count),
       );
-      if (confirmed) deleteCompletely = true;
+      if (!confirmed) return;
     }
 
     if (deleteCompletely == null) return;
+    final isCompletely = deleteCompletely;
 
     await _showProgressDialog(
       'Deleting memories...',
@@ -331,12 +316,14 @@ class MemoriesViewState extends State<MemoriesView>
               .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
               .firstOrNull;
           if (item != null) {
-            if (deleteCompletely!) {
+            if (isCompletely) {
               item.mediaService.fullMediaRemoval();
               await apiService.deleteMemory(mediaId);
               await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
             } else {
-              item.mediaService.storedPath.deleteSync();
+              if (item.mediaService.storedPath.existsSync()) {
+                item.mediaService.storedPath.deleteSync();
+              }
             }
           }
           setProgress((i + 1) / selectedList.length);
@@ -515,9 +502,9 @@ class MemoriesViewState extends State<MemoriesView>
                         vertical: 8,
                         horizontal: 16,
                       ),
-                      child: const Text(
-                        'Cloud backup limit reached! Please upgrade your plan or free up space.',
-                        style: TextStyle(
+                      child: Text(
+                        context.lang.memoriesBackupLimitReached,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -565,65 +552,128 @@ class MemoriesViewState extends State<MemoriesView>
                             physics: const BouncingScrollPhysics(),
                             slivers: [
                               SliverAppBar(
-                                title: const Text(
-                                  'Memories',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                                leading: _selectionMode
+                                    ? IconButton(
+                                        icon: const Icon(Icons.arrow_back),
+                                        onPressed: () =>
+                                            setState(_selectedMediaIds.clear),
+                                      )
+                                    : null,
+                                title: _selectionMode
+                                    ? Builder(
+                                        builder: (context) => Text(
+                                          context.lang.memoriesSelectedCount(
+                                            _selectedMediaIds.length,
+                                          ),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Memories',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                pinned: _selectionMode,
                                 floating: true,
                                 snap: true,
                                 elevation: 0,
                                 backgroundColor: context.color.surface,
-                                actions: [
-                                  if (state.isLoading)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                      ),
-                                      child: Center(
-                                        child: Tooltip(
-                                          message: context.lang
-                                              .migrationOfMemories(
-                                                state.filesToMigrate,
-                                              ),
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              value: state.migrationProgress,
-                                              strokeWidth: 2.5,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation(
-                                                    context.color.primary,
+                                actions: _selectionMode
+                                    ? [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                          ),
+                                          onPressed: _batchDelete,
+                                        ),
+                                        Builder(
+                                          builder: (context) {
+                                            final visibleCount =
+                                                _filterFavoritesOnly
+                                                ? state.galleryItems
+                                                      .where(
+                                                        (e) => e
+                                                            .mediaService
+                                                            .mediaFile
+                                                            .isFavorite,
+                                                      )
+                                                      .length
+                                                : state.galleryItems.length;
+                                            final areAllSelected =
+                                                visibleCount > 0 &&
+                                                _selectedMediaIds.length >=
+                                                    visibleCount;
+
+                                            return MemoriesSelectionMenuComp(
+                                              areAllSelected: areAllSelected,
+                                              onSelectAll: _selectAll,
+                                              onExport: _batchExport,
+                                              onFavorite: _batchFavorite,
+                                              onDeleteCompletely: () =>
+                                                  _batchDelete(
+                                                    forceDeleteCompletely: true,
                                                   ),
-                                              backgroundColor: context
-                                                  .color
-                                                  .primary
-                                                  .withValues(alpha: 0.2),
+                                              onDeleteLocally: () =>
+                                                  _batchDelete(
+                                                    forceDeleteCompletely:
+                                                        false,
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                      ]
+                                    : [
+                                        if (state.isLoading)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            child: Center(
+                                              child: Tooltip(
+                                                message: context.lang
+                                                    .migrationOfMemories(
+                                                      state.filesToMigrate,
+                                                    ),
+                                                child: SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    value:
+                                                        state.migrationProgress,
+                                                    strokeWidth: 2.5,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation(
+                                                          context.color.primary,
+                                                        ),
+                                                    backgroundColor: context
+                                                        .color
+                                                        .primary
+                                                        .withValues(alpha: 0.2),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
                                           ),
+                                        IconButton(
+                                          icon: Icon(
+                                            _filterFavoritesOnly
+                                                ? Icons.favorite
+                                                : Icons.favorite_border,
+                                            color: _filterFavoritesOnly
+                                                ? Colors.redAccent
+                                                : null,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _filterFavoritesOnly =
+                                                  !_filterFavoritesOnly;
+                                            });
+                                          },
                                         ),
-                                      ),
-                                    ),
-                                  IconButton(
-                                    icon: Icon(
-                                      _filterFavoritesOnly
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: _filterFavoritesOnly
-                                          ? Colors.redAccent
-                                          : null,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _filterFavoritesOnly =
-                                            !_filterFavoritesOnly;
-                                      });
-                                    },
-                                    tooltip: _filterFavoritesOnly
-                                        ? 'Show all'
-                                        : 'Show favorites only',
-                                  ),
-                                ],
+                                      ],
                               ),
                               MemoriesFlashbackBannerComp(
                                 lastYears: lastYears,
@@ -703,47 +753,6 @@ class MemoriesViewState extends State<MemoriesView>
               );
             },
           ),
-
-          if (_selectionMode)
-            Builder(
-              builder: (context) {
-                final items = _service.currentState.galleryItems;
-                var visibleCount = 0;
-                var favCount = 0;
-
-                for (final item in items) {
-                  final isFav = item.mediaService.mediaFile.isFavorite;
-                  if (!_filterFavoritesOnly || isFav) {
-                    visibleCount++;
-                  }
-                  if (_selectedMediaIds.contains(
-                    item.mediaService.mediaFile.mediaId,
-                  )) {
-                    if (isFav) {
-                      favCount++;
-                    }
-                  }
-                }
-
-                final areAllSelected =
-                    visibleCount > 0 &&
-                    _selectedMediaIds.length >= visibleCount;
-                final areAllFav =
-                    _selectedMediaIds.isNotEmpty &&
-                    favCount == _selectedMediaIds.length;
-
-                return MemoriesSelectionToolbarComp(
-                  selectedCount: _selectedMediaIds.length,
-                  areAllSelected: areAllSelected,
-                  areAllFav: areAllFav,
-                  onSelectAll: _selectAll,
-                  onExport: _batchExport,
-                  onFavorite: _batchFavorite,
-                  onDelete: _batchDelete,
-                  onClear: () => setState(_selectedMediaIds.clear),
-                );
-              },
-            ),
         ],
       ),
     );

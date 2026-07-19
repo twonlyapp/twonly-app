@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'mediafiles.dao.g.dart';
@@ -217,10 +220,30 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     final rows = await select(mediaFiles).get();
     final stats = <MediaType, int>{};
 
+    final Set<String> existingPaths;
+    if (rows.isNotEmpty) {
+      final dummyMs = MediaFileService(rows.first);
+      final storedDir = dummyMs.storedPath.parent;
+      if (storedDir.existsSync()) {
+        existingPaths = storedDir
+            .listSync()
+            .whereType<File>()
+            .map((f) => f.path)
+            .toSet();
+      } else {
+        existingPaths = <String>{};
+      }
+    } else {
+      existingPaths = <String>{};
+    }
+
     for (final row in rows) {
       final type = row.type;
-      final size = row.sizeInBytes ?? 0;
-      stats[type] = (stats[type] ?? 0) + size;
+      final ms = MediaFileService(row);
+      if (existingPaths.contains(ms.storedPath.path)) {
+        final size = row.sizeInBytes ?? 0;
+        stats[type] = (stats[type] ?? 0) + size;
+      }
     }
 
     return stats;

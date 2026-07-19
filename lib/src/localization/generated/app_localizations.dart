@@ -1442,6 +1442,60 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}'**
   String deleteMemoriesBody(num count);
 
+  /// No description provided for @deleteMemoriesLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Only'**
+  String get deleteMemoriesLocalOnly;
+
+  /// No description provided for @deleteMemoriesCompletely.
+  ///
+  /// In en, this message translates to:
+  /// **'Completely'**
+  String get deleteMemoriesCompletely;
+
+  /// No description provided for @memoriesSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 Element} other {{count} Elements}}'**
+  String memoriesSelectedCount(num count);
+
+  /// No description provided for @memoriesMenuSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get memoriesMenuSelectAll;
+
+  /// No description provided for @memoriesMenuDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get memoriesMenuDeselectAll;
+
+  /// No description provided for @memoriesMenuExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to gallery'**
+  String get memoriesMenuExport;
+
+  /// No description provided for @memoriesMenuFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get memoriesMenuFavorite;
+
+  /// No description provided for @memoriesMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completely'**
+  String get memoriesMenuDelete;
+
+  /// No description provided for @memoriesMenuDeleteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete locally'**
+  String get memoriesMenuDeleteLocal;
+
   /// No description provided for @settingsBackup.
   ///
   /// In en, this message translates to:
@@ -4057,6 +4111,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Contacts'**
   String get missingRecoveryContactsCardAction;
+
+  /// No description provided for @memoriesBackupLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup limit reached! Please upgrade your plan or free up space.'**
+  String get memoriesBackupLimitReached;
+
+  /// No description provided for @settingsStorageLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage'**
+  String get settingsStorageLocal;
+
+  /// No description provided for @settingsStorageNoCloudBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Cloud Backup'**
+  String get settingsStorageNoCloudBackupTitle;
+
+  /// No description provided for @settingsStorageNoCloudBackupCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.'**
+  String get settingsStorageNoCloudBackupCard;
+
+  /// No description provided for @galleryActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get galleryActionSave;
+
+  /// No description provided for @galleryActionExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get galleryActionExport;
+
+  /// No description provided for @galleryActionFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get galleryActionFavorite;
+
+  /// No description provided for @galleryActionUnfavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get galleryActionUnfavorite;
+
+  /// No description provided for @galleryActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get galleryActionDelete;
+
+  /// No description provided for @galleryActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get galleryActionShare;
 }
 
 class _AppLocalizationsDelegate

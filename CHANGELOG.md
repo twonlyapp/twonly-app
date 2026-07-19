@@ -2,6 +2,7 @@
 
 ## 0.4.0
 
+- New: Encrypted Cloud Backup of Memories
 - New: Passwordless Backup
 - Fix: Performance issues
 
