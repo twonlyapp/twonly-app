@@ -69,7 +69,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
           _secondFactor = SecondFactorType.email;
           _emailController.text = config.email!;
           _threshold = 2;
-        } else if (config.pinSeed != null) {
+        } else if (config.serverKeyProtection != null && config.email == null) {
           _secondFactor = SecondFactorType.pin;
           _threshold = 2;
         } else {

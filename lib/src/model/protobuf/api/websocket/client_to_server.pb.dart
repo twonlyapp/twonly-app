@@ -813,15 +813,15 @@ class Handshake_GetServerKeyForPasswordLessRecovery
     extends $pb.GeneratedMessage {
   factory Handshake_GetServerKeyForPasswordLessRecovery({
     $fixnum.Int64? userId,
-    $core.List<$core.int>? encryptedServerKeyNone,
+    $core.List<$core.int>? serverKeyProtection,
     $core.List<$core.int>? pinUnlockToken,
     $core.List<$core.int>? pinProtectionKey,
     $core.String? email,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
-    if (encryptedServerKeyNone != null)
-      result.encryptedServerKeyNone = encryptedServerKeyNone;
+    if (serverKeyProtection != null)
+      result.serverKeyProtection = serverKeyProtection;
     if (pinUnlockToken != null) result.pinUnlockToken = pinUnlockToken;
     if (pinProtectionKey != null) result.pinProtectionKey = pinProtectionKey;
     if (email != null) result.email = email;
@@ -846,7 +846,7 @@ class Handshake_GetServerKeyForPasswordLessRecovery
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'encryptedServerKeyNone', $pb.PbFieldType.OY)
+        2, _omitFieldNames ? '' : 'serverKeyProtection', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
         3, _omitFieldNames ? '' : 'pinUnlockToken', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(
@@ -889,14 +889,13 @@ class Handshake_GetServerKeyForPasswordLessRecovery
   void clearUserId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.int> get encryptedServerKeyNone => $_getN(1);
+  $core.List<$core.int> get serverKeyProtection => $_getN(1);
   @$pb.TagNumber(2)
-  set encryptedServerKeyNone($core.List<$core.int> value) =>
-      $_setBytes(1, value);
+  set serverKeyProtection($core.List<$core.int> value) => $_setBytes(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasEncryptedServerKeyNone() => $_has(1);
+  $core.bool hasServerKeyProtection() => $_has(1);
   @$pb.TagNumber(2)
-  void clearEncryptedServerKeyNone() => $_clearField(2);
+  void clearServerKeyProtection() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $core.List<$core.int> get pinUnlockToken => $_getN(2);
@@ -1746,50 +1745,6 @@ class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetAvailablePlans>(
           create);
   static ApplicationData_GetAvailablePlans? _defaultInstance;
-}
-
-class ApplicationData_GetAddAccountsInvites extends $pb.GeneratedMessage {
-  factory ApplicationData_GetAddAccountsInvites() => create();
-
-  ApplicationData_GetAddAccountsInvites._();
-
-  factory ApplicationData_GetAddAccountsInvites.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_GetAddAccountsInvites.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetAddAccountsInvites',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetAddAccountsInvites clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_GetAddAccountsInvites copyWith(
-          void Function(ApplicationData_GetAddAccountsInvites) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetAddAccountsInvites))
-          as ApplicationData_GetAddAccountsInvites;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAddAccountsInvites create() =>
-      ApplicationData_GetAddAccountsInvites._();
-  @$core.override
-  ApplicationData_GetAddAccountsInvites createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAddAccountsInvites getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_GetAddAccountsInvites>(create);
-  static ApplicationData_GetAddAccountsInvites? _defaultInstance;
 }
 
 class ApplicationData_GetCurrentPlanInfos extends $pb.GeneratedMessage {

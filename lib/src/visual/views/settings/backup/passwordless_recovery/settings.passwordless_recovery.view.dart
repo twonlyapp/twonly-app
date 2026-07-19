@@ -116,7 +116,7 @@ class PasswordLessRecoverySettings extends StatelessWidget {
           secondFactorLabel = context.lang
               .passwordlessRecoverySecondFactorEmailLabel(config.email!);
           secondFactorIcon = Icons.email_outlined;
-        } else if (config.pinSeed != null) {
+        } else if (config.serverKeyProtection != null && config.email == null) {
           secondFactorLabel = context.lang.passwordlessRecoverySecondFactorPin;
           secondFactorIcon = Icons.pin_outlined;
           actionButton = MyButton(

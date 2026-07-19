@@ -13,6 +13,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -170,9 +171,14 @@ Future<void> runMigrations() async {
     });
   }
 
+  if (userService.currentUser.appVersion < 118) {
+    await PasswordlessRecoveryService.migratePasswordlessRecovery();
+    await UserService.update((u) => u.appVersion = 118);
+  }
+
   if (kDebugMode) {
     assert(
-      AppState.latestAppVersionId == 117,
+      AppState.latestAppVersionId == 118,
       'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
     );
     assert(

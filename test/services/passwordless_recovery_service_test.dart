@@ -502,6 +502,7 @@ void main() {
 
         final msg = pb.EncryptedContent_PasswordLessRecovery()
           ..delete = false
+          ..threshold = Int64(2)
           ..recoverySecretShare = [11, 22, 33];
 
         await PasswordlessRecoveryService.handlePasswordlessRecovery(

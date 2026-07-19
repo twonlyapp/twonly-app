@@ -217,18 +217,13 @@ class PasswordLessRecovery {
   // Only stored, so the user can see his deposit email address...
   String? email;
 
-  // <--
   // Data shared with trusted friends
 
   @JsonKey(defaultValue: 2)
   int threshold;
-  // Trusted friends are able to brute-force the pin -> Server delets after X tries
-  List<int>? pinSeed;
+  // Used to derive the key from the email/pin
+  List<int>? serverKeyProtection;
   List<int>? pinUnlockToken;
-
-  // Stored not on the server, so the server is unable to link a email to a user until the actuall recovery or can
-  // brute-force the pin
-  List<int>? encryptedServerKeyNonce;
   // --->
 
   // Checking with the server that the server data is valid and not delted throug the pin protection for example.

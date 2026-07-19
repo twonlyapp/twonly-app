@@ -778,15 +778,15 @@ class ApiService {
 
   Future<Result> getServerKeyForPasswordlessRecovery({
     required int userId,
-    List<int>? encryptedServerKeyNone,
+    List<int>? serverKeyProtection,
     List<int>? pinUnlockToken,
     List<int>? pinProtectionKey,
     String? email,
   }) async {
     final get = Handshake_GetServerKeyForPasswordLessRecovery()
       ..userId = Int64(userId);
-    if (encryptedServerKeyNone != null) {
-      get.encryptedServerKeyNone = encryptedServerKeyNone;
+    if (serverKeyProtection != null) {
+      get.serverKeyProtection = serverKeyProtection;
     }
     if (pinUnlockToken != null) {
       get.pinUnlockToken = pinUnlockToken;
@@ -802,7 +802,6 @@ class ApiService {
     final req = createClientToServerFromHandshake(handshake);
     return sendRequestSync(req, authenticated: false);
   }
-
 
   Future<Result> submitRecoveryShare({
     required String notificationId,
@@ -954,7 +953,8 @@ class ApiService {
 
   /// Polls the server for new passwordless recovery notification messages.
   /// [alreadyReceivedIds] prevents the server from sending duplicates.
-  Future<server.Response_PasswordlessNotificationMessages?> checkForPasswordlessNotification({
+  Future<server.Response_PasswordlessNotificationMessages?>
+  checkForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     List<Int64>? alreadyReceivedIds,

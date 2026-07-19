@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cryptography_plus/cryptography_plus.dart'
-    show Hmac, Mac, SecretBox, SecretKey, Xchacha20;
+    show Hkdf, Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +21,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
+import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -239,7 +240,8 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
       final userId = shares.first.myUserId;
       Uint8List? serverKey;
 
-      if (reconstructed.hasPinSeed()) {
+      if (!reconstructed.hasEmailHint() &&
+          reconstructed.hasServerKeyProtection()) {
         final pin = _secondFactorController.text.trim();
         if (pin.isEmpty) {
           showSnackbar(
@@ -252,18 +254,18 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           return;
         }
 
-        // Calculate pinProtectionKey
-        final pinProtectionKey = await Hmac.sha256().calculateMac(
-          Uint8List.fromList(utf8.encode(pin)),
-          secretKey: SecretKey(reconstructed.pinSeed),
+        // Calculate pinProtectionKey via Hkdf
+        final hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+        final pinKey = await hkdf.deriveKey(
+          secretKey: SecretKey(reconstructed.serverKeyProtection),
+          nonce: utf8.encode(pin),
         );
 
         // Fetch serverKey
         final res = await apiService.getServerKeyForPasswordlessRecovery(
           userId: userId,
           pinUnlockToken: reconstructed.pinUnlockToken,
-          pinProtectionKey: pinProtectionKey.bytes,
-          encryptedServerKeyNone: reconstructed.encryptedServerKeyNonce,
+          pinProtectionKey: await pinKey.extractBytes(),
         );
 
         if (res.isError) {
@@ -303,7 +305,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           final res = await apiService.getServerKeyForPasswordlessRecovery(
             userId: userId,
             email: email,
-            encryptedServerKeyNone: reconstructed.encryptedServerKeyNonce,
+            serverKeyProtection: reconstructed.serverKeyProtection,
           );
 
           if (res.isError) {
@@ -490,7 +492,9 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           child: Column(
             children: [
               AvatarIcon(
-                svg: utf8.decode(first.myAvatarSvg ?? []),
+                svg: first.myAvatarSvg != null
+                    ? getAvatarSvg(Uint8List.fromList(first.myAvatarSvg!))
+                    : null,
                 fontSize: 60,
               ),
               const SizedBox(height: 12),
@@ -568,7 +572,8 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
               ),
             )
           else if (_reconstructedSecret != null) ...[
-            if (_reconstructedSecret!.hasPinSeed()) ...[
+            if (_reconstructedSecret!.hasServerKeyProtection() &&
+                !_reconstructedSecret!.hasEmailHint()) ...[
               MyInput(
                 controller: _secondFactorController,
                 hintText: context.lang.passwordlessRecoveryMethodPinHint,
