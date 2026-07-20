@@ -2427,4 +2427,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsStorageLocalOnly => 'Local only';
+
+  @override
+  String get settingsStorageDisableBackupTitle => 'Disable Backup?';
+
+  @override
+  String settingsStorageDisableBackupBody(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'are *$count images*',
+      one: 'is *1 image*',
+    );
+    return 'This will delete all backed up memories from the cloud. There $_temp0 only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?';
+  }
+
+  @override
+  String get settingsStorageDisableBackupBtn => 'Disable';
+
+  @override
+  String get settingsStorageDisableBackupAction => 'Disable Cloud Backup';
+
+  @override
+  String get settingsStorageSyncNow => 'Sync now';
+
+  @override
+  String get settingsStorageSyncUpToDate => 'All memories are up to date.';
 }

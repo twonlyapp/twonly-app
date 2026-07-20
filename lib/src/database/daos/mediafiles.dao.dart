@@ -256,4 +256,23 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         ))
         .get();
   }
+
+  Future<int> getCloudOnlyMemoriesCount() async {
+    final query = select(mediaFiles)
+      ..where(
+        (t) =>
+            t.stored.equals(true) &
+            t.cloudState.equals(CloudState.uploaded.name),
+      );
+    final rows = await query.get();
+
+    var count = 0;
+    for (final row in rows) {
+      final ms = MediaFileService(row);
+      if (!(ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0)) {
+        count++;
+      }
+    }
+    return count;
+  }
 }

@@ -2448,4 +2448,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsStorageLocalOnly => 'Nur lokal';
+
+  @override
+  String get settingsStorageDisableBackupTitle => 'Backup deaktivieren?';
+
+  @override
+  String settingsStorageDisableBackupBody(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '*$count Bilder*, die',
+      one: '*1 Bild*, das',
+    );
+    return 'Dadurch werden alle gesicherten Erinnerungen aus der Cloud gelöscht. Es gibt $_temp0 nur in der Cloud und nicht lokal gespeichert sind. Diese gehen *dauerhaft verloren*. Fortfahren?';
+  }
+
+  @override
+  String get settingsStorageDisableBackupBtn => 'Deaktivieren';
+
+  @override
+  String get settingsStorageDisableBackupAction => 'Cloud-Backup deaktivieren';
+
+  @override
+  String get settingsStorageSyncNow => 'Jetzt synchronisieren';
+
+  @override
+  String get settingsStorageSyncUpToDate =>
+      'Alle Memories sind auf dem neuesten Stand.';
 }

@@ -4237,6 +4237,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Local only'**
   String get settingsStorageLocalOnly;
+
+  /// No description provided for @settingsStorageDisableBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Backup?'**
+  String get settingsStorageDisableBackupTitle;
+
+  /// No description provided for @settingsStorageDisableBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all backed up memories from the cloud. There {count, plural, =1 {is *1 image*} other {are *{count} images*}} only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?'**
+  String settingsStorageDisableBackupBody(num count);
+
+  /// No description provided for @settingsStorageDisableBackupBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get settingsStorageDisableBackupBtn;
+
+  /// No description provided for @settingsStorageDisableBackupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Cloud Backup'**
+  String get settingsStorageDisableBackupAction;
+
+  /// No description provided for @settingsStorageSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get settingsStorageSyncNow;
+
+  /// No description provided for @settingsStorageSyncUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'All memories are up to date.'**
+  String get settingsStorageSyncUpToDate;
 }
 
 class _AppLocalizationsDelegate

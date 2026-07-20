@@ -2472,47 +2472,6 @@ class ApplicationData_SetLoginToken extends $pb.GeneratedMessage {
   void clearLoginToken() => $_clearField(1);
 }
 
-class ApplicationData_Deprecated extends $pb.GeneratedMessage {
-  factory ApplicationData_Deprecated() => create();
-
-  ApplicationData_Deprecated._();
-
-  factory ApplicationData_Deprecated.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApplicationData_Deprecated.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.Deprecated',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_Deprecated clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApplicationData_Deprecated copyWith(
-          void Function(ApplicationData_Deprecated) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_Deprecated))
-          as ApplicationData_Deprecated;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_Deprecated create() => ApplicationData_Deprecated._();
-  @$core.override
-  ApplicationData_Deprecated createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_Deprecated getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_Deprecated>(create);
-  static ApplicationData_Deprecated? _defaultInstance;
-}
-
 class ApplicationData_RegisterPasswordLessRecovery
     extends $pb.GeneratedMessage {
   factory ApplicationData_RegisterPasswordLessRecovery({
@@ -3054,23 +3013,59 @@ class ApplicationData_DeleteMemory extends $pb.GeneratedMessage {
   void clearMediaId() => $_clearField(1);
 }
 
+class ApplicationData_DisableMemoriesBackup extends $pb.GeneratedMessage {
+  factory ApplicationData_DisableMemoriesBackup() => create();
+
+  ApplicationData_DisableMemoriesBackup._();
+
+  factory ApplicationData_DisableMemoriesBackup.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_DisableMemoriesBackup.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.DisableMemoriesBackup',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_DisableMemoriesBackup clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_DisableMemoriesBackup copyWith(
+          void Function(ApplicationData_DisableMemoriesBackup) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_DisableMemoriesBackup))
+          as ApplicationData_DisableMemoriesBackup;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DisableMemoriesBackup create() =>
+      ApplicationData_DisableMemoriesBackup._();
+  @$core.override
+  ApplicationData_DisableMemoriesBackup createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DisableMemoriesBackup getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_DisableMemoriesBackup>(create);
+  static ApplicationData_DisableMemoriesBackup? _defaultInstance;
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
   getPrekeysByUserId,
   getUserById,
   updateGoogleFcmToken,
-  deprecated9,
   getCurrentPlanInfos,
-  deprecated11,
   getAvailablePlans,
-  deprecated13,
-  deprecated14,
-  deprecated15,
-  deprecated16,
-  deprecated17,
   removeAdditionalUser,
-  deprecated19,
   downloadDone,
   getSignedPrekeyByUserid,
   updateSignedPrekey,
@@ -3089,6 +3084,7 @@ enum ApplicationData_ApplicationData {
   getMemoriesUrl,
   getMemoriesUsage,
   deleteMemory,
+  disableMemoriesBackup,
   notSet
 }
 
@@ -3099,17 +3095,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetPrekeysByUserId? getPrekeysByUserId,
     ApplicationData_GetUserById? getUserById,
     ApplicationData_UpdateGoogleFcmToken? updateGoogleFcmToken,
-    ApplicationData_Deprecated? deprecated9,
     ApplicationData_GetCurrentPlanInfos? getCurrentPlanInfos,
-    ApplicationData_Deprecated? deprecated11,
     ApplicationData_GetAvailablePlans? getAvailablePlans,
-    ApplicationData_Deprecated? deprecated13,
-    ApplicationData_Deprecated? deprecated14,
-    ApplicationData_Deprecated? deprecated15,
-    ApplicationData_Deprecated? deprecated16,
-    ApplicationData_Deprecated? deprecated17,
     ApplicationData_RemoveAdditionalUser? removeAdditionalUser,
-    ApplicationData_Deprecated? deprecated19,
     ApplicationData_DownloadDone? downloadDone,
     ApplicationData_GetSignedPreKeyByUserId? getSignedPrekeyByUserid,
     ApplicationData_UpdateSignedPreKey? updateSignedPrekey,
@@ -3128,6 +3116,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetMemoriesUrl? getMemoriesUrl,
     ApplicationData_GetMemoriesUsage? getMemoriesUsage,
     ApplicationData_DeleteMemory? deleteMemory,
+    ApplicationData_DisableMemoriesBackup? disableMemoriesBackup,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -3137,19 +3126,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getUserById != null) result.getUserById = getUserById;
     if (updateGoogleFcmToken != null)
       result.updateGoogleFcmToken = updateGoogleFcmToken;
-    if (deprecated9 != null) result.deprecated9 = deprecated9;
     if (getCurrentPlanInfos != null)
       result.getCurrentPlanInfos = getCurrentPlanInfos;
-    if (deprecated11 != null) result.deprecated11 = deprecated11;
     if (getAvailablePlans != null) result.getAvailablePlans = getAvailablePlans;
-    if (deprecated13 != null) result.deprecated13 = deprecated13;
-    if (deprecated14 != null) result.deprecated14 = deprecated14;
-    if (deprecated15 != null) result.deprecated15 = deprecated15;
-    if (deprecated16 != null) result.deprecated16 = deprecated16;
-    if (deprecated17 != null) result.deprecated17 = deprecated17;
     if (removeAdditionalUser != null)
       result.removeAdditionalUser = removeAdditionalUser;
-    if (deprecated19 != null) result.deprecated19 = deprecated19;
     if (downloadDone != null) result.downloadDone = downloadDone;
     if (getSignedPrekeyByUserid != null)
       result.getSignedPrekeyByUserid = getSignedPrekeyByUserid;
@@ -3174,6 +3155,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getMemoriesUrl != null) result.getMemoriesUrl = getMemoriesUrl;
     if (getMemoriesUsage != null) result.getMemoriesUsage = getMemoriesUsage;
     if (deleteMemory != null) result.deleteMemory = deleteMemory;
+    if (disableMemoriesBackup != null)
+      result.disableMemoriesBackup = disableMemoriesBackup;
     return result;
   }
 
@@ -3193,17 +3176,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     3: ApplicationData_ApplicationData.getPrekeysByUserId,
     6: ApplicationData_ApplicationData.getUserById,
     8: ApplicationData_ApplicationData.updateGoogleFcmToken,
-    9: ApplicationData_ApplicationData.deprecated9,
     10: ApplicationData_ApplicationData.getCurrentPlanInfos,
-    11: ApplicationData_ApplicationData.deprecated11,
     12: ApplicationData_ApplicationData.getAvailablePlans,
-    13: ApplicationData_ApplicationData.deprecated13,
-    14: ApplicationData_ApplicationData.deprecated14,
-    15: ApplicationData_ApplicationData.deprecated15,
-    16: ApplicationData_ApplicationData.deprecated16,
-    17: ApplicationData_ApplicationData.deprecated17,
     18: ApplicationData_ApplicationData.removeAdditionalUser,
-    19: ApplicationData_ApplicationData.deprecated19,
     20: ApplicationData_ApplicationData.downloadDone,
     22: ApplicationData_ApplicationData.getSignedPrekeyByUserid,
     23: ApplicationData_ApplicationData.updateSignedPrekey,
@@ -3222,6 +3197,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     36: ApplicationData_ApplicationData.getMemoriesUrl,
     37: ApplicationData_ApplicationData.getMemoriesUsage,
     38: ApplicationData_ApplicationData.deleteMemory,
+    39: ApplicationData_ApplicationData.disableMemoriesBackup,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3235,17 +3211,9 @@ class ApplicationData extends $pb.GeneratedMessage {
       3,
       6,
       8,
-      9,
       10,
-      11,
       12,
-      13,
-      14,
-      15,
-      16,
-      17,
       18,
-      19,
       20,
       22,
       23,
@@ -3263,7 +3231,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       35,
       36,
       37,
-      38
+      38,
+      39
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -3283,42 +3252,18 @@ class ApplicationData extends $pb.GeneratedMessage {
         8, _omitFieldNames ? '' : 'updateGoogleFcmToken',
         protoName: 'updateGoogleFcmToken',
         subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
-    ..aOM<ApplicationData_Deprecated>(9, _omitFieldNames ? '' : 'deprecated9',
-        protoName: 'deprecated_9',
-        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_GetCurrentPlanInfos>(
         10, _omitFieldNames ? '' : 'getCurrentPlanInfos',
         protoName: 'getCurrentPlanInfos',
         subBuilder: ApplicationData_GetCurrentPlanInfos.create)
-    ..aOM<ApplicationData_Deprecated>(11, _omitFieldNames ? '' : 'deprecated11',
-        protoName: 'deprecated_11',
-        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_GetAvailablePlans>(
         12, _omitFieldNames ? '' : 'getAvailablePlans',
         protoName: 'getAvailablePlans',
         subBuilder: ApplicationData_GetAvailablePlans.create)
-    ..aOM<ApplicationData_Deprecated>(13, _omitFieldNames ? '' : 'deprecated13',
-        protoName: 'deprecated_13',
-        subBuilder: ApplicationData_Deprecated.create)
-    ..aOM<ApplicationData_Deprecated>(14, _omitFieldNames ? '' : 'deprecated14',
-        protoName: 'deprecated_14',
-        subBuilder: ApplicationData_Deprecated.create)
-    ..aOM<ApplicationData_Deprecated>(15, _omitFieldNames ? '' : 'deprecated15',
-        protoName: 'deprecated_15',
-        subBuilder: ApplicationData_Deprecated.create)
-    ..aOM<ApplicationData_Deprecated>(16, _omitFieldNames ? '' : 'deprecated16',
-        protoName: 'deprecated_16',
-        subBuilder: ApplicationData_Deprecated.create)
-    ..aOM<ApplicationData_Deprecated>(17, _omitFieldNames ? '' : 'deprecated17',
-        protoName: 'deprecated_17',
-        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_RemoveAdditionalUser>(
         18, _omitFieldNames ? '' : 'removeAdditionalUser',
         protoName: 'removeAdditionalUser',
         subBuilder: ApplicationData_RemoveAdditionalUser.create)
-    ..aOM<ApplicationData_Deprecated>(19, _omitFieldNames ? '' : 'deprecated19',
-        protoName: 'deprecated_19',
-        subBuilder: ApplicationData_Deprecated.create)
     ..aOM<ApplicationData_DownloadDone>(
         20, _omitFieldNames ? '' : 'downloadDone',
         protoName: 'downloadDone',
@@ -3379,6 +3324,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_DeleteMemory>(
         38, _omitFieldNames ? '' : 'deleteMemory',
         subBuilder: ApplicationData_DeleteMemory.create)
+    ..aOM<ApplicationData_DisableMemoriesBackup>(
+        39, _omitFieldNames ? '' : 'disableMemoriesBackup',
+        subBuilder: ApplicationData_DisableMemoriesBackup.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3405,17 +3353,9 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   @$pb.TagNumber(6)
   @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
   @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   @$pb.TagNumber(12)
-  @$pb.TagNumber(13)
-  @$pb.TagNumber(14)
-  @$pb.TagNumber(15)
-  @$pb.TagNumber(16)
-  @$pb.TagNumber(17)
   @$pb.TagNumber(18)
-  @$pb.TagNumber(19)
   @$pb.TagNumber(20)
   @$pb.TagNumber(22)
   @$pb.TagNumber(23)
@@ -3434,6 +3374,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(36)
   @$pb.TagNumber(37)
   @$pb.TagNumber(38)
+  @$pb.TagNumber(39)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3441,17 +3382,9 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   @$pb.TagNumber(6)
   @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
   @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   @$pb.TagNumber(12)
-  @$pb.TagNumber(13)
-  @$pb.TagNumber(14)
-  @$pb.TagNumber(15)
-  @$pb.TagNumber(16)
-  @$pb.TagNumber(17)
   @$pb.TagNumber(18)
-  @$pb.TagNumber(19)
   @$pb.TagNumber(20)
   @$pb.TagNumber(22)
   @$pb.TagNumber(23)
@@ -3470,6 +3403,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(36)
   @$pb.TagNumber(37)
   @$pb.TagNumber(38)
+  @$pb.TagNumber(39)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3531,353 +3465,278 @@ class ApplicationData extends $pb.GeneratedMessage {
   ApplicationData_UpdateGoogleFcmToken ensureUpdateGoogleFcmToken() =>
       $_ensure(4);
 
-  @$pb.TagNumber(9)
-  ApplicationData_Deprecated get deprecated9 => $_getN(5);
-  @$pb.TagNumber(9)
-  set deprecated9(ApplicationData_Deprecated value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasDeprecated9() => $_has(5);
-  @$pb.TagNumber(9)
-  void clearDeprecated9() => $_clearField(9);
-  @$pb.TagNumber(9)
-  ApplicationData_Deprecated ensureDeprecated9() => $_ensure(5);
-
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos get getCurrentPlanInfos => $_getN(6);
+  ApplicationData_GetCurrentPlanInfos get getCurrentPlanInfos => $_getN(5);
   @$pb.TagNumber(10)
   set getCurrentPlanInfos(ApplicationData_GetCurrentPlanInfos value) =>
       $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasGetCurrentPlanInfos() => $_has(6);
+  $core.bool hasGetCurrentPlanInfos() => $_has(5);
   @$pb.TagNumber(10)
   void clearGetCurrentPlanInfos() => $_clearField(10);
   @$pb.TagNumber(10)
   ApplicationData_GetCurrentPlanInfos ensureGetCurrentPlanInfos() =>
-      $_ensure(6);
-
-  @$pb.TagNumber(11)
-  ApplicationData_Deprecated get deprecated11 => $_getN(7);
-  @$pb.TagNumber(11)
-  set deprecated11(ApplicationData_Deprecated value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasDeprecated11() => $_has(7);
-  @$pb.TagNumber(11)
-  void clearDeprecated11() => $_clearField(11);
-  @$pb.TagNumber(11)
-  ApplicationData_Deprecated ensureDeprecated11() => $_ensure(7);
+      $_ensure(5);
 
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans get getAvailablePlans => $_getN(8);
+  ApplicationData_GetAvailablePlans get getAvailablePlans => $_getN(6);
   @$pb.TagNumber(12)
   set getAvailablePlans(ApplicationData_GetAvailablePlans value) =>
       $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasGetAvailablePlans() => $_has(8);
+  $core.bool hasGetAvailablePlans() => $_has(6);
   @$pb.TagNumber(12)
   void clearGetAvailablePlans() => $_clearField(12);
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans ensureGetAvailablePlans() => $_ensure(8);
-
-  @$pb.TagNumber(13)
-  ApplicationData_Deprecated get deprecated13 => $_getN(9);
-  @$pb.TagNumber(13)
-  set deprecated13(ApplicationData_Deprecated value) => $_setField(13, value);
-  @$pb.TagNumber(13)
-  $core.bool hasDeprecated13() => $_has(9);
-  @$pb.TagNumber(13)
-  void clearDeprecated13() => $_clearField(13);
-  @$pb.TagNumber(13)
-  ApplicationData_Deprecated ensureDeprecated13() => $_ensure(9);
-
-  @$pb.TagNumber(14)
-  ApplicationData_Deprecated get deprecated14 => $_getN(10);
-  @$pb.TagNumber(14)
-  set deprecated14(ApplicationData_Deprecated value) => $_setField(14, value);
-  @$pb.TagNumber(14)
-  $core.bool hasDeprecated14() => $_has(10);
-  @$pb.TagNumber(14)
-  void clearDeprecated14() => $_clearField(14);
-  @$pb.TagNumber(14)
-  ApplicationData_Deprecated ensureDeprecated14() => $_ensure(10);
-
-  @$pb.TagNumber(15)
-  ApplicationData_Deprecated get deprecated15 => $_getN(11);
-  @$pb.TagNumber(15)
-  set deprecated15(ApplicationData_Deprecated value) => $_setField(15, value);
-  @$pb.TagNumber(15)
-  $core.bool hasDeprecated15() => $_has(11);
-  @$pb.TagNumber(15)
-  void clearDeprecated15() => $_clearField(15);
-  @$pb.TagNumber(15)
-  ApplicationData_Deprecated ensureDeprecated15() => $_ensure(11);
-
-  @$pb.TagNumber(16)
-  ApplicationData_Deprecated get deprecated16 => $_getN(12);
-  @$pb.TagNumber(16)
-  set deprecated16(ApplicationData_Deprecated value) => $_setField(16, value);
-  @$pb.TagNumber(16)
-  $core.bool hasDeprecated16() => $_has(12);
-  @$pb.TagNumber(16)
-  void clearDeprecated16() => $_clearField(16);
-  @$pb.TagNumber(16)
-  ApplicationData_Deprecated ensureDeprecated16() => $_ensure(12);
-
-  @$pb.TagNumber(17)
-  ApplicationData_Deprecated get deprecated17 => $_getN(13);
-  @$pb.TagNumber(17)
-  set deprecated17(ApplicationData_Deprecated value) => $_setField(17, value);
-  @$pb.TagNumber(17)
-  $core.bool hasDeprecated17() => $_has(13);
-  @$pb.TagNumber(17)
-  void clearDeprecated17() => $_clearField(17);
-  @$pb.TagNumber(17)
-  ApplicationData_Deprecated ensureDeprecated17() => $_ensure(13);
+  ApplicationData_GetAvailablePlans ensureGetAvailablePlans() => $_ensure(6);
 
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser get removeAdditionalUser => $_getN(14);
+  ApplicationData_RemoveAdditionalUser get removeAdditionalUser => $_getN(7);
   @$pb.TagNumber(18)
   set removeAdditionalUser(ApplicationData_RemoveAdditionalUser value) =>
       $_setField(18, value);
   @$pb.TagNumber(18)
-  $core.bool hasRemoveAdditionalUser() => $_has(14);
+  $core.bool hasRemoveAdditionalUser() => $_has(7);
   @$pb.TagNumber(18)
   void clearRemoveAdditionalUser() => $_clearField(18);
   @$pb.TagNumber(18)
   ApplicationData_RemoveAdditionalUser ensureRemoveAdditionalUser() =>
-      $_ensure(14);
-
-  @$pb.TagNumber(19)
-  ApplicationData_Deprecated get deprecated19 => $_getN(15);
-  @$pb.TagNumber(19)
-  set deprecated19(ApplicationData_Deprecated value) => $_setField(19, value);
-  @$pb.TagNumber(19)
-  $core.bool hasDeprecated19() => $_has(15);
-  @$pb.TagNumber(19)
-  void clearDeprecated19() => $_clearField(19);
-  @$pb.TagNumber(19)
-  ApplicationData_Deprecated ensureDeprecated19() => $_ensure(15);
+      $_ensure(7);
 
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone get downloadDone => $_getN(16);
+  ApplicationData_DownloadDone get downloadDone => $_getN(8);
   @$pb.TagNumber(20)
   set downloadDone(ApplicationData_DownloadDone value) => $_setField(20, value);
   @$pb.TagNumber(20)
-  $core.bool hasDownloadDone() => $_has(16);
+  $core.bool hasDownloadDone() => $_has(8);
   @$pb.TagNumber(20)
   void clearDownloadDone() => $_clearField(20);
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone ensureDownloadDone() => $_ensure(16);
+  ApplicationData_DownloadDone ensureDownloadDone() => $_ensure(8);
 
   @$pb.TagNumber(22)
   ApplicationData_GetSignedPreKeyByUserId get getSignedPrekeyByUserid =>
-      $_getN(17);
+      $_getN(9);
   @$pb.TagNumber(22)
   set getSignedPrekeyByUserid(ApplicationData_GetSignedPreKeyByUserId value) =>
       $_setField(22, value);
   @$pb.TagNumber(22)
-  $core.bool hasGetSignedPrekeyByUserid() => $_has(17);
+  $core.bool hasGetSignedPrekeyByUserid() => $_has(9);
   @$pb.TagNumber(22)
   void clearGetSignedPrekeyByUserid() => $_clearField(22);
   @$pb.TagNumber(22)
   ApplicationData_GetSignedPreKeyByUserId ensureGetSignedPrekeyByUserid() =>
-      $_ensure(17);
+      $_ensure(9);
 
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey get updateSignedPrekey => $_getN(18);
+  ApplicationData_UpdateSignedPreKey get updateSignedPrekey => $_getN(10);
   @$pb.TagNumber(23)
   set updateSignedPrekey(ApplicationData_UpdateSignedPreKey value) =>
       $_setField(23, value);
   @$pb.TagNumber(23)
-  $core.bool hasUpdateSignedPrekey() => $_has(18);
+  $core.bool hasUpdateSignedPrekey() => $_has(10);
   @$pb.TagNumber(23)
   void clearUpdateSignedPrekey() => $_clearField(23);
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey ensureUpdateSignedPrekey() => $_ensure(18);
+  ApplicationData_UpdateSignedPreKey ensureUpdateSignedPrekey() => $_ensure(10);
 
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount get deleteAccount => $_getN(19);
+  ApplicationData_DeleteAccount get deleteAccount => $_getN(11);
   @$pb.TagNumber(24)
   set deleteAccount(ApplicationData_DeleteAccount value) =>
       $_setField(24, value);
   @$pb.TagNumber(24)
-  $core.bool hasDeleteAccount() => $_has(19);
+  $core.bool hasDeleteAccount() => $_has(11);
   @$pb.TagNumber(24)
   void clearDeleteAccount() => $_clearField(24);
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount ensureDeleteAccount() => $_ensure(19);
+  ApplicationData_DeleteAccount ensureDeleteAccount() => $_ensure(11);
 
   @$pb.TagNumber(25)
-  ApplicationData_ReportUser get reportUser => $_getN(20);
+  ApplicationData_ReportUser get reportUser => $_getN(12);
   @$pb.TagNumber(25)
   set reportUser(ApplicationData_ReportUser value) => $_setField(25, value);
   @$pb.TagNumber(25)
-  $core.bool hasReportUser() => $_has(20);
+  $core.bool hasReportUser() => $_has(12);
   @$pb.TagNumber(25)
   void clearReportUser() => $_clearField(25);
   @$pb.TagNumber(25)
-  ApplicationData_ReportUser ensureReportUser() => $_ensure(20);
+  ApplicationData_ReportUser ensureReportUser() => $_ensure(12);
 
   @$pb.TagNumber(26)
-  ApplicationData_ChangeUsername get changeUsername => $_getN(21);
+  ApplicationData_ChangeUsername get changeUsername => $_getN(13);
   @$pb.TagNumber(26)
   set changeUsername(ApplicationData_ChangeUsername value) =>
       $_setField(26, value);
   @$pb.TagNumber(26)
-  $core.bool hasChangeUsername() => $_has(21);
+  $core.bool hasChangeUsername() => $_has(13);
   @$pb.TagNumber(26)
   void clearChangeUsername() => $_clearField(26);
   @$pb.TagNumber(26)
-  ApplicationData_ChangeUsername ensureChangeUsername() => $_ensure(21);
+  ApplicationData_ChangeUsername ensureChangeUsername() => $_ensure(13);
 
   @$pb.TagNumber(27)
-  ApplicationData_IPAPurchase get ipaPurchase => $_getN(22);
+  ApplicationData_IPAPurchase get ipaPurchase => $_getN(14);
   @$pb.TagNumber(27)
   set ipaPurchase(ApplicationData_IPAPurchase value) => $_setField(27, value);
   @$pb.TagNumber(27)
-  $core.bool hasIpaPurchase() => $_has(22);
+  $core.bool hasIpaPurchase() => $_has(14);
   @$pb.TagNumber(27)
   void clearIpaPurchase() => $_clearField(27);
   @$pb.TagNumber(27)
-  ApplicationData_IPAPurchase ensureIpaPurchase() => $_ensure(22);
+  ApplicationData_IPAPurchase ensureIpaPurchase() => $_ensure(14);
 
   @$pb.TagNumber(28)
-  ApplicationData_IPAForceCheck get ipaForceCheck => $_getN(23);
+  ApplicationData_IPAForceCheck get ipaForceCheck => $_getN(15);
   @$pb.TagNumber(28)
   set ipaForceCheck(ApplicationData_IPAForceCheck value) =>
       $_setField(28, value);
   @$pb.TagNumber(28)
-  $core.bool hasIpaForceCheck() => $_has(23);
+  $core.bool hasIpaForceCheck() => $_has(15);
   @$pb.TagNumber(28)
   void clearIpaForceCheck() => $_clearField(28);
   @$pb.TagNumber(28)
-  ApplicationData_IPAForceCheck ensureIpaForceCheck() => $_ensure(23);
+  ApplicationData_IPAForceCheck ensureIpaForceCheck() => $_ensure(15);
 
   @$pb.TagNumber(29)
-  ApplicationData_AddAdditionalUser get addAdditionalUser => $_getN(24);
+  ApplicationData_AddAdditionalUser get addAdditionalUser => $_getN(16);
   @$pb.TagNumber(29)
   set addAdditionalUser(ApplicationData_AddAdditionalUser value) =>
       $_setField(29, value);
   @$pb.TagNumber(29)
-  $core.bool hasAddAdditionalUser() => $_has(24);
+  $core.bool hasAddAdditionalUser() => $_has(16);
   @$pb.TagNumber(29)
   void clearAddAdditionalUser() => $_clearField(29);
   @$pb.TagNumber(29)
-  ApplicationData_AddAdditionalUser ensureAddAdditionalUser() => $_ensure(24);
+  ApplicationData_AddAdditionalUser ensureAddAdditionalUser() => $_ensure(16);
 
   @$pb.TagNumber(30)
-  ApplicationData_SetLoginToken get setLoginToken => $_getN(25);
+  ApplicationData_SetLoginToken get setLoginToken => $_getN(17);
   @$pb.TagNumber(30)
   set setLoginToken(ApplicationData_SetLoginToken value) =>
       $_setField(30, value);
   @$pb.TagNumber(30)
-  $core.bool hasSetLoginToken() => $_has(25);
+  $core.bool hasSetLoginToken() => $_has(17);
   @$pb.TagNumber(30)
   void clearSetLoginToken() => $_clearField(30);
   @$pb.TagNumber(30)
-  ApplicationData_SetLoginToken ensureSetLoginToken() => $_ensure(25);
+  ApplicationData_SetLoginToken ensureSetLoginToken() => $_ensure(17);
 
   @$pb.TagNumber(31)
   ApplicationData_RegisterPasswordLessRecovery
-      get registerPasswordlessRecovery => $_getN(26);
+      get registerPasswordlessRecovery => $_getN(18);
   @$pb.TagNumber(31)
   set registerPasswordlessRecovery(
           ApplicationData_RegisterPasswordLessRecovery value) =>
       $_setField(31, value);
   @$pb.TagNumber(31)
-  $core.bool hasRegisterPasswordlessRecovery() => $_has(26);
+  $core.bool hasRegisterPasswordlessRecovery() => $_has(18);
   @$pb.TagNumber(31)
   void clearRegisterPasswordlessRecovery() => $_clearField(31);
   @$pb.TagNumber(31)
   ApplicationData_RegisterPasswordLessRecovery
-      ensureRegisterPasswordlessRecovery() => $_ensure(26);
+      ensureRegisterPasswordlessRecovery() => $_ensure(18);
 
   @$pb.TagNumber(32)
   ApplicationData_PasswordlessNotification get passwordlessNotification =>
-      $_getN(27);
+      $_getN(19);
   @$pb.TagNumber(32)
   set passwordlessNotification(
           ApplicationData_PasswordlessNotification value) =>
       $_setField(32, value);
   @$pb.TagNumber(32)
-  $core.bool hasPasswordlessNotification() => $_has(27);
+  $core.bool hasPasswordlessNotification() => $_has(19);
   @$pb.TagNumber(32)
   void clearPasswordlessNotification() => $_clearField(32);
   @$pb.TagNumber(32)
   ApplicationData_PasswordlessNotification ensurePasswordlessNotification() =>
-      $_ensure(27);
+      $_ensure(19);
 
   @$pb.TagNumber(33)
-  ApplicationData_RequestMemoriesUpload get requestMemoriesUpload => $_getN(28);
+  ApplicationData_RequestMemoriesUpload get requestMemoriesUpload => $_getN(20);
   @$pb.TagNumber(33)
   set requestMemoriesUpload(ApplicationData_RequestMemoriesUpload value) =>
       $_setField(33, value);
   @$pb.TagNumber(33)
-  $core.bool hasRequestMemoriesUpload() => $_has(28);
+  $core.bool hasRequestMemoriesUpload() => $_has(20);
   @$pb.TagNumber(33)
   void clearRequestMemoriesUpload() => $_clearField(33);
   @$pb.TagNumber(33)
   ApplicationData_RequestMemoriesUpload ensureRequestMemoriesUpload() =>
-      $_ensure(28);
+      $_ensure(20);
 
   @$pb.TagNumber(34)
-  ApplicationData_ConfirmMemoriesUpload get confirmMemoriesUpload => $_getN(29);
+  ApplicationData_ConfirmMemoriesUpload get confirmMemoriesUpload => $_getN(21);
   @$pb.TagNumber(34)
   set confirmMemoriesUpload(ApplicationData_ConfirmMemoriesUpload value) =>
       $_setField(34, value);
   @$pb.TagNumber(34)
-  $core.bool hasConfirmMemoriesUpload() => $_has(29);
+  $core.bool hasConfirmMemoriesUpload() => $_has(21);
   @$pb.TagNumber(34)
   void clearConfirmMemoriesUpload() => $_clearField(34);
   @$pb.TagNumber(34)
   ApplicationData_ConfirmMemoriesUpload ensureConfirmMemoriesUpload() =>
-      $_ensure(29);
+      $_ensure(21);
 
   @$pb.TagNumber(35)
-  ApplicationData_GetMemoriesList get getMemoriesList => $_getN(30);
+  ApplicationData_GetMemoriesList get getMemoriesList => $_getN(22);
   @$pb.TagNumber(35)
   set getMemoriesList(ApplicationData_GetMemoriesList value) =>
       $_setField(35, value);
   @$pb.TagNumber(35)
-  $core.bool hasGetMemoriesList() => $_has(30);
+  $core.bool hasGetMemoriesList() => $_has(22);
   @$pb.TagNumber(35)
   void clearGetMemoriesList() => $_clearField(35);
   @$pb.TagNumber(35)
-  ApplicationData_GetMemoriesList ensureGetMemoriesList() => $_ensure(30);
+  ApplicationData_GetMemoriesList ensureGetMemoriesList() => $_ensure(22);
 
   @$pb.TagNumber(36)
-  ApplicationData_GetMemoriesUrl get getMemoriesUrl => $_getN(31);
+  ApplicationData_GetMemoriesUrl get getMemoriesUrl => $_getN(23);
   @$pb.TagNumber(36)
   set getMemoriesUrl(ApplicationData_GetMemoriesUrl value) =>
       $_setField(36, value);
   @$pb.TagNumber(36)
-  $core.bool hasGetMemoriesUrl() => $_has(31);
+  $core.bool hasGetMemoriesUrl() => $_has(23);
   @$pb.TagNumber(36)
   void clearGetMemoriesUrl() => $_clearField(36);
   @$pb.TagNumber(36)
-  ApplicationData_GetMemoriesUrl ensureGetMemoriesUrl() => $_ensure(31);
+  ApplicationData_GetMemoriesUrl ensureGetMemoriesUrl() => $_ensure(23);
 
   @$pb.TagNumber(37)
-  ApplicationData_GetMemoriesUsage get getMemoriesUsage => $_getN(32);
+  ApplicationData_GetMemoriesUsage get getMemoriesUsage => $_getN(24);
   @$pb.TagNumber(37)
   set getMemoriesUsage(ApplicationData_GetMemoriesUsage value) =>
       $_setField(37, value);
   @$pb.TagNumber(37)
-  $core.bool hasGetMemoriesUsage() => $_has(32);
+  $core.bool hasGetMemoriesUsage() => $_has(24);
   @$pb.TagNumber(37)
   void clearGetMemoriesUsage() => $_clearField(37);
   @$pb.TagNumber(37)
-  ApplicationData_GetMemoriesUsage ensureGetMemoriesUsage() => $_ensure(32);
+  ApplicationData_GetMemoriesUsage ensureGetMemoriesUsage() => $_ensure(24);
 
   @$pb.TagNumber(38)
-  ApplicationData_DeleteMemory get deleteMemory => $_getN(33);
+  ApplicationData_DeleteMemory get deleteMemory => $_getN(25);
   @$pb.TagNumber(38)
   set deleteMemory(ApplicationData_DeleteMemory value) => $_setField(38, value);
   @$pb.TagNumber(38)
-  $core.bool hasDeleteMemory() => $_has(33);
+  $core.bool hasDeleteMemory() => $_has(25);
   @$pb.TagNumber(38)
   void clearDeleteMemory() => $_clearField(38);
   @$pb.TagNumber(38)
-  ApplicationData_DeleteMemory ensureDeleteMemory() => $_ensure(33);
+  ApplicationData_DeleteMemory ensureDeleteMemory() => $_ensure(25);
+
+  @$pb.TagNumber(39)
+  ApplicationData_DisableMemoriesBackup get disableMemoriesBackup => $_getN(26);
+  @$pb.TagNumber(39)
+  set disableMemoriesBackup(ApplicationData_DisableMemoriesBackup value) =>
+      $_setField(39, value);
+  @$pb.TagNumber(39)
+  $core.bool hasDisableMemoriesBackup() => $_has(26);
+  @$pb.TagNumber(39)
+  void clearDisableMemoriesBackup() => $_clearField(39);
+  @$pb.TagNumber(39)
+  ApplicationData_DisableMemoriesBackup ensureDisableMemoriesBackup() =>
+      $_ensure(26);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

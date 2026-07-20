@@ -781,6 +781,13 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<Result> disableMemoriesBackup() async {
+    final get = ApplicationData_DisableMemoriesBackup();
+    final appData = ApplicationData()..disableMemoriesBackup = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
   Future<int?> getUserIdFromUsername(String username) async {
     final appData = Handshake(
       getUseridByUsername: Handshake_GetUserIdByUsername(username: username),

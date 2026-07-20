@@ -60,8 +60,7 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         switch (_sortOption) {
           case StorageSortOption.size:
             storedFiles.sort(
-              (a, b) =>
-                  (b.sizeInBytes ?? 0).compareTo(a.sizeInBytes ?? 0),
+              (a, b) => (b.sizeInBytes ?? 0).compareTo(a.sizeInBytes ?? 0),
             );
           case StorageSortOption.newest:
             storedFiles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -83,7 +82,9 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                 : null,
             title: isSelecting
                 ? Text(
-                    context.lang.memoriesSelectedCount(_selectedMediaIds.length),
+                    context.lang.memoriesSelectedCount(
+                      _selectedMediaIds.length,
+                    ),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   )
                 : Text(context.lang.settingsStorageContents),
@@ -98,61 +99,60 @@ class _StorageContentsViewState extends State<StorageContentsView> {
           body: snapshot.connectionState == ConnectionState.waiting
               ? const Center(child: CircularProgressIndicator())
               : snapshot.hasError
-                  ? Center(child: Text('Error: ${snapshot.error}'))
-                  : storedFiles.isEmpty
-                      ? Center(
-                          child: Text(
-                            context.lang.settingsStorageNoContents,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge
-                                ?.copyWith(color: Colors.grey),
+              ? Center(child: Text('Error: ${snapshot.error}'))
+              : storedFiles.isEmpty
+              ? Center(
+                  child: Text(
+                    context.lang.settingsStorageNoContents,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
+                  ),
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildChip(
+                                StorageSortOption.size,
+                                context.lang.settingsStorageSortStorage,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildChip(
+                                StorageSortOption.newest,
+                                context.lang.settingsStorageSortNewest,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildChip(
+                                StorageSortOption.oldest,
+                                context.lang.settingsStorageSortOldest,
+                              ),
+                            ],
                           ),
-                        )
-                      : Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      _buildChip(
-                                        StorageSortOption.size,
-                                        context.lang.settingsStorageSortStorage,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      _buildChip(
-                                        StorageSortOption.newest,
-                                        context.lang.settingsStorageSortNewest,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      _buildChip(
-                                        StorageSortOption.oldest,
-                                        context.lang.settingsStorageSortOldest,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const Divider(height: 1),
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: storedFiles.length,
-                                itemBuilder: (context, index) {
-                                  final file = storedFiles[index];
-                                  return _buildListItem(context, file);
-                                },
-                              ),
-                            ),
-                          ],
                         ),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: storedFiles.length,
+                        itemBuilder: (context, index) {
+                          final file = storedFiles[index];
+                          return _buildListItem(context, file);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
         );
       },
     );
@@ -183,8 +183,8 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     final isSelecting = _selectedMediaIds.isNotEmpty;
 
     final ms = MediaFileService(file);
-    final hasStored = file.stored ||
-        (ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0);
+    final isLocal =
+        ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0;
 
     final IconData statusIcon;
     final String statusText;
@@ -197,7 +197,7 @@ class _StorageContentsViewState extends State<StorageContentsView> {
         statusIcon = Icons.cloud_upload_outlined;
         statusText = context.lang.settingsStorageLocalOnly;
       case CloudState.uploaded:
-        if (hasStored) {
+        if (isLocal) {
           statusIcon = Icons.cloud_done_outlined;
           statusText = context.lang.settingsStorageLocalAndCloud;
         } else {
@@ -260,16 +260,14 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     final ms = MediaFileService(file);
     final isVideo = file.type == MediaType.video;
 
-    final imgFile = ms.thumbnailPath.existsSync() &&
-            ms.thumbnailPath.lengthSync() > 0
+    final imgFile =
+        ms.thumbnailPath.existsSync() && ms.thumbnailPath.lengthSync() > 0
         ? ms.thumbnailPath
         : ((file.type == MediaType.image || file.type == MediaType.gif) &&
-                ms.storedPath.existsSync() &&
-                ms.storedPath.lengthSync() > 0)
+              ms.storedPath.existsSync() &&
+              ms.storedPath.lengthSync() > 0)
         ? ms.storedPath
-        : (ms.tempPath.existsSync() &&
-                ms.tempPath.lengthSync() > 0 &&
-                !isVideo)
+        : (ms.tempPath.existsSync() && ms.tempPath.lengthSync() > 0 && !isVideo)
         ? ms.tempPath
         : null;
 
@@ -294,16 +292,15 @@ class _StorageContentsViewState extends State<StorageContentsView> {
                       ),
                     )
                   : file.blurhash != null
-                      ? BlurHash(
-                          hash: file.blurhash!,
-                          optimizationMode:
-                              BlurHashOptimizationMode.approximation,
-                        )
-                      : const Icon(
-                          Icons.image_outlined,
-                          size: 24,
-                          color: Colors.grey,
-                        ),
+                  ? BlurHash(
+                      hash: file.blurhash!,
+                      optimizationMode: BlurHashOptimizationMode.approximation,
+                    )
+                  : const Icon(
+                      Icons.image_outlined,
+                      size: 24,
+                      color: Colors.grey,
+                    ),
             ),
             if (isVideo)
               Container(
@@ -336,11 +333,12 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     if (deleteCompletely == null) return;
 
     try {
-      MediaFileService(file).fullMediaRemoval();
-      await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-
       if (deleteCompletely) {
+        await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
         unawaited(apiService.deleteMemory(file.mediaId));
+        MediaFileService(file).fullMediaRemoval();
+      } else {
+        MediaFileService(file).storedPath.deleteSync();
       }
 
       if (context.mounted) {
@@ -360,15 +358,19 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     }
   }
 
-  Future<void> _batchDelete(BuildContext context, List<MediaFile> allFiles) async {
+  Future<void> _batchDelete(
+    BuildContext context,
+    List<MediaFile> allFiles,
+  ) async {
     final selectedCount = _selectedMediaIds.length;
     if (selectedCount == 0) return;
 
     final selectedFiles = allFiles
         .where((file) => _selectedMediaIds.contains(file.mediaId))
         .toList();
-    final hasAnyCloudBackup =
-        selectedFiles.any((file) => file.cloudState == CloudState.uploaded);
+    final hasAnyCloudBackup = selectedFiles.any(
+      (file) => file.cloudState == CloudState.uploaded,
+    );
 
     final deleteCompletely = await showDeleteMemoriesDialog(
       context: context,
@@ -380,11 +382,12 @@ class _StorageContentsViewState extends State<StorageContentsView> {
 
     try {
       for (final file in selectedFiles) {
-        MediaFileService(file).fullMediaRemoval();
-        await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-
         if (deleteCompletely) {
+          await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
           unawaited(apiService.deleteMemory(file.mediaId));
+          MediaFileService(file).fullMediaRemoval();
+        } else {
+          MediaFileService(file).storedPath.deleteSync();
         }
       }
 

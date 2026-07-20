@@ -63,10 +63,11 @@ class MemoriesCloudService {
 
   Timer? _timer;
   bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
 
   final _progressController =
-      StreamController<MemoriesBackupProgress>.broadcast();
-  Stream<MemoriesBackupProgress> get progressStream =>
+      StreamController<MemoriesBackupProgress?>.broadcast();
+  Stream<MemoriesBackupProgress?> get progressStream =>
       _progressController.stream;
 
   MemoriesBackupProgress? _currentProgress;
@@ -97,7 +98,7 @@ class MemoriesCloudService {
       currentUploadProgress: currentUploadProgress,
       currentMediaId: currentMediaId,
     );
-    _progressController.add(_currentProgress!);
+    _progressController.add(_currentProgress);
   }
 
   Future<void> checkUploads() async {
@@ -152,6 +153,7 @@ class MemoriesCloudService {
     } finally {
       _currentProgress = null;
       _isProcessing = false;
+      _progressController.add(null);
     }
   }
 
