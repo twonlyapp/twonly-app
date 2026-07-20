@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:blurhash_dart/blurhash_dart.dart' as bh;
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
@@ -259,7 +260,12 @@ class MemoriesService {
       // Phase 2: Background — hash, crop analysis, size calculation.
       // Each DB write here fires the stream subscription above, keeping
       // the gallery state fresh without a separate notification step.
-      await _backgroundProcessPendingFiles(pendingFiles);
+      _dbSubscription?.pause();
+      try {
+        await _backgroundProcessPendingFiles(pendingFiles);
+      } finally {
+        _dbSubscription?.resume();
+      }
     } catch (e) {
       Log.error('Error in background migration queue: $e');
     }
@@ -291,9 +297,8 @@ class MemoriesService {
                 : mediaService.originalPath;
             if (imageFile.existsSync()) {
               final bytes = await imageFile.readAsBytes();
-              final image = img.decodeImage(bytes);
-              if (image != null) {
-                final blurhash = bh.BlurHash.encode(image).hash;
+              final blurhash = await compute(_calculateBlurhash, bytes);
+              if (blurhash != null) {
                 await twonlyDB.mediaFilesDao.updateMedia(
                   mediaFile.mediaId,
                   MediaFilesCompanion(blurhash: Value(blurhash)),
@@ -383,4 +388,14 @@ class MemoriesService {
     _dbSubscription?.cancel();
     _stateController.close();
   }
+}
+
+String? _calculateBlurhash(Uint8List bytes) {
+  try {
+    final image = img.decodeImage(bytes);
+    if (image != null) {
+      return bh.BlurHash.encode(image).hash;
+    }
+  } catch (_) {}
+  return null;
 }
