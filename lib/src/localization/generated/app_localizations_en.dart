@@ -2400,4 +2400,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoriesBackupTitle => 'Memories Backup';
+
+  @override
+  String get settingsHelpNews => 'News';
 }

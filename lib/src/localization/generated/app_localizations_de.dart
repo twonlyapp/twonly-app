@@ -2421,4 +2421,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get memoriesBackupTitle => 'Memories Backup';
+
+  @override
+  String get settingsHelpNews => 'Neuigkeiten';
 }

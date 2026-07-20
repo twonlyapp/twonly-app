@@ -175,6 +175,13 @@ Future<void> postStartupTasks() async {
   // 2. Service initializations
   unawaited(finishStartedPreprocessing());
   unawaited(createPushAvatars());
+  unawaited(newsService.init().then((_) {
+    final lastDownload = newsService.lastDownloadedAt;
+    if (lastDownload == null ||
+        DateTime.now().difference(lastDownload) >= const Duration(days: 7)) {
+      newsService.fetchFeed();
+    }
+  }));
 
   unawaited(UserDiscoveryService.verifyInitializationOnStartup());
 

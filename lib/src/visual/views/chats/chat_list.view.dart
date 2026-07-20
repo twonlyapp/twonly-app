@@ -17,8 +17,8 @@ import 'package:twonly/src/visual/components/connection_status.comp.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
-import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/missing_recovery_contacts.comp.dart';
@@ -184,7 +184,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
           ],
         ),
         actions: [
-          const FeedbackIconButtonComp(),
+          const NewsIconButtonComp(),
           ValueListenableBuilder<int>(
             valueListenable: _badgeCount,
             builder: (context, badgeCount, child) {

@@ -4183,6 +4183,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Memories Backup'**
   String get memoriesBackupTitle;
+
+  /// No description provided for @settingsHelpNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get settingsHelpNews;
 }
 
 class _AppLocalizationsDelegate
