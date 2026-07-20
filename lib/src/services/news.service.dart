@@ -18,13 +18,15 @@ class BlogEntry {
   });
 
   factory BlogEntry.fromJson(Map<String, dynamic> json) => BlogEntry(
-        title: (json['title'] as String?) ?? '',
-        link: (json['link'] as String?) ?? '',
-        guid: (json['guid'] as String?) ?? '',
-        description: (json['description'] as String?) ?? '',
-        imageUrl: (json['imageUrl'] as String?) ?? '',
-        pubDate: json['pubDate'] != null ? DateTime.tryParse(json['pubDate'] as String) : null,
-      );
+    title: (json['title'] as String?) ?? '',
+    link: (json['link'] as String?) ?? '',
+    guid: (json['guid'] as String?) ?? '',
+    description: (json['description'] as String?) ?? '',
+    imageUrl: (json['imageUrl'] as String?) ?? '',
+    pubDate: json['pubDate'] != null
+        ? DateTime.tryParse(json['pubDate'] as String)
+        : null,
+  );
 
   final String title;
   final String link;
@@ -34,13 +36,13 @@ class BlogEntry {
   final DateTime? pubDate;
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'link': link,
-        'guid': guid,
-        'description': description,
-        'imageUrl': imageUrl,
-        'pubDate': pubDate?.toIso8601String(),
-      };
+    'title': title,
+    'link': link,
+    'guid': guid,
+    'description': description,
+    'imageUrl': imageUrl,
+    'pubDate': pubDate?.toIso8601String(),
+  };
 
   @override
   String toString() {
@@ -56,7 +58,8 @@ class NewsService {
 
   final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
 
-  File get _cacheFile => File(join(AppEnvironment.supportDir, 'news_feed.json'));
+  File get _cacheFile =>
+      File(join(AppEnvironment.supportDir, 'news_feed.json'));
 
   Future<void> init() async {
     try {
@@ -152,7 +155,9 @@ class NewsService {
 
       _updateUnreadCount();
       await saveCache();
-      Log.info('Successfully fetched ${entries.length} news entries. Unread count: ${unreadCountNotifier.value}');
+      Log.info(
+        'Successfully fetched ${entries.length} news entries. Unread count: ${unreadCountNotifier.value}',
+      );
     } catch (e) {
       Log.error('Failed to fetch news feed: $e');
     }
@@ -166,32 +171,54 @@ class NewsService {
     for (final match in matches) {
       final itemContent = match.group(1) ?? '';
 
-      final titleMatch = RegExp(r'<title>([\s\S]*?)<\/title>').firstMatch(itemContent);
+      final titleMatch = RegExp(
+        r'<title>([\s\S]*?)<\/title>',
+      ).firstMatch(itemContent);
       final title = _stripCdata(titleMatch?.group(1) ?? '');
 
-      final linkMatch = RegExp(r'<link>([\s\S]*?)<\/link>').firstMatch(itemContent);
+      final linkMatch = RegExp(
+        r'<link>([\s\S]*?)<\/link>',
+      ).firstMatch(itemContent);
       final link = _stripCdata(linkMatch?.group(1) ?? '');
 
-      final guidMatch = RegExp(r'<guid[^>]*?>([\s\S]*?)<\/guid>').firstMatch(itemContent);
+      final guidMatch = RegExp(
+        r'<guid[^>]*?>([\s\S]*?)<\/guid>',
+      ).firstMatch(itemContent);
       final guid = _stripCdata(guidMatch?.group(1) ?? link);
 
-      final descMatch = RegExp(r'<description>([\s\S]*?)<\/description>').firstMatch(itemContent);
+      final descMatch = RegExp(
+        r'<description>([\s\S]*?)<\/description>',
+      ).firstMatch(itemContent);
       final descriptionRaw = _stripCdata(descMatch?.group(1) ?? '');
-      final description = descriptionRaw.replaceAll(RegExp('<[^>]*>'), '');
+      final description = descriptionRaw
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&amp;', '&')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&apos;', "'")
+          .replaceAll('&#39;', "'")
+          .replaceAll(RegExp('<[^>]*>'), '')
+          .trim();
 
       var imageUrl = '';
-      final enclosureMatch = RegExp(r'<enclosure\s+[^>]*?url="([^"]+)"').firstMatch(itemContent);
+      final enclosureMatch = RegExp(
+        r'<enclosure\s+[^>]*?url="([^"]+)"',
+      ).firstMatch(itemContent);
       if (enclosureMatch != null) {
         imageUrl = enclosureMatch.group(1) ?? '';
       }
       if (imageUrl.isEmpty) {
-        final mediaMatch = RegExp(r'<media:content\s+[^>]*?url="([^"]+)"').firstMatch(itemContent);
+        final mediaMatch = RegExp(
+          r'<media:content\s+[^>]*?url="([^"]+)"',
+        ).firstMatch(itemContent);
         if (mediaMatch != null) {
           imageUrl = mediaMatch.group(1) ?? '';
         }
       }
 
-      final pubDateMatch = RegExp(r'<pubDate>([\s\S]*?)<\/pubDate>').firstMatch(itemContent);
+      final pubDateMatch = RegExp(
+        r'<pubDate>([\s\S]*?)<\/pubDate>',
+      ).firstMatch(itemContent);
       DateTime? pubDate;
       if (pubDateMatch != null) {
         final pubDateStr = pubDateMatch.group(1) ?? '';
@@ -199,14 +226,16 @@ class NewsService {
         pubDate ??= _parseRfc2822(pubDateStr);
       }
 
-      entries.add(BlogEntry(
-        title: title,
-        link: link,
-        guid: guid,
-        description: description,
-        imageUrl: imageUrl,
-        pubDate: pubDate,
-      ));
+      entries.add(
+        BlogEntry(
+          title: title,
+          link: link,
+          guid: guid,
+          description: description,
+          imageUrl: imageUrl,
+          pubDate: pubDate,
+        ),
+      );
     }
 
     return entries;
@@ -238,14 +267,30 @@ class NewsService {
 
       final timeParts = parts[3].split(':');
       final hour = timeParts.isNotEmpty ? (int.tryParse(timeParts[0]) ?? 0) : 0;
-      final minute = timeParts.length > 1 ? (int.tryParse(timeParts[1]) ?? 0) : 0;
-      final second = timeParts.length > 2 ? (int.tryParse(timeParts[2]) ?? 0) : 0;
+      final minute = timeParts.length > 1
+          ? (int.tryParse(timeParts[1]) ?? 0)
+          : 0;
+      final second = timeParts.length > 2
+          ? (int.tryParse(timeParts[2]) ?? 0)
+          : 0;
 
       const months = {
-        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
-        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+        'jan': 1,
+        'feb': 2,
+        'mar': 3,
+        'apr': 4,
+        'may': 5,
+        'jun': 6,
+        'jul': 7,
+        'aug': 8,
+        'sep': 9,
+        'oct': 10,
+        'nov': 11,
+        'dec': 12,
       };
-      final monthStringPart = monthStr.length > 3 ? monthStr.substring(0, 3) : monthStr;
+      final monthStringPart = monthStr.length > 3
+          ? monthStr.substring(0, 3)
+          : monthStr;
       final month = months[monthStringPart] ?? 1;
 
       return DateTime.utc(year, month, day, hour, minute, second);

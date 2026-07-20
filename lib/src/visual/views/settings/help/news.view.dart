@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/reactive_tap_feedback.element.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NewsView extends StatefulWidget {
@@ -33,8 +34,8 @@ class _NewsViewState extends State<NewsView> {
               child: Text(
                 'No news articles found.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey,
-                    ),
+                  color: Colors.grey,
+                ),
               ),
             )
           : ListView.builder(
@@ -42,17 +43,23 @@ class _NewsViewState extends State<NewsView> {
               itemCount: entries.length,
               itemBuilder: (context, index) {
                 final entry = entries[index];
-                return Card(
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                final isDark = isDarkMode(context);
+
+                return ReactiveTapFeedback(
+                  onTap: () => launchUrl(
+                    Uri.parse(entry.link),
+                    mode: LaunchMode.externalApplication,
                   ),
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: InkWell(
-                    onTap: () => launchUrl(
-                      Uri.parse(entry.link),
-                      mode: LaunchMode.externalApplication,
+                  child: Card(
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,14 +72,15 @@ class _NewsViewState extends State<NewsView> {
                             placeholder: (context, url) => Container(
                               height: 180,
                               color: Colors.grey.withValues(alpha: 0.1),
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
                             ),
                             errorWidget: (context, url, error) => Container(
                               height: 180,
                               color: Colors.grey.withValues(alpha: 0.1),
-                              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                              child: const Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         Padding(
@@ -85,7 +93,8 @@ class _NewsViewState extends State<NewsView> {
                                   DateFormat.yMMMMd(
                                     Localizations.localeOf(context).toString(),
                                   ).format(entry.pubDate!),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
                                         color: Colors.grey,
                                       ),
                                 ),
@@ -93,7 +102,8 @@ class _NewsViewState extends State<NewsView> {
                               ],
                               Text(
                                 entry.title,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -102,8 +112,11 @@ class _NewsViewState extends State<NewsView> {
                                 entry.description,
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: context.color.onSurface.withValues(alpha: 0.8),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: context.color.onSurface.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                               ),
                             ],

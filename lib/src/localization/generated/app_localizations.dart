@@ -806,11 +806,11 @@ abstract class AppLocalizations {
   /// **'Feedback submitted successfully!'**
   String get contactUsSuccess;
 
-  /// No description provided for @contactUsShortcut.
+  /// No description provided for @hideNewsIcon.
   ///
   /// In en, this message translates to:
-  /// **'Hide Feedback Icon'**
-  String get contactUsShortcut;
+  /// **'Hide News Icon'**
+  String get hideNewsIcon;
 
   /// No description provided for @settingsHelpTerms.
   ///

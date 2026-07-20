@@ -41,7 +41,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['automaticallyMarkEqualMediaFilesAsOpened'] as bool? ?? false
       ..videoStabilizationEnabled =
           json['videoStabilizationEnabled'] as bool? ?? true
-      ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
+      ..showNewsShortcut = json['showNewsShortcut'] as bool? ?? true
       ..showShowImagePreviewWhenSending =
           json['showShowImagePreviewWhenSending'] as bool? ?? false
       ..startWithCameraOpen = json['startWithCameraOpen'] as bool? ?? true
@@ -142,7 +142,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'automaticallyMarkEqualMediaFilesAsOpened':
       instance.automaticallyMarkEqualMediaFilesAsOpened,
   'videoStabilizationEnabled': instance.videoStabilizationEnabled,
-  'showFeedbackShortcut': instance.showFeedbackShortcut,
+  'showNewsShortcut': instance.showNewsShortcut,
   'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
   'startWithCameraOpen': instance.startWithCameraOpen,
   'preSelectedEmojies': instance.preSelectedEmojies,

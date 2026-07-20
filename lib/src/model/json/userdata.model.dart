@@ -72,7 +72,7 @@ class UserData {
   bool videoStabilizationEnabled = true;
 
   @JsonKey(defaultValue: true)
-  bool showFeedbackShortcut = true;
+  bool showNewsShortcut = true;
 
   @JsonKey(defaultValue: false)
   bool showShowImagePreviewWhenSending = false;

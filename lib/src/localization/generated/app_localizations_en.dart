@@ -382,7 +382,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactUsSuccess => 'Feedback submitted successfully!';
 
   @override
-  String get contactUsShortcut => 'Hide Feedback Icon';
+  String get hideNewsIcon => 'Hide News Icon';
 
   @override
   String get settingsHelpTerms => 'Terms of Service';

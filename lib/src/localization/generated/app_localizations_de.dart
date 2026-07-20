@@ -386,7 +386,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactUsSuccess => 'Feedback erfolgreich übermittelt!';
 
   @override
-  String get contactUsShortcut => 'Feedback-Symbol ausblenden';
+  String get hideNewsIcon => 'Neuigkeiten-Symbol ausblenden';
 
   @override
   String get settingsHelpTerms => 'Nutzungsbedingungen';
