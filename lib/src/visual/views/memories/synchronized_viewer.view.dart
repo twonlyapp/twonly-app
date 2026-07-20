@@ -42,6 +42,7 @@ class _SynchronizedImageViewerScreenState
   final Set<String> _favoritedMediaIds = {};
   bool _isSaving = false;
   final Set<String> _storedMediaIds = {};
+  final Set<String> _precachedMediaIds = {};
 
   late int _currentIndex;
   bool _isZoomed = false;
@@ -55,11 +56,15 @@ class _SynchronizedImageViewerScreenState
     final initialId =
         widget.galleryItems[widget.initialIndex].mediaService.mediaFile.mediaId;
     _currentlyViewedMediaIdNotifier = ValueNotifier(initialId);
+    _precachedMediaIds.add(initialId);
 
     _horizontalPager = PageController(initialPage: widget.initialIndex);
     _verticalPager = PageController(initialPage: 1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _verticalPager.addListener(_onVerticalScrollUpdated);
+      if (mounted) {
+        _verticalPager.addListener(_onVerticalScrollUpdated);
+        _precacheNeighbours(_currentIndex);
+      }
     });
 
     for (final item in widget.galleryItems) {
@@ -314,6 +319,8 @@ class _SynchronizedImageViewerScreenState
                           .mediaId;
                       _currentlyViewedMediaIdNotifier.value = newMediaId;
                       widget.activeMediaIdNotifier.value = newMediaId;
+                      _precachedMediaIds.add(newMediaId);
+                      _precacheNeighbours(idx);
                     },
                     itemBuilder: (context, index) {
                       return SynchronizedViewerItemComp(
@@ -368,5 +375,41 @@ class _SynchronizedImageViewerScreenState
         ),
       ),
     );
+  }
+
+  void _precacheNeighbours(int index) {
+    if (!mounted) return;
+
+    final indicesToPrecache = [index - 5, index + 5];
+
+    for (final idx in indicesToPrecache) {
+      if (idx >= 0 && idx < widget.galleryItems.length) {
+        final item = widget.galleryItems[idx];
+        if (item.mediaService.mediaFile.type == MediaType.video) {
+          continue;
+        }
+
+        final mediaId = item.mediaService.mediaFile.mediaId;
+        if (_precachedMediaIds.contains(mediaId)) {
+          continue;
+        }
+
+        final filePath =
+            item.mediaService.storedPath.existsSync() &&
+                item.mediaService.storedPath.lengthSync() > 0
+            ? item.mediaService.storedPath
+            : item.mediaService.tempPath.existsSync() &&
+                  item.mediaService.tempPath.lengthSync() > 0
+            ? item.mediaService.tempPath
+            : item.mediaService.thumbnailPath;
+
+        if (filePath.existsSync() && filePath.lengthSync() > 0) {
+          _precachedMediaIds.add(mediaId);
+          precacheImage(FileImage(filePath), context).onError((e, s) {
+            _precachedMediaIds.remove(mediaId);
+          });
+        }
+      }
+    }
   }
 }
