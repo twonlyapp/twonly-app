@@ -4171,6 +4171,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get galleryActionShare;
+
+  /// No description provided for @settingsStorageHidePromo.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get settingsStorageHidePromo;
+
+  /// No description provided for @memoriesBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories Backup'**
+  String get memoriesBackupTitle;
 }
 
 class _AppLocalizationsDelegate

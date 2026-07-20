@@ -2415,4 +2415,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get galleryActionShare => 'Teilen';
+
+  @override
+  String get settingsStorageHidePromo => 'Ausblenden';
+
+  @override
+  String get memoriesBackupTitle => 'Memories Backup';
 }

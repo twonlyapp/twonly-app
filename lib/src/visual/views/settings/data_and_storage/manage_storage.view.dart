@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +10,9 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class ManageStorageView extends StatefulWidget {
   const ManageStorageView({super.key});
@@ -117,84 +120,123 @@ class _ManageStorageViewState extends State<ManageStorageView> {
             const SizedBox(height: 24),
           ] else ...[
             Text(
-              'Memories Backup',
+              context.lang.memoriesBackupTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            Text(
-              _memoriesUsage != null
-                  ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
-                  : '-',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              height: 24,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (_memoriesUsage == null ||
-                        _memoriesUsage!.maxBytes == 0) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final maxWidth = constraints.maxWidth;
-                    final current = _memoriesUsage!.currentBytes.toDouble();
-                    final max = _memoriesUsage!.maxBytes.toDouble();
-                    final usageWidth =
-                        ((current / max).clamp(0.0, 1.0)) * maxWidth;
-
-                    return Row(
+            if (!userService.currentUser.isCloudBackupEnabled) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (usageWidth > 0)
-                          Container(
-                            width: usageWidth,
-                            color: Colors.blue,
-                          ),
+                        Text(
+                          context.lang.settingsStorageNoCloudBackupCard,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  MyButton(
+                    variant: MyButtonVariant.primaryMiddle,
+                    onPressed: () async {
+                      await UserService.update(
+                        (u) => u.isCloudBackupEnabled = true,
+                      );
+                      setState(() {});
+                      unawaited(memoriesCloudService.checkUploads());
+                    },
+                    child: Text(context.lang.enable),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+            ] else ...[
+              Text(
+                _memoriesUsage != null
+                    ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                    : '-',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            StreamBuilder<MemoriesBackupProgress>(
-              initialData: memoriesCloudService.currentProgress,
-              stream: memoriesCloudService.progressStream,
-              builder: (context, snapshot) {
-                final progress = snapshot.data;
-                if (progress == null || progress.totalPending == 0) {
-                  return const SizedBox.shrink();
-                }
-                final percent =
-                    (progress.currentUploaded / progress.totalPending) +
-                    (progress.currentUploadProgress / progress.totalPending);
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Text(
-                      'Syncing: ${progress.currentUploaded} / ${progress.totalPending} files (${(percent * 100).toStringAsFixed(1)}%)',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 6),
-                    LinearProgressIndicator(
-                      value: percent.clamp(0.0, 1.0),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+              Container(
+                height: 24,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (_memoriesUsage == null ||
+                          _memoriesUsage!.maxBytes == 0) {
+                        return const SizedBox.shrink();
+                      }
+
+                      final maxWidth = constraints.maxWidth;
+                      final current = _memoriesUsage!.currentBytes.toDouble();
+                      final max = _memoriesUsage!.maxBytes.toDouble();
+                      final usageWidth =
+                          ((current / max).clamp(0.0, 1.0)) * maxWidth;
+
+                      return Row(
+                        children: [
+                          if (usageWidth > 0)
+                            Container(
+                              width: usageWidth,
+                              color: Colors.blue,
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              StreamBuilder<MemoriesBackupProgress>(
+                initialData: memoriesCloudService.currentProgress,
+                stream: memoriesCloudService.progressStream,
+                builder: (context, snapshot) {
+                  final progress = snapshot.data;
+                  if (progress == null || progress.totalPending == 0) {
+                    return const SizedBox.shrink();
+                  }
+                  final percent =
+                      (progress.currentUploaded / progress.totalPending) +
+                      (progress.currentUploadProgress / progress.totalPending);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      Text(
+                        'Syncing: ${progress.currentUploaded} / ${progress.totalPending} files (${(percent * 100).toStringAsFixed(1)}%)',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      const SizedBox(height: 6),
+                      LinearProgressIndicator(
+                        value: percent.clamp(0.0, 1.0),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+            ],
           ],
           Text(
             isFreePlan

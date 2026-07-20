@@ -2394,4 +2394,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get galleryActionShare => 'Share';
+
+  @override
+  String get settingsStorageHidePromo => 'Hide';
+
+  @override
+  String get memoriesBackupTitle => 'Memories Backup';
 }

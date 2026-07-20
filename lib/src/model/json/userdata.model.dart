@@ -103,6 +103,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool screenLockEnabled = false;
 
+  @JsonKey(defaultValue: false)
+  bool isCloudBackupEnabled = false;
+
   // > User Discovery Configurations
 
   @JsonKey(defaultValue: false)
@@ -139,6 +142,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool hideChangeLog = true;
 
+  @JsonKey(defaultValue: false)
+  bool hideMemoriesBackupPromo = false;
+
   @JsonKey(defaultValue: true)
   bool updateFCMToken = true;
 
@@ -150,8 +156,8 @@ class UserData {
   @Deprecated('Use the secure storage in rust')
   TwonlySafeBackup? twonlySafeBackup;
 
-  @JsonKey(defaultValue: true)
-  bool isBackupEnabled = true;
+  @JsonKey(defaultValue: false)
+  bool isBackupEnabled = false;
 
   PasswordLessRecovery? passwordLessRecovery;
 

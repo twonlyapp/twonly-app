@@ -68,6 +68,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
+      ..isCloudBackupEnabled = json['isCloudBackupEnabled'] as bool? ?? false
       ..isUserDiscoveryEnabled =
           json['isUserDiscoveryEnabled'] as bool? ?? false
       ..requiredSendImages = (json['requiredSendImages'] as num?)?.toInt() ?? 4
@@ -88,6 +89,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           ?.map((e) => (e as num).toInt())
           .toList()
       ..hideChangeLog = json['hideChangeLog'] as bool? ?? true
+      ..hideMemoriesBackupPromo =
+          json['hideMemoriesBackupPromo'] as bool? ?? false
       ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
       ..canUseLoginTokenForAuth =
           json['canUseLoginTokenForAuth'] as bool? ?? true
@@ -96,7 +99,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           : TwonlySafeBackup.fromJson(
               json['twonlySafeBackup'] as Map<String, dynamic>,
             )
-      ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? true
+      ..isBackupEnabled = json['isBackupEnabled'] as bool? ?? false
       ..passwordLessRecovery = json['passwordLessRecovery'] == null
           ? null
           : PasswordLessRecovery.fromJson(
@@ -153,6 +156,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,
+  'isCloudBackupEnabled': instance.isCloudBackupEnabled,
   'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
   'requiredSendImages': instance.requiredSendImages,
   'userDiscoveryThreshold': instance.userDiscoveryThreshold,
@@ -165,6 +169,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,
   'hideChangeLog': instance.hideChangeLog,
+  'hideMemoriesBackupPromo': instance.hideMemoriesBackupPromo,
   'updateFCMToken': instance.updateFCMToken,
   'canUseLoginTokenForAuth': instance.canUseLoginTokenForAuth,
   'twonlySafeBackup': instance.twonlySafeBackup,

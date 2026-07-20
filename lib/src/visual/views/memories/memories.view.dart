@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
@@ -10,6 +11,7 @@ import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/draggable_scrollbar.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/views/memories/components/cloud_backup_promo.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/flashback_banner.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/selection_menu.comp.dart';
@@ -680,6 +682,7 @@ class MemoriesViewState extends State<MemoriesView>
                                 onOpenFlashback: (items, idx) =>
                                     _openViewer(items, idx, isFlashback: true),
                               ),
+                              const MemoriesCloudBackupPromoComp(),
                               for (final month in months) ...[
                                 SliverPadding(
                                   padding: const EdgeInsets.fromLTRB(

@@ -101,7 +101,7 @@ class MemoriesCloudService {
   }
 
   Future<void> checkUploads() async {
-    if (_isProcessing || !userService.currentUser.isBackupEnabled) return;
+    if (_isProcessing || !userService.currentUser.isCloudBackupEnabled) return;
 
     try {
       final memories = await twonlyDB.mediaFilesDao.getMemoriesToBackup();
