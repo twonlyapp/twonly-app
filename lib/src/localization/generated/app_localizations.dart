@@ -4189,6 +4189,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'News'**
   String get settingsHelpNews;
+
+  /// No description provided for @settingsStorageContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage contents'**
+  String get settingsStorageContents;
+
+  /// No description provided for @settingsStorageSortStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Occupied storage'**
+  String get settingsStorageSortStorage;
+
+  /// No description provided for @settingsStorageSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get settingsStorageSortNewest;
+
+  /// No description provided for @settingsStorageSortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get settingsStorageSortOldest;
+
+  /// No description provided for @settingsStorageNoContents.
+  ///
+  /// In en, this message translates to:
+  /// **'No storage contents found.'**
+  String get settingsStorageNoContents;
+
+  /// No description provided for @settingsStorageCloudOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud only'**
+  String get settingsStorageCloudOnly;
+
+  /// No description provided for @settingsStorageLocalAndCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Local and cloud'**
+  String get settingsStorageLocalAndCloud;
+
+  /// No description provided for @settingsStorageLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only'**
+  String get settingsStorageLocalOnly;
 }
 
 class _AppLocalizationsDelegate

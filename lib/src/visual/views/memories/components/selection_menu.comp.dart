@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class MemoriesSelectionMenuComp extends StatelessWidget {
@@ -97,19 +98,20 @@ class MemoriesSelectionMenuComp extends StatelessWidget {
             ],
           ),
         ),
-        PopupMenuItem(
-          value: 'deleteLocal',
-          child: Row(
-            children: [
-              const Icon(
-                Icons.phonelink_erase_outlined,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text(context.lang.memoriesMenuDeleteLocal),
-            ],
+        if (userService.currentUser.isCloudBackupEnabled)
+          PopupMenuItem(
+            value: 'deleteLocal',
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.phonelink_erase_outlined,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(context.lang.memoriesMenuDeleteLocal),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

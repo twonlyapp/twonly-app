@@ -71,7 +71,9 @@ class _SynchronizedImageViewerScreenState
       if (item.mediaService.mediaFile.isFavorite) {
         _favoritedMediaIds.add(item.mediaService.mediaFile.mediaId);
       }
-      if (item.mediaService.mediaFile.stored) {
+      if (item.mediaService.mediaFile.stored ||
+          (item.mediaService.storedPath.existsSync() &&
+              item.mediaService.storedPath.lengthSync() > 0)) {
         _storedMediaIds.add(item.mediaService.mediaFile.mediaId);
       }
     }

@@ -13,6 +13,7 @@ import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
 
 class ManageStorageView extends StatefulWidget {
   const ManageStorageView({super.key});
@@ -299,6 +300,14 @@ class _ManageStorageViewState extends State<ManageStorageView> {
             title: context.lang.settingsStorageGifs,
             size: formatBytes(gifBytes),
             color: Colors.orange,
+          ),
+          const SizedBox(height: 32),
+          Align(
+            child: MyButton(
+              variant: MyButtonVariant.primaryMiddle,
+              onPressed: () => context.navPush(const StorageContentsView()),
+              child: Text(context.lang.settingsStorageContents),
+            ),
           ),
         ],
       ),

@@ -2403,4 +2403,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHelpNews => 'News';
+
+  @override
+  String get settingsStorageContents => 'Storage contents';
+
+  @override
+  String get settingsStorageSortStorage => 'Occupied storage';
+
+  @override
+  String get settingsStorageSortNewest => 'Newest';
+
+  @override
+  String get settingsStorageSortOldest => 'Oldest';
+
+  @override
+  String get settingsStorageNoContents => 'No storage contents found.';
+
+  @override
+  String get settingsStorageCloudOnly => 'Cloud only';
+
+  @override
+  String get settingsStorageLocalAndCloud => 'Local and cloud';
+
+  @override
+  String get settingsStorageLocalOnly => 'Local only';
 }
