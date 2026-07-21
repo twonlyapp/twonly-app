@@ -8,6 +8,12 @@ enum MediaType {
   audio,
 }
 
+enum CloudState {
+  none,
+  pending,
+  uploaded,
+}
+
 enum UploadState {
   // Image/Video was taken. A database entry was created to track it...
   initialized,
@@ -43,6 +49,9 @@ class MediaFiles extends Table {
   TextColumn get type => textEnum<MediaType>()();
 
   TextColumn get uploadState => textEnum<UploadState>().nullable()();
+  TextColumn get cloudState =>
+      textEnum<CloudState>().withDefault(const Constant('none'))();
+  TextColumn get blurhash => text().nullable()();
   TextColumn get downloadState => textEnum<DownloadState>().nullable()();
 
   BoolColumn get requiresAuthentication =>
@@ -69,14 +78,12 @@ class MediaFiles extends Table {
 
   BlobColumn get storedFileHash => blob().nullable()();
 
-  BoolColumn get hasThumbnail =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get hasThumbnail => boolean().withDefault(const Constant(false))();
 
   IntColumn get sizeInBytes => integer().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get createdAtMonth => text().nullable()();
-
 
   @override
   Set<Column> get primaryKey => {mediaId};

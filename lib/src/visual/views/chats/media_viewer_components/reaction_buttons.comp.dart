@@ -335,9 +335,10 @@ class _ParticlePainter extends CustomPainter {
   _ParticlePainter(this.particles);
   final List<_Particle> particles;
 
+  static final _textPainter = TextPainter(textDirection: TextDirection.ltr);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
     for (final p in particles) {
       final tp = TextSpan(
         text: p.emoji,
@@ -350,14 +351,17 @@ class _ParticlePainter extends CustomPainter {
               : null,
         ),
       );
-      textPainter
+      _textPainter
         ..text = tp
         ..layout();
       canvas
         ..save()
-        ..translate(p.x - textPainter.width / 2, p.y - textPainter.height / 2)
+        ..translate(
+          p.x - _textPainter.width / 2,
+          p.y - _textPainter.height / 2,
+        )
         ..rotate(p.rotation);
-      textPainter.paint(canvas, Offset.zero);
+      _textPainter.paint(canvas, Offset.zero);
       canvas.restore();
     }
   }

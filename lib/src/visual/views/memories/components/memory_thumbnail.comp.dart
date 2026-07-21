@@ -1,7 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/components/selectable_thumbnail.comp.dart';
 import 'package:twonly/src/visual/views/memories/components/memory_transition_painter.dart';
 
@@ -31,8 +37,10 @@ class MemoriesThumbnailComp extends StatefulWidget {
 
 class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   ImageProvider? _imageProvider;
+  File? _selectedImageFile;
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
+  int _retries = 0;
   late final ImageStreamListener _listener;
 
   @override
@@ -52,6 +60,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
           setState(() {
             _imageProvider = null;
             _imageInfo = null;
+            _selectedImageFile = null;
           });
         }
       },
@@ -60,6 +69,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   }
 
   void _resolveImage() {
+    if (_retries > 3) return;
     final media = widget.galleryItem.mediaService;
     final hasThumbnail =
         media.thumbnailPath.existsSync() &&
@@ -70,17 +80,43 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
         media.mediaFile.type == MediaType.image ||
         media.mediaFile.type == MediaType.gif;
 
+    _selectedImageFile = null;
+
     if (hasThumbnail) {
       _imageProvider = FileImage(media.thumbnailPath);
+      _selectedImageFile = media.thumbnailPath;
     } else if (hasStored && isImageOrGif) {
       _imageProvider = FileImage(media.storedPath);
+      _selectedImageFile = media.storedPath;
+    }
+
+    if (!hasThumbnail) {
+      if (hasStored) {
+        unawaited(
+          media.createThumbnail().then((_) {
+            if (mounted) {
+              _resolveImage();
+            }
+          }),
+        );
+      } else {
+        unawaited(
+          MemoriesCloudService.downloadFromCloud(media, isThumbnail: true).then(
+            (success) {
+              if (mounted && success) {
+                _resolveImage();
+              }
+            },
+          ),
+        );
+      }
     }
 
     if (_imageProvider != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final config = createLocalImageConfiguration(context);
-        _imageStream = _imageProvider!.resolve(config);
+        _imageStream = _imageProvider?.resolve(config);
         _imageStream!.addListener(_listener);
       });
     }
@@ -92,7 +128,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
     if (oldWidget.galleryItem.mediaService.mediaFile.mediaId !=
         widget.galleryItem.mediaService.mediaFile.mediaId) {
       _imageStream?.removeListener(_listener);
+      _imageStream = null;
+      _imageProvider = null;
       _imageInfo = null;
+      _retries = 0;
+      _selectedImageFile = null;
       _resolveImage();
     }
   }
@@ -148,6 +188,14 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) {
+                    if (error.toString().contains('Invalid image data')) {
+                      if (_selectedImageFile != null) {
+                        _selectedImageFile?.deleteSync();
+                        _retries++;
+                        _resolveImage();
+                      }
+                    }
+                    Log.warn(error);
                     return ColoredBox(
                       color: Colors.grey.shade200,
                       child: const Center(
@@ -158,6 +206,11 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                       ),
                     );
                   },
+                )
+              else if (media.mediaFile.blurhash != null)
+                BlurHash(
+                  hash: media.mediaFile.blurhash!,
+                  optimizationMode: BlurHashOptimizationMode.approximation,
                 )
               else
                 ColoredBox(
@@ -195,6 +248,45 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                     ],
                   ),
                 ),
+              Builder(
+                builder: (context) {
+                  final hasStored =
+                      media.storedPath.existsSync() &&
+                      media.storedPath.lengthSync() > 0;
+                  final IconData iconData;
+                  final Color color;
+
+                  switch (media.mediaFile.cloudState) {
+                    case CloudState.none:
+                      iconData = Icons.cloud_off_outlined;
+                      color = Colors.white54;
+                    case CloudState.pending:
+                      iconData = Icons.cloud_upload_outlined;
+                      color = Colors.white70;
+                    case CloudState.uploaded:
+                      if (hasStored) {
+                        iconData = Icons.cloud_done_outlined;
+                        color = Colors.white;
+                      } else {
+                        iconData = Icons.cloud_outlined;
+                        color = Colors.white;
+                      }
+                  }
+
+                  return Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Icon(
+                      iconData,
+                      color: color,
+                      size: 16,
+                      shadows: const [
+                        Shadow(color: Colors.black54, blurRadius: 4),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),

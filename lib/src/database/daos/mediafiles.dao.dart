@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'mediafiles.dao.g.dart';
@@ -120,6 +123,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           (t) =>
               t.stored.equals(true) &
               (t.storedFileHash.isNull() |
+                  t.blurhash.isNull() |
                   t.hasCropAnalyzed.equals(false) |
                   (t.hasThumbnail.equals(false) &
                       t.type.equals(MediaType.audio.name).not()) |
@@ -141,7 +145,12 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
     final query =
-        (select(mediaFiles)..where((t) => t.stored.equals(true))).join([])
+        (select(mediaFiles)..where(
+              (t) =>
+                  t.stored.equals(true) |
+                  t.cloudState.equals(CloudState.uploaded.name),
+            ))
+            .join([])
           ..groupBy([
             const CustomExpression<Object>(
               'COALESCE(stored_file_hash, media_id)',
@@ -211,12 +220,59 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     final rows = await select(mediaFiles).get();
     final stats = <MediaType, int>{};
 
+    final Set<String> existingPaths;
+    if (rows.isNotEmpty) {
+      final dummyMs = MediaFileService(rows.first);
+      final storedDir = dummyMs.storedPath.parent;
+      if (storedDir.existsSync()) {
+        existingPaths = storedDir
+            .listSync()
+            .whereType<File>()
+            .map((f) => f.path)
+            .toSet();
+      } else {
+        existingPaths = <String>{};
+      }
+    } else {
+      existingPaths = <String>{};
+    }
+
     for (final row in rows) {
       final type = row.type;
-      final size = row.sizeInBytes ?? 0;
-      stats[type] = (stats[type] ?? 0) + size;
+      final ms = MediaFileService(row);
+      if (existingPaths.contains(ms.storedPath.path)) {
+        final size = row.sizeInBytes ?? 0;
+        stats[type] = (stats[type] ?? 0) + size;
+      }
     }
 
     return stats;
+  }
+
+  Future<List<MediaFile>> getMemoriesToBackup() async {
+    return (select(mediaFiles)..where(
+          (t) =>
+              t.stored.equals(true) & t.cloudState.equals(CloudState.none.name),
+        ))
+        .get();
+  }
+
+  Future<int> getCloudOnlyMemoriesCount() async {
+    final query = select(mediaFiles)
+      ..where(
+        (t) =>
+            t.stored.equals(true) &
+            t.cloudState.equals(CloudState.uploaded.name),
+      );
+    final rows = await query.get();
+
+    var count = 0;
+    for (final row in rows) {
+      final ms = MediaFileService(row);
+      if (!(ms.storedPath.existsSync() && ms.storedPath.lengthSync() > 0)) {
+        count++;
+      }
+    }
+    return count;
   }
 }

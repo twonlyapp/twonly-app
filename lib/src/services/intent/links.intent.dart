@@ -32,8 +32,7 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   // Check if this is the QR code link which was
   // therefore scanned with the system camera
 
-  if (kDebugMode &&
-      uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
+  if (uri.toString().startsWith(PasswordlessRecoveryService.linkPrefix)) {
     await PasswordlessRecoveryService.handleRecoveryLink(uri.toString());
     return true;
   }

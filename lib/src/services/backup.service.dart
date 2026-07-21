@@ -247,7 +247,7 @@ class BackupService {
       }
 
       if (recoveryData.state == BackupRecoveryState.archiveBackupStarted) {
-        // The KeyManager was restored sucessfully, restore the archive now.
+        // The KeyManager was restored successfully, restore the archive now.
         try {
           final downloadToken =
               await RustBackupArchive.getBackupDownloadToken();

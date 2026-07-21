@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -10,49 +13,62 @@ import 'package:twonly/src/visual/views/contact/contact.view.dart';
 
 class ContactChip extends StatelessWidget {
   const ContactChip({
-    required this.contact,
+    this.contact,
+    this.username,
+    this.avatarSvg,
     this.onTap,
     super.key,
-  });
+  }) : assert(
+         contact != null || username != null,
+         'Either contact or username must be provided',
+       );
 
-  final Contact contact;
+  final Contact? contact;
+  final String? username;
+  final List<int>? avatarSvg;
   final void Function(int)? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ReactiveTapFeedback(
       onTap: () {
+        if (contact == null) return;
         if (onTap != null) {
-          onTap!(contact.userId);
+          onTap!(contact!.userId);
         } else {
           context.navPush(
             ContactView(
-              contact.userId,
-              key: ValueKey(contact.userId),
+              contact!.userId,
+              key: ValueKey(contact!.userId),
             ),
           );
         }
       },
       child: Chip(
         avatar: AvatarIcon(
-          contactId: contact.userId,
+          contactId: contact?.userId,
           fontSize: 10,
+          svg: avatarSvg != null
+              ? getAvatarSvg(Uint8List.fromList(avatarSvg!))
+              : null,
         ),
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              getContactDisplayName(contact),
+              contact != null ? getContactDisplayName(contact!) : username!,
               style: const TextStyle(fontSize: 14),
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 6),
-            VerificationBadgeComp(
-              contact: contact,
-              size: 12,
-              clickable: false,
-            ),
-            if (onTap != null) ...[
+            if (contact != null) ...[
+              const SizedBox(width: 6),
+              VerificationBadgeComp(
+                contact: contact,
+                size: 12,
+                clickable: false,
+              ),
+            ],
+            if (onTap != null && contact != null) ...[
               const SizedBox(width: 15),
               const FaIcon(
                 FontAwesomeIcons.xmark,

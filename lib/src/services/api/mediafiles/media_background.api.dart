@@ -22,6 +22,7 @@ Future<void> initFileDownloader() async {
         if (update.task.taskId.contains('download_')) {
           await handleDownloadStatusUpdate(update);
         }
+
         if (update.task.taskId.contains('backup_')) {
           await BackupService.handleBackupStatusUpdate(
             update.task.taskId,

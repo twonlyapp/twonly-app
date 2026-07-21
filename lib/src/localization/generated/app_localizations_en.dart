@@ -382,7 +382,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactUsSuccess => 'Feedback submitted successfully!';
 
   @override
-  String get contactUsShortcut => 'Hide Feedback Icon';
+  String get hideNewsIcon => 'Hide News Icon';
 
   @override
   String get settingsHelpTerms => 'Terms of Service';
@@ -454,10 +454,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verificationTypeLink => 'Verified via link.';
-
-  @override
-  String get verificationTypeContactSharedByVerified =>
-      'Contact received from a verified contact.';
 
   @override
   String get verificationTypeMigratedFromOldVersion =>
@@ -651,10 +647,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proFeature2 => '✓ 1 additional Plus user';
 
   @override
-  String get proFeature3 => '✓ Restore flames';
+  String get proFeature3 => '✓ 25GB Memories storage';
 
   @override
-  String get proFeature4 => '✓ Support twonly';
+  String get proFeature4 => '✓ Restore flames';
 
   @override
   String get familyFeature1 => '✓ Unlimited media file uploads';
@@ -663,7 +659,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature2 => '✓ 4 additional Plus user';
 
   @override
-  String get familyFeature3 => '✓ Restore flames';
+  String get familyFeature3 => '✓ 50GB Memories storage';
 
   @override
   String get familyFeature4 => '✓ Support twonly';
@@ -756,6 +752,41 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get deleteMemoriesLocalOnly => 'Local Only';
+
+  @override
+  String get deleteMemoriesCompletely => 'Completely';
+
+  @override
+  String memoriesSelectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elements',
+      one: '1 Element',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get memoriesMenuSelectAll => 'Select all';
+
+  @override
+  String get memoriesMenuDeselectAll => 'Deselect all';
+
+  @override
+  String get memoriesMenuExport => 'Export to gallery';
+
+  @override
+  String get memoriesMenuFavorite => 'Favorite';
+
+  @override
+  String get memoriesMenuDelete => 'Delete completely';
+
+  @override
+  String get memoriesMenuDeleteLocal => 'Delete locally';
 
   @override
   String get settingsBackup => 'Backup';
@@ -877,9 +908,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retransmissionRequested => 'Retransmission requested';
-
-  @override
-  String get openChangeLog => 'Open changelog automatically';
 
   @override
   String reportUserTitle(Object username) {
@@ -1141,10 +1169,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationContactRequest => 'wants to connect with you.';
 
   @override
-  String get notificationContactRequestUnknownUser =>
-      'have received a new contact request.';
-
-  @override
   String get notificationAcceptRequest => 'is now connected with you.';
 
   @override
@@ -1180,12 +1204,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String notificationResponse(Object inGroup) {
     return 'has responded$inGroup.';
   }
-
-  @override
-  String get notificationTitleUnknown => 'You have a new message.';
-
-  @override
-  String get notificationBodyUnknown => 'Open twonly to learn more.';
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';
@@ -1344,9 +1362,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingBackupBody =>
       'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
-
-  @override
-  String get onboardingVerificationBadgeTitle => 'Verification Badge';
 
   @override
   String get onboardingUserDiscoveryShareFriends => 'Share your friends';
@@ -1959,28 +1974,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Step-by-step setup so you can decide for yourself.';
 
   @override
-  String get onboardingProfileSelectionStrictTitle => 'Enhanced Protection';
-
-  @override
-  String get onboardingProfileSelectionStrictDesc =>
-      'Maximum anti-phishing defense. Recommended for *journalists & public figures*.';
-
-  @override
   String get replyFlameRestored => 'Flames restored';
 
   @override
   String get replyAskAFriend => 'Ask a friend';
-
-  @override
-  String get unverifiedWarningDirectTitle => 'Identity not verified in person';
-
-  @override
-  String get unverifiedWarningGroupTitle =>
-      'Not all members are verified in person';
-
-  @override
-  String get unverifiedWarningBody =>
-      '*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.';
 
   @override
   String get unverifiedWarningButton => 'Verify now';
@@ -2033,12 +2030,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importGalleryStarting => 'Starting import...';
 
   @override
-  String importGalleryComplete(
-    Object imported,
-    Object duplicated,
-    Object failed,
-  ) {
-    return 'Import complete: $imported successfully imported, $duplicated duplicated and $failed failed.';
+  String importGalleryComplete(Object imported, Object failed) {
+    return 'Import complete: $imported successfully imported and $failed failed.';
   }
 
   @override
@@ -2176,33 +2169,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.';
 
   @override
-  String get passwordlessRecoveryNotEnoughFriends =>
-      'Not enough friends selected. You need at least 3.';
-
-  @override
-  String get passwordlessRecoveryLoading => 'Loading...';
-
-  @override
   String get passwordlessRecoveryEnableSuccess =>
       'Passwordless recovery successfully enabled!';
 
   @override
-  String get passwordlessRecoveryEnableFailed =>
-      'Failed to enable passwordless recovery.';
-
-  @override
-  String get passwordlessRecoveryNeedAtLeast3 =>
-      'You need at least 3 trusted friends.';
-
-  @override
-  String get passwordlessRecoveryInvalidPin => 'Invalid PIN';
-
-  @override
   String get passwordlessRecoveryEnterPin => 'Please enter a PIN.';
-
-  @override
-  String get passwordlessRecoveryPinMinLength =>
-      'PIN must be at least 4 digits.';
 
   @override
   String get passwordlessRecoveryEnterEmail => 'Please enter an email address.';
@@ -2226,14 +2197,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryInfoHowItWorksDesc =>
-      'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.';
+      'twonly operates without phone numbers, which is why we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined number of these friends must combine their shares.';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactor => 'Why a Second Factor?';
 
   @override
   String get passwordlessRecoveryInfoWhySecondFactorDesc =>
-      'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.';
+      'The second factor (Email or PIN) provides important additional protection. Even if your friends were to secretly team up, they still couldn\'t access your account without this second factor.';
 
   @override
   String get passwordlessRecoveryInfoGotIt => 'Got it';
@@ -2272,6 +2243,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordlessRecoverySelectFriends => 'Select trusted friends';
+
+  @override
+  String get passwordlessRecoveryTrustedFriends => 'Trusted Friends';
+
+  @override
+  String passwordlessRecoveryDoneBtn(num count) {
+    return 'Done ($count)';
+  }
 
   @override
   String get passwordlessRecoveryNoFriendsSelected =>
@@ -2314,8 +2293,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No recovery share stored for this contact.';
 
   @override
-  String get passwordlessRecoveryShareSent =>
-      'Recovery share successfully sent!';
+  String get passwordlessRecoveryEmailSent => 'Recovery email sent!';
+
+  @override
+  String get passwordlessRecoveryShareSent => 'Recovery share sent!';
 
   @override
   String get passwordlessRecoveryNetworkError =>
@@ -2342,16 +2323,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryNoContactsFound => 'No contacts found';
 
   @override
-  String get passwordlessRecoveryCantHelpHim => 'You can\'t help him';
+  String get passwordlessRecoveryCantHelpHim => 'You can\'t help this person';
 
   @override
   String passwordlessRecoveryDoesAskedYou(Object username) {
-    return 'Does $username has asked you?';
+    return 'Has $username asked you?';
   }
 
   @override
   String get passwordlessRecoveryVerifySourceDesc =>
-      'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.';
+      'Please make sure this request really came from this person. If in doubt, ask them via another channel!';
 
   @override
   String get passwordlessRecoveryNo => 'No';
@@ -2365,14 +2346,111 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recoverPasswordlessBeingRecoveredLabel =>
-      'Account being recovered';
-
-  @override
   String recoverPasswordlessSharesReceived(Object received, Object threshold) {
-    return '$received of $threshold friends have shared';
+    return '$received out of $threshold friends have helped';
   }
 
   @override
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
+
+  @override
+  String get missingRecoveryContactsCardTitle => 'Recovery Contacts';
+
+  @override
+  String get missingRecoveryContactsCardDesc =>
+      'Select Recovery Contacts to help you recover your account without requiring a password.';
+
+  @override
+  String get missingRecoveryContactsCardAction => 'Select Contacts';
+
+  @override
+  String get memoriesBackupLimitReached =>
+      'Cloud backup limit reached! Please upgrade your plan or free up space.';
+
+  @override
+  String get settingsStorageLocal => 'Local storage';
+
+  @override
+  String get settingsStorageNoCloudBackupTitle => 'No Cloud Backup';
+
+  @override
+  String get settingsStorageNoCloudBackupCard =>
+      'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.';
+
+  @override
+  String get galleryActionSave => 'Save';
+
+  @override
+  String get galleryActionExport => 'Export';
+
+  @override
+  String get galleryActionFavorite => 'Favorite';
+
+  @override
+  String get galleryActionUnfavorite => 'Unfavorite';
+
+  @override
+  String get galleryActionDelete => 'Delete';
+
+  @override
+  String get galleryActionShare => 'Share';
+
+  @override
+  String get settingsStorageHidePromo => 'Hide';
+
+  @override
+  String get memoriesBackupTitle => 'Memories Backup';
+
+  @override
+  String get settingsHelpNews => 'News';
+
+  @override
+  String get settingsStorageContents => 'Storage contents';
+
+  @override
+  String get settingsStorageSortStorage => 'Occupied storage';
+
+  @override
+  String get settingsStorageSortNewest => 'Newest';
+
+  @override
+  String get settingsStorageSortOldest => 'Oldest';
+
+  @override
+  String get settingsStorageNoContents => 'No storage contents found.';
+
+  @override
+  String get settingsStorageCloudOnly => 'Cloud only';
+
+  @override
+  String get settingsStorageLocalAndCloud => 'Local and cloud';
+
+  @override
+  String get settingsStorageLocalOnly => 'Local only';
+
+  @override
+  String get settingsStorageDisableBackupTitle => 'Disable Backup?';
+
+  @override
+  String settingsStorageDisableBackupBody(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'are *$count images*',
+      one: 'is *1 image*',
+    );
+    return 'This will delete all backed up memories from the cloud. There $_temp0 only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?';
+  }
+
+  @override
+  String get settingsStorageDisableBackupBtn => 'Disable';
+
+  @override
+  String get settingsStorageDisableBackupAction => 'Disable Cloud Backup';
+
+  @override
+  String get settingsStorageSyncNow => 'Sync now';
+
+  @override
+  String get settingsStorageSyncUpToDate => 'All memories are up to date.';
 }

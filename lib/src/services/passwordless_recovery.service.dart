@@ -5,15 +5,13 @@ import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography_plus/cryptography_plus.dart'
-    show Hmac, Mac, SecretBox, SecretKey, Xchacha20;
+    show Hkdf, Hmac, Mac, SecretBox, SecretKey, Xchacha20;
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:go_router/go_router.dart';
 import 'package:twonly/core/bridge/wrapper.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
-import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart'
     show getContactDisplayName;
 import 'package:twonly/src/database/twonly.db.dart';
@@ -26,7 +24,7 @@ import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user.service.dart';
-import 'package:twonly/src/utils/avatars.dart' show getAvatarSvg;
+
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -37,6 +35,8 @@ enum SecondFactorType { email, pin, none }
 class PasswordlessRecoveryService {
   static final StreamController<String> onEmailTokenReceived =
       StreamController<String>.broadcast();
+
+  static String? lastEmailToken;
 
   static String linkPrefix = 'https://me.twonly.eu/r/#';
 
@@ -50,11 +50,8 @@ class PasswordlessRecoveryService {
     final parts = fragment.split('/');
     if (parts.length < 2) {
       if (fragment.isNotEmpty) {
+        lastEmailToken = fragment;
         onEmailTokenReceived.add(fragment);
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && context.mounted) {
-          unawaited(context.push(Routes.recoverPasswordless, extra: fragment));
-        }
       }
       return;
     }
@@ -108,9 +105,7 @@ class PasswordlessRecoveryService {
       final shareUser = TrustedFriendShare_User(
         userId: Int64(contact.userId),
         displayName: getContactDisplayName(contact),
-        avatar: contact.avatarSvgCompressed != null
-            ? utf8.encode(getAvatarSvg(contact.avatarSvgCompressed!))
-            : null,
+        avatar: contact.avatarSvgCompressed,
       );
 
       final trustedFriendShare = TrustedFriendShare(
@@ -190,52 +185,45 @@ class PasswordlessRecoveryService {
 
     switch (secondFactorType) {
       case SecondFactorType.email:
-
-        // The serverKey is encrypted with the email; this protects the server from seeing the user's email address, while
-        // also ensuring that the server can only send the real secret to the user's configured email, as a different
-        // email will result in a different secret key.
-        // This is only stored so the user can see there email, and verify that he has set the valid mail...
-        config.email = secondFactorValue;
-        emailHint = createEmailHint(secondFactorValue);
+        config.email = secondFactorValue.toLowerCase();
+        emailHint = createEmailHint(config.email!);
 
         // E-Mail Protection:
-        // - Server can only learn the email during recovery. Ensured as the server gets the NONCE and MAC to decrpyt during recovery.
-        // - Trusted-friends: Server key is send to the mail, they whould need access to the user's mail account.
-        secondFactorEncryptedServerKeyKey = SecretKey(
-          Uint8List.fromList(sha256.convert(utf8.encode(config.email!)).bytes),
+        // - Server can only learn the email during recovery. Ensured as the server gets the NONCE to decrypt only during recovery.
+        // - Trusted-friends: Server key is only sent to the mail, they would need access to the user's mail account.
+        config.serverKeyProtection = getRandomUint8List(32);
+
+        final hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+        secondFactorEncryptedServerKeyKey = await hkdf.deriveKey(
+          secretKey: SecretKey(config.serverKeyProtection!),
+          nonce: utf8.encode(config.email!),
         );
 
       case SecondFactorType.pin:
 
-        // The pin seed - never shared with the server - ensures that the server is unable to brute-force real user's pin.
-        config.pinSeed = getRandomUint8List(32);
+        // The pin seed - never shared with the server - ensures that the server is unable to brute-force real user's pin
+        config.serverKeyProtection = getRandomUint8List(32);
 
-        // As the pin is heavily protected against brute-forcing e.g. will be deleted by the server after X tries, the
-        // unlock token is required to prevent a malicous user (except the trusted friends) to triger this deletion.
+        // As the pin is heavily protected against brute-forcing e.g. will be deleted by the server after 10 tries, the
+        // unlock token is required to prevent a malicious user (except the trusted friends) to trigger this deletion.
         config.pinUnlockToken = getRandomUint8List(32);
 
         // Brute-force protection for the user's pin:
         //  - Server: Does not know the seed.
-        //  - Trusted friends:
-        //  Can only check the result X times before the server deletes the key. As they do not have
-        //  the mac and the cypher text they are unable to brute-force the pin localy. And the server only allows 10
-        //  tries.
-        final pinProtectionKey = await Hmac.sha256().calculateMac(
-          Uint8List.fromList(utf8.encode(secondFactorValue)),
-          secretKey: SecretKey(config.pinSeed!),
+        //  - Trusted friends:  Can only check the result 10 times before the server deletes the key. As they do not have
+        //  the mac and the cipher text they are unable to brute-force the pin locally. And the server only allows 10 tries.
+        final hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+        secondFactorEncryptedServerKeyKey = await hkdf.deriveKey(
+          secretKey: SecretKey(config.serverKeyProtection!),
+          nonce: utf8.encode(secondFactorValue),
         );
-
-        // To restore the user has to provide the server with this encryption key. The server then can verify the
-        // correct pin was entered, when decrypting the server key as he also receives the mac and nonce from the user
-        // during recovery. Only when the mac is correct the server provides the user with the serverKey.
-        secondFactorEncryptedServerKeyKey = SecretKey(pinProtectionKey.bytes);
 
       case SecondFactorType.none:
     }
 
     if (secondFactorEncryptedServerKeyKey != null) {
       // The server key is used to encrypt the RecoveryData of the users. This ensures that when the trusted friends
-      // colaberate, they additional need the serverKey to decrypt the user's key.
+      // collaborate, they additionally need the serverKey to decrypt the user's key.
       serverKey = getRandomUint8List(32);
 
       final secretBox = await xchacha20.encrypt(
@@ -244,18 +232,16 @@ class PasswordlessRecoveryService {
         nonce: xchacha20.newNonce(),
       );
 
-      // The server only gets the encrypted server key and the mac. Because the server does not know the nonce (192-bit
-      // because of XChaCha), he is unable to decrypt the server key without the help of the trusted friends. This
-      // ensures that the server never learns the users orginal pin, as he is missing the pin_seed and also unable to
-      // brute-force the email of the user as he does not have the nonce.
+      // The server only gets the encrypted server key, the mac, and the nonce.
+      // This ensures that the server never learns the user's original pin, as he is missing the serverKeyProtection and also unable to
+      // brute-force the email of the user.
       encryptedServerKey = Uint8List.fromList([
         ...secretBox.cipherText,
         ...secretBox.mac.bytes,
+        ...secretBox.nonce,
       ]);
 
-      config
-        ..encryptedServerKeyNonce = secretBox.nonce
-        ..encryptedServerKey = encryptedServerKey;
+      config.encryptedServerKey = encryptedServerKey;
     }
 
     // 3. Using shamir's secret to generate the shares for the users.
@@ -285,10 +271,9 @@ class PasswordlessRecoveryService {
 
     final sharedSecretData = SharedSecretData(
       recoveryData: recoveryData,
-      pinSeed: config.pinSeed,
+      serverKeyProtection: config.serverKeyProtection,
       pinUnlockToken: config.pinUnlockToken,
       emailHint: emailHint,
-      encryptedServerKeyNonce: config.encryptedServerKeyNonce,
     ).writeToBuffer();
 
     // 3.2. Use the amount of trusted friends to generate the shares
@@ -326,35 +311,37 @@ class PasswordlessRecoveryService {
 
     unawaited(performHeartbeat());
 
-    // The passwordless is configured sucessfully.
+    // The passwordless is configured successfully.
     return true;
   }
 
   static Future<bool> testPin(String pin) async {
     final config = userService.currentUser.passwordLessRecovery;
-    if (config?.pinSeed == null || config?.encryptedServerKey == null) {
+    if (config?.serverKeyProtection == null ||
+        config?.encryptedServerKey == null) {
       return false;
     }
 
     try {
-      final pinProtectionKey = await Hmac.sha256().calculateMac(
-        Uint8List.fromList(utf8.encode(pin)),
-        secretKey: SecretKey(config!.pinSeed!),
-      );
-
-      final secondFactorEncryptedServerKeyKey = SecretKey(
-        pinProtectionKey.bytes,
+      final hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+      final secondFactorEncryptedServerKeyKey = await hkdf.deriveKey(
+        secretKey: SecretKey(config!.serverKeyProtection!),
+        nonce: utf8.encode(pin),
       );
 
       final xchacha20 = Xchacha20.poly1305Aead();
 
       final combined = config.encryptedServerKey!;
-      final cipherText = combined.sublist(0, combined.length - 16);
-      final macBytes = combined.sublist(combined.length - 16);
+      final nonceBytes = combined.sublist(combined.length - 24);
+      final macBytes = combined.sublist(
+        combined.length - 40,
+        combined.length - 24,
+      );
+      final cipherText = combined.sublist(0, combined.length - 40);
 
       final secretBox = SecretBox(
         cipherText,
-        nonce: config.encryptedServerKeyNonce!,
+        nonce: nonceBytes,
         mac: Mac(macBytes),
       );
 
@@ -399,7 +386,7 @@ class PasswordlessRecoveryService {
           clock.now().difference(lastContactHeartbeat).inHours >= 24;
 
       if (isContactHeartbeatOlderThan24h) {
-        // Get all contacts where recoveryLastHeartbeat is NULL. Then for each contacts send.
+        // Get all contacts where recoveryLastHeartbeat is NULL. Then for each contact send.
         // recoveryLastHeartbeat is ONLY updated in case the contact has responded.
         final pendingShares =
             await (twonlyDB.select(twonlyDB.contacts)..where(
@@ -545,7 +532,7 @@ class PasswordlessRecoveryService {
     final recoveryLastHeartbeat =
         const ListEquality().equals(computedHash, msg.hash)
         ? clock.now()
-        : null; // The stored share not valid (maybe a old backup was restored). This will cause the performHeartbeat to resend him his share
+        : null; // The stored share not valid (maybe an old backup was restored). This will cause the performHeartbeat to resend him his share
     Log.info(
       '[$receiptId] Got heartbeat: ($recoveryLastHeartbeat)',
     );
@@ -605,6 +592,9 @@ class PasswordlessRecoveryService {
         final receivedShare = ReceivedRecoveryShare(
           messageId: msgId,
           trustedFriendDisplayName: share.trustedFriend.displayName,
+          trustedFriendAvatarSvg: share.trustedFriend.hasAvatar()
+              ? share.trustedFriend.avatar
+              : null,
           myDisplayName: share.shareUser.displayName,
           myUserId: share.shareUser.userId.toInt(),
           myAvatarSvg: share.shareUser.hasAvatar()
@@ -636,5 +626,54 @@ class PasswordlessRecoveryService {
     }
 
     return didUpdate;
+  }
+
+  static Future<void> migratePasswordlessRecovery() async {
+    final config = userService.currentUser.passwordLessRecovery;
+    if (config == null) return;
+
+    final oldTrustedFriends = await (twonlyDB.select(
+      twonlyDB.contacts,
+    )..where((t) => t.recoveryIsTrustedFriend.equals(true))).get();
+    final trustedFriendIds = oldTrustedFriends.map((e) => e.userId).toList();
+
+    if (trustedFriendIds.isEmpty) return;
+
+    if (config.email != null) {
+      await enablePasswordlessRecovery(
+        trustedFriendIds: trustedFriendIds,
+        secondFactorType: SecondFactorType.email,
+        secondFactorValue: config.email!,
+        threshold: config.threshold,
+      );
+    } else if (config.pinUnlockToken == null) {
+      await enablePasswordlessRecovery(
+        trustedFriendIds: trustedFriendIds,
+        secondFactorType: SecondFactorType.none,
+        secondFactorValue: '',
+        threshold: config.threshold,
+      );
+    } else {
+      // It's PIN, we can't migrate it because we don't have the PIN. We delete it so the user has to do it again.
+      for (final contact in oldTrustedFriends) {
+        try {
+          await sendCipherText(
+            contact.userId,
+            pb.EncryptedContent(
+              passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
+                delete: true,
+              ),
+            ),
+          );
+        } catch (e) {
+          Log.error(
+            'Failed to send delete PasswordLessRecovery message to contact ${contact.userId}: $e',
+          );
+        }
+      }
+
+      await twonlyDB.contactsDao.resetRecoveryDataForAllContacts();
+      await UserService.update((u) => u.passwordLessRecovery = null);
+    }
   }
 }

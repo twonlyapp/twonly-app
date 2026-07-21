@@ -124,5 +124,21 @@ impl RustKeyManager {
         *ctx.key_manager.lock().await = key_manager;
         Ok(())
     }
+
+    pub async fn encrypt_cloud_media_key(media_key: Vec<u8>, addition: String) -> Result<Vec<u8>> {
+        let key_manager = get_twonly_flutter()?.key_manager.lock().await;
+        if media_key.len() != 32 {
+            return Err(TwonlyError::WronKeySize(32, media_key.len()));
+        }
+        let mut key_array = [0u8; 32];
+        key_array.copy_from_slice(&media_key);
+        Ok(key_manager.main_key.encrypt_cloud_media_key(&key_array, &addition))
+    }
+
+    pub async fn decrypt_cloud_media_key(encrypted_media_key: Vec<u8>, addition: String) -> Result<Vec<u8>> {
+        let key_manager = get_twonly_flutter()?.key_manager.lock().await;
+        let decrypted = key_manager.main_key.decrypt_cloud_media_key(&encrypted_media_key, &addition)?;
+        Ok(decrypted.to_vec())
+    }
 }
 

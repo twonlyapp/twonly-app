@@ -17,10 +17,11 @@ import 'package:twonly/src/visual/components/connection_status.comp.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
-import 'package:twonly/src/visual/views/chats/chat_list_components/feedback_btn.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
+import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/missing_recovery_contacts.comp.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -38,7 +39,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
   List<Group> _groupsPinned = [];
   List<Group> _groupsArchived = [];
 
-  bool _hasContacts = false;
+  final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
   bool get _hasOpenGroup =>
       _groupsNotPinned.isNotEmpty ||
@@ -50,6 +51,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
 
   int _countContactRequest = 0;
   int _countAnnouncedUsers = 0;
+  final ValueNotifier<int> _badgeCount = ValueNotifier(0);
   late StreamSubscription<int?> _countContactRequestStream;
   late StreamSubscription<int?> _countAnnouncedStream;
 
@@ -80,9 +82,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
       contacts,
     ) {
       if (!mounted) return;
-      setState(() {
-        _hasContacts = contacts.isNotEmpty;
-      });
+      _hasContacts.value = contacts.isNotEmpty;
     });
 
     _countContactRequestStream = twonlyDB.contactsDao
@@ -90,9 +90,8 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
         .listen((update) {
           if (update != null) {
             if (!mounted) return;
-            setState(() {
-              _countContactRequest = update;
-            });
+            _countContactRequest = update;
+            _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
           }
         });
 
@@ -100,9 +99,8 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
         .watchNewAnnouncementsWithDataCount()
         .listen((update) {
           if (!mounted) return;
-          setState(() {
-            _countAnnouncedUsers = update;
-          });
+          _countAnnouncedUsers = update;
+          _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
         });
 
     _precacheSub = twonlyDB.messagesDao.watchUnopenedMediaFiles().listen((mediaFiles) {
@@ -141,7 +139,10 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final plan = context.watch<PurchasesProvider>().plan;
+    final plan = context.select<PurchasesProvider, SubscriptionPlan>(
+      (p) => p.plan,
+    );
+    final dark = isDarkMode(context);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -175,7 +176,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                      color: dark ? Colors.black : Colors.white,
                     ),
                   ),
                 ),
@@ -183,41 +184,41 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
           ],
         ),
         actions: [
-          const FeedbackIconButtonComp(),
-          Stack(
-            children: [
-              if (_countAnnouncedUsers + _countContactRequest > 0)
-                Positioned.fill(
-                  child: Center(
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: primaryColor,
-                        shape: BoxShape.circle,
+          const NewsIconButtonComp(),
+          ValueListenableBuilder<int>(
+            valueListenable: _badgeCount,
+            builder: (context, badgeCount, child) {
+              return Stack(
+                children: [
+                  if (badgeCount > 0)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Center(
+                    child: NotificationBadgeComp(
+                      backgroundColor: dark ? Colors.white : Colors.black,
+                      textColor: dark ? Colors.black : Colors.white,
+                      count: badgeCount.toString(),
+                      child: IconButton(
+                        color: badgeCount > 0 ? Colors.black : null,
+                        key: searchForOtherUsers,
+                        icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
+                        onPressed: () => context.push(Routes.chatsAddNewUser),
                       ),
                     ),
                   ),
-                ),
-              Center(
-                child: NotificationBadgeComp(
-                  backgroundColor: isDarkMode(context)
-                      ? Colors.white
-                      : Colors.black,
-                  textColor: isDarkMode(context) ? Colors.black : Colors.white,
-                  count: (_countAnnouncedUsers + _countContactRequest)
-                      .toString(),
-                  child: IconButton(
-                    color: (_countAnnouncedUsers + _countContactRequest > 0)
-                        ? Colors.black
-                        : null,
-                    key: searchForOtherUsers,
-                    icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
-                    onPressed: () => context.push(Routes.chatsAddNewUser),
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
 
           IconButton(
@@ -236,6 +237,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
           children: [
             const FinishSetupComp(),
             const MissingBackupComp(),
+            const MissingRecoveryContactsComp(),
             if (_loading)
               const Expanded(
                 child: SizedBox.shrink(),
@@ -303,45 +305,43 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
         ),
       ),
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-      floatingActionButton: !_hasContacts
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 30),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FloatingActionButton(
-                    heroTag: 'qrcode_fab',
-                    elevation: 2,
-                    backgroundColor: isDarkMode(context)
-                        ? Colors.grey[800]
-                        : Colors.grey[200],
-                    foregroundColor: isDarkMode(context)
-                        ? Colors.white
-                        : Colors.black87,
-                    onPressed: () => context.push(Routes.settingsPublicProfile),
-                    child: FaIcon(
-                      FontAwesomeIcons.qrcode,
-                      color: isDarkMode(context)
-                          ? Colors.white
-                          : Colors.black87,
-                    ),
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: _hasContacts,
+        builder: (context, hasContacts, child) {
+          if (!hasContacts) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'qrcode_fab',
+                  elevation: 2,
+                  backgroundColor: dark ? Colors.grey[800] : Colors.grey[200],
+                  foregroundColor: dark ? Colors.white : Colors.black87,
+                  onPressed: () => context.push(Routes.settingsPublicProfile),
+                  child: FaIcon(
+                    FontAwesomeIcons.qrcode,
+                    color: dark ? Colors.white : Colors.black87,
                   ),
-                  const SizedBox(height: 12),
-                  FloatingActionButton(
-                    heroTag: 'new_chat_fab',
-                    elevation: 2,
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.black87,
-                    onPressed: () => context.push(Routes.chatsStartNewChat),
-                    child: const FaIcon(
-                      FontAwesomeIcons.penToSquare,
-                      color: Colors.black87,
-                    ),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton(
+                  heroTag: 'new_chat_fab',
+                  elevation: 2,
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.black87,
+                  onPressed: () => context.push(Routes.chatsStartNewChat),
+                  child: const FaIcon(
+                    FontAwesomeIcons.penToSquare,
+                    color: Colors.black87,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 }

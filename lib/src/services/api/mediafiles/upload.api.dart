@@ -222,6 +222,19 @@ Future<void> finishStartedPreprocessing() async {
           Log.info('Ignoring media files as it is a draft');
           continue;
         }
+
+        final messages = await twonlyDB.messagesDao.getMessagesByMediaId(
+          mediaFile.mediaId,
+        );
+        if (messages.isEmpty) {
+          Log.info(
+            'Deleted orphaned media file ${mediaFile.mediaId} as no messages reference it.',
+          );
+          MediaFileService(mediaFile).fullMediaRemoval();
+          await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+          continue;
+        }
+
         try {
           final service = MediaFileService(mediaFile);
           if (!service.originalPath.existsSync() &&
@@ -492,20 +505,51 @@ Future<void> _startBackgroundMediaUploadInternal(
     }
 
     if (!mediaService.encryptedPath.existsSync()) {
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Encrypted file not found. Starting encryption.',
+      );
       await _encryptMediaFiles(mediaService);
       if (!mediaService.encryptedPath.existsSync()) {
+        Log.warn(
+          'Media ${mediaService.mediaFile.mediaId}: Encryption failed. Encrypted file still missing.',
+        );
         return;
       }
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Encryption completed successfully.',
+      );
+    } else {
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Encrypted file already exists.',
+      );
     }
 
     if (!mediaService.uploadRequestPath.existsSync()) {
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Upload request file not found. Creating it.',
+      );
       await _createUploadRequest(mediaService);
+      if (!mediaService.uploadRequestPath.existsSync()) {
+        Log.warn(
+          'Media ${mediaService.mediaFile.mediaId}: Upload request file creation returned empty (e.g. no messages).',
+        );
+      }
+    } else {
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Upload request file already exists.',
+      );
     }
 
     if (mediaService.uploadRequestPath.existsSync()) {
+      Log.info(
+        'Media ${mediaService.mediaFile.mediaId}: Transitioning uploadState from ${mediaService.mediaFile.uploadState} to uploading.',
+      );
       await mediaService.setUploadState(UploadState.uploading);
       // at this point the original file is not used any more, so it can be deleted
       if (mediaService.originalPath.existsSync()) {
+        Log.info(
+          'Media ${mediaService.mediaFile.mediaId}: Deleting original file as it is now encrypted.',
+        );
         mediaService.originalPath.deleteSync();
       }
     }
@@ -553,6 +597,9 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   if (messages.isEmpty) {
     // There where no user selected who should receive the image, so waiting with this step...
+    Log.info(
+      'Media ${media.mediaFile.mediaId}: No recipient messages found, waiting to create upload request',
+    );
     return;
   }
 

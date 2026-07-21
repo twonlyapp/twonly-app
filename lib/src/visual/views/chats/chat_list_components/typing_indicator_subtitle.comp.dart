@@ -28,10 +28,6 @@ class _TypingIndicatorSubtitleCompState
   void initState() {
     super.initState();
 
-    _periodicUpdate = Timer.periodic(const Duration(seconds: 1), (_) {
-      filterOpenUsers(_groupMembers);
-    });
-
     final membersStream = twonlyDB.groupsDao.watchGroupMembers(
       widget.groupId,
     );
@@ -41,11 +37,22 @@ class _TypingIndicatorSubtitleCompState
   }
 
   void filterOpenUsers(List<GroupMember> input) {
-    if (mounted) {
-      setState(() {
-        _groupMembers = input.where(isTyping).toList();
+    if (!mounted) return;
+    
+    final typingMembers = input.where(isTyping).toList();
+    
+    if (typingMembers.isEmpty) {
+      _periodicUpdate?.cancel();
+      _periodicUpdate = null;
+    } else {
+      _periodicUpdate ??= Timer.periodic(const Duration(seconds: 1), (_) {
+        filterOpenUsers(_groupMembers);
       });
     }
+
+    setState(() {
+      _groupMembers = typingMembers;
+    });
   }
 
   @override

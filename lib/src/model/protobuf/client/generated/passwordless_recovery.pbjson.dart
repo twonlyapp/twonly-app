@@ -15,20 +15,6 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-@$core.Deprecated('Use recoveryRequestDescriptor instead')
-const RecoveryRequest$json = {
-  '1': 'RecoveryRequest',
-  '2': [
-    {'1': 'notification_id', '3': 1, '4': 1, '5': 9, '10': 'notificationId'},
-    {'1': 'public_key', '3': 2, '4': 1, '5': 12, '10': 'publicKey'},
-  ],
-};
-
-/// Descriptor for `RecoveryRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List recoveryRequestDescriptor = $convert.base64Decode(
-    'Cg9SZWNvdmVyeVJlcXVlc3QSJwoPbm90aWZpY2F0aW9uX2lkGAEgASgJUg5ub3RpZmljYXRpb2'
-    '5JZBIdCgpwdWJsaWNfa2V5GAIgASgMUglwdWJsaWNLZXk=');
-
 @$core.Deprecated('Use encryptedEnvelopeDescriptor instead')
 const EncryptedEnvelope$json = {
   '1': 'EncryptedEnvelope',
@@ -116,21 +102,12 @@ const SharedSecretData$json = {
   '2': [
     {'1': 'recovery_data', '3': 1, '4': 1, '5': 12, '10': 'recoveryData'},
     {
-      '1': 'encrypted_server_key_nonce',
+      '1': 'server_key_protection',
       '3': 3,
       '4': 1,
       '5': 12,
       '9': 0,
-      '10': 'encryptedServerKeyNonce',
-      '17': true
-    },
-    {
-      '1': 'pin_seed',
-      '3': 4,
-      '4': 1,
-      '5': 12,
-      '9': 1,
-      '10': 'pinSeed',
+      '10': 'serverKeyProtection',
       '17': true
     },
     {
@@ -138,7 +115,7 @@ const SharedSecretData$json = {
       '3': 5,
       '4': 1,
       '5': 12,
-      '9': 2,
+      '9': 1,
       '10': 'pinUnlockToken',
       '17': true
     },
@@ -147,14 +124,13 @@ const SharedSecretData$json = {
       '3': 6,
       '4': 1,
       '5': 9,
-      '9': 3,
+      '9': 2,
       '10': 'emailHint',
       '17': true
     },
   ],
   '8': [
-    {'1': '_encrypted_server_key_nonce'},
-    {'1': '_pin_seed'},
+    {'1': '_server_key_protection'},
     {'1': '_pin_unlock_token'},
     {'1': '_email_hint'},
   ],
@@ -163,8 +139,7 @@ const SharedSecretData$json = {
 /// Descriptor for `SharedSecretData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sharedSecretDataDescriptor = $convert.base64Decode(
     'ChBTaGFyZWRTZWNyZXREYXRhEiMKDXJlY292ZXJ5X2RhdGEYASABKAxSDHJlY292ZXJ5RGF0YR'
-    'JAChplbmNyeXB0ZWRfc2VydmVyX2tleV9ub25jZRgDIAEoDEgAUhdlbmNyeXB0ZWRTZXJ2ZXJL'
-    'ZXlOb25jZYgBARIeCghwaW5fc2VlZBgEIAEoDEgBUgdwaW5TZWVkiAEBEi0KEHBpbl91bmxvY2'
-    'tfdG9rZW4YBSABKAxIAlIOcGluVW5sb2NrVG9rZW6IAQESIgoKZW1haWxfaGludBgGIAEoCUgD'
-    'UgllbWFpbEhpbnSIAQFCHQobX2VuY3J5cHRlZF9zZXJ2ZXJfa2V5X25vbmNlQgsKCV9waW5fc2'
-    'VlZEITChFfcGluX3VubG9ja190b2tlbkINCgtfZW1haWxfaGludA==');
+    'I3ChVzZXJ2ZXJfa2V5X3Byb3RlY3Rpb24YAyABKAxIAFITc2VydmVyS2V5UHJvdGVjdGlvbogB'
+    'ARItChBwaW5fdW5sb2NrX3Rva2VuGAUgASgMSAFSDnBpblVubG9ja1Rva2VuiAEBEiIKCmVtYW'
+    'lsX2hpbnQYBiABKAlIAlIJZW1haWxIaW50iAEBQhgKFl9zZXJ2ZXJfa2V5X3Byb3RlY3Rpb25C'
+    'EwoRX3Bpbl91bmxvY2tfdG9rZW5CDQoLX2VtYWlsX2hpbnQ=');

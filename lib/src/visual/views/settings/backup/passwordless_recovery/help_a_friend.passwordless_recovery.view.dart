@@ -285,6 +285,22 @@ class _ConfirmRecoveryDialogState extends State<ConfirmRecoveryDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Row(
+              children: [
+                AvatarIcon(contactId: widget.contact.userId),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    getContactDisplayName(widget.contact),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             Text(
               context.lang.passwordlessRecoveryVerifySourceDesc,
               style: TextStyle(

@@ -17,16 +17,16 @@ class _FactorOption {
 
 const _options = [
   _FactorOption(
-    type: SecondFactorType.none,
-    icon: Icons.block_rounded,
+    type: SecondFactorType.email,
+    icon: Icons.email_rounded,
   ),
   _FactorOption(
     type: SecondFactorType.pin,
     icon: Icons.dialpad_rounded,
   ),
   _FactorOption(
-    type: SecondFactorType.email,
-    icon: Icons.email_rounded,
+    type: SecondFactorType.none,
+    icon: Icons.block_rounded,
   ),
 ];
 

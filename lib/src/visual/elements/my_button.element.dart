@@ -12,6 +12,7 @@ enum MyButtonVariant {
   secondaryDense,
   secondaryMiddle,
   error,
+  errorMiddle,
 }
 
 class MyButton extends StatefulWidget {
@@ -33,7 +34,6 @@ class MyButton extends StatefulWidget {
 }
 
 class _MyButtonState extends State<MyButton> {
-
   @override
   Widget build(BuildContext context) {
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;
@@ -186,6 +186,25 @@ class _MyButtonState extends State<MyButton> {
           elevation: 0,
           textStyle: const TextStyle(
             fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      case MyButtonVariant.errorMiddle:
+        buttonStyle = FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+          disabledBackgroundColor: disabledBgColor,
+          disabledForegroundColor: disabledFgColor,
+          minimumSize: const Size(0, 48),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: 0,
+          textStyle: const TextStyle(
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         );

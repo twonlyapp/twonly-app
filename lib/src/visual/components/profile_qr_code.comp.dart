@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -22,59 +24,73 @@ class ProfileQrCodeComp extends StatefulWidget {
     BuildContext context, {
     Contact? contact,
     bool openToVerify = false,
-  }) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: context.color.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
+  }) async {
+    StreamSubscription<void>? subscription;
+
+    if (openToVerify) {
+      subscription = KeyVerificationService.onVerificationSuccessClose.listen((_) {
+        if (context.mounted) {
+          KeyVerificationService.closeVerificationFlows(context);
+        }
+      });
+    }
+
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return Container(
+            decoration: BoxDecoration(
+              color: context.color.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: double.infinity),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.color.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: double.infinity),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.color.onSurface.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                openToVerify
-                    ? (contact != null
-                        ? context.lang.letUserScanQrCode(
-                            getContactDisplayName(contact),
-                          )
-                        : context.lang.letFriendScanQrToVerify)
-                    : (contact != null
-                        ? context.lang.letUserScanQrCode(
-                            getContactDisplayName(contact),
-                          )
-                        : context.lang.addContactQrSheetSubtext),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: context.color.onSurface.withValues(alpha: 0.6),
+                const SizedBox(height: 24),
+                Text(
+                  openToVerify
+                      ? (contact != null
+                          ? context.lang.letUserScanQrCode(
+                              getContactDisplayName(contact),
+                            )
+                          : context.lang.letFriendScanQrToVerify)
+                      : (contact != null
+                          ? context.lang.letUserScanQrCode(
+                              getContactDisplayName(contact),
+                            )
+                          : context.lang.addContactQrSheetSubtext),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: context.color.onSurface.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              const ProfileQrCodeComp(),
-              const SizedBox(height: 34),
-            ],
-          ),
-        );
-      },
-    );
+                const SizedBox(height: 24),
+                const ProfileQrCodeComp(),
+                const SizedBox(height: 34),
+              ],
+            ),
+          );
+        },
+      );
+    } finally {
+      await subscription?.cancel();
+    }
   }
 
   @override

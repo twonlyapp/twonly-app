@@ -32,6 +32,7 @@ import 'package:twonly/src/services/api/server_messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
@@ -143,6 +144,7 @@ class ApiService {
       unawaited(PasswordlessRecoveryService.performHeartbeat());
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
+      memoriesCloudService.init();
 
       if (userService.currentUser.userStudyParticipantsToken != null) {
         // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
@@ -710,6 +712,82 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<server.Response_MemoriesUploadUrls?> requestMemoriesUpload(
+    int sizeBytes,
+    DateTime originalDate,
+    String mediaId,
+  ) async {
+    final get = ApplicationData_RequestMemoriesUpload()
+      ..size = Int64(sizeBytes)
+      ..originalDate = Int64(originalDate.millisecondsSinceEpoch)
+      ..mediaId = mediaId;
+    final appData = ApplicationData()..requestMemoriesUpload = get;
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUploadUrls()) {
+        return ok.memoriesUploadUrls;
+      }
+    }
+    return null;
+  }
+
+  Future<server.Response_MemoriesUsage?> getMemoriesUsage() async {
+    final appData = ApplicationData()
+      ..getMemoriesUsage = ApplicationData_GetMemoriesUsage();
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUsage()) {
+        return ok.memoriesUsage;
+      }
+    }
+    return null;
+  }
+
+  Future<server.Response_MemoriesUrl?> getMemoriesUrl(
+    String mediaId,
+    bool thumbnail,
+  ) async {
+    final appData = ApplicationData()
+      ..getMemoriesUrl = ApplicationData_GetMemoriesUrl(
+        mediaId: mediaId,
+        thumbnail: thumbnail,
+      );
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasMemoriesUrl()) {
+        return ok.memoriesUrl;
+      }
+    }
+    return null;
+  }
+
+  Future<Result> confirmMemoriesUpload(String mediaId) async {
+    final get = ApplicationData_ConfirmMemoriesUpload()..mediaId = mediaId;
+    final appData = ApplicationData()..confirmMemoriesUpload = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> deleteMemory(String mediaId) async {
+    final get = ApplicationData_DeleteMemory()..mediaId = mediaId;
+    final appData = ApplicationData()..deleteMemory = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> disableMemoriesBackup() async {
+    final get = ApplicationData_DisableMemoriesBackup();
+    final appData = ApplicationData()..disableMemoriesBackup = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
   Future<int?> getUserIdFromUsername(String username) async {
     final appData = Handshake(
       getUseridByUsername: Handshake_GetUserIdByUsername(username: username),
@@ -778,15 +856,15 @@ class ApiService {
 
   Future<Result> getServerKeyForPasswordlessRecovery({
     required int userId,
-    List<int>? encryptedServerKeyNone,
+    List<int>? serverKeyProtection,
     List<int>? pinUnlockToken,
     List<int>? pinProtectionKey,
     String? email,
   }) async {
     final get = Handshake_GetServerKeyForPasswordLessRecovery()
       ..userId = Int64(userId);
-    if (encryptedServerKeyNone != null) {
-      get.encryptedServerKeyNone = encryptedServerKeyNone;
+    if (serverKeyProtection != null) {
+      get.serverKeyProtection = serverKeyProtection;
     }
     if (pinUnlockToken != null) {
       get.pinUnlockToken = pinUnlockToken;
@@ -802,7 +880,6 @@ class ApiService {
     final req = createClientToServerFromHandshake(handshake);
     return sendRequestSync(req, authenticated: false);
   }
-
 
   Future<Result> submitRecoveryShare({
     required String notificationId,
@@ -954,7 +1031,8 @@ class ApiService {
 
   /// Polls the server for new passwordless recovery notification messages.
   /// [alreadyReceivedIds] prevents the server from sending duplicates.
-  Future<server.Response_PasswordlessNotificationMessages?> checkForPasswordlessNotification({
+  Future<server.Response_PasswordlessNotificationMessages?>
+  checkForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     List<Int64>? alreadyReceivedIds,

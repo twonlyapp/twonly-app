@@ -16,12 +16,16 @@ class ChatReactionSelectionView extends StatefulWidget {
 class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   List<String> _selectedEmojis = [];
 
+  /// Cache the emoji keys list once to avoid repeated Map.keys.toList() calls.
+  static final List<String> _allEmojis = EmojiAnimationComp.animatedIcons.keys
+      .toList();
+
   List<String> _emojisFromSession() {
     final user = userService.currentUser;
     if (user.preSelectedEmojies != null) {
       return user.preSelectedEmojies!;
     }
-    return EmojiAnimationComp.animatedIcons.keys.toList().sublist(0, 6);
+    return _allEmojis.sublist(0, 6);
   }
 
   @override
@@ -60,23 +64,27 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
             ),
-            itemCount: EmojiAnimationComp.animatedIcons.keys.length,
+            itemCount: _allEmojis.length,
             itemBuilder: (context, index) {
-              final emoji = EmojiAnimationComp.animatedIcons.keys.elementAt(
-                index,
-              );
+              final emoji = _allEmojis[index];
+              final isSelected = _selectedEmojis.contains(emoji);
               return GestureDetector(
                 onTap: () => _onEmojiSelected(emoji),
                 child: Card(
-                  color: _selectedEmojis.contains(emoji)
+                  color: isSelected
                       ? context.color.primary.withAlpha(150)
                       : context.color.surface,
                   child: Center(
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: EmojiAnimationComp(emoji: emoji),
-                    ),
+                    child: isSelected
+                        ? SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: EmojiAnimationComp(emoji: emoji),
+                          )
+                        : Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 32),
+                          ),
                   ),
                 ),
               );

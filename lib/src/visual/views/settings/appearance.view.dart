@@ -72,9 +72,9 @@ class _AppearanceViewState extends State<AppearanceView> {
     }
   }
 
-  Future<void> toggleShowFeedbackIcon() async {
+  Future<void> toggleShowNewsIcon() async {
     await UserService.update((u) {
-      u.showFeedbackShortcut = !u.showFeedbackShortcut;
+      u.showNewsShortcut = !u.showNewsShortcut;
     });
   }
 
@@ -113,11 +113,11 @@ class _AppearanceViewState extends State<AppearanceView> {
                 },
               ),
               ListTile(
-                title: Text(context.lang.contactUsShortcut),
-                onTap: toggleShowFeedbackIcon,
+                title: Text(context.lang.hideNewsIcon),
+                onTap: toggleShowNewsIcon,
                 trailing: Switch.adaptive(
-                  value: !userService.currentUser.showFeedbackShortcut,
-                  onChanged: (a) => toggleShowFeedbackIcon(),
+                  value: !userService.currentUser.showNewsShortcut,
+                  onChanged: (a) => toggleShowNewsIcon(),
                 ),
               ),
               ListTile(

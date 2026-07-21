@@ -9,7 +9,7 @@ import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 void main() {

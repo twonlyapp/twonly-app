@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -10,11 +9,11 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
-import 'package:twonly/src/visual/helpers/video_player_file.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_actions_toolbar.comp.dart';
+import 'package:twonly/src/visual/views/memories/components/synchronized_viewer_item.comp.dart';
 
 class SynchronizedImageViewerScreen extends StatefulWidget {
   const SynchronizedImageViewerScreen({
@@ -43,6 +42,7 @@ class _SynchronizedImageViewerScreenState
   final Set<String> _favoritedMediaIds = {};
   bool _isSaving = false;
   final Set<String> _storedMediaIds = {};
+  final Set<String> _precachedMediaIds = {};
 
   late int _currentIndex;
   bool _isZoomed = false;
@@ -56,18 +56,24 @@ class _SynchronizedImageViewerScreenState
     final initialId =
         widget.galleryItems[widget.initialIndex].mediaService.mediaFile.mediaId;
     _currentlyViewedMediaIdNotifier = ValueNotifier(initialId);
+    _precachedMediaIds.add(initialId);
 
     _horizontalPager = PageController(initialPage: widget.initialIndex);
     _verticalPager = PageController(initialPage: 1);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _verticalPager.addListener(_onVerticalScrollUpdated);
+      if (mounted) {
+        _verticalPager.addListener(_onVerticalScrollUpdated);
+        _precacheNeighbours(_currentIndex);
+      }
     });
 
     for (final item in widget.galleryItems) {
       if (item.mediaService.mediaFile.isFavorite) {
         _favoritedMediaIds.add(item.mediaService.mediaFile.mediaId);
       }
-      if (item.mediaService.storedPath.existsSync()) {
+      if (item.mediaService.mediaFile.stored ||
+          (item.mediaService.storedPath.existsSync() &&
+              item.mediaService.storedPath.lengthSync() > 0)) {
         _storedMediaIds.add(item.mediaService.mediaFile.mediaId);
       }
     }
@@ -156,36 +162,46 @@ class _SynchronizedImageViewerScreenState
   }
 
   Future<void> _deleteFile() async {
-    final confirmed = await showAlertDialog(
-      context,
-      context.lang.deleteImageTitle,
-      context.lang.deleteImageBody,
+    final item = widget.galleryItems[_currentIndex];
+    final mediaId = item.mediaService.mediaFile.mediaId;
+    final hasCloudBackup =
+        item.mediaService.mediaFile.cloudState != CloudState.none;
+
+    final deleteCompletely = await showDeleteMemoriesDialog(
+      context: context,
+      count: 1,
+      hasCloudBackup: hasCloudBackup,
     );
 
-    if (!confirmed) return;
+    if (deleteCompletely == null) return;
 
-    widget.galleryItems[_currentIndex].mediaService.fullMediaRemoval();
-    await twonlyDB.mediaFilesDao.deleteMediaFile(
-      widget.galleryItems[_currentIndex].mediaService.mediaFile.mediaId,
-    );
+    if (deleteCompletely) {
+      item.mediaService.fullMediaRemoval();
+      await apiService.deleteMemory(mediaId);
+      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
 
-    widget.galleryItems.removeAt(_currentIndex);
+      widget.galleryItems.removeAt(_currentIndex);
 
-    if (widget.galleryItems.isEmpty) {
-      if (mounted) Navigator.pop(context, true);
-      return;
+      if (widget.galleryItems.isEmpty) {
+        if (mounted) Navigator.pop(context, true);
+        return;
+      }
+
+      if (_currentIndex >= widget.galleryItems.length) {
+        _currentIndex = widget.galleryItems.length - 1;
+      }
+
+      final newId =
+          widget.galleryItems[_currentIndex].mediaService.mediaFile.mediaId;
+      _currentlyViewedMediaIdNotifier.value = newId;
+      widget.activeMediaIdNotifier.value = newId;
+
+      setState(() {});
+    } else {
+      if (item.mediaService.storedPath.existsSync()) {
+        item.mediaService.storedPath.deleteSync();
+      }
     }
-
-    if (_currentIndex >= widget.galleryItems.length) {
-      _currentIndex = widget.galleryItems.length - 1;
-    }
-
-    final newId =
-        widget.galleryItems[_currentIndex].mediaService.mediaFile.mediaId;
-    _currentlyViewedMediaIdNotifier.value = newId;
-    widget.activeMediaIdNotifier.value = newId;
-
-    setState(() {});
   }
 
   Future<void> _exportFile() async {
@@ -305,88 +321,54 @@ class _SynchronizedImageViewerScreenState
                           .mediaId;
                       _currentlyViewedMediaIdNotifier.value = newMediaId;
                       widget.activeMediaIdNotifier.value = newMediaId;
+                      _precachedMediaIds.add(newMediaId);
+                      _precacheNeighbours(idx);
                     },
                     itemBuilder: (context, index) {
-                      final item = widget.galleryItems[index];
-                      final itemMediaId = item.mediaService.mediaFile.mediaId;
-
-                      var filePath = item.mediaService.storedPath;
-                      if (!filePath.existsSync()) {
-                        filePath = item.mediaService.tempPath;
-                      }
-
-                      final isVideo =
-                          item.mediaService.mediaFile.type == MediaType.video;
-
-                      return Center(
-                        child: ValueListenableBuilder<String>(
-                          valueListenable: _currentlyViewedMediaIdNotifier,
-                          builder: (context, activeMediaId, childWidget) {
-                            // Dynamically resolve Hero tags to prevent layout tree duplicate assertions
-                            final isActiveTarget = activeMediaId == itemMediaId;
-
-                            if (isActiveTarget) {
-                              return Hero(
-                                tag: itemMediaId,
-                                transitionOnUserGestures: true,
-                                child: childWidget!,
-                              );
-                            }
-                            return childWidget!;
-                          },
-                          child: !filePath.existsSync()
-                              ? const Center(
-                                  child: Icon(
-                                    Icons.broken_image_outlined,
-                                    color: Colors.white38,
-                                    size: 64,
-                                  ),
-                                )
-                              : isVideo
-                              ? VideoPlayerFileHelper(videoPath: filePath)
-                              : PhotoView(
-                                  imageProvider: FileImage(filePath),
-                                  initialScale:
-                                      PhotoViewComputedScale.contained,
-                                  minScale: PhotoViewComputedScale.contained,
-                                  maxScale:
-                                      PhotoViewComputedScale.covered * 4.1,
-                                  backgroundDecoration: const BoxDecoration(
-                                    color: Colors.transparent,
-                                  ),
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.broken_image_outlined,
-                                        color: Colors.white38,
-                                        size: 64,
-                                      ),
-                                    );
-                                  },
-                                  scaleStateChangedCallback: (state) {
-                                    final zoomed =
-                                        state != PhotoViewScaleState.initial;
-                                    if (_isZoomed != zoomed) {
-                                      setState(() {
-                                        _isZoomed = zoomed;
-                                      });
-                                    }
-                                  },
-                                ),
-                        ),
+                      return SynchronizedViewerItemComp(
+                        item: widget.galleryItems[index],
+                        currentlyViewedMediaIdNotifier:
+                            _currentlyViewedMediaIdNotifier,
+                        onZoomChanged: (zoomed) {
+                          if (_isZoomed != zoomed) {
+                            setState(() {
+                              _isZoomed = zoomed;
+                            });
+                          }
+                        },
                       );
                     },
                   ),
 
-                  SynchronizedViewerActionsToolbarComp(
-                    isFavorite: _favoritedMediaIds.contains(currentMediaId),
-                    onShare: _shareMediaFile,
-                    onExport: _exportFile,
-                    onToggleFavorite: () => _toggleFavorite(currentMediaId),
-                    onDelete: _deleteFile,
-                    showStoreButton: !_storedMediaIds.contains(currentMediaId),
-                    onStore: _storeMediaFile,
-                    isImageSaving: _isSaving,
+                  Positioned(
+                    bottom: MediaQuery.paddingOf(context).bottom + 16,
+                    left: 0,
+                    right: 0,
+                    child: AnimatedOpacity(
+                      opacity: _isZoomed ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      child: IgnorePointer(
+                        ignoring: _isZoomed,
+                        child: Center(
+                          child: SynchronizedViewerActionsToolbarComp(
+                            isFavorite: _favoritedMediaIds.contains(
+                              currentMediaId,
+                            ),
+                            onShare: _shareMediaFile,
+                            onExport: _exportFile,
+                            onToggleFavorite: () =>
+                                _toggleFavorite(currentMediaId),
+                            onDelete: _deleteFile,
+                            showStoreButton: !_storedMediaIds.contains(
+                              currentMediaId,
+                            ),
+                            onStore: _storeMediaFile,
+                            isImageSaving: _isSaving,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -395,5 +377,41 @@ class _SynchronizedImageViewerScreenState
         ),
       ),
     );
+  }
+
+  void _precacheNeighbours(int index) {
+    if (!mounted) return;
+
+    final indicesToPrecache = [index - 5, index + 5];
+
+    for (final idx in indicesToPrecache) {
+      if (idx >= 0 && idx < widget.galleryItems.length) {
+        final item = widget.galleryItems[idx];
+        if (item.mediaService.mediaFile.type == MediaType.video) {
+          continue;
+        }
+
+        final mediaId = item.mediaService.mediaFile.mediaId;
+        if (_precachedMediaIds.contains(mediaId)) {
+          continue;
+        }
+
+        final filePath =
+            item.mediaService.storedPath.existsSync() &&
+                item.mediaService.storedPath.lengthSync() > 0
+            ? item.mediaService.storedPath
+            : item.mediaService.tempPath.existsSync() &&
+                  item.mediaService.tempPath.lengthSync() > 0
+            ? item.mediaService.tempPath
+            : item.mediaService.thumbnailPath;
+
+        if (filePath.existsSync() && filePath.lengthSync() > 0) {
+          _precachedMediaIds.add(mediaId);
+          precacheImage(FileImage(filePath), context).onError((e, s) {
+            _precachedMediaIds.remove(mediaId);
+          });
+        }
+      }
+    }
   }
 }

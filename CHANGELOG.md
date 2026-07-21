@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- New: Encrypted Cloud Backup of Memories
+- New: Passwordless Backup
+- Fix: Performance issues
+
 ## 0.3.7
 
 - Fix: Multiple UI issues

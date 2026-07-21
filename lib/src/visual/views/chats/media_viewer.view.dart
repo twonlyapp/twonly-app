@@ -4,7 +4,6 @@ import 'dart:collection';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:screen_protector/screen_protector.dart';
@@ -24,13 +23,13 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/animate_icon.comp.dart';
-import 'package:twonly/src/visual/elements/my_icon_button.element.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/additional_message_content.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/keyboard_dismiss_observer.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_content_renderer.comp.dart';
+import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_bottom_navigation.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/media_viewer_message_input.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/twonly_present_overlay.comp.dart';
@@ -63,7 +62,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   DateTime? canBeSeenUntil;
   final ValueNotifier<double> progress = ValueNotifier(0);
   bool showSendTextMessageInput = false;
-  double maxBottomInset = 0;
   DateTime? _lastTimeInputClosed;
   final GlobalKey mediaWidgetKey = GlobalKey();
 
@@ -366,7 +364,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       return advanceToNextMediaOrExit();
     }
 
-    // The server can now delete the encrypted bytes, as the users has sucessfully opened it.
+    // The server can now delete the encrypted bytes, as the user has successfully opened it.
     Log.info(
       'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
     );
@@ -505,7 +503,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           advanceToNextMediaOrExit();
         }
       });
-      progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      progressTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
         final mediaFile = currentMedia?.mediaFile;
         if (mediaFile == null) return;
         if (mediaFile.displayLimitInMilliseconds == null ||
@@ -562,107 +560,49 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Widget bottomNavigation() {
-    return Row(
+    return MediaViewerBottomNavigationBar(
       key: mediaWidgetKey,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (currentMedia != null &&
-            currentMessage != null &&
-            !currentMedia!.mediaFile.requiresAuthentication &&
-            currentMedia!.mediaFile.displayLimitInMilliseconds == null)
-          MyIconButton(
-            variant: MyIconButtonVariant.secondary,
-            onPressed: (currentMedia == null || currentMessage == null)
-                ? null
-                : onPressedSaveToGallery,
-            icon: imageSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator.adaptive(strokeWidth: 2),
-                  )
-                : imageSaved
-                ? const Icon(Icons.check)
-                : const FaIcon(FontAwesomeIcons.floppyDisk, size: 20),
+      currentMedia: currentMedia,
+      currentMessage: currentMessage,
+      imageSaving: imageSaving,
+      imageSaved: imageSaved,
+      showShortReactions: showShortReactions,
+      onSaveToGallery: onPressedSaveToGallery,
+      onToggleReactions: () {
+        if (!showShortReactions) {
+          displayShortReactions();
+        } else {
+          setState(() {
+            showShortReactions = false;
+          });
+        }
+      },
+      onMessagePressed: () {
+        displayShortReactions();
+        setState(() {
+          showSendTextMessageInput = true;
+        });
+      },
+      onCameraPressed: () async {
+        nextMediaTimer?.cancel();
+        progressTimer?.cancel();
+        await videoController?.pause();
+        if (!mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return CameraSendToView(widget.group);
+            },
           ),
-        const SizedBox(width: 10),
-        IconButton(
-          icon: SizedBox(
-            width: 30,
-            height: 30,
-            child: GridView.count(
-              crossAxisCount: 2,
-              children: List.generate(
-                4,
-                (index) {
-                  return SizedBox(
-                    width: 8,
-                    height: 8,
-                    child: Center(
-                      child: EmojiAnimationComp(
-                        emoji: EmojiAnimationComp.animatedIcons.keys
-                            .toList()[index],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          onPressed: () {
-            if (!showShortReactions) {
-              displayShortReactions();
-            } else {
-              setState(() {
-                showShortReactions = false;
-              });
-            }
-          },
-          style: ButtonStyle(
-            padding: WidgetStateProperty.all<EdgeInsets>(
-              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        MyIconButton(
-          variant: MyIconButtonVariant.secondary,
-          onPressed: () async {
-            displayShortReactions();
-            setState(() {
-              showSendTextMessageInput = true;
-            });
-          },
-          icon: const FaIcon(
-            FontAwesomeIcons.message,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
-        MyIconButton(
-          onPressed: () async {
-            nextMediaTimer?.cancel();
-            progressTimer?.cancel();
-            await videoController?.pause();
-            if (!mounted) return;
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return CameraSendToView(widget.group);
-                },
-              ),
-            );
-            if (mounted &&
-                currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
-              await advanceToNextMediaOrExit();
-            } else {
-              await videoController?.play();
-            }
-          },
-          icon: const FaIcon(FontAwesomeIcons.camera, size: 24),
-        ),
-      ],
+        );
+        if (mounted &&
+            currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
+          await advanceToNextMediaOrExit();
+        } else {
+          await videoController?.play();
+        }
+      },
     );
   }
 
@@ -717,124 +657,118 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    if (bottomInset > maxBottomInset) {
-      maxBottomInset = bottomInset;
-    } else if (bottomInset == 0 && maxBottomInset > 0) {
-      maxBottomInset = 0;
-      if (showSendTextMessageInput) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              showSendTextMessageInput = false;
-              showShortReactions = false;
-              _lastTimeInputClosed = clock.now();
-            });
-          }
+    return KeyboardDismissObserver(
+      showSendTextMessageInput: showSendTextMessageInput,
+      onKeyboardDismissed: () {
+        setState(() {
+          showSendTextMessageInput = false;
+          showShortReactions = false;
+          _lastTimeInputClosed = clock.now();
         });
-      }
-    }
-
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (_showDownloadingLoader) _loader(),
-            if ((currentMedia != null || videoController != null) &&
-                (canBeSeenUntil == null || progress.value >= 0))
-              GestureDetector(
-                onTap: onScreenTapped,
-                onDoubleTap: (videoController == null) ? null : onScreenTapped,
-                child: MediaViewSizingHelper(
-                  bottomNavigation: bottomNavigation(),
-                  requiredHeight: 55,
-                  child: MediaContentRenderer(
-                    currentMedia: currentMedia,
-                    videoController: videoController,
-                    loader: _loader(),
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (_showDownloadingLoader) _loader(),
+              if ((currentMedia != null || videoController != null) &&
+                  (canBeSeenUntil == null || progress.value >= 0))
+                GestureDetector(
+                  onTap: onScreenTapped,
+                  onDoubleTap: (videoController == null)
+                      ? null
+                      : onScreenTapped,
+                  child: MediaViewSizingHelper(
+                    bottomNavigation: bottomNavigation(),
+                    requiredHeight: 55,
+                    child: MediaContentRenderer(
+                      currentMedia: currentMedia,
+                      videoController: videoController,
+                      loader: _loader(),
+                    ),
+                  ),
+                ),
+              if (displayTwonlyPresent)
+                TwonlyPresentOverlay(
+                  onTap: () => loadAndDownloadCurrentMedia(showTwonly: true),
+                ),
+              if (currentMedia != null &&
+                  currentMedia?.mediaFile.downloadState != DownloadState.ready)
+                Positioned.fill(child: _loader()),
+              if (canBeSeenUntil != null || progress.value >= 0)
+                Positioned(
+                  right: 20,
+                  top: 27,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: progress,
+                          builder: (context, value, child) {
+                            return CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 2,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Positioned(
+                top: 10,
+                left: showSendTextMessageInput ? 0 : null,
+                right: showSendTextMessageInput ? 0 : 15,
+                child: Text(
+                  _currentMediaSender,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: showSendTextMessageInput ? 24 : 14,
+                    fontWeight: FontWeight.bold,
+                    color: showSendTextMessageInput
+                        ? null
+                        : const Color.fromARGB(255, 126, 126, 126),
+                    shadows: const [
+                      Shadow(
+                        color: Color.fromARGB(122, 0, 0, 0),
+                        blurRadius: 5,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            if (displayTwonlyPresent)
-              TwonlyPresentOverlay(
-                onTap: () => loadAndDownloadCurrentMedia(showTwonly: true),
-              ),
-            if (currentMedia != null &&
-                currentMedia?.mediaFile.downloadState != DownloadState.ready)
-              Positioned.fill(child: _loader()),
-            if (canBeSeenUntil != null || progress.value >= 0)
-              Positioned(
-                right: 20,
-                top: 27,
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: ValueListenableBuilder<double>(
-                        valueListenable: progress,
-                        builder: (context, value, child) {
-                          return CircularProgressIndicator(
-                            value: value,
-                            strokeWidth: 2,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+              if (showSendTextMessageInput)
+                MediaViewerMessageInput(
+                  controller: textMessageController,
+                  onSubmitted: (value) => _sendTextMessage(),
+                  onSendPressed: _sendTextMessage,
                 ),
-              ),
-            Positioned(
-              top: 10,
-              left: showSendTextMessageInput ? 0 : null,
-              right: showSendTextMessageInput ? 0 : 15,
-              child: Text(
-                _currentMediaSender,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: showSendTextMessageInput ? 24 : 14,
-                  fontWeight: FontWeight.bold,
-                  color: showSendTextMessageInput
-                      ? null
-                      : const Color.fromARGB(255, 126, 126, 126),
-                  shadows: const [
-                    Shadow(
-                      color: Color.fromARGB(122, 0, 0, 0),
-                      blurRadius: 5,
-                    ),
-                  ],
+              if (currentMessage != null)
+                AdditionalMessageContent(currentMessage!),
+              if (currentMedia != null)
+                ReactionButtons(
+                  show: showShortReactions,
+                  textInputFocused: showSendTextMessageInput,
+                  mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
+                  groupId: widget.group.groupId,
+                  messageId: currentMessage!.messageId,
+                  emojiKey: emojiKey,
+                  hide: () {
+                    setState(() {
+                      showShortReactions = false;
+                      showSendTextMessageInput = false;
+                      _lastTimeInputClosed = clock.now();
+                    });
+                  },
                 ),
+              Positioned.fill(
+                child: EmojiFloatWidget(key: emojiKey),
               ),
-            ),
-            if (showSendTextMessageInput)
-              MediaViewerMessageInput(
-                controller: textMessageController,
-                onSubmitted: (value) => _sendTextMessage(),
-                onSendPressed: _sendTextMessage,
-              ),
-            if (currentMessage != null)
-              AdditionalMessageContent(currentMessage!),
-            if (currentMedia != null)
-              ReactionButtons(
-                show: showShortReactions,
-                textInputFocused: showSendTextMessageInput,
-                mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
-                groupId: widget.group.groupId,
-                messageId: currentMessage!.messageId,
-                emojiKey: emojiKey,
-                hide: () {
-                  setState(() {
-                    showShortReactions = false;
-                    showSendTextMessageInput = false;
-                    _lastTimeInputClosed = clock.now();
-                  });
-                },
-              ),
-            Positioned.fill(
-              child: EmojiFloatWidget(key: emojiKey),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -72,7 +72,7 @@ class UserData {
   bool videoStabilizationEnabled = true;
 
   @JsonKey(defaultValue: true)
-  bool showFeedbackShortcut = true;
+  bool showNewsShortcut = true;
 
   @JsonKey(defaultValue: false)
   bool showShowImagePreviewWhenSending = false;
@@ -102,6 +102,9 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool screenLockEnabled = false;
+
+  @JsonKey(defaultValue: false)
+  bool isCloudBackupEnabled = false;
 
   // > User Discovery Configurations
 
@@ -138,6 +141,9 @@ class UserData {
 
   @JsonKey(defaultValue: true)
   bool hideChangeLog = true;
+
+  @JsonKey(defaultValue: false)
+  bool hideMemoriesBackupPromo = false;
 
   @JsonKey(defaultValue: true)
   bool updateFCMToken = true;
@@ -195,8 +201,12 @@ class TwonlySafeBackup {
   factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
       _$TwonlySafeBackupFromJson(json);
 
+  @JsonKey(defaultValue: 0)
   int lastBackupSize = 0;
+
+  @JsonKey(defaultValue: LastBackupUploadState.none)
   LastBackupUploadState backupUploadState = LastBackupUploadState.none;
+
   DateTime? lastBackupDone;
   List<int> backupId;
   List<int> encryptionKey;
@@ -213,17 +223,13 @@ class PasswordLessRecovery {
   // Only stored, so the user can see his deposit email address...
   String? email;
 
-  // <--
   // Data shared with trusted friends
 
+  @JsonKey(defaultValue: 2)
   int threshold;
-  // Trusted friends are able to brute-force the pin -> Server delets after X tries
-  List<int>? pinSeed;
+  // Used to derive the key from the email/pin
+  List<int>? serverKeyProtection;
   List<int>? pinUnlockToken;
-
-  // Stored not on the server, so the server is unable to link a email to a user until the actuall recovery or can
-  // brute-force the pin
-  List<int>? encryptedServerKeyNonce;
   // --->
 
   // Checking with the server that the server data is valid and not delted throug the pin protection for example.

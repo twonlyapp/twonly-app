@@ -436,7 +436,10 @@ class UserDiscoverySetupComp extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          const AvatarIcon(fontSize: 14),
+                          const AvatarIcon(
+                            fontSize: 14,
+                            myAvatar: true,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(

@@ -806,11 +806,11 @@ abstract class AppLocalizations {
   /// **'Feedback submitted successfully!'**
   String get contactUsSuccess;
 
-  /// No description provided for @contactUsShortcut.
+  /// No description provided for @hideNewsIcon.
   ///
   /// In en, this message translates to:
-  /// **'Hide Feedback Icon'**
-  String get contactUsShortcut;
+  /// **'Hide News Icon'**
+  String get hideNewsIcon;
 
   /// No description provided for @settingsHelpTerms.
   ///
@@ -925,12 +925,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified via link.'**
   String get verificationTypeLink;
-
-  /// No description provided for @verificationTypeContactSharedByVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact received from a verified contact.'**
-  String get verificationTypeContactSharedByVerified;
 
   /// No description provided for @verificationTypeMigratedFromOldVersion.
   ///
@@ -1271,13 +1265,13 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'✓ 25GB Memories storage'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Support twonly'**
+  /// **'✓ Restore flames'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
@@ -1295,7 +1289,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'✓ 50GB Memories storage'**
   String get familyFeature3;
 
   /// No description provided for @familyFeature4.
@@ -1447,6 +1441,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}'**
   String deleteMemoriesBody(num count);
+
+  /// No description provided for @deleteMemoriesLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Only'**
+  String get deleteMemoriesLocalOnly;
+
+  /// No description provided for @deleteMemoriesCompletely.
+  ///
+  /// In en, this message translates to:
+  /// **'Completely'**
+  String get deleteMemoriesCompletely;
+
+  /// No description provided for @memoriesSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 Element} other {{count} Elements}}'**
+  String memoriesSelectedCount(num count);
+
+  /// No description provided for @memoriesMenuSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get memoriesMenuSelectAll;
+
+  /// No description provided for @memoriesMenuDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get memoriesMenuDeselectAll;
+
+  /// No description provided for @memoriesMenuExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to gallery'**
+  String get memoriesMenuExport;
+
+  /// No description provided for @memoriesMenuFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get memoriesMenuFavorite;
+
+  /// No description provided for @memoriesMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completely'**
+  String get memoriesMenuDelete;
+
+  /// No description provided for @memoriesMenuDeleteLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete locally'**
+  String get memoriesMenuDeleteLocal;
 
   /// No description provided for @settingsBackup.
   ///
@@ -1669,12 +1717,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retransmission requested'**
   String get retransmissionRequested;
-
-  /// No description provided for @openChangeLog.
-  ///
-  /// In en, this message translates to:
-  /// **'Open changelog automatically'**
-  String get openChangeLog;
 
   /// No description provided for @reportUserTitle.
   ///
@@ -2084,12 +2126,6 @@ abstract class AppLocalizations {
   /// **'wants to connect with you.'**
   String get notificationContactRequest;
 
-  /// No description provided for @notificationContactRequestUnknownUser.
-  ///
-  /// In en, this message translates to:
-  /// **'have received a new contact request.'**
-  String get notificationContactRequestUnknownUser;
-
   /// No description provided for @notificationAcceptRequest.
   ///
   /// In en, this message translates to:
@@ -2143,18 +2179,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'has responded{inGroup}.'**
   String notificationResponse(Object inGroup);
-
-  /// No description provided for @notificationTitleUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'You have a new message.'**
-  String get notificationTitleUnknown;
-
-  /// No description provided for @notificationBodyUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'Open twonly to learn more.'**
-  String get notificationBodyUnknown;
 
   /// No description provided for @notificationCategoryMessageTitle.
   ///
@@ -2437,12 +2461,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
   String get onboardingBackupBody;
-
-  /// No description provided for @onboardingVerificationBadgeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification Badge'**
-  String get onboardingVerificationBadgeTitle;
 
   /// No description provided for @onboardingUserDiscoveryShareFriends.
   ///
@@ -3434,18 +3452,6 @@ abstract class AppLocalizations {
   /// **'Step-by-step setup so you can decide for yourself.'**
   String get onboardingProfileSelectionCustomizeDesc;
 
-  /// No description provided for @onboardingProfileSelectionStrictTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Enhanced Protection'**
-  String get onboardingProfileSelectionStrictTitle;
-
-  /// No description provided for @onboardingProfileSelectionStrictDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum anti-phishing defense. Recommended for *journalists & public figures*.'**
-  String get onboardingProfileSelectionStrictDesc;
-
   /// No description provided for @replyFlameRestored.
   ///
   /// In en, this message translates to:
@@ -3457,24 +3463,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask a friend'**
   String get replyAskAFriend;
-
-  /// No description provided for @unverifiedWarningDirectTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity not verified in person'**
-  String get unverifiedWarningDirectTitle;
-
-  /// No description provided for @unverifiedWarningGroupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Not all members are verified in person'**
-  String get unverifiedWarningGroupTitle;
-
-  /// No description provided for @unverifiedWarningBody.
-  ///
-  /// In en, this message translates to:
-  /// **'*Avoid sharing sensitive data*. Risk of *impersonation* without manual verification.'**
-  String get unverifiedWarningBody;
 
   /// No description provided for @unverifiedWarningButton.
   ///
@@ -3563,12 +3551,8 @@ abstract class AppLocalizations {
   /// No description provided for @importGalleryComplete.
   ///
   /// In en, this message translates to:
-  /// **'Import complete: {imported} successfully imported, {duplicated} duplicated and {failed} failed.'**
-  String importGalleryComplete(
-    Object imported,
-    Object duplicated,
-    Object failed,
-  );
+  /// **'Import complete: {imported} successfully imported and {failed} failed.'**
+  String importGalleryComplete(Object imported, Object failed);
 
   /// No description provided for @importGalleryGrantAccess.
   ///
@@ -3804,53 +3788,17 @@ abstract class AppLocalizations {
   /// **'These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.'**
   String get passwordlessRecoveryInactiveFriendsDesc;
 
-  /// No description provided for @passwordlessRecoveryNotEnoughFriends.
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough friends selected. You need at least 3.'**
-  String get passwordlessRecoveryNotEnoughFriends;
-
-  /// No description provided for @passwordlessRecoveryLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading...'**
-  String get passwordlessRecoveryLoading;
-
   /// No description provided for @passwordlessRecoveryEnableSuccess.
   ///
   /// In en, this message translates to:
   /// **'Passwordless recovery successfully enabled!'**
   String get passwordlessRecoveryEnableSuccess;
 
-  /// No description provided for @passwordlessRecoveryEnableFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to enable passwordless recovery.'**
-  String get passwordlessRecoveryEnableFailed;
-
-  /// No description provided for @passwordlessRecoveryNeedAtLeast3.
-  ///
-  /// In en, this message translates to:
-  /// **'You need at least 3 trusted friends.'**
-  String get passwordlessRecoveryNeedAtLeast3;
-
-  /// No description provided for @passwordlessRecoveryInvalidPin.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid PIN'**
-  String get passwordlessRecoveryInvalidPin;
-
   /// No description provided for @passwordlessRecoveryEnterPin.
   ///
   /// In en, this message translates to:
   /// **'Please enter a PIN.'**
   String get passwordlessRecoveryEnterPin;
-
-  /// No description provided for @passwordlessRecoveryPinMinLength.
-  ///
-  /// In en, this message translates to:
-  /// **'PIN must be at least 4 digits.'**
-  String get passwordlessRecoveryPinMinLength;
 
   /// No description provided for @passwordlessRecoveryEnterEmail.
   ///
@@ -3891,7 +3839,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryInfoHowItWorksDesc.
   ///
   /// In en, this message translates to:
-  /// **'Because twonly operates without central user accounts or phone numbers to maximize privacy, we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined threshold of these friends must combine their shares.'**
+  /// **'twonly operates without phone numbers, which is why we rely on a decentralized recovery mechanism. Using Shamir\'s Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined number of these friends must combine their shares.'**
   String get passwordlessRecoveryInfoHowItWorksDesc;
 
   /// No description provided for @passwordlessRecoveryInfoWhySecondFactor.
@@ -3903,7 +3851,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryInfoWhySecondFactorDesc.
   ///
   /// In en, this message translates to:
-  /// **'The second factor (Email or PIN) serves as a vital cryptographic safeguard against malicious collusion. If your trusted friends were to coordinate their shares behind your back, they still wouldn\'t be able to decrypt your identity without the second factor key.'**
+  /// **'The second factor (Email or PIN) provides important additional protection. Even if your friends were to secretly team up, they still couldn\'t access your account without this second factor.'**
   String get passwordlessRecoveryInfoWhySecondFactorDesc;
 
   /// No description provided for @passwordlessRecoveryInfoGotIt.
@@ -3965,6 +3913,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select trusted friends'**
   String get passwordlessRecoverySelectFriends;
+
+  /// No description provided for @passwordlessRecoveryTrustedFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted Friends'**
+  String get passwordlessRecoveryTrustedFriends;
+
+  /// No description provided for @passwordlessRecoveryDoneBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Done ({count})'**
+  String passwordlessRecoveryDoneBtn(num count);
 
   /// No description provided for @passwordlessRecoveryNoFriendsSelected.
   ///
@@ -4032,10 +3992,16 @@ abstract class AppLocalizations {
   /// **'No recovery share stored for this contact.'**
   String get passwordlessRecoveryNoShareStored;
 
+  /// No description provided for @passwordlessRecoveryEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery email sent!'**
+  String get passwordlessRecoveryEmailSent;
+
   /// No description provided for @passwordlessRecoveryShareSent.
   ///
   /// In en, this message translates to:
-  /// **'Recovery share successfully sent!'**
+  /// **'Recovery share sent!'**
   String get passwordlessRecoveryShareSent;
 
   /// No description provided for @passwordlessRecoveryNetworkError.
@@ -4083,19 +4049,19 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryCantHelpHim.
   ///
   /// In en, this message translates to:
-  /// **'You can\'t help him'**
+  /// **'You can\'t help this person'**
   String get passwordlessRecoveryCantHelpHim;
 
   /// No description provided for @passwordlessRecoveryDoesAskedYou.
   ///
   /// In en, this message translates to:
-  /// **'Does {username} has asked you?'**
+  /// **'Has {username} asked you?'**
   String passwordlessRecoveryDoesAskedYou(Object username);
 
   /// No description provided for @passwordlessRecoveryVerifySourceDesc.
   ///
   /// In en, this message translates to:
-  /// **'Please ensure that you actualy received the link/qr code from your friend! If you are unsure, please verify again and then click again on the link or come back.'**
+  /// **'Please make sure this request really came from this person. If in doubt, ask them via another channel!'**
   String get passwordlessRecoveryVerifySourceDesc;
 
   /// No description provided for @passwordlessRecoveryNo.
@@ -4116,16 +4082,10 @@ abstract class AppLocalizations {
   /// **'Yes ({seconds}s)'**
   String passwordlessRecoveryYesWithTimer(Object seconds);
 
-  /// No description provided for @recoverPasswordlessBeingRecoveredLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Account being recovered'**
-  String get recoverPasswordlessBeingRecoveredLabel;
-
   /// No description provided for @recoverPasswordlessSharesReceived.
   ///
   /// In en, this message translates to:
-  /// **'{received} of {threshold} friends have shared'**
+  /// **'{received} out of {threshold} friends have helped'**
   String recoverPasswordlessSharesReceived(Object received, Object threshold);
 
   /// No description provided for @recoverPasswordlessRecoverNowBtn.
@@ -4133,6 +4093,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recover now'**
   String get recoverPasswordlessRecoverNowBtn;
+
+  /// No description provided for @missingRecoveryContactsCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Contacts'**
+  String get missingRecoveryContactsCardTitle;
+
+  /// No description provided for @missingRecoveryContactsCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Recovery Contacts to help you recover your account without requiring a password.'**
+  String get missingRecoveryContactsCardDesc;
+
+  /// No description provided for @missingRecoveryContactsCardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Contacts'**
+  String get missingRecoveryContactsCardAction;
+
+  /// No description provided for @memoriesBackupLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup limit reached! Please upgrade your plan or free up space.'**
+  String get memoriesBackupLimitReached;
+
+  /// No description provided for @settingsStorageLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage'**
+  String get settingsStorageLocal;
+
+  /// No description provided for @settingsStorageNoCloudBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Cloud Backup'**
+  String get settingsStorageNoCloudBackupTitle;
+
+  /// No description provided for @settingsStorageNoCloudBackupCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.'**
+  String get settingsStorageNoCloudBackupCard;
+
+  /// No description provided for @galleryActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get galleryActionSave;
+
+  /// No description provided for @galleryActionExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get galleryActionExport;
+
+  /// No description provided for @galleryActionFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get galleryActionFavorite;
+
+  /// No description provided for @galleryActionUnfavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite'**
+  String get galleryActionUnfavorite;
+
+  /// No description provided for @galleryActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get galleryActionDelete;
+
+  /// No description provided for @galleryActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get galleryActionShare;
+
+  /// No description provided for @settingsStorageHidePromo.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get settingsStorageHidePromo;
+
+  /// No description provided for @memoriesBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories Backup'**
+  String get memoriesBackupTitle;
+
+  /// No description provided for @settingsHelpNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get settingsHelpNews;
+
+  /// No description provided for @settingsStorageContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage contents'**
+  String get settingsStorageContents;
+
+  /// No description provided for @settingsStorageSortStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Occupied storage'**
+  String get settingsStorageSortStorage;
+
+  /// No description provided for @settingsStorageSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get settingsStorageSortNewest;
+
+  /// No description provided for @settingsStorageSortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get settingsStorageSortOldest;
+
+  /// No description provided for @settingsStorageNoContents.
+  ///
+  /// In en, this message translates to:
+  /// **'No storage contents found.'**
+  String get settingsStorageNoContents;
+
+  /// No description provided for @settingsStorageCloudOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud only'**
+  String get settingsStorageCloudOnly;
+
+  /// No description provided for @settingsStorageLocalAndCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Local and cloud'**
+  String get settingsStorageLocalAndCloud;
+
+  /// No description provided for @settingsStorageLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local only'**
+  String get settingsStorageLocalOnly;
+
+  /// No description provided for @settingsStorageDisableBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Backup?'**
+  String get settingsStorageDisableBackupTitle;
+
+  /// No description provided for @settingsStorageDisableBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all backed up memories from the cloud. There {count, plural, =1 {is *1 image*} other {are *{count} images*}} only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?'**
+  String settingsStorageDisableBackupBody(num count);
+
+  /// No description provided for @settingsStorageDisableBackupBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get settingsStorageDisableBackupBtn;
+
+  /// No description provided for @settingsStorageDisableBackupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Cloud Backup'**
+  String get settingsStorageDisableBackupAction;
+
+  /// No description provided for @settingsStorageSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get settingsStorageSyncNow;
+
+  /// No description provided for @settingsStorageSyncUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'All memories are up to date.'**
+  String get settingsStorageSyncUpToDate;
 }
 
 class _AppLocalizationsDelegate

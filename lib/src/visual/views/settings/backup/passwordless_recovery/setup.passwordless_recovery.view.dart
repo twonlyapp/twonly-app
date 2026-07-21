@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -69,15 +68,17 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
         if (config.email != null) {
           _secondFactor = SecondFactorType.email;
           _emailController.text = config.email!;
-        } else if (config.pinSeed != null) {
+          _threshold = 2;
+        } else if (config.serverKeyProtection != null && config.email == null) {
           _secondFactor = SecondFactorType.pin;
+          _threshold = 2;
         } else {
           _secondFactor = SecondFactorType.none;
+          _threshold = 4;
         }
-        _threshold = max(2, (selectedContacts.length / 2).ceil());
       });
     } else {
-      contacts.sortBy((c) => c.mediaSendCounter);
+      contacts.sort((a, b) => b.mediaSendCounter.compareTo(a.mediaSendCounter));
       final verifiedContacts = contacts
           .where(
             (c) =>
@@ -137,8 +138,9 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
       MaterialPageRoute(
         builder: (_) => SelectContactsView(
           text: SelectedContactView(
-            title: 'Trusted Friends',
-            submitButton: (selected, _) => 'Done ($selected)',
+            title: context.lang.passwordlessRecoveryTrustedFriends,
+            submitButton: (selected, _) =>
+                context.lang.passwordlessRecoveryDoneBtn(selected),
             submitIcon: FontAwesomeIcons.check,
           ),
           alreadySelected: _selectedContacts.map((c) => c.userId).toList(),
@@ -230,7 +232,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
                 onSelectFriends: _selectTrustedFriends,
                 onRemoveContact: (userId) => setState(() {
                   _selectedContacts.removeWhere((c) => c.userId == userId);
-                  _threshold = _validThreshold;
+                  _threshold = _minThreshold;
                 }),
               ),
               const SizedBox(height: 28),
@@ -239,7 +241,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
                 selected: _secondFactor,
                 onChanged: (type) => setState(() {
                   _secondFactor = type;
-                  _threshold = _validThreshold;
+                  _threshold = _minThreshold;
                 }),
                 pinController: _pinController,
                 emailController: _emailController,
@@ -250,7 +252,7 @@ class _PasswordLessRecoverySetupState extends State<PasswordLessRecoverySetup> {
               ThresholdPicker(
                 contactCount: _selectedContacts.length,
                 minThreshold: _minThreshold,
-                currentThreshold: _validThreshold,
+                currentThreshold: _threshold,
                 onChanged: (value) => setState(() => _threshold = value),
               ),
               const SizedBox(height: 28),

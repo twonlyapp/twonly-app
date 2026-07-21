@@ -14,7 +14,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:workmanager/workmanager.dart';
 

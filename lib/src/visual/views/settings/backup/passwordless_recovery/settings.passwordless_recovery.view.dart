@@ -93,172 +93,187 @@ class PasswordLessRecoverySettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = userService.currentUser.passwordLessRecovery;
+    return StreamBuilder<void>(
+      stream: userService.onUserUpdated,
+      builder: (context, _) {
+        final config = userService.currentUser.passwordLessRecovery;
 
-    if (config == null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(context.lang.passwordlessRecovery)),
-        body: Center(
-          child: Text(context.lang.passwordlessRecoveryNotConfigured),
-        ),
-      );
-    }
-
-    var secondFactorLabel = context.lang.passwordlessRecoverySecondFactorNone;
-    var secondFactorIcon = Icons.lock_outline_rounded;
-    Widget? actionButton;
-
-    if (config.email != null) {
-      secondFactorLabel = context.lang
-          .passwordlessRecoverySecondFactorEmailLabel(config.email!);
-      secondFactorIcon = Icons.email_outlined;
-    } else if (config.pinSeed != null) {
-      secondFactorLabel = context.lang.passwordlessRecoverySecondFactorPin;
-      secondFactorIcon = Icons.pin_outlined;
-      actionButton = MyButton(
-        variant: MyButtonVariant.secondaryDense,
-        onPressed: () => _testPin(context),
-        child: Text(context.lang.passwordlessRecoveryTestPin),
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.passwordlessRecovery),
-        actions: [
-          IconButton(
-            onPressed: () => showPasswordlessRecoveryInfoSheet(context),
-            icon: const Icon(Icons.info_outline_rounded),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          MyButton(
-            variant: MyButtonVariant.secondary,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const PasswordLessRecoverySetup(),
-              ),
+        if (config == null) {
+          return Scaffold(
+            appBar: AppBar(title: Text(context.lang.passwordlessRecovery)),
+            body: Center(
+              child: Text(context.lang.passwordlessRecoveryNotConfigured),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          );
+        }
+
+        var secondFactorLabel =
+            context.lang.passwordlessRecoverySecondFactorNone;
+        var secondFactorIcon = Icons.lock_outline_rounded;
+        Widget? actionButton;
+
+        if (config.email != null) {
+          secondFactorLabel = context.lang
+              .passwordlessRecoverySecondFactorEmailLabel(config.email!);
+          secondFactorIcon = Icons.email_outlined;
+        } else if (config.serverKeyProtection != null && config.email == null) {
+          secondFactorLabel = context.lang.passwordlessRecoverySecondFactorPin;
+          secondFactorIcon = Icons.pin_outlined;
+          actionButton = MyButton(
+            variant: MyButtonVariant.secondaryDense,
+            onPressed: () => _testPin(context),
+            child: Text(context.lang.passwordlessRecoveryTestPin),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(context.lang.passwordlessRecovery),
+            actions: [
+              IconButton(
+                onPressed: () => showPasswordlessRecoveryInfoSheet(context),
+                icon: const Icon(Icons.info_outline_rounded),
+              ),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              MyButton(
+                variant: MyButtonVariant.secondary,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PasswordLessRecoverySetup(),
+                  ),
+                ),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.manage_accounts_rounded, size: 18),
-                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.manage_accounts_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          context.lang.passwordlessRecoveryModify,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
                     Text(
-                      context.lang.passwordlessRecoveryModify,
-                      style: const TextStyle(fontSize: 14),
+                      context.lang.passwordlessRecoveryModifyDesc,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.color.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  context.lang.passwordlessRecoveryModifyDesc,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.color.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              _buildInfoCard(
+                context,
+                title: context.lang.passwordlessRecoverySecondFactor,
+                value: secondFactorLabel,
+                icon: secondFactorIcon,
+                action: actionButton,
+              ),
+              const SizedBox(height: 24),
+              StreamBuilder<List<Contact>>(
+                stream:
+                    (twonlyDB.select(
+                          twonlyDB.contacts,
+                        )..where((t) => t.recoveryIsTrustedFriend.equals(true)))
+                        .watch(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: CircularProgressIndicator.adaptive(),
+                    );
+                  }
+
+                  final friends = snapshot.data!;
+                  if (friends.isEmpty) {
+                    return Text(
+                      context.lang.passwordlessRecoveryNoFriendsFound,
+                    );
+                  }
+
+                  final activeFriends = friends.where((c) {
+                    final lastHeartbeat = c.recoveryLastHeartbeat;
+                    if (lastHeartbeat == null) return false;
+                    return DateTime.now().difference(lastHeartbeat).inDays <=
+                        14;
+                  }).toList();
+
+                  final inactiveFriends = friends.where((c) {
+                    final lastHeartbeat = c.recoveryLastHeartbeat;
+                    if (lastHeartbeat == null) return true;
+                    return DateTime.now().difference(lastHeartbeat).inDays > 14;
+                  }).toList();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (activeFriends.isNotEmpty) ...[
+                        Text(
+                          context.lang.passwordlessRecoveryActiveFriends,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.lang.passwordlessRecoveryActiveFriendsDesc,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: context.color.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFriendsGridCard(
+                          context,
+                          friends: activeFriends,
+                          isActive: true,
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      if (inactiveFriends.isNotEmpty) ...[
+                        Text(
+                          context.lang.passwordlessRecoveryInactiveFriends,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.lang.passwordlessRecoveryInactiveFriendsDesc,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: context.color.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildFriendsGridCard(
+                          context,
+                          friends: inactiveFriends,
+                          isActive: false,
+                        ),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          _buildInfoCard(
-            context,
-            title: context.lang.passwordlessRecoverySecondFactor,
-            value: secondFactorLabel,
-            icon: secondFactorIcon,
-            action: actionButton,
-          ),
-          const SizedBox(height: 24),
-          StreamBuilder<List<Contact>>(
-            stream: (twonlyDB.select(
-              twonlyDB.contacts,
-            )..where((t) => t.recoveryIsTrustedFriend.equals(true))).watch(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: CircularProgressIndicator.adaptive(),
-                );
-              }
-
-              final friends = snapshot.data!;
-              if (friends.isEmpty) {
-                return Text(context.lang.passwordlessRecoveryNoFriendsFound);
-              }
-
-              final activeFriends = friends.where((c) {
-                final lastHeartbeat = c.recoveryLastHeartbeat;
-                if (lastHeartbeat == null) return false;
-                return DateTime.now().difference(lastHeartbeat).inDays <= 14;
-              }).toList();
-
-              final inactiveFriends = friends.where((c) {
-                final lastHeartbeat = c.recoveryLastHeartbeat;
-                if (lastHeartbeat == null) return true;
-                return DateTime.now().difference(lastHeartbeat).inDays > 14;
-              }).toList();
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (activeFriends.isNotEmpty) ...[
-                    Text(
-                      context.lang.passwordlessRecoveryActiveFriends,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.lang.passwordlessRecoveryActiveFriendsDesc,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.color.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFriendsGridCard(
-                      context,
-                      friends: activeFriends,
-                      isActive: true,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                  if (inactiveFriends.isNotEmpty) ...[
-                    Text(
-                      context.lang.passwordlessRecoveryInactiveFriends,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.lang.passwordlessRecoveryInactiveFriendsDesc,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.color.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFriendsGridCard(
-                      context,
-                      friends: inactiveFriends,
-                      isActive: false,
-                    ),
-                  ],
-                ],
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

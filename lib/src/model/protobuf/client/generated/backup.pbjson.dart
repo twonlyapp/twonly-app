@@ -51,3 +51,27 @@ final $typed_data.Uint8List twonlySafeBackupEncryptedDescriptor =
     $convert.base64Decode(
         'ChlUd29ubHlTYWZlQmFja3VwRW5jcnlwdGVkEhAKA21hYxgBIAEoDFIDbWFjEhQKBW5vbmNlGA'
         'IgASgMUgVub25jZRIfCgtjaXBoZXJfdGV4dBgDIAEoDFIKY2lwaGVyVGV4dA==');
+
+@$core.Deprecated('Use cloudMediaBackupEncryptedDescriptor instead')
+const CloudMediaBackupEncrypted$json = {
+  '1': 'CloudMediaBackupEncrypted',
+  '2': [
+    {'1': 'addition', '3': 1, '4': 1, '5': 9, '10': 'addition'},
+    {
+      '1': 'encrypted_media_key',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedMediaKey'
+    },
+    {'1': 'media_nonce', '3': 3, '4': 1, '5': 12, '10': 'mediaNonce'},
+    {'1': 'media_ciphertext', '3': 4, '4': 1, '5': 12, '10': 'mediaCiphertext'},
+  ],
+};
+
+/// Descriptor for `CloudMediaBackupEncrypted`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cloudMediaBackupEncryptedDescriptor = $convert.base64Decode(
+    'ChlDbG91ZE1lZGlhQmFja3VwRW5jcnlwdGVkEhoKCGFkZGl0aW9uGAEgASgJUghhZGRpdGlvbh'
+    'IuChNlbmNyeXB0ZWRfbWVkaWFfa2V5GAIgASgMUhFlbmNyeXB0ZWRNZWRpYUtleRIfCgttZWRp'
+    'YV9ub25jZRgDIAEoDFIKbWVkaWFOb25jZRIpChBtZWRpYV9jaXBoZXJ0ZXh0GAQgASgMUg9tZW'
+    'RpYUNpcGhlcnRleHQ=');

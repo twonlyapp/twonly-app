@@ -22,7 +22,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as api_pb;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
@@ -502,6 +502,7 @@ void main() {
 
         final msg = pb.EncryptedContent_PasswordLessRecovery()
           ..delete = false
+          ..threshold = Int64(2)
           ..recoverySecretShare = [11, 22, 33];
 
         await PasswordlessRecoveryService.handlePasswordlessRecovery(

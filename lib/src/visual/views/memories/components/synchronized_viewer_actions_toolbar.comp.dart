@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
   const SynchronizedViewerActionsToolbarComp({
@@ -27,94 +26,125 @@ class SynchronizedViewerActionsToolbarComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: MediaQuery.paddingOf(context).bottom + 24,
-      left: 0,
-      right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (showStoreButton) ...[
-            IconButton(
-              icon: isImageSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator.adaptive(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.50),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            if (showStoreButton)
+              _ToolbarAction(
+                icon: isImageSaving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const FaIcon(
+                        FontAwesomeIcons.floppyDisk,
+                        color: Colors.white,
+                        size: 18,
                       ),
-                    )
-                  : const FaIcon(
-                      FontAwesomeIcons.floppyDisk,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-              onPressed: isImageSaving ? null : onStore,
-              tooltip: 'Store media',
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.black54,
-                padding: const EdgeInsets.all(12),
+                label: context.lang.galleryActionSave,
+                onTap: isImageSaving ? null : onStore,
               ),
+            _ToolbarAction(
+              icon: const FaIcon(
+                FontAwesomeIcons.download,
+                color: Colors.white,
+                size: 19,
+              ),
+              label: context.lang.galleryActionExport,
+              onTap: onExport,
             ),
-            const SizedBox(width: 16),
+            _ToolbarAction(
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? Colors.redAccent : Colors.white,
+                size: 22,
+              ),
+              label: isFavorite
+                  ? context.lang.galleryActionUnfavorite
+                  : context.lang.galleryActionFavorite,
+              onTap: onToggleFavorite,
+            ),
+            _ToolbarAction(
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.white,
+                size: 22,
+              ),
+              label: context.lang.galleryActionDelete,
+              onTap: onDelete,
+            ),
+            _ToolbarAction(
+              icon: const FaIcon(
+                FontAwesomeIcons.shareNodes,
+                color: Colors.white,
+                size: 19,
+              ),
+              label: context.lang.galleryActionShare,
+              onTap: onShare,
+            ),
           ],
-          IconButton(
-            icon: const FaIcon(
-              FontAwesomeIcons.fileArrowDown,
-              color: Colors.white,
-              size: 21,
-            ),
-            onPressed: onExport,
-            tooltip: context.lang.galleryExport,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black54,
-              padding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(width: 16),
-          IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: isFavorite ? Colors.redAccent : Colors.white,
-              size: 24,
-            ),
-            onPressed: onToggleFavorite,
-            tooltip: 'Favorite',
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black54,
-              padding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(width: 16),
-          IconButton(
-            icon: const Icon(
-              Icons.delete_outline,
-              color: Colors.white,
-              size: 24,
-            ),
-            onPressed: onDelete,
-            tooltip: context.lang.galleryDelete,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black54,
-              padding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(width: 16),
-          IconButton(
-            icon: const FaIcon(
-              FontAwesomeIcons.solidPaperPlane,
-              color: primaryColor,
-              size: 22,
-            ),
-            onPressed: onShare,
-            tooltip: context.lang.shareImagedEditorSendImage,
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black54,
-              padding: const EdgeInsets.all(12),
+        ),
+      ),
+    );
+  }
+}
+
+class _ToolbarAction extends StatelessWidget {
+  const _ToolbarAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final Widget icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Opacity(
+        opacity: onTap == null ? 0.4 : 1.0,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 24,
+                  child: Center(child: icon),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

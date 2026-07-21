@@ -61,23 +61,27 @@ impl MainKey {
         self.decrypt_with_info(b"backup_key", encrypted_backup)
     }
 
-    // Encrypts a newly generated media key using the derived Media Main Key.
-    // pub fn encrypt_media_key(&self, media_key: &[u8; 32]) -> Vec<u8> {
-    //     self.encrypt_with_info(b"media_main_key", media_key)
-    // }
+    pub fn encrypt_cloud_media_key(&self, media_key: &[u8; 32], addition: &str) -> Vec<u8> {
+        let info = format!("cloud_media_key_{}", addition);
+        self.encrypt_with_info(info.as_bytes(), media_key)
+    }
 
-    // Decrypts a wrapped media key using the derived Media Main Key.
-    // pub fn decrypt_media_key(&self, wrapped_media_key: &[u8]) -> Result<[u8; 32]> {
-    //     let decrypted = self.decrypt_with_info(b"media_main_key", wrapped_media_key)?;
+    pub fn decrypt_cloud_media_key(
+        &self,
+        encrypted_media_key: &[u8],
+        addition: &str,
+    ) -> Result<[u8; 32]> {
+        let info = format!("cloud_media_key_{}", addition);
+        let decrypted = self.decrypt_with_info(info.as_bytes(), encrypted_media_key)?;
 
-    //     if decrypted.len() != 32 {
-    //         return Err("Invalid decrypted key length".to_string())?;
-    //     }
+        if decrypted.len() != 32 {
+            return Err("Invalid decrypted key length".to_string())?;
+        }
 
-    //     let mut result = [0u8; 32];
-    //     result.copy_from_slice(&decrypted);
-    //     Ok(result)
-    // }
+        let mut result = [0u8; 32];
+        result.copy_from_slice(&decrypted);
+        Ok(result)
+    }
 
     fn derive_key(&self, info: &[u8]) -> [u8; 32] {
         let hk = Hkdf::<Sha256>::new(None, &self.main_key);

@@ -430,6 +430,7 @@ class Response_Plan extends $pb.GeneratedMessage {
     $fixnum.Int64? yearlyCostsCent,
     $core.bool? allowedToSendTextMessages,
     $core.bool? isAdditionalAccount,
+    $fixnum.Int64? memoriesSizeLimit,
   }) {
     final result = create();
     if (planId != null) result.planId = planId;
@@ -447,6 +448,7 @@ class Response_Plan extends $pb.GeneratedMessage {
       result.allowedToSendTextMessages = allowedToSendTextMessages;
     if (isAdditionalAccount != null)
       result.isAdditionalAccount = isAdditionalAccount;
+    if (memoriesSizeLimit != null) result.memoriesSizeLimit = memoriesSizeLimit;
     return result;
   }
 
@@ -473,6 +475,7 @@ class Response_Plan extends $pb.GeneratedMessage {
     ..aInt64(8, _omitFieldNames ? '' : 'yearlyCostsCent')
     ..aOB(9, _omitFieldNames ? '' : 'allowedToSendTextMessages')
     ..aOB(10, _omitFieldNames ? '' : 'isAdditionalAccount')
+    ..aInt64(11, _omitFieldNames ? '' : 'memoriesSizeLimit')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -575,6 +578,15 @@ class Response_Plan extends $pb.GeneratedMessage {
   $core.bool hasIsAdditionalAccount() => $_has(8);
   @$pb.TagNumber(10)
   void clearIsAdditionalAccount() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get memoriesSizeLimit => $_getI64(9);
+  @$pb.TagNumber(11)
+  set memoriesSizeLimit($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMemoriesSizeLimit() => $_has(9);
+  @$pb.TagNumber(11)
+  void clearMemoriesSizeLimit() => $_clearField(11);
 }
 
 class Response_Plans extends $pb.GeneratedMessage {
@@ -1635,6 +1647,426 @@ class Response_PasswordlessNotificationMessages extends $pb.GeneratedMessage {
       $_getList(0);
 }
 
+class Response_PresignedPost extends $pb.GeneratedMessage {
+  factory Response_PresignedPost({
+    $core.String? url,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? fields,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (fields != null) result.fields.addEntries(fields);
+    return result;
+  }
+
+  Response_PresignedPost._();
+
+  factory Response_PresignedPost.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PresignedPost.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PresignedPost',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..m<$core.String, $core.String>(2, _omitFieldNames ? '' : 'fields',
+        entryClassName: 'Response.PresignedPost.FieldsEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('server_to_client'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PresignedPost clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PresignedPost copyWith(
+          void Function(Response_PresignedPost) updates) =>
+      super.copyWith((message) => updates(message as Response_PresignedPost))
+          as Response_PresignedPost;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PresignedPost create() => Response_PresignedPost._();
+  @$core.override
+  Response_PresignedPost createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PresignedPost getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PresignedPost>(create);
+  static Response_PresignedPost? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbMap<$core.String, $core.String> get fields => $_getMap(1);
+}
+
+class Response_MemoriesUploadUrls extends $pb.GeneratedMessage {
+  factory Response_MemoriesUploadUrls({
+    $core.String? mediaId,
+    Response_PresignedPost? thumbnailUpload,
+    Response_PresignedPost? fullUpload,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    if (thumbnailUpload != null) result.thumbnailUpload = thumbnailUpload;
+    if (fullUpload != null) result.fullUpload = fullUpload;
+    return result;
+  }
+
+  Response_MemoriesUploadUrls._();
+
+  factory Response_MemoriesUploadUrls.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_MemoriesUploadUrls.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.MemoriesUploadUrls',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aOM<Response_PresignedPost>(2, _omitFieldNames ? '' : 'thumbnailUpload',
+        subBuilder: Response_PresignedPost.create)
+    ..aOM<Response_PresignedPost>(3, _omitFieldNames ? '' : 'fullUpload',
+        subBuilder: Response_PresignedPost.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUploadUrls clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUploadUrls copyWith(
+          void Function(Response_MemoriesUploadUrls) updates) =>
+      super.copyWith(
+              (message) => updates(message as Response_MemoriesUploadUrls))
+          as Response_MemoriesUploadUrls;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUploadUrls create() =>
+      Response_MemoriesUploadUrls._();
+  @$core.override
+  Response_MemoriesUploadUrls createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUploadUrls getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_MemoriesUploadUrls>(create);
+  static Response_MemoriesUploadUrls? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  Response_PresignedPost get thumbnailUpload => $_getN(1);
+  @$pb.TagNumber(2)
+  set thumbnailUpload(Response_PresignedPost value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasThumbnailUpload() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearThumbnailUpload() => $_clearField(2);
+  @$pb.TagNumber(2)
+  Response_PresignedPost ensureThumbnailUpload() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Response_PresignedPost get fullUpload => $_getN(2);
+  @$pb.TagNumber(3)
+  set fullUpload(Response_PresignedPost value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFullUpload() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFullUpload() => $_clearField(3);
+  @$pb.TagNumber(3)
+  Response_PresignedPost ensureFullUpload() => $_ensure(2);
+}
+
+class Response_MediaItem extends $pb.GeneratedMessage {
+  factory Response_MediaItem({
+    $core.String? mediaId,
+    $fixnum.Int64? originalDate,
+    $core.String? thumbnailDownloadUrl,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    if (originalDate != null) result.originalDate = originalDate;
+    if (thumbnailDownloadUrl != null)
+      result.thumbnailDownloadUrl = thumbnailDownloadUrl;
+    return result;
+  }
+
+  Response_MediaItem._();
+
+  factory Response_MediaItem.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_MediaItem.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.MediaItem',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aInt64(2, _omitFieldNames ? '' : 'originalDate')
+    ..aOS(3, _omitFieldNames ? '' : 'thumbnailDownloadUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MediaItem clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MediaItem copyWith(void Function(Response_MediaItem) updates) =>
+      super.copyWith((message) => updates(message as Response_MediaItem))
+          as Response_MediaItem;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_MediaItem create() => Response_MediaItem._();
+  @$core.override
+  Response_MediaItem createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_MediaItem getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_MediaItem>(create);
+  static Response_MediaItem? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get originalDate => $_getI64(1);
+  @$pb.TagNumber(2)
+  set originalDate($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOriginalDate() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOriginalDate() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get thumbnailDownloadUrl => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set thumbnailDownloadUrl($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasThumbnailDownloadUrl() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearThumbnailDownloadUrl() => $_clearField(3);
+}
+
+class Response_MemoriesList extends $pb.GeneratedMessage {
+  factory Response_MemoriesList({
+    $core.Iterable<Response_MediaItem>? items,
+  }) {
+    final result = create();
+    if (items != null) result.items.addAll(items);
+    return result;
+  }
+
+  Response_MemoriesList._();
+
+  factory Response_MemoriesList.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_MemoriesList.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.MemoriesList',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..pPM<Response_MediaItem>(1, _omitFieldNames ? '' : 'items',
+        subBuilder: Response_MediaItem.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesList clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesList copyWith(
+          void Function(Response_MemoriesList) updates) =>
+      super.copyWith((message) => updates(message as Response_MemoriesList))
+          as Response_MemoriesList;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesList create() => Response_MemoriesList._();
+  @$core.override
+  Response_MemoriesList createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesList getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_MemoriesList>(create);
+  static Response_MemoriesList? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<Response_MediaItem> get items => $_getList(0);
+}
+
+class Response_MemoriesUrl extends $pb.GeneratedMessage {
+  factory Response_MemoriesUrl({
+    $core.String? fullDownloadUrl,
+  }) {
+    final result = create();
+    if (fullDownloadUrl != null) result.fullDownloadUrl = fullDownloadUrl;
+    return result;
+  }
+
+  Response_MemoriesUrl._();
+
+  factory Response_MemoriesUrl.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_MemoriesUrl.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.MemoriesUrl',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'fullDownloadUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUrl clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUrl copyWith(void Function(Response_MemoriesUrl) updates) =>
+      super.copyWith((message) => updates(message as Response_MemoriesUrl))
+          as Response_MemoriesUrl;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUrl create() => Response_MemoriesUrl._();
+  @$core.override
+  Response_MemoriesUrl createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUrl getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_MemoriesUrl>(create);
+  static Response_MemoriesUrl? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get fullDownloadUrl => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set fullDownloadUrl($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFullDownloadUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFullDownloadUrl() => $_clearField(1);
+}
+
+class Response_MemoriesUsage extends $pb.GeneratedMessage {
+  factory Response_MemoriesUsage({
+    $fixnum.Int64? maxBytes,
+    $fixnum.Int64? currentBytes,
+    $fixnum.Int64? count,
+  }) {
+    final result = create();
+    if (maxBytes != null) result.maxBytes = maxBytes;
+    if (currentBytes != null) result.currentBytes = currentBytes;
+    if (count != null) result.count = count;
+    return result;
+  }
+
+  Response_MemoriesUsage._();
+
+  factory Response_MemoriesUsage.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_MemoriesUsage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.MemoriesUsage',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'maxBytes')
+    ..aInt64(2, _omitFieldNames ? '' : 'currentBytes')
+    ..aInt64(3, _omitFieldNames ? '' : 'count')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUsage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_MemoriesUsage copyWith(
+          void Function(Response_MemoriesUsage) updates) =>
+      super.copyWith((message) => updates(message as Response_MemoriesUsage))
+          as Response_MemoriesUsage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUsage create() => Response_MemoriesUsage._();
+  @$core.override
+  Response_MemoriesUsage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_MemoriesUsage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_MemoriesUsage>(create);
+  static Response_MemoriesUsage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get maxBytes => $_getI64(0);
+  @$pb.TagNumber(1)
+  set maxBytes($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMaxBytes() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMaxBytes() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get currentBytes => $_getI64(1);
+  @$pb.TagNumber(2)
+  set currentBytes($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCurrentBytes() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCurrentBytes() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get count => $_getI64(2);
+  @$pb.TagNumber(3)
+  set count($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCount() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCount() => $_clearField(3);
+}
+
 enum Response_Ok_Ok {
   none,
   userid,
@@ -1653,6 +2085,10 @@ enum Response_Ok_Ok {
   proofOfWork,
   passwordlessRecoveryServerKey,
   passwordlessNotificationMessages,
+  memoriesUploadUrls,
+  memoriesList,
+  memoriesUrl,
+  memoriesUsage,
   notSet
 }
 
@@ -1675,6 +2111,10 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_ProofOfWork? proofOfWork,
     $core.List<$core.int>? passwordlessRecoveryServerKey,
     Response_PasswordlessNotificationMessages? passwordlessNotificationMessages,
+    Response_MemoriesUploadUrls? memoriesUploadUrls,
+    Response_MemoriesList? memoriesList,
+    Response_MemoriesUrl? memoriesUrl,
+    Response_MemoriesUsage? memoriesUsage,
   }) {
     final result = create();
     if (none != null) result.none = none;
@@ -1698,6 +2138,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (passwordlessNotificationMessages != null)
       result.passwordlessNotificationMessages =
           passwordlessNotificationMessages;
+    if (memoriesUploadUrls != null)
+      result.memoriesUploadUrls = memoriesUploadUrls;
+    if (memoriesList != null) result.memoriesList = memoriesList;
+    if (memoriesUrl != null) result.memoriesUrl = memoriesUrl;
+    if (memoriesUsage != null) result.memoriesUsage = memoriesUsage;
     return result;
   }
 
@@ -1728,6 +2173,10 @@ class Response_Ok extends $pb.GeneratedMessage {
     15: Response_Ok_Ok.proofOfWork,
     16: Response_Ok_Ok.passwordlessRecoveryServerKey,
     17: Response_Ok_Ok.passwordlessNotificationMessages,
+    18: Response_Ok_Ok.memoriesUploadUrls,
+    19: Response_Ok_Ok.memoriesList,
+    20: Response_Ok_Ok.memoriesUrl,
+    21: Response_Ok_Ok.memoriesUsage,
     0: Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -1735,7 +2184,29 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
+    ..oo(0, [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21
+    ])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(
@@ -1772,6 +2243,15 @@ class Response_Ok extends $pb.GeneratedMessage {
     ..aOM<Response_PasswordlessNotificationMessages>(
         17, _omitFieldNames ? '' : 'passwordlessNotificationMessages',
         subBuilder: Response_PasswordlessNotificationMessages.create)
+    ..aOM<Response_MemoriesUploadUrls>(
+        18, _omitFieldNames ? '' : 'memoriesUploadUrls',
+        subBuilder: Response_MemoriesUploadUrls.create)
+    ..aOM<Response_MemoriesList>(19, _omitFieldNames ? '' : 'memoriesList',
+        subBuilder: Response_MemoriesList.create)
+    ..aOM<Response_MemoriesUrl>(20, _omitFieldNames ? '' : 'memoriesUrl',
+        subBuilder: Response_MemoriesUrl.create)
+    ..aOM<Response_MemoriesUsage>(21, _omitFieldNames ? '' : 'memoriesUsage',
+        subBuilder: Response_MemoriesUsage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1810,6 +2290,10 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
+  @$pb.TagNumber(21)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
@@ -1828,6 +2312,10 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
+  @$pb.TagNumber(21)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2012,6 +2500,51 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(17)
   Response_PasswordlessNotificationMessages
       ensurePasswordlessNotificationMessages() => $_ensure(16);
+
+  @$pb.TagNumber(18)
+  Response_MemoriesUploadUrls get memoriesUploadUrls => $_getN(17);
+  @$pb.TagNumber(18)
+  set memoriesUploadUrls(Response_MemoriesUploadUrls value) =>
+      $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasMemoriesUploadUrls() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearMemoriesUploadUrls() => $_clearField(18);
+  @$pb.TagNumber(18)
+  Response_MemoriesUploadUrls ensureMemoriesUploadUrls() => $_ensure(17);
+
+  @$pb.TagNumber(19)
+  Response_MemoriesList get memoriesList => $_getN(18);
+  @$pb.TagNumber(19)
+  set memoriesList(Response_MemoriesList value) => $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasMemoriesList() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearMemoriesList() => $_clearField(19);
+  @$pb.TagNumber(19)
+  Response_MemoriesList ensureMemoriesList() => $_ensure(18);
+
+  @$pb.TagNumber(20)
+  Response_MemoriesUrl get memoriesUrl => $_getN(19);
+  @$pb.TagNumber(20)
+  set memoriesUrl(Response_MemoriesUrl value) => $_setField(20, value);
+  @$pb.TagNumber(20)
+  $core.bool hasMemoriesUrl() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearMemoriesUrl() => $_clearField(20);
+  @$pb.TagNumber(20)
+  Response_MemoriesUrl ensureMemoriesUrl() => $_ensure(19);
+
+  @$pb.TagNumber(21)
+  Response_MemoriesUsage get memoriesUsage => $_getN(20);
+  @$pb.TagNumber(21)
+  set memoriesUsage(Response_MemoriesUsage value) => $_setField(21, value);
+  @$pb.TagNumber(21)
+  $core.bool hasMemoriesUsage() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearMemoriesUsage() => $_clearField(21);
+  @$pb.TagNumber(21)
+  Response_MemoriesUsage ensureMemoriesUsage() => $_ensure(20);
 }
 
 enum Response_Response { ok, error, notSet }

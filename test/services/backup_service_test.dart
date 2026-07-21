@@ -16,7 +16,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
 import 'package:twonly/src/model/json/userdata.model.dart'
     hide LastBackupUploadState;
-import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';

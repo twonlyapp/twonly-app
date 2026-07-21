@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
@@ -186,15 +185,14 @@ class _BackupViewState extends State<BackupView> {
                     ],
                   ),
 
-                if (userService.currentUser.passwordLessRecovery == null &&
-                    kDebugMode) ...[
+                if (userService.currentUser.passwordLessRecovery == null) ...[
                   const SizedBox(height: 20),
                   Center(
                     child: MyButton(
                       variant: MyButtonVariant.primaryMiddle,
                       onPressed: () =>
                           context.navPush(const PasswordLessRecoverySetup()),
-                      child: const Text('Setup Passwordless Recovery'),
+                      child: Text(context.lang.passwordlessRecoveryEnableBtn),
                     ),
                   ),
                 ],

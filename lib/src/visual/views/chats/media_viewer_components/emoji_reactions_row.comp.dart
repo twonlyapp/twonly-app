@@ -80,11 +80,18 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       child: SizedBox(
         width: 40,
         child: Center(
-          child: widget.show
-              ? EmojiAnimationComp(
-                  emoji: widget.emoji,
-                )
-              : const SizedBox.shrink(),
+          child: AnimatedOpacity(
+            opacity: widget.show ? 1.0 : 0.0,
+            duration: widget.show
+                ? const Duration(milliseconds: 150)
+                : Duration.zero,
+            child: Offstage(
+              offstage: !widget.show,
+              child: EmojiAnimationComp(
+                emoji: widget.emoji,
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -41,7 +41,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['automaticallyMarkEqualMediaFilesAsOpened'] as bool? ?? false
       ..videoStabilizationEnabled =
           json['videoStabilizationEnabled'] as bool? ?? true
-      ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
+      ..showNewsShortcut = json['showNewsShortcut'] as bool? ?? true
       ..showShowImagePreviewWhenSending =
           json['showShowImagePreviewWhenSending'] as bool? ?? false
       ..startWithCameraOpen = json['startWithCameraOpen'] as bool? ?? true
@@ -68,6 +68,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
+      ..isCloudBackupEnabled = json['isCloudBackupEnabled'] as bool? ?? false
       ..isUserDiscoveryEnabled =
           json['isUserDiscoveryEnabled'] as bool? ?? false
       ..requiredSendImages = (json['requiredSendImages'] as num?)?.toInt() ?? 4
@@ -88,6 +89,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           ?.map((e) => (e as num).toInt())
           .toList()
       ..hideChangeLog = json['hideChangeLog'] as bool? ?? true
+      ..hideMemoriesBackupPromo =
+          json['hideMemoriesBackupPromo'] as bool? ?? false
       ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
       ..canUseLoginTokenForAuth =
           json['canUseLoginTokenForAuth'] as bool? ?? true
@@ -139,7 +142,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'automaticallyMarkEqualMediaFilesAsOpened':
       instance.automaticallyMarkEqualMediaFilesAsOpened,
   'videoStabilizationEnabled': instance.videoStabilizationEnabled,
-  'showFeedbackShortcut': instance.showFeedbackShortcut,
+  'showNewsShortcut': instance.showNewsShortcut,
   'showShowImagePreviewWhenSending': instance.showShowImagePreviewWhenSending,
   'startWithCameraOpen': instance.startWithCameraOpen,
   'preSelectedEmojies': instance.preSelectedEmojies,
@@ -153,6 +156,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,
+  'isCloudBackupEnabled': instance.isCloudBackupEnabled,
   'isUserDiscoveryEnabled': instance.isUserDiscoveryEnabled,
   'requiredSendImages': instance.requiredSendImages,
   'userDiscoveryThreshold': instance.userDiscoveryThreshold,
@@ -165,6 +169,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
   'lastChangeLogHash': instance.lastChangeLogHash,
   'hideChangeLog': instance.hideChangeLog,
+  'hideMemoriesBackupPromo': instance.hideMemoriesBackupPromo,
   'updateFCMToken': instance.updateFCMToken,
   'canUseLoginTokenForAuth': instance.canUseLoginTokenForAuth,
   'twonlySafeBackup': instance.twonlySafeBackup,
@@ -202,11 +207,13 @@ TwonlySafeBackup _$TwonlySafeBackupFromJson(Map<String, dynamic> json) =>
             .map((e) => (e as num).toInt())
             .toList(),
       )
-      ..lastBackupSize = (json['lastBackupSize'] as num).toInt()
-      ..backupUploadState = $enumDecode(
-        _$LastBackupUploadStateEnumMap,
-        json['backupUploadState'],
-      )
+      ..lastBackupSize = (json['lastBackupSize'] as num?)?.toInt() ?? 0
+      ..backupUploadState =
+          $enumDecodeNullable(
+            _$LastBackupUploadStateEnumMap,
+            json['backupUploadState'],
+          ) ??
+          LastBackupUploadState.none
       ..lastBackupDone = json['lastBackupDone'] == null
           ? null
           : DateTime.parse(json['lastBackupDone'] as String);
@@ -230,18 +237,14 @@ const _$LastBackupUploadStateEnumMap = {
 
 PasswordLessRecovery _$PasswordLessRecoveryFromJson(
   Map<String, dynamic> json,
-) => PasswordLessRecovery((json['threshold'] as num).toInt())
+) => PasswordLessRecovery((json['threshold'] as num?)?.toInt() ?? 2)
   ..email = json['email'] as String?
-  ..pinSeed = (json['pinSeed'] as List<dynamic>?)
+  ..serverKeyProtection = (json['serverKeyProtection'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
       .toList()
   ..pinUnlockToken = (json['pinUnlockToken'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
       .toList()
-  ..encryptedServerKeyNonce =
-      (json['encryptedServerKeyNonce'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList()
   ..lastServerHeartbeat = json['lastServerHeartbeat'] == null
       ? null
       : DateTime.parse(json['lastServerHeartbeat'] as String)
@@ -257,9 +260,8 @@ Map<String, dynamic> _$PasswordLessRecoveryToJson(
 ) => <String, dynamic>{
   'email': instance.email,
   'threshold': instance.threshold,
-  'pinSeed': instance.pinSeed,
+  'serverKeyProtection': instance.serverKeyProtection,
   'pinUnlockToken': instance.pinUnlockToken,
-  'encryptedServerKeyNonce': instance.encryptedServerKeyNonce,
   'lastServerHeartbeat': instance.lastServerHeartbeat?.toIso8601String(),
   'lastContactHeartbeat': instance.lastContactHeartbeat?.toIso8601String(),
   'encryptedServerKey': instance.encryptedServerKey,

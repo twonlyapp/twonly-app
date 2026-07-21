@@ -1,18 +1,15 @@
 import 'dart:async';
 
-import 'package:app_links/app_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -46,13 +43,13 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   final MainCameraController _mainCameraController = MainCameraController();
   late final PageController _homeViewPageController;
 
-  StreamSubscription<List<SharedFile>>? _intentStreamSub;
-  StreamSubscription<Uri>? _deepLinkSub;
+  StreamSubscription<Uri>? _sharedLinkSub;
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
 
   static final streamHomeViewPageIndex = StreamController<int>.broadcast();
+  static final streamSharedLink = StreamController<Uri>.broadcast();
 
   @override
   void initState() {
@@ -113,26 +110,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     unawaited(_initAsync());
 
-    void handleShareLink(Uri uri) {
-      routerProvider.go(Routes.home);
-      streamHomeViewPageIndex.add(1);
-      _mainCameraController.setSharedLinkForPreview(uri);
-    }
-
-    // Subscribe to all events (initial link and further)
-    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
-      if (!mounted) return;
-      Log.info('Got link via app links: ${uri.scheme}');
-      if (!await handleIntentUrl(context, uri)) {
-        if (uri.scheme.startsWith('http')) {
-          handleShareLink(uri);
-        }
-      }
-    });
-
-    _intentStreamSub = initIntentStreams(
-      context,
-      handleShareLink,
+    _sharedLinkSub = streamSharedLink.stream.listen(
+      _mainCameraController.setSharedLinkForPreview,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -207,8 +186,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _disableCameraTimer?.cancel();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
-    _intentStreamSub?.cancel();
-    _deepLinkSub?.cancel();
+    _sharedLinkSub?.cancel();
     super.dispose();
   }
 

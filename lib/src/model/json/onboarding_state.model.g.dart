@@ -20,6 +20,9 @@ ReceivedRecoveryShare _$ReceivedRecoveryShareFromJson(
   sharedSecretDataBytes: (json['sharedSecretDataBytes'] as List<dynamic>)
       .map((e) => (e as num).toInt())
       .toList(),
+  trustedFriendAvatarSvg: (json['trustedFriendAvatarSvg'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
 );
 
 Map<String, dynamic> _$ReceivedRecoveryShareToJson(
@@ -27,6 +30,7 @@ Map<String, dynamic> _$ReceivedRecoveryShareToJson(
 ) => <String, dynamic>{
   'messageId': instance.messageId,
   'trustedFriendDisplayName': instance.trustedFriendDisplayName,
+  'trustedFriendAvatarSvg': instance.trustedFriendAvatarSvg,
   'myDisplayName': instance.myDisplayName,
   'myUserId': instance.myUserId,
   'myAvatarSvg': instance.myAvatarSvg,
