@@ -16,6 +16,7 @@ import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/colors.dart';
@@ -303,18 +304,33 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                 Expanded(
                   child: ColoredBox(
                     color: Colors.transparent,
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          substringBy(group.groupName, 20),
+                        Row(
+                          children: [
+                            Text(
+                              substringBy(group.groupName, 20),
+                            ),
+                            const SizedBox(width: 5),
+                            VerificationBadgeComp(
+                              key: verifyShieldKey,
+                              group: group,
+                            ),
+                            const SizedBox(width: 10),
+                            FlameCounterWidget(groupId: group.groupId),
+                          ],
                         ),
-                        const SizedBox(width: 5),
-                        VerificationBadgeComp(
-                          key: verifyShieldKey,
-                          group: group,
-                        ),
-                        const SizedBox(width: 10),
-                        FlameCounterWidget(groupId: group.groupId),
+                        if (group.isDirectChat)
+                          StreamBuilder<List<Contact>>(
+                            stream: twonlyDB.groupsDao.watchGroupContact(group.groupId),
+                            builder: (context, snapshot) {
+                              final contacts = snapshot.data ?? [];
+                              if (contacts.isEmpty) return const SizedBox.shrink();
+                              return ContactLabels(contactId: contacts.first.userId);
+                            },
+                          ),
                       ],
                     ),
                   ),

@@ -2245,7 +2245,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoverySelectFriends => 'Select trusted friends';
 
   @override
-  String get passwordlessRecoveryTrustedFriends => 'Trusted Friends';
+  String get passwordlessRecoveryTrustedFriends => 'Account recovery';
 
   @override
   String passwordlessRecoveryDoneBtn(num count) {
@@ -2461,4 +2461,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
+
+  @override
+  String get contactLabelsTitle => 'Contact Labels';
+
+  @override
+  String get contactLabelsSubtitleEmpty => 'No labels selected';
+
+  @override
+  String get contactLabelsMaxLimit => 'Maximum 3 labels per contact';
+
+  @override
+  String get createLabel => 'Create new label';
+
+  @override
+  String get editLabel => 'Edit label';
+
+  @override
+  String get deleteLabel => 'Delete label';
+
+  @override
+  String get deleteLabelConfirmation =>
+      'Are you sure you want to delete this label? It will be removed from all contacts.';
+
+  @override
+  String get labelNameHint => 'Label name';
+
+  @override
+  String get labelTextColor => 'Text color';
+
+  @override
+  String get labelBackgroundColor => 'Background color';
+
+  @override
+  String get customColor => 'Custom Color';
+
+  @override
+  String get hue => 'Hue';
+
+  @override
+  String get saturation => 'Saturation';
+
+  @override
+  String get brightness => 'Brightness';
 }

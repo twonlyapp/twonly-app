@@ -11,6 +11,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -20,6 +21,7 @@ import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/user_discovery_contact_settings.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
+import 'package:twonly/src/visual/views/contact/select_contact_labels.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
 class ContactView extends StatefulWidget {
@@ -224,6 +226,21 @@ class _ContactViewState extends State<ContactView> {
               widget.userId,
               userService.currentUser.userId,
             ),
+          ),
+          ContactLabelsSubtitleBuilder(
+            contactId: contact.userId,
+            builder: (context, subtitleWidget) {
+              return BetterListTile(
+                icon: FontAwesomeIcons.tag,
+                text: context.lang.contactLabelsTitle,
+                subtitle: subtitleWidget,
+                onTap: () {
+                  context.navPush(
+                    SelectContactLabelsView(contactId: contact.userId),
+                  );
+                },
+              );
+            },
           ),
           const Divider(),
           RestoreFlameComp(

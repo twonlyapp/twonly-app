@@ -12,6 +12,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
@@ -216,32 +217,39 @@ class _StartNewChatView extends State<StartNewChatView> {
                     }
 
                     if (i < filteredContacts.length) {
+                      final contact = filteredContacts[i];
                       return UserContextMenu(
-                        key: ValueKey(filteredContacts[i].userId),
-                        contact: filteredContacts[i],
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              Text(getContactDisplayName(filteredContacts[i])),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  right: 8,
-                                  left: 1,
-                                ),
-                                child: VerificationBadgeComp(
-                                  contact: filteredContacts[i],
-                                ),
+                        key: ValueKey(contact.userId),
+                        contact: contact,
+                        child: ContactLabelsSubtitleBuilder(
+                          contactId: contact.userId,
+                          builder: (context, subtitleWidget) {
+                            return ListTile(
+                              title: Row(
+                                children: [
+                                  Text(getContactDisplayName(contact)),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 8,
+                                      left: 1,
+                                    ),
+                                    child: VerificationBadgeComp(
+                                      contact: contact,
+                                    ),
+                                  ),
+                                  FlameCounterWidget(
+                                    contactId: contact.userId,
+                                  ),
+                                ],
                               ),
-                              FlameCounterWidget(
-                                contactId: filteredContacts[i].userId,
+                              subtitle: subtitleWidget,
+                              leading: AvatarIcon(
+                                contactId: contact.userId,
+                                fontSize: 13,
                               ),
-                            ],
-                          ),
-                          leading: AvatarIcon(
-                            contactId: filteredContacts[i].userId,
-                            fontSize: 13,
-                          ),
-                          onTap: () => _onTapUser(filteredContacts[i]),
+                              onTap: () => _onTapUser(contact),
+                            );
+                          },
                         ),
                       );
                     }

@@ -3917,7 +3917,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryTrustedFriends.
   ///
   /// In en, this message translates to:
-  /// **'Trusted Friends'**
+  /// **'Account recovery'**
   String get passwordlessRecoveryTrustedFriends;
 
   /// No description provided for @passwordlessRecoveryDoneBtn.
@@ -4285,6 +4285,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show flame restore warning'**
   String get settingsShowRestoreFlameTitle;
+
+  /// No description provided for @contactLabelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Labels'**
+  String get contactLabelsTitle;
+
+  /// No description provided for @contactLabelsSubtitleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No labels selected'**
+  String get contactLabelsSubtitleEmpty;
+
+  /// No description provided for @contactLabelsMaxLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 3 labels per contact'**
+  String get contactLabelsMaxLimit;
+
+  /// No description provided for @createLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new label'**
+  String get createLabel;
+
+  /// No description provided for @editLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit label'**
+  String get editLabel;
+
+  /// No description provided for @deleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete label'**
+  String get deleteLabel;
+
+  /// No description provided for @deleteLabelConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this label? It will be removed from all contacts.'**
+  String get deleteLabelConfirmation;
+
+  /// No description provided for @labelNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Label name'**
+  String get labelNameHint;
+
+  /// No description provided for @labelTextColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text color'**
+  String get labelTextColor;
+
+  /// No description provided for @labelBackgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Background color'**
+  String get labelBackgroundColor;
+
+  /// No description provided for @customColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Color'**
+  String get customColor;
+
+  /// No description provided for @hue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get hue;
+
+  /// No description provided for @saturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get saturation;
+
+  /// No description provided for @brightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get brightness;
 }
 
 class _AppLocalizationsDelegate

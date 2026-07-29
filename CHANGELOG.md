@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 0.4.3
+
+- New: Contact labels
+
 ## 0.4.0
 
 - New: Encrypted Cloud Backup of Memories
