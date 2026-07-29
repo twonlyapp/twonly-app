@@ -168,6 +168,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     super.initState();
     initVolumeControl();
     initAsync();
+    _checkAndInitCamera();
   }
 
   @override
@@ -176,9 +177,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (oldWidget.isVisible != widget.isVisible) {
       if (widget.isVisible) {
         initVolumeControl();
+        _checkAndInitCamera();
       } else {
         _deInitVolumeControl();
       }
+    }
+  }
+
+  void _checkAndInitCamera() {
+    if (widget.isVisible &&
+        mc.cameraController == null &&
+        !mc.initCameraStarted) {
+      unawaited(
+        mc.selectCamera(
+          mc.selectedCameraDetails.cameraId,
+          false,
+        ),
+      );
     }
   }
 
@@ -686,7 +701,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Widget build(BuildContext context) {
     if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
         mc.cameraController == null) {
-      return Container();
+      if (widget.isVisible && !mc.initCameraStarted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAndInitCamera();
+        });
+      }
+      // Show a loader instead of an empty container to prevent a black screen
+      // while the camera is initializing or if initialization failed.
+      return Center(
+        child: SizedBox(
+          height: 60,
+          width: 60,
+          child: ThreeRotatingDots(
+            size: 40,
+            color: context.color.primary,
+          ),
+        ),
+      );
     }
     return StreamBuilder(
       stream: userService.onUserUpdated,

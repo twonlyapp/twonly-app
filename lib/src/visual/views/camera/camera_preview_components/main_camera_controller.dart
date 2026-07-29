@@ -155,6 +155,7 @@ class MainCameraController {
     } catch (e) {
       Log.error('Error querying available cameras: $e');
       initCameraStarted = false;
+      setState?.call();
       return;
     }
 
@@ -164,6 +165,7 @@ class MainCameraController {
         'Trying to select a non existing camera $cameraId >= ${AppEnvironment.cameras.length}',
       );
       initCameraStarted = false;
+      setState?.call();
       return;
     }
 
@@ -192,7 +194,7 @@ class MainCameraController {
       final hasMic = await micPermissionFuture;
       if (sessionId != _cameraSessionId) return;
 
-      final controller = CameraController(
+      var controller = CameraController(
         AppEnvironment.cameras[cameraId],
         ResolutionPreset.high,
         enableAudio: hasMic,
@@ -204,7 +206,21 @@ class MainCameraController {
       var assignedToGlobal = false;
       try {
         _initializeFuture = controller.initialize();
-        await _initializeFuture;
+        try {
+          await _initializeFuture;
+        } on CameraException catch (e) {
+          // If specific image format is unsupported on this hardware, fallback to default format
+          Log.warn('Initial camera format initialization failed ($e), trying fallback format...');
+          await controller.dispose();
+          controller = CameraController(
+            AppEnvironment.cameras[cameraId],
+            ResolutionPreset.high,
+            enableAudio: hasMic,
+          );
+          _initializeFuture = controller.initialize();
+          await _initializeFuture;
+        }
+
         if (sessionId != _cameraSessionId) {
           unawaited(controller.dispose());
           return;
@@ -256,6 +272,7 @@ class MainCameraController {
           unawaited(controller.dispose());
         }
         initCameraStarted = false;
+        setState?.call();
         return;
       }
     } else {
