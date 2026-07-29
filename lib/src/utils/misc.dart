@@ -210,6 +210,10 @@ Future<bool> authenticateUser(
         return true;
       }
     }
+  } catch (e) {
+    // Catch unexpected platform exceptions (e.g. PlatformException) that
+    // would otherwise propagate and leave callers in a broken state.
+    Log.error('Unexpected authentication error: $e');
   }
   return false;
 }
