@@ -671,25 +671,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Fallback: when no content is visible (no media, no loader,
-              // no twonly-present overlay), show a loader to prevent a
-              // black screen. If there are truly no files left, exit.
-              if (!_showDownloadingLoader &&
-                  currentMedia == null &&
-                  videoController == null &&
-                  !displayTwonlyPresent)
-                Builder(builder: (context) {
-                  // Schedule exit on the next frame if there is nothing
-                  // left to display, so we don't trap the user.
-                  if (allMediaFiles.isEmpty) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted && currentMedia == null) {
-                        Navigator.of(context).maybePop();
-                      }
-                    });
-                  }
-                  return _loader();
-                }),
               if (_showDownloadingLoader) _loader(),
               if ((currentMedia != null || videoController != null) &&
                   (canBeSeenUntil == null || progress.value >= 0))

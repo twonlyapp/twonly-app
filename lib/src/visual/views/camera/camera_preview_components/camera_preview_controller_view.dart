@@ -706,18 +706,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           _checkAndInitCamera();
         });
       }
-      // Show a loader instead of an empty container to prevent a black screen
-      // while the camera is initializing or if initialization failed.
-      return Center(
-        child: SizedBox(
-          height: 60,
-          width: 60,
-          child: ThreeRotatingDots(
-            size: 40,
-            color: context.color.primary,
-          ),
-        ),
-      );
+      return Container();
     }
     return StreamBuilder(
       stream: userService.onUserUpdated,

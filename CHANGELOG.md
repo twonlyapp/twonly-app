@@ -4,6 +4,7 @@
 ## 0.4.3
 
 - New: Contact labels
+- Fix: Multiple black screens
 
 ## 0.4.0
 
