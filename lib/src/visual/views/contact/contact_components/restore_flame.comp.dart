@@ -107,6 +107,9 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
 
   @override
   Widget build(BuildContext context) {
+    if (!userService.currentUser.showRestoreFlame) {
+      return const SizedBox.shrink();
+    }
     if (_group == null || !isItPossibleToRestoreFlames(_group!)) {
       return Container();
     }
@@ -115,7 +118,7 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         onTap: _restoreFlames,
         title: Text(
-          'Restore your ${_group!.maxFlameCounter} lost flames',
+          context.lang.restoreLostFlames(_group!.maxFlameCounter),
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         trailing: const SizedBox(
@@ -134,7 +137,7 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
           emoji: '🔥',
         ),
       ),
-      text: 'Restore your ${_group!.maxFlameCounter} lost flames',
+      text: context.lang.restoreLostFlames(_group!.maxFlameCounter),
     );
   }
 }

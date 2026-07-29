@@ -2475,4 +2475,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsStorageSyncUpToDate =>
       'Alle Memories sind auf dem neuesten Stand.';
+
+  @override
+  String restoreLostFlames(int count) {
+    return 'Stelle deine $count verlorenen Flammen wieder her';
+  }
+
+  @override
+  String get settingsShowRestoreFlameTitle =>
+      'Hinweis zur Flammen-Wiederherstellung anzeigen';
 }

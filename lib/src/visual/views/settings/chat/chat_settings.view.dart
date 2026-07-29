@@ -24,6 +24,12 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
     });
   }
 
+  Future<void> setShowRestoreFlame(bool value) async {
+    await UserService.update((u) {
+      u.showRestoreFlame = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,6 +60,13 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
                     .currentUser
                     .automaticallyMarkEqualMediaFilesAsOpened,
                 onChanged: setAutomaticallyMarkEqualMediaFilesAsOpened,
+              ),
+              SwitchListTile.adaptive(
+                title: Text(
+                  context.lang.settingsShowRestoreFlameTitle,
+                ),
+                value: userService.currentUser.showRestoreFlame,
+                onChanged: setShowRestoreFlame,
               ),
             ],
           );

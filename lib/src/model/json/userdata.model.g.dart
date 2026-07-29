@@ -60,6 +60,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..autoStoreAllSendUnlimitedMediaFiles =
           json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
       ..typingIndicators = json['typingIndicators'] as bool? ?? true
+      ..showRestoreFlame = json['showRestoreFlame'] as bool? ?? true
       ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
@@ -151,6 +152,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'autoStoreAllSendUnlimitedMediaFiles':
       instance.autoStoreAllSendUnlimitedMediaFiles,
   'typingIndicators': instance.typingIndicators,
+  'showRestoreFlame': instance.showRestoreFlame,
   'myBestFriendGroupId': instance.myBestFriendGroupId,
   'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
       ?.toIso8601String(),

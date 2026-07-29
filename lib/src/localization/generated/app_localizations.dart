@@ -4273,6 +4273,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All memories are up to date.'**
   String get settingsStorageSyncUpToDate;
+
+  /// No description provided for @restoreLostFlames.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore your {count} lost flames'**
+  String restoreLostFlames(int count);
+
+  /// No description provided for @settingsShowRestoreFlameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show flame restore warning'**
+  String get settingsShowRestoreFlameTitle;
 }
 
 class _AppLocalizationsDelegate

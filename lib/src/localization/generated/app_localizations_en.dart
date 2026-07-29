@@ -2453,4 +2453,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsStorageSyncUpToDate => 'All memories are up to date.';
+
+  @override
+  String restoreLostFlames(int count) {
+    return 'Restore your $count lost flames';
+  }
+
+  @override
+  String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
 }

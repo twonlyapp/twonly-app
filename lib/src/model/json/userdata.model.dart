@@ -93,6 +93,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool typingIndicators = true;
 
+  @JsonKey(defaultValue: true)
+  bool showRestoreFlame = true;
+
   String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
