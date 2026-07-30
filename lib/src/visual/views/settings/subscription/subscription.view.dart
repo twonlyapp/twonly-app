@@ -11,6 +11,7 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/subscription/additional_users.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -141,6 +142,23 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             ),
           ],
           const SizedBox(height: 30),
+          if (isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester) ...[
+            BetterListTile(
+              icon: FontAwesomeIcons.userPlus,
+              text: context.lang.manageAdditionalUsers,
+              subtitle: loaded ? Text('${context.lang.open}: 3') : null,
+              onTap: () async {
+                await context.navPush(
+                  AdditionalUsersView(
+                    ballance: ballance,
+                  ),
+                );
+                await initAsync();
+              },
+            ),
+            const Divider(),
+          ],
           BetterListTile(
             icon: FontAwesomeIcons.fileContract,
             text: context.lang.termsOfService,
@@ -172,24 +190,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               );
             },
           ),
-          if (isPayingUser(currentPlan) ||
-              currentPlan == SubscriptionPlan.Tester)
-            const Divider(),
-          if (isPayingUser(currentPlan) ||
-              currentPlan == SubscriptionPlan.Tester)
-            BetterListTile(
-              icon: FontAwesomeIcons.userPlus,
-              text: context.lang.manageAdditionalUsers,
-              subtitle: loaded ? Text('${context.lang.open}: 3') : null,
-              onTap: () async {
-                await context.navPush(
-                  AdditionalUsersView(
-                    ballance: ballance,
-                  ),
-                );
-                await initAsync();
-              },
-            ),
         ],
       ),
     );
@@ -310,8 +310,10 @@ class _PlanCardState extends State<PlanCard> {
                 ),
               ),
               const SizedBox(height: 10),
-              if (currentPlan == widget.plan)
-                FilledButton.icon(
+              if (currentPlan == widget.plan &&
+                  widget.plan != SubscriptionPlan.Tester)
+                MyButton(
+                  variant: MyButtonVariant.primaryMiddle,
                   onPressed: () async {
                     var url = 'https://apps.apple.com/account/subscriptions';
                     if (Platform.isAndroid) {
@@ -323,53 +325,77 @@ class _PlanCardState extends State<PlanCard> {
                       mode: LaunchMode.externalApplication,
                     );
                   },
-                  label: const Text('Manage subscription'),
+                  child: Text(context.lang.subscriptionManage),
                 ),
               if (widget.onPurchase != null &&
                   monthlyProduct != null &&
-                  !isPayingUser(currentPlan))
-                OutlinedButton.icon(
+                  !isPayingUser(currentPlan)) ...[
+                const SizedBox(height: 8),
+                MyButton(
+                  variant: MyButtonVariant.primaryMiddle,
                   onPressed: _isLoading != null
                       ? null
                       : () => onButtonPressed(monthlyProduct),
-                  icon: _isLoading == monthlyProduct
-                      ? const SizedBox(
-                          width: 10,
-                          height: 10,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isLoading == monthlyProduct) ...[
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
                           child: CircularProgressIndicator.adaptive(
-                            strokeWidth: 1,
+                            strokeWidth: 2,
                           ),
-                        )
-                      : null,
-                  label: Text(
-                    context.lang.upgradeToPaidPlanButton(
-                      widget.plan.name,
-                      ' (${getFormattedPrice(monthlyProduct)}/${context.lang.month})',
-                    ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${getFormattedPrice(monthlyProduct)}/${context.lang.month})',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
               if (widget.onPurchase != null &&
-                  (yearlyProduct != null && !isPayingUser(currentPlan)))
-                FilledButton.icon(
+                  (yearlyProduct != null && !isPayingUser(currentPlan))) ...[
+                const SizedBox(height: 8),
+                MyButton(
+                  variant: MyButtonVariant.primaryMiddle,
                   onPressed: _isLoading != null
                       ? null
                       : () => onButtonPressed(yearlyProduct),
-                  icon: _isLoading == yearlyProduct
-                      ? const SizedBox(
-                          width: 10,
-                          height: 10,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isLoading == yearlyProduct) ...[
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
                           child: CircularProgressIndicator.adaptive(
-                            strokeWidth: 1,
+                            strokeWidth: 2,
                           ),
-                        )
-                      : null,
-                  label: Text(
-                    context.lang.upgradeToPaidPlanButton(
-                      widget.plan.name,
-                      ' (${getFormattedPrice(yearlyProduct)}/${context.lang.year})',
-                    ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Flexible(
+                        child: Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${getFormattedPrice(yearlyProduct)}/${context.lang.year})',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
             ],
           ),
         ),

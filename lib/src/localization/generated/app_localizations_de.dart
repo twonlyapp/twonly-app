@@ -1981,6 +1981,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get subscriptionPledgeSubtitle => 'Keine Werbung. Volle Privatsphäre.';
 
   @override
+  String get subscriptionManage => 'Abonnement verwalten';
+
+  @override
   String get dragToZoom => 'Zum Zoomen ziehen';
 
   @override

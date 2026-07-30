@@ -14,6 +14,7 @@ import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class SelectAdditionalUsers extends StatefulWidget {
   const SelectAdditionalUsers({
@@ -101,17 +102,24 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
           title: Text(context.lang.additionalUserSelectTitle),
         ),
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        floatingActionButton: FilledButton.icon(
+        floatingActionButton: MyButton(
+          variant: MyButtonVariant.primaryMiddle,
           onPressed: selectedUsers.isEmpty
               ? null
               : () => Navigator.pop(context, selectedUsers.toList()),
-          label: Text(
-            context.lang.additionalUserSelectButton(
-              widget.limit,
-              selectedUsers.length + widget.alreadySelected.length,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const FaIcon(FontAwesomeIcons.userPlus, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                context.lang.additionalUserSelectButton(
+                  widget.limit,
+                  selectedUsers.length + widget.alreadySelected.length,
+                ),
+              ),
+            ],
           ),
-          icon: const FaIcon(FontAwesomeIcons.userPlus),
         ),
         body: SafeArea(
           child: Padding(

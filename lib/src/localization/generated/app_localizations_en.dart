@@ -1966,6 +1966,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
 
   @override
+  String get subscriptionManage => 'Manage subscription';
+
+  @override
   String get dragToZoom => 'Drag to Zoom';
 
   @override

@@ -13,6 +13,7 @@ import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/subscription/select_additional_users.view.dart';
 
 class AdditionalUsersView extends StatefulWidget {
@@ -57,16 +58,18 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   }
 
   Future<void> addAdditionalUser() async {
-    final selectedUserIds = await context.navPush(
-      SelectAdditionalUsers(
-        limit: _planLimit,
-        alreadySelected:
-            ballance?.additionalAccounts
-                .map((e) => e.userId.toInt())
-                .toList() ??
-            [],
-      ),
-    ) as List<int>?;
+    final selectedUserIds =
+        await context.navPush(
+              SelectAdditionalUsers(
+                limit: _planLimit,
+                alreadySelected:
+                    ballance?.additionalAccounts
+                        .map((e) => e.userId.toInt())
+                        .toList() ??
+                    [],
+              ),
+            )
+            as List<int>?;
     if (selectedUserIds == null) return;
     for (final selectedUserId in selectedUserIds) {
       final res = await apiService.addAdditionalUser(Int64(selectedUserId));
@@ -110,7 +113,8 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: FilledButton(
+                child: MyButton(
+                  variant: MyButtonVariant.primaryMiddle,
                   onPressed: addAdditionalUser,
                   child: Text(
                     context.lang.additionalUserAddButton(

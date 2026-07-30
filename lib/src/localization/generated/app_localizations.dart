@@ -3434,6 +3434,12 @@ abstract class AppLocalizations {
   /// **'Zero ads. Total privacy.'**
   String get subscriptionPledgeSubtitle;
 
+  /// No description provided for @subscriptionManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get subscriptionManage;
+
   /// No description provided for @dragToZoom.
   ///
   /// In en, this message translates to:
