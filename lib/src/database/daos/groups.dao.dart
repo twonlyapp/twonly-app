@@ -340,6 +340,24 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .write(GroupsCompanion(lastMessageExchange: Value(clampedLastMessage)));
   }
 
+  Future<void> increaseMemberLastMessage(
+    String groupId,
+    int contactId,
+    DateTime newLastMessage,
+  ) async {
+    final now = clock.now();
+    final clampedLastMessage =
+        newLastMessage.isAfter(now) ? now : newLastMessage;
+    await (update(groupMembers)..where(
+          (t) =>
+              t.groupId.equals(groupId) &
+              t.contactId.equals(contactId) &
+              (t.lastMessage.isNull() |
+                  t.lastMessage.isSmallerThanValue(clampedLastMessage)),
+        ))
+        .write(GroupMembersCompanion(lastMessage: Value(clampedLastMessage)));
+  }
+
   Stream<List<Group>> watchNonDirectGroupsForMember(int contactId) {
     final query =
         select(groups).join([

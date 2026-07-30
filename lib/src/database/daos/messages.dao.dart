@@ -489,22 +489,28 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
       await into(messages).insertOnConflictUpdate(insertMessage);
 
+      final msgTime = insertMessage.createdAt.present
+          ? insertMessage.createdAt.value
+          : clock.now();
+
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
-        GroupsCompanion(
-          lastMessageExchange: Value(clock.now()),
-          archived: const Value(false),
-          deletedContent: const Value(false),
+        const GroupsCompanion(
+          archived: Value(false),
+          deletedContent: Value(false),
         ),
       );
 
-      if (message.senderId.present) {
-        await twonlyDB.groupsDao.updateMember(
+      await twonlyDB.groupsDao.increaseLastMessageExchange(
+        message.groupId.value,
+        msgTime,
+      );
+
+      if (message.senderId.present && message.senderId.value != null) {
+        await twonlyDB.groupsDao.increaseMemberLastMessage(
           message.groupId.value,
           message.senderId.value!,
-          GroupMembersCompanion(
-            lastMessage: Value(clock.now()),
-          ),
+          msgTime,
         );
       }
 
