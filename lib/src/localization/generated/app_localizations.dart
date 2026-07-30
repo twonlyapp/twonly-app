@@ -1541,7 +1541,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupArchiveHeader.
   ///
   /// In en, this message translates to:
-  /// **'Contacts, Settings and Messages'**
+  /// **'Contacts & Messages'**
   String get backupArchiveHeader;
 
   /// No description provided for @backupLastBackupDate.
@@ -1595,7 +1595,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupSelectStrongPassword.
   ///
   /// In en, this message translates to:
-  /// **'Choose a secure password. This is required if you want to restore your twonly Backup.'**
+  /// **'Choose a secure password. This is required if you want to restore your backup.'**
   String get backupSelectStrongPassword;
 
   /// No description provided for @password.
@@ -1651,6 +1651,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can only change your password after you have authenticated!'**
   String get backupChangePasswordAuthFailed;
+
+  /// No description provided for @backupFreeSpaceWithCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Space with Cloud Backup'**
+  String get backupFreeSpaceWithCloud;
+
+  /// No description provided for @backupMemoriesNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enabled'**
+  String get backupMemoriesNotEnabled;
+
+  /// No description provided for @backupMemoriesUpgradeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade required'**
+  String get backupMemoriesUpgradeRequired;
+
+  /// No description provided for @todayAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Today at {time}'**
+  String todayAt(Object time);
+
+  /// No description provided for @yesterdayAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday at {time}'**
+  String yesterdayAt(Object time);
 
   /// No description provided for @twonlySafeRecoverTitle.
   ///
@@ -3671,7 +3701,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecovery.
   ///
   /// In en, this message translates to:
-  /// **'Passwordless Recovery'**
+  /// **'Password Recovery'**
   String get passwordlessRecovery;
 
   /// No description provided for @passwordlessRecoveryNotConfigured.
@@ -4193,7 +4223,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageContents.
   ///
   /// In en, this message translates to:
-  /// **'Storage contents'**
+  /// **'Free up space'**
   String get settingsStorageContents;
 
   /// No description provided for @settingsStorageSortStorage.

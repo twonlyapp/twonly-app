@@ -1,13 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
+    as server;
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
 
@@ -21,6 +31,7 @@ class BackupView extends StatefulWidget {
 class _BackupViewState extends State<BackupView> {
   bool _isLoading = false;
   CurrentBackupStatus? _backupStatus;
+  server.Response_MemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
 
   @override
@@ -41,51 +52,29 @@ class _BackupViewState extends State<BackupView> {
   Future<void> _loadBackupStatus() async {
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
+    final memoriesUsage = await apiService.getMemoriesUsage();
     if (!mounted) return;
     setState(() {
       _backupStatus = status;
+      _memoriesUsage = memoriesUsage;
       _isLoading = false;
     });
   }
 
-  String _getBackupStatusString(LastBackupUploadState status) {
-    switch (status) {
-      case LastBackupUploadState.none:
-        return context.lang.backupPending;
-      case LastBackupUploadState.pending:
-        return context.lang.backupPending;
-      case LastBackupUploadState.failed:
-        return context.lang.backupFailed;
-      case LastBackupUploadState.success:
-        return context.lang.backupSuccess;
+  String _buildTileSubtitle(DateTime? date, int? size) {
+    if (date == null) return '-';
+    final dateStr = formatRelativeDateTime(context, date);
+    if (size != null && size > 0) {
+      return '$dateStr • ${formatBytes(size)}';
     }
-  }
-
-  List<TableRow> _buildTableRows(List<(String, String)> rows) {
-    return rows.map((pair) {
-      return TableRow(
-        children: [
-          TableCell(
-            child: Text(pair.$1),
-          ),
-          TableCell(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 4,
-              ),
-              child: Text(
-                pair.$2,
-                textAlign: TextAlign.right,
-              ),
-            ),
-          ),
-        ],
-      );
-    }).toList();
+    return dateStr;
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentPlan = context.watch<PurchasesProvider>().plan;
+    final isFreePlan = currentPlan == SubscriptionPlan.Free;
+
     return StreamBuilder<void>(
       stream: userService.onUserUpdated,
       builder: (context, _) {
@@ -94,109 +83,105 @@ class _BackupViewState extends State<BackupView> {
             title: Text(context.lang.settingsBackup),
           ),
           body: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: ListView(
               children: [
-                const SizedBox(height: 8),
-                Text(
-                  context.lang.backupTwonlySafeDesc,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-
                 if (userService.currentUser.passwordLessRecovery != null)
-                  const PasswordLessRecoveryStatus(),
-
-                if (userService.currentUser.isBackupEnabled)
-                  Column(
-                    children: [
-                      const SizedBox(height: 32),
-                      Center(
-                        child: Text(
-                          context.lang.backupIdentityHeader,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: PasswordLessRecoveryStatus(),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Center(
+                      child: MyButton(
+                        variant: MyButtonVariant.primaryMiddle,
+                        onPressed: () =>
+                            context.navPush(const PasswordLessRecoverySetup()),
+                        child: Text(context.lang.passwordlessRecoveryEnableBtn),
                       ),
-                      const SizedBox(height: 8),
-                      Table(
-                        defaultVerticalAlignment:
-                            TableCellVerticalAlignment.middle,
-                        children: _buildTableRows([
-                          (
-                            context.lang.backupLastBackupDate,
-                            _backupStatus?.identityLastSuccessFull != null
-                                ? formatDateTime(
-                                    context,
-                                    _backupStatus!.identityLastSuccessFull,
-                                  )
-                                : '-',
-                          ),
-                          (
-                            context.lang.backupLastBackupSize,
-                            _backupStatus?.identitySize != null
-                                ? formatBytes(_backupStatus!.identitySize!)
-                                : '-',
-                          ),
-                          (
-                            context.lang.backupLastBackupResult,
-                            _getBackupStatusString(
-                              _backupStatus?.identityState ??
-                                  LastBackupUploadState.none,
-                            ),
-                          ),
-                        ]),
-                      ),
-                      const SizedBox(height: 24),
-                      Center(
-                        child: Text(
-                          context.lang.backupArchiveHeader,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Table(
-                        defaultVerticalAlignment:
-                            TableCellVerticalAlignment.middle,
-                        children: _buildTableRows([
-                          (
-                            context.lang.backupLastBackupDate,
-                            _backupStatus?.archiveLastSuccessFull != null
-                                ? formatDateTime(
-                                    context,
-                                    _backupStatus!.archiveLastSuccessFull,
-                                  )
-                                : '-',
-                          ),
-                          (
-                            context.lang.backupLastBackupSize,
-                            _backupStatus?.archiveSize != null
-                                ? formatBytes(_backupStatus!.archiveSize!)
-                                : '-',
-                          ),
-                          (
-                            context.lang.backupLastBackupResult,
-                            _getBackupStatusString(
-                              _backupStatus?.archiveState ??
-                                  LastBackupUploadState.none,
-                            ),
-                          ),
-                        ]),
-                      ),
-                    ],
-                  ),
-
-                if (userService.currentUser.passwordLessRecovery == null) ...[
-                  const SizedBox(height: 20),
-                  Center(
-                    child: MyButton(
-                      variant: MyButtonVariant.primaryMiddle,
-                      onPressed: () =>
-                          context.navPush(const PasswordLessRecoverySetup()),
-                      child: Text(context.lang.passwordlessRecoveryEnableBtn),
                     ),
                   ),
-                ],
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    context.lang.backupTwonlySafeDesc,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+
+                if (userService.currentUser.isBackupEnabled) ...[
+                  // 1. Identity tile
+                  BetterListTile(
+                    icon: FontAwesomeIcons.userCheck,
+                    text: context.lang.backupIdentityHeader,
+                    subtitle: Text(
+                      _buildTileSubtitle(
+                        _backupStatus?.identityLastSuccessFull,
+                        _backupStatus?.identitySize,
+                      ),
+                    ),
+                  ),
+
+                  // 2. Contacts & Messages tile
+                  BetterListTile(
+                    icon: FontAwesomeIcons.comments,
+                    text: context.lang.backupArchiveHeader,
+                    subtitle: Text(
+                      _buildTileSubtitle(
+                        _backupStatus?.archiveLastSuccessFull,
+                        _backupStatus?.archiveSize,
+                      ),
+                    ),
+                  ),
+
+                  // 3. Memories tile
+                  BetterListTile(
+                    icon: FontAwesomeIcons.photoFilm,
+                    text: context.lang.memoriesBackupTitle,
+                    subtitle: Text(
+                      isFreePlan
+                          ? context.lang.backupMemoriesUpgradeRequired
+                          : (!userService.currentUser.isCloudBackupEnabled
+                                ? context.lang.backupMemoriesNotEnabled
+                                : (_memoriesUsage != null
+                                      ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                                      : '-')),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: context.color.onSurfaceVariant,
+                    ),
+                    onTap: () async {
+                      if (isFreePlan) {
+                        await context.push(Routes.settingsSubscription);
+                      } else if (!userService
+                          .currentUser
+                          .isCloudBackupEnabled) {
+                        await UserService.update(
+                          (u) => u.isCloudBackupEnabled = true,
+                        );
+                        if (mounted) setState(() {});
+                        unawaited(memoriesCloudService.checkUploads());
+                      } else {
+                        await context.navPush(const MemoriesBackupDetailView());
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 20),
+                ],
+
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -212,9 +197,7 @@ class _BackupViewState extends State<BackupView> {
                                     _isLoading = true;
                                   });
                                   await BackupService.makeBackup(force: true);
-                                  setState(() {
-                                    _isLoading = false;
-                                  });
+                                  await _loadBackupStatus();
                                 },
                           child: Text(context.lang.backupTwonlySaveNow),
                         ),

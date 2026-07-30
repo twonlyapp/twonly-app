@@ -82,7 +82,7 @@ class _SetupBackupViewState extends State<SetupBackupView> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('twonly Backup'),
+          title: Text(context.lang.settingsBackup),
           actions: [
             IconButton(
               onPressed: () => showBackupExplanation(context),
@@ -125,12 +125,6 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                 showError:
                     _passwordController.text != _repeatedController.text &&
                     _repeatedController.text.isNotEmpty,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                context.lang.backupNoPasswordRecovery,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 10),
               Center(

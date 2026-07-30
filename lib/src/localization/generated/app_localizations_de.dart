@@ -817,7 +817,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupIdentityHeader => 'Identität';
 
   @override
-  String get backupArchiveHeader => 'Kontakte, Einstellungen und Nachrichten';
+  String get backupArchiveHeader => 'Kontakte & Nachrichten';
 
   @override
   String get backupLastBackupDate => 'Letztes Backup';
@@ -847,7 +847,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Backup wiederherstellen möchtest.';
+      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein Backup wiederherstellen möchtest.';
 
   @override
   String get password => 'Passwort';
@@ -877,6 +877,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backupChangePasswordAuthFailed =>
       'Du kannst dein Passwort nur ändern, wenn du dich authentifiziert hast!';
+
+  @override
+  String get backupFreeSpaceWithCloud =>
+      'Speicherplatz mit Cloud-Backup freigeben';
+
+  @override
+  String get backupMemoriesNotEnabled => 'Nicht aktiviert';
+
+  @override
+  String get backupMemoriesUpgradeRequired => 'Upgrade erforderlich';
+
+  @override
+  String todayAt(Object time) {
+    return 'Heute um $time';
+  }
+
+  @override
+  String yesterdayAt(Object time) {
+    return 'Gestern um $time';
+  }
 
   @override
   String get twonlySafeRecoverTitle => 'Backup wiederherstellen';
@@ -2118,7 +2138,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get avatarCustomizeReset => 'Zurücksetzen';
 
   @override
-  String get passwordlessRecovery => 'Passwortloses Backup';
+  String get passwordlessRecovery => 'Passwort vergessen';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Nicht konfiguriert';
@@ -2184,7 +2204,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryEnableSuccess =>
-      'Passwortloses Backup erfolgreich aktiviert!';
+      '\"Passwort vergessen\" erfolgreich aktiviert!';
 
   @override
   String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
@@ -2194,13 +2214,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bitte gib eine E-Mail-Adresse ein.';
 
   @override
-  String get passwordlessRecoveryEnableBtn => 'Passwortloses Backup aktivieren';
+  String get passwordlessRecoveryEnableBtn =>
+      '\"Passwort vergessen\" aktivieren';
 
   @override
-  String get passwordlessRecoveryRecoverBtn => 'Passwortlos wiederherstellen';
+  String get passwordlessRecoveryRecoverBtn =>
+      'Mit \"Passwort vergessen\" wiederherstellen';
 
   @override
-  String get passwordlessRecoveryModifyBtn => 'Passwortloses Backup bearbeiten';
+  String get passwordlessRecoveryModifyBtn =>
+      '\"Passwort vergessen\" bearbeiten';
 
   @override
   String passwordlessRecoveryStatusEnabled(num count) {
@@ -2426,7 +2449,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpNews => 'Neuigkeiten';
 
   @override
-  String get settingsStorageContents => 'Speicherinhalte';
+  String get settingsStorageContents => 'Speicherplatz freigeben';
 
   @override
   String get settingsStorageSortStorage => 'Belegter Speicher';

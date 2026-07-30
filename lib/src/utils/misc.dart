@@ -264,6 +264,28 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
   }
 }
 
+String formatRelativeDateTime(BuildContext context, DateTime? dateTime) {
+  if (dateTime == null) {
+    return '-';
+  }
+  final now = clock.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(const Duration(days: 1));
+  final dateDay = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+  final time = DateFormat.Hm(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(dateTime);
+
+  if (dateDay == today) {
+    return context.lang.todayAt(time);
+  } else if (dateDay == yesterday) {
+    return context.lang.yesterdayAt(time);
+  } else {
+    return formatDateTime(context, dateTime);
+  }
+}
+
 String formatBytes(int bytes) {
   if (bytes <= 0) return '0 Bytes';
   const units = <String>['Bytes', 'KB', 'MB', 'GB', 'TB'];

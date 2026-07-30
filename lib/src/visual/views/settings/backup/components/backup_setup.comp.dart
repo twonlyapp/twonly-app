@@ -128,7 +128,7 @@ void showBackupExplanation(BuildContext context) {
               ),
               const SizedBox(height: 24),
               Text(
-                'twonly Backup',
+                context.lang.settingsBackup,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,

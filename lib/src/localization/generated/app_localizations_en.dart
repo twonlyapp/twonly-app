@@ -812,7 +812,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupIdentityHeader => 'Identity';
 
   @override
-  String get backupArchiveHeader => 'Contacts, Settings and Messages';
+  String get backupArchiveHeader => 'Contacts & Messages';
 
   @override
   String get backupLastBackupDate => 'Last backup';
@@ -842,7 +842,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Choose a secure password. This is required if you want to restore your twonly Backup.';
+      'Choose a secure password. This is required if you want to restore your backup.';
 
   @override
   String get password => 'Password';
@@ -872,6 +872,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupChangePasswordAuthFailed =>
       'You can only change your password after you have authenticated!';
+
+  @override
+  String get backupFreeSpaceWithCloud => 'Free Space with Cloud Backup';
+
+  @override
+  String get backupMemoriesNotEnabled => 'Not enabled';
+
+  @override
+  String get backupMemoriesUpgradeRequired => 'Upgrade required';
+
+  @override
+  String todayAt(Object time) {
+    return 'Today at $time';
+  }
+
+  @override
+  String yesterdayAt(Object time) {
+    return 'Yesterday at $time';
+  }
 
   @override
   String get twonlySafeRecoverTitle => 'Restore backup';
@@ -2104,7 +2123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarCustomizeReset => 'Reset';
 
   @override
-  String get passwordlessRecovery => 'Passwordless Recovery';
+  String get passwordlessRecovery => 'Password Recovery';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Not configured';
@@ -2405,7 +2424,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpNews => 'News';
 
   @override
-  String get settingsStorageContents => 'Storage contents';
+  String get settingsStorageContents => 'Free up space';
 
   @override
   String get settingsStorageSortStorage => 'Occupied storage';
