@@ -323,10 +323,12 @@ class MediaFileService {
             name: mediaFile.mediaId,
           );
         } else {
-          await saveImageToGallery(
-            storedPath.readAsBytesSync(),
-            createdAt: mediaFile.createdAt,
-            name: mediaFile.mediaId,
+          unawaited(
+            saveImageToGallery(
+              await storedPath.readAsBytes(),
+              createdAt: mediaFile.createdAt,
+              name: mediaFile.mediaId,
+            ),
           );
         }
       }

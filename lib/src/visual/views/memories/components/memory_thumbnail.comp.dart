@@ -113,6 +113,8 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
     }
 
     if (_imageProvider != null) {
+      _imageStream?.removeListener(_listener);
+      _imageStream = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final config = createLocalImageConfiguration(context);
@@ -189,10 +191,21 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                   gaplessPlayback: true,
                   errorBuilder: (context, error, stackTrace) {
                     if (error.toString().contains('Invalid image data')) {
-                      if (_selectedImageFile != null) {
-                        _selectedImageFile?.deleteSync();
-                        _retries++;
-                        _resolveImage();
+                      final fileToDelete = _selectedImageFile;
+                      _selectedImageFile = null;
+                      if (fileToDelete != null) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          try {
+                            if (fileToDelete.existsSync()) {
+                              fileToDelete.deleteSync();
+                            }
+                          } catch (_) {}
+                          if (_retries < 3) {
+                            _retries++;
+                            _resolveImage();
+                          }
+                        });
                       }
                     }
                     Log.warn(error);
