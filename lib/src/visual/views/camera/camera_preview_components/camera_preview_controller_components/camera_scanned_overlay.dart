@@ -23,7 +23,8 @@ class CameraScannedOverlay extends StatelessWidget {
         width: 150,
         child: ListView(
           children: [
-            if (mainController.scannedUrl != null)
+            if (mainController.scannedUrl != null &&
+                mainController.scannedUrl!.isNotEmpty)
               _buildScannedUrlTile(context, mainController.scannedUrl!),
           ],
         ),

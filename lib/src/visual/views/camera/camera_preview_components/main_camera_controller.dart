@@ -81,7 +81,7 @@ class MainCameraController {
   }
 
   void onImageSend() {
-    scannedUrl = '';
+    scannedUrl = null;
     setState?.call();
   }
 
@@ -210,7 +210,9 @@ class MainCameraController {
           await _initializeFuture;
         } on CameraException catch (e) {
           // If specific image format is unsupported on this hardware, fallback to default format
-          Log.warn('Initial camera format initialization failed ($e), trying fallback format...');
+          Log.warn(
+            'Initial camera format initialization failed ($e), trying fallback format...',
+          );
           await controller.dispose();
           controller = CameraController(
             AppEnvironment.cameras[cameraId],

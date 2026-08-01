@@ -161,6 +161,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     initAsync();
 
     void handleShareLink(Uri uri) {
+      HomeViewState.pendingSharedLink = uri;
       routerProvider.go(Routes.home);
       HomeViewState.streamHomeViewPageIndex.add(1);
       HomeViewState.streamSharedLink.add(uri);
