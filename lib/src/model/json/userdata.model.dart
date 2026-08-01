@@ -57,6 +57,12 @@ class UserData {
   @JsonKey(defaultValue: ThemeMode.system)
   ThemeMode themeMode = ThemeMode.system;
 
+  int? primaryColorValue;
+
+  Color get primaryColor => primaryColorValue != null
+      ? Color(primaryColorValue!)
+      : const Color(0xFF57CC99);
+
   int? defaultShowTime;
 
   @JsonKey(defaultValue: false)

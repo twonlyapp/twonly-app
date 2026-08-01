@@ -9,7 +9,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/svg_icon.element.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 const colorVerificationBadgeYellow = Color.fromARGB(255, 0, 182, 238);
 
@@ -90,7 +89,7 @@ class VerificationBadgeInfo extends StatelessWidget {
           context,
           icon: const SvgIcon(assetPath: SvgIcons.verifiedGreen, size: 40),
           description: context.lang.verificationBadgeGreenDesc,
-          boldTextColor: primaryColor,
+          boldTextColor: context.color.primary,
           onTap: () => context.push(
             Routes.cameraQRScanner,
             extra: {

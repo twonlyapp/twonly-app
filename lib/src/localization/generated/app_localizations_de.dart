@@ -2553,4 +2553,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get brightness => 'Helligkeit';
+
+  @override
+  String get settingsAppearancePrimaryColor => 'Hauptfarbe';
+
+  @override
+  String get themeSystemDefault => 'Systemstandard';
+
+  @override
+  String get themeLight => 'Hell';
+
+  @override
+  String get themeDark => 'Dunkel';
 }

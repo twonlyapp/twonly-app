@@ -86,7 +86,7 @@ class VerificationSuccessAnimationState
       '<svg viewBox="0 0 640 640"><path d="$_path2" fill="white"/></svg>';
 
   static const _grey = Color(0xFF8E9AAF);
-  static const Color _green = primaryColor;
+  static const Color _green = defaultPrimaryColor;
 
   @override
   void initState() {

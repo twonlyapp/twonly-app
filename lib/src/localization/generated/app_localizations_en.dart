@@ -2526,4 +2526,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get brightness => 'Brightness';
+
+  @override
+  String get settingsAppearancePrimaryColor => 'Primary Color';
+
+  @override
+  String get themeSystemDefault => 'System default';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
 }

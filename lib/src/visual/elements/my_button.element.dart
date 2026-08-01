@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/reactive_tap_feedback.element.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 enum MyButtonVariant {
   primary,
@@ -49,7 +48,7 @@ class _MyButtonState extends State<MyButton> {
     switch (widget.variant) {
       case MyButtonVariant.primary:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: context.color.primary,
           foregroundColor: Colors.black87,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
@@ -96,7 +95,7 @@ class _MyButtonState extends State<MyButton> {
         );
       case MyButtonVariant.primaryMiddle:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: context.color.primary,
           foregroundColor: Colors.black87,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,
@@ -115,7 +114,7 @@ class _MyButtonState extends State<MyButton> {
         );
       case MyButtonVariant.primaryDense:
         buttonStyle = FilledButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: context.color.primary,
           foregroundColor: Colors.black87,
           disabledBackgroundColor: disabledBgColor,
           disabledForegroundColor: disabledFgColor,

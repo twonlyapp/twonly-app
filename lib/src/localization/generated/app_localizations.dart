@@ -4405,6 +4405,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Brightness'**
   String get brightness;
+
+  /// No description provided for @settingsAppearancePrimaryColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Color'**
+  String get settingsAppearancePrimaryColor;
+
+  /// No description provided for @themeSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get themeSystemDefault;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
 }
 
 class _AppLocalizationsDelegate

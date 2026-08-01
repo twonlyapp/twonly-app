@@ -5,7 +5,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class NewsIconButtonComp extends StatelessWidget {
   const NewsIconButtonComp({super.key});
@@ -23,7 +22,7 @@ class NewsIconButtonComp extends StatelessWidget {
           builder: (context, count, child) {
             return NotificationBadgeComp(
               count: count.toString(),
-              backgroundColor: primaryColor,
+              backgroundColor: context.color.primary,
               textColor: Colors.black87,
               child: IconButton(
                 onPressed: () => context.push(Routes.settingsHelpNews),

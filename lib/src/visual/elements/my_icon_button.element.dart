@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/reactive_tap_feedback.element.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 enum MyIconButtonVariant {
   primary,
@@ -43,7 +42,7 @@ class _MyIconButtonState extends State<MyIconButton> {
     late final Color fgColor;
 
     if (widget.variant == MyIconButtonVariant.primary) {
-      bgColor = primaryColor;
+      bgColor = context.color.primary;
       fgColor = Colors.black87;
     } else {
       bgColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;

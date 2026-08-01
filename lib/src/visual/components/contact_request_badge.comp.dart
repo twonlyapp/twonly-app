@@ -5,7 +5,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class ContactRequestBadgeComp extends StatelessWidget {
   const ContactRequestBadgeComp({super.key});
@@ -26,8 +25,8 @@ class ContactRequestBadgeComp extends StatelessWidget {
                 child: Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    color: primaryColor,
+                  decoration: BoxDecoration(
+                    color: context.color.primary,
                     shape: BoxShape.circle,
                   ),
                 ),

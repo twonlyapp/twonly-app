@@ -15,7 +15,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/connection_status.comp.dart';
 import 'package:twonly/src/visual/components/notification_badge.comp.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
@@ -196,8 +195,8 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: const BoxDecoration(
-                            color: primaryColor,
+                          decoration: BoxDecoration(
+                            color: context.color.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -329,7 +328,7 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
                 FloatingActionButton(
                   heroTag: 'new_chat_fab',
                   elevation: 2,
-                  backgroundColor: primaryColor,
+                  backgroundColor: context.color.primary,
                   foregroundColor: Colors.black87,
                   onPressed: () => context.push(Routes.chatsStartNewChat),
                   child: const FaIcon(

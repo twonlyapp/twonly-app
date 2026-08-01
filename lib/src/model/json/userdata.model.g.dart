@@ -33,6 +33,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..themeMode =
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
           ThemeMode.system
+      ..primaryColorValue = (json['primaryColorValue'] as num?)?.toInt()
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
@@ -137,6 +138,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'lastPlanBallance': instance.lastPlanBallance,
   'additionalUserInvites': instance.additionalUserInvites,
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+  'primaryColorValue': instance.primaryColorValue,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
   'enableDatabaseLogging': instance.enableDatabaseLogging,
