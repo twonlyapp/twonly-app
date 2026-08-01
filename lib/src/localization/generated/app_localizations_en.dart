@@ -2376,7 +2376,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Recovery Contacts';
+  String get missingRecoveryContactsCardTitle => 'Account Recovery';
 
   @override
   String get missingRecoveryContactsCardDesc =>

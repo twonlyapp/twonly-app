@@ -2401,7 +2401,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Vertrauenswürdige Kontakte';
+  String get missingRecoveryContactsCardTitle => 'Kontowiederherstellung';
 
   @override
   String get missingRecoveryContactsCardDesc =>

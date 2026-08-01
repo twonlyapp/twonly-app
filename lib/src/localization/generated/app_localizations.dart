@@ -4133,7 +4133,7 @@ abstract class AppLocalizations {
   /// No description provided for @missingRecoveryContactsCardTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recovery Contacts'**
+  /// **'Account Recovery'**
   String get missingRecoveryContactsCardTitle;
 
   /// No description provided for @missingRecoveryContactsCardDesc.
