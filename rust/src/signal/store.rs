@@ -57,21 +57,18 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         identity: &IdentityKey,
     ) -> Result<IdentityChange, SignalProtocolError> {
         let name = address.name();
-        let device_id: u32 = address.device_id().into();
         let identity_bytes = identity.serialize();
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?
             .as_millis() as i64;
 
-        let existing: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT identity_key FROM signal_identities WHERE name = ? AND device_id = ?",
-        )
-        .bind(name)
-        .bind(device_id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let existing: Option<(Vec<u8>,)> =
+            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
+                .bind(name)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
         let changed = if let Some(row) = existing {
             row.0 != identity_bytes.as_ref()
@@ -79,9 +76,8 @@ impl IdentityKeyStore for DbIdentityKeyStore {
             false
         };
 
-        sqlx::query("INSERT INTO signal_identities (name, device_id, identity_key, timestamp) VALUES (?, ?, ?, ?) ON CONFLICT(name, device_id) DO UPDATE SET identity_key = excluded.identity_key, timestamp = excluded.timestamp")
+        sqlx::query("INSERT INTO signal_identities (name, identity_key, timestamp) VALUES (?, ?, ?) ON CONFLICT(name) DO UPDATE SET identity_key = excluded.identity_key, timestamp = excluded.timestamp")
             .bind(name)
-            .bind(device_id)
             .bind(identity_bytes.as_ref())
             .bind(timestamp)
             .execute(&self.pool)
@@ -98,17 +94,14 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         _direction: Direction,
     ) -> Result<bool, SignalProtocolError> {
         let name = address.name();
-        let device_id: u32 = address.device_id().into();
         let identity_bytes = identity.serialize();
 
-        let row: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT identity_key FROM signal_identities WHERE name = ? AND device_id = ?",
-        )
-        .bind(name)
-        .bind(device_id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let row: Option<(Vec<u8>,)> =
+            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
+                .bind(name)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
         if let Some((stored_key,)) = row {
             Ok(stored_key == identity_bytes.as_ref())
@@ -122,16 +115,13 @@ impl IdentityKeyStore for DbIdentityKeyStore {
         address: &ProtocolAddress,
     ) -> Result<Option<IdentityKey>, SignalProtocolError> {
         let name = address.name();
-        let device_id: u32 = address.device_id().into();
 
-        let row: Option<(Vec<u8>,)> = sqlx::query_as(
-            "SELECT identity_key FROM signal_identities WHERE name = ? AND device_id = ?",
-        )
-        .bind(name)
-        .bind(device_id)
-        .fetch_optional(&self.pool)
-        .await
-        .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
+        let row: Option<(Vec<u8>,)> =
+            sqlx::query_as("SELECT identity_key FROM signal_identities WHERE name = ?")
+                .bind(name)
+                .fetch_optional(&self.pool)
+                .await
+                .map_err(|_| SignalProtocolError::UntrustedIdentity(address.clone()))?;
 
         if let Some((bytes,)) = row {
             let key = IdentityKey::decode(&bytes)

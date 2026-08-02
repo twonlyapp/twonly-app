@@ -21,7 +21,7 @@ sqlx = { version = "0.9.0-alpha.1", default-features = false, features = [
 libsqlite3-sys = { version = "0.35.0", features = [
     "bundled-sqlcipher-vendored-openssl",
 ] }
-tokio = { version = "1.44", features = ["full"] }
+tokio = { version = "1.44", features = ["full", "macros"] }
 tracing = "0.1.44"
 prost = "0.14.1"
 blahaj = "0.6.0"
@@ -43,7 +43,7 @@ chrono = { version = "0.4", features = ["serde"] }
 zip = { version = "2.2.2", default-features = false, features = ["deflate"] }
 scrypt = { version = "0.12", default-features = false }
 walkdir = "2.5.0"
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0", rev = "44a6dd8fc9f9d6903b32842b80b3894a75678418" }
 rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
 async-trait = "0.1.91"

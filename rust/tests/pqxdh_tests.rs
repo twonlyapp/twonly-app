@@ -17,13 +17,21 @@ async fn test_twonly_api_100_messages() -> Result<(), Box<dyn std::error::Error>
     let bob_identity_bytes = RustSignalEngine::generate_identity_key_pair()?;
 
     // 3. Initialize engines with the DB pools
-    let alice_engine =
-        RustSignalEngine::new_with_pool(alice_db.pool.clone(), alice_identity_bytes, 1234)?;
-    let bob_engine =
-        RustSignalEngine::new_with_pool(bob_db.pool.clone(), bob_identity_bytes, 5678)?;
+    let alice_engine = RustSignalEngine::new_with_pool(
+        alice_db.pool.clone(),
+        alice_identity_bytes,
+        1234,
+        "alice".to_string(),
+    )?;
+    let bob_engine = RustSignalEngine::new_with_pool(
+        bob_db.pool.clone(),
+        bob_identity_bytes,
+        5678,
+        "bob".to_string(),
+    )?;
 
     // 4. Bob generates a bundle
-    let bob_bundle = bob_engine.generate_bundle(1, 1).await?;
+    let bob_bundle = bob_engine.generate_bundle(1, 1, 1).await?;
 
     // 5. Alice processes Bob's bundle
     alice_engine

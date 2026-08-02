@@ -13,6 +13,7 @@ use crate::signal::store::DbSignalProtocolStore;
 
 pub struct RustSignalEngine {
     store: Arc<Mutex<DbSignalProtocolStore>>,
+    local_name: String,
 }
 
 pub struct FrbPreKeyBundle {
@@ -30,7 +31,7 @@ pub struct FrbPreKeyBundle {
 }
 
 impl RustSignalEngine {
-    pub async fn new() -> Result<Self> {
+    pub async fn new(local_name: String) -> Result<Self> {
         let twonly = crate::bridge::get_twonly_flutter()?;
         let pool = twonly.rust_db.pool.clone();
 
@@ -52,6 +53,7 @@ impl RustSignalEngine {
 
         Ok(Self {
             store: Arc::new(Mutex::new(store)),
+            local_name,
         })
     }
 
@@ -59,6 +61,7 @@ impl RustSignalEngine {
         pool: sqlx::SqlitePool,
         identity_key_pair_bytes: Vec<u8>,
         local_registration_id: u32,
+        local_name: String,
     ) -> Result<Self> {
         let identity_key_pair = IdentityKeyPair::try_from(&identity_key_pair_bytes[..])
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
@@ -67,6 +70,7 @@ impl RustSignalEngine {
 
         Ok(Self {
             store: Arc::new(Mutex::new(store)),
+            local_name,
         })
     }
 
@@ -80,6 +84,7 @@ impl RustSignalEngine {
         &self,
         pre_key_id: u32,
         signed_pre_key_id: u32,
+        kyber_pre_key_id: u32,
     ) -> Result<FrbPreKeyBundle> {
         let mut store_guard = self.store.lock().await;
         let store = &mut *store_guard;
@@ -110,7 +115,7 @@ impl RustSignalEngine {
         let timestamp = Timestamp::from_epoch_millis(
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .map_err(|e| TwonlyError::Signal(e.to_string()))?
                 .as_millis() as u64,
         );
         store
@@ -127,7 +132,6 @@ impl RustSignalEngine {
             .await
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
 
-        let kyber_pre_key_id = 1;
         let kyber_key_pair = libsignal_protocol::kem::KeyPair::generate(
             libsignal_protocol::kem::KeyType::Kyber1024,
             &mut csprng,
@@ -143,7 +147,9 @@ impl RustSignalEngine {
                 &mut csprng,
             )
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
-        let kyber_sig_arr: [u8; 64] = kyber_signature[..].try_into().unwrap();
+        let kyber_sig_arr: [u8; 64] = kyber_signature[..]
+            .try_into()
+            .map_err(|e: std::array::TryFromSliceError| TwonlyError::Signal(e.to_string()))?;
         store
             .kyber_pre_key_store
             .save_kyber_pre_key(
@@ -196,8 +202,11 @@ impl RustSignalEngine {
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
         let remote_address = ProtocolAddress::new(name, d_id);
-        let local_address =
-            ProtocolAddress::new("local".to_string(), DeviceId::try_from(1).unwrap());
+        let local_address = ProtocolAddress::new(
+            self.local_name.clone(),
+            DeviceId::try_from(1)
+                .map_err(|_| TwonlyError::Generic("Invalid device id 1".to_string()))?,
+        );
 
         let identity_key = IdentityKey::decode(&bundle.identity_key)
             .map_err(|e| TwonlyError::Signal(e.to_string()))?;
@@ -221,7 +230,9 @@ impl RustSignalEngine {
 
         let pre_key_bundle = PreKeyBundle::new(
             bundle.registration_id,
-            DeviceId::try_from(bundle.device_id).unwrap_or(DeviceId::try_from(1).unwrap()),
+            DeviceId::try_from(bundle.device_id).map_err(|_| {
+                TwonlyError::Generic(format!("Invalid device id: {}", bundle.device_id))
+            })?,
             pre_key,
             SignedPreKeyId::from(bundle.signed_pre_key_id),
             signed_pre_key_public,
@@ -261,8 +272,11 @@ impl RustSignalEngine {
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
         let remote_address = ProtocolAddress::new(name, d_id);
-        let local_address =
-            ProtocolAddress::new("local".to_string(), DeviceId::try_from(1).unwrap());
+        let local_address = ProtocolAddress::new(
+            self.local_name.clone(),
+            DeviceId::try_from(1)
+                .map_err(|_| TwonlyError::Generic("Invalid device id 1".to_string()))?,
+        );
 
         let mut csprng = rand::rng();
         let now = SystemTime::now();
@@ -295,8 +309,11 @@ impl RustSignalEngine {
         let d_id = DeviceId::try_from(device_id)
             .map_err(|_| TwonlyError::Generic(format!("Invalid device id: {}", device_id)))?;
         let remote_address = ProtocolAddress::new(name, d_id);
-        let local_address =
-            ProtocolAddress::new("local".to_string(), DeviceId::try_from(1).unwrap());
+        let local_address = ProtocolAddress::new(
+            self.local_name.clone(),
+            DeviceId::try_from(1)
+                .map_err(|_| TwonlyError::Generic("Invalid device id 1".to_string()))?,
+        );
 
         let plaintext = if is_prekey_message {
             let message = PreKeySignalMessage::try_from(&ciphertext_bytes[..])

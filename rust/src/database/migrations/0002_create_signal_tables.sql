@@ -1,10 +1,9 @@
 -- Signal Identities (Stores remote IdentityKeys)
 CREATE TABLE IF NOT EXISTS signal_identities (
     name TEXT NOT NULL,
-    device_id INTEGER NOT NULL,
     identity_key BLOB NOT NULL,
     timestamp INTEGER NOT NULL,
-    PRIMARY KEY (name, device_id)
+    PRIMARY KEY (name)
 );
 
 -- Signal PreKeys (Stores local one-time prekeys)
