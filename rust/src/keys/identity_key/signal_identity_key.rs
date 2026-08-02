@@ -5,10 +5,10 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub(crate) struct SignalIdentityKey {
-    // https://github.com/MixinNetwork/libsignal_protocol_dart/blob/c95a1586057022acdbb9c76b1692d94cc549bcc7/protobuf/LocalStorageProtocol.proto#L85
     pub(crate) identity_key_pair_structure: Vec<u8>,
     pub(crate) registration_id: i64,
     pub(crate) pre_key_store: HashMap<i64, Vec<u8>>,
+    pub(crate) pqc_identity_key: Option<Vec<u8>>,
 }
 
 impl SignalIdentityKey {}
@@ -21,6 +21,9 @@ impl Zeroize for SignalIdentityKey {
             value.zeroize();
         }
         self.pre_key_store.clear();
+        if let Some(pqc) = &mut self.pqc_identity_key {
+            pqc.zeroize();
+        }
     }
 }
 

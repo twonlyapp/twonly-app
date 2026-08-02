@@ -67,6 +67,9 @@ pub enum TwonlyError {
     InvalidOutputLen(#[from] InvalidOutputLen),
     #[error("AES-GCM error")]
     AesGcm,
+
+    #[error("Signal protocol error: {0}")]
+    Signal(String),
 }
 
 impl From<String> for TwonlyError {

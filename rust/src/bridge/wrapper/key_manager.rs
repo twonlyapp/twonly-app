@@ -36,6 +36,7 @@ impl RustKeyManager {
             identity_key_pair_structure,
             registration_id,
             pre_key_store: signed_pre_key_store,
+            pqc_identity_key: None,
         });
         key_manager.store_to_keychain(&ctx.secure_storage)?;
         Ok(())
@@ -132,13 +133,19 @@ impl RustKeyManager {
         }
         let mut key_array = [0u8; 32];
         key_array.copy_from_slice(&media_key);
-        Ok(key_manager.main_key.encrypt_cloud_media_key(&key_array, &addition))
+        Ok(key_manager
+            .main_key
+            .encrypt_cloud_media_key(&key_array, &addition))
     }
 
-    pub async fn decrypt_cloud_media_key(encrypted_media_key: Vec<u8>, addition: String) -> Result<Vec<u8>> {
+    pub async fn decrypt_cloud_media_key(
+        encrypted_media_key: Vec<u8>,
+        addition: String,
+    ) -> Result<Vec<u8>> {
         let key_manager = get_twonly_flutter()?.key_manager.lock().await;
-        let decrypted = key_manager.main_key.decrypt_cloud_media_key(&encrypted_media_key, &addition)?;
+        let decrypted = key_manager
+            .main_key
+            .decrypt_cloud_media_key(&encrypted_media_key, &addition)?;
         Ok(decrypted.to_vec())
     }
 }
-
