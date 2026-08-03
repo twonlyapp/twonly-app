@@ -331,11 +331,17 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                         ),
                         if (group.isDirectChat)
                           StreamBuilder<List<Contact>>(
-                            stream: twonlyDB.groupsDao.watchGroupContact(group.groupId),
+                            stream: twonlyDB.groupsDao.watchGroupContact(
+                              group.groupId,
+                            ),
                             builder: (context, snapshot) {
                               final contacts = snapshot.data ?? [];
-                              if (contacts.isEmpty) return const SizedBox.shrink();
-                              return ContactLabels(contactId: contacts.first.userId);
+                              if (contacts.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+                              return ContactLabels(
+                                contactId: contacts.first.userId,
+                              );
                             },
                           ),
                       ],
