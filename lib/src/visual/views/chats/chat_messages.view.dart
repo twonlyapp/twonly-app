@@ -235,13 +235,20 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       messages = chatItems.reversed.toList();
     });
 
-    if (wasSentByMe && itemScrollController.isAttached) {
-      unawaited(
-        itemScrollController.scrollTo(
-          index: 0,
-          duration: const Duration(milliseconds: 150),
-        ),
-      );
+    if (wasSentByMe) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !itemScrollController.isAttached) return;
+        try {
+          unawaited(
+            itemScrollController.scrollTo(
+              index: 0,
+              duration: const Duration(milliseconds: 150),
+            ),
+          );
+        } catch (_) {
+          // Ignore if the inner scroll controller is still not attached
+        }
+      });
     }
 
     final items = await MemoryItem.convertFromMessages(storedMediaFiles);
