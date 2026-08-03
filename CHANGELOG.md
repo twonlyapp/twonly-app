@@ -1,9 +1,10 @@
 # Changelog
 
+## 0.5.0
 
-## 0.4.3
-
+- New: Update to Signal's new PQC-ready key agreement PQXDH
 - New: Contact labels
+- Fix: Multiple bug fixes
 - Fix: Multiple black screens
 
 ## 0.4.0
