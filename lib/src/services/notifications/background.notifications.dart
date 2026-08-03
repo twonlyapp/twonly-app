@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -125,7 +127,9 @@ Future<void> showLocalPushNotification(
   if (targetGroupId != null) {
     try {
       final currentUri = routerProvider.routerDelegate.currentConfiguration.uri;
-      if (currentUri.path.contains(targetGroupId)) {
+      final isResumed =
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+      if (isResumed && currentUri.path.contains(targetGroupId)) {
         Log.info(
           'Suppressing local push notification because chat with group $targetGroupId is currently open.',
         );

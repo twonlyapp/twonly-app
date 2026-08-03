@@ -20,7 +20,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   if (Platform.isAndroid) {
     if (isInitialized) {
-      await handlePeriodicTask(lastExecutionInSecondsLimit: 10);
+      await handlePeriodicTask(lastExecutionInSecondsLimit: 3);
     }
   } else {
     // make sure every thing run...
