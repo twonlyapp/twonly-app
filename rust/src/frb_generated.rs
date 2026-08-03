@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1788847092;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1109927244;
 
 // Section: executor
 
@@ -710,6 +710,210 @@ let api_record = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); mo
                          let output_ok = crate::bridge::wrapper::key_manager::RustKeyManager::store_signed_prekey(api_signed_pre_key_id, api_record).await?;   Ok(output_ok)
                     })().await)
                 } })
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_decrypt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_decrypt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_name = <String>::sse_decode(&mut deserializer);
+            let api_device_id = <u32>::sse_decode(&mut deserializer);
+            let api_ciphertext = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::bridge::wrapper::signal::RustSignal::decrypt(
+                            api_name,
+                            api_device_id,
+                            api_ciphertext,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_encrypt_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_encrypt",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_name = <String>::sse_decode(&mut deserializer);
+            let api_device_id = <u32>::sse_decode(&mut deserializer);
+            let api_plaintext = <Vec<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::bridge::wrapper::signal::RustSignal::encrypt(
+                            api_name,
+                            api_device_id,
+                            api_plaintext,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_generate_bundle",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::generate_bundle().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_generate_pqc_prekeys",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::generate_pqc_prekeys()
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_signal_process_prekey_bundle",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_name = <String>::sse_decode(&mut deserializer);
+            let api_device_id = <u32>::sse_decode(&mut deserializer);
+            let api_bundle =
+                <crate::signal::engine::FrbPreKeyBundle>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::wrapper::signal::RustSignal::process_prekey_bundle(
+                                api_name,
+                                api_device_id,
+                                api_bundle,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
 }
 fn wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
@@ -1600,6 +1804,54 @@ impl SseDecode for crate::bridge::wrapper::user_discovery::FlutterUserDiscovery 
     }
 }
 
+impl SseDecode for crate::signal::engine::FrbPqcPreKey {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_eccPreKeyId = <u32>::sse_decode(deserializer);
+        let mut var_eccPreKey = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_kyberPreKeyId = <u32>::sse_decode(deserializer);
+        let mut var_kyberPreKey = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_kyberPreKeySignature = <Vec<u8>>::sse_decode(deserializer);
+        return crate::signal::engine::FrbPqcPreKey {
+            ecc_pre_key_id: var_eccPreKeyId,
+            ecc_pre_key: var_eccPreKey,
+            kyber_pre_key_id: var_kyberPreKeyId,
+            kyber_pre_key: var_kyberPreKey,
+            kyber_pre_key_signature: var_kyberPreKeySignature,
+        };
+    }
+}
+
+impl SseDecode for crate::signal::engine::FrbPreKeyBundle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_registrationId = <u32>::sse_decode(deserializer);
+        let mut var_deviceId = <u32>::sse_decode(deserializer);
+        let mut var_preKeyId = <Option<u32>>::sse_decode(deserializer);
+        let mut var_preKeyPublic = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_signedPreKeyId = <u32>::sse_decode(deserializer);
+        let mut var_signedPreKeyPublic = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_signedPreKeySignature = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_kyberPreKeyId = <u32>::sse_decode(deserializer);
+        let mut var_kyberPreKeyPublic = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_kyberPreKeySignature = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_identityKey = <Vec<u8>>::sse_decode(deserializer);
+        return crate::signal::engine::FrbPreKeyBundle {
+            registration_id: var_registrationId,
+            device_id: var_deviceId,
+            pre_key_id: var_preKeyId,
+            pre_key_public: var_preKeyPublic,
+            signed_pre_key_id: var_signedPreKeyId,
+            signed_pre_key_public: var_signedPreKeyPublic,
+            signed_pre_key_signature: var_signedPreKeySignature,
+            kyber_pre_key_id: var_kyberPreKeyId,
+            kyber_pre_key_public: var_kyberPreKeyPublic,
+            kyber_pre_key_signature: var_kyberPreKeySignature,
+            identity_key: var_identityKey,
+        };
+    }
+}
+
 impl SseDecode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1623,6 +1875,20 @@ impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap() as _
+    }
+}
+
+impl SseDecode for Vec<crate::signal::engine::FrbPqcPreKey> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::signal::engine::FrbPqcPreKey>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
     }
 }
 
@@ -1701,6 +1967,17 @@ impl SseDecode for Option<i64> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<i64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u32>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -1810,6 +2087,13 @@ impl SseDecode for crate::bridge::wrapper::key_manager::RustKeyManager {
     }
 }
 
+impl SseDecode for crate::bridge::wrapper::signal::RustSignal {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::bridge::wrapper::signal::RustSignal {};
+    }
+}
+
 impl SseDecode for crate::bridge::wrapper::RustUtils {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1912,24 +2196,29 @@ fn pde_ffi_dispatcher_primary_impl(
 29 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_serialize_impl(port, ptr, rust_vec_len, data_len),
 30 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(port, ptr, rust_vec_len, data_len),
 31 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
-32 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
-33 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(port, ptr, rust_vec_len, data_len),
-45 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(port, ptr, rust_vec_len, data_len),
-46 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(port, ptr, rust_vec_len, data_len),
-47 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(port, ptr, rust_vec_len, data_len),
-48 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(port, ptr, rust_vec_len, data_len),
-49 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crate__bridge__wrapper__signal__rust_signal_decrypt_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crate__bridge__wrapper__signal__rust_signal_encrypt_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_announced_user_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_config_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_promotion_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_contact_version_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_other_promotions_by_public_id_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_own_promotions_after_version_impl(port, ptr, rust_vec_len, data_len),
+45 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_get_share_for_contact_impl(port, ptr, rust_vec_len, data_len),
+46 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_new_user_relation_impl(port, ptr, rust_vec_len, data_len),
+47 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_push_own_promotion_and_clear_old_version_impl(port, ptr, rust_vec_len, data_len),
+48 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_contact_version_impl(port, ptr, rust_vec_len, data_len),
+49 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_set_shares_impl(port, ptr, rust_vec_len, data_len),
+50 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_store_other_promotion_impl(port, ptr, rust_vec_len, data_len),
+51 => wire__crate__bridge__callbacks__user_discovery__user_discovery_store_flutter_update_config_impl(port, ptr, rust_vec_len, data_len),
+52 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_sign_data_impl(port, ptr, rust_vec_len, data_len),
+53 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_signature_impl(port, ptr, rust_vec_len, data_len),
+54 => wire__crate__bridge__callbacks__user_discovery__user_discovery_utils_flutter_verify_stored_pubkey_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -2007,6 +2296,60 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::user_discovery::F
     for crate::bridge::wrapper::user_discovery::FlutterUserDiscovery
 {
     fn into_into_dart(self) -> crate::bridge::wrapper::user_discovery::FlutterUserDiscovery {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::signal::engine::FrbPqcPreKey {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ecc_pre_key_id.into_into_dart().into_dart(),
+            self.ecc_pre_key.into_into_dart().into_dart(),
+            self.kyber_pre_key_id.into_into_dart().into_dart(),
+            self.kyber_pre_key.into_into_dart().into_dart(),
+            self.kyber_pre_key_signature.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::signal::engine::FrbPqcPreKey
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::signal::engine::FrbPqcPreKey>
+    for crate::signal::engine::FrbPqcPreKey
+{
+    fn into_into_dart(self) -> crate::signal::engine::FrbPqcPreKey {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::signal::engine::FrbPreKeyBundle {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.registration_id.into_into_dart().into_dart(),
+            self.device_id.into_into_dart().into_dart(),
+            self.pre_key_id.into_into_dart().into_dart(),
+            self.pre_key_public.into_into_dart().into_dart(),
+            self.signed_pre_key_id.into_into_dart().into_dart(),
+            self.signed_pre_key_public.into_into_dart().into_dart(),
+            self.signed_pre_key_signature.into_into_dart().into_dart(),
+            self.kyber_pre_key_id.into_into_dart().into_dart(),
+            self.kyber_pre_key_public.into_into_dart().into_dart(),
+            self.kyber_pre_key_signature.into_into_dart().into_dart(),
+            self.identity_key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::signal::engine::FrbPreKeyBundle
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::signal::engine::FrbPreKeyBundle>
+    for crate::signal::engine::FrbPreKeyBundle
+{
+    fn into_into_dart(self) -> crate::signal::engine::FrbPreKeyBundle {
         self
     }
 }
@@ -2102,6 +2445,23 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::key_manager::Rust
     for crate::bridge::wrapper::key_manager::RustKeyManager
 {
     fn into_into_dart(self) -> crate::bridge::wrapper::key_manager::RustKeyManager {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::wrapper::signal::RustSignal {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::wrapper::signal::RustSignal
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::signal::RustSignal>
+    for crate::bridge::wrapper::signal::RustSignal
+{
+    fn into_into_dart(self) -> crate::bridge::wrapper::signal::RustSignal {
         self
     }
 }
@@ -2229,6 +2589,34 @@ impl SseEncode for crate::bridge::wrapper::user_discovery::FlutterUserDiscovery 
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::signal::engine::FrbPqcPreKey {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.ecc_pre_key_id, serializer);
+        <Vec<u8>>::sse_encode(self.ecc_pre_key, serializer);
+        <u32>::sse_encode(self.kyber_pre_key_id, serializer);
+        <Vec<u8>>::sse_encode(self.kyber_pre_key, serializer);
+        <Vec<u8>>::sse_encode(self.kyber_pre_key_signature, serializer);
+    }
+}
+
+impl SseEncode for crate::signal::engine::FrbPreKeyBundle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.registration_id, serializer);
+        <u32>::sse_encode(self.device_id, serializer);
+        <Option<u32>>::sse_encode(self.pre_key_id, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.pre_key_public, serializer);
+        <u32>::sse_encode(self.signed_pre_key_id, serializer);
+        <Vec<u8>>::sse_encode(self.signed_pre_key_public, serializer);
+        <Vec<u8>>::sse_encode(self.signed_pre_key_signature, serializer);
+        <u32>::sse_encode(self.kyber_pre_key_id, serializer);
+        <Vec<u8>>::sse_encode(self.kyber_pre_key_public, serializer);
+        <Vec<u8>>::sse_encode(self.kyber_pre_key_signature, serializer);
+        <Vec<u8>>::sse_encode(self.identity_key, serializer);
+    }
+}
+
 impl SseEncode for i64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2251,6 +2639,16 @@ impl SseEncode for isize {
             .cursor
             .write_i64::<NativeEndian>(self as _)
             .unwrap();
+    }
+}
+
+impl SseEncode for Vec<crate::signal::engine::FrbPqcPreKey> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::signal::engine::FrbPqcPreKey>::sse_encode(item, serializer);
+        }
     }
 }
 
@@ -2320,6 +2718,16 @@ impl SseEncode for Option<i64> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <i64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<u32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u32>::sse_encode(value, serializer);
         }
     }
 }
@@ -2401,6 +2809,11 @@ impl SseEncode for crate::bridge::wrapper::backup::RustBackupIdentity {
 }
 
 impl SseEncode for crate::bridge::wrapper::key_manager::RustKeyManager {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for crate::bridge::wrapper::signal::RustSignal {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }

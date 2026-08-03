@@ -13,6 +13,7 @@ use crate::error::Result;
 use crate::error::TwonlyError;
 use crate::keys::KeyManager;
 use crate::secure_storage::SecureStorage;
+use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use flutter_rust_bridge::frb;
@@ -52,6 +53,7 @@ pub(crate) struct TwonlyFlutter {
     pub(crate) rust_db: Arc<Database>,
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
+    pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
 }
 
 pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {

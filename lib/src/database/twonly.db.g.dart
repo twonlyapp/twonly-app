@@ -174,6 +174,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<SignalVersion, String>
+  signalVersion = GeneratedColumn<String>(
+    'signal_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('v1'),
+  ).withConverter<SignalVersion>($ContactsTable.$convertersignalVersion);
   static const VerificationMeta _userDiscoveryVersionMeta =
       const VerificationMeta('userDiscoveryVersion');
   @override
@@ -337,6 +347,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     verified,
     accountDeleted,
     createdAt,
+    signalVersion,
     userDiscoveryVersion,
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
@@ -626,6 +637,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      signalVersion: $ContactsTable.$convertersignalVersion.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}signal_version'],
+        )!,
+      ),
       userDiscoveryVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}user_discovery_version'],
@@ -681,6 +698,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   $ContactsTable createAlias(String alias) {
     return $ContactsTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<SignalVersion, String, String>
+  $convertersignalVersion = const EnumNameConverter<SignalVersion>(
+    SignalVersion.values,
+  );
 }
 
 class Contact extends DataClass implements Insertable<Contact> {
@@ -697,6 +719,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool accountDeleted;
   final DateTime createdAt;
+  final SignalVersion signalVersion;
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
   final bool? userDiscoveryManualApproved;
@@ -723,6 +746,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.verified,
     required this.accountDeleted,
     required this.createdAt,
+    required this.signalVersion,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
     this.userDiscoveryManualApproved,
@@ -758,6 +782,11 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['verified'] = Variable<bool>(verified);
     map['account_deleted'] = Variable<bool>(accountDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['signal_version'] = Variable<String>(
+        $ContactsTable.$convertersignalVersion.toSql(signalVersion),
+      );
+    }
     if (!nullToAbsent || userDiscoveryVersion != null) {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
@@ -820,6 +849,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: Value(verified),
       accountDeleted: Value(accountDeleted),
       createdAt: Value(createdAt),
+      signalVersion: Value(signalVersion),
       userDiscoveryVersion: userDiscoveryVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(userDiscoveryVersion),
@@ -878,6 +908,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: serializer.fromJson<bool>(json['verified']),
       accountDeleted: serializer.fromJson<bool>(json['accountDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      signalVersion: $ContactsTable.$convertersignalVersion.fromJson(
+        serializer.fromJson<String>(json['signalVersion']),
+      ),
       userDiscoveryVersion: serializer.fromJson<Uint8List?>(
         json['userDiscoveryVersion'],
       ),
@@ -931,6 +964,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'verified': serializer.toJson<bool>(verified),
       'accountDeleted': serializer.toJson<bool>(accountDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'signalVersion': serializer.toJson<String>(
+        $ContactsTable.$convertersignalVersion.toJson(signalVersion),
+      ),
       'userDiscoveryVersion': serializer.toJson<Uint8List?>(
         userDiscoveryVersion,
       ),
@@ -976,6 +1012,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? verified,
     bool? accountDeleted,
     DateTime? createdAt,
+    SignalVersion? signalVersion,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
     Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -1004,6 +1041,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified: verified ?? this.verified,
     accountDeleted: accountDeleted ?? this.accountDeleted,
     createdAt: createdAt ?? this.createdAt,
+    signalVersion: signalVersion ?? this.signalVersion,
     userDiscoveryVersion: userDiscoveryVersion.present
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
@@ -1059,6 +1097,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? data.accountDeleted.value
           : this.accountDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      signalVersion: data.signalVersion.present
+          ? data.signalVersion.value
+          : this.signalVersion,
       userDiscoveryVersion: data.userDiscoveryVersion.present
           ? data.userDiscoveryVersion.value
           : this.userDiscoveryVersion,
@@ -1114,6 +1155,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
+          ..write('signalVersion: $signalVersion, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
@@ -1147,6 +1189,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified,
     accountDeleted,
     createdAt,
+    signalVersion,
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
@@ -1180,6 +1223,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.verified == this.verified &&
           other.accountDeleted == this.accountDeleted &&
           other.createdAt == this.createdAt &&
+          other.signalVersion == this.signalVersion &&
           $driftBlobEquality.equals(
             other.userDiscoveryVersion,
             this.userDiscoveryVersion,
@@ -1219,6 +1263,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> verified;
   final Value<bool> accountDeleted;
   final Value<DateTime> createdAt;
+  final Value<SignalVersion> signalVersion;
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
   final Value<bool?> userDiscoveryManualApproved;
@@ -1245,6 +1290,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.signalVersion = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
@@ -1272,6 +1318,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.signalVersion = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
@@ -1299,6 +1346,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? verified,
     Expression<bool>? accountDeleted,
     Expression<DateTime>? createdAt,
+    Expression<String>? signalVersion,
     Expression<Uint8List>? userDiscoveryVersion,
     Expression<bool>? userDiscoveryExcluded,
     Expression<bool>? userDiscoveryManualApproved,
@@ -1328,6 +1376,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (verified != null) 'verified': verified,
       if (accountDeleted != null) 'account_deleted': accountDeleted,
       if (createdAt != null) 'created_at': createdAt,
+      if (signalVersion != null) 'signal_version': signalVersion,
       if (userDiscoveryVersion != null)
         'user_discovery_version': userDiscoveryVersion,
       if (userDiscoveryExcluded != null)
@@ -1368,6 +1417,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? verified,
     Value<bool>? accountDeleted,
     Value<DateTime>? createdAt,
+    Value<SignalVersion>? signalVersion,
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
     Value<bool?>? userDiscoveryManualApproved,
@@ -1395,6 +1445,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       verified: verified ?? this.verified,
       accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
+      signalVersion: signalVersion ?? this.signalVersion,
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
       userDiscoveryExcluded:
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
@@ -1461,6 +1512,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (signalVersion.present) {
+      map['signal_version'] = Variable<String>(
+        $ContactsTable.$convertersignalVersion.toSql(signalVersion.value),
+      );
     }
     if (userDiscoveryVersion.present) {
       map['user_discovery_version'] = Variable<Uint8List>(
@@ -1537,6 +1593,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
+          ..write('signalVersion: $signalVersion, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
@@ -1769,7 +1826,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         false,
         type: DriftSqlType.int,
         requiredDuringInsert: false,
-        defaultValue: const Constant(defaultDeleteMessagesAfterMilliseconds),
+        defaultValue: const Constant(1000 * 60 * 60 * 24),
       );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -14022,6 +14079,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<SignalVersion> signalVersion,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
@@ -14050,6 +14108,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<SignalVersion> signalVersion,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
@@ -14427,6 +14486,12 @@ class $$ContactsTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SignalVersion, SignalVersion, String>
+  get signalVersion => $composableBuilder(
+    column: $table.signalVersion,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<Uint8List> get userDiscoveryVersion => $composableBuilder(
@@ -14874,6 +14939,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get signalVersion => $composableBuilder(
+    column: $table.signalVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<Uint8List> get userDiscoveryVersion => $composableBuilder(
     column: $table.userDiscoveryVersion,
     builder: (column) => ColumnOrderings(column),
@@ -14994,6 +15064,12 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SignalVersion, String> get signalVersion =>
+      $composableBuilder(
+        column: $table.signalVersion,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<Uint8List> get userDiscoveryVersion => $composableBuilder(
     column: $table.userDiscoveryVersion,
@@ -15425,6 +15501,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<SignalVersion> signalVersion = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -15453,6 +15530,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                signalVersion: signalVersion,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
@@ -15481,6 +15559,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<SignalVersion> signalVersion = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -15509,6 +15588,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                signalVersion: signalVersion,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,

@@ -67,6 +67,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
           json['signalLastSignedPreKeyUpdated'] == null
           ? null
           : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..signalLastPqcPreKeysUploaded =
+          json['signalLastPqcPreKeysUploaded'] == null
+          ? null
+          : DateTime.parse(json['signalLastPqcPreKeysUploaded'] as String)
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
@@ -157,6 +161,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'showRestoreFlame': instance.showRestoreFlame,
   'myBestFriendGroupId': instance.myBestFriendGroupId,
   'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
+      ?.toIso8601String(),
+  'signalLastPqcPreKeysUploaded': instance.signalLastPqcPreKeysUploaded
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,

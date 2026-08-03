@@ -19,6 +19,8 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
+    as client;
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
@@ -625,7 +627,13 @@ class ApiService {
 
     final signalStore = await getSignalStoreFromIdentity(signalIdentity);
 
-    final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
+    final signedPreKeysList = await signalStore.loadSignedPreKeys();
+    if (signedPreKeysList.isEmpty) {
+      throw Exception(
+        'Signal Signed PreKeys list is empty. Database insertion likely failed due to lack of storage space or a corrupted database.',
+      );
+    }
+    final signedPreKey = signedPreKeysList[0];
 
     final loginToken = await RustKeyManager.getLoginToken();
 
@@ -988,6 +996,28 @@ class ApiService {
       ..signedPrekey = signedPreKey
       ..signedPrekeySignature = signedPreKeySignature;
     final appData = ApplicationData()..updateSignedPrekey = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> uploadPqcPreKeys(
+    int eccSignedPreKeyId,
+    Uint8List eccSignedPreKey,
+    Uint8List eccSignedPreKeySignature,
+    int kyberSignedPreKeyId,
+    Uint8List kyberSignedPreKey,
+    Uint8List kyberSignedPreKeySignature,
+    List<client.ApplicationData_PqcPreKey> prekeys,
+  ) async {
+    final get = ApplicationData_UploadPqcPreKeys()
+      ..eccSignedPrekeyId = Int64(eccSignedPreKeyId)
+      ..eccSignedPrekey = eccSignedPreKey
+      ..eccSignedPrekeySignature = eccSignedPreKeySignature
+      ..kyberSignedPrekeyId = Int64(kyberSignedPreKeyId)
+      ..kyberSignedPrekey = kyberSignedPreKey
+      ..kyberSignedPrekeySignature = kyberSignedPreKeySignature
+      ..prekeys.addAll(prekeys);
+    final appData = ApplicationData()..uploadPqcPrekeys = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }

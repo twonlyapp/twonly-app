@@ -106,6 +106,8 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
+  DateTime? signalLastPqcPreKeysUploaded;
+
   @JsonKey(defaultValue: false)
   bool allowErrorTrackingViaSentry = false;
 

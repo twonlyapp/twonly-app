@@ -9,6 +9,7 @@ import 'bridge/callbacks/user_discovery.dart';
 import 'bridge/wrapper.dart';
 import 'bridge/wrapper/backup.dart';
 import 'bridge/wrapper/key_manager.dart';
+import 'bridge/wrapper/signal.dart';
 import 'bridge/wrapper/user_discovery.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -18,6 +19,7 @@ import 'frb_generated.io.dart'
 import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'signal/engine.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -76,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1788847092;
+  int get rustContentHash => 1109927244;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -257,6 +259,29 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBridgeWrapperKeyManagerRustKeyManagerStoreSignedPrekey({
     required PlatformInt64 signedPreKeyId,
     required List<int> record,
+  });
+
+  Future<Uint8List> crateBridgeWrapperSignalRustSignalDecrypt({
+    required String name,
+    required int deviceId,
+    required List<int> ciphertext,
+  });
+
+  Future<Uint8List> crateBridgeWrapperSignalRustSignalEncrypt({
+    required String name,
+    required int deviceId,
+    required List<int> plaintext,
+  });
+
+  Future<FrbPreKeyBundle> crateBridgeWrapperSignalRustSignalGenerateBundle();
+
+  Future<List<FrbPqcPreKey>>
+  crateBridgeWrapperSignalRustSignalGeneratePqcPrekeys();
+
+  Future<void> crateBridgeWrapperSignalRustSignalProcessPrekeyBundle({
+    required String name,
+    required int deviceId,
+    required FrbPreKeyBundle bundle,
   });
 
   Future<List<Uint8List>> crateBridgeWrapperRustUtilsGenerateShares({
@@ -1652,6 +1677,183 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<Uint8List> crateBridgeWrapperSignalRustSignalDecrypt({
+    required String name,
+    required int deviceId,
+    required List<int> ciphertext,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(name, serializer);
+          sse_encode_u_32(deviceId, serializer);
+          sse_encode_list_prim_u_8_loose(ciphertext, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeWrapperSignalRustSignalDecryptConstMeta,
+        argValues: [name, deviceId, ciphertext],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeWrapperSignalRustSignalDecryptConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_signal_decrypt",
+        argNames: ["name", "deviceId", "ciphertext"],
+      );
+
+  @override
+  Future<Uint8List> crateBridgeWrapperSignalRustSignalEncrypt({
+    required String name,
+    required int deviceId,
+    required List<int> plaintext,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(name, serializer);
+          sse_encode_u_32(deviceId, serializer);
+          sse_encode_list_prim_u_8_loose(plaintext, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeWrapperSignalRustSignalEncryptConstMeta,
+        argValues: [name, deviceId, plaintext],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeWrapperSignalRustSignalEncryptConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_signal_encrypt",
+        argNames: ["name", "deviceId", "plaintext"],
+      );
+
+  @override
+  Future<FrbPreKeyBundle> crateBridgeWrapperSignalRustSignalGenerateBundle() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_frb_pre_key_bundle,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateBridgeWrapperSignalRustSignalGenerateBundleConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperSignalRustSignalGenerateBundleConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_signal_generate_bundle",
+        argNames: [],
+      );
+
+  @override
+  Future<List<FrbPqcPreKey>>
+  crateBridgeWrapperSignalRustSignalGeneratePqcPrekeys() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 35,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_frb_pqc_pre_key,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperSignalRustSignalGeneratePqcPrekeysConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperSignalRustSignalGeneratePqcPrekeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_signal_generate_pqc_prekeys",
+        argNames: [],
+      );
+
+  @override
+  Future<void> crateBridgeWrapperSignalRustSignalProcessPrekeyBundle({
+    required String name,
+    required int deviceId,
+    required FrbPreKeyBundle bundle,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(name, serializer);
+          sse_encode_u_32(deviceId, serializer);
+          sse_encode_box_autoadd_frb_pre_key_bundle(bundle, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta:
+            kCrateBridgeWrapperSignalRustSignalProcessPrekeyBundleConstMeta,
+        argValues: [name, deviceId, bundle],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateBridgeWrapperSignalRustSignalProcessPrekeyBundleConstMeta =>
+      const TaskConstMeta(
+        debugName: "rust_signal_process_prekey_bundle",
+        argNames: ["name", "deviceId", "bundle"],
+      );
+
+  @override
   Future<List<Uint8List>> crateBridgeWrapperRustUtilsGenerateShares({
     required List<int> secret,
     required int total,
@@ -1667,7 +1869,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1702,7 +1904,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 38,
             port: port_,
           );
         },
@@ -1738,7 +1940,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 39,
             port: port_,
           );
         },
@@ -1775,7 +1977,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 40,
             port: port_,
           );
         },
@@ -1813,7 +2015,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 41,
             port: port_,
           );
         },
@@ -1851,7 +2053,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 42,
             port: port_,
           );
         },
@@ -1889,7 +2091,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 38,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1928,7 +2130,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 44,
             port: port_,
           );
         },
@@ -1967,7 +2169,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 45,
             port: port_,
           );
         },
@@ -2012,7 +2214,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 46,
             port: port_,
           );
         },
@@ -2064,7 +2266,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 42,
+            funcId: 47,
             port: port_,
           );
         },
@@ -2105,7 +2307,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 48,
             port: port_,
           );
         },
@@ -2143,7 +2345,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 49,
             port: port_,
           );
         },
@@ -2181,7 +2383,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 45,
+            funcId: 50,
             port: port_,
           );
         },
@@ -2219,7 +2421,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 46,
+            funcId: 51,
             port: port_,
           );
         },
@@ -2257,7 +2459,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 47,
+            funcId: 52,
             port: port_,
           );
         },
@@ -2299,7 +2501,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 48,
+            funcId: 53,
             port: port_,
           );
         },
@@ -2339,7 +2541,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 49,
+            funcId: 54,
             port: port_,
           );
         },
@@ -2979,6 +3181,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_pre_key_bundle(raw);
+  }
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_i_64(raw);
@@ -2994,6 +3202,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   OtherPromotion dco_decode_box_autoadd_other_promotion(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_other_promotion(raw);
+  }
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -3022,6 +3236,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPqcPreKey dco_decode_frb_pqc_pre_key(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FrbPqcPreKey(
+      eccPreKeyId: dco_decode_u_32(arr[0]),
+      eccPreKey: dco_decode_list_prim_u_8_strict(arr[1]),
+      kyberPreKeyId: dco_decode_u_32(arr[2]),
+      kyberPreKey: dco_decode_list_prim_u_8_strict(arr[3]),
+      kyberPreKeySignature: dco_decode_list_prim_u_8_strict(arr[4]),
+    );
+  }
+
+  @protected
+  FrbPreKeyBundle dco_decode_frb_pre_key_bundle(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 11)
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    return FrbPreKeyBundle(
+      registrationId: dco_decode_u_32(arr[0]),
+      deviceId: dco_decode_u_32(arr[1]),
+      preKeyId: dco_decode_opt_box_autoadd_u_32(arr[2]),
+      preKeyPublic: dco_decode_opt_list_prim_u_8_strict(arr[3]),
+      signedPreKeyId: dco_decode_u_32(arr[4]),
+      signedPreKeyPublic: dco_decode_list_prim_u_8_strict(arr[5]),
+      signedPreKeySignature: dco_decode_list_prim_u_8_strict(arr[6]),
+      kyberPreKeyId: dco_decode_u_32(arr[7]),
+      kyberPreKeyPublic: dco_decode_list_prim_u_8_strict(arr[8]),
+      kyberPreKeySignature: dco_decode_list_prim_u_8_strict(arr[9]),
+      identityKey: dco_decode_list_prim_u_8_strict(arr[10]),
+    );
+  }
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
@@ -3043,6 +3293,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_isize(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_frb_pqc_pre_key).toList();
   }
 
   @protected
@@ -3094,6 +3350,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
   }
 
   @protected
@@ -3198,6 +3460,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 0)
       throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
     return RustKeyManager();
+  }
+
+  @protected
+  RustSignal dco_decode_rust_signal(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 0)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return RustSignal();
   }
 
   @protected
@@ -3348,6 +3619,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPreKeyBundle sse_decode_box_autoadd_frb_pre_key_bundle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_pre_key_bundle(deserializer));
+  }
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_i_64(deserializer));
@@ -3365,6 +3644,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_other_promotion(deserializer));
+  }
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_32(deserializer));
   }
 
   @protected
@@ -3392,6 +3677,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPqcPreKey sse_decode_frb_pqc_pre_key(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_eccPreKeyId = sse_decode_u_32(deserializer);
+    var var_eccPreKey = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_kyberPreKeyId = sse_decode_u_32(deserializer);
+    var var_kyberPreKey = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_kyberPreKeySignature = sse_decode_list_prim_u_8_strict(
+      deserializer,
+    );
+    return FrbPqcPreKey(
+      eccPreKeyId: var_eccPreKeyId,
+      eccPreKey: var_eccPreKey,
+      kyberPreKeyId: var_kyberPreKeyId,
+      kyberPreKey: var_kyberPreKey,
+      kyberPreKeySignature: var_kyberPreKeySignature,
+    );
+  }
+
+  @protected
+  FrbPreKeyBundle sse_decode_frb_pre_key_bundle(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_registrationId = sse_decode_u_32(deserializer);
+    var var_deviceId = sse_decode_u_32(deserializer);
+    var var_preKeyId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_preKeyPublic = sse_decode_opt_list_prim_u_8_strict(deserializer);
+    var var_signedPreKeyId = sse_decode_u_32(deserializer);
+    var var_signedPreKeyPublic = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_signedPreKeySignature = sse_decode_list_prim_u_8_strict(
+      deserializer,
+    );
+    var var_kyberPreKeyId = sse_decode_u_32(deserializer);
+    var var_kyberPreKeyPublic = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_kyberPreKeySignature = sse_decode_list_prim_u_8_strict(
+      deserializer,
+    );
+    var var_identityKey = sse_decode_list_prim_u_8_strict(deserializer);
+    return FrbPreKeyBundle(
+      registrationId: var_registrationId,
+      deviceId: var_deviceId,
+      preKeyId: var_preKeyId,
+      preKeyPublic: var_preKeyPublic,
+      signedPreKeyId: var_signedPreKeyId,
+      signedPreKeyPublic: var_signedPreKeyPublic,
+      signedPreKeySignature: var_signedPreKeySignature,
+      kyberPreKeyId: var_kyberPreKeyId,
+      kyberPreKeyPublic: var_kyberPreKeyPublic,
+      kyberPreKeySignature: var_kyberPreKeySignature,
+      identityKey: var_identityKey,
+    );
+  }
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
@@ -3409,6 +3746,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<FrbPqcPreKey> sse_decode_list_frb_pqc_pre_key(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbPqcPreKey>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_pqc_pre_key(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -3498,6 +3849,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_i_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_32(deserializer));
     } else {
       return null;
     }
@@ -3611,6 +3973,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return RustKeyManager();
+  }
+
+  @protected
+  RustSignal sse_decode_rust_signal(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return RustSignal();
   }
 
   @protected
@@ -3947,6 +4315,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_frb_pre_key_bundle(
+    FrbPreKeyBundle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_pre_key_bundle(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
     SseSerializer serializer,
@@ -3971,6 +4348,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_other_promotion(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self, serializer);
   }
 
   @protected
@@ -4000,6 +4383,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_frb_pqc_pre_key(FrbPqcPreKey self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.eccPreKeyId, serializer);
+    sse_encode_list_prim_u_8_strict(self.eccPreKey, serializer);
+    sse_encode_u_32(self.kyberPreKeyId, serializer);
+    sse_encode_list_prim_u_8_strict(self.kyberPreKey, serializer);
+    sse_encode_list_prim_u_8_strict(self.kyberPreKeySignature, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_pre_key_bundle(
+    FrbPreKeyBundle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.registrationId, serializer);
+    sse_encode_u_32(self.deviceId, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.preKeyId, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.preKeyPublic, serializer);
+    sse_encode_u_32(self.signedPreKeyId, serializer);
+    sse_encode_list_prim_u_8_strict(self.signedPreKeyPublic, serializer);
+    sse_encode_list_prim_u_8_strict(self.signedPreKeySignature, serializer);
+    sse_encode_u_32(self.kyberPreKeyId, serializer);
+    sse_encode_list_prim_u_8_strict(self.kyberPreKeyPublic, serializer);
+    sse_encode_list_prim_u_8_strict(self.kyberPreKeySignature, serializer);
+    sse_encode_list_prim_u_8_strict(self.identityKey, serializer);
+  }
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
@@ -4016,6 +4428,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_frb_pqc_pre_key(
+    List<FrbPqcPreKey> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_pqc_pre_key(item, serializer);
+    }
   }
 
   @protected
@@ -4109,6 +4533,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_i_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_32(self, serializer);
     }
   }
 
@@ -4219,6 +4653,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     RustKeyManager self,
     SseSerializer serializer,
   ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_rust_signal(RustSignal self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
   }
 

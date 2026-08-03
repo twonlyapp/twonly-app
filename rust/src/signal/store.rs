@@ -13,6 +13,7 @@ pub struct DbSignalProtocolStore {
     pub signed_pre_key_store: DbSignedPreKeyStore,
     pub kyber_pre_key_store: DbKyberPreKeyStore,
     pub session_store: DbSessionStore,
+    pub pool: SqlitePool,
 }
 
 impl DbSignalProtocolStore {
@@ -22,6 +23,7 @@ impl DbSignalProtocolStore {
         local_registration_id: u32,
     ) -> Self {
         Self {
+            pool: pool.clone(),
             identity_store: DbIdentityKeyStore {
                 pool: pool.clone(),
                 identity_key_pair,

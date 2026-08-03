@@ -12,6 +12,7 @@ import 'bridge/callbacks/user_discovery.dart';
 import 'bridge/wrapper.dart';
 import 'bridge/wrapper/backup.dart';
 import 'bridge/wrapper/key_manager.dart';
+import 'bridge/wrapper/signal.dart';
 import 'bridge/wrapper/user_discovery.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -19,6 +20,7 @@ import 'frb_generated.dart';
 import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'signal/engine.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -133,6 +135,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BackupPasswordKeys dco_decode_box_autoadd_backup_password_keys(dynamic raw);
 
   @protected
+  FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
@@ -140,6 +145,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   OtherPromotion dco_decode_box_autoadd_other_promotion(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
   UserDiscoveryStoreFlutter dco_decode_box_autoadd_user_discovery_store_flutter(
@@ -155,6 +163,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
 
   @protected
+  FrbPqcPreKey dco_decode_frb_pqc_pre_key(dynamic raw);
+
+  @protected
+  FrbPreKeyBundle dco_decode_frb_pre_key_bundle(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
@@ -162,6 +176,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
+  List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw);
 
   @protected
   List<Uint8List> dco_decode_list_list_prim_u_8_strict(dynamic raw);
@@ -187,6 +204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
   List<Uint8List>? dco_decode_opt_list_list_prim_u_8_strict(dynamic raw);
@@ -221,6 +241,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustKeyManager dco_decode_rust_key_manager(dynamic raw);
+
+  @protected
+  RustSignal dco_decode_rust_signal(dynamic raw);
 
   @protected
   RustUtils dco_decode_rust_utils(dynamic raw);
@@ -291,6 +314,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbPreKeyBundle sse_decode_box_autoadd_frb_pre_key_bundle(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
@@ -300,6 +328,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   OtherPromotion sse_decode_box_autoadd_other_promotion(
     SseDeserializer deserializer,
   );
+
+  @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   UserDiscoveryStoreFlutter sse_decode_box_autoadd_user_discovery_store_flutter(
@@ -317,6 +348,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbPqcPreKey sse_decode_frb_pqc_pre_key(SseDeserializer deserializer);
+
+  @protected
+  FrbPreKeyBundle sse_decode_frb_pre_key_bundle(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
@@ -324,6 +361,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
+  List<FrbPqcPreKey> sse_decode_list_frb_pqc_pre_key(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<Uint8List> sse_decode_list_list_prim_u_8_strict(
@@ -357,6 +399,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   List<Uint8List>? sse_decode_opt_list_list_prim_u_8_strict(
@@ -401,6 +446,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustKeyManager sse_decode_rust_key_manager(SseDeserializer deserializer);
+
+  @protected
+  RustSignal sse_decode_rust_signal(SseDeserializer deserializer);
 
   @protected
   RustUtils sse_decode_rust_utils(SseDeserializer deserializer);
@@ -564,6 +612,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_frb_pre_key_bundle(
+    FrbPreKeyBundle self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
     SseSerializer serializer,
@@ -580,6 +634,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     OtherPromotion self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_user_discovery_store_flutter(
@@ -600,6 +657,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_pqc_pre_key(FrbPqcPreKey self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_frb_pre_key_bundle(
+    FrbPreKeyBundle self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
@@ -607,6 +673,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_frb_pqc_pre_key(
+    List<FrbPqcPreKey> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_list_prim_u_8_strict(
@@ -649,6 +721,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     PlatformInt64? self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_list_prim_u_8_strict(
@@ -709,6 +784,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     RustKeyManager self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_rust_signal(RustSignal self, SseSerializer serializer);
 
   @protected
   void sse_encode_rust_utils(RustUtils self, SseSerializer serializer);

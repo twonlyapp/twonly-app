@@ -25,6 +25,8 @@ class Message_Type extends $pb.ProtobufEnum {
       Message_Type._(3, _omitEnumNames ? '' : 'PREKEY_BUNDLE');
   static const Message_Type TEST_NOTIFICATION =
       Message_Type._(4, _omitEnumNames ? '' : 'TEST_NOTIFICATION');
+  static const Message_Type CIPHERTEXT_V2 =
+      Message_Type._(5, _omitEnumNames ? '' : 'CIPHERTEXT_V2');
 
   static const $core.List<Message_Type> values = <Message_Type>[
     SENDER_DELIVERY_RECEIPT,
@@ -32,10 +34,11 @@ class Message_Type extends $pb.ProtobufEnum {
     CIPHERTEXT,
     PREKEY_BUNDLE,
     TEST_NOTIFICATION,
+    CIPHERTEXT_V2,
   ];
 
   static final $core.List<Message_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 4);
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
   static Message_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

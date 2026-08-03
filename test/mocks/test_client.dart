@@ -46,8 +46,12 @@ class TestClient {
   Group? defaultGroup;
   int realUserId = 0;
 
-  Future<void> init() async {
+  Future<void> init({bool disablePqc = false}) async {
     env = await UserEnvironment.create(localIdSeed, username);
+    if (disablePqc) {
+      env.userService.currentUser.signalLastPqcPreKeysUploaded = DateTime.now()
+          .add(const Duration(days: 365));
+    }
     api = ApiService();
 
     await run(() async {

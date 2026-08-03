@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -273,6 +274,21 @@ class _ContactViewState extends State<ContactView> {
             text: context.lang.contactRemove,
             onTap: () => handleUserRemoveRequest(contact),
           ),
+          if (userService.currentUser.isDeveloper) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  'Encryption: ${switch (contact.signalVersion) {
+                    SignalVersion.v1 => 'Signal Protocol (v1)',
+                    SignalVersion.v2 => 'PQXDH (v2)',
+                  }}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

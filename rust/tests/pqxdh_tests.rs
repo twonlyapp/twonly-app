@@ -31,7 +31,7 @@ async fn test_twonly_api_100_messages() -> Result<(), Box<dyn std::error::Error>
     )?;
 
     // 4. Bob generates a bundle
-    let bob_bundle = bob_engine.generate_bundle(1, 1, 1).await?;
+    let bob_bundle = bob_engine.generate_bundle().await?;
 
     // 5. Alice processes Bob's bundle
     alice_engine
@@ -48,9 +48,8 @@ async fn test_twonly_api_100_messages() -> Result<(), Box<dyn std::error::Error>
                 .encrypt_message("bob".to_string(), 1, plaintext.clone())
                 .await?;
 
-            let is_prekey = i == 1; // Only the first message is a PreKeySignalMessage
             let decrypted = bob_engine
-                .decrypt_message("alice".to_string(), 1, ciphertext, is_prekey)
+                .decrypt_message("alice".to_string(), 1, ciphertext)
                 .await?;
 
             assert_eq!(plaintext, decrypted);
@@ -62,7 +61,7 @@ async fn test_twonly_api_100_messages() -> Result<(), Box<dyn std::error::Error>
                 .await?;
 
             let decrypted = alice_engine
-                .decrypt_message("bob".to_string(), 1, ciphertext, false)
+                .decrypt_message("bob".to_string(), 1, ciphertext)
                 .await?;
 
             assert_eq!(plaintext, decrypted);

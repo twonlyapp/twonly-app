@@ -49,6 +49,8 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   try {
     if (msg.v0.hasRequestNewPreKeys()) {
       response = await handleRequestNewPreKey();
+    } else if (msg.v0.hasRequestNewPqcPreKeys()) {
+      response = (await handleRequestNewPqcPreKey()) ?? response;
     } else if (msg.v0.hasNewMessage()) {
       Log.info('Got 1 message from the server.');
       await handleClient2ClientMessage(msg.v0.newMessage);
@@ -190,6 +192,7 @@ Future<void> _handleClient2ClientMessage(
       }
 
     case Message_Type.CIPHERTEXT:
+    case Message_Type.CIPHERTEXT_V2:
     case Message_Type.PREKEY_BUNDLE:
       if (message.hasEncryptedContent()) {
         Value<String>? receiptIdDB;
@@ -297,12 +300,23 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessageRaw(
   Set<int>? brokenSessionsInCurrentBatch,
 }) async {
   Log.info('[$receiptId] calling signalDecryptMessage');
-  var (encryptedContent, decryptionErrorType) = await signalDecryptMessage(
-    fromUserId,
-    encryptedContentRaw,
-    messageType.value,
-    brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
-  );
+  EncryptedContent? encryptedContent;
+  PlaintextContent_DecryptionErrorMessage_Type? decryptionErrorType;
+
+  if (messageType == Message_Type.CIPHERTEXT_V2) {
+    (encryptedContent, decryptionErrorType) = await signalDecryptMessageV2(
+      fromUserId,
+      encryptedContentRaw,
+      brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
+    );
+  } else {
+    (encryptedContent, decryptionErrorType) = await signalDecryptMessageV1(
+      fromUserId,
+      encryptedContentRaw,
+      messageType.value,
+      brokenSessionsInCurrentBatch: brokenSessionsInCurrentBatch,
+    );
+  }
 
   if (encryptedContent == null) {
     return (

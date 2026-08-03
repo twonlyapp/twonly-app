@@ -8,7 +8,6 @@ pub(crate) struct SignalIdentityKey {
     pub(crate) identity_key_pair_structure: Vec<u8>,
     pub(crate) registration_id: i64,
     pub(crate) pre_key_store: HashMap<i64, Vec<u8>>,
-    pub(crate) pqc_identity_key: Option<Vec<u8>>,
 }
 
 impl SignalIdentityKey {}
@@ -21,9 +20,6 @@ impl Zeroize for SignalIdentityKey {
             value.zeroize();
         }
         self.pre_key_store.clear();
-        if let Some(pqc) = &mut self.pqc_identity_key {
-            pqc.zeroize();
-        }
     }
 }
 

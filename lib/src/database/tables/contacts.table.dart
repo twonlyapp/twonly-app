@@ -1,5 +1,8 @@
 import 'package:drift/drift.dart';
 
+
+enum SignalVersion { v1, v2 }
+
 @DataClassName('Contact')
 class Contacts extends Table {
   IntColumn get userId => integer()();
@@ -22,6 +25,9 @@ class Contacts extends Table {
       boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  TextColumn get signalVersion =>
+      textEnum<SignalVersion>().withDefault(const Constant('v1'))();
 
   // User Discovery
   BlobColumn get userDiscoveryVersion => blob().nullable()();

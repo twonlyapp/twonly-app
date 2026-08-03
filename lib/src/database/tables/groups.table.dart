@@ -31,7 +31,7 @@ class Groups extends Table {
       boolean().withDefault(const Constant(false))();
 
   IntColumn get deleteMessagesAfterMilliseconds => integer().withDefault(
-    const Constant(defaultDeleteMessagesAfterMilliseconds),
+    const Constant(1000 * 60 * 60 * 24),
   )();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

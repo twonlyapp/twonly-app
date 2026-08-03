@@ -2059,6 +2059,250 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
   void clearSignedPrekeySignature() => $_clearField(3);
 }
 
+class ApplicationData_PqcPreKey extends $pb.GeneratedMessage {
+  factory ApplicationData_PqcPreKey({
+    $fixnum.Int64? eccPreKeyId,
+    $core.List<$core.int>? eccPreKey,
+    $fixnum.Int64? kyberPreKeyId,
+    $core.List<$core.int>? kyberPreKey,
+    $core.List<$core.int>? kyberPreKeySignature,
+  }) {
+    final result = create();
+    if (eccPreKeyId != null) result.eccPreKeyId = eccPreKeyId;
+    if (eccPreKey != null) result.eccPreKey = eccPreKey;
+    if (kyberPreKeyId != null) result.kyberPreKeyId = kyberPreKeyId;
+    if (kyberPreKey != null) result.kyberPreKey = kyberPreKey;
+    if (kyberPreKeySignature != null)
+      result.kyberPreKeySignature = kyberPreKeySignature;
+    return result;
+  }
+
+  ApplicationData_PqcPreKey._();
+
+  factory ApplicationData_PqcPreKey.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_PqcPreKey.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.PqcPreKey',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'eccPreKeyId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'eccPreKey', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'kyberPreKeyId')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'kyberPreKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'kyberPreKeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_PqcPreKey clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_PqcPreKey copyWith(
+          void Function(ApplicationData_PqcPreKey) updates) =>
+      super.copyWith((message) => updates(message as ApplicationData_PqcPreKey))
+          as ApplicationData_PqcPreKey;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_PqcPreKey create() => ApplicationData_PqcPreKey._();
+  @$core.override
+  ApplicationData_PqcPreKey createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_PqcPreKey getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_PqcPreKey>(create);
+  static ApplicationData_PqcPreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get eccPreKeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set eccPreKeyId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEccPreKeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEccPreKeyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get eccPreKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set eccPreKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEccPreKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEccPreKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get kyberPreKeyId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set kyberPreKeyId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasKyberPreKeyId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearKyberPreKeyId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get kyberPreKey => $_getN(3);
+  @$pb.TagNumber(4)
+  set kyberPreKey($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasKyberPreKey() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearKyberPreKey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get kyberPreKeySignature => $_getN(4);
+  @$pb.TagNumber(5)
+  set kyberPreKeySignature($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKyberPreKeySignature() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKyberPreKeySignature() => $_clearField(5);
+}
+
+class ApplicationData_UploadPqcPreKeys extends $pb.GeneratedMessage {
+  factory ApplicationData_UploadPqcPreKeys({
+    $fixnum.Int64? eccSignedPrekeyId,
+    $core.List<$core.int>? eccSignedPrekey,
+    $core.List<$core.int>? eccSignedPrekeySignature,
+    $fixnum.Int64? kyberSignedPrekeyId,
+    $core.List<$core.int>? kyberSignedPrekey,
+    $core.List<$core.int>? kyberSignedPrekeySignature,
+    $core.Iterable<ApplicationData_PqcPreKey>? prekeys,
+  }) {
+    final result = create();
+    if (eccSignedPrekeyId != null) result.eccSignedPrekeyId = eccSignedPrekeyId;
+    if (eccSignedPrekey != null) result.eccSignedPrekey = eccSignedPrekey;
+    if (eccSignedPrekeySignature != null)
+      result.eccSignedPrekeySignature = eccSignedPrekeySignature;
+    if (kyberSignedPrekeyId != null)
+      result.kyberSignedPrekeyId = kyberSignedPrekeyId;
+    if (kyberSignedPrekey != null) result.kyberSignedPrekey = kyberSignedPrekey;
+    if (kyberSignedPrekeySignature != null)
+      result.kyberSignedPrekeySignature = kyberSignedPrekeySignature;
+    if (prekeys != null) result.prekeys.addAll(prekeys);
+    return result;
+  }
+
+  ApplicationData_UploadPqcPreKeys._();
+
+  factory ApplicationData_UploadPqcPreKeys.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_UploadPqcPreKeys.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.UploadPqcPreKeys',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'eccSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'eccSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3,
+        _omitFieldNames ? '' : 'eccSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..aInt64(4, _omitFieldNames ? '' : 'kyberSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'kyberSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(6,
+        _omitFieldNames ? '' : 'kyberSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..pPM<ApplicationData_PqcPreKey>(7, _omitFieldNames ? '' : 'prekeys',
+        subBuilder: ApplicationData_PqcPreKey.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_UploadPqcPreKeys clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_UploadPqcPreKeys copyWith(
+          void Function(ApplicationData_UploadPqcPreKeys) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_UploadPqcPreKeys))
+          as ApplicationData_UploadPqcPreKeys;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadPqcPreKeys create() =>
+      ApplicationData_UploadPqcPreKeys._();
+  @$core.override
+  ApplicationData_UploadPqcPreKeys createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadPqcPreKeys getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_UploadPqcPreKeys>(
+          create);
+  static ApplicationData_UploadPqcPreKeys? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get eccSignedPrekeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set eccSignedPrekeyId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEccSignedPrekeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEccSignedPrekeyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get eccSignedPrekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set eccSignedPrekey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEccSignedPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEccSignedPrekey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get eccSignedPrekeySignature => $_getN(2);
+  @$pb.TagNumber(3)
+  set eccSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEccSignedPrekeySignature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEccSignedPrekeySignature() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get kyberSignedPrekeyId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set kyberSignedPrekeyId($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasKyberSignedPrekeyId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearKyberSignedPrekeyId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get kyberSignedPrekey => $_getN(4);
+  @$pb.TagNumber(5)
+  set kyberSignedPrekey($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKyberSignedPrekey() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKyberSignedPrekey() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get kyberSignedPrekeySignature => $_getN(5);
+  @$pb.TagNumber(6)
+  set kyberSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasKyberSignedPrekeySignature() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearKyberSignedPrekeySignature() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $pb.PbList<ApplicationData_PqcPreKey> get prekeys => $_getList(6);
+}
+
 class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadDone({
     $core.List<$core.int>? downloadToken,
@@ -3085,6 +3329,7 @@ enum ApplicationData_ApplicationData {
   getMemoriesUsage,
   deleteMemory,
   disableMemoriesBackup,
+  uploadPqcPrekeys,
   notSet
 }
 
@@ -3117,6 +3362,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetMemoriesUsage? getMemoriesUsage,
     ApplicationData_DeleteMemory? deleteMemory,
     ApplicationData_DisableMemoriesBackup? disableMemoriesBackup,
+    ApplicationData_UploadPqcPreKeys? uploadPqcPrekeys,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -3157,6 +3403,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (deleteMemory != null) result.deleteMemory = deleteMemory;
     if (disableMemoriesBackup != null)
       result.disableMemoriesBackup = disableMemoriesBackup;
+    if (uploadPqcPrekeys != null) result.uploadPqcPrekeys = uploadPqcPrekeys;
     return result;
   }
 
@@ -3198,6 +3445,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     37: ApplicationData_ApplicationData.getMemoriesUsage,
     38: ApplicationData_ApplicationData.deleteMemory,
     39: ApplicationData_ApplicationData.disableMemoriesBackup,
+    40: ApplicationData_ApplicationData.uploadPqcPrekeys,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3232,7 +3480,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       36,
       37,
       38,
-      39
+      39,
+      40
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -3327,6 +3576,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_DisableMemoriesBackup>(
         39, _omitFieldNames ? '' : 'disableMemoriesBackup',
         subBuilder: ApplicationData_DisableMemoriesBackup.create)
+    ..aOM<ApplicationData_UploadPqcPreKeys>(
+        40, _omitFieldNames ? '' : 'uploadPqcPrekeys',
+        subBuilder: ApplicationData_UploadPqcPreKeys.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3375,6 +3627,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(37)
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
+  @$pb.TagNumber(40)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3404,6 +3657,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(37)
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
+  @$pb.TagNumber(40)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3737,6 +3991,18 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(39)
   ApplicationData_DisableMemoriesBackup ensureDisableMemoriesBackup() =>
       $_ensure(26);
+
+  @$pb.TagNumber(40)
+  ApplicationData_UploadPqcPreKeys get uploadPqcPrekeys => $_getN(27);
+  @$pb.TagNumber(40)
+  set uploadPqcPrekeys(ApplicationData_UploadPqcPreKeys value) =>
+      $_setField(40, value);
+  @$pb.TagNumber(40)
+  $core.bool hasUploadPqcPrekeys() => $_has(27);
+  @$pb.TagNumber(40)
+  void clearUploadPqcPrekeys() => $_clearField(40);
+  @$pb.TagNumber(40)
+  ApplicationData_UploadPqcPreKeys ensureUploadPqcPrekeys() => $_ensure(27);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
@@ -3857,16 +4123,68 @@ class Response_Prekeys extends $pb.GeneratedMessage {
   $pb.PbList<Response_PreKey> get prekeys => $_getList(0);
 }
 
-enum Response_Ok_Ok { none, prekeys, notSet }
+class Response_PqcPrekeys extends $pb.GeneratedMessage {
+  factory Response_PqcPrekeys({
+    $core.Iterable<ApplicationData_PqcPreKey>? prekeys,
+  }) {
+    final result = create();
+    if (prekeys != null) result.prekeys.addAll(prekeys);
+    return result;
+  }
+
+  Response_PqcPrekeys._();
+
+  factory Response_PqcPrekeys.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PqcPrekeys.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PqcPrekeys',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..pPM<ApplicationData_PqcPreKey>(1, _omitFieldNames ? '' : 'prekeys',
+        subBuilder: ApplicationData_PqcPreKey.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcPrekeys clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcPrekeys copyWith(void Function(Response_PqcPrekeys) updates) =>
+      super.copyWith((message) => updates(message as Response_PqcPrekeys))
+          as Response_PqcPrekeys;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcPrekeys create() => Response_PqcPrekeys._();
+  @$core.override
+  Response_PqcPrekeys createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcPrekeys getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PqcPrekeys>(create);
+  static Response_PqcPrekeys? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ApplicationData_PqcPreKey> get prekeys => $_getList(0);
+}
+
+enum Response_Ok_Ok { none, prekeys, prekeysPqc, notSet }
 
 class Response_Ok extends $pb.GeneratedMessage {
   factory Response_Ok({
     $core.bool? none,
     Response_Prekeys? prekeys,
+    Response_PqcPrekeys? prekeysPqc,
   }) {
     final result = create();
     if (none != null) result.none = none;
     if (prekeys != null) result.prekeys = prekeys;
+    if (prekeysPqc != null) result.prekeysPqc = prekeysPqc;
     return result;
   }
 
@@ -3882,6 +4200,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, Response_Ok_Ok> _Response_Ok_OkByTag = {
     1: Response_Ok_Ok.none,
     2: Response_Ok_Ok.prekeys,
+    3: Response_Ok_Ok.prekeysPqc,
     0: Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3889,10 +4208,12 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
+    ..oo(0, [1, 2, 3])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aOM<Response_Prekeys>(2, _omitFieldNames ? '' : 'prekeys',
         subBuilder: Response_Prekeys.create)
+    ..aOM<Response_PqcPrekeys>(3, _omitFieldNames ? '' : 'prekeysPqc',
+        subBuilder: Response_PqcPrekeys.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3916,9 +4237,11 @@ class Response_Ok extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3940,6 +4263,17 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearPrekeys() => $_clearField(2);
   @$pb.TagNumber(2)
   Response_Prekeys ensurePrekeys() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  Response_PqcPrekeys get prekeysPqc => $_getN(2);
+  @$pb.TagNumber(3)
+  set prekeysPqc(Response_PqcPrekeys value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPrekeysPqc() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPrekeysPqc() => $_clearField(3);
+  @$pb.TagNumber(3)
+  Response_PqcPrekeys ensurePrekeysPqc() => $_ensure(2);
 }
 
 enum Response_Response { ok, error, notSet }
