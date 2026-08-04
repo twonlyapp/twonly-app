@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -206,7 +207,15 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                 '${context.lang.received}: ${friendlyDateTime(context, widget.message.ackByServer!)}',
               ),
             if (userService.currentUser.isDeveloper)
-              Text('ID: ${widget.message.messageId}'),
+              GestureDetector(
+                onTap: () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: widget.message.messageId),
+                  );
+                  await HapticFeedback.heavyImpact();
+                },
+                child: Text('ID: ${widget.message.messageId}'),
+              ),
             if (messageHistory.isNotEmpty) ...[
               const SizedBox(height: 10),
               const Divider(),

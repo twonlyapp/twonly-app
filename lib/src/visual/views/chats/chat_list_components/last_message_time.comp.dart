@@ -41,7 +41,11 @@ class _LastMessageTimeCompState extends State<LastMessageTimeComp> {
     _actionSubscription = null;
 
     if (widget.message != null) {
-      targetTime = widget.message!.openedAt ?? widget.message!.createdAt;
+      if (widget.message!.senderId == null) {
+        targetTime = widget.message!.openedAt ?? widget.message!.createdAt;
+      } else {
+        targetTime = widget.message!.createdAt;
+      }
       _updateSeconds();
     } else if (widget.dateTime != null) {
       targetTime = widget.dateTime;
