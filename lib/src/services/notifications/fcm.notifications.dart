@@ -10,6 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
+import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/notifications/fcm.background.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
@@ -167,51 +168,61 @@ class FcmNotificationService {
     // This is just a workarround until the new Rust decryption is enrolled fully.
     final pushDataString = message.data['push_data'] as String?;
     if (pushDataString != null) {
-      try {
-        final pushDataBytes = base64Decode(pushDataString);
-        final encryptedPush = EncryptedPushNotification.fromBuffer(
-          pushDataBytes,
-        );
-        final pushUsers = await getPushKeys(
-          SecureStorageKeys.receivingPushKeys,
-        );
-        for (final pushUser in pushUsers) {
-          for (final pushKey in pushUser.pushKeys) {
-            final decrypted = await tryDecryptMessage(
-              pushKey.key,
-              encryptedPush,
-            );
-            if (decrypted != null) {
-              if (isUUIDNewer(pushUser.lastMessageId, decrypted.messageId)) {
+      if (apiService.isConnected) {
+        Log.info('Got FCM message, but API is connected...');
+      } else {
+        Log.info('Trying to connect to the API in the background.');
+
+        if (await backgroundFetch()) {
+          return;
+        }
+
+        try {
+          final pushDataBytes = base64Decode(pushDataString);
+          final encryptedPush = EncryptedPushNotification.fromBuffer(
+            pushDataBytes,
+          );
+          final pushUsers = await getPushKeys(
+            SecureStorageKeys.receivingPushKeys,
+          );
+          for (final pushUser in pushUsers) {
+            for (final pushKey in pushUser.pushKeys) {
+              final decrypted = await tryDecryptMessage(
+                pushKey.key,
+                encryptedPush,
+              );
+              if (decrypted != null) {
+                if (isUUIDNewer(pushUser.lastMessageId, decrypted.messageId)) {
+                  Log.info(
+                    'Skipping local push notification because message is older than lastMessageId',
+                  );
+                  return;
+                }
                 Log.info(
-                  'Skipping local push notification because message is older than lastMessageId',
+                  'Successfully decrypted push_data directly from FCM payload! Showing notification.',
+                );
+                await showLocalPushNotification(
+                  pushUser,
+                  decrypted,
+                  titleSuffix:
+                      (userService.isUserCreated &&
+                          userService.currentUser.isDeveloper)
+                      ? ' [d]'
+                      : null,
+                );
+                unawaited(
+                  updateLastMessageId(
+                    pushUser.userId.toInt(),
+                    decrypted.messageId,
+                  ),
                 );
                 return;
               }
-              Log.info(
-                'Successfully decrypted push_data directly from FCM payload! Showing notification.',
-              );
-              await showLocalPushNotification(
-                pushUser,
-                decrypted,
-                titleSuffix:
-                    (userService.isUserCreated &&
-                        userService.currentUser.isDeveloper)
-                    ? ' [d]'
-                    : null,
-              );
-              unawaited(
-                updateLastMessageId(
-                  pushUser.userId.toInt(),
-                  decrypted.messageId,
-                ),
-              );
-              return;
             }
           }
+        } catch (e) {
+          Log.error('Error handling push_data: $e');
         }
-      } catch (e) {
-        Log.error('Error handling push_data: $e');
       }
     }
 
