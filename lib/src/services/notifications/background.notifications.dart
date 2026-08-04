@@ -102,6 +102,7 @@ Future<void> showLocalPushNotification(
   PushUser pushUser,
   PushNotification pushNotification, {
   String? groupId,
+  String? titleSuffix,
 }) async {
   String? title;
   String? body;
@@ -141,6 +142,10 @@ Future<void> showLocalPushNotification(
   }
 
   title = pushUser.displayName;
+  if (titleSuffix != null && titleSuffix.isNotEmpty) {
+    title = '$title $titleSuffix';
+  }
+
   body = getPushNotificationText(pushNotification);
   if (body == '') {
     Log.error('No push notification type defined!');
