@@ -63,6 +63,7 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
           .insert(companion, mode: InsertMode.insertOrReplace);
     } catch (e) {
       Log.error('$e');
+      rethrow;
     }
   }
 

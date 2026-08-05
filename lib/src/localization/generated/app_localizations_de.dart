@@ -742,6 +742,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteOkBtnForMe => 'Für mich löschen';
 
   @override
+  String get deleteOnlyForMe => 'Nur für mich löschen';
+
+  @override
   String get deleteImageTitle => 'Bist du dir sicher?';
 
   @override
@@ -817,7 +820,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupIdentityHeader => 'Identität';
 
   @override
-  String get backupArchiveHeader => 'Kontakte, Einstellungen und Nachrichten';
+  String get backupArchiveHeader => 'Kontakte & Nachrichten';
 
   @override
   String get backupLastBackupDate => 'Letztes Backup';
@@ -847,7 +850,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Backup wiederherstellen möchtest.';
+      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein Backup wiederherstellen möchtest.';
 
   @override
   String get password => 'Passwort';
@@ -877,6 +880,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backupChangePasswordAuthFailed =>
       'Du kannst dein Passwort nur ändern, wenn du dich authentifiziert hast!';
+
+  @override
+  String get backupFreeSpaceWithCloud =>
+      'Speicherplatz mit Cloud-Backup freigeben';
+
+  @override
+  String get backupMemoriesNotEnabled => 'Nicht aktiviert';
+
+  @override
+  String get backupMemoriesUpgradeRequired => 'Upgrade erforderlich';
+
+  @override
+  String todayAt(Object time) {
+    return 'Heute um $time';
+  }
+
+  @override
+  String yesterdayAt(Object time) {
+    return 'Gestern um $time';
+  }
 
   @override
   String get twonlySafeRecoverTitle => 'Backup wiederherstellen';
@@ -1961,6 +1984,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get subscriptionPledgeSubtitle => 'Keine Werbung. Volle Privatsphäre.';
 
   @override
+  String get subscriptionManage => 'Abonnement verwalten';
+
+  @override
   String get dragToZoom => 'Zum Zoomen ziehen';
 
   @override
@@ -2118,7 +2144,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get avatarCustomizeReset => 'Zurücksetzen';
 
   @override
-  String get passwordlessRecovery => 'Passwortloses Backup';
+  String get passwordlessRecovery => 'Passwort vergessen';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Nicht konfiguriert';
@@ -2184,7 +2210,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryEnableSuccess =>
-      'Passwortloses Backup erfolgreich aktiviert!';
+      '\"Passwort vergessen\" erfolgreich aktiviert!';
 
   @override
   String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
@@ -2194,13 +2220,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bitte gib eine E-Mail-Adresse ein.';
 
   @override
-  String get passwordlessRecoveryEnableBtn => 'Passwortloses Backup aktivieren';
+  String get passwordlessRecoveryEnableBtn =>
+      '\"Passwort vergessen\" aktivieren';
 
   @override
-  String get passwordlessRecoveryRecoverBtn => 'Passwortlos wiederherstellen';
+  String get passwordlessRecoveryRecoverBtn =>
+      'Mit \"Passwort vergessen\" wiederherstellen';
 
   @override
-  String get passwordlessRecoveryModifyBtn => 'Passwortloses Backup bearbeiten';
+  String get passwordlessRecoveryModifyBtn =>
+      '\"Passwort vergessen\" bearbeiten';
 
   @override
   String passwordlessRecoveryStatusEnabled(num count) {
@@ -2261,7 +2290,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoverySelectFriends => 'Freunde auswählen';
 
   @override
-  String get passwordlessRecoveryTrustedFriends => 'Vertrauenswürdige Freunde';
+  String get passwordlessRecoveryTrustedFriends => 'Kontowiederherstellung';
 
   @override
   String passwordlessRecoveryDoneBtn(num count) {
@@ -2375,7 +2404,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Jetzt wiederherstellen';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Vertrauenswürdige Kontakte';
+  String get missingRecoveryContactsCardTitle => 'Kontowiederherstellung';
 
   @override
   String get missingRecoveryContactsCardDesc =>
@@ -2426,7 +2455,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpNews => 'Neuigkeiten';
 
   @override
-  String get settingsStorageContents => 'Speicherinhalte';
+  String get settingsStorageContents => 'Speicherplatz freigeben';
 
   @override
   String get settingsStorageSortStorage => 'Belegter Speicher';
@@ -2475,4 +2504,68 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsStorageSyncUpToDate =>
       'Alle Memories sind auf dem neuesten Stand.';
+
+  @override
+  String restoreLostFlames(int count) {
+    return 'Stelle deine $count verlorenen Flammen wieder her';
+  }
+
+  @override
+  String get settingsShowRestoreFlameTitle =>
+      'Hinweis zur Flammen-Wiederherstellung anzeigen';
+
+  @override
+  String get contactLabelsTitle => 'Kontaktlabels';
+
+  @override
+  String get contactLabelsSubtitleEmpty => 'Keine Labels ausgewählt';
+
+  @override
+  String get contactLabelsMaxLimit => 'Maximal 3 Labels pro Kontakt';
+
+  @override
+  String get createLabel => 'Neues Label erstellen';
+
+  @override
+  String get editLabel => 'Label bearbeiten';
+
+  @override
+  String get deleteLabel => 'Label löschen';
+
+  @override
+  String get deleteLabelConfirmation =>
+      'Möchtest du dieses Label wirklich löschen? Es wird von allen Kontakten entfernt.';
+
+  @override
+  String get labelNameHint => 'Label-Name';
+
+  @override
+  String get labelTextColor => 'Textfarbe';
+
+  @override
+  String get labelBackgroundColor => 'Hintergrundfarbe';
+
+  @override
+  String get customColor => 'Eigene Farbe';
+
+  @override
+  String get hue => 'Farbton';
+
+  @override
+  String get saturation => 'Sättigung';
+
+  @override
+  String get brightness => 'Helligkeit';
+
+  @override
+  String get settingsAppearancePrimaryColor => 'Hauptfarbe';
+
+  @override
+  String get themeSystemDefault => 'Systemstandard';
+
+  @override
+  String get themeLight => 'Hell';
+
+  @override
+  String get themeDark => 'Dunkel';
 }

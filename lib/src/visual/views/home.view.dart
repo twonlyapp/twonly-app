@@ -48,6 +48,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
 
+  static Uri? pendingSharedLink;
   static final streamHomeViewPageIndex = StreamController<int>.broadcast();
   static final streamSharedLink = StreamController<Uri>.broadcast();
 
@@ -56,7 +57,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     var initialPage = widget.initialPage;
-    if (initialPage == 1 && !userService.currentUser.startWithCameraOpen) {
+    if (HomeViewState.pendingSharedLink != null) {
+      initialPage = 1;
+    } else if (initialPage == 1 &&
+        !userService.currentUser.startWithCameraOpen) {
       initialPage = 0;
     }
     _activePageIdx = initialPage;
@@ -100,6 +104,22 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       streamHomeViewPageIndex.add(0);
     });
 
+    _sharedLinkSub = streamSharedLink.stream.listen((uri) {
+      HomeViewState.pendingSharedLink = null;
+      _mainCameraController.setSharedLinkForPreview(uri);
+      Permission.camera.isGranted.then((hasPermission) {
+        if (hasPermission && mounted) {
+          unawaited(_mainCameraController.selectCamera(0, true));
+        }
+      });
+    });
+
+    if (HomeViewState.pendingSharedLink != null) {
+      final link = HomeViewState.pendingSharedLink!;
+      HomeViewState.pendingSharedLink = null;
+      _mainCameraController.setSharedLinkForPreview(link);
+    }
+
     if (initialPage == 1) {
       Permission.camera.isGranted.then((hasPermission) {
         if (hasPermission && mounted) {
@@ -110,14 +130,11 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     unawaited(_initAsync());
 
-    _sharedLinkSub = streamSharedLink.stream.listen(
-      _mainCameraController.setSharedLinkForPreview,
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialPage == 1 &&
-              !userService.currentUser.startWithCameraOpen ||
-          widget.initialPage == 0) {
+      if (_mainCameraController.sharedLinkForPreview == null &&
+          ((widget.initialPage == 1 &&
+                  !userService.currentUser.startWithCameraOpen) ||
+              widget.initialPage == 0)) {
         streamHomeViewPageIndex.add(0);
       }
       Future.delayed(const Duration(seconds: 1), () {

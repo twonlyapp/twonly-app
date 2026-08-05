@@ -33,6 +33,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..themeMode =
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
           ThemeMode.system
+      ..primaryColorValue = (json['primaryColorValue'] as num?)?.toInt()
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
@@ -60,11 +61,16 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
       ..autoStoreAllSendUnlimitedMediaFiles =
           json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
       ..typingIndicators = json['typingIndicators'] as bool? ?? true
+      ..showRestoreFlame = json['showRestoreFlame'] as bool? ?? true
       ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
           ? null
           : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..signalLastPqcPreKeysUploaded =
+          json['signalLastPqcPreKeysUploaded'] == null
+          ? null
+          : DateTime.parse(json['signalLastPqcPreKeysUploaded'] as String)
       ..allowErrorTrackingViaSentry =
           json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..screenLockEnabled = json['screenLockEnabled'] as bool? ?? false
@@ -136,6 +142,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'lastPlanBallance': instance.lastPlanBallance,
   'additionalUserInvites': instance.additionalUserInvites,
   'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+  'primaryColorValue': instance.primaryColorValue,
   'defaultShowTime': instance.defaultShowTime,
   'requestedAudioPermission': instance.requestedAudioPermission,
   'enableDatabaseLogging': instance.enableDatabaseLogging,
@@ -151,8 +158,11 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'autoStoreAllSendUnlimitedMediaFiles':
       instance.autoStoreAllSendUnlimitedMediaFiles,
   'typingIndicators': instance.typingIndicators,
+  'showRestoreFlame': instance.showRestoreFlame,
   'myBestFriendGroupId': instance.myBestFriendGroupId,
   'signalLastSignedPreKeyUpdated': instance.signalLastSignedPreKeyUpdated
+      ?.toIso8601String(),
+  'signalLastPqcPreKeysUploaded': instance.signalLastPqcPreKeysUploaded
       ?.toIso8601String(),
   'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
   'screenLockEnabled': instance.screenLockEnabled,

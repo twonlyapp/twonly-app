@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class _FactorOption {
   const _FactorOption({
@@ -113,7 +112,7 @@ class SecondFactorPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryColor : Colors.transparent,
+                  color: isSelected ? context.color.primary : Colors.transparent,
                   borderRadius: borderRadius,
                 ),
                 child: Column(

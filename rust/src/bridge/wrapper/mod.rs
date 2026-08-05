@@ -1,5 +1,6 @@
 pub mod backup;
 pub mod key_manager;
+pub mod signal;
 pub mod user_discovery;
 
 use crate::error::Result;

@@ -168,6 +168,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     super.initState();
     initVolumeControl();
     initAsync();
+    _checkAndInitCamera();
   }
 
   @override
@@ -176,9 +177,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (oldWidget.isVisible != widget.isVisible) {
       if (widget.isVisible) {
         initVolumeControl();
+        _checkAndInitCamera();
       } else {
         _deInitVolumeControl();
       }
+    }
+  }
+
+  void _checkAndInitCamera() {
+    if (widget.isVisible &&
+        mc.cameraController == null &&
+        !mc.initCameraStarted) {
+      unawaited(
+        mc.selectCamera(
+          mc.selectedCameraDetails.cameraId,
+          false,
+        ),
+      );
     }
   }
 
@@ -686,6 +701,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Widget build(BuildContext context) {
     if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
         mc.cameraController == null) {
+      if (widget.isVisible &&
+          !mc.initCameraStarted &&
+          !mc.isSharePreviewIsShown) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAndInitCamera();
+        });
+      }
       return Container();
     }
     return StreamBuilder(

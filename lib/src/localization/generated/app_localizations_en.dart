@@ -737,6 +737,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteOkBtnForMe => 'Delete for me';
 
   @override
+  String get deleteOnlyForMe => 'Delete only for me';
+
+  @override
   String get deleteImageTitle => 'Are you sure?';
 
   @override
@@ -812,7 +815,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupIdentityHeader => 'Identity';
 
   @override
-  String get backupArchiveHeader => 'Contacts, Settings and Messages';
+  String get backupArchiveHeader => 'Contacts & Messages';
 
   @override
   String get backupLastBackupDate => 'Last backup';
@@ -842,7 +845,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Choose a secure password. This is required if you want to restore your twonly Backup.';
+      'Choose a secure password. This is required if you want to restore your backup.';
 
   @override
   String get password => 'Password';
@@ -872,6 +875,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupChangePasswordAuthFailed =>
       'You can only change your password after you have authenticated!';
+
+  @override
+  String get backupFreeSpaceWithCloud => 'Free Space with Cloud Backup';
+
+  @override
+  String get backupMemoriesNotEnabled => 'Not enabled';
+
+  @override
+  String get backupMemoriesUpgradeRequired => 'Upgrade required';
+
+  @override
+  String todayAt(Object time) {
+    return 'Today at $time';
+  }
+
+  @override
+  String yesterdayAt(Object time) {
+    return 'Yesterday at $time';
+  }
 
   @override
   String get twonlySafeRecoverTitle => 'Restore backup';
@@ -1947,6 +1969,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionPledgeSubtitle => 'Zero ads. Total privacy.';
 
   @override
+  String get subscriptionManage => 'Manage subscription';
+
+  @override
   String get dragToZoom => 'Drag to Zoom';
 
   @override
@@ -2104,7 +2129,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarCustomizeReset => 'Reset';
 
   @override
-  String get passwordlessRecovery => 'Passwordless Recovery';
+  String get passwordlessRecovery => 'Password Recovery';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Not configured';
@@ -2245,7 +2270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoverySelectFriends => 'Select trusted friends';
 
   @override
-  String get passwordlessRecoveryTrustedFriends => 'Trusted Friends';
+  String get passwordlessRecoveryTrustedFriends => 'Account recovery';
 
   @override
   String passwordlessRecoveryDoneBtn(num count) {
@@ -2354,7 +2379,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recoverPasswordlessRecoverNowBtn => 'Recover now';
 
   @override
-  String get missingRecoveryContactsCardTitle => 'Recovery Contacts';
+  String get missingRecoveryContactsCardTitle => 'Account Recovery';
 
   @override
   String get missingRecoveryContactsCardDesc =>
@@ -2405,7 +2430,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpNews => 'News';
 
   @override
-  String get settingsStorageContents => 'Storage contents';
+  String get settingsStorageContents => 'Free up space';
 
   @override
   String get settingsStorageSortStorage => 'Occupied storage';
@@ -2453,4 +2478,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsStorageSyncUpToDate => 'All memories are up to date.';
+
+  @override
+  String restoreLostFlames(int count) {
+    return 'Restore your $count lost flames';
+  }
+
+  @override
+  String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
+
+  @override
+  String get contactLabelsTitle => 'Contact Labels';
+
+  @override
+  String get contactLabelsSubtitleEmpty => 'No labels selected';
+
+  @override
+  String get contactLabelsMaxLimit => 'Maximum 3 labels per contact';
+
+  @override
+  String get createLabel => 'Create new label';
+
+  @override
+  String get editLabel => 'Edit label';
+
+  @override
+  String get deleteLabel => 'Delete label';
+
+  @override
+  String get deleteLabelConfirmation =>
+      'Are you sure you want to delete this label? It will be removed from all contacts.';
+
+  @override
+  String get labelNameHint => 'Label name';
+
+  @override
+  String get labelTextColor => 'Text color';
+
+  @override
+  String get labelBackgroundColor => 'Background color';
+
+  @override
+  String get customColor => 'Custom Color';
+
+  @override
+  String get hue => 'Hue';
+
+  @override
+  String get saturation => 'Saturation';
+
+  @override
+  String get brightness => 'Brightness';
+
+  @override
+  String get settingsAppearancePrimaryColor => 'Primary Color';
+
+  @override
+  String get themeSystemDefault => 'System default';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
 }

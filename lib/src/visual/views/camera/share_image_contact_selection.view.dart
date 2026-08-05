@@ -310,10 +310,12 @@ class _ShareImageView extends State<ShareImageView> {
                               });
 
                               // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-                              await insertMediaFileInMessagesTable(
-                                widget.mediaFileService,
-                                widget.selectedGroupIds.toList(),
-                                additionalData: widget.additionalData,
+                              unawaited(
+                                insertMediaFileInMessagesTable(
+                                  widget.mediaFileService,
+                                  widget.selectedGroupIds.toList(),
+                                  additionalData: widget.additionalData,
+                                ),
                               );
 
                               if (context.mounted) {

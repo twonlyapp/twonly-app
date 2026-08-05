@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/main_camera_controller.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 
 class CameraSendToView extends StatefulWidget {
   const CameraSendToView(this.sendToGroup, {super.key});
@@ -24,6 +28,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
     };
     Permission.camera.isGranted.then((hasPermission) {
       if (hasPermission && mounted) {
+        AppState.hasCameraPermissions = true;
         unawaited(_mainCameraController.selectCamera(0, true));
       }
     });
@@ -56,6 +61,17 @@ class CameraSendToViewState extends State<CameraSendToView> {
               mainController: _mainCameraController,
               sendToGroup: widget.sendToGroup,
               isVisible: true,
+            ),
+          ),
+          // Always-visible back button so the user can exit regardless of
+          // camera state (e.g. during init or after init failure).
+          Positioned(
+            left: 5,
+            top: MediaQuery.paddingOf(context).top + 10,
+            child: ActionButton(
+              FontAwesomeIcons.xmark,
+              tooltipText: context.lang.close,
+              onPressed: () => Navigator.pop(context),
             ),
           ),
         ],

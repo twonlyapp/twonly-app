@@ -89,15 +89,17 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           Locale('de', ''),
         ];
 
+        final settings = context.watch<SettingsChangeProvider>();
+
         if (widget.storageError) {
           return MaterialApp(
             localizationsDelegates: localizationsDelegates,
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
             title: 'twonly',
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: context.read<SettingsChangeProvider>().themeMode,
+            theme: getLightTheme(settings.primaryColor),
+            darkTheme: getDarkTheme(settings.primaryColor),
+            themeMode: settings.themeMode,
             home: const CriticalErrorView(),
           );
         }
@@ -108,9 +110,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             debugShowCheckedModeBanner: false,
             supportedLocales: supportedLocales,
             title: 'twonly',
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: context.read<SettingsChangeProvider>().themeMode,
+            theme: getLightTheme(settings.primaryColor),
+            darkTheme: getDarkTheme(settings.primaryColor),
+            themeMode: settings.themeMode,
             home: const RecoveryView(),
           );
         }
@@ -121,9 +123,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           debugShowCheckedModeBanner: false,
           supportedLocales: supportedLocales,
           title: 'twonly',
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: context.read<SettingsChangeProvider>().themeMode,
+          theme: getLightTheme(settings.primaryColor),
+          darkTheme: getDarkTheme(settings.primaryColor),
+          themeMode: settings.themeMode,
         );
       },
     );
@@ -161,6 +163,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     initAsync();
 
     void handleShareLink(Uri uri) {
+      HomeViewState.pendingSharedLink = uri;
       routerProvider.go(Routes.home);
       HomeViewState.streamHomeViewPageIndex.add(1);
       HomeViewState.streamSharedLink.add(uri);

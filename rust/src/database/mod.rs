@@ -5,12 +5,12 @@ use std::time::Duration;
 
 pub(crate) mod tables;
 
-pub(crate) struct Database {
-    pub(crate) pool: SqlitePool,
+pub struct Database {
+    pub pool: SqlitePool,
 }
 
 impl Database {
-    pub(crate) async fn new(
+    pub async fn new(
         db_path: &String,
         encryption_key: Option<&str>,
         read_only: bool,
@@ -47,7 +47,7 @@ impl Database {
         Ok(Self { pool })
     }
 
-    pub(crate) async fn run_migrations(&self) -> Result<()> {
+    pub async fn run_migrations(&self) -> Result<()> {
         sqlx::migrate!("./src/database/migrations")
             .run(&self.pool)
             .await

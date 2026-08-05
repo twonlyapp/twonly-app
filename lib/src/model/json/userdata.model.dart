@@ -57,6 +57,12 @@ class UserData {
   @JsonKey(defaultValue: ThemeMode.system)
   ThemeMode themeMode = ThemeMode.system;
 
+  int? primaryColorValue;
+
+  Color get primaryColor => primaryColorValue != null
+      ? Color(primaryColorValue!)
+      : const Color(0xFF57CC99);
+
   int? defaultShowTime;
 
   @JsonKey(defaultValue: false)
@@ -93,9 +99,14 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool typingIndicators = true;
 
+  @JsonKey(defaultValue: true)
+  bool showRestoreFlame = true;
+
   String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
+
+  DateTime? signalLastPqcPreKeysUploaded;
 
   @JsonKey(defaultValue: false)
   bool allowErrorTrackingViaSentry = false;

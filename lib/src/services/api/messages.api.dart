@@ -5,10 +5,10 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
@@ -176,11 +176,11 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
     }
 
     if (message.type == pb.Message_Type.CIPHERTEXT) {
-      final cipherText = await signalEncryptMessage(
+      final encryptResult = await signalEncryptMessage(
         receipt.contactId,
         Uint8List.fromList(message.encryptedContent),
       );
-      if (cipherText == null) {
+      if (encryptResult == null) {
         Log.error(
           '[${receipt.receiptId}] Could not encrypt the message for user ${receipt.contactId}. Aborting and trying again.',
         );
@@ -194,16 +194,31 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
         await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
         return null;
       }
-      message.encryptedContent = cipherText.serialize();
-      switch (cipherText.getType()) {
-        case CiphertextMessage.prekeyType:
-          message.type = pb.Message_Type.PREKEY_BUNDLE;
-        case CiphertextMessage.whisperType:
-          message.type = pb.Message_Type.CIPHERTEXT;
-        default:
-          Log.error('Invalid ciphertext type: ${cipherText.getType()}.');
-          return null;
+      message
+        ..encryptedContent = encryptResult.ciphertext
+        ..type = encryptResult.type;
+    } else if (message.type == pb.Message_Type.CIPHERTEXT_V2) {
+      final encryptResult = await signalEncryptMessageV2(
+        receipt.contactId,
+        Uint8List.fromList(message.encryptedContent),
+      );
+      if (encryptResult == null) {
+        Log.error(
+          '[${receipt.receiptId}] Could not encrypt the message (V2) for user ${receipt.contactId}. Aborting and trying again.',
+        );
+        if (receipt.messageId != null) {
+          await twonlyDB.messagesDao.handleMessageAckByServer(
+            receipt.contactId,
+            receipt.messageId!,
+            clock.now(),
+          );
+        }
+        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
+        return null;
       }
+      message
+        ..encryptedContent = encryptResult.ciphertext
+        ..type = encryptResult.type;
     }
 
     if (onlyReturnEncryptedData) {
@@ -482,8 +497,11 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     }
   }
 
+  final contact = await twonlyDB.contactsDao.getContactById(contactId);
+  final isV2 = contact?.signalVersion == SignalVersion.v2;
+
   final response = pb.Message()
-    ..type = pb.Message_Type.CIPHERTEXT
+    ..type = isV2 ? pb.Message_Type.CIPHERTEXT_V2 : pb.Message_Type.CIPHERTEXT
     ..encryptedContent = encryptedContent.writeToBuffer();
 
   var retryCounter = 0;

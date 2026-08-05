@@ -7,6 +7,7 @@ message Message {
     CIPHERTEXT              = 2;
     PREKEY_BUNDLE           = 3;
     TEST_NOTIFICATION       = 4;
+    CIPHERTEXT_V2           = 5;
   }
   Type                      type              = 1;
   string                    receipt_id        = 2;

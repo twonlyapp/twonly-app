@@ -10,11 +10,14 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
 import 'package:twonly/src/visual/elements/contact_chip.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_group_name.view.dart';
 
 class GroupCreateSelectMembersView extends StatefulWidget {
@@ -131,14 +134,21 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
           ),
         ),
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        floatingActionButton: FilledButton.icon(
+        floatingActionButton: MyButton(
+          variant: MyButtonVariant.primaryMiddle,
           onPressed: selectedUsers.isEmpty ? null : submitChanges,
-          label: Text(
-            widget.groupId == null
-                ? context.lang.next
-                : context.lang.updateGroup,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const FaIcon(FontAwesomeIcons.penToSquare, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                widget.groupId == null
+                    ? context.lang.next
+                    : context.lang.updateGroup,
+              ),
+            ],
           ),
-          icon: const FaIcon(FontAwesomeIcons.penToSquare),
         ),
         body: SafeArea(
           child: Padding(
@@ -209,43 +219,58 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              Text(getContactDisplayName(user)),
-                              FlameCounterWidget(
-                                contactId: user.userId,
-                                prefix: true,
-                              ),
-                            ],
-                          ),
-                          subtitle: (alreadyInGroup.contains(user.userId))
+                        child: ContactLabelsSubtitleBuilder(
+                          contactId: user.userId,
+                          additionalSubtitle: alreadyInGroup.contains(user.userId)
                               ? Text(context.lang.alreadyInGroup)
                               : null,
-                          leading: AvatarIcon(
-                            contactId: user.userId,
-                            fontSize: 13,
-                          ),
-                          trailing: Checkbox.adaptive(
-                            value:
-                                selectedUsers.contains(user.userId) |
-                                alreadyInGroup.contains(user.userId),
-                            side: WidgetStateBorderSide.resolveWith(
-                              (states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return const BorderSide(width: 0);
-                                }
-                                return BorderSide(
-                                  color: Theme.of(context).colorScheme.outline,
-                                );
+                          builder: (context, subtitleWidget) {
+                            return ListTile(
+                              title: Row(
+                                children: [
+                                  Text(getContactDisplayName(user)),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 8,
+                                      left: 1,
+                                    ),
+                                    child: VerificationBadgeComp(
+                                      contact: user,
+                                    ),
+                                  ),
+                                  FlameCounterWidget(
+                                    contactId: user.userId,
+                                    prefix: true,
+                                  ),
+                                ],
+                              ),
+                              subtitle: subtitleWidget,
+                              leading: AvatarIcon(
+                                contactId: user.userId,
+                                fontSize: 13,
+                              ),
+                              trailing: Checkbox.adaptive(
+                                value:
+                                    selectedUsers.contains(user.userId) |
+                                    alreadyInGroup.contains(user.userId),
+                                side: WidgetStateBorderSide.resolveWith(
+                                  (states) {
+                                    if (states.contains(WidgetState.selected)) {
+                                      return const BorderSide(width: 0);
+                                    }
+                                    return BorderSide(
+                                      color: Theme.of(context).colorScheme.outline,
+                                    );
+                                  },
+                                ),
+                                onChanged: (value) {
+                                  toggleSelectedUser(user.userId);
+                                },
+                              ),
+                              onTap: () {
+                                toggleSelectedUser(user.userId);
                               },
-                            ),
-                            onChanged: (value) {
-                              toggleSelectedUser(user.userId);
-                            },
-                          ),
-                          onTap: () {
-                            toggleSelectedUser(user.userId);
+                            );
                           },
                         ),
                       );

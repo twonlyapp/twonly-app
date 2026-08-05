@@ -1,12 +1,13 @@
 mod backup;
 pub mod bridge;
 mod context;
-mod database;
+pub mod database;
 mod error;
 mod frb_generated;
 mod keys;
 mod log;
 mod secure_storage;
+pub mod signal;
 mod standalone;
 mod user_discovery;
 mod utils;

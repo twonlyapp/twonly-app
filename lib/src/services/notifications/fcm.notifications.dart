@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/notifications/fcm.background.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -144,6 +145,7 @@ class FcmNotificationService {
   }
 
   static Future<void> handleRemoteMessage(RemoteMessage message) async {
+    Log.info('handleRemoteMessage received message: ${message.messageId}');
     await _updateLastFcmMessageTimestamp();
     if (!Platform.isAndroid) {
       Log.error('Got message in Dart while on iOS');
@@ -153,6 +155,24 @@ class FcmNotificationService {
         'Got notification but app is in background, so the SDK already have shown the message.',
       );
       return;
+    }
+
+    // In scenarios like Android Doze Mode or aggressive background restrictions, the OS may kill
+    // or heavily restrict network access, preventing the WebSocket from connecting in time.
+    // By parsing the FCM data payload offline, we can instantly display the notification, which also
+    // prevents FCM from penalizing/downgrading the app's data message priority for failing to show a notification.
+    // This is just a workarround until the new Rust decryption is enrolled fully.
+    final pushDataString = message.data['push_data'] as String?;
+    if (pushDataString != null) {
+      if (apiService.isConnected) {
+        Log.info('Got FCM message, but API is connected...');
+      } else {
+        Log.info('Trying to connect to the API in the background.');
+
+        if (await backgroundFetch()) {
+          return;
+        }
+      }
     }
 
     if (message.notification != null || message.data['title'] != null) {

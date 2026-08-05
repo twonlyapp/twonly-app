@@ -33,7 +33,12 @@ class Result<T, E> {
 }
 
 DateTime fromTimestamp(Int64 timeStamp) {
-  return DateTime.fromMillisecondsSinceEpoch(timeStamp.toInt());
+  final date = DateTime.fromMillisecondsSinceEpoch(timeStamp.toInt());
+  final now = DateTime.now();
+  if (date.isAfter(now)) {
+    return now;
+  }
+  return date;
 }
 
 // ignore: strict_raw_type

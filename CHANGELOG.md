@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+- New: Update to Signal's new PQC-ready key agreement PQXDH
+- New: Contact labels
+- Fix: Multiple bug fixes
+- Fix: Multiple black screens
+
 ## 0.4.0
 
 - New: Encrypted Cloud Backup of Memories

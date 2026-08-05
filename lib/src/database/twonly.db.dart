@@ -6,6 +6,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
+import 'package:twonly/src/database/daos/labels.dao.dart';
 import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
@@ -15,6 +16,7 @@ import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/drift_logging_interceptor.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
+import 'package:twonly/src/database/tables/labels.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
@@ -59,6 +61,8 @@ part 'twonly.db.g.dart';
     UserDiscoveryShares,
     Shortcuts,
     ShortcutMembers,
+    Labels,
+    ContactLabels,
   ],
   daos: [
     MessagesDao,
@@ -70,6 +74,7 @@ part 'twonly.db.g.dart';
     UserDiscoveryDao,
     KeyVerificationDao,
     ShortcutsDao,
+    LabelsDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
@@ -82,7 +87,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 25;
 
   static QueryExecutor _openConnection() {
     final connection = driftDatabase(
@@ -284,6 +289,13 @@ class TwonlyDB extends _$TwonlyDB {
               schema.mediaFiles,
               schema.mediaFiles.blurhash,
             );
+          },
+          from23To24: (m, schema) async {
+            await m.createTable(schema.labels);
+            await m.createTable(schema.contactLabels);
+          },
+          from24To25: (m, schema) async {
+            await m.addColumn(schema.contacts, schema.contacts.signalVersion);
           },
         )(m, from, to);
       },

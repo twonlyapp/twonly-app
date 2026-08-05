@@ -7,10 +7,13 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -20,6 +23,7 @@ import 'package:twonly/src/visual/views/contact/contact_components/mutual_groups
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/user_discovery_contact_settings.comp.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/verification_expansion_tile.comp.dart';
+import 'package:twonly/src/visual/views/contact/select_contact_labels.view.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
 
 class ContactView extends StatefulWidget {
@@ -225,6 +229,21 @@ class _ContactViewState extends State<ContactView> {
               userService.currentUser.userId,
             ),
           ),
+          ContactLabelsSubtitleBuilder(
+            contactId: contact.userId,
+            builder: (context, subtitleWidget) {
+              return BetterListTile(
+                icon: FontAwesomeIcons.tag,
+                text: context.lang.contactLabelsTitle,
+                subtitle: subtitleWidget,
+                onTap: () {
+                  context.navPush(
+                    SelectContactLabelsView(contactId: contact.userId),
+                  );
+                },
+              );
+            },
+          ),
           const Divider(),
           RestoreFlameComp(
             contactId: widget.userId,
@@ -256,6 +275,48 @@ class _ContactViewState extends State<ContactView> {
             text: context.lang.contactRemove,
             onTap: () => handleUserRemoveRequest(contact),
           ),
+          if (userService.currentUser.isDeveloper) ...[
+            if (contact.signalVersion != SignalVersion.v2)
+              BetterListTile(
+                icon: FontAwesomeIcons.arrowsRotate,
+                text: 'Update Connection to V2 (PQXDH)',
+                onTap: () async {
+                  final userData = await apiService.getUserById(contact.userId);
+                  if (userData != null) {
+                    await processSignalUserData(userData);
+                    final updatedContact = await twonlyDB.contactsDao
+                        .getContactById(contact.userId);
+                    final isV2 =
+                        updatedContact?.signalVersion == SignalVersion.v2;
+
+                    if (context.mounted) {
+                      showSnackbar(
+                        context,
+                        isV2
+                            ? 'Connection updated to V2 successfully'
+                            : 'Failed to update connection to V2',
+                        level: isV2
+                            ? SnackbarLevel.success
+                            : SnackbarLevel.error,
+                      );
+                    }
+                  }
+                },
+              ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  'Encryption: ${switch (contact.signalVersion) {
+                    SignalVersion.v1 => 'Signal Protocol (v1)',
+                    SignalVersion.v2 => 'PQXDH (v2)',
+                  }}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

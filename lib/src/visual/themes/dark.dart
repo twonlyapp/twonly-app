@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 
-final ThemeData darkTheme = () {
+ThemeData getDarkTheme([Color primary = defaultPrimaryColor]) {
   final base = ThemeData.dark().copyWith(
     colorScheme: ColorScheme.fromSeed(
       brightness: Brightness.dark,
-      seedColor: const Color(0xFF57CC99),
+      seedColor: primary,
+      primary: primary,
       surface: const Color.fromARGB(255, 20, 18, 23),
       surfaceContainer: const Color.fromARGB(255, 45, 41, 54),
       surfaceContainerLow: const Color.fromARGB(255, 38, 34, 45),
@@ -21,4 +23,6 @@ final ThemeData darkTheme = () {
       fontFamilyFallback: Platform.isAndroid ? const ['NotoColorEmoji'] : null,
     ),
   );
-}();
+}
+
+final ThemeData darkTheme = getDarkTheme();

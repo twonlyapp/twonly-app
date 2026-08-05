@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::bridge::get_twonly_flutter;
 use crate::error::{Result, TwonlyError};
 use crate::keys::SignalIdentityKey;
+use crate::signal::engine::RustSignalEngine;
 
 pub struct RustKeyManager {}
 
@@ -19,9 +20,21 @@ impl RustKeyManager {
 
     pub async fn set_user_id(user_id: i64) -> Result<()> {
         let ctx = get_twonly_flutter()?;
-        let mut key_manager = ctx.key_manager.lock().await;
-        key_manager.user_id = Some(user_id);
-        key_manager.store_to_keychain(&ctx.secure_storage)?;
+        {
+            let mut key_manager = ctx.key_manager.lock().await;
+            key_manager.user_id = Some(user_id);
+            key_manager.store_to_keychain(&ctx.secure_storage)?;
+        }
+
+        let mut guard = ctx.signal_engine.lock().await;
+        match RustSignalEngine::new(user_id.to_string()).await {
+            Ok(engine) => *guard = Some(engine),
+            Err(e) => {
+                tracing::warn!("Failed to initialize Signal engine on set_user_id: {}. It will be initialized later.", e);
+                *guard = None;
+            }
+        }
+
         Ok(())
     }
 
@@ -31,13 +44,31 @@ impl RustKeyManager {
         signed_pre_key_store: HashMap<i64, Vec<u8>>,
     ) -> Result<()> {
         let ctx = get_twonly_flutter()?;
-        let mut key_manager = ctx.key_manager.lock().await;
-        key_manager.signal_identity = Some(SignalIdentityKey {
-            identity_key_pair_structure,
-            registration_id,
-            pre_key_store: signed_pre_key_store,
-        });
-        key_manager.store_to_keychain(&ctx.secure_storage)?;
+        let user_id = {
+            let mut key_manager = ctx.key_manager.lock().await;
+            key_manager.signal_identity = Some(SignalIdentityKey {
+                identity_key_pair_structure,
+                registration_id,
+                pre_key_store: signed_pre_key_store,
+            });
+            key_manager.store_to_keychain(&ctx.secure_storage)?;
+            key_manager.user_id
+        };
+
+        if let Some(user_id) = user_id {
+            let mut guard = ctx.signal_engine.lock().await;
+            match RustSignalEngine::new(user_id.to_string()).await {
+                Ok(engine) => *guard = Some(engine),
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to initialize Signal engine on import_signal_identity: {}.",
+                        e
+                    );
+                    *guard = None;
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -132,13 +163,19 @@ impl RustKeyManager {
         }
         let mut key_array = [0u8; 32];
         key_array.copy_from_slice(&media_key);
-        Ok(key_manager.main_key.encrypt_cloud_media_key(&key_array, &addition))
+        Ok(key_manager
+            .main_key
+            .encrypt_cloud_media_key(&key_array, &addition))
     }
 
-    pub async fn decrypt_cloud_media_key(encrypted_media_key: Vec<u8>, addition: String) -> Result<Vec<u8>> {
+    pub async fn decrypt_cloud_media_key(
+        encrypted_media_key: Vec<u8>,
+        addition: String,
+    ) -> Result<Vec<u8>> {
         let key_manager = get_twonly_flutter()?.key_manager.lock().await;
-        let decrypted = key_manager.main_key.decrypt_cloud_media_key(&encrypted_media_key, &addition)?;
+        let decrypted = key_manager
+            .main_key
+            .decrypt_cloud_media_key(&encrypted_media_key, &addition)?;
         Ok(decrypted.to_vec())
     }
 }
-

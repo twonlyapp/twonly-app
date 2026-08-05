@@ -1,3 +1,4 @@
+use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::UserDiscovery;
 use crate::{
     bridge::{
@@ -132,6 +133,17 @@ impl Context {
                 rust_db_key.zeroize();
 
                 if is_flutter {
+                    let mut signal_engine = Arc::default();
+                    if let Some(user_id) = key_manager.user_id {
+                        if let Some(signal_identity) = &key_manager.signal_identity {
+                            signal_engine = Arc::new(Mutex::new(Some(RustSignalEngine::new_with_pool(
+                                rust_db.pool.clone(),
+                                signal_identity.identity_key_pair_structure.clone(),
+                                signal_identity.registration_id as u32,
+                                user_id.to_string(),
+                            )?)));
+                        }
+                    }
                     Ok(Context::Flutter(TwonlyFlutter {
                         config,
                         secure_storage,
@@ -141,6 +153,7 @@ impl Context {
                             UserDiscoveryStoreFlutter {},
                             UserDiscoveryUtilsFlutter {},
                         )?),
+                        signal_engine,
                     }))
                 } else {
                     Ok(Context::Standalone(TwonlyStandalone {

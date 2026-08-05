@@ -174,6 +174,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<SignalVersion, String>
+  signalVersion = GeneratedColumn<String>(
+    'signal_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('v1'),
+  ).withConverter<SignalVersion>($ContactsTable.$convertersignalVersion);
   static const VerificationMeta _userDiscoveryVersionMeta =
       const VerificationMeta('userDiscoveryVersion');
   @override
@@ -337,6 +347,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     verified,
     accountDeleted,
     createdAt,
+    signalVersion,
     userDiscoveryVersion,
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
@@ -626,6 +637,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      signalVersion: $ContactsTable.$convertersignalVersion.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}signal_version'],
+        )!,
+      ),
       userDiscoveryVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}user_discovery_version'],
@@ -681,6 +698,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   $ContactsTable createAlias(String alias) {
     return $ContactsTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<SignalVersion, String, String>
+  $convertersignalVersion = const EnumNameConverter<SignalVersion>(
+    SignalVersion.values,
+  );
 }
 
 class Contact extends DataClass implements Insertable<Contact> {
@@ -697,6 +719,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool accountDeleted;
   final DateTime createdAt;
+  final SignalVersion signalVersion;
   final Uint8List? userDiscoveryVersion;
   final bool userDiscoveryExcluded;
   final bool? userDiscoveryManualApproved;
@@ -723,6 +746,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     required this.verified,
     required this.accountDeleted,
     required this.createdAt,
+    required this.signalVersion,
     this.userDiscoveryVersion,
     required this.userDiscoveryExcluded,
     this.userDiscoveryManualApproved,
@@ -758,6 +782,11 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['verified'] = Variable<bool>(verified);
     map['account_deleted'] = Variable<bool>(accountDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['signal_version'] = Variable<String>(
+        $ContactsTable.$convertersignalVersion.toSql(signalVersion),
+      );
+    }
     if (!nullToAbsent || userDiscoveryVersion != null) {
       map['user_discovery_version'] = Variable<Uint8List>(userDiscoveryVersion);
     }
@@ -820,6 +849,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: Value(verified),
       accountDeleted: Value(accountDeleted),
       createdAt: Value(createdAt),
+      signalVersion: Value(signalVersion),
       userDiscoveryVersion: userDiscoveryVersion == null && nullToAbsent
           ? const Value.absent()
           : Value(userDiscoveryVersion),
@@ -878,6 +908,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: serializer.fromJson<bool>(json['verified']),
       accountDeleted: serializer.fromJson<bool>(json['accountDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      signalVersion: $ContactsTable.$convertersignalVersion.fromJson(
+        serializer.fromJson<String>(json['signalVersion']),
+      ),
       userDiscoveryVersion: serializer.fromJson<Uint8List?>(
         json['userDiscoveryVersion'],
       ),
@@ -931,6 +964,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'verified': serializer.toJson<bool>(verified),
       'accountDeleted': serializer.toJson<bool>(accountDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'signalVersion': serializer.toJson<String>(
+        $ContactsTable.$convertersignalVersion.toJson(signalVersion),
+      ),
       'userDiscoveryVersion': serializer.toJson<Uint8List?>(
         userDiscoveryVersion,
       ),
@@ -976,6 +1012,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     bool? verified,
     bool? accountDeleted,
     DateTime? createdAt,
+    SignalVersion? signalVersion,
     Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
     bool? userDiscoveryExcluded,
     Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -1004,6 +1041,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified: verified ?? this.verified,
     accountDeleted: accountDeleted ?? this.accountDeleted,
     createdAt: createdAt ?? this.createdAt,
+    signalVersion: signalVersion ?? this.signalVersion,
     userDiscoveryVersion: userDiscoveryVersion.present
         ? userDiscoveryVersion.value
         : this.userDiscoveryVersion,
@@ -1059,6 +1097,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? data.accountDeleted.value
           : this.accountDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      signalVersion: data.signalVersion.present
+          ? data.signalVersion.value
+          : this.signalVersion,
       userDiscoveryVersion: data.userDiscoveryVersion.present
           ? data.userDiscoveryVersion.value
           : this.userDiscoveryVersion,
@@ -1114,6 +1155,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
+          ..write('signalVersion: $signalVersion, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
@@ -1147,6 +1189,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     verified,
     accountDeleted,
     createdAt,
+    signalVersion,
     $driftBlobEquality.hash(userDiscoveryVersion),
     userDiscoveryExcluded,
     userDiscoveryManualApproved,
@@ -1180,6 +1223,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.verified == this.verified &&
           other.accountDeleted == this.accountDeleted &&
           other.createdAt == this.createdAt &&
+          other.signalVersion == this.signalVersion &&
           $driftBlobEquality.equals(
             other.userDiscoveryVersion,
             this.userDiscoveryVersion,
@@ -1219,6 +1263,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> verified;
   final Value<bool> accountDeleted;
   final Value<DateTime> createdAt;
+  final Value<SignalVersion> signalVersion;
   final Value<Uint8List?> userDiscoveryVersion;
   final Value<bool> userDiscoveryExcluded;
   final Value<bool?> userDiscoveryManualApproved;
@@ -1245,6 +1290,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.signalVersion = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
@@ -1272,6 +1318,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.signalVersion = const Value.absent(),
     this.userDiscoveryVersion = const Value.absent(),
     this.userDiscoveryExcluded = const Value.absent(),
     this.userDiscoveryManualApproved = const Value.absent(),
@@ -1299,6 +1346,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? verified,
     Expression<bool>? accountDeleted,
     Expression<DateTime>? createdAt,
+    Expression<String>? signalVersion,
     Expression<Uint8List>? userDiscoveryVersion,
     Expression<bool>? userDiscoveryExcluded,
     Expression<bool>? userDiscoveryManualApproved,
@@ -1328,6 +1376,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (verified != null) 'verified': verified,
       if (accountDeleted != null) 'account_deleted': accountDeleted,
       if (createdAt != null) 'created_at': createdAt,
+      if (signalVersion != null) 'signal_version': signalVersion,
       if (userDiscoveryVersion != null)
         'user_discovery_version': userDiscoveryVersion,
       if (userDiscoveryExcluded != null)
@@ -1368,6 +1417,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<bool>? verified,
     Value<bool>? accountDeleted,
     Value<DateTime>? createdAt,
+    Value<SignalVersion>? signalVersion,
     Value<Uint8List?>? userDiscoveryVersion,
     Value<bool>? userDiscoveryExcluded,
     Value<bool?>? userDiscoveryManualApproved,
@@ -1395,6 +1445,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       verified: verified ?? this.verified,
       accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
+      signalVersion: signalVersion ?? this.signalVersion,
       userDiscoveryVersion: userDiscoveryVersion ?? this.userDiscoveryVersion,
       userDiscoveryExcluded:
           userDiscoveryExcluded ?? this.userDiscoveryExcluded,
@@ -1461,6 +1512,11 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (signalVersion.present) {
+      map['signal_version'] = Variable<String>(
+        $ContactsTable.$convertersignalVersion.toSql(signalVersion.value),
+      );
     }
     if (userDiscoveryVersion.present) {
       map['user_discovery_version'] = Variable<Uint8List>(
@@ -1537,6 +1593,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('verified: $verified, ')
           ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt, ')
+          ..write('signalVersion: $signalVersion, ')
           ..write('userDiscoveryVersion: $userDiscoveryVersion, ')
           ..write('userDiscoveryExcluded: $userDiscoveryExcluded, ')
           ..write('userDiscoveryManualApproved: $userDiscoveryManualApproved, ')
@@ -1769,7 +1826,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         false,
         type: DriftSqlType.int,
         requiredDuringInsert: false,
-        defaultValue: const Constant(defaultDeleteMessagesAfterMilliseconds),
+        defaultValue: const Constant(1000 * 60 * 60 * 24),
       );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -13161,6 +13218,582 @@ class ShortcutMembersCompanion extends UpdateCompanion<ShortcutMember> {
   }
 }
 
+class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LabelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _textColorMeta = const VerificationMeta(
+    'textColor',
+  );
+  @override
+  late final GeneratedColumn<int> textColor = GeneratedColumn<int>(
+    'text_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _backgroundColorMeta = const VerificationMeta(
+    'backgroundColor',
+  );
+  @override
+  late final GeneratedColumn<int> backgroundColor = GeneratedColumn<int>(
+    'background_color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    textColor,
+    backgroundColor,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'labels';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Label> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('text_color')) {
+      context.handle(
+        _textColorMeta,
+        textColor.isAcceptableOrUnknown(data['text_color']!, _textColorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_textColorMeta);
+    }
+    if (data.containsKey('background_color')) {
+      context.handle(
+        _backgroundColorMeta,
+        backgroundColor.isAcceptableOrUnknown(
+          data['background_color']!,
+          _backgroundColorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_backgroundColorMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Label map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Label(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      textColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}text_color'],
+      )!,
+      backgroundColor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}background_color'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LabelsTable createAlias(String alias) {
+    return $LabelsTable(attachedDatabase, alias);
+  }
+}
+
+class Label extends DataClass implements Insertable<Label> {
+  final int id;
+  final String name;
+  final int textColor;
+  final int backgroundColor;
+  final DateTime createdAt;
+  const Label({
+    required this.id,
+    required this.name,
+    required this.textColor,
+    required this.backgroundColor,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['text_color'] = Variable<int>(textColor);
+    map['background_color'] = Variable<int>(backgroundColor);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  LabelsCompanion toCompanion(bool nullToAbsent) {
+    return LabelsCompanion(
+      id: Value(id),
+      name: Value(name),
+      textColor: Value(textColor),
+      backgroundColor: Value(backgroundColor),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Label.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Label(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      textColor: serializer.fromJson<int>(json['textColor']),
+      backgroundColor: serializer.fromJson<int>(json['backgroundColor']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'textColor': serializer.toJson<int>(textColor),
+      'backgroundColor': serializer.toJson<int>(backgroundColor),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Label copyWith({
+    int? id,
+    String? name,
+    int? textColor,
+    int? backgroundColor,
+    DateTime? createdAt,
+  }) => Label(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    textColor: textColor ?? this.textColor,
+    backgroundColor: backgroundColor ?? this.backgroundColor,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Label copyWithCompanion(LabelsCompanion data) {
+    return Label(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      textColor: data.textColor.present ? data.textColor.value : this.textColor,
+      backgroundColor: data.backgroundColor.present
+          ? data.backgroundColor.value
+          : this.backgroundColor,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Label(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('textColor: $textColor, ')
+          ..write('backgroundColor: $backgroundColor, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, textColor, backgroundColor, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Label &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.textColor == this.textColor &&
+          other.backgroundColor == this.backgroundColor &&
+          other.createdAt == this.createdAt);
+}
+
+class LabelsCompanion extends UpdateCompanion<Label> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> textColor;
+  final Value<int> backgroundColor;
+  final Value<DateTime> createdAt;
+  const LabelsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.textColor = const Value.absent(),
+    this.backgroundColor = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  LabelsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required int textColor,
+    required int backgroundColor,
+    this.createdAt = const Value.absent(),
+  }) : name = Value(name),
+       textColor = Value(textColor),
+       backgroundColor = Value(backgroundColor);
+  static Insertable<Label> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? textColor,
+    Expression<int>? backgroundColor,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (textColor != null) 'text_color': textColor,
+      if (backgroundColor != null) 'background_color': backgroundColor,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  LabelsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<int>? textColor,
+    Value<int>? backgroundColor,
+    Value<DateTime>? createdAt,
+  }) {
+    return LabelsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      textColor: textColor ?? this.textColor,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (textColor.present) {
+      map['text_color'] = Variable<int>(textColor.value);
+    }
+    if (backgroundColor.present) {
+      map['background_color'] = Variable<int>(backgroundColor.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabelsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('textColor: $textColor, ')
+          ..write('backgroundColor: $backgroundColor, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ContactLabelsTable extends ContactLabels
+    with TableInfo<$ContactLabelsTable, ContactLabel> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContactLabelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (user_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _labelIdMeta = const VerificationMeta(
+    'labelId',
+  );
+  @override
+  late final GeneratedColumn<int> labelId = GeneratedColumn<int>(
+    'label_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES labels (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [contactId, labelId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contact_labels';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContactLabel> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('label_id')) {
+      context.handle(
+        _labelIdMeta,
+        labelId.isAcceptableOrUnknown(data['label_id']!, _labelIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {contactId, labelId};
+  @override
+  ContactLabel map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContactLabel(
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      labelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}label_id'],
+      )!,
+    );
+  }
+
+  @override
+  $ContactLabelsTable createAlias(String alias) {
+    return $ContactLabelsTable(attachedDatabase, alias);
+  }
+}
+
+class ContactLabel extends DataClass implements Insertable<ContactLabel> {
+  final int contactId;
+  final int labelId;
+  const ContactLabel({required this.contactId, required this.labelId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['contact_id'] = Variable<int>(contactId);
+    map['label_id'] = Variable<int>(labelId);
+    return map;
+  }
+
+  ContactLabelsCompanion toCompanion(bool nullToAbsent) {
+    return ContactLabelsCompanion(
+      contactId: Value(contactId),
+      labelId: Value(labelId),
+    );
+  }
+
+  factory ContactLabel.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContactLabel(
+      contactId: serializer.fromJson<int>(json['contactId']),
+      labelId: serializer.fromJson<int>(json['labelId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'contactId': serializer.toJson<int>(contactId),
+      'labelId': serializer.toJson<int>(labelId),
+    };
+  }
+
+  ContactLabel copyWith({int? contactId, int? labelId}) => ContactLabel(
+    contactId: contactId ?? this.contactId,
+    labelId: labelId ?? this.labelId,
+  );
+  ContactLabel copyWithCompanion(ContactLabelsCompanion data) {
+    return ContactLabel(
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      labelId: data.labelId.present ? data.labelId.value : this.labelId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactLabel(')
+          ..write('contactId: $contactId, ')
+          ..write('labelId: $labelId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(contactId, labelId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContactLabel &&
+          other.contactId == this.contactId &&
+          other.labelId == this.labelId);
+}
+
+class ContactLabelsCompanion extends UpdateCompanion<ContactLabel> {
+  final Value<int> contactId;
+  final Value<int> labelId;
+  final Value<int> rowid;
+  const ContactLabelsCompanion({
+    this.contactId = const Value.absent(),
+    this.labelId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContactLabelsCompanion.insert({
+    required int contactId,
+    required int labelId,
+    this.rowid = const Value.absent(),
+  }) : contactId = Value(contactId),
+       labelId = Value(labelId);
+  static Insertable<ContactLabel> custom({
+    Expression<int>? contactId,
+    Expression<int>? labelId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (contactId != null) 'contact_id': contactId,
+      if (labelId != null) 'label_id': labelId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContactLabelsCompanion copyWith({
+    Value<int>? contactId,
+    Value<int>? labelId,
+    Value<int>? rowid,
+  }) {
+    return ContactLabelsCompanion(
+      contactId: contactId ?? this.contactId,
+      labelId: labelId ?? this.labelId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (labelId.present) {
+      map['label_id'] = Variable<int>(labelId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactLabelsCompanion(')
+          ..write('contactId: $contactId, ')
+          ..write('labelId: $labelId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -13208,6 +13841,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $ShortcutMembersTable shortcutMembers = $ShortcutMembersTable(
     this,
   );
+  late final $LabelsTable labels = $LabelsTable(this);
+  late final $ContactLabelsTable contactLabels = $ContactLabelsTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final ReceiptsDao receiptsDao = ReceiptsDao(this as TwonlyDB);
@@ -13221,6 +13856,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     this as TwonlyDB,
   );
   late final ShortcutsDao shortcutsDao = ShortcutsDao(this as TwonlyDB);
+  late final LabelsDao labelsDao = LabelsDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -13251,6 +13887,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     userDiscoveryShares,
     shortcuts,
     shortcutMembers,
+    labels,
+    contactLabels,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -13409,6 +14047,20 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       ),
       result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'labels',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -13427,6 +14079,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<SignalVersion> signalVersion,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
@@ -13455,6 +14108,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<bool> verified,
       Value<bool> accountDeleted,
       Value<DateTime> createdAt,
+      Value<SignalVersion> signalVersion,
       Value<Uint8List?> userDiscoveryVersion,
       Value<bool> userDiscoveryExcluded,
       Value<bool?> userDiscoveryManualApproved,
@@ -13737,6 +14391,27 @@ final class $$ContactsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
+  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactLabels,
+    aliasName: $_aliasNameGenerator(
+      db.contacts.userId,
+      db.contactLabels.contactId,
+    ),
+  );
+
+  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
+    final manager = $$ContactLabelsTableTableManager($_db, $_db.contactLabels)
+        .filter(
+          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ContactsTableFilterComposer
@@ -13811,6 +14486,12 @@ class $$ContactsTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SignalVersion, SignalVersion, String>
+  get signalVersion => $composableBuilder(
+    column: $table.signalVersion,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<Uint8List> get userDiscoveryVersion => $composableBuilder(
@@ -14157,6 +14838,31 @@ class $$ContactsTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> contactLabelsRefs(
+    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
+  ) {
+    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contactLabels,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactLabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.contactLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableOrderingComposer
@@ -14230,6 +14936,11 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signalVersion => $composableBuilder(
+    column: $table.signalVersion,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -14353,6 +15064,12 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SignalVersion, String> get signalVersion =>
+      $composableBuilder(
+        column: $table.signalVersion,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<Uint8List> get userDiscoveryVersion => $composableBuilder(
     column: $table.userDiscoveryVersion,
@@ -14703,6 +15420,31 @@ class $$ContactsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> contactLabelsRefs<T extends Object>(
+    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
+  ) {
+    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contactLabels,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactLabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contactLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager
@@ -14730,6 +15472,7 @@ class $$ContactsTableTableManager
             bool userDiscoveryOtherPromotionsRefs,
             bool userDiscoveryOwnPromotionsRefs,
             bool userDiscoverySharesRefs,
+            bool contactLabelsRefs,
           })
         > {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
@@ -14758,6 +15501,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<SignalVersion> signalVersion = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -14786,6 +15530,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                signalVersion: signalVersion,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
@@ -14814,6 +15559,7 @@ class $$ContactsTableTableManager
                 Value<bool> verified = const Value.absent(),
                 Value<bool> accountDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<SignalVersion> signalVersion = const Value.absent(),
                 Value<Uint8List?> userDiscoveryVersion = const Value.absent(),
                 Value<bool> userDiscoveryExcluded = const Value.absent(),
                 Value<bool?> userDiscoveryManualApproved = const Value.absent(),
@@ -14842,6 +15588,7 @@ class $$ContactsTableTableManager
                 verified: verified,
                 accountDeleted: accountDeleted,
                 createdAt: createdAt,
+                signalVersion: signalVersion,
                 userDiscoveryVersion: userDiscoveryVersion,
                 userDiscoveryExcluded: userDiscoveryExcluded,
                 userDiscoveryManualApproved: userDiscoveryManualApproved,
@@ -14876,6 +15623,7 @@ class $$ContactsTableTableManager
                 userDiscoveryOtherPromotionsRefs = false,
                 userDiscoveryOwnPromotionsRefs = false,
                 userDiscoverySharesRefs = false,
+                contactLabelsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -14894,6 +15642,7 @@ class $$ContactsTableTableManager
                     if (userDiscoveryOwnPromotionsRefs)
                       db.userDiscoveryOwnPromotions,
                     if (userDiscoverySharesRefs) db.userDiscoveryShares,
+                    if (contactLabelsRefs) db.contactLabels,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -15129,6 +15878,27 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (contactLabelsRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          ContactLabel
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._contactLabelsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).contactLabelsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.userId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -15161,6 +15931,7 @@ typedef $$ContactsTableProcessedTableManager =
         bool userDiscoveryOtherPromotionsRefs,
         bool userDiscoveryOwnPromotionsRefs,
         bool userDiscoverySharesRefs,
+        bool contactLabelsRefs,
       })
     >;
 typedef $$GroupsTableCreateCompanionBuilder =
@@ -24834,6 +25605,653 @@ typedef $$ShortcutMembersTableProcessedTableManager =
       ShortcutMember,
       PrefetchHooks Function({bool shortcutId, bool groupId})
     >;
+typedef $$LabelsTableCreateCompanionBuilder =
+    LabelsCompanion Function({
+      Value<int> id,
+      required String name,
+      required int textColor,
+      required int backgroundColor,
+      Value<DateTime> createdAt,
+    });
+typedef $$LabelsTableUpdateCompanionBuilder =
+    LabelsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<int> textColor,
+      Value<int> backgroundColor,
+      Value<DateTime> createdAt,
+    });
+
+final class $$LabelsTableReferences
+    extends BaseReferences<_$TwonlyDB, $LabelsTable, Label> {
+  $$LabelsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
+  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactLabels,
+    aliasName: $_aliasNameGenerator(db.labels.id, db.contactLabels.labelId),
+  );
+
+  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
+    final manager = $$ContactLabelsTableTableManager(
+      $_db,
+      $_db.contactLabels,
+    ).filter((f) => f.labelId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$LabelsTableFilterComposer extends Composer<_$TwonlyDB, $LabelsTable> {
+  $$LabelsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> contactLabelsRefs(
+    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
+  ) {
+    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.contactLabels,
+      getReferencedColumn: (t) => t.labelId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactLabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.contactLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabelsTableOrderingComposer extends Composer<_$TwonlyDB, $LabelsTable> {
+  $$LabelsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LabelsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $LabelsTable> {
+  $$LabelsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get textColor =>
+      $composableBuilder(column: $table.textColor, builder: (column) => column);
+
+  GeneratedColumn<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> contactLabelsRefs<T extends Object>(
+    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
+  ) {
+    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.contactLabels,
+      getReferencedColumn: (t) => t.labelId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactLabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contactLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabelsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $LabelsTable,
+          Label,
+          $$LabelsTableFilterComposer,
+          $$LabelsTableOrderingComposer,
+          $$LabelsTableAnnotationComposer,
+          $$LabelsTableCreateCompanionBuilder,
+          $$LabelsTableUpdateCompanionBuilder,
+          (Label, $$LabelsTableReferences),
+          Label,
+          PrefetchHooks Function({bool contactLabelsRefs})
+        > {
+  $$LabelsTableTableManager(_$TwonlyDB db, $LabelsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LabelsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LabelsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LabelsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> textColor = const Value.absent(),
+                Value<int> backgroundColor = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => LabelsCompanion(
+                id: id,
+                name: name,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required int textColor,
+                required int backgroundColor,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => LabelsCompanion.insert(
+                id: id,
+                name: name,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$LabelsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactLabelsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (contactLabelsRefs) db.contactLabels,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (contactLabelsRefs)
+                    await $_getPrefetchedData<
+                      Label,
+                      $LabelsTable,
+                      ContactLabel
+                    >(
+                      currentTable: table,
+                      referencedTable: $$LabelsTableReferences
+                          ._contactLabelsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$LabelsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).contactLabelsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.labelId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LabelsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $LabelsTable,
+      Label,
+      $$LabelsTableFilterComposer,
+      $$LabelsTableOrderingComposer,
+      $$LabelsTableAnnotationComposer,
+      $$LabelsTableCreateCompanionBuilder,
+      $$LabelsTableUpdateCompanionBuilder,
+      (Label, $$LabelsTableReferences),
+      Label,
+      PrefetchHooks Function({bool contactLabelsRefs})
+    >;
+typedef $$ContactLabelsTableCreateCompanionBuilder =
+    ContactLabelsCompanion Function({
+      required int contactId,
+      required int labelId,
+      Value<int> rowid,
+    });
+typedef $$ContactLabelsTableUpdateCompanionBuilder =
+    ContactLabelsCompanion Function({
+      Value<int> contactId,
+      Value<int> labelId,
+      Value<int> rowid,
+    });
+
+final class $$ContactLabelsTableReferences
+    extends BaseReferences<_$TwonlyDB, $ContactLabelsTable, ContactLabel> {
+  $$ContactLabelsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias(
+        $_aliasNameGenerator(db.contactLabels.contactId, db.contacts.userId),
+      );
+
+  $$ContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<int>('contact_id')!;
+
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $LabelsTable _labelIdTable(_$TwonlyDB db) => db.labels.createAlias(
+    $_aliasNameGenerator(db.contactLabels.labelId, db.labels.id),
+  );
+
+  $$LabelsTableProcessedTableManager get labelId {
+    final $_column = $_itemColumn<int>('label_id')!;
+
+    final manager = $$LabelsTableTableManager(
+      $_db,
+      $_db.labels,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_labelIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ContactLabelsTableFilterComposer
+    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
+  $$ContactLabelsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableFilterComposer get labelId {
+    final $$LabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelId,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ContactLabelsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
+  $$ContactLabelsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableOrderingComposer get labelId {
+    final $$LabelsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelId,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableOrderingComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ContactLabelsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
+  $$ContactLabelsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableAnnotationComposer get labelId {
+    final $$LabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelId,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ContactLabelsTableTableManager
+    extends
+        RootTableManager<
+          _$TwonlyDB,
+          $ContactLabelsTable,
+          ContactLabel,
+          $$ContactLabelsTableFilterComposer,
+          $$ContactLabelsTableOrderingComposer,
+          $$ContactLabelsTableAnnotationComposer,
+          $$ContactLabelsTableCreateCompanionBuilder,
+          $$ContactLabelsTableUpdateCompanionBuilder,
+          (ContactLabel, $$ContactLabelsTableReferences),
+          ContactLabel,
+          PrefetchHooks Function({bool contactId, bool labelId})
+        > {
+  $$ContactLabelsTableTableManager(_$TwonlyDB db, $ContactLabelsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContactLabelsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContactLabelsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContactLabelsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> contactId = const Value.absent(),
+                Value<int> labelId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContactLabelsCompanion(
+                contactId: contactId,
+                labelId: labelId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int contactId,
+                required int labelId,
+                Value<int> rowid = const Value.absent(),
+              }) => ContactLabelsCompanion.insert(
+                contactId: contactId,
+                labelId: labelId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ContactLabelsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactId = false, labelId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$ContactLabelsTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn: $$ContactLabelsTableReferences
+                                    ._contactIdTable(db)
+                                    .userId,
+                              )
+                              as T;
+                    }
+                    if (labelId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.labelId,
+                                referencedTable: $$ContactLabelsTableReferences
+                                    ._labelIdTable(db),
+                                referencedColumn: $$ContactLabelsTableReferences
+                                    ._labelIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ContactLabelsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$TwonlyDB,
+      $ContactLabelsTable,
+      ContactLabel,
+      $$ContactLabelsTableFilterComposer,
+      $$ContactLabelsTableOrderingComposer,
+      $$ContactLabelsTableAnnotationComposer,
+      $$ContactLabelsTableCreateCompanionBuilder,
+      $$ContactLabelsTableUpdateCompanionBuilder,
+      (ContactLabel, $$ContactLabelsTableReferences),
+      ContactLabel,
+      PrefetchHooks Function({bool contactId, bool labelId})
+    >;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -24910,4 +26328,8 @@ class $TwonlyDBManager {
       $$ShortcutsTableTableManager(_db, _db.shortcuts);
   $$ShortcutMembersTableTableManager get shortcutMembers =>
       $$ShortcutMembersTableTableManager(_db, _db.shortcutMembers);
+  $$LabelsTableTableManager get labels =>
+      $$LabelsTableTableManager(_db, _db.labels);
+  $$ContactLabelsTableTableManager get contactLabels =>
+      $$ContactLabelsTableTableManager(_db, _db.contactLabels);
 }

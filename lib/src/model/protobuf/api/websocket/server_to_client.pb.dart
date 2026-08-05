@@ -95,6 +95,7 @@ enum V0_Kind {
   requestNewPreKeys,
   error,
   newMessages,
+  requestNewPqcPreKeys,
   notSet
 }
 
@@ -106,6 +107,7 @@ class V0 extends $pb.GeneratedMessage {
     $core.bool? requestNewPreKeys,
     $0.ErrorCode? error,
     NewMessages? newMessages,
+    $core.bool? requestNewPqcPreKeys,
   }) {
     final result = create();
     if (seq != null) result.seq = seq;
@@ -114,6 +116,8 @@ class V0 extends $pb.GeneratedMessage {
     if (requestNewPreKeys != null) result.requestNewPreKeys = requestNewPreKeys;
     if (error != null) result.error = error;
     if (newMessages != null) result.newMessages = newMessages;
+    if (requestNewPqcPreKeys != null)
+      result.requestNewPqcPreKeys = requestNewPqcPreKeys;
     return result;
   }
 
@@ -132,6 +136,7 @@ class V0 extends $pb.GeneratedMessage {
     4: V0_Kind.requestNewPreKeys,
     6: V0_Kind.error,
     7: V0_Kind.newMessages,
+    8: V0_Kind.requestNewPqcPreKeys,
     0: V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -139,7 +144,7 @@ class V0 extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 6, 7])
+    ..oo(0, [2, 3, 4, 6, 7, 8])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response',
@@ -152,6 +157,8 @@ class V0 extends $pb.GeneratedMessage {
         enumValues: $0.ErrorCode.values)
     ..aOM<NewMessages>(7, _omitFieldNames ? '' : 'newMessages',
         protoName: 'newMessages', subBuilder: NewMessages.create)
+    ..aOB(8, _omitFieldNames ? '' : 'RequestNewPqcPreKeys',
+        protoName: 'RequestNewPqcPreKeys')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -177,12 +184,14 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   V0_Kind whichKind() => _V0_KindByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   void clearKind() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -244,6 +253,15 @@ class V0 extends $pb.GeneratedMessage {
   void clearNewMessages() => $_clearField(7);
   @$pb.TagNumber(7)
   NewMessages ensureNewMessages() => $_ensure(5);
+
+  @$pb.TagNumber(8)
+  $core.bool get requestNewPqcPreKeys => $_getBF(6);
+  @$pb.TagNumber(8)
+  set requestNewPqcPreKeys($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRequestNewPqcPreKeys() => $_has(6);
+  @$pb.TagNumber(8)
+  void clearRequestNewPqcPreKeys() => $_clearField(8);
 }
 
 class NewMessage extends $pb.GeneratedMessage {
@@ -830,45 +848,6 @@ class Response_AdditionalAccount extends $pb.GeneratedMessage {
   void clearPlanId() => $_clearField(3);
 }
 
-class Response_Deprecated extends $pb.GeneratedMessage {
-  factory Response_Deprecated() => create();
-
-  Response_Deprecated._();
-
-  factory Response_Deprecated.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory Response_Deprecated.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Deprecated',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Deprecated clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  Response_Deprecated copyWith(void Function(Response_Deprecated) updates) =>
-      super.copyWith((message) => updates(message as Response_Deprecated))
-          as Response_Deprecated;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Response_Deprecated create() => Response_Deprecated._();
-  @$core.override
-  Response_Deprecated createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static Response_Deprecated getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Deprecated>(create);
-  static Response_Deprecated? _defaultInstance;
-}
-
 class Response_Transaction extends $pb.GeneratedMessage {
   factory Response_Transaction() => create();
 
@@ -1196,6 +1175,252 @@ class Response_SignedPreKey extends $pb.GeneratedMessage {
   void clearSignedPrekeySignature() => $_clearField(3);
 }
 
+class Response_PqcPreKey extends $pb.GeneratedMessage {
+  factory Response_PqcPreKey({
+    $fixnum.Int64? eccPreKeyId,
+    $core.List<$core.int>? eccPreKey,
+    $fixnum.Int64? kyberPreKeyId,
+    $core.List<$core.int>? kyberPreKey,
+    $core.List<$core.int>? kyberPreKeySignature,
+  }) {
+    final result = create();
+    if (eccPreKeyId != null) result.eccPreKeyId = eccPreKeyId;
+    if (eccPreKey != null) result.eccPreKey = eccPreKey;
+    if (kyberPreKeyId != null) result.kyberPreKeyId = kyberPreKeyId;
+    if (kyberPreKey != null) result.kyberPreKey = kyberPreKey;
+    if (kyberPreKeySignature != null)
+      result.kyberPreKeySignature = kyberPreKeySignature;
+    return result;
+  }
+
+  Response_PqcPreKey._();
+
+  factory Response_PqcPreKey.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PqcPreKey.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PqcPreKey',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'eccPreKeyId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'eccPreKey', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'kyberPreKeyId')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'kyberPreKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'kyberPreKeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcPreKey clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcPreKey copyWith(void Function(Response_PqcPreKey) updates) =>
+      super.copyWith((message) => updates(message as Response_PqcPreKey))
+          as Response_PqcPreKey;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcPreKey create() => Response_PqcPreKey._();
+  @$core.override
+  Response_PqcPreKey createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcPreKey getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PqcPreKey>(create);
+  static Response_PqcPreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get eccPreKeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set eccPreKeyId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEccPreKeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEccPreKeyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get eccPreKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set eccPreKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEccPreKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEccPreKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get kyberPreKeyId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set kyberPreKeyId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasKyberPreKeyId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearKyberPreKeyId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get kyberPreKey => $_getN(3);
+  @$pb.TagNumber(4)
+  set kyberPreKey($core.List<$core.int> value) => $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasKyberPreKey() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearKyberPreKey() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get kyberPreKeySignature => $_getN(4);
+  @$pb.TagNumber(5)
+  set kyberPreKeySignature($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKyberPreKeySignature() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKyberPreKeySignature() => $_clearField(5);
+}
+
+class Response_PqcBundle extends $pb.GeneratedMessage {
+  factory Response_PqcBundle({
+    $fixnum.Int64? eccSignedPrekeyId,
+    $core.List<$core.int>? eccSignedPrekey,
+    $core.List<$core.int>? eccSignedPrekeySignature,
+    $fixnum.Int64? kyberSignedPrekeyId,
+    $core.List<$core.int>? kyberSignedPrekey,
+    $core.List<$core.int>? kyberSignedPrekeySignature,
+    Response_PqcPreKey? prekey,
+  }) {
+    final result = create();
+    if (eccSignedPrekeyId != null) result.eccSignedPrekeyId = eccSignedPrekeyId;
+    if (eccSignedPrekey != null) result.eccSignedPrekey = eccSignedPrekey;
+    if (eccSignedPrekeySignature != null)
+      result.eccSignedPrekeySignature = eccSignedPrekeySignature;
+    if (kyberSignedPrekeyId != null)
+      result.kyberSignedPrekeyId = kyberSignedPrekeyId;
+    if (kyberSignedPrekey != null) result.kyberSignedPrekey = kyberSignedPrekey;
+    if (kyberSignedPrekeySignature != null)
+      result.kyberSignedPrekeySignature = kyberSignedPrekeySignature;
+    if (prekey != null) result.prekey = prekey;
+    return result;
+  }
+
+  Response_PqcBundle._();
+
+  factory Response_PqcBundle.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PqcBundle.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PqcBundle',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'eccSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'eccSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3,
+        _omitFieldNames ? '' : 'eccSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..aInt64(4, _omitFieldNames ? '' : 'kyberSignedPrekeyId')
+    ..a<$core.List<$core.int>>(
+        5, _omitFieldNames ? '' : 'kyberSignedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(6,
+        _omitFieldNames ? '' : 'kyberSignedPrekeySignature', $pb.PbFieldType.OY)
+    ..aOM<Response_PqcPreKey>(7, _omitFieldNames ? '' : 'prekey',
+        subBuilder: Response_PqcPreKey.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcBundle clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PqcBundle copyWith(void Function(Response_PqcBundle) updates) =>
+      super.copyWith((message) => updates(message as Response_PqcBundle))
+          as Response_PqcBundle;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcBundle create() => Response_PqcBundle._();
+  @$core.override
+  Response_PqcBundle createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PqcBundle getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PqcBundle>(create);
+  static Response_PqcBundle? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get eccSignedPrekeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set eccSignedPrekeyId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEccSignedPrekeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEccSignedPrekeyId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get eccSignedPrekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set eccSignedPrekey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEccSignedPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEccSignedPrekey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get eccSignedPrekeySignature => $_getN(2);
+  @$pb.TagNumber(3)
+  set eccSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEccSignedPrekeySignature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEccSignedPrekeySignature() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get kyberSignedPrekeyId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set kyberSignedPrekeyId($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasKyberSignedPrekeyId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearKyberSignedPrekeyId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.List<$core.int> get kyberSignedPrekey => $_getN(4);
+  @$pb.TagNumber(5)
+  set kyberSignedPrekey($core.List<$core.int> value) => $_setBytes(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasKyberSignedPrekey() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearKyberSignedPrekey() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get kyberSignedPrekeySignature => $_getN(5);
+  @$pb.TagNumber(6)
+  set kyberSignedPrekeySignature($core.List<$core.int> value) =>
+      $_setBytes(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasKyberSignedPrekeySignature() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearKyberSignedPrekeySignature() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  Response_PqcPreKey get prekey => $_getN(6);
+  @$pb.TagNumber(7)
+  set prekey(Response_PqcPreKey value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasPrekey() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearPrekey() => $_clearField(7);
+  @$pb.TagNumber(7)
+  Response_PqcPreKey ensurePrekey() => $_ensure(6);
+}
+
 class Response_UserData extends $pb.GeneratedMessage {
   factory Response_UserData({
     $fixnum.Int64? userId,
@@ -1206,6 +1431,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     $fixnum.Int64? signedPrekeyId,
     $core.List<$core.int>? username,
     $fixnum.Int64? registrationId,
+    Response_PqcBundle? pqcBundle,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -1217,6 +1443,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     if (signedPrekeyId != null) result.signedPrekeyId = signedPrekeyId;
     if (username != null) result.username = username;
     if (registrationId != null) result.registrationId = registrationId;
+    if (pqcBundle != null) result.pqcBundle = pqcBundle;
     return result;
   }
 
@@ -1247,6 +1474,8 @@ class Response_UserData extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         7, _omitFieldNames ? '' : 'username', $pb.PbFieldType.OY)
     ..aInt64(8, _omitFieldNames ? '' : 'registrationId')
+    ..aOM<Response_PqcBundle>(9, _omitFieldNames ? '' : 'pqcBundle',
+        subBuilder: Response_PqcBundle.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1334,6 +1563,17 @@ class Response_UserData extends $pb.GeneratedMessage {
   $core.bool hasRegistrationId() => $_has(7);
   @$pb.TagNumber(8)
   void clearRegistrationId() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  Response_PqcBundle get pqcBundle => $_getN(8);
+  @$pb.TagNumber(9)
+  set pqcBundle(Response_PqcBundle value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasPqcBundle() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearPqcBundle() => $_clearField(9);
+  @$pb.TagNumber(9)
+  Response_PqcBundle ensurePqcBundle() => $_ensure(8);
 }
 
 class Response_UploadToken extends $pb.GeneratedMessage {
@@ -2074,11 +2314,9 @@ enum Response_Ok_Ok {
   uploadtoken,
   userdata,
   authtoken,
-  deprecated7,
   authenticated,
   plans,
   planballance,
-  deprecated11,
   addaccountsinvites,
   downloadtokens,
   signedprekey,
@@ -2100,11 +2338,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_UploadToken? uploadtoken,
     Response_UserData? userdata,
     $core.List<$core.int>? authtoken,
-    Response_Deprecated? deprecated7,
     Response_Authenticated? authenticated,
     Response_Plans? plans,
     Response_PlanBallance? planballance,
-    Response_Deprecated? deprecated11,
     Response_AddAccountsInvites? addaccountsinvites,
     Response_DownloadTokens? downloadtokens,
     Response_SignedPreKey? signedprekey,
@@ -2123,11 +2359,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (uploadtoken != null) result.uploadtoken = uploadtoken;
     if (userdata != null) result.userdata = userdata;
     if (authtoken != null) result.authtoken = authtoken;
-    if (deprecated7 != null) result.deprecated7 = deprecated7;
     if (authenticated != null) result.authenticated = authenticated;
     if (plans != null) result.plans = plans;
     if (planballance != null) result.planballance = planballance;
-    if (deprecated11 != null) result.deprecated11 = deprecated11;
     if (addaccountsinvites != null)
       result.addaccountsinvites = addaccountsinvites;
     if (downloadtokens != null) result.downloadtokens = downloadtokens;
@@ -2162,11 +2396,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     4: Response_Ok_Ok.uploadtoken,
     5: Response_Ok_Ok.userdata,
     6: Response_Ok_Ok.authtoken,
-    7: Response_Ok_Ok.deprecated7,
     8: Response_Ok_Ok.authenticated,
     9: Response_Ok_Ok.plans,
     10: Response_Ok_Ok.planballance,
-    11: Response_Ok_Ok.deprecated11,
     12: Response_Ok_Ok.addaccountsinvites,
     13: Response_Ok_Ok.downloadtokens,
     14: Response_Ok_Ok.signedprekey,
@@ -2184,29 +2416,8 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21
-    ])
+    ..oo(
+        0, [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(
@@ -2217,16 +2428,12 @@ class Response_Ok extends $pb.GeneratedMessage {
         subBuilder: Response_UserData.create)
     ..a<$core.List<$core.int>>(
         6, _omitFieldNames ? '' : 'authtoken', $pb.PbFieldType.OY)
-    ..aOM<Response_Deprecated>(7, _omitFieldNames ? '' : 'deprecated7',
-        protoName: 'deprecated_7', subBuilder: Response_Deprecated.create)
     ..aOM<Response_Authenticated>(8, _omitFieldNames ? '' : 'authenticated',
         subBuilder: Response_Authenticated.create)
     ..aOM<Response_Plans>(9, _omitFieldNames ? '' : 'plans',
         subBuilder: Response_Plans.create)
     ..aOM<Response_PlanBallance>(10, _omitFieldNames ? '' : 'planballance',
         subBuilder: Response_PlanBallance.create)
-    ..aOM<Response_Deprecated>(11, _omitFieldNames ? '' : 'deprecated11',
-        protoName: 'deprecated_11', subBuilder: Response_Deprecated.create)
     ..aOM<Response_AddAccountsInvites>(
         12, _omitFieldNames ? '' : 'addaccountsinvites',
         subBuilder: Response_AddAccountsInvites.create)
@@ -2279,11 +2486,9 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
   @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
@@ -2301,11 +2506,9 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
   @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
@@ -2376,175 +2579,153 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearAuthtoken() => $_clearField(6);
 
-  @$pb.TagNumber(7)
-  Response_Deprecated get deprecated7 => $_getN(6);
-  @$pb.TagNumber(7)
-  set deprecated7(Response_Deprecated value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasDeprecated7() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearDeprecated7() => $_clearField(7);
-  @$pb.TagNumber(7)
-  Response_Deprecated ensureDeprecated7() => $_ensure(6);
-
   @$pb.TagNumber(8)
-  Response_Authenticated get authenticated => $_getN(7);
+  Response_Authenticated get authenticated => $_getN(6);
   @$pb.TagNumber(8)
   set authenticated(Response_Authenticated value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasAuthenticated() => $_has(7);
+  $core.bool hasAuthenticated() => $_has(6);
   @$pb.TagNumber(8)
   void clearAuthenticated() => $_clearField(8);
   @$pb.TagNumber(8)
-  Response_Authenticated ensureAuthenticated() => $_ensure(7);
+  Response_Authenticated ensureAuthenticated() => $_ensure(6);
 
   @$pb.TagNumber(9)
-  Response_Plans get plans => $_getN(8);
+  Response_Plans get plans => $_getN(7);
   @$pb.TagNumber(9)
   set plans(Response_Plans value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasPlans() => $_has(8);
+  $core.bool hasPlans() => $_has(7);
   @$pb.TagNumber(9)
   void clearPlans() => $_clearField(9);
   @$pb.TagNumber(9)
-  Response_Plans ensurePlans() => $_ensure(8);
+  Response_Plans ensurePlans() => $_ensure(7);
 
   @$pb.TagNumber(10)
-  Response_PlanBallance get planballance => $_getN(9);
+  Response_PlanBallance get planballance => $_getN(8);
   @$pb.TagNumber(10)
   set planballance(Response_PlanBallance value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasPlanballance() => $_has(9);
+  $core.bool hasPlanballance() => $_has(8);
   @$pb.TagNumber(10)
   void clearPlanballance() => $_clearField(10);
   @$pb.TagNumber(10)
-  Response_PlanBallance ensurePlanballance() => $_ensure(9);
-
-  @$pb.TagNumber(11)
-  Response_Deprecated get deprecated11 => $_getN(10);
-  @$pb.TagNumber(11)
-  set deprecated11(Response_Deprecated value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasDeprecated11() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearDeprecated11() => $_clearField(11);
-  @$pb.TagNumber(11)
-  Response_Deprecated ensureDeprecated11() => $_ensure(10);
+  Response_PlanBallance ensurePlanballance() => $_ensure(8);
 
   @$pb.TagNumber(12)
-  Response_AddAccountsInvites get addaccountsinvites => $_getN(11);
+  Response_AddAccountsInvites get addaccountsinvites => $_getN(9);
   @$pb.TagNumber(12)
   set addaccountsinvites(Response_AddAccountsInvites value) =>
       $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasAddaccountsinvites() => $_has(11);
+  $core.bool hasAddaccountsinvites() => $_has(9);
   @$pb.TagNumber(12)
   void clearAddaccountsinvites() => $_clearField(12);
   @$pb.TagNumber(12)
-  Response_AddAccountsInvites ensureAddaccountsinvites() => $_ensure(11);
+  Response_AddAccountsInvites ensureAddaccountsinvites() => $_ensure(9);
 
   @$pb.TagNumber(13)
-  Response_DownloadTokens get downloadtokens => $_getN(12);
+  Response_DownloadTokens get downloadtokens => $_getN(10);
   @$pb.TagNumber(13)
   set downloadtokens(Response_DownloadTokens value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasDownloadtokens() => $_has(12);
+  $core.bool hasDownloadtokens() => $_has(10);
   @$pb.TagNumber(13)
   void clearDownloadtokens() => $_clearField(13);
   @$pb.TagNumber(13)
-  Response_DownloadTokens ensureDownloadtokens() => $_ensure(12);
+  Response_DownloadTokens ensureDownloadtokens() => $_ensure(10);
 
   @$pb.TagNumber(14)
-  Response_SignedPreKey get signedprekey => $_getN(13);
+  Response_SignedPreKey get signedprekey => $_getN(11);
   @$pb.TagNumber(14)
   set signedprekey(Response_SignedPreKey value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasSignedprekey() => $_has(13);
+  $core.bool hasSignedprekey() => $_has(11);
   @$pb.TagNumber(14)
   void clearSignedprekey() => $_clearField(14);
   @$pb.TagNumber(14)
-  Response_SignedPreKey ensureSignedprekey() => $_ensure(13);
+  Response_SignedPreKey ensureSignedprekey() => $_ensure(11);
 
   @$pb.TagNumber(15)
-  Response_ProofOfWork get proofOfWork => $_getN(14);
+  Response_ProofOfWork get proofOfWork => $_getN(12);
   @$pb.TagNumber(15)
   set proofOfWork(Response_ProofOfWork value) => $_setField(15, value);
   @$pb.TagNumber(15)
-  $core.bool hasProofOfWork() => $_has(14);
+  $core.bool hasProofOfWork() => $_has(12);
   @$pb.TagNumber(15)
   void clearProofOfWork() => $_clearField(15);
   @$pb.TagNumber(15)
-  Response_ProofOfWork ensureProofOfWork() => $_ensure(14);
+  Response_ProofOfWork ensureProofOfWork() => $_ensure(12);
 
   @$pb.TagNumber(16)
-  $core.List<$core.int> get passwordlessRecoveryServerKey => $_getN(15);
+  $core.List<$core.int> get passwordlessRecoveryServerKey => $_getN(13);
   @$pb.TagNumber(16)
   set passwordlessRecoveryServerKey($core.List<$core.int> value) =>
-      $_setBytes(15, value);
+      $_setBytes(13, value);
   @$pb.TagNumber(16)
-  $core.bool hasPasswordlessRecoveryServerKey() => $_has(15);
+  $core.bool hasPasswordlessRecoveryServerKey() => $_has(13);
   @$pb.TagNumber(16)
   void clearPasswordlessRecoveryServerKey() => $_clearField(16);
 
   @$pb.TagNumber(17)
   Response_PasswordlessNotificationMessages
-      get passwordlessNotificationMessages => $_getN(16);
+      get passwordlessNotificationMessages => $_getN(14);
   @$pb.TagNumber(17)
   set passwordlessNotificationMessages(
           Response_PasswordlessNotificationMessages value) =>
       $_setField(17, value);
   @$pb.TagNumber(17)
-  $core.bool hasPasswordlessNotificationMessages() => $_has(16);
+  $core.bool hasPasswordlessNotificationMessages() => $_has(14);
   @$pb.TagNumber(17)
   void clearPasswordlessNotificationMessages() => $_clearField(17);
   @$pb.TagNumber(17)
   Response_PasswordlessNotificationMessages
-      ensurePasswordlessNotificationMessages() => $_ensure(16);
+      ensurePasswordlessNotificationMessages() => $_ensure(14);
 
   @$pb.TagNumber(18)
-  Response_MemoriesUploadUrls get memoriesUploadUrls => $_getN(17);
+  Response_MemoriesUploadUrls get memoriesUploadUrls => $_getN(15);
   @$pb.TagNumber(18)
   set memoriesUploadUrls(Response_MemoriesUploadUrls value) =>
       $_setField(18, value);
   @$pb.TagNumber(18)
-  $core.bool hasMemoriesUploadUrls() => $_has(17);
+  $core.bool hasMemoriesUploadUrls() => $_has(15);
   @$pb.TagNumber(18)
   void clearMemoriesUploadUrls() => $_clearField(18);
   @$pb.TagNumber(18)
-  Response_MemoriesUploadUrls ensureMemoriesUploadUrls() => $_ensure(17);
+  Response_MemoriesUploadUrls ensureMemoriesUploadUrls() => $_ensure(15);
 
   @$pb.TagNumber(19)
-  Response_MemoriesList get memoriesList => $_getN(18);
+  Response_MemoriesList get memoriesList => $_getN(16);
   @$pb.TagNumber(19)
   set memoriesList(Response_MemoriesList value) => $_setField(19, value);
   @$pb.TagNumber(19)
-  $core.bool hasMemoriesList() => $_has(18);
+  $core.bool hasMemoriesList() => $_has(16);
   @$pb.TagNumber(19)
   void clearMemoriesList() => $_clearField(19);
   @$pb.TagNumber(19)
-  Response_MemoriesList ensureMemoriesList() => $_ensure(18);
+  Response_MemoriesList ensureMemoriesList() => $_ensure(16);
 
   @$pb.TagNumber(20)
-  Response_MemoriesUrl get memoriesUrl => $_getN(19);
+  Response_MemoriesUrl get memoriesUrl => $_getN(17);
   @$pb.TagNumber(20)
   set memoriesUrl(Response_MemoriesUrl value) => $_setField(20, value);
   @$pb.TagNumber(20)
-  $core.bool hasMemoriesUrl() => $_has(19);
+  $core.bool hasMemoriesUrl() => $_has(17);
   @$pb.TagNumber(20)
   void clearMemoriesUrl() => $_clearField(20);
   @$pb.TagNumber(20)
-  Response_MemoriesUrl ensureMemoriesUrl() => $_ensure(19);
+  Response_MemoriesUrl ensureMemoriesUrl() => $_ensure(17);
 
   @$pb.TagNumber(21)
-  Response_MemoriesUsage get memoriesUsage => $_getN(20);
+  Response_MemoriesUsage get memoriesUsage => $_getN(18);
   @$pb.TagNumber(21)
   set memoriesUsage(Response_MemoriesUsage value) => $_setField(21, value);
   @$pb.TagNumber(21)
-  $core.bool hasMemoriesUsage() => $_has(20);
+  $core.bool hasMemoriesUsage() => $_has(18);
   @$pb.TagNumber(21)
   void clearMemoriesUsage() => $_clearField(21);
   @$pb.TagNumber(21)
-  Response_MemoriesUsage ensureMemoriesUsage() => $_ensure(20);
+  Response_MemoriesUsage ensureMemoriesUsage() => $_ensure(18);
 }
 
 enum Response_Response { ok, error, notSet }

@@ -11,6 +11,7 @@ import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -248,33 +249,39 @@ class _GroupViewState extends State<GroupView> {
               group: _group!,
               contact: member.$1,
               member: member.$2,
-              child: BetterListTile(
-                padding: const EdgeInsets.only(left: 13),
-                leading: AvatarIcon(
-                  contactId: member.$1.userId,
-                  fontSize: 16,
-                ),
-                textWidget: Row(
-                  children: [
-                    Text(getContactDisplayName(member.$1, maxLength: 25)),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 5),
-                      child: VerificationBadgeComp(
-                        key: Key(member.$2.contactId.toString()),
-                        contact: member.$1,
-                      ),
+              child: ContactLabelsSubtitleBuilder(
+                contactId: member.$1.userId,
+                builder: (context, subtitleWidget) {
+                  return BetterListTile(
+                    padding: const EdgeInsets.only(left: 13),
+                    leading: AvatarIcon(
+                      contactId: member.$1.userId,
+                      fontSize: 16,
                     ),
-                  ],
-                ),
-                trailing: (member.$2.memberState == MemberState.admin)
-                    ? Text(context.lang.admin)
-                    : null,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ContactView(member.$1.userId),
+                    textWidget: Row(
+                      children: [
+                        Text(getContactDisplayName(member.$1, maxLength: 25)),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 5),
+                          child: VerificationBadgeComp(
+                            key: Key(member.$2.contactId.toString()),
+                            contact: member.$1,
+                          ),
+                        ),
+                      ],
                     ),
+                    subtitle: subtitleWidget,
+                    trailing: (member.$2.memberState == MemberState.admin)
+                        ? Text(context.lang.admin)
+                        : null,
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContactView(member.$1.userId),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
@@ -42,6 +42,8 @@ class _UserListItem extends State<GroupListItemComp> {
   StreamSubscription<Message?>? _lastMessageStream;
   StreamSubscription<Reaction?>? _lastReactionStream;
   StreamSubscription<List<MediaFile>>? _lastMediaFilesStream;
+  Contact? _directContact;
+  StreamSubscription<List<Contact>>? _directContactStream;
 
   List<Message> _previewMessages = [];
   final List<MediaFile> _previewMediaFiles = [];
@@ -60,6 +62,7 @@ class _UserListItem extends State<GroupListItemComp> {
     _lastReactionStream?.cancel();
     _lastMessageStream?.cancel();
     _lastMediaFilesStream?.cancel();
+    _directContactStream?.cancel();
     super.dispose();
   }
 
@@ -102,12 +105,26 @@ class _UserListItem extends State<GroupListItemComp> {
           setState(() {});
         });
 
-    final groupContacts = await twonlyDB.groupsDao.getGroupContact(
-      widget.group.groupId,
-    );
-    if (!mounted) return;
-    if (groupContacts.length == 1) {
-      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    if (widget.group.isDirectChat) {
+      _directContactStream = twonlyDB.groupsDao
+          .watchGroupContact(widget.group.groupId)
+          .listen((contacts) {
+            if (!mounted) return;
+            if (contacts.isNotEmpty) {
+              setState(() {
+                _directContact = contacts.first;
+                _receiverDeletedAccount = _directContact!.accountDeleted;
+              });
+            }
+          });
+    } else {
+      final groupContacts = await twonlyDB.groupsDao.getGroupContact(
+        widget.group.groupId,
+      );
+      if (!mounted) return;
+      if (groupContacts.length == 1) {
+        _receiverDeletedAccount = groupContacts.first.accountDeleted;
+      }
     }
   }
 
@@ -239,8 +256,12 @@ class _UserListItem extends State<GroupListItemComp> {
           child: ListTile(
             title: Row(
               children: [
-                Text(
-                  substringBy(widget.group.groupName, 30),
+                Flexible(
+                  child: Text(
+                    widget.group.groupName,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
                 const SizedBox(width: 3),
                 VerificationBadgeComp(
@@ -249,6 +270,18 @@ class _UserListItem extends State<GroupListItemComp> {
                   clickable: false,
                   size: 12,
                 ),
+                if (widget.group.isDirectChat && _directContact != null) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: ContactLabels(
+                        contactId: _directContact!.userId,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             subtitle: _receiverDeletedAccount

@@ -89,36 +89,40 @@ Future<bool> initBackgroundExecution() async {
 final Mutex _keyValueMutex = Mutex();
 
 // ignore: unreachable_from_main
-Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
-  final shouldBeExecuted = await exclusiveAccess(
-    lockName: 'periodic_task',
-    mutex: _keyValueMutex,
-    action: () async {
-      final lastExecution = await KeyValueStore.get(
-        KeyValueKeys.lastPeriodicTaskExecution,
-      );
-      if (lastExecution != null && lastExecution.containsKey('timestamp')) {
-        final lastExecutionTime = lastExecution['timestamp'] as int?;
-        if (lastExecutionTime != null) {
-          final lastExecutionDate = DateTime.fromMillisecondsSinceEpoch(
-            lastExecutionTime,
-          );
-          if (DateTime.now().difference(lastExecutionDate).inSeconds <
-              lastExecutionInSecondsLimit) {
-            return false;
+Future<bool> backgroundFetch({
+  int? lastExecutionInSecondsLimit = 120,
+}) async {
+  if (lastExecutionInSecondsLimit != null) {
+    final shouldBeExecuted = await exclusiveAccess(
+      lockName: 'periodic_task',
+      mutex: _keyValueMutex,
+      action: () async {
+        final lastExecution = await KeyValueStore.get(
+          KeyValueKeys.lastPeriodicTaskExecution,
+        );
+        if (lastExecution != null && lastExecution.containsKey('timestamp')) {
+          final lastExecutionTime = lastExecution['timestamp'] as int?;
+          if (lastExecutionTime != null) {
+            final lastExecutionDate = DateTime.fromMillisecondsSinceEpoch(
+              lastExecutionTime,
+            );
+            if (DateTime.now().difference(lastExecutionDate).inSeconds <
+                lastExecutionInSecondsLimit) {
+              return false;
+            }
           }
         }
-      }
-      await KeyValueStore.put(KeyValueKeys.lastPeriodicTaskExecution, {
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      });
-      return true;
-    },
-  );
+        await KeyValueStore.put(KeyValueKeys.lastPeriodicTaskExecution, {
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        return true;
+      },
+    );
 
-  if (!shouldBeExecuted) return;
+    if (!shouldBeExecuted) return false;
+  }
 
-  Log.info('eu.twonly.periodic_task was called.');
+  Log.info('Periodic task was called.');
   AppState.gotMessageFromServer = false;
 
   final stopwatch = Stopwatch()..start();
@@ -130,13 +134,15 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
 
   if (!await apiService.connect()) {
     Log.info('Could not connect to the api. Returning early.');
-    return;
+    return false;
   }
 
   if (!apiService.isAuthenticated) {
     Log.info('Api is not authenticated. Returning early.');
-    return;
+    return false;
   }
+
+  var receiveMessage = false;
 
   try {
     while (!AppState.gotMessageFromServer) {
@@ -148,19 +154,22 @@ Future<void> handlePeriodicTask({int lastExecutionInSecondsLimit = 120}) async {
     }
 
     if (AppState.gotMessageFromServer) {
+      receiveMessage = true;
       Log.info('Received a server message from the server.');
     }
 
     await finishStartedPreprocessing();
 
-    await Future.delayed(const Duration(milliseconds: 2000));
+    if (lastExecutionInSecondsLimit != null) {
+      await Future.delayed(const Duration(milliseconds: 2000));
+    }
   } finally {
     await apiService.close(() {});
     stopwatch.stop();
   }
 
-  Log.info('eu.twonly.periodic_task finished after ${stopwatch.elapsed}.');
-  return;
+  Log.info('Periodic task finished after ${stopwatch.elapsed}.');
+  return receiveMessage;
 }
 
 Future<void> handleProcessingTask() async {

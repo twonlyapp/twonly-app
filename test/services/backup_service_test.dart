@@ -261,6 +261,11 @@ void main() {
         // Verify key manager was imported successfully
         final recoveredUserId = await RustKeyManager.getUserId();
         expect(recoveredUserId, 1);
+
+        // Restore mock DB to prevent tearDown crash (deleteLocalUserData overrides it)
+        locator.unregister<TwonlyDB>();
+        final dbFile = File('${tempDir.path}/twonly.sqlite');
+        locator.registerSingleton<TwonlyDB>(TwonlyDB(NativeDatabase(dbFile)));
       },
     );
   });

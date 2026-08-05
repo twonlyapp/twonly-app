@@ -210,6 +210,10 @@ Future<bool> authenticateUser(
         return true;
       }
     }
+  } catch (e) {
+    // Catch unexpected platform exceptions (e.g. PlatformException) that
+    // would otherwise propagate and leave callers in a broken state.
+    Log.error('Unexpected authentication error: $e');
   }
   return false;
 }
@@ -257,6 +261,28 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
     return time;
   } else {
     return '$time $date';
+  }
+}
+
+String formatRelativeDateTime(BuildContext context, DateTime? dateTime) {
+  if (dateTime == null) {
+    return '-';
+  }
+  final now = clock.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final yesterday = today.subtract(const Duration(days: 1));
+  final dateDay = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+  final time = DateFormat.Hm(
+    Localizations.localeOf(context).toLanguageTag(),
+  ).format(dateTime);
+
+  if (dateDay == today) {
+    return context.lang.todayAt(time);
+  } else if (dateDay == yesterday) {
+    return context.lang.yesterdayAt(time);
+  } else {
+    return formatDateTime(context, dateTime);
   }
 }
 

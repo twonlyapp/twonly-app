@@ -170,6 +170,7 @@ class _RegisterViewState extends State<RegisterView> {
       widget.callbackOnSuccess();
     } catch (e, stack) {
       Log.error('Error creating new user', error: e, stackTrace: stack);
+      await deleteLocalUserData();
       if (mounted) {
         setState(() {
           _isTryingToRegister = false;

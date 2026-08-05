@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -42,12 +41,12 @@ class _LastMessageTimeCompState extends State<LastMessageTimeComp> {
     _actionSubscription = null;
 
     if (widget.message != null) {
-      _actionSubscription = twonlyDB.messagesDao
-          .watchLastMessageAction(widget.message!.messageId)
-          .listen((lastAction) {
-            targetTime = lastAction?.actionAt ?? widget.message!.createdAt;
-            _updateSeconds();
-          });
+      if (widget.message!.senderId == null) {
+        targetTime = widget.message!.openedAt ?? widget.message!.createdAt;
+      } else {
+        targetTime = widget.message!.createdAt;
+      }
+      _updateSeconds();
     } else if (widget.dateTime != null) {
       targetTime = widget.dateTime;
       _updateSeconds();

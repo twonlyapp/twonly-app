@@ -47,6 +47,7 @@ class _ArchivedChatsViewState extends State<ArchivedChatsView> {
       body: ListView(
         children: _groupsArchived.map((group) {
           return GroupListItemComp(
+            key: ValueKey(group.groupId),
             group: group,
           );
         }).toList(),

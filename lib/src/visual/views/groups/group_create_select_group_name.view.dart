@@ -5,9 +5,12 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
+import 'package:twonly/src/visual/components/contact_labels.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
+import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
 import 'package:twonly/src/visual/decorations/input_text.decoration.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class GroupCreateSelectGroupNameView extends StatefulWidget {
   const GroupCreateSelectGroupNameView({
@@ -59,20 +62,28 @@ class _GroupCreateSelectGroupNameViewState
           title: Text(context.lang.selectGroupName),
         ),
         floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
-        floatingActionButton: FilledButton.icon(
+        floatingActionButton: MyButton(
+          variant: MyButtonVariant.primaryMiddle,
           onPressed: (textFieldGroupName.text.isEmpty || _isLoading)
               ? null
               : _createNewGroup,
-          label: Text(context.lang.createGroup),
-          icon: _isLoading
-              ? const SizedBox(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoading)
+                const SizedBox(
                   width: 15,
                   height: 15,
                   child: CircularProgressIndicator.adaptive(
                     strokeWidth: 1,
                   ),
                 )
-              : const FaIcon(FontAwesomeIcons.penToSquare),
+              else
+                const FaIcon(FontAwesomeIcons.penToSquare, size: 16),
+              const SizedBox(width: 8),
+              Text(context.lang.createGroup),
+            ],
+          ),
         ),
         body: SafeArea(
           child: Padding(
@@ -111,20 +122,35 @@ class _GroupCreateSelectGroupNameViewState
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ListTile(
-                          title: Row(
-                            children: [
-                              Text(getContactDisplayName(user)),
-                              FlameCounterWidget(
-                                contactId: user.userId,
-                                prefix: true,
+                        child: ContactLabelsSubtitleBuilder(
+                          contactId: user.userId,
+                          builder: (context, subtitleWidget) {
+                            return ListTile(
+                              title: Row(
+                                children: [
+                                  Text(getContactDisplayName(user)),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 8,
+                                      left: 1,
+                                    ),
+                                    child: VerificationBadgeComp(
+                                      contact: user,
+                                    ),
+                                  ),
+                                  FlameCounterWidget(
+                                    contactId: user.userId,
+                                    prefix: true,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          leading: AvatarIcon(
-                            contactId: user.userId,
-                            fontSize: 13,
-                          ),
+                              subtitle: subtitleWidget,
+                              leading: AvatarIcon(
+                                contactId: user.userId,
+                                fontSize: 13,
+                              ),
+                            );
+                          },
                         ),
                       );
                     },

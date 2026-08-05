@@ -2,12 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-const primaryColor = Color(0xFF57CC99);
+const defaultPrimaryColor = Color(0xFF57CC99);
 
-final ThemeData lightTheme = () {
+ThemeData getLightTheme([Color primary = defaultPrimaryColor]) {
   final base = ThemeData(
     colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
+      seedColor: primary,
+      primary: primary,
     ),
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
@@ -19,10 +20,12 @@ final ThemeData lightTheme = () {
       fontFamilyFallback: Platform.isAndroid ? const ['NotoColorEmoji'] : null,
     ),
   );
-}();
+}
+
+final ThemeData lightTheme = getLightTheme();
 
 final ButtonStyle primaryColorButtonStyle = FilledButton.styleFrom(
-  backgroundColor: primaryColor,
+  backgroundColor: defaultPrimaryColor,
   foregroundColor: Colors.black87,
   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
   shape: RoundedRectangleBorder(

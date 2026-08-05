@@ -75,7 +75,7 @@ class _BackupSetupPageState extends State<BackupSetupPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'twonly Backup',
+          context.lang.settingsBackup,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),

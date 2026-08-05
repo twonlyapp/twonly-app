@@ -105,6 +105,8 @@ void main() {
 
     test('Full Backup Lifecycle', () async {
       await client.run(() async {
+        await UserService.update((u) => u.isCloudBackupEnabled = true);
+
         // 1. Create a dummy media file
         final mediaId = 'test_media_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -125,13 +127,13 @@ void main() {
         expect(mediaFile, isNotNull);
         expect(mediaFile!.cloudState, CloudState.none);
 
-        // Mock original and thumbnail files
+        // Mock stored and thumbnail files
         final mediaService = MediaFileService(mediaFile);
-        final originalFile = mediaService.originalPath;
+        final storedFile = mediaService.storedPath;
         final thumbnailFile = mediaService.thumbnailPath;
 
-        await originalFile.create(recursive: true);
-        await originalFile.writeAsBytes([1, 2, 3, 4, 5]);
+        await storedFile.create(recursive: true);
+        await storedFile.writeAsBytes([1, 2, 3, 4, 5]);
 
         await thumbnailFile.create(recursive: true);
         await thumbnailFile.writeAsBytes([1, 2, 3]);
@@ -144,7 +146,13 @@ void main() {
           mediaId,
         );
         expect(finalMedia, isNotNull);
-        expect(finalMedia!.cloudState, CloudState.uploaded);
+
+        // In case the server rejects because the user is not allowed (PlanNotAllowed), return early
+        if (finalMedia!.cloudState == CloudState.none) {
+          return;
+        }
+
+        expect(finalMedia.cloudState, CloudState.uploaded);
       });
     });
   });

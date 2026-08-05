@@ -1,7 +1,9 @@
 import 'dart:typed_data';
+
 import 'package:clock/clock.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart';
 import 'package:twonly/src/model/json/signal_identity.model.dart';
@@ -13,39 +15,61 @@ import 'package:twonly/src/utils/log.dart';
 
 class SignalIdentityService {
   static Future<void> onAuthenticated() async {
-    if (userService.currentUser.signalLastSignedPreKeyUpdated != null) {
-      final fortyEightHoursAgo = clock.now().subtract(
-        const Duration(hours: 48),
-      );
-      final isYoungerThan48Hours =
-          (userService.currentUser.signalLastSignedPreKeyUpdated!).isAfter(
-            fortyEightHoursAgo,
-          );
-      if (isYoungerThan48Hours) {
-        // The key does live for 48 hours then it expires and a new key is generated.
-        return;
+    final now = clock.now();
+    final fortyEightHoursAgo = now.subtract(const Duration(hours: 48));
+    final oneWeekAgo = now.subtract(const Duration(days: 7));
+
+    if (userService.currentUser.signalLastSignedPreKeyUpdated == null ||
+        !userService.currentUser.signalLastSignedPreKeyUpdated!.isAfter(
+          fortyEightHoursAgo,
+        )) {
+      final signedPreKey = await _getNewSignalSignedPreKey();
+      if (signedPreKey == null) {
+        Log.error('could not generate a new signed pre key!');
+      } else {
+        await UserService.update((user) {
+          user.signalLastSignedPreKeyUpdated = now;
+        });
+        final res = await apiService.updateSignedPreKey(
+          signedPreKey.id,
+          signedPreKey.getKeyPair().publicKey.serialize(),
+          signedPreKey.signature,
+        );
+        if (res.isError) {
+          Log.error('could not update the signed pre key: ${res.error}');
+          await UserService.update((user) {
+            user.signalLastSignedPreKeyUpdated = null;
+          });
+        } else {
+          Log.info('updated signed pre key');
+        }
       }
     }
-    final signedPreKey = await _getNewSignalSignedPreKey();
-    if (signedPreKey == null) {
-      Log.error('could not generate a new signed pre key!');
-      return;
-    }
-    await UserService.update((user) {
-      user.signalLastSignedPreKeyUpdated = clock.now();
-    });
-    final res = await apiService.updateSignedPreKey(
-      signedPreKey.id,
-      signedPreKey.getKeyPair().publicKey.serialize(),
-      signedPreKey.signature,
-    );
-    if (res.isError) {
-      Log.error('could not update the signed pre key: ${res.error}');
-      await UserService.update((user) {
-        user.signalLastSignedPreKeyUpdated = null;
-      });
-    } else {
-      Log.info('updated signed pre key');
+
+    if (userService.currentUser.signalLastPqcPreKeysUploaded == null ||
+        !userService.currentUser.signalLastPqcPreKeysUploaded!.isAfter(
+          oneWeekAgo,
+        )) {
+      final bundle = await RustSignal.generateBundle();
+
+      final pqcRes = await apiService.uploadPqcPreKeys(
+        bundle.signedPreKeyId,
+        bundle.signedPreKeyPublic,
+        bundle.signedPreKeySignature,
+        bundle.kyberPreKeyId,
+        bundle.kyberPreKeyPublic,
+        bundle.kyberPreKeySignature,
+        [],
+      );
+
+      if (pqcRes.isError) {
+        Log.warn('could not update the pqc signed pre key: ${pqcRes.error}');
+      } else {
+        Log.info('updated pqc signed pre key');
+        await UserService.update((user) {
+          user.signalLastPqcPreKeysUploaded = now;
+        });
+      }
     }
   }
 }

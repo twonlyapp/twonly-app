@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/themes/light.dart';
 
 class ThresholdPicker extends StatelessWidget {
   const ThresholdPicker({
@@ -103,7 +102,7 @@ class ThresholdPicker extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: isSelected ? primaryColor : Colors.transparent,
+                      color: isSelected ? context.color.primary : Colors.transparent,
                       borderRadius: borderRadius,
                     ),
                     child: Center(

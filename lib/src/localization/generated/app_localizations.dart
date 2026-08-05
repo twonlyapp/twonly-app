@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Delete for me'**
   String get deleteOkBtnForMe;
 
+  /// No description provided for @deleteOnlyForMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete only for me'**
+  String get deleteOnlyForMe;
+
   /// No description provided for @deleteImageTitle.
   ///
   /// In en, this message translates to:
@@ -1541,7 +1547,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupArchiveHeader.
   ///
   /// In en, this message translates to:
-  /// **'Contacts, Settings and Messages'**
+  /// **'Contacts & Messages'**
   String get backupArchiveHeader;
 
   /// No description provided for @backupLastBackupDate.
@@ -1595,7 +1601,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupSelectStrongPassword.
   ///
   /// In en, this message translates to:
-  /// **'Choose a secure password. This is required if you want to restore your twonly Backup.'**
+  /// **'Choose a secure password. This is required if you want to restore your backup.'**
   String get backupSelectStrongPassword;
 
   /// No description provided for @password.
@@ -1651,6 +1657,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can only change your password after you have authenticated!'**
   String get backupChangePasswordAuthFailed;
+
+  /// No description provided for @backupFreeSpaceWithCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Space with Cloud Backup'**
+  String get backupFreeSpaceWithCloud;
+
+  /// No description provided for @backupMemoriesNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enabled'**
+  String get backupMemoriesNotEnabled;
+
+  /// No description provided for @backupMemoriesUpgradeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade required'**
+  String get backupMemoriesUpgradeRequired;
+
+  /// No description provided for @todayAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Today at {time}'**
+  String todayAt(Object time);
+
+  /// No description provided for @yesterdayAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday at {time}'**
+  String yesterdayAt(Object time);
 
   /// No description provided for @twonlySafeRecoverTitle.
   ///
@@ -3404,6 +3440,12 @@ abstract class AppLocalizations {
   /// **'Zero ads. Total privacy.'**
   String get subscriptionPledgeSubtitle;
 
+  /// No description provided for @subscriptionManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get subscriptionManage;
+
   /// No description provided for @dragToZoom.
   ///
   /// In en, this message translates to:
@@ -3671,7 +3713,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecovery.
   ///
   /// In en, this message translates to:
-  /// **'Passwordless Recovery'**
+  /// **'Password Recovery'**
   String get passwordlessRecovery;
 
   /// No description provided for @passwordlessRecoveryNotConfigured.
@@ -3917,7 +3959,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryTrustedFriends.
   ///
   /// In en, this message translates to:
-  /// **'Trusted Friends'**
+  /// **'Account recovery'**
   String get passwordlessRecoveryTrustedFriends;
 
   /// No description provided for @passwordlessRecoveryDoneBtn.
@@ -4097,7 +4139,7 @@ abstract class AppLocalizations {
   /// No description provided for @missingRecoveryContactsCardTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recovery Contacts'**
+  /// **'Account Recovery'**
   String get missingRecoveryContactsCardTitle;
 
   /// No description provided for @missingRecoveryContactsCardDesc.
@@ -4193,7 +4235,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStorageContents.
   ///
   /// In en, this message translates to:
-  /// **'Storage contents'**
+  /// **'Free up space'**
   String get settingsStorageContents;
 
   /// No description provided for @settingsStorageSortStorage.
@@ -4273,6 +4315,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All memories are up to date.'**
   String get settingsStorageSyncUpToDate;
+
+  /// No description provided for @restoreLostFlames.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore your {count} lost flames'**
+  String restoreLostFlames(int count);
+
+  /// No description provided for @settingsShowRestoreFlameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show flame restore warning'**
+  String get settingsShowRestoreFlameTitle;
+
+  /// No description provided for @contactLabelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Labels'**
+  String get contactLabelsTitle;
+
+  /// No description provided for @contactLabelsSubtitleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No labels selected'**
+  String get contactLabelsSubtitleEmpty;
+
+  /// No description provided for @contactLabelsMaxLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 3 labels per contact'**
+  String get contactLabelsMaxLimit;
+
+  /// No description provided for @createLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new label'**
+  String get createLabel;
+
+  /// No description provided for @editLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit label'**
+  String get editLabel;
+
+  /// No description provided for @deleteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete label'**
+  String get deleteLabel;
+
+  /// No description provided for @deleteLabelConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this label? It will be removed from all contacts.'**
+  String get deleteLabelConfirmation;
+
+  /// No description provided for @labelNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Label name'**
+  String get labelNameHint;
+
+  /// No description provided for @labelTextColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text color'**
+  String get labelTextColor;
+
+  /// No description provided for @labelBackgroundColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Background color'**
+  String get labelBackgroundColor;
+
+  /// No description provided for @customColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Color'**
+  String get customColor;
+
+  /// No description provided for @hue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get hue;
+
+  /// No description provided for @saturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get saturation;
+
+  /// No description provided for @brightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get brightness;
+
+  /// No description provided for @settingsAppearancePrimaryColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Color'**
+  String get settingsAppearancePrimaryColor;
+
+  /// No description provided for @themeSystemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System default'**
+  String get themeSystemDefault;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
 }
 
 class _AppLocalizationsDelegate

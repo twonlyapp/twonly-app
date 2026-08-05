@@ -15,11 +15,12 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dar
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
 import 'package:twonly/src/visual/views/chats/message_info.view.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MessageContextMenu extends StatelessWidget {
@@ -83,8 +84,9 @@ class MessageContextMenu extends StatelessWidget {
           return SynchronizedImageViewerScreen(
             galleryItems: galleryItems,
             initialIndex: 0,
-            activeMediaIdNotifier:
-                ValueNotifier(mediaFileService!.mediaFile.mediaId),
+            activeMediaIdNotifier: ValueNotifier(
+              mediaFileService!.mediaFile.mediaId,
+            ),
           );
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -172,36 +174,31 @@ class MessageContextMenu extends StatelessWidget {
         ContextMenuItem(
           title: context.lang.delete,
           onTap: () async {
-            final delete = await showAlertDialog(
+            final action = await showDeleteMessageOptions(
               navigator.context,
-              navigator.context.lang.deleteTitle,
-              null,
-              customOk:
-                  (message.senderId == null && !message.isDeletedFromSender)
-                  ? navigator.context.lang.deleteOkBtnForAll
-                  : navigator.context.lang.deleteOkBtnForMe,
+              message,
+              group,
+              galleryItems,
             );
-            if (delete) {
-              if (message.senderId == null && !message.isDeletedFromSender) {
-                await twonlyDB.messagesDao.handleMessageDeletion(
-                  null,
-                  message.messageId,
-                  clock.now(),
-                );
-                await sendCipherTextToGroup(
-                  message.groupId,
-                  pb.EncryptedContent(
-                    messageUpdate: pb.EncryptedContent_MessageUpdate(
-                      type: pb.EncryptedContent_MessageUpdate_Type.DELETE,
-                      senderMessageId: message.messageId,
-                    ),
+            if (action == 'delete_for_all') {
+              await twonlyDB.messagesDao.handleMessageDeletion(
+                null,
+                message.messageId,
+                clock.now(),
+              );
+              await sendCipherTextToGroup(
+                message.groupId,
+                pb.EncryptedContent(
+                  messageUpdate: pb.EncryptedContent_MessageUpdate(
+                    type: pb.EncryptedContent_MessageUpdate_Type.DELETE,
+                    senderMessageId: message.messageId,
                   ),
-                );
-              } else {
-                await twonlyDB.messagesDao.deleteMessagesById(
-                  message.messageId,
-                );
-              }
+                ),
+              );
+            } else if (action == 'delete_for_me') {
+              await twonlyDB.messagesDao.deleteMessagesById(
+                message.messageId,
+              );
             }
           },
           icon: FontAwesomeIcons.trash,
@@ -230,81 +227,215 @@ class MessageContextMenu extends StatelessWidget {
   }
 }
 
+Future<String?> showDeleteMessageOptions(
+  BuildContext context,
+  Message message,
+  Group group,
+  List<MemoryItem> galleryItems,
+) async {
+  return showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      final isForAll = message.senderId == null && !message.isDeletedFromSender;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 40,
+        ),
+        decoration: BoxDecoration(
+          color: context.color.surfaceContainer,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Stack(
+              children: [
+                ChatListEntry(
+                  group: group,
+                  message: message,
+                  galleryItems: galleryItems,
+                ),
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      // Prevent clicks
+                    },
+                    child: Container(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+            if (isForAll) ...[
+              Center(
+                child: MyButton(
+                  variant: MyButtonVariant.errorMiddle,
+                  onPressed: () {
+                    Navigator.pop(context, 'delete_for_all');
+                  },
+                  child: Text(
+                    context.lang.deleteOkBtnForAll,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Center(
+              child: MyButton(
+                variant: isForAll
+                    ? MyButtonVariant.secondaryDense
+                    : MyButtonVariant.errorMiddle,
+                onPressed: () {
+                  Navigator.pop(context, 'delete_for_me');
+                },
+                child: Text(
+                  isForAll
+                      ? context.lang.deleteOnlyForMe
+                      : context.lang.deleteOkBtnForMe,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: MyButton(
+                variant: MyButtonVariant.text,
+                onPressed: () {
+                  Navigator.pop(context, 'cancel');
+                },
+                child: Text(context.lang.cancel, textAlign: TextAlign.center),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 Future<void> editTextMessage(BuildContext context, Message message) async {
   var newText = message.content;
   final controller = TextEditingController(text: message.content);
-  await showDialog(
+  await showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
     builder: (context) {
-      return AlertDialog(
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 40,
+              ),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainer,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: TextField(
-                      controller: controller,
-                      autofocus: true,
-                      textCapitalization: TextCapitalization.sentences,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 4,
-                      minLines: 1,
-                      onChanged: (value) => setState(() {
-                        newText = value;
-                      }),
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                      ),
+                  TextField(
+                    controller: controller,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 4,
+                    minLines: 1,
+                    onChanged: (value) => setState(() {
+                      newText = value;
+                    }),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: MyButton(
+                          variant: MyButtonVariant.secondaryMiddle,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            context.lang.cancel,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: MyButton(
+                          variant: MyButtonVariant.primaryMiddle,
+                          onPressed: () async {
+                            if (newText != null &&
+                                newText != message.content &&
+                                newText != '') {
+                              final timestamp = clock.now();
+
+                              await twonlyDB.messagesDao.handleTextEdit(
+                                null,
+                                message.messageId,
+                                newText!,
+                                timestamp,
+                              );
+                              await sendCipherTextToGroup(
+                                message.groupId,
+                                pb.EncryptedContent(
+                                  messageUpdate:
+                                      pb.EncryptedContent_MessageUpdate(
+                                        type: pb
+                                            .EncryptedContent_MessageUpdate_Type
+                                            .EDIT_TEXT,
+                                        senderMessageId: message.messageId,
+                                        text: newText,
+                                        timestamp: Int64(
+                                          timestamp.millisecondsSinceEpoch,
+                                        ),
+                                      ),
+                                ),
+                              );
+                            }
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop();
+                          },
+                          child: Text(
+                            context.lang.ok,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (newText != null &&
-                  newText != message.content &&
-                  newText != '') {
-                final timestamp = clock.now();
-
-                await twonlyDB.messagesDao.handleTextEdit(
-                  null,
-                  message.messageId,
-                  newText!,
-                  timestamp,
-                );
-                await sendCipherTextToGroup(
-                  message.groupId,
-                  pb.EncryptedContent(
-                    messageUpdate: pb.EncryptedContent_MessageUpdate(
-                      type: pb.EncryptedContent_MessageUpdate_Type.EDIT_TEXT,
-                      senderMessageId: message.messageId,
-                      text: newText,
-                      timestamp: Int64(
-                        timestamp.millisecondsSinceEpoch,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.ok),
-          ),
-        ],
+            ),
+          );
+        },
       );
     },
   );

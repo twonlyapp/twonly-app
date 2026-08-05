@@ -1,21 +1,12 @@
-import 'dart:async';
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/providers/purchases.provider.dart';
-import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/data_and_storage/storage_contents.view.dart';
 
@@ -28,8 +19,6 @@ class ManageStorageView extends StatefulWidget {
 
 class _ManageStorageViewState extends State<ManageStorageView> {
   Map<MediaType, int> _stats = {};
-  server.Response_MemoriesUsage? _memoriesUsage;
-  int _cloudOnlyCount = 0;
 
   @override
   void initState() {
@@ -39,107 +28,10 @@ class _ManageStorageViewState extends State<ManageStorageView> {
 
   Future<void> _loadStats() async {
     final stats = await twonlyDB.mediaFilesDao.getStorageStats();
-    final memoriesUsage = await apiService.getMemoriesUsage();
-    final cloudOnlyCount = await twonlyDB.mediaFilesDao
-        .getCloudOnlyMemoriesCount();
     if (mounted) {
       setState(() {
         _stats = stats;
-        _memoriesUsage = memoriesUsage;
-        _cloudOnlyCount = cloudOnlyCount;
       });
-    }
-  }
-
-  Future<void> _disableBackup() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                context.lang.settingsStorageDisableBackupTitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text.rich(
-                TextSpan(
-                  children: formattedText(
-                    context,
-                    context.lang.settingsStorageDisableBackupBody(
-                      _cloudOnlyCount,
-                    ),
-                    textColor: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.8),
-                  ),
-                ),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: MyButton(
-                      variant: MyButtonVariant.secondaryMiddle,
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text(context.lang.galleryCancel),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: MyButton(
-                      variant: MyButtonVariant.errorMiddle,
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(context.lang.settingsStorageDisableBackupBtn),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await apiService.disableMemoriesBackup();
-        final allMedias = await (twonlyDB.select(
-          twonlyDB.mediaFiles,
-        )..where((t) => t.stored.equals(true))).get();
-        for (final media in allMedias) {
-          final ms = MediaFileService(media);
-          if (!ms.storedPath.existsSync()) {
-            ms.fullMediaRemoval();
-            await twonlyDB.mediaFilesDao.deleteMediaFile(media.mediaId);
-          }
-        }
-        await twonlyDB.mediaFilesDao.updateAllMediaFiles(
-          const MediaFilesCompanion(
-            cloudState: Value(CloudState.none),
-          ),
-        );
-        await UserService.update((u) => u.isCloudBackupEnabled = false);
-        await _loadStats();
-      } catch (e) {
-        if (mounted) {
-          showSnackbar(context, e.toString());
-        }
-      }
     }
   }
 
@@ -162,7 +54,7 @@ class _ManageStorageViewState extends State<ManageStorageView> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (isFreePlan) ...[
+          if (isFreePlan || !userService.currentUser.isCloudBackupEnabled) ...[
             Card(
               elevation: 0,
               color: Theme.of(
@@ -177,41 +69,35 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                 ),
               ),
               child: InkWell(
-                onTap: () => context.push(Routes.settingsSubscription),
+                onTap: () {
+                  if (isFreePlan) {
+                    context.push(Routes.settingsSubscription);
+                  } else {
+                    context.push(Routes.settingsBackup);
+                  }
+                },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
                       Icon(
-                        Icons.cloud_off_outlined,
+                        Icons.cloud_queue_rounded,
                         color: Theme.of(context).colorScheme.primary,
                         size: 24,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.lang.settingsStorageNoCloudBackupTitle,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              context.lang.settingsStorageNoCloudBackupCard,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
+                        child: Text(
+                          context.lang.backupFreeSpaceWithCloud,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),
@@ -219,181 +105,8 @@ class _ManageStorageViewState extends State<ManageStorageView> {
               ),
             ),
             const SizedBox(height: 24),
-          ] else ...[
-            Text(
-              context.lang.memoriesBackupTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            if (!userService.currentUser.isCloudBackupEnabled) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.lang.settingsStorageNoCloudBackupCard,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  MyButton(
-                    variant: MyButtonVariant.primaryMiddle,
-                    onPressed: () async {
-                      await UserService.update(
-                        (u) => u.isCloudBackupEnabled = true,
-                      );
-                      setState(() {});
-                      unawaited(memoriesCloudService.checkUploads());
-                    },
-                    child: Text(context.lang.enable),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 24),
-            ] else ...[
-              Text(
-                _memoriesUsage != null
-                    ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
-                    : '-',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                height: 24,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (_memoriesUsage == null ||
-                          _memoriesUsage!.maxBytes == 0) {
-                        return const SizedBox.shrink();
-                      }
-
-                      final maxWidth = constraints.maxWidth;
-                      final current = _memoriesUsage!.currentBytes.toDouble();
-                      final max = _memoriesUsage!.maxBytes.toDouble();
-                      final usageWidth =
-                          ((current / max).clamp(0.0, 1.0)) * maxWidth;
-
-                      return Row(
-                        children: [
-                          if (usageWidth > 0)
-                            Container(
-                              width: usageWidth,
-                              color: Colors.blue,
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-              StreamBuilder<MemoriesBackupProgress?>(
-                initialData: memoriesCloudService.currentProgress,
-                stream: memoriesCloudService.progressStream,
-                builder: (context, snapshot) {
-                  final progress = snapshot.data;
-                  final isSyncing =
-                      progress != null && progress.totalPending > 0;
-                  final percent = isSyncing
-                      ? ((progress.currentUploaded / progress.totalPending) +
-                                (progress.currentUploadProgress /
-                                    progress.totalPending))
-                            .clamp(0.0, 1.0)
-                      : 0.0;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (isSyncing) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          'Syncing: ${progress.currentUploaded} / ${progress.totalPending} files (${(percent * 100).toStringAsFixed(1)}%)',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        const SizedBox(height: 6),
-                        LinearProgressIndicator(
-                          value: percent,
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      Align(
-                        child: MyButton(
-                          variant: MyButtonVariant.primaryDense,
-                          onPressed: isSyncing
-                              ? null
-                              : () async {
-                                  final memories = await twonlyDB.mediaFilesDao
-                                      .getMemoriesToBackup();
-                                  if (memories.isEmpty) {
-                                    if (context.mounted) {
-                                      showSnackbar(
-                                        context,
-                                        context
-                                            .lang
-                                            .settingsStorageSyncUpToDate,
-                                      );
-                                    }
-                                  } else {
-                                    unawaited(
-                                      memoriesCloudService.checkUploads(),
-                                    );
-                                  }
-                                },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.sync, size: 18),
-                              const SizedBox(width: 8),
-                              Text(context.lang.settingsStorageSyncNow),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        child: MyButton(
-                          variant: MyButtonVariant.secondaryDense,
-                          onPressed: _disableBackup,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.cloud_off_outlined, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.lang.settingsStorageDisableBackupAction,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 24),
-            ],
+            const Divider(),
+            const SizedBox(height: 24),
           ],
           Text(
             isFreePlan
