@@ -701,7 +701,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Widget build(BuildContext context) {
     if (mc.selectedCameraDetails.cameraId >= AppEnvironment.cameras.length ||
         mc.cameraController == null) {
-      if (widget.isVisible && !mc.initCameraStarted) {
+      if (widget.isVisible &&
+          !mc.initCameraStarted &&
+          !mc.isSharePreviewIsShown) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _checkAndInitCamera();
         });

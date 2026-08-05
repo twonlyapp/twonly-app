@@ -392,49 +392,54 @@ Future<void> insertMediaFileInMessagesTable(
   List<String> groupIds, {
   AdditionalMessageData? additionalData,
 }) async {
-  await twonlyDB.mediaFilesDao.updateAllMediaFiles(
-    const MediaFilesCompanion(
-      isDraftMedia: Value(false),
-    ),
-  );
-  for (final groupId in groupIds) {
-    final groupMembers = await twonlyDB.groupsDao.getGroupContact(groupId);
-    if (groupMembers.length == 1) {
-      if (groupMembers.first.accountDeleted) {
-        Log.warn(
-          'Did not send media file to $groupId because the only account has deleted his account.',
-        );
-        continue;
-      }
-    }
-
-    final message = await twonlyDB.messagesDao.insertMessage(
-      MessagesCompanion(
-        groupId: Value(groupId),
-        mediaId: Value(mediaService.mediaFile.mediaId),
-        type: Value(MessageType.media.name),
-        additionalMessageData: Value.absentIfNull(
-          additionalData?.writeToBuffer(),
-        ),
+  await twonlyDB.transaction(() async {
+    await twonlyDB.mediaFilesDao.updateAllMediaFiles(
+      const MediaFilesCompanion(
+        isDraftMedia: Value(false),
       ),
     );
-    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
-    if (message != null) {
-      Log.info(
-        'Created message ${message.messageId} for media ${message.mediaId}',
-      );
-      // de-archive contact when sending a new message
-      await twonlyDB.groupsDao.updateGroup(
-        message.groupId,
-        const GroupsCompanion(
-          archived: Value(false),
-          deletedContent: Value(false),
+    for (final groupId in groupIds) {
+      final groupMembers = await twonlyDB.groupsDao.getGroupContact(groupId);
+      if (groupMembers.length == 1) {
+        if (groupMembers.first.accountDeleted) {
+          Log.warn(
+            'Did not send media file to $groupId because the only account has deleted his account.',
+          );
+          continue;
+        }
+      }
+
+      final message = await twonlyDB.messagesDao.insertMessage(
+        MessagesCompanion(
+          groupId: Value(groupId),
+          mediaId: Value(mediaService.mediaFile.mediaId),
+          type: Value(MessageType.media.name),
+          additionalMessageData: Value.absentIfNull(
+            additionalData?.writeToBuffer(),
+          ),
         ),
       );
-    } else {
-      Log.error('Error inserting media upload message in database.');
+      await twonlyDB.groupsDao.increaseLastMessageExchange(
+        groupId,
+        clock.now(),
+      );
+      if (message != null) {
+        Log.info(
+          'Created message ${message.messageId} for media ${message.mediaId}',
+        );
+        // de-archive contact when sending a new message
+        await twonlyDB.groupsDao.updateGroup(
+          message.groupId,
+          const GroupsCompanion(
+            archived: Value(false),
+            deletedContent: Value(false),
+          ),
+        );
+      } else {
+        Log.error('Error inserting media upload message in database.');
+      }
     }
-  }
+  });
 
   unawaited(startBackgroundMediaUpload(mediaService));
 }

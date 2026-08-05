@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Delete for me'**
   String get deleteOkBtnForMe;
 
+  /// No description provided for @deleteOnlyForMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete only for me'**
+  String get deleteOnlyForMe;
+
   /// No description provided for @deleteImageTitle.
   ///
   /// In en, this message translates to:

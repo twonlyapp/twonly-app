@@ -58,6 +58,8 @@ class _MessageInputState extends State<MessageInput> {
   Timer? _nextTypingIndicator;
   DateTime? _lastTextChangeTime;
   int? _contactId;
+  Timer? _recordingTimer;
+  DateTime? _recordingStartTime;
 
   Future<void> _sendMessage() async {
     if (_textFieldController.text == '') return;
@@ -104,6 +106,7 @@ class _MessageInputState extends State<MessageInput> {
     _textFieldController.removeListener(_handleTextChange);
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
+    _recordingTimer?.cancel();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
 
@@ -124,12 +127,6 @@ class _MessageInputState extends State<MessageInput> {
 
   void _initializeControllers() {
     recorderController = RecorderController();
-    recorderController.onCurrentDuration.listen((duration) {
-      if (!mounted) return;
-      setState(() {
-        _currentDuration = duration.inMilliseconds;
-      });
-    });
   }
 
   void _handleTextChange() {
@@ -161,6 +158,21 @@ class _MessageInputState extends State<MessageInput> {
       _recordingState = RecordingState.recording;
       _currentDuration = 0;
     });
+    _recordingStartTime = clock.now();
+    _recordingTimer?.cancel();
+    _recordingTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      timer,
+    ) {
+      if (!mounted) return;
+      setState(() {
+        if (_recordingStartTime != null) {
+          _currentDuration = clock
+              .now()
+              .difference(_recordingStartTime!)
+              .inMilliseconds;
+        }
+      });
+    });
     await HapticFeedback.heavyImpact();
     final audioTmpPath = '${AppEnvironment.cacheDir}/recording.m4a';
     unawaited(
@@ -171,6 +183,8 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Future<void> _stopAudioRecording() async {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
     await HapticFeedback.heavyImpact();
     setState(() {
       _audioRecordingLock = false;
@@ -200,6 +214,8 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   Future<void> _cancelAudioRecording() async {
+    _recordingTimer?.cancel();
+    _recordingTimer = null;
     setState(() {
       _audioRecordingLock = false;
       _cancelSlideOffset = 0;
@@ -285,307 +301,301 @@ class _MessageInputState extends State<MessageInput> {
         Padding(
           padding: const EdgeInsets.only(left: 10, bottom: 10),
           child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.color.surfaceContainer,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        if (_recordingState != RecordingState.recording)
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _emojiShowing = !_emojiShowing;
-                                if (_emojiShowing) {
-                                  widget.textFieldFocus.unfocus();
-                                } else {
-                                  widget.textFieldFocus.requestFocus();
-                                }
-                              });
-                            },
-                            child: ColoredBox(
-                              color: Colors.transparent,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 8,
-                                  bottom: 8,
-                                  left: 12,
-                                  right: 8,
-                                ),
-                                child: FaIcon(
-                                  size: 20,
-                                  _emojiShowing
-                                      ? FontAwesomeIcons.keyboard
-                                      : FontAwesomeIcons.faceSmile,
-                                ),
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.color.surfaceContainer,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      if (_recordingState != RecordingState.recording)
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _emojiShowing = !_emojiShowing;
+                              if (_emojiShowing) {
+                                widget.textFieldFocus.unfocus();
+                              } else {
+                                widget.textFieldFocus.requestFocus();
+                              }
+                            });
+                          },
+                          child: ColoredBox(
+                            color: Colors.transparent,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8,
+                                bottom: 8,
+                                left: 12,
+                                right: 8,
+                              ),
+                              child: FaIcon(
+                                size: 20,
+                                _emojiShowing
+                                    ? FontAwesomeIcons.keyboard
+                                    : FontAwesomeIcons.faceSmile,
                               ),
                             ),
                           ),
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              TextField(
-                                controller: _textFieldController,
-                                focusNode: widget.textFieldFocus,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                keyboardType: TextInputType.multiline,
-                                showCursor:
-                                    _recordingState != RecordingState.recording,
-                                maxLines: 4,
-                                minLines: 1,
-                                onChanged: (value) {
-                                  setState(() {});
-                                },
-                                onSubmitted: (_) {
-                                  _sendMessage();
-                                },
-                                style: const TextStyle(fontSize: 17),
-                                decoration: InputDecoration(
-                                  hintText: context.lang.chatListDetailInput,
-                                  contentPadding: EdgeInsets.zero,
-                                  border: InputBorder.none,
-                                ),
+                        ),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            TextField(
+                              controller: _textFieldController,
+                              focusNode: widget.textFieldFocus,
+                              textCapitalization: TextCapitalization.sentences,
+                              keyboardType: TextInputType.multiline,
+                              showCursor:
+                                  _recordingState != RecordingState.recording,
+                              maxLines: 4,
+                              minLines: 1,
+                              onChanged: (value) {
+                                setState(() {});
+                              },
+                              onSubmitted: (_) {
+                                _sendMessage();
+                              },
+                              style: const TextStyle(fontSize: 17),
+                              decoration: InputDecoration(
+                                hintText: context.lang.chatListDetailInput,
+                                contentPadding: EdgeInsets.zero,
+                                border: InputBorder.none,
                               ),
-                              if (_recordingState == RecordingState.recording)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: context.color.surfaceContainer,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.only(
-                                          top: 14,
-                                          bottom: 14,
-                                          left: 12,
-                                          right: 8,
-                                        ),
-                                        child: FaIcon(
-                                          FontAwesomeIcons.microphone,
-                                          size: 20,
-                                          color: Colors.red,
-                                        ),
+                            ),
+                            if (_recordingState == RecordingState.recording)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: context.color.surfaceContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 14,
+                                        bottom: 14,
+                                        left: 12,
+                                        right: 8,
                                       ),
-                                      const SizedBox(width: 10),
+                                      child: FaIcon(
+                                        FontAwesomeIcons.microphone,
+                                        size: 20,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      formatMsToMinSec(
+                                        _currentDuration,
+                                      ),
+                                      style: TextStyle(
+                                        color: isDarkMode(context)
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    if (!_audioRecordingLock) ...[
+                                      SizedBox(
+                                        width: (100 - _cancelSlideOffset) % 101,
+                                      ),
                                       Text(
-                                        formatMsToMinSec(
-                                          _currentDuration,
-                                        ),
-                                        style: TextStyle(
-                                          color: isDarkMode(context)
-                                              ? Colors.white
-                                              : Colors.black,
-                                          fontSize: 12,
-                                        ),
+                                        context.lang.voiceMessageSlideToCancel,
                                       ),
-                                      if (!_audioRecordingLock) ...[
-                                        SizedBox(
-                                          width:
-                                              (100 - _cancelSlideOffset) % 101,
-                                        ),
-                                        Text(
-                                          context
-                                              .lang
-                                              .voiceMessageSlideToCancel,
-                                        ),
-                                      ] else ...[
-                                        Expanded(
-                                          child: Container(),
-                                        ),
-                                        GestureDetector(
-                                          onTap: _cancelAudioRecording,
-                                          child: Text(
-                                            context.lang.voiceMessageCancel,
-                                            style: const TextStyle(
-                                              color: Colors.red,
-                                            ),
+                                    ] else ...[
+                                      Expanded(
+                                        child: Container(),
+                                      ),
+                                      GestureDetector(
+                                        onTap: _cancelAudioRecording,
+                                        child: Text(
+                                          context.lang.voiceMessageCancel,
+                                          style: const TextStyle(
+                                            color: Colors.red,
                                           ),
                                         ),
-                                        const SizedBox(width: 20),
-                                      ],
+                                      ),
+                                      const SizedBox(width: 20),
                                     ],
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (_textFieldController.text == '')
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.camera),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return CameraSendToView(widget.group);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      if (_textFieldController.text == '')
+                        GestureDetector(
+                          onLongPressMoveUpdate: (details) {
+                            if (_audioRecordingLock) return;
+                            if (_recordingOffset.dy -
+                                    details.localPosition.dy >=
+                                100) {
+                              HapticFeedback.heavyImpact();
+                              setState(() {
+                                _audioRecordingLock = true;
+                              });
+                            }
+                            if (_recordingOffset.dx -
+                                        details.localPosition.dx >=
+                                    90 &&
+                                _recordingState == RecordingState.recording) {
+                              _recordingState = RecordingState.none;
+                              HapticFeedback.heavyImpact();
+                              _cancelAudioRecording();
+                            }
+
+                            setState(() {
+                              final a =
+                                  _recordingOffset.dx -
+                                  details.localPosition.dx;
+                              if (a > 0 && a <= 90) {
+                                _cancelSlideOffset =
+                                    _recordingOffset.dx -
+                                    details.localPosition.dx;
+                              }
+                            });
+                          },
+                          onLongPressStart: (a) {
+                            _recordingOffset = a.localPosition;
+                            _startAudioRecording();
+                          },
+                          onLongPressCancel: _cancelAudioRecording,
+                          onLongPressEnd: (a) {
+                            if (_recordingState != RecordingState.recording) {
+                              return;
+                            }
+                            if (!_audioRecordingLock) {
+                              _stopAudioRecording();
+                            }
+                          },
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              if (_recordingState == RecordingState.recording &&
+                                  !_audioRecordingLock)
+                                Positioned.fill(
+                                  top: -120,
+                                  left: -5,
+                                  child: Align(
+                                    alignment: AlignmentGeometry.topCenter,
+                                    child: Container(
+                                      padding: const EdgeInsets.only(top: 13),
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          90,
+                                        ),
+                                        color: isDarkMode(context)
+                                            ? Colors.black
+                                            : Colors.white,
+                                      ),
+                                      child: const Center(
+                                        child: Column(
+                                          children: [
+                                            FaIcon(
+                                              FontAwesomeIcons.lock,
+                                              size: 16,
+                                            ),
+                                            SizedBox(height: 5),
+                                            FaIcon(
+                                              FontAwesomeIcons.angleUp,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (_recordingState == RecordingState.recording &&
+                                  !_audioRecordingLock)
+                                Positioned.fill(
+                                  top: -20,
+                                  left: -25,
+                                  bottom: -20,
+                                  right: -20,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(90),
+                                    ),
+                                    width: 60,
+                                    height: 60,
+                                  ),
+                                ),
+                              if (!_audioRecordingLock)
+                                ColoredBox(
+                                  color: Colors.transparent,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 8,
+                                      left: 8,
+                                      right: 12,
+                                    ),
+                                    child: FaIcon(
+                                      size: 20,
+                                      color:
+                                          (_recordingState ==
+                                              RecordingState.recording)
+                                          ? Colors.white
+                                          : null,
+                                      (_recordingState == RecordingState.none)
+                                          ? FontAwesomeIcons.microphone
+                                          : (_recordingState ==
+                                                RecordingState.recording)
+                                          ? FontAwesomeIcons.stop
+                                          : FontAwesomeIcons.play,
+                                    ),
                                   ),
                                 ),
                             ],
                           ),
                         ),
-                        if (_textFieldController.text == '')
-                          IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.camera),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return CameraSendToView(widget.group);
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        if (_textFieldController.text == '')
-                          GestureDetector(
-                            onLongPressMoveUpdate: (details) {
-                              if (_audioRecordingLock) return;
-                              if (_recordingOffset.dy -
-                                      details.localPosition.dy >=
-                                  100) {
-                                HapticFeedback.heavyImpact();
-                                setState(() {
-                                  _audioRecordingLock = true;
-                                });
-                              }
-                              if (_recordingOffset.dx -
-                                          details.localPosition.dx >=
-                                      90 &&
-                                  _recordingState == RecordingState.recording) {
-                                _recordingState = RecordingState.none;
-                                HapticFeedback.heavyImpact();
-                                _cancelAudioRecording();
-                              }
-
-                              setState(() {
-                                final a =
-                                    _recordingOffset.dx -
-                                    details.localPosition.dx;
-                                if (a > 0 && a <= 90) {
-                                  _cancelSlideOffset =
-                                      _recordingOffset.dx -
-                                      details.localPosition.dx;
-                                }
-                              });
-                            },
-                            onLongPressStart: (a) {
-                              _recordingOffset = a.localPosition;
-                              _startAudioRecording();
-                            },
-                            onLongPressCancel: _cancelAudioRecording,
-                            onLongPressEnd: (a) {
-                              if (_recordingState != RecordingState.recording) {
-                                return;
-                              }
-                              if (!_audioRecordingLock) {
-                                _stopAudioRecording();
-                              }
-                            },
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                if (_recordingState ==
-                                        RecordingState.recording &&
-                                    !_audioRecordingLock)
-                                  Positioned.fill(
-                                    top: -120,
-                                    left: -5,
-                                    child: Align(
-                                      alignment: AlignmentGeometry.topCenter,
-                                      child: Container(
-                                        padding: const EdgeInsets.only(top: 13),
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            90,
-                                          ),
-                                          color: isDarkMode(context)
-                                              ? Colors.black
-                                              : Colors.white,
-                                        ),
-                                        child: const Center(
-                                          child: Column(
-                                            children: [
-                                              FaIcon(
-                                                FontAwesomeIcons.lock,
-                                                size: 16,
-                                              ),
-                                              SizedBox(height: 5),
-                                              FaIcon(
-                                                FontAwesomeIcons.angleUp,
-                                                size: 16,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                if (_recordingState ==
-                                        RecordingState.recording &&
-                                    !_audioRecordingLock)
-                                  Positioned.fill(
-                                    top: -20,
-                                    left: -25,
-                                    bottom: -20,
-                                    right: -20,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        borderRadius: BorderRadius.circular(90),
-                                      ),
-                                      width: 60,
-                                      height: 60,
-                                    ),
-                                  ),
-                                if (!_audioRecordingLock)
-                                  ColoredBox(
-                                    color: Colors.transparent,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        bottom: 8,
-                                        left: 8,
-                                        right: 12,
-                                      ),
-                                      child: FaIcon(
-                                        size: 20,
-                                        color:
-                                            (_recordingState ==
-                                                RecordingState.recording)
-                                            ? Colors.white
-                                            : null,
-                                        (_recordingState == RecordingState.none)
-                                            ? FontAwesomeIcons.microphone
-                                            : (_recordingState ==
-                                                  RecordingState.recording)
-                                            ? FontAwesomeIcons.stop
-                                            : FontAwesomeIcons.play,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
-                if (_textFieldController.text != '' || _audioRecordingLock)
-                  IconButton(
-                    padding: const EdgeInsets.all(15),
-                    icon: FaIcon(
-                      color: context.color.primary,
-                      FontAwesomeIcons.solidPaperPlane,
-                    ),
-                    onPressed: _audioRecordingLock
-                        ? _stopAudioRecording
-                        : _sendMessage,
-                  )
-                else
-                  SparksWidget(
-                    animate: _showSparks,
-                    child: IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.plus),
-                      padding: const EdgeInsets.all(15),
-                      onPressed: () => _showAdditionalShareModal(context),
-                    ),
+              ),
+              if (_textFieldController.text != '' || _audioRecordingLock)
+                IconButton(
+                  padding: const EdgeInsets.all(15),
+                  icon: FaIcon(
+                    color: context.color.primary,
+                    FontAwesomeIcons.solidPaperPlane,
                   ),
-              ],
-            ),
+                  onPressed: _audioRecordingLock
+                      ? _stopAudioRecording
+                      : _sendMessage,
+                )
+              else
+                SparksWidget(
+                  animate: _showSparks,
+                  child: IconButton(
+                    icon: const FaIcon(FontAwesomeIcons.plus),
+                    padding: const EdgeInsets.all(15),
+                    onPressed: () => _showAdditionalShareModal(context),
+                  ),
+                ),
+            ],
           ),
+        ),
         Offstage(
           offstage: !_emojiShowing,
           child: EmojiPicker(

@@ -742,6 +742,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteOkBtnForMe => 'Für mich löschen';
 
   @override
+  String get deleteOnlyForMe => 'Nur für mich löschen';
+
+  @override
   String get deleteImageTitle => 'Bist du dir sicher?';
 
   @override

@@ -37,6 +37,20 @@ Future<bool> _processSignalUserDataV2(Response_UserData userData) async {
       ),
     );
 
+    final signalStore = await getSignalStore();
+    if (signalStore != null) {
+      final existingIdentity = await signalStore.getIdentity(
+        SignalProtocolAddress(userData.userId.toString(), defaultDeviceId),
+      );
+
+      if (existingIdentity != null && existingIdentity != tempIdentityKey) {
+        Log.error(
+          'Identity key mismatch for contact ${userData.userId}! Existing V1 key does not match the incoming V2 identity key.',
+        );
+        return false;
+      }
+    }
+
     int? tempEccPreKeyId;
     Uint8List? tempEccPreKeyPublic;
     if (userData.pqcBundle.hasPrekey()) {

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:firebase_app_installations/firebase_app_installations.dart';
@@ -9,14 +8,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
-import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/services/notifications/fcm.background.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 import '../../../firebase_options.dart';
 
@@ -175,53 +171,6 @@ class FcmNotificationService {
 
         if (await backgroundFetch()) {
           return;
-        }
-
-        try {
-          final pushDataBytes = base64Decode(pushDataString);
-          final encryptedPush = EncryptedPushNotification.fromBuffer(
-            pushDataBytes,
-          );
-          final pushUsers = await getPushKeys(
-            SecureStorageKeys.receivingPushKeys,
-          );
-          for (final pushUser in pushUsers) {
-            for (final pushKey in pushUser.pushKeys) {
-              final decrypted = await tryDecryptMessage(
-                pushKey.key,
-                encryptedPush,
-              );
-              if (decrypted != null) {
-                if (isUUIDNewer(pushUser.lastMessageId, decrypted.messageId)) {
-                  Log.info(
-                    'Skipping local push notification because message is older than lastMessageId',
-                  );
-                  return;
-                }
-                Log.info(
-                  'Successfully decrypted push_data directly from FCM payload! Showing notification.',
-                );
-                await showLocalPushNotification(
-                  pushUser,
-                  decrypted,
-                  titleSuffix:
-                      (userService.isUserCreated &&
-                          userService.currentUser.isDeveloper)
-                      ? ' [d]'
-                      : null,
-                );
-                unawaited(
-                  updateLastMessageId(
-                    pushUser.userId.toInt(),
-                    decrypted.messageId,
-                  ),
-                );
-                return;
-              }
-            }
-          }
-        } catch (e) {
-          Log.error('Error handling push_data: $e');
         }
       }
     }

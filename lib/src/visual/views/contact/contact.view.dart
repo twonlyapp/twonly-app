@@ -9,6 +9,7 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -275,6 +276,33 @@ class _ContactViewState extends State<ContactView> {
             onTap: () => handleUserRemoveRequest(contact),
           ),
           if (userService.currentUser.isDeveloper) ...[
+            if (contact.signalVersion != SignalVersion.v2)
+              BetterListTile(
+                icon: FontAwesomeIcons.arrowsRotate,
+                text: 'Update Connection to V2 (PQXDH)',
+                onTap: () async {
+                  final userData = await apiService.getUserById(contact.userId);
+                  if (userData != null) {
+                    await processSignalUserData(userData);
+                    final updatedContact = await twonlyDB.contactsDao
+                        .getContactById(contact.userId);
+                    final isV2 =
+                        updatedContact?.signalVersion == SignalVersion.v2;
+
+                    if (context.mounted) {
+                      showSnackbar(
+                        context,
+                        isV2
+                            ? 'Connection updated to V2 successfully'
+                            : 'Failed to update connection to V2',
+                        level: isV2
+                            ? SnackbarLevel.success
+                            : SnackbarLevel.error,
+                      );
+                    }
+                  }
+                },
+              ),
             const Divider(),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),

@@ -359,11 +359,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             context.lang.dialogAskDeleteMediaFilePopTitle,
           ),
           actions: [
-            FilledButton(
-              child: Text(context.lang.dialogAskDeleteMediaFilePopDelete),
+            MyButton(
+              variant: MyButtonVariant.primaryMiddle,
               onPressed: () {
                 Navigator.pop(context, true);
               },
+              child: Text(context.lang.dialogAskDeleteMediaFilePopDelete),
             ),
             TextButton(
               child: Text(context.lang.cancel),
