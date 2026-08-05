@@ -13,7 +13,7 @@ class BetterText extends StatelessWidget {
   Widget build(BuildContext context) {
     // Regular expression to find URLs and domains
     final urlRegExp = RegExp(
-      r'(?:(?:https?://|www\.)[^\s]+|(?:[a-zA-Z0-9-]+\.[a-zA-Z]{2,}))',
+      r'''(?:(?:https?://|www\.)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))|(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})''',
       caseSensitive: false,
     );
 
