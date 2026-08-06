@@ -13843,6 +13843,14 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   );
   late final $LabelsTable labels = $LabelsTable(this);
   late final $ContactLabelsTable contactLabels = $ContactLabelsTable(this);
+  late final Index idxMessagesGroupIdCreatedAt = Index(
+    'idx_messages_group_id_created_at',
+    'CREATE INDEX idx_messages_group_id_created_at ON messages (group_id, created_at)',
+  );
+  late final Index idxReceiptsMessageId = Index(
+    'idx_receipts_message_id',
+    'CREATE INDEX idx_receipts_message_id ON receipts (message_id)',
+  );
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final ReceiptsDao receiptsDao = ReceiptsDao(this as TwonlyDB);
@@ -13889,6 +13897,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     shortcutMembers,
     labels,
     contactLabels,
+    idxMessagesGroupIdCreatedAt,
+    idxReceiptsMessageId,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

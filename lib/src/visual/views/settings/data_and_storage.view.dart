@@ -17,6 +17,14 @@ class DataAndStorageView extends StatefulWidget {
 }
 
 class _DataAndStorageViewState extends State<DataAndStorageView> {
+  late Future<Map<MediaType, int>> _storageStatsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _storageStatsFuture = twonlyDB.mediaFilesDao.getStorageStats();
+  }
+
   Future<void> showAutoDownloadOptions(
     BuildContext context,
     ConnectivityResult connectionMode,
@@ -93,7 +101,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
           return ListView(
             children: [
               FutureBuilder<Map<MediaType, int>>(
-                future: twonlyDB.mediaFilesDao.getStorageStats(),
+                future: _storageStatsFuture,
                 builder: (context, snapshot) {
                   final stats = snapshot.data ?? {};
                   final totalBytes = stats.values.fold<int>(0, (a, b) => a + b);

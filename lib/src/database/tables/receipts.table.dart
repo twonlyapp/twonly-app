@@ -3,6 +3,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 
 @DataClassName('Receipt')
+@TableIndex(name: 'idx_receipts_message_id', columns: {#messageId})
 class Receipts extends Table {
   TextColumn get receiptId => text()();
 
