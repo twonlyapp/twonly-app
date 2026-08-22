@@ -40,6 +40,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders = [appName: "twonly"]
     }
     signingConfigs {
        release {
@@ -53,6 +54,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix ".testing"
+            manifestPlaceholders = [appName: "twonly [dev]"]
         }
         // profile {
         //     applicationIdSuffix ".STOP"
