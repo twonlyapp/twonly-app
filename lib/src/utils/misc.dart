@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -6,7 +7,6 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
@@ -44,41 +44,41 @@ Future<String?> saveImageToGallery(
 
   if (createdAt != null) {
     try {
-      final image = img.decodeImage(imageBytes);
-      if (image != null) {
-        final formattedDate = DateFormat(
-          'yyyy:MM:dd HH:mm:ss',
-        ).format(createdAt);
-        image.exif.imageIfd[0x0132] = img.IfdValueAscii(
-          formattedDate,
-        ); // DateTime
-        image.exif.exifIfd[0x9003] = img.IfdValueAscii(
-          formattedDate,
-        ); // DateTimeOriginal
-        image.exif.exifIfd[0x9004] = img.IfdValueAscii(
-          formattedDate,
-        ); // DateTimeDigitized
+      bytesToProcess = await Isolate.run(() {
+        final image = img.decodeImage(imageBytes);
+        if (image != null) {
+          final formattedDate = DateFormat(
+            'yyyy:MM:dd HH:mm:ss',
+          ).format(createdAt);
+          image.exif.imageIfd[0x0132] = img.IfdValueAscii(
+            formattedDate,
+          ); // DateTime
+          image.exif.exifIfd[0x9003] = img.IfdValueAscii(
+            formattedDate,
+          ); // DateTimeOriginal
+          image.exif.exifIfd[0x9004] = img.IfdValueAscii(
+            formattedDate,
+          ); // DateTimeDigitized
 
-        bytesToProcess = img.encodeJpg(image);
-      }
+          return img.encodeJpg(image);
+        }
+        return imageBytes;
+      });
     } catch (e) {
       Log.error(e);
     }
   }
 
-  final jpgImages = await FlutterImageCompress.compressWithList(
-    // ignore: avoid_redundant_argument_values
-    format: CompressFormat.jpeg,
-    bytesToProcess,
-    quality: 100,
-    keepExif: true,
-  );
   final hasAccess = await Gal.hasAccess(toAlbum: true);
   if (!hasAccess) {
     await Gal.requestAccess(toAlbum: true);
   }
   try {
-    await Gal.putImageBytes(jpgImages, album: 'twonly', name: name ?? 'image');
+    await Gal.putImageBytes(
+      bytesToProcess,
+      album: 'twonly',
+      name: name ?? 'image',
+    );
     return null;
   } on GalException catch (e) {
     Log.error(e);

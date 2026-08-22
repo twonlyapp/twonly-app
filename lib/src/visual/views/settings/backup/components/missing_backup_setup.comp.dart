@@ -22,7 +22,9 @@ class _MissingBackupCompState extends State<MissingBackupComp> {
       builder: (context, snapshot) {
         final user = userService.currentUser;
 
-        if (user.currentSetupPage != null || user.isBackupEnabled) {
+        if (user.currentSetupPage != null ||
+            user.isBackupEnabled ||
+            user.passwordLessRecovery != null) {
           return const SizedBox.shrink();
         }
 
