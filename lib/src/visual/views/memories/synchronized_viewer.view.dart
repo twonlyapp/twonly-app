@@ -207,6 +207,19 @@ class _SynchronizedImageViewerScreenState
   Future<void> _exportFile() async {
     final item = widget.galleryItems[_currentIndex].mediaService;
 
+    if (!item.storedPath.existsSync()) {
+      await item.storeMediaFile();
+      if (!mounted) return;
+      if (userService.currentUser.storeMediaFilesInGallery) {
+        showSnackbar(
+          context,
+          context.lang.galleryExportSuccess,
+          level: SnackbarLevel.success,
+        );
+        return;
+      }
+    }
+
     try {
       if (item.mediaFile.type == MediaType.video) {
         await saveVideoToGallery(
