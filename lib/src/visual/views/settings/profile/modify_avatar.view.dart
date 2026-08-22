@@ -31,10 +31,9 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
     }
   }
 
-  Future<void> updateUserAvatar(String json, String svg) async {
+  Future<void> updateUserAvatar(String svg) async {
     await UserService.update(
       (u) => u
-        ..avatarJson = json
         ..avatarSvg = svg
         ..avatarCounter = u.avatarCounter + 1,
     );
@@ -104,9 +103,8 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
 
   Future<void> storeAvatarAndExit() async {
     await _avatarMakerController.saveAvatarSVG();
-    final json = _avatarMakerController.getJsonOptionsSync();
     final svg = _avatarMakerController.getAvatarSVGSync();
-    await updateUserAvatar(json, svg);
+    await updateUserAvatar(svg);
     if (mounted) {
       Navigator.pop(context, true);
     }
@@ -118,8 +116,8 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        if (_avatarMakerController.getJsonOptionsSync() !=
-            userService.currentUser.avatarJson) {
+        if (_avatarMakerController.getAvatarSVGSync() !=
+            userService.currentUser.avatarSvg) {
           // there where changes
           final shouldPop = await _showBackDialog() ?? false;
           if (context.mounted && shouldPop) {

@@ -1,7 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/cached_network_image.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/link_preview/parser/base.dart';
 
 class CustomLinkCard extends StatelessWidget {

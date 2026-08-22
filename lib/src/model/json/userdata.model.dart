@@ -23,7 +23,6 @@ class UserData {
   String username;
   String displayName;
   String? avatarSvg;
-  String? avatarJson;
 
   @JsonKey(defaultValue: 0)
   int appVersion = 0;

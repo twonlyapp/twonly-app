@@ -37,7 +37,6 @@ dependencies:
   path_provider: ^2.1.5
   url_launcher: ^6.3.2
   vector_graphics: ^1.1.19
-  video_player: ^2.10.1
   in_app_purchase: ^3.3.0
   go_router: ^17.1.0
 
@@ -72,34 +71,13 @@ dependencies:
   # Overwritten by self-controlled repository
   emoji_picker_flutter: ^4.3.0
 
-  # Packages which got overwritten using the twonly-app-dependencies repository
-  # Idea: Every change goes though a git commit, where every change can be reviewed.
-  restart_app: ^1.3.2
-  photo_view: ^0.15.0
-  hashlib: ^2.0.0
-  libsignal_protocol_dart: ^0.7.4
-  lottie: ^3.3.1
-  mutex: ^3.1.0
-  introduction_screen: ^4.0.0
-  qr_flutter: ^4.1.0
-  hand_signature: ^3.0.3
-  flutter_sharing_intent: ^2.0.4
-  screen_protector: ^1.5.1
-  flutter_markdown_plus: ^1.0.7
-  exif: ^3.3.0
-  flutter_blurhash: ^0.9.1
-
   # With high download. (But should be checked nonetheless.)
   app_links: ^7.0.0 # 1.6 mio
-  image: ^4.3.0 # 3.3 mio
   flutter_secure_storage: ^10.3.1 # 1.85 mio
   permission_handler: ^12.0.0+1 # 2 mio
 
   # Not yet checked 
-  audio_waveforms: ^2.0.2
-  avatar_maker: ^0.4.0
   background_downloader: ^9.4.0
-  cached_network_image: ^3.4.1
   cryptography_flutter_plus: ^3.0.0
   cryptography_plus: ^3.0.0
   flutter_android_volume_keydown: ^1.0.1
@@ -109,60 +87,47 @@ dependencies:
   photo_manager: ^3.9.0
   google_mlkit_barcode_scanning: ^0.14.1
   google_mlkit_face_detection: ^0.13.1
-  pro_video_editor: ^1.6.1
   rust_lib_twonly:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
+
+## --- Start Managed Dependencies --- 
+  audio_waveforms: ^2.0.2
+  avatar_maker: ^1.5.0
   blurhash_dart: ^1.2.1
+  exif: ^3.3.0
+  sprintf: ^7.0.0
+  flutter_blurhash: ^0.9.1
+  flutter_markdown_plus: ^1.0.7
+  video_player: ^2.14.0
+  video_player_android: ^2.12.0
+  video_player_avfoundation: ^2.11.0
+  camera_android_camerax: ^0.7.4+6
+  flutter_sharing_intent: ^2.0.4
+  hand_signature: ^3.1.0+2
+  hashlib: ^2.3.0
+  hashlib_codecs: ^3.0.1
+  image: ^4.9.2
+  introduction_screen: ^4.0.0
+  dots_indicator: ^4.0.1
+  libsignal_protocol_dart: ^0.8.0
+  adaptive_number: ^1.0.0
+  ed25519_edwards: ^0.3.1
+  optional: ^6.1.0+1
+  pointycastle: ^4.0.0
+  x25519: ^0.1.1
+  lottie: ^3.5.1
+  mutex: ^3.1.0
+  photo_view: ^0.15.0
+  pro_video_editor: ^2.11.3
+  qr_flutter: ^4.1.0
+  qr: ^3.1.0-wip
+  restart_app: ^1.7.3
+  screen_protector: ^1.5.1
+## --- End Managed Dependencies --- 
 
 
 dependency_overrides:
-  dots_indicator:
-    path: ./dependencies/dots_indicator
-  restart_app:
-    path: ./dependencies/restart_app
-  hashlib:
-    path: ./dependencies/hashlib
-  introduction_screen:
-    path: ./dependencies/introduction_screen
-  libsignal_protocol_dart:
-    path: ./dependencies/libsignal_protocol_dart
-  flutter_sharing_intent:
-    path: ./dependencies/flutter_sharing_intent
-  lottie:
-    path: ./dependencies/lottie
-  mutex:
-    path: ./dependencies/mutex
-  photo_view:
-    path: ./dependencies/photo_view
-  qr:
-    path: ./dependencies/qr
-  adaptive_number:
-    path: ./dependencies/adaptive_number
-  ed25519_edwards:
-    path: ./dependencies/ed25519_edwards
-  hand_signature:
-    path: ./dependencies/hand_signature
-  hashlib_codecs:
-    path: ./dependencies/hashlib_codecs
-  optional:
-    path: ./dependencies/optional
-  pointycastle:
-    path: ./dependencies/pointycastle
-  x25519:
-    path: ./dependencies/x25519
-  qr_flutter:
-    path: ./dependencies/qr_flutter
-  screen_protector:
-    path: ./dependencies/screen_protector
-  flutter_markdown_plus:
-    path: ./dependencies/flutter_markdown_plus
-  camera_android_camerax: 
-    # path: ../flutter-packages/packages/camera/camera_android_camerax
-    git:
-      url: https://github.com/otsmr/flutter-packages.git
-      path: packages/camera/camera_android_camerax 
-      ref: e83fb3a27d4da2c37a3c8acbf2486283965b4f69
   emoji_picker_flutter:
     # Fixes the issue with recent emojis (solved by https://github.com/Fintasys/emoji_picker_flutter/pull/238)
     # Using override until this gets merged.
@@ -173,12 +138,74 @@ dependency_overrides:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git
       ref: fix/lStar-not-found-error
+
+## --- Start Managed Dependency Overrides --- 
+  audio_waveforms:
+    path: ./dependencies/audio_waveforms
+  avatar_maker:
+    path: ./dependencies/avatar_maker
+  blurhash_dart:
+    path: ./dependencies/blurhash_dart
   exif:
     path: ./dependencies/exif
   sprintf:
     path: ./dependencies/sprintf
   flutter_blurhash:
     path: ./dependencies/flutter_blurhash
+  flutter_markdown_plus:
+    path: ./dependencies/flutter_markdown_plus
+  video_player:
+    path: ./dependencies/video_player
+  video_player_android:
+    path: ./dependencies/video_player_android
+  video_player_avfoundation:
+    path: ./dependencies/video_player_avfoundation
+  camera_android_camerax:
+    path: ./dependencies/camera_android_camerax
+  flutter_sharing_intent:
+    path: ./dependencies/flutter_sharing_intent
+  hand_signature:
+    path: ./dependencies/hand_signature
+  hashlib:
+    path: ./dependencies/hashlib
+  hashlib_codecs:
+    path: ./dependencies/hashlib_codecs
+  image:
+    path: ./dependencies/image
+  introduction_screen:
+    path: ./dependencies/introduction_screen
+  dots_indicator:
+    path: ./dependencies/dots_indicator
+  libsignal_protocol_dart:
+    path: ./dependencies/libsignal_protocol_dart
+  adaptive_number:
+    path: ./dependencies/adaptive_number
+  ed25519_edwards:
+    path: ./dependencies/ed25519_edwards
+  optional:
+    path: ./dependencies/optional
+  pointycastle:
+    path: ./dependencies/pointycastle
+  x25519:
+    path: ./dependencies/x25519
+  lottie:
+    path: ./dependencies/lottie
+  mutex:
+    path: ./dependencies/mutex
+  photo_view:
+    path: ./dependencies/photo_view
+  pro_video_editor:
+    path: ./dependencies/pro_video_editor
+  qr_flutter:
+    path: ./dependencies/qr_flutter
+  qr:
+    path: ./dependencies/qr
+  restart_app:
+    path: ./dependencies/restart_app
+  screen_protector:
+    path: ./dependencies/screen_protector
+## --- End Managed Dependency Overrides --- 
+  
 
 dev_dependencies:
   build_runner: ^2.4.15

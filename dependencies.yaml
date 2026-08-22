@@ -1,0 +1,109 @@
+cache: ./.cache
+outdir: ./dependencies
+dependencies:
+  audio_waveforms:
+    git: https://github.com/SimformSolutionsPvtLtd/audio_waveforms.git
+    tag: 2.0.2
+  avatar_maker:
+    git: https://github.com/RoadTripMoustache/avatar_maker.git
+    tag: 1.5.0
+    keep:
+    - assets/icons
+  blurhash_dart:
+    git: https://github.com/justacid/blurhash-dart.git
+    tag: v1.2.1
+  exif:
+    git: https://github.com/bigflood/dartexif.git
+    dependencies:
+      sprintf:
+        git: https://github.com/Naddiseo/dart-sprintf.git
+        commit: f1e74f2f4c339d983f9d011b4ba1df4ec8b8857c
+    commit: bf170d5639f0b6fcb0947060cf8bd7b623df9069
+  flutter_blurhash:
+    git: https://github.com/fluttercommunity/flutter_blurhash.git
+    commit: c5cdec4986432e835bb91f5ce00564534450cdc7
+  flutter_markdown_plus:
+    git: https://github.com/foresightmobile/flutter_markdown_plus.git
+    commit: dc1185c933fbf9dba559ef6c91586ff1503be3ee
+  flutter_packages:
+    git: https://github.com/otsmr/flutter-packages.git
+    subpackages:
+    - name: video_player
+      path: packages/video_player/video_player
+    - name: video_player_android
+      path: packages/video_player/video_player_android
+    - name: video_player_avfoundation
+      path: packages/video_player/video_player_avfoundation
+    - name: camera_android_camerax
+      path: packages/camera/camera_android_camerax
+    commit: bb0e9f500828f3117a6ea96b898eaee3710e43d9
+  flutter_sharing_intent:
+    git: https://github.com/bhagat-techind/flutter_sharing_intent.git
+    commit: aa1672f547d6579585fa27df0b28ffa2a2544aaa
+  hand_signature:
+    git: https://github.com/RomanBase/hand_signature.git
+    commit: 1beedb164d093643365b0832277c377353c7464f
+  hashlib:
+    git: https://github.com/bitanon/hashlib.git
+    replace:
+    - - abstract class MACHashBase
+      - abstract mixin class MACHashBase
+    dependencies:
+      hashlib_codecs:
+        git: https://github.com/bitanon/hashlib_codecs.git
+        commit: 2a966c37c3b9b1f5541ae88e99ab34acf3fc968b
+    commit: bc9c2f8dd7bbc72f47ccab0ce1111d40259c49bc
+  image:
+    git: https://github.com/brendan-duncan/image.git
+    tag: v4.9.2
+  introduction_screen:
+    git: https://github.com/Pyozer/introduction_screen.git
+    dependencies:
+      dots_indicator:
+        git: https://github.com/Pyozer/dots_indicator.git
+        commit: 508f5883ac79bdbc10254092de3f28f571d261cd
+    commit: 4a90e557630b28834479ed9c64a9d2d0185d8e48
+  libsignal_protocol_dart:
+    git: https://github.com/MixinNetwork/libsignal_protocol_dart.git
+    dependencies:
+      adaptive_number:
+        git: https://github.com/lemoony/adaptive_number_dart
+        commit: ea9178fdd4d82ac45cf0ec966ac870dae661124f
+      ed25519_edwards:
+        git: https://github.com/Tougee/ed25519.git
+        commit: 7353ba759ea9f4646cbf481c2ef949625c8ce4cf
+      optional:
+        git: https://github.com/tonio-ramirez/optional.dart.git
+        commit: 71c638891ce4f2aff35c7387727989f31f9d877d
+      pointycastle:
+        git: https://github.com/bcgit/pc-dart.git
+        commit: bbd8569f68a7fccbdf0b92d0b44a9219c126c8dd
+      x25519:
+        git: https://github.com/Tougee/curve25519.git
+        commit: ecb1d357714537bba6e276ef45f093846d4beaee
+    commit: c95a1586057022acdbb9c76b1692d94cc549bcc7
+  lottie:
+    git: https://github.com/xvrh/lottie-flutter.git
+    commit: 127bc29f2c6bd8b32ec4064a09e54e6b31cd0a88
+  mutex:
+    git: https://github.com/hoylen/dart-mutex.git
+    commit: 84ca903a3ac863735e3228c75a212133621f680f
+  photo_view:
+    git: https://github.com/bluefireteam/photo_view.git
+    commit: a13ca2fc387a3fb1276126959e092c44d0029987
+  pro_video_editor:
+    git: https://github.com/hm21/pro_video_editor.git
+    tag: v2.11.3
+  qr_flutter:
+    git: https://github.com/theyakka/qr.flutter.git
+    dependencies:
+      qr:
+        git: https://github.com/kevmoo/qr.dart.git
+        commit: 7b1e9665ca976f484e7975356cf26fc7a0ccf02e
+    commit: d5e7206396105d643113618290bbcc755d05f492
+  restart_app:
+    git: https://github.com/gabrimatic/restart_app
+    commit: 66897cb67e235bab85421647bfae036acb4438cb
+  screen_protector:
+    git: https://github.com/prongbang/screen_protector.git
+    commit: 019c04d622d7b610d2903d3a347edc3ba76a6ed0
