@@ -17,6 +17,8 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
+import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/status.passwordless_recovery.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/setup.passwordless_recovery.view.dart';
@@ -74,6 +76,9 @@ class _BackupViewState extends State<BackupView> {
   Widget build(BuildContext context) {
     final currentPlan = context.watch<PurchasesProvider>().plan;
     final isFreePlan = currentPlan == SubscriptionPlan.Free;
+    final hasPasswordless =
+        userService.currentUser.passwordLessRecovery != null;
+    final hasPassword = userService.currentUser.isBackupEnabled;
 
     return StreamBuilder<void>(
       stream: userService.onUserUpdated,
@@ -86,7 +91,33 @@ class _BackupViewState extends State<BackupView> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: ListView(
               children: [
-                if (userService.currentUser.passwordLessRecovery != null)
+                // --- BEREICH 1: Konto-Wiederherstellung ---
+                Text(
+                  context.lang.backupRecoverySectionTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    (!hasPasswordless && !hasPassword)
+                        ? context.lang.backupRecoverySectionDescNone
+                        : context.lang.backupRecoverySectionDescSome,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: (!hasPasswordless && !hasPassword)
+                          ? context.color.error
+                          : context.color.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                if (hasPasswordless)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: PasswordLessRecoveryStatus(),
@@ -94,20 +125,46 @@ class _BackupViewState extends State<BackupView> {
                 else
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Center(
-                      child: MyButton(
-                        variant: MyButtonVariant.primaryMiddle,
-                        onPressed: () =>
-                            context.navPush(const PasswordLessRecoverySetup()),
-                        child: Text(context.lang.passwordlessRecoveryEnableBtn),
-                      ),
+                    child: RecoveryCard(
+                      icon: FontAwesomeIcons.shieldHeart,
+                      title: context.lang.backupRecoveryOptionAFriends,
+                      subtitle: context.lang.backupRecoveryOptionAMicrocopy,
+                      onTap: () =>
+                          context.navPush(const PasswordLessRecoverySetup()),
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: RecoveryCard(
+                    isEnabled: hasPassword,
+                    icon: FontAwesomeIcons.key,
+                    title: context.lang.backupRecoveryOptionBPassword,
+                    subtitle: hasPassword
+                        ? context.lang.backupChangePassword
+                        : context.lang.backupRecoveryOptionBMicrocopy,
+                    onTap: () =>
+                        context.push(Routes.settingsBackupSetup, extra: true),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+                const Divider(),
+                const SizedBox(height: 32),
+
+                // --- BEREICH 2: Cloud-Backup ---
+                Text(
+                  context.lang.backupCloudSectionTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    context.lang.backupTwonlySafeDesc,
+                    context.lang.backupCloudSectionDesc,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: context.color.onSurfaceVariant,
@@ -115,109 +172,125 @@ class _BackupViewState extends State<BackupView> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
-                if (userService.currentUser.isBackupEnabled) ...[
-                  // 1. Identity tile
-                  BetterListTile(
-                    icon: FontAwesomeIcons.userCheck,
-                    text: context.lang.backupIdentityHeader,
-                    subtitle: Text(
-                      _buildTileSubtitle(
-                        _backupStatus?.identityLastSuccessFull,
-                        _backupStatus?.identitySize,
-                      ),
+                // Kontakte & Nachrichten
+                BetterListTile(
+                  icon: FontAwesomeIcons.comments,
+                  text: context.lang.backupCloudContactsMessages,
+                  subtitle: Text(
+                    _buildTileSubtitle(
+                      _backupStatus?.archiveLastSuccessFull,
+                      _backupStatus?.archiveSize,
                     ),
                   ),
+                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                ),
 
-                  // 2. Contacts & Messages tile
-                  BetterListTile(
-                    icon: FontAwesomeIcons.comments,
-                    text: context.lang.backupArchiveHeader,
-                    subtitle: Text(
-                      _buildTileSubtitle(
-                        _backupStatus?.archiveLastSuccessFull,
-                        _backupStatus?.archiveSize,
-                      ),
-                    ),
+                // Bilder & Medien
+                BetterListTile(
+                  icon: FontAwesomeIcons.photoFilm,
+                  text: context.lang.backupCloudImagesMedia,
+                  subtitle: Text(
+                    isFreePlan
+                        ? context.lang.backupMemoriesUpgradeRequired
+                        : (!userService.currentUser.isCloudBackupEnabled
+                              ? context.lang.backupMemoriesNotEnabled
+                              : (_memoriesUsage != null
+                                    ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                                    : '-')),
                   ),
+                  trailing: isFreePlan
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade700,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  const FaIcon(
+                                    FontAwesomeIcons.star,
+                                    size: 10,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.lang.backupCloudProBadge,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Switch(
+                              value: false,
+                              onChanged: null,
+                            ),
+                          ],
+                        )
+                      : Switch(
+                          value: userService.currentUser.isCloudBackupEnabled,
+                          onChanged: (val) async {
+                            if (!val) {
+                              final disabled =
+                                  await promptAndDisableMemoriesBackup(context);
+                              if (disabled && mounted) setState(() {});
+                            } else {
+                              await UserService.update(
+                                (u) => u.isCloudBackupEnabled = val,
+                              );
+                              if (mounted) setState(() {});
+                              unawaited(memoriesCloudService.checkUploads());
+                            }
+                          },
+                        ),
+                  onTap: isFreePlan
+                      ? () async {
+                          await context.push(Routes.settingsSubscription);
+                        }
+                      : () async {
+                          if (userService.currentUser.isCloudBackupEnabled) {
+                            await context.navPush(
+                              const MemoriesBackupDetailView(),
+                            );
+                          } else {
+                            await UserService.update(
+                              (u) => u.isCloudBackupEnabled = true,
+                            );
+                            if (mounted) setState(() {});
+                            unawaited(memoriesCloudService.checkUploads());
+                          }
+                        },
+                ),
 
-                  // 3. Memories tile
-                  BetterListTile(
-                    icon: FontAwesomeIcons.photoFilm,
-                    text: context.lang.memoriesBackupTitle,
-                    subtitle: Text(
-                      isFreePlan
-                          ? context.lang.backupMemoriesUpgradeRequired
-                          : (!userService.currentUser.isCloudBackupEnabled
-                                ? context.lang.backupMemoriesNotEnabled
-                                : (_memoriesUsage != null
-                                      ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
-                                      : '-')),
-                    ),
-                    trailing: Icon(
-                      Icons.chevron_right_rounded,
-                      color: context.color.onSurfaceVariant,
-                    ),
-                    onTap: () async {
-                      if (isFreePlan) {
-                        await context.push(Routes.settingsSubscription);
-                      } else if (!userService
-                          .currentUser
-                          .isCloudBackupEnabled) {
-                        await UserService.update(
-                          (u) => u.isCloudBackupEnabled = true,
-                        );
-                        if (mounted) setState(() {});
-                        unawaited(memoriesCloudService.checkUploads());
-                      } else {
-                        await context.navPush(const MemoriesBackupDetailView());
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 20),
-                ],
-
+                const SizedBox(height: 32),
                 Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (userService.currentUser.isBackupEnabled) ...[
-                        MyButton(
-                          variant: MyButtonVariant.secondaryDense,
-                          onPressed: _isLoading
-                              ? null
-                              : () async {
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  await BackupService.makeBackup(force: true);
-                                  await _loadBackupStatus();
-                                },
-                          child: Text(context.lang.backupTwonlySaveNow),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      MyButton(
-                        variant: MyButtonVariant.secondaryDense,
-                        onPressed: () => context.push(
-                          Routes.settingsBackupSetup,
-                          extra: true,
-                        ),
-                        child: Text(
-                          !userService.currentUser.isBackupEnabled
-                              ? context.lang.backupEnableBackup
-                              : context.lang.backupChangePassword,
-                        ),
-                      ),
-                    ],
+                  child: MyButton(
+                    variant: MyButtonVariant.secondaryDense,
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            await BackupService.makeBackup(force: true);
+                            await _loadBackupStatus();
+                          },
+                    child: Text(context.lang.backupTwonlySaveNow),
                   ),
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),

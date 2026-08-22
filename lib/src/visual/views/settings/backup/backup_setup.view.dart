@@ -154,8 +154,8 @@ class _SetupBackupViewState extends State<SetupBackupView> {
                       const SizedBox(width: 8),
                       Text(
                         userService.currentUser.isBackupEnabled
-                            ? context.lang.backupEnableBackup
-                            : context.lang.backupChangePassword,
+                            ? context.lang.backupChangePassword
+                            : context.lang.backupEnableBackup,
                       ),
                     ],
                   ),

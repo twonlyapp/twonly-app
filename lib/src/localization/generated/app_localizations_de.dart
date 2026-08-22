@@ -850,7 +850,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein Backup wiederherstellen möchtest.';
+      'Wähle ein sicheres Passwort. Es wird empfohlen, dieses über deinen bevorzugten Passwort-Manager zu generieren und zu speichern.';
 
   @override
   String get password => 'Passwort';
@@ -866,7 +866,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Passwort muss mindestens 10 Zeichen lang sein.';
 
   @override
-  String get backupEnableBackup => 'Automatische Sicherung aktivieren';
+  String get backupEnableBackup => 'Passwort-Backup aktivieren';
 
   @override
   String get backupTwonlySaveNow => 'Jetzt speichern';
@@ -2144,7 +2144,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get avatarCustomizeReset => 'Zurücksetzen';
 
   @override
-  String get passwordlessRecovery => 'Passwort vergessen';
+  String get passwordlessRecovery => 'Vertraute Freunde';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Nicht konfiguriert';
@@ -2210,7 +2210,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryEnableSuccess =>
-      '\"Passwort vergessen\" erfolgreich aktiviert!';
+      'Vertraute Freunde erfolgreich eingerichtet!';
 
   @override
   String get passwordlessRecoveryEnterPin => 'Bitte gib eine PIN ein.';
@@ -2220,16 +2220,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bitte gib eine E-Mail-Adresse ein.';
 
   @override
-  String get passwordlessRecoveryEnableBtn =>
-      '\"Passwort vergessen\" aktivieren';
+  String get passwordlessRecoveryEnableBtn => 'Vertraute Freunde aktivieren';
 
   @override
   String get passwordlessRecoveryRecoverBtn =>
-      'Mit \"Passwort vergessen\" wiederherstellen';
+      'Mithilfe von vertrauten Freunden wiederherstellen';
 
   @override
-  String get passwordlessRecoveryModifyBtn =>
-      '\"Passwort vergessen\" bearbeiten';
+  String get passwordlessRecoveryModifyBtn => 'Vertraute Freunde bearbeiten';
 
   @override
   String passwordlessRecoveryStatusEnabled(num count) {
@@ -2568,4 +2566,60 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get themeDark => 'Dunkel';
+
+  @override
+  String get backupRecoverySectionTitle => 'Konto-Zugang sichern';
+
+  @override
+  String get backupRecoverySectionDescNone =>
+      'Du musst mindestens eine Wiederherstellungsoption auswählen, da dir sonst niemand helfen kann, falls du den Zugriff auf dein Gerät verlierst.';
+
+  @override
+  String get backupRecoverySectionDescSome =>
+      'Mit den untenstehenden Wiederherstellungsoptionen kannst du dein Konto wiederherstellen. Es wird empfohlen, beide Optionen zu aktivieren.';
+
+  @override
+  String get backupRecoveryOptionAFriends => 'Über vertraute Freunde';
+
+  @override
+  String get backupRecoveryOptionAMicrocopy =>
+      'Wähle Freunde aus, die dir helfen, dein Konto wiederherzustellen.';
+
+  @override
+  String get backupRecoveryOptionBPassword => 'Klassisches Passwort';
+
+  @override
+  String get backupRecoveryOptionBMicrocopy =>
+      'Lege ein Passwort für deinen Zugang fest.';
+
+  @override
+  String get backupCloudSectionTitle => 'Deine Daten sichern';
+
+  @override
+  String get backupCloudSectionDesc =>
+      'Sichere deine Inhalte, damit nichts verloren geht.';
+
+  @override
+  String get backupCloudContactsMessages => 'Kontakte & Nachrichten';
+
+  @override
+  String get backupCloudFreeActive => 'Kostenlos aktiv';
+
+  @override
+  String get backupCloudImagesMedia => 'Bilder & Medien';
+
+  @override
+  String get backupCloudProBadge => 'Pro';
+
+  @override
+  String get memoriesAddingToFavorites => 'Zu Favoriten hinzufügen...';
+
+  @override
+  String get memoriesRemovingFromFavorites => 'Aus Favoriten entfernen...';
+
+  @override
+  String get memoriesDeletingProgress => 'Erinnerungen werden gelöscht...';
+
+  @override
+  String get memoriesExportingProgress => 'Erinnerungen werden exportiert...';
 }

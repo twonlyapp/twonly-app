@@ -3,6 +3,7 @@
 ## 0.5.1
 
 - Improve: Show delivery and read receipt indicators for text messages
+- Improve: Backup screen clearer and easier to understand
 - Fix: Background audio correctly pauses and resumes when viewing videos
 
 ## 0.5.0
