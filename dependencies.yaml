@@ -36,7 +36,7 @@ dependencies:
       path: packages/video_player/video_player_avfoundation
     - name: camera_android_camerax
       path: packages/camera/camera_android_camerax
-    commit: bb0e9f500828f3117a6ea96b898eaee3710e43d9
+    commit: b4f7d807a822a8ce327aae21353ac2217e928f6d
   flutter_sharing_intent:
     git: https://github.com/bhagat-techind/flutter_sharing_intent.git
     commit: aa1672f547d6579585fa27df0b28ffa2a2544aaa

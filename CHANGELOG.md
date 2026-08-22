@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Fix: Background audio correctly pauses and resumes when viewing videos
+
 ## 0.5.0
 
 - New: Update to Signal's new PQC-ready key agreement PQXDH

@@ -116,9 +116,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       });
       videoController = VideoPlayerController.file(
         mediaService.originalPath,
-        videoPlayerOptions: VideoPlayerOptions(
-          mixWithOthers: true,
-        ),
+        videoPlayerOptions: VideoPlayerOptions(),
       );
       videoController?.setLooping(true);
       videoController
