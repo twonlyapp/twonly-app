@@ -4,6 +4,7 @@
 
 - Improve: Show delivery and read receipt indicators for text messages
 - Improve: Backup screen clearer and easier to understand
+- Improve: Show username above messages in group chats
 - Fix: Background audio correctly pauses and resumes when viewing videos
 
 ## 0.5.0

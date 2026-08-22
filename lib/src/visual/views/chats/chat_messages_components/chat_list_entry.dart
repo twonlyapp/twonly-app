@@ -11,6 +11,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_reaction_row.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_ask_a_friend.entry.dart';
@@ -202,7 +203,22 @@ class _ChatListEntryState extends State<ChatListEntry> {
           )
         else
           Column(
+            crossAxisAlignment: right
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
+              if (info.displayUserName != '' && !widget.group.isDirectChat)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2, left: 4),
+                  child: Text(
+                    info.displayUserName,
+                    style: TextStyle(
+                      color: context.color.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
               ResponseContainer(
                 msg: widget.message,
                 group: widget.group,
