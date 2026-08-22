@@ -6,7 +6,8 @@
 - Improve: Backup screen clearer and easier to understand
 - Improve: Show username above messages in group chats
 - Fix: Background audio correctly pauses and resumes when viewing videos
-- Fix: Multiple bug fixes
+- Fix: Sometimes old messages were being received as duplicates
+- Fix: Multiple smaller bug fixes
 
 ## 0.5.0
 

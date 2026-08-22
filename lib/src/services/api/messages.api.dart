@@ -114,22 +114,6 @@ Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
     // ignore: parameter_assignments
     receipt = loadedReceipt;
 
-    if (receipt.retryCount >= 2) {
-      // After two retries, change the receiptId. This addresses a bug where the receiver received the message and marked it as received,
-      // but the app was closed before the message was fully processed. Because the receipt was already stored, subsequent retries were
-      // detected as duplicates and rejected.
-      final oldReceiptId = receipt.receiptId;
-      final updatedReceipt = await twonlyDB.receiptsDao.rotateReceiptId(
-        oldReceiptId,
-      );
-      if (updatedReceipt != null) {
-        Log.info(
-          'Changed receiptId $oldReceiptId to ${updatedReceipt.receiptId} as retryCount is ${receipt.retryCount}',
-        );
-        receipt = updatedReceipt;
-      }
-    }
-
     final contact = await twonlyDB.contactsDao.getContactById(
       receipt.contactId,
     );

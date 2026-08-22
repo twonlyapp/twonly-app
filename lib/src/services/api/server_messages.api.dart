@@ -141,6 +141,26 @@ Future<void> _handleClient2ClientMessage(
   }
 
   if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
+    Log.info(
+      '[$receiptId] Message is a duplicate. Sending delivery receipt again.',
+    );
+    try {
+      final response = Message(type: Message_Type.SENDER_DELIVERY_RECEIPT);
+      await twonlyDB.receiptsDao.insertReceipt(
+        ReceiptsCompanion(
+          receiptId: Value(receiptId),
+          contactId: Value(fromUserId),
+          message: Value(response.writeToBuffer()),
+          contactWillSendsReceipt: const Value(false),
+        ),
+      );
+      await tryToSendCompleteMessage(
+        receiptId: receiptId,
+        blocking: false,
+      );
+    } catch (e) {
+      Log.warn('[$receiptId] Error handling duplicate receipt ACK: $e');
+    }
     return;
   }
 
