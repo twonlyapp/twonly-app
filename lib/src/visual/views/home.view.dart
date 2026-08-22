@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -47,10 +50,14 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
+  StreamSubscription<(String, MediaType)>? _sharedMediaSub;
 
   static Uri? pendingSharedLink;
+  static (String, MediaType)? pendingSharedMedia;
   static final streamHomeViewPageIndex = StreamController<int>.broadcast();
   static final streamSharedLink = StreamController<Uri>.broadcast();
+  static final streamSharedMedia =
+      StreamController<(String, MediaType)>.broadcast();
 
   @override
   void initState() {
@@ -59,6 +66,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     var initialPage = widget.initialPage;
     if (HomeViewState.pendingSharedLink != null) {
       initialPage = 1;
+    } else if (HomeViewState.pendingSharedMedia != null) {
+      initialPage = 0;
     } else if (initialPage == 1 &&
         !userService.currentUser.startWithCameraOpen) {
       initialPage = 0;
@@ -114,10 +123,46 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
     });
 
+    _sharedMediaSub = streamSharedMedia.stream.listen((media) async {
+      HomeViewState.pendingSharedMedia = null;
+      final type = media.$2;
+      final filePath = media.$1;
+
+      final newMediaService = await initializeMediaUpload(
+        type,
+        userService.currentUser.defaultShowTime,
+      );
+      if (newMediaService == null) {
+        Log.error('Could not create new media file for intent shared file');
+        return;
+      }
+
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        Log.error('The shared intent file does not exist.');
+        return;
+      }
+      file.copySync(newMediaService.originalPath.path);
+      if (!mounted) return;
+
+      await context.navPush(
+        ShareImageEditorView(
+          mediaFileService: newMediaService,
+          sharedFromGallery: true,
+        ),
+      );
+    });
+
     if (HomeViewState.pendingSharedLink != null) {
       final link = HomeViewState.pendingSharedLink!;
       HomeViewState.pendingSharedLink = null;
       _mainCameraController.setSharedLinkForPreview(link);
+    }
+
+    if (HomeViewState.pendingSharedMedia != null) {
+      final media = HomeViewState.pendingSharedMedia!;
+      HomeViewState.pendingSharedMedia = null;
+      streamSharedMedia.add(media);
     }
 
     if (initialPage == 1) {
@@ -204,6 +249,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();
     _sharedLinkSub?.cancel();
+    _sharedMediaSub?.cancel();
     super.dispose();
   }
 
