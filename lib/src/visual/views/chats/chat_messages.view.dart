@@ -84,7 +84,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     contactSub?.cancel();
     groupActionsSub?.cancel();
     _nextTypingIndicator?.cancel();
-    textFieldFocus?.dispose();
+    try {
+      textFieldFocus?.dispose();
+      // ignore: empty_catches
+    } catch (e) {}
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

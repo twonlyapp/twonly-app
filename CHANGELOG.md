@@ -2,6 +2,7 @@
 
 ## 0.5.1
 
+- Improve: Show delivery and read receipt indicators for text messages
 - Fix: Background audio correctly pauses and resumes when viewing videos
 
 ## 0.5.0

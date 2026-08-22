@@ -2,8 +2,11 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:twonly/locator.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/loader/three_rotating_dots.loader.dart';
 
 class FriendlyMessageTime extends StatelessWidget {
   const FriendlyMessageTime({
@@ -17,6 +20,8 @@ class FriendlyMessageTime extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusIcon = _buildStatusIcon(Colors.grey.shade400);
+
     return Padding(
       padding: const EdgeInsets.only(left: 6),
       child: Row(
@@ -48,8 +53,64 @@ class FriendlyMessageTime extends StatelessWidget {
               fontWeight: FontWeight.normal,
             ),
           ),
+          ?statusIcon,
         ],
       ),
+    );
+  }
+
+  Widget? _buildStatusIcon(Color iconColor) {
+    if (message.type != MessageType.text.name || message.senderId != null) {
+      return null;
+    }
+
+    if (message.ackByServer == null) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: ThreeRotatingDots(size: 8, color: iconColor),
+      );
+    }
+
+    if (message.openedByAll != null || message.openedAt != null) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4),
+        child: FaIcon(
+          FontAwesomeIcons.solidEye,
+          size: 8,
+          color: iconColor,
+        ),
+      );
+    }
+
+    // Now check message actions for ackByUserAt
+    return StreamBuilder<List<(MessageAction, Contact)>>(
+      stream: twonlyDB.messagesDao.watchMessageActions(message.messageId),
+      builder: (context, snapshot) {
+        final actions = snapshot.data ?? [];
+        final hasAckByUser = actions.any(
+          (t) => t.$1.type == MessageActionType.ackByUserAt,
+        );
+
+        if (hasAckByUser) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: FaIcon(
+              FontAwesomeIcons.checkDouble,
+              size: 8,
+              color: iconColor,
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: FaIcon(
+            FontAwesomeIcons.check,
+            size: 8,
+            color: iconColor,
+          ),
+        );
+      },
     );
   }
 }
