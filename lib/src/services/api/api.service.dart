@@ -44,7 +44,6 @@ import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
-import 'package:twonly/src/services/user_study.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -147,11 +146,6 @@ class ApiService {
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
       memoriesCloudService.init();
-
-      if (userService.currentUser.userStudyParticipantsToken != null) {
-        // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
-        unawaited(handleUserStudyUpload());
-      }
     }
   }
 

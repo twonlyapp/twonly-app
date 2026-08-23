@@ -47,8 +47,6 @@ import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
 import 'package:twonly/src/visual/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/visual/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/visual/views/user_study/user_study_questionnaire.view.dart';
-import 'package:twonly/src/visual/views/user_study/user_study_welcome.view.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -267,19 +265,6 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'diagnostics',
               builder: (context, state) => const DiagnosticsView(),
-            ),
-            GoRoute(
-              path: 'user_study',
-              builder: (context, state) => UserStudyWelcomeView(
-                wasOpenedAutomatic: state.extra as bool? ?? false,
-              ),
-              routes: [
-                GoRoute(
-                  path: 'questionnaire',
-                  builder: (context, state) =>
-                      const UserStudyQuestionnaireView(),
-                ),
-              ],
             ),
             GoRoute(
               path: 'credits',

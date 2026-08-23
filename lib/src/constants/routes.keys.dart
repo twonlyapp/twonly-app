@@ -50,7 +50,6 @@ class Routes {
   static const String settingsHelpContactUs = '/settings/help/contact_us';
   static const String settingsHelpNews = '/settings/help/news';
   static const String settingsHelpDiagnostics = '/settings/help/diagnostics';
-  static const String settingsHelpUserStudy = '/settings/help/user_study';
   static const String settingsHelpUserStudyQuestionnaire =
       '/settings/help/user_study/questionnaire';
   static const String settingsHelpCredits = '/settings/help/credits';
