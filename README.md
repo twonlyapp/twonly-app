@@ -32,7 +32,7 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 ## Features
 
 - Offer a Snapchat™ like experience
-- End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
+- End-to-End encryption using the [Signal Protocol](https://signal.org/docs/specifications/pqxdh/)
 - Open Source and can be downloaded directly from GitHub
 - No email or phone number required to register
 - The backend is hosted exclusively in Europe
@@ -40,19 +40,12 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - [User Discovery](https://twonly.eu/en/blog/2026-mutual-friends.html) without a phone number
 - E2EE cloud backup of memories
 
-## Roadmap
+## Next on the bucket list
 
-### Currently
-
-- Implementation of features so that Snapchat can actually be replaced
-    - Importing memories from Snapchat
-
-### Next on the bucket list
-
+- Importing memories from Snapchat
 - For Android: Support for [UnifiedPush] (https://unifiedpush.org/)
 - For Android: Reproducible builds
 - Implementation of [Sealed Sender](https://signal.org/blog/sealed-sender/) (or a similar protocol) to minimize metadata
-- Switch from the Signal protocol to [MLS](https://github.com/openmls/openmls) for post-quantum crypto support
 - Decentralize the server so that anyone can run their own server
 
 ## Security Issues
@@ -63,7 +56,7 @@ guarantee a bounty currently :/
 
 ## Contribution
 
-Currently there are still some core features and rewrites open I want to do like the switch to the MLS protocol involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
+Currently there are still some core features and rewrites open I want to do involving a huge rewrite in Rust. Because of this, contributions are currently not wanted. You can still view the code (if you find any security issues please contact me!). Also, issues are currently closed. If you find a bug, please use the in-app option as there you can upload your debug log which helps a lot. 
 
 ## Signing Keys
 
