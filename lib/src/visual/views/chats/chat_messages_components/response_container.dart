@@ -234,20 +234,19 @@ class _ResponsePreviewState extends State<ResponsePreview> {
       final pathToCheck = isVideo
           ? _mediaService!.thumbnailPath
           : _mediaService!.storedPath;
-      if (pathToCheck.existsSync() && pathToCheck.lengthSync() > 0) {
-        imageWidget = Container(
-          height: 40,
-          width: 40,
-          margin: const EdgeInsets.only(left: 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Image.file(
-              pathToCheck,
-              fit: BoxFit.cover,
-            ),
+      imageWidget = Container(
+        height: 40,
+        width: 40,
+        margin: const EdgeInsets.only(left: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Image.file(
+            pathToCheck,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
-        );
-      }
+        ),
+      );
     }
 
     return Container(

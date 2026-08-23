@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:clock/clock.dart';
@@ -35,6 +36,7 @@ class DeveloperSettingsView extends StatefulWidget {
 
 class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
   bool _isGeneratingMockImages = false;
+  bool _isGeneratingMockMessages = false;
 
   @override
   void initState() {
@@ -254,6 +256,105 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
     }
   }
 
+  Future<void> _generate1000RandomMessages() async {
+    if (!kDebugMode || _isGeneratingMockMessages) return;
+
+    final groups = await twonlyDB.groupsDao.getAllGroups();
+    groups.sort((a, b) => a.groupName.compareTo(b.groupName));
+    if (!mounted) return;
+    if (groups.isEmpty) {
+      showSnackbar(context, 'No groups available for message generation.');
+      return;
+    }
+
+    final group = await showDialog<Group>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Generate messages in group'),
+        children: [
+          for (final group in groups)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, group),
+              child: Text(group.groupName),
+            ),
+        ],
+      ),
+    );
+    if (group == null || !mounted) return;
+
+    setState(() => _isGeneratingMockMessages = true);
+    try {
+      final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+        group.groupId,
+      );
+      if (members.isEmpty) {
+        if (mounted) {
+          showSnackbar(context, 'The selected group has no active members.');
+        }
+        return;
+      }
+
+      const samples = [
+        'Hey! How is everyone doing?',
+        'This is a randomly generated debug message.',
+        'Did anyone see this?',
+        'Sounds good to me!',
+        'I will check that later.',
+        'That made me laugh 😄',
+        'What do you think?',
+        'Let’s do it!',
+        'Quick update from my side.',
+        'Testing a longer message to see how the chat bubble wraps across multiple lines in this conversation.',
+      ];
+      final random = Random();
+      final now = clock.now();
+      final idPrefix = 'debug_${now.microsecondsSinceEpoch}';
+
+      await twonlyDB.batch((batch) {
+        for (var i = 0; i < 1000; i++) {
+          final member = members[random.nextInt(members.length)];
+          final createdAt = now.subtract(Duration(seconds: 1000 - i));
+          final sample = samples[random.nextInt(samples.length)];
+          batch.insert(
+            twonlyDB.messages,
+            MessagesCompanion(
+              groupId: Value(group.groupId),
+              messageId: Value('${idPrefix}_$i'),
+              senderId: Value(member.contactId),
+              type: const Value('text'),
+              content: Value('$sample #${i + 1}'),
+              openedAt: Value(now),
+              ackByServer: Value(createdAt),
+              ackByUser: Value(createdAt),
+              createdAt: Value(createdAt),
+            ),
+          );
+        }
+      });
+      await twonlyDB.groupsDao.updateGroup(
+        group.groupId,
+        GroupsCompanion(
+          archived: const Value(false),
+          deletedContent: const Value(false),
+          lastMessageReceived: Value(now),
+          lastMessageExchange: Value(now),
+        ),
+      );
+
+      if (mounted) {
+        showSnackbar(
+          context,
+          'Generated 1000 messages in ${group.groupName}.',
+          level: SnackbarLevel.success,
+        );
+      }
+    } catch (error) {
+      if (mounted) showSnackbar(context, 'Could not generate messages: $error');
+    } finally {
+      if (mounted) setState(() => _isGeneratingMockMessages = false);
+    }
+  }
+
   Future<void> toggleDeveloperSettings() async {
     await UserService.update((u) => u.isDeveloper = !u.isDeveloper);
   }
@@ -375,6 +476,23 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                   title: const Text('Automated Testing'),
                   onTap: () =>
                       context.push(Routes.settingsDeveloperAutomatedTesting),
+                ),
+              if (kDebugMode)
+                ListTile(
+                  title: const Text('Generate 1000 Random Messages'),
+                  subtitle: const Text('Choose a group to populate'),
+                  trailing: _isGeneratingMockMessages
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator.adaptive(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : null,
+                  onTap: _isGeneratingMockMessages
+                      ? null
+                      : _generate1000RandomMessages,
                 ),
               if (kDebugMode)
                 ListTile(

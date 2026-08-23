@@ -166,6 +166,13 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .watch();
   }
 
+  Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
+    if (mediaIds.isEmpty) return Stream.value(const []);
+    return (select(
+      mediaFiles,
+    )..where((file) => file.mediaId.isIn(mediaIds))).watch();
+  }
+
   Stream<List<MediaFile>> watchMediaFilesForGroup(String groupId) {
     final query = select(mediaFiles).join([
       innerJoin(

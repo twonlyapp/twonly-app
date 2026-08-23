@@ -63,7 +63,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         widget.mediaService.mediaFile.displayLimitInMilliseconds != null) {
       return;
     }
-    if (widget.mediaService.tempPath.existsSync() && mounted) {
+    // Async check keeps media discovery off the UI thread.
+    // ignore: avoid_slow_async_io
+    if (await widget.mediaService.tempPath.exists() && mounted) {
       setState(() {
         _canBeReopened = true;
       });

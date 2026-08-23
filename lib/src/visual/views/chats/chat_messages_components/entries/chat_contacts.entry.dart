@@ -20,12 +20,14 @@ class ChatContactsEntry extends StatefulWidget {
     required this.message,
     required this.borderRadius,
     required this.info,
+    this.contactsById,
     super.key,
   });
 
   final Message message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
+  final Map<int, Contact>? contactsById;
 
   @override
   State<ChatContactsEntry> createState() => _ChatContactsEntryState();
@@ -73,6 +75,7 @@ class _ChatContactsEntryState extends State<ChatContactsEntry> {
               _ContactRow(
                 contact: data.contacts[i],
                 message: widget.message,
+                contactsById: widget.contactsById,
               ),
             ],
           ],
@@ -86,10 +89,12 @@ class _ContactRow extends StatefulWidget {
   const _ContactRow({
     required this.contact,
     required this.message,
+    this.contactsById,
   });
 
   final SharedContact contact;
   final Message message;
+  final Map<int, Contact>? contactsById;
 
   @override
   State<_ContactRow> createState() => _ContactRowState();
@@ -161,61 +166,68 @@ class _ContactRowState extends State<_ContactRow> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.contactsById != null) {
+      return _buildContactRow(
+        widget.contactsById![widget.contact.userId.toInt()],
+      );
+    }
     return StreamBuilder<Contact?>(
       stream: twonlyDB.contactsDao.watchContact(widget.contact.userId.toInt()),
       builder: (context, snapshot) {
-        final contactInDb = snapshot.data;
-        final isAdded =
-            contactInDb != null ||
-            widget.contact.userId.toInt() == userService.currentUser.userId;
+        return _buildContactRow(snapshot.data);
+      },
+    );
+  }
 
-        return GestureDetector(
-          onTap: _isLoading ? null : () => _onContactClick(isAdded),
-          child: ColoredBox(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-              child: Row(
-                children: [
+  Widget _buildContactRow(Contact? contactInDb) {
+    final isAdded =
+        contactInDb != null ||
+        widget.contact.userId.toInt() == userService.currentUser.userId;
+    return GestureDetector(
+      onTap: _isLoading ? null : () => _onContactClick(isAdded),
+      child: ColoredBox(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          child: Row(
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.user,
+                color: Colors.white,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: BetterText(
+                  text: widget.contact.displayName,
+                  textColor: Colors.white,
+                ),
+              ),
+              if (widget.message.senderId != null && !isAdded) ...[
+                const Spacer(),
+                const SizedBox(width: 8),
+                if (_isLoading)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator.adaptive(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
+                    ),
+                  )
+                else
                   const FaIcon(
-                    FontAwesomeIcons.user,
+                    FontAwesomeIcons.userPlus,
                     color: Colors.white,
                     size: 16,
                   ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: BetterText(
-                      text: widget.contact.displayName,
-                      textColor: Colors.white,
-                    ),
-                  ),
-                  if (widget.message.senderId != null && !isAdded) ...[
-                    const Spacer(),
-                    const SizedBox(width: 8),
-                    if (_isLoading)
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    else
-                      const FaIcon(
-                        FontAwesomeIcons.userPlus,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                  ],
-                ],
-              ),
-            ),
+              ],
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

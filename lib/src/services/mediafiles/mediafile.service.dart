@@ -296,11 +296,9 @@ class MediaFileService {
 
   bool get imagePreviewAvailable =>
       mediaFile.hasThumbnail ||
-      (thumbnailPath.existsSync() && thumbnailPath.lengthSync() > 0) ||
       mediaFile.type == MediaType.audio ||
       ((mediaFile.type == MediaType.image || mediaFile.type == MediaType.gif) &&
-          storedPath.existsSync() &&
-          storedPath.lengthSync() > 0);
+          mediaFile.stored);
 
   Future<void> storeMediaFile() async {
     Log.info('Storing media file ${mediaFile.mediaId}');

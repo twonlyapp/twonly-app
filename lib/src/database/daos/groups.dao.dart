@@ -86,9 +86,18 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     await into(groupHistories).insert(insertAction);
   }
 
-  Stream<List<GroupHistory>> watchGroupActions(String groupId) {
+  Stream<List<GroupHistory>> watchGroupActions(
+    String groupId, {
+    DateTime? since,
+  }) {
     return (select(groupHistories)
-          ..where((t) => t.groupId.equals(groupId))
+          ..where(
+            (t) =>
+                t.groupId.equals(groupId) &
+                (since == null
+                    ? const Constant(true)
+                    : t.actionAt.isBiggerOrEqualValue(since)),
+          )
           ..orderBy([(t) => OrderingTerm.asc(t.actionAt)]))
         .watch();
   }

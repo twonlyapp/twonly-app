@@ -6,7 +6,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/avatars.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
 class AvatarIcon extends StatefulWidget {
@@ -34,6 +33,7 @@ class AvatarIcon extends StatefulWidget {
 
 class _AvatarIconState extends State<AvatarIcon> {
   List<Contact> _avatarContacts = [];
+  Set<int> _contactsWithPngAvatar = {};
   String? _myAvatarPath;
 
   StreamSubscription<List<Contact>>? groupStream;
@@ -59,7 +59,22 @@ class _AvatarIconState extends State<AvatarIcon> {
     _avatarContacts = contacts
         .where((contact) => contact.avatarSvgCompressed != null)
         .toList();
+    unawaited(_refreshAvatarFiles());
     if (mounted) setState(() {});
+  }
+
+  Future<void> _refreshAvatarFiles() async {
+    final available = <int>{};
+    for (final contact in _avatarContacts) {
+      final file = avatarPNGFile(contact.userId);
+      // Async file access keeps avatar discovery off the UI thread.
+      // ignore: avoid_slow_async_io
+      if (await file.exists()) {
+        available.add(contact.userId);
+      }
+    }
+    if (!mounted) return;
+    setState(() => _contactsWithPngAvatar = available);
   }
 
   @override
@@ -79,17 +94,12 @@ class _AvatarIconState extends State<AvatarIcon> {
 
   Widget getAvatarForContact(Contact contact) {
     final avatarFile = avatarPNGFile(contact.userId);
-    if (avatarFile.existsSync()) {
+    if (_contactsWithPngAvatar.contains(contact.userId)) {
       return Image.file(
         avatarFile,
         errorBuilder: errorBuilder,
       );
     }
-
-    Log.warn(
-      'PNG avatar file for contact ${contact.userId} does not exist. Generating in background.',
-    );
-    unawaited(createPushAvatars(forceForUserId: contact.userId));
 
     if (contact.avatarSvgCompressed != null) {
       return SvgPicture.string(
@@ -119,6 +129,7 @@ class _AvatarIconState extends State<AvatarIcon> {
                 }
               }
             }
+            unawaited(_refreshAvatarFiles());
             setState(() {});
           });
     } else if (widget.myAvatar) {
@@ -132,6 +143,7 @@ class _AvatarIconState extends State<AvatarIcon> {
           .listen((contact) {
             if (contact != null && contact.avatarSvgCompressed != null) {
               _avatarContacts = [contact];
+              unawaited(_refreshAvatarFiles());
               setState(() {});
             }
           });

@@ -168,6 +168,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
       );
     }
 
@@ -184,6 +185,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         message: widget.message,
         borderRadius: borderRadius,
         info: info,
+        contactsById: widget.useSharedData ? widget.userIdToContact : null,
       );
     }
 

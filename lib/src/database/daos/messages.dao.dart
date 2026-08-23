@@ -142,7 +142,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                         .not() |
                     mediaFiles.downloadState.isNull()),
           )
-          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
           ..limit(1);
 
     return query.map((row) => row.readTable(messages)).watchSingleOrNull();
@@ -180,7 +183,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
   }
 
-  Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
+  Future<Stream<List<Message>>> watchByGroupId(
+    String groupId, {
+    int limit = 100,
+  }) async {
     final group = await twonlyDB.groupsDao.getGroup(groupId);
     final deletionTime = clock.now().subtract(
       Duration(
@@ -211,9 +217,61 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                                 .equals(DownloadState.reuploadRequested.name)
                                 .not()))),
           )
-          ..orderBy([OrderingTerm.asc(messages.createdAt)]);
+          ..orderBy([OrderingTerm.desc(messages.createdAt)])
+          ..limit(limit);
 
-    return query.map((row) => row.readTable(messages)).watch();
+    return query
+        .map((row) => row.readTable(messages))
+        .watch()
+        .map((items) => items.reversed.toList());
+  }
+
+  Future<List<Message>> getMessagesBefore(
+    String groupId,
+    DateTime before, {
+    required String beforeMessageId,
+    int limit = 100,
+  }) async {
+    final group = await twonlyDB.groupsDao.getGroup(groupId);
+    final deletionTime = clock.now().subtract(
+      Duration(milliseconds: group!.deleteMessagesAfterMilliseconds),
+    );
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            messages.groupId.equals(groupId) &
+                (messages.createdAt.isSmallerThanValue(before) |
+                    (messages.createdAt.equals(before) &
+                        messages.messageId.isSmallerThanValue(
+                          beforeMessageId,
+                        ))) &
+                (messages.openedAt.isBiggerThanValue(deletionTime) |
+                    messages.openedAt.isNull() |
+                    messages.mediaStored.equals(true)) &
+                (messages.isDeletedFromSender.equals(true) |
+                    (messages.type.equals(MessageType.text.name).not() &
+                        messages.type.equals(MessageType.media.name).not()) |
+                    (messages.type.equals(MessageType.text.name) &
+                        messages.content.isNotNull()) |
+                    (messages.type.equals(MessageType.media.name) &
+                        messages.mediaId.isNotNull() &
+                        (mediaFiles.downloadState.isNull() |
+                            mediaFiles.downloadState
+                                .equals(DownloadState.reuploadRequested.name)
+                                .not()))),
+          )
+          ..orderBy([
+            OrderingTerm.desc(messages.createdAt),
+            OrderingTerm.desc(messages.messageId),
+          ])
+          ..limit(limit);
+    final items = await query.map((row) => row.readTable(messages)).get();
+    return items.reversed.toList();
   }
 
   Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {
@@ -628,9 +686,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .watch();
   }
 
-  Stream<List<MessageAction>> watchMessageActionsForGroup(
-    String groupId,
+  Stream<List<MessageAction>> watchAcknowledgementsForMessages(
+    Set<String> messageIds,
   ) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(messageActions)..where(
+          (action) =>
+              action.messageId.isIn(messageIds) &
+              action.type.equals(MessageActionType.ackByUserAt.name),
+        ))
+        .watch();
+  }
+
+  Stream<List<MessageAction>> watchMessageActionsForGroup(String groupId) {
     final query = select(messageActions).join([
       innerJoin(
         messages,

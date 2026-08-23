@@ -108,6 +108,14 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .watch();
   }
 
+  Stream<List<Reaction>> watchReactionsForMessages(Set<String> messageIds) {
+    if (messageIds.isEmpty) return Stream.value(const []);
+    return (select(reactions)
+          ..where((reaction) => reaction.messageId.isIn(messageIds))
+          ..orderBy([(reaction) => OrderingTerm.desc(reaction.createdAt)]))
+        .watch();
+  }
+
   Stream<List<Reaction>> watchReactionsForGroup(String groupId) {
     final query =
         select(reactions).join([

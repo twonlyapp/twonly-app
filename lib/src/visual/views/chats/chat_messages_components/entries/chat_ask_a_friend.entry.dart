@@ -20,12 +20,14 @@ class ChatAskAFriendEntry extends StatefulWidget {
     required this.message,
     required this.borderRadius,
     required this.info,
+    this.contactsById,
     super.key,
   });
 
   final Message message;
   final BorderRadiusGeometry borderRadius;
   final BubbleInfo info;
+  final Map<int, Contact>? contactsById;
 
   @override
   State<ChatAskAFriendEntry> createState() => _ChatAskAFriendEntryState();
@@ -56,6 +58,11 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
   Future<void> _loadUser() async {
     if (_data == null || !_data!.hasAskAboutUserId()) return;
     final userId = _data!.askAboutUserId.toInt();
+    final sharedContact = widget.contactsById?[userId];
+    if (sharedContact != null) {
+      _username = sharedContact.displayName ?? sharedContact.username;
+      return;
+    }
     setState(() {
       _isLoading = true;
     });
@@ -162,7 +169,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           mainAxisSize: MainAxisSize.min,
           children: [
             StreamBuilder<Contact?>(
-              stream: twonlyDB.contactsDao.watchContact(userId),
+              stream: widget.contactsById == null
+                  ? twonlyDB.contactsDao.watchContact(userId)
+                  : Stream.value(widget.contactsById![userId]),
               builder: (context, snapshot) {
                 final contactInDb = snapshot.data;
                 return GestureDetector(
@@ -181,6 +190,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                       children: [
                         AvatarIcon(
                           contactId: userId,
+                          contacts: widget.contactsById?[userId] == null
+                              ? null
+                              : [widget.contactsById![userId]!],
                           fontSize: 12,
                         ),
                         const SizedBox(width: 8),
@@ -255,7 +267,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
               ),
             ] else ...[
               StreamBuilder<Contact?>(
-                stream: twonlyDB.contactsDao.watchContact(userId),
+                stream: widget.contactsById == null
+                    ? twonlyDB.contactsDao.watchContact(userId)
+                    : Stream.value(widget.contactsById![userId]),
                 builder: (context, contactSnapshot) {
                   final contactInDb = contactSnapshot.data;
                   if (contactInDb != null) {
@@ -269,8 +283,9 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
                   }
 
                   return StreamBuilder<UserDiscoveryAnnouncedUser?>(
-                    stream:
-                        twonlyDB.userDiscoveryDao.watchAnnouncedUser(userId),
+                    stream: twonlyDB.userDiscoveryDao.watchAnnouncedUser(
+                      userId,
+                    ),
                     builder: (context, userSnapshot) {
                       final announcedUser = userSnapshot.data;
                       if (announcedUser != null && announcedUser.isHidden) {

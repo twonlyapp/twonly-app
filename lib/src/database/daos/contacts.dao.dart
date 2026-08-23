@@ -36,6 +36,11 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
 
+  Stream<List<Contact>> watchContactsByIds(Set<int> userIds) {
+    if (userIds.isEmpty) return Stream.value(const []);
+    return (select(contacts)..where((t) => t.userId.isIn(userIds))).watch();
+  }
+
   Future<Contact?> getContactById(int userId) async {
     return (select(
       contacts,

@@ -10,7 +10,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
 
-class ChatAudioEntry extends StatelessWidget {
+class ChatAudioEntry extends StatefulWidget {
   const ChatAudioEntry({
     required this.message,
     required this.mediaService,
@@ -25,9 +25,49 @@ class ChatAudioEntry extends StatelessWidget {
   final BubbleInfo info;
 
   @override
+  State<ChatAudioEntry> createState() => _ChatAudioEntryState();
+}
+
+class _ChatAudioEntryState extends State<ChatAudioEntry> {
+  bool? _hasAudioFile;
+  bool _hasTempFile = false;
+
+  Message get message => widget.message;
+  MediaFileService get mediaService => widget.mediaService;
+  BorderRadius get borderRadius => widget.borderRadius;
+  BubbleInfo get info => widget.info;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAudioFiles();
+  }
+
+  @override
+  void didUpdateWidget(ChatAudioEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.mediaService.mediaFile != oldWidget.mediaService.mediaFile) {
+      _checkAudioFiles();
+    }
+  }
+
+  Future<void> _checkAudioFiles() async {
+    // Async checks keep audio discovery off the UI thread.
+    // ignore: avoid_slow_async_io
+    final hasTempFile = await mediaService.tempPath.exists();
+    // ignore: avoid_slow_async_io
+    final hasOriginalFile = await mediaService.originalPath.exists();
+    final hasAudioFile = hasTempFile || hasOriginalFile;
+    if (!mounted) return;
+    setState(() {
+      _hasTempFile = hasTempFile;
+      _hasAudioFile = hasAudioFile;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!mediaService.tempPath.existsSync() &&
-        !mediaService.originalPath.existsSync()) {
+    if (_hasAudioFile != true) {
       return Container(); // media file was purged
     }
 
@@ -73,16 +113,20 @@ class ChatAudioEntry extends StatelessWidget {
                   )
                 else
                   Expanded(
-                    child: mediaService.mediaFile.downloadState ==
+                    child:
+                        mediaService.mediaFile.downloadState ==
                                 DownloadState.ready ||
                             mediaService.mediaFile.downloadState == null
-                        ? (mediaService.tempPath.existsSync()
-                            ? InChatAudioPlayer(
-                                path: mediaService.tempPath.path,
-                                message: message,
-                              )
-                            : Container())
-                        : MessageSendStateIcon([message], [mediaService.mediaFile]),
+                        ? (_hasTempFile
+                              ? InChatAudioPlayer(
+                                  path: mediaService.tempPath.path,
+                                  message: message,
+                                )
+                              : Container())
+                        : MessageSendStateIcon(
+                            [message],
+                            [mediaService.mediaFile],
+                          ),
                   ),
                 if (showTime) FriendlyMessageTime(message: message),
               ],
