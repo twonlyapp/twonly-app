@@ -19,8 +19,8 @@ import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/visual/context_menu/context_menu.helper.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layer_data.dart';
-import 'package:twonly/src/visual/views/chats/message_info.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/visual/views/chats/message_info.view.dart';
 import 'package:twonly/src/visual/views/memories/synchronized_viewer.view.dart';
 
 class MessageContextMenu extends StatelessWidget {

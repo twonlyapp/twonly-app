@@ -24,9 +24,7 @@ class _VideoPlayerFileHelperState extends State<VideoPlayerFileHelper> {
     super.initState();
     _controller = VideoPlayerController.file(
       widget.videoPath,
-      videoPlayerOptions: VideoPlayerOptions(
-        mixWithOthers: true,
-      ),
+      videoPlayerOptions: VideoPlayerOptions(),
     );
 
     unawaited(

@@ -1601,7 +1601,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupSelectStrongPassword.
   ///
   /// In en, this message translates to:
-  /// **'Choose a secure password. This is required if you want to restore your backup.'**
+  /// **'Select a secure password. It is recommended to generate and store it via your password manager of choice.'**
   String get backupSelectStrongPassword;
 
   /// No description provided for @password.
@@ -1631,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupEnableBackup.
   ///
   /// In en, this message translates to:
-  /// **'Activate automatic backup'**
+  /// **'Enable Password Backup'**
   String get backupEnableBackup;
 
   /// No description provided for @backupTwonlySaveNow.
@@ -3713,7 +3713,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecovery.
   ///
   /// In en, this message translates to:
-  /// **'Password Recovery'**
+  /// **'Trusted Friends'**
   String get passwordlessRecovery;
 
   /// No description provided for @passwordlessRecoveryNotConfigured.
@@ -3833,7 +3833,7 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryEnableSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Passwordless recovery successfully enabled!'**
+  /// **'Trusted Friends successfully set up!'**
   String get passwordlessRecoveryEnableSuccess;
 
   /// No description provided for @passwordlessRecoveryEnterPin.
@@ -3851,19 +3851,19 @@ abstract class AppLocalizations {
   /// No description provided for @passwordlessRecoveryEnableBtn.
   ///
   /// In en, this message translates to:
-  /// **'Enable Passwordless Recovery'**
+  /// **'Enable Trusted Friends'**
   String get passwordlessRecoveryEnableBtn;
 
   /// No description provided for @passwordlessRecoveryRecoverBtn.
   ///
   /// In en, this message translates to:
-  /// **'Recover passwordless'**
+  /// **'Recover via Trusted Friends'**
   String get passwordlessRecoveryRecoverBtn;
 
   /// No description provided for @passwordlessRecoveryModifyBtn.
   ///
   /// In en, this message translates to:
-  /// **'Modify Passwordless Recovery'**
+  /// **'Modify Trusted Friends'**
   String get passwordlessRecoveryModifyBtn;
 
   /// No description provided for @passwordlessRecoveryStatusEnabled.
@@ -4435,6 +4435,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get themeDark;
+
+  /// No description provided for @backupRecoverySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure Account Access'**
+  String get backupRecoverySectionTitle;
+
+  /// No description provided for @backupRecoverySectionDescNone.
+  ///
+  /// In en, this message translates to:
+  /// **'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.'**
+  String get backupRecoverySectionDescNone;
+
+  /// No description provided for @backupRecoverySectionDescSome.
+  ///
+  /// In en, this message translates to:
+  /// **'You can recover your account with the recovery options below. It is recommended to enable both options.'**
+  String get backupRecoverySectionDescSome;
+
+  /// No description provided for @backupRecoveryOptionAFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Via trusted friends'**
+  String get backupRecoveryOptionAFriends;
+
+  /// No description provided for @backupRecoveryOptionAMicrocopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Select friends who can help you recover your account.'**
+  String get backupRecoveryOptionAMicrocopy;
+
+  /// No description provided for @backupRecoveryOptionBPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Password'**
+  String get backupRecoveryOptionBPassword;
+
+  /// No description provided for @backupRecoveryOptionBMicrocopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a password for your access.'**
+  String get backupRecoveryOptionBMicrocopy;
+
+  /// No description provided for @backupCloudSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Your Data'**
+  String get backupCloudSectionTitle;
+
+  /// No description provided for @backupCloudSectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup your content so nothing gets lost.'**
+  String get backupCloudSectionDesc;
+
+  /// No description provided for @backupCloudContactsMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts & Messages'**
+  String get backupCloudContactsMessages;
+
+  /// No description provided for @backupCloudFreeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Active'**
+  String get backupCloudFreeActive;
+
+  /// No description provided for @backupCloudImagesMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Images & Media'**
+  String get backupCloudImagesMedia;
+
+  /// No description provided for @backupCloudProBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get backupCloudProBadge;
+
+  /// No description provided for @memoriesAddingToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding to favorites...'**
+  String get memoriesAddingToFavorites;
+
+  /// No description provided for @memoriesRemovingFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing from favorites...'**
+  String get memoriesRemovingFromFavorites;
+
+  /// No description provided for @memoriesDeletingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting memories...'**
+  String get memoriesDeletingProgress;
+
+  /// No description provided for @memoriesExportingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting memories...'**
+  String get memoriesExportingProgress;
 }
 
 class _AppLocalizationsDelegate

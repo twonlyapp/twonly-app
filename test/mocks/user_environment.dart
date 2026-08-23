@@ -99,7 +99,6 @@ class UserEnvironment {
       appVersion: 100,
     );
 
-    // ignore: cascade_invocations
     us.isUserCreated = true;
 
     final identityKeyPair = generateIdentityKeyPair();

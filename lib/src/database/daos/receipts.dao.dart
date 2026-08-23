@@ -72,7 +72,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     await (delete(receivedReceipts)..where(
           (t) => (t.createdAt.isSmallerThanValue(
             clock.now().subtract(
-              const Duration(days: 25),
+              const Duration(days: 45),
             ),
           )),
         ))

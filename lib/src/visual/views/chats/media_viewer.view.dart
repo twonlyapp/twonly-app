@@ -426,9 +426,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Future<void> _setupVideoPlayer(MediaFileService mediaLocal) async {
     final controller = VideoPlayerController.file(
       mediaLocal.tempPath,
-      videoPlayerOptions: VideoPlayerOptions(
-        mixWithOthers: mediaLocal.mediaFile.displayLimitInMilliseconds == null,
-      ),
+      videoPlayerOptions: VideoPlayerOptions(),
     );
 
     await controller.setLooping(

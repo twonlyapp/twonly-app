@@ -91,10 +91,10 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 valueColor: AlwaysStoppedAnimation(Colors.white),
               ),
             )
+          else if (_imageSaved)
+            const Icon(Icons.check, size: 14)
           else
-            _imageSaved
-                ? const Icon(Icons.check, size: 14)
-                : const FaIcon(FontAwesomeIcons.floppyDisk, size: 14),
+            const FaIcon(FontAwesomeIcons.floppyDisk, size: 14),
           if (widget.displayButtonLabel) const SizedBox(width: 10),
           if (widget.displayButtonLabel)
             Text(

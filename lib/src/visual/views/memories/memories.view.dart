@@ -306,11 +306,11 @@ class MemoriesViewState extends State<MemoriesView>
       if (!confirmed) return;
     }
 
-    if (deleteCompletely == null) return;
+    if (deleteCompletely == null || !mounted) return;
     final isCompletely = deleteCompletely;
 
     await _showProgressDialog(
-      'Deleting memories...',
+      context.lang.memoriesDeletingProgress,
       (setProgress) async {
         for (var i = 0; i < selectedList.length; i++) {
           final mediaId = selectedList[i];
@@ -350,7 +350,7 @@ class MemoriesViewState extends State<MemoriesView>
 
     try {
       await _showProgressDialog(
-        'Exporting memories...',
+        context.lang.memoriesExportingProgress,
         (setProgress) async {
           for (var i = 0; i < selectedList.length; i++) {
             final mediaId = selectedList[i];
@@ -411,7 +411,9 @@ class MemoriesViewState extends State<MemoriesView>
     final targetFav = !areAllFav;
 
     await _showProgressDialog(
-      targetFav ? 'Adding to favorites...' : 'Removing from favorites...',
+      targetFav
+          ? context.lang.memoriesAddingToFavorites
+          : context.lang.memoriesRemovingFromFavorites,
       (setProgress) async {
         for (var i = 0; i < selectedList.length; i++) {
           final mediaId = selectedList[i];

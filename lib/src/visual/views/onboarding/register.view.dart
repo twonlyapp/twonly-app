@@ -115,7 +115,7 @@ class _RegisterViewState extends State<RegisterView> {
         if (res.error == ErrorCode.UserIdAlreadyTaken) {
           Log.error('User ID already token. Tying again.');
           await deleteLocalUserData();
-          return createNewUser();
+          return await createNewUser();
         }
         if (res.error == ErrorCode.UsernameAlreadyTaken ||
             res.error == ErrorCode.UsernameNotValid) {

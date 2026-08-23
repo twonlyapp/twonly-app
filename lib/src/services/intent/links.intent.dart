@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +10,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart'
     show PasswordlessRecoveryService;
 import 'package:twonly/src/services/signal/session.signal.dart';
@@ -20,7 +17,6 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/visual/views/contact/add_contact_via_qr_link.view.dart';
 import 'package:twonly/src/visual/views/contact/add_new_contact.view.dart';
 
@@ -149,53 +145,20 @@ Future<void> _pubKeysDoNotMatch(BuildContext context, String username) async {
   );
 }
 
-Future<void> handleIntentMediaFile(
-  BuildContext context,
-  String filePath,
-  MediaType type,
-) async {
-  final file = File(filePath);
-  if (!file.existsSync()) {
-    Log.error('The shared intent file does not exits.');
-    return;
-  }
-
-  final newMediaService = await initializeMediaUpload(
-    type,
-    userService.currentUser.defaultShowTime,
-  );
-  if (newMediaService == null) {
-    Log.error('Could not create new media file for intent shared file');
-    return;
-  }
-
-  file.copySync(newMediaService.originalPath.path);
-  if (!context.mounted) return;
-
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => ShareImageEditorView(
-        mediaFileService: newMediaService,
-        sharedFromGallery: true,
-      ),
-    ),
-  );
-}
-
 StreamSubscription<List<SharedFile>> initIntentStreams(
   BuildContext context,
   void Function(Uri) onUrlCallBack,
+  void Function(String, MediaType) onMediaCallBack,
 ) {
   FlutterSharingIntent.instance.getInitialSharing().then((f) {
     if (!context.mounted) return;
-    handleIntentSharedFile(context, f, onUrlCallBack);
+    handleIntentSharedFile(context, f, onUrlCallBack, onMediaCallBack);
   });
 
   return FlutterSharingIntent.instance.getMediaStream().listen(
     (f) {
       if (!context.mounted) return;
-      handleIntentSharedFile(context, f, onUrlCallBack);
+      handleIntentSharedFile(context, f, onUrlCallBack, onMediaCallBack);
     },
     // ignore: inference_failure_on_untyped_parameter
     onError: (err) {
@@ -208,6 +171,7 @@ Future<void> handleIntentSharedFile(
   BuildContext context,
   List<SharedFile> files,
   void Function(Uri) onUrlCallBack,
+  void Function(String, MediaType) onMediaCallBack,
 ) async {
   for (final file in files) {
     if (file.value == null) {
@@ -231,9 +195,9 @@ Future<void> handleIntentSharedFile(
         if (file.value!.endsWith('.gif')) {
           type = MediaType.gif;
         }
-        await handleIntentMediaFile(context, file.value!, type);
+        onMediaCallBack(file.value!, type);
       case SharedMediaType.VIDEO:
-        await handleIntentMediaFile(context, file.value!, MediaType.video);
+        onMediaCallBack(file.value!, MediaType.video);
       // ignore: no_default_cases
       default:
     }

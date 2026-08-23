@@ -780,10 +780,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     mc.sharedLinkForPreview != null &&
                     mc.sharedLinkForPreview!.shouldGeneratePreview &&
                     !mc.isVideoRecording)
-                  ShowTitleText(
-                    title: mc.sharedLinkForPreview!.url.host,
-                    desc: 'Link',
-                    isLink: true,
+                  Positioned(
+                    top: 50,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Chip(
+                        label: Text(mc.sharedLinkForPreview!.url.host),
+                        onDeleted: () {
+                          mc.setSharedLinkForPreview(null);
+                        },
+                      ),
+                    ),
                   ),
                 if (!mc.isSharePreviewIsShown &&
                     !mc.isVideoRecording &&

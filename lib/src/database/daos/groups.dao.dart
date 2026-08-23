@@ -275,7 +275,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
               ),
             ],
           )..where(groups.isDirectChat.equals(false)));
-      return query.map((row) => row.readTable(groupMembers)).get();
+      return await query.map((row) => row.readTable(groupMembers)).get();
     } catch (e) {
       Log.error(e);
       return [];
@@ -346,8 +346,9 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     DateTime newLastMessage,
   ) async {
     final now = clock.now();
-    final clampedLastMessage =
-        newLastMessage.isAfter(now) ? now : newLastMessage;
+    final clampedLastMessage = newLastMessage.isAfter(now)
+        ? now
+        : newLastMessage;
     await (update(groupMembers)..where(
           (t) =>
               t.groupId.equals(groupId) &

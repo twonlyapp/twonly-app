@@ -227,11 +227,19 @@ Future<void> finishStartedPreprocessing() async {
           mediaFile.mediaId,
         );
         if (messages.isEmpty) {
-          Log.info(
-            'Deleted orphaned media file ${mediaFile.mediaId} as no messages reference it.',
-          );
-          MediaFileService(mediaFile).fullMediaRemoval();
-          await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+          if (mediaFile.createdAt.isBefore(
+            clock.now().subtract(const Duration(hours: 1)),
+          )) {
+            Log.info(
+              'Deleted orphaned media file ${mediaFile.mediaId} as no messages reference it.',
+            );
+            MediaFileService(mediaFile).fullMediaRemoval();
+            await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+          } else {
+            Log.info(
+              'Media file ${mediaFile.mediaId} has no messages, but is too new to be deleted by finishStartedPreprocessing. Skipping.',
+            );
+          }
           continue;
         }
 
@@ -484,12 +492,20 @@ Future<void> _startBackgroundMediaUploadInternal(
           mediaService.mediaFile.mediaId,
         );
         if (messages.isEmpty) {
-          Log.warn(
-            'Media files ${mediaService.mediaFile.mediaId} has no original, temp, or stored path. Removing it from DB as files are not existent.',
-          );
-          await twonlyDB.mediaFilesDao.deleteMediaFile(
-            mediaService.mediaFile.mediaId,
-          );
+          if (mediaService.mediaFile.createdAt.isBefore(
+            clock.now().subtract(const Duration(hours: 1)),
+          )) {
+            Log.warn(
+              'Media files ${mediaService.mediaFile.mediaId} has no original, temp, or stored path. Removing it from DB as files are not existent.',
+            );
+            await twonlyDB.mediaFilesDao.deleteMediaFile(
+              mediaService.mediaFile.mediaId,
+            );
+          } else {
+            Log.warn(
+              'Media files ${mediaService.mediaFile.mediaId} has no paths, but is too new to be deleted. Skipping deletion.',
+            );
+          }
         } else {
           Log.warn(
             'Media files ${mediaService.mediaFile.mediaId} has no original, temp, or stored path, but messages still reference it. Marking as uploaded to stop retries.',

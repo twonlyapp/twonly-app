@@ -1,8 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/cached_network_image.dart';
 import 'package:twonly/src/visual/elements/reactive_tap_feedback.element.dart';
 import 'package:url_launcher/url_launcher.dart';
 

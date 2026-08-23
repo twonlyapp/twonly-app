@@ -51,18 +51,6 @@ class ChatTextEntry extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (info.displayUserName != '')
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(
-                  info.displayUserName,
-                  textAlign: TextAlign.left,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,

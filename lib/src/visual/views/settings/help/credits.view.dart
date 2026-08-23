@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/cached_network_image.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/filters/stickers.dart';
 import 'package:url_launcher/url_launcher.dart';
 

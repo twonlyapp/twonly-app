@@ -140,6 +140,9 @@ signalDecryptMessageV1(
   ) = await lockingSignalProtocol.protect(() async {
     Log.info('Lock acquired for $fromUserId (V1)');
     try {
+      // Yield execution to the event loop to prevent UI freezing during bulk decryption
+      await Future.delayed(Duration.zero);
+
       final session = SessionCipher.fromStore(
         (await getSignalStore())!,
         getSignalAddress(fromUserId),

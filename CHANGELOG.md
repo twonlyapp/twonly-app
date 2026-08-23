@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1
+
+- Improve: Show delivery and read receipt indicators for text messages
+- Improve: Backup screen clearer and easier to understand
+- Improve: Show username above messages in group chats
+- Fix: Background audio correctly pauses and resumes when viewing videos
+- Fix: Sometimes old messages were being received as duplicates
+- Fix: Multiple smaller bug fixes
+
 ## 0.5.0
 
 - New: Update to Signal's new PQC-ready key agreement PQXDH
@@ -49,8 +58,8 @@
 
 ## 0.3.0
 
-- Improved: Design of some UI components
-- Improved: Memories viewer shows state for batch operations and has improved performance
+- Improve: Design of some UI components
+- Improve: Memories viewer shows state for batch operations and has improved performance
 - Fix: Issue with background notifications on Android
 - Fix: Changed minimum threshold for the user discovery to 3
 - Fix: Multiple UI issues
@@ -59,24 +68,24 @@
 ## 0.2.26
 
 - New: Import images from the gallery
-- Improved: Media files are now stored in the dedicated "twonly" album
-- Improved: UI components adapt to native styling (iOS/Android)
-- Fix: Migration issue that resulted in a corrupted backup mechanism 
+- Improve: Media files are now stored in the dedicated "twonly" album
+- Improve: UI components adapt to native styling (iOS/Android)
+- Fix: Migration issue that resulted in a corrupted backup mechanism
 - Fix: Database issues causing messages to be lost or the database to be corrupted
 - Fix: Permission view did not disappear after they were granted
 
 ## 0.2.23
 
-- Improved: Smaller UI changes
+- Improve: Smaller UI changes
 - Fix: Some messages were not marked as opened.
 
 ## 0.2.20
 
 - New: Adds an "Ask a Friend" button to new contact suggestions.
 - New: Adds security profiles.
-- Improved: Onboarding flow for new users.
-- Improved: Flame restore experience.
-- Improved: The blue verification checkmark now displays the total number of verifications.
+- Improve: Onboarding flow for new users.
+- Improve: Flame restore experience.
+- Improve: The blue verification checkmark now displays the total number of verifications.
 - Fix: Issue with receiving messages when user closed app while decrypting
 - Fix: Background message fetching reliability.
 - Fix: Issue with focus changing when taking a picture
@@ -93,36 +102,36 @@
 
 ## 0.2.13
 
-- New: Tutorial on how to use zoom. 
+- New: Tutorial on how to use zoom.
 - New: Manage storage view.
-- Improved: Media thumbnails for faster loading.
+- Improve: Media thumbnails for faster loading.
 - Fix: Some messages were not marked as opened.
 
 ## 0.2.12
 
 - New: Automatically mark identical media as opened across all chats (Settings > Chats).
-- Improved: Memories viewer redesigned with smoother animations and new quick-action controls.
+- Improve: Memories viewer redesigned with smoother animations and new quick-action controls.
 - Fix: Reliability of receiving media files.
 
 ## 0.2.11
 
 - New: Create custom shortcuts to quickly share images with pre-selected groups
 - New: Seamless recovery for iOS reinstallations
-- Improved: Redesigned snackbar notifications
-- Improved: New backup mechanism to allow larger backup files
-- Improved: Move keys into a centralized Rust-owned structure stored in secure storage
+- Improve: Redesigned snackbar notifications
+- Improve: New backup mechanism to allow larger backup files
+- Improve: Move keys into a centralized Rust-owned structure stored in secure storage
 - Fix: Messages occasionally not received until app restart
 - Fix: Multiple smaller issues
 
 ## 0.2.10
 
-- Fix: Issue with push notifications on Android  
+- Fix: Issue with push notifications on Android
 
 ## 0.2.9
 
-- Improved: Make contact avatars clickable
+- Improve: Make contact avatars clickable
 - Fix: Messages occasionally not received until app restart
-- Fix: Complete setup would sometimes get stuck 
+- Fix: Complete setup would sometimes get stuck
 
 ## 0.2.8
 
@@ -133,29 +142,29 @@
 - New: Feature to find friends without a phone number
 - New: The verification state is now transferred to the scanned user
 - New: Registration setup to configure the most important configurations
-- Improved: Show ⌛ instead of the flame icon when it is about to expire
-- Improved: FAQ is now in the app rather than opening in the browser
-- Improved: Videos can now be paused
-- Improved: Lock to record hands-free
+- Improve: Show ⌛ instead of the flame icon when it is about to expire
+- Improve: FAQ is now in the app rather than opening in the browser
+- Improve: Videos can now be paused
+- Improve: Lock to record hands-free
 - Fix: Many smaller issues
 
 ## 0.1.8
 
-- Improved: Typos and grammar issues thanks to @AlbertUnruh
+- Improve: Typos and grammar issues thanks to @AlbertUnruh
 - Fix: App becomes unresponsive when clicking notifications.
 
 ## 0.1.7
 
-- Improved: Show input indicator in the chat overview as well 
-- Improved: Username change error handling
-- Fix: Phantom push notification 
+- Improve: Show input indicator in the chat overview as well
+- Improve: Username change error handling
+- Fix: Phantom push notification
 - Fix: Start in chat, if configured
 - Fix: Smaller UI fixes
 
 ## 0.1.5
 
 - Fix: Reupload of media files was not working properly
-- Fix: Chats were sometimes ordered wrongly  
+- Fix: Chats were sometimes ordered wrongly
 - Fix: Typing indicator was not always shown
 - Fix: Multiple smaller issues
 
@@ -163,7 +172,7 @@
 
 - New: Typing and chat open indicator
 - New: Screen lock for twonly (Can be enabled in the settings.)
-- Improve: Visual indication when connected to the server 
+- Improve: Visual indication when connected to the server
 - Improve: Several minor issues with the user interface
 - Fix: Poor audio quality and edge distortions in videos sent from Android
 
@@ -173,23 +182,23 @@
 - New: Crop or rotate images before sharing them.
 - New: Clicking on “Text Notifications” will now open the chat directly (Android only)
 - New: Developer settings to reduce flames
-- Improve: Improved troubleshooting for issues with push notifications 
+- Improve: Improved troubleshooting for issues with push notifications
 - Improve: A message appears if someone has deleted their account.
 - Improve: Make the verification badge more visible.
 - Fix: Flash not activated when starting a video recording
 - Fix: Problem sending media when a recipient has deleted their account.
 - Fix: Receive push notifications without receiving an in-app message (Android)
 - Fix: Issue with sending GIFs from Memories
-- Fix: Incorrect processing of messages that have already been fetched from the server causes the UI to freeze 
+- Fix: Incorrect processing of messages that have already been fetched from the server causes the UI to freeze
 
 ## 0.1.1
 
 - New: Groups can now collect flames as well
-- New: Background execution to pre-load messages 
+- New: Background execution to pre-load messages
 - New: Adds a link if the image contains a QR code
 - Improve: Video compression with progress updates
 - Improve: Show message "Flames restored"
-- Improve: Show toast message if user was added via QR 
+- Improve: Show toast message if user was added via QR
 - Fix: Media file appears as a white square and is not listed.
 - Fix: Issue with media files required to be reuploaded
 - Fix: Problem during contact requests
@@ -199,17 +208,17 @@
 
 ## 0.0.96
 
-- Feature: Show link in chat if the saved media file contains one
-- Improve: Verification badge for groups 
+- New: Show link in chat if the saved media file contains one
+- Improve: Verification badge for groups
 - Improve: Huge reduction in app size
 - Fix: Crash on older devices when compressing a video
 - Fix: Problem with decrypting messages fixed
 
 ## 0.0.93
 
-- Feature: Verification checkmark for friends   
+- New: Verification checkmark for friends
 - Fix: Added contacts in contact sharing that were not clickable.
-- Fix: Open chat after the image expires in case a draft message exists 
+- Fix: Open chat after the image expires in case a draft message exists
 - Fix: Restore flames as a plus user
 - Fix: Route not found when sharing image
 - Fix: Increase recent limit in emoji keyboard
@@ -220,139 +229,138 @@
 
 ## 0.0.92
 
-- Adds the option to share contacts
-- Adds option to zoom in received images / videos 
-- Fixes issue with "reuploaded requested" not working
-- Fixes race condition while writing to the log file
+- New: The option to share contacts
+- New: Option to zoom in received images / videos
+- Fix: Issue with "reuploaded requested" not working
+- Fix: Race condition while writing to the log file
 
 ## 0.0.91
 
-- Fixes link preview on iOS
-- Fixes sharing images from other apps on iOS
+- Fix: Link preview on iOS
+- Fix: Sharing images from other apps on iOS
 
 ## 0.0.90
 
-- Fixes issue that media files where not reuploaded  
-- Fixes iOS zooming issue when switching between .5 and x1
-- Fixes biometric auth bypass when opening a twonly/reopen send image
-- Fixes that media files could not be downloaded in case the contact deleted his account 
-- Fixes database issue in case twonly is opened multiple times 
-- Fixes typos in translation
+- Fix: Issue that media files were not reuploaded
+- Fix: iOS zooming issue when switching between .5 and x1
+- Fix: Biometric auth bypass when opening a twonly/reopen send image
+- Fix: That media files could not be downloaded in case the contact deleted his account
+- Fix: Database issue in case twonly is opened multiple times
+- Fix: Typos in translation
 
 ## 0.0.87
 
-- Adds link preview to shared links
-- Adds option to manual focus in the camera
-- Adds support to switch between front and back cameras during video recording
-- Adds basic face filters
-- Improves image editor, like emojis or text under a drawing can be moved
-- Improves speed after taking a picture  
-- Fixes issue with emojis disappearing in the image editor
+- New: Link preview to shared links
+- New: Option to manual focus in the camera
+- New: Support to switch between front and back cameras during video recording
+- New: Basic face filters
+- Improve: Image editor, like emojis or text under a drawing can be moved
+- Improve: Speed after taking a picture
+- Fix: Issue with emojis disappearing in the image editor
 
 ## 0.0.86
 
-- Allows to reopen send images (if send without time limit or enabled auth) 
-- Added support for front camera zoom
-- Several bug fixes
+- New: Allows to reopen send images (if send without time limit or enabled auth)
+- New: Support for front camera zoom
+- Fix: Several bug fixes
 
 ## 0.0.83
 
-- Improved view of the diagnostic log
-- Several bug fixes
+- Improve: View of the diagnostic log
+- Fix: Several bug fixes
 
 ## 0.0.82
 
-- Added an option in the settings to automatically save all sent images
-- Hides duplicate images in the memory
-- Fixes a bug where messages were not being received
-- Several other minor improvements
+- New: An option in the settings to automatically save all sent images
+- New: Hides duplicate images in the memory
+- Improve: Several other minor improvements
+- Fix: A bug where messages were not being received
 
 ## 0.0.81
 
-- Fixes the issue where black/blank images were sometimes received
-- Fixes an issue in the image editor
+- Fix: The issue where black/blank images were sometimes received
+- Fix: An issue in the image editor
 
 ## 0.0.80
 
-- Share images/videos directly from other applications
-- More customization options in the appearance settings
-- Improved UI for changing the display time of images
-- Several minor UI improvements
-- Several bug fixes
+- New: Share images/videos directly from other applications
+- New: More customization options in the appearance settings
+- Improve: UI for changing the display time of images
+- Improve: Several minor UI improvements
+- Fix: Several bug fixes
 
 ## 0.0.74
 
-- Improving uploading speed
-- Fixing issue with ffmpeg for android
+- Improve: Uploading speed
+- Fix: Issue with ffmpeg for android
 
 ## 0.0.73
 
-- Integrated QR code scanner in the main camera
-- New profile share page
-- New workflow for checking the security number
-- Improved user interface for creating voice messages
+- New: Integrated QR code scanner in the main camera
+- New: Profile share page
+- New: Workflow for checking the security number
+- Improve: User interface for creating voice messages
 
 ## 0.0.69
 
-- Option to export and import memories
-- iOS support for ultra-wide-angle camera
-- Support Android Monochrome Icon
-- Multiple layout issues fixed
-- Multiple bug fixes
+- New: Option to export and import memories
+- New: iOS support for ultra-wide-angle camera
+- New: Support Android Monochrome Icon
+- Fix: Multiple layout issues fixed
+- Fix: Multiple bug fixes
 
 ## 0.0.67
 
-- Adds crash reports (optional). Please consider enabling this under Settings > Help > “Share errors and crashes with us.”
-- Fixes bug when saving images to the gallery
-- Multiple layout issues fixed
-- Multiple bug fixes
+- New: Crash reports (optional). Please consider enabling this under Settings > Help > “Share errors and crashes with us.”
+- Fix: Bug when saving images to the gallery
+- Fix: Multiple layout issues fixed
+- Fix: Multiple bug fixes
 
 ## 0.0.62
 
-- Support for groups with multiple administrators
-- Edit and delete messages
-- Create images using volume buttons
-- New and improved emoji picker
-- Removing audio after recording is possible
-- Edited image is now embedded into the video
-- Video max length increased to 60 seconds
-- Switched to FFmpeg for improved video compression
-- New context menu and other UI enhancements
-- Client-to-client protocol migrated to Protocol Buffers (Protobuf)
-- Database identifiers converted to UUIDs and the database schema completely redesigned
-- Improved reliability of client-to-client messaging
-- Multiple bug fixes
+- New: Support for groups with multiple administrators
+- New: Edit and delete messages
+- New: Create images using volume buttons
+- New: Removing audio after recording is possible
+- New: Edited image is now embedded into the video
+- New: Video max length increased to 60 seconds
+- New: Context menu and other UI enhancements
+- New: Client-to-client protocol migrated to Protocol Buffers (Protobuf)
+- New: Database identifiers converted to UUIDs and the database schema completely redesigned
+- Improve: Emoji picker
+- Improve: Switched to FFmpeg for improved video compression
+- Improve: Reliability of client-to-client messaging
+- Fix: Multiple bug fixes
 
 ## 0.0.61
 
-- Improving image editor when changing colors
-- Fixing message decryption error 
-- Fixing issue with user deletion
-- Fixing issue with flame counter sync
-- Dependency and Flutter upgrade
+- New: Image editor when changing colors
+- New: Dependency and Flutter upgrade
+- Fix: Message decryption error
+- Fix: Issue with user deletion
+- Fix: Issue with flame counter sync
 
 ## 0.0.60
 
-- Improved logging to debug the 'Tap to load' issue.
-- Display your own avatar in the title bar of the chat list.
-- Created a default avatar image in case none was set.
-- Improved UI handling when requesting microphone access for the first time.
-- Flutter SDK and dependencies upgraded.
-- Multiple bug fixes.
+- New: Display your own avatar in the title bar of the chat list.
+- New: Created a default avatar image in case none was set.
+- New: Flutter SDK and dependencies upgraded.
+- Improve: Logging to debug the 'Tap to load' issue.
+- Improve: UI handling when requesting microphone access for the first time.
+- Fix: Multiple bug fixes.
 
 ## 0.0.59
 
-- Fixing media download error
-- Fixing issue with video recording
-- Location Filter are now stored as WebP instead of PNG
+- New: Location Filter are now stored as WebP instead of PNG
+- Fix: Media download error
+- Fix: Issue with video recording
 
 ## 0.0.58
 
-- twonly now has a free plan and is now financed by donations and an optional subscription with more features (coming soon)
-- iOS gestures to close images
-- Improved chat messages view, including better citation view and display times
-- Onboarding screens updated and registration view simplified 
-- The sender is displayed in the top right corner when a media file is opened
-- Images are now stored as WebP to save storage
-- Button to report users
-- Multiple bug fixes
+- New: iOS gestures to close images
+- New: Onboarding screens updated and registration view simplified
+- New: The sender is displayed in the top right corner when a media file is opened
+- New: Images are now stored as WebP to save storage
+- New: Button to report users
+- Improve: Chat messages view, including better citation view and display times
+- Fix: Multiple bug fixes

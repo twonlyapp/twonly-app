@@ -845,7 +845,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupSelectStrongPassword =>
-      'Choose a secure password. This is required if you want to restore your backup.';
+      'Select a secure password. It is recommended to generate and store it via your password manager of choice.';
 
   @override
   String get password => 'Password';
@@ -861,7 +861,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must be at least 10 characters long.';
 
   @override
-  String get backupEnableBackup => 'Activate automatic backup';
+  String get backupEnableBackup => 'Enable Password Backup';
 
   @override
   String get backupTwonlySaveNow => 'Save now';
@@ -2129,7 +2129,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarCustomizeReset => 'Reset';
 
   @override
-  String get passwordlessRecovery => 'Password Recovery';
+  String get passwordlessRecovery => 'Trusted Friends';
 
   @override
   String get passwordlessRecoveryNotConfigured => 'Not configured';
@@ -2195,7 +2195,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordlessRecoveryEnableSuccess =>
-      'Passwordless recovery successfully enabled!';
+      'Trusted Friends successfully set up!';
 
   @override
   String get passwordlessRecoveryEnterPin => 'Please enter a PIN.';
@@ -2204,13 +2204,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordlessRecoveryEnterEmail => 'Please enter an email address.';
 
   @override
-  String get passwordlessRecoveryEnableBtn => 'Enable Passwordless Recovery';
+  String get passwordlessRecoveryEnableBtn => 'Enable Trusted Friends';
 
   @override
-  String get passwordlessRecoveryRecoverBtn => 'Recover passwordless';
+  String get passwordlessRecoveryRecoverBtn => 'Recover via Trusted Friends';
 
   @override
-  String get passwordlessRecoveryModifyBtn => 'Modify Passwordless Recovery';
+  String get passwordlessRecoveryModifyBtn => 'Modify Trusted Friends';
 
   @override
   String passwordlessRecoveryStatusEnabled(num count) {
@@ -2541,4 +2541,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
+
+  @override
+  String get backupRecoverySectionTitle => 'Secure Account Access';
+
+  @override
+  String get backupRecoverySectionDescNone =>
+      'You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.';
+
+  @override
+  String get backupRecoverySectionDescSome =>
+      'You can recover your account with the recovery options below. It is recommended to enable both options.';
+
+  @override
+  String get backupRecoveryOptionAFriends => 'Via trusted friends';
+
+  @override
+  String get backupRecoveryOptionAMicrocopy =>
+      'Select friends who can help you recover your account.';
+
+  @override
+  String get backupRecoveryOptionBPassword => 'Classic Password';
+
+  @override
+  String get backupRecoveryOptionBMicrocopy =>
+      'Set a password for your access.';
+
+  @override
+  String get backupCloudSectionTitle => 'Backup Your Data';
+
+  @override
+  String get backupCloudSectionDesc =>
+      'Backup your content so nothing gets lost.';
+
+  @override
+  String get backupCloudContactsMessages => 'Contacts & Messages';
+
+  @override
+  String get backupCloudFreeActive => 'Free Active';
+
+  @override
+  String get backupCloudImagesMedia => 'Images & Media';
+
+  @override
+  String get backupCloudProBadge => 'Pro';
+
+  @override
+  String get memoriesAddingToFavorites => 'Adding to favorites...';
+
+  @override
+  String get memoriesRemovingFromFavorites => 'Removing from favorites...';
+
+  @override
+  String get memoriesDeletingProgress => 'Deleting memories...';
+
+  @override
+  String get memoriesExportingProgress => 'Exporting memories...';
 }

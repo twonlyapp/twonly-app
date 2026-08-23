@@ -27,6 +27,13 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   final TextEditingController usernameCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
 
+  @override
+  void dispose() {
+    usernameCtrl.dispose();
+    passwordCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _recoverTwonlySafe() async {
     setState(() {
       isLoading = true;

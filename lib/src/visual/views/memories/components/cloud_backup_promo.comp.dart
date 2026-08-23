@@ -1,7 +1,14 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
@@ -11,6 +18,9 @@ class MemoriesCloudBackupPromoComp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isFreePlan =
+        context.watch<PurchasesProvider>().plan == SubscriptionPlan.Free;
+
     return StreamBuilder<void>(
       stream: userService.onUserUpdated,
       builder: (context, snapshot) {
@@ -24,55 +34,99 @@ class MemoriesCloudBackupPromoComp extends StatelessWidget {
         return SliverToBoxAdapter(
           child: Container(
             margin: const EdgeInsets.symmetric(
-              horizontal: 8,
+              horizontal: 12,
               vertical: 8,
             ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                colors: [
-                  context.color.primaryContainer.withValues(alpha: 0.15),
-                  context.color.primaryContainer.withValues(alpha: 0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: context.color.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
               border: Border.all(
-                color: context.color.primary.withValues(alpha: 0.1),
-                width: 1.5,
+                color: context.color.primary.withValues(alpha: 0.15),
               ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          context.lang.memoriesBackupTitle,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: context.color.onSurface,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                context.lang.memoriesBackupTitle,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: context.color.onSurface,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade700,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const FaIcon(
+                                    FontAwesomeIcons.star,
+                                    size: 10,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.lang.backupCloudProBadge,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           context.lang.settingsStorageNoCloudBackupCard,
                           style: TextStyle(
                             fontSize: 13,
                             color: context.color.onSurfaceVariant,
-                            height: 1.3,
+                            height: 1.4,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             MyButton(
                               variant: MyButtonVariant.primaryDense,
                               onPressed: () async {
+                                if (isFreePlan) {
+                                  unawaited(
+                                    context.push(Routes.settingsSubscription),
+                                  );
+                                  return;
+                                }
                                 await UserService.update(
                                   (u) => u.isCloudBackupEnabled = true,
                                 );
@@ -80,9 +134,7 @@ class MemoriesCloudBackupPromoComp extends StatelessWidget {
                               },
                               child: Text(context.lang.enable),
                             ),
-                            const SizedBox(width: 8),
-                            MyButton(
-                              variant: MyButtonVariant.secondaryDense,
+                            TextButton(
                               onPressed: () async {
                                 await UserService.update(
                                   (u) => u.hideMemoriesBackupPromo = true,
@@ -90,6 +142,10 @@ class MemoriesCloudBackupPromoComp extends StatelessWidget {
                               },
                               child: Text(
                                 context.lang.settingsStorageHidePromo,
+                                style: TextStyle(
+                                  color: context.color.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],

@@ -10,6 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
@@ -180,9 +181,17 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       }
     });
 
+    void handleShareMedia(String path, MediaType type) {
+      HomeViewState.pendingSharedMedia = (path, type);
+      routerProvider.go(Routes.home);
+      HomeViewState.streamHomeViewPageIndex.add(0);
+      HomeViewState.streamSharedMedia.add((path, type));
+    }
+
     _intentStreamSub = initIntentStreams(
       context,
       handleShareLink,
+      handleShareMedia,
     );
   }
 

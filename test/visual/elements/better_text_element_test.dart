@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 
 void main() {
-  testWidgets('BetterText parses URLs correctly', (WidgetTester tester) async {
+  testWidgets('BetterText parses URLs correctly', (tester) async {
     const text =
         'Test: (https://google.com) and another link https://example.com/#fragment, plus www.test.com. Also check https://wikipedia.org/wiki/Test_(disambiguation) !';
 

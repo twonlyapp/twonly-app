@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -114,29 +115,33 @@ File currentUserAvatarFile(int avatarCounter) {
   return File('${avatarsDirectory.path}/user_$avatarCounter.png');
 }
 
+final _avatarMutex = Mutex();
+
 Future<String?> getUserAvatar() async {
   if (userService.currentUser.avatarSvg == null) {
     return null;
   }
 
-  final avatarCounter = userService.currentUser.avatarCounter;
-  final file = currentUserAvatarFile(avatarCounter);
-  if (file.existsSync()) {
+  return _avatarMutex.protect(() async {
+    final avatarCounter = userService.currentUser.avatarCounter;
+    final file = currentUserAvatarFile(avatarCounter);
+    if (file.existsSync()) {
+      return file.path;
+    }
+
+    final pictureInfo = await vg.loadPicture(
+      SvgStringLoader(userService.currentUser.avatarSvg!),
+      null,
+    );
+
+    final image = await pictureInfo.picture.toImage(270, 300);
+
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = byteData!.buffer.asUint8List();
+
+    await file.writeAsBytes(pngBytes, flush: true);
+    pictureInfo.picture.dispose();
+
     return file.path;
-  }
-
-  final pictureInfo = await vg.loadPicture(
-    SvgStringLoader(userService.currentUser.avatarSvg!),
-    null,
-  );
-
-  final image = await pictureInfo.picture.toImage(270, 300);
-
-  final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-  final pngBytes = byteData!.buffer.asUint8List();
-
-  await file.writeAsBytes(pngBytes);
-  pictureInfo.picture.dispose();
-
-  return file.path;
+  });
 }
