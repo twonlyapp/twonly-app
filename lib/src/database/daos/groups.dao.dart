@@ -188,6 +188,15 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watch();
   }
 
+  Stream<List<(Contact, GroupMember)>> watchAllGroupMembers() {
+    final query = select(groupMembers).join([
+      innerJoin(contacts, contacts.userId.equalsExp(groupMembers.contactId)),
+    ]);
+    return query
+        .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
+        .watch();
+  }
+
   Stream<List<Group>> watchGroupsForShareImage() {
     return (select(groups)..where(
           (g) => g.leftGroup.equals(false) & g.deletedContent.equals(false),
@@ -200,6 +209,12 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           (g) => g.contactId.equals(contactId),
         ))
         .watch();
+  }
+
+  Stream<List<GroupMember>> watchTypingGroupMembers() {
+    return (select(
+      groupMembers,
+    )..where((member) => member.lastTypeIndicator.isNotNull())).watch();
   }
 
   Stream<Group?> watchGroup(String groupId) {

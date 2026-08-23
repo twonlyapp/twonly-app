@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/database/signal.db.dart';
 
 class SignalIdentityKeyStore extends IdentityKeyStore {
   SignalIdentityKeyStore(this.identityKeyPair, this.localRegistrationId);
@@ -13,7 +13,7 @@ class SignalIdentityKeyStore extends IdentityKeyStore {
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
     final identity =
-        await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)..where(
+        await (signalDB.select(signalDB.signalIdentityKeyStores)..where(
               (t) =>
                   t.deviceId.equals(address.getDeviceId()) &
                   t.name.equals(address.getName()),
@@ -55,8 +55,8 @@ class SignalIdentityKeyStore extends IdentityKeyStore {
       return false;
     }
     if (await getIdentity(address) == null) {
-      await twonlyDB
-          .into(twonlyDB.signalIdentityKeyStores)
+      await signalDB
+          .into(signalDB.signalIdentityKeyStores)
           .insert(
             SignalIdentityKeyStoresCompanion(
               deviceId: Value(address.getDeviceId()),
@@ -65,7 +65,7 @@ class SignalIdentityKeyStore extends IdentityKeyStore {
             ),
           );
     } else {
-      await (twonlyDB.update(twonlyDB.signalIdentityKeyStores)..where(
+      await (signalDB.update(signalDB.signalIdentityKeyStores)..where(
             (t) =>
                 t.deviceId.equals(address.getDeviceId()) &
                 t.name.equals(address.getName()),

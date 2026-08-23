@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -18,6 +20,7 @@ import 'package:twonly/src/visual/components/notification_badge.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/group_list_item.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/news_btn.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/finish_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/missing_backup_setup.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/passwordless_recovery/components/missing_recovery_contacts.comp.dart';
@@ -28,15 +31,34 @@ class ChatListView extends StatefulWidget {
   State<ChatListView> createState() => _ChatListViewState();
 }
 
-class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClientMixin<ChatListView> {
+class _ChatListViewState extends State<ChatListView>
+    with AutomaticKeepAliveClientMixin<ChatListView> {
   StreamSubscription<void>? _userSub;
   StreamSubscription<List<Group>>? _contactsSub;
   StreamSubscription<List<Contact>>? _contactsCountSub;
   StreamSubscription<List<MediaFile>>? _precacheSub;
+  StreamSubscription<List<GroupMember>>? _typingMembersSub;
+  StreamSubscription<List<(Contact, GroupMember)>>? _groupMembersSub;
+  StreamSubscription<List<Message>>? _unopenedMessagesSub;
+  StreamSubscription<List<(String, Reaction)>>? _reactionsSub;
+  StreamSubscription<List<Message>>? _latestMessagesSub;
+  StreamSubscription<List<MediaFile>>? _chatListMediaSub;
+  StreamSubscription<Map<String, VerificationStatus>>? _verificationSub;
+  StreamSubscription<List<(int, Label)>>? _contactLabelsSub;
+  Timer? _typingUpdateTimer;
   final Set<String> _precachedMediaIds = {};
   List<Group> _groupsNotPinned = [];
   List<Group> _groupsPinned = [];
   List<Group> _groupsArchived = [];
+  Set<String> _typingGroupIds = {};
+  List<GroupMember> _typingMembers = [];
+  Map<String, List<Contact>> _contactsByGroup = {};
+  Map<String, List<Message>> _unopenedMessagesByGroup = {};
+  Map<String, Reaction> _lastReactionByGroup = {};
+  Map<String, Message> _lastMessageByGroup = {};
+  Map<String, MediaFile> _chatListMediaById = {};
+  Map<String, VerificationStatus> _verificationByGroup = {};
+  Map<int, List<Label>> _labelsByContact = {};
 
   final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
@@ -102,7 +124,9 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
           _badgeCount.value = _countAnnouncedUsers + _countContactRequest;
         });
 
-    _precacheSub = twonlyDB.messagesDao.watchUnopenedMediaFiles().listen((mediaFiles) {
+    _precacheSub = twonlyDB.messagesDao.watchUnopenedMediaFiles().listen((
+      mediaFiles,
+    ) {
       if (!mounted) return;
       for (final media in mediaFiles) {
         if (!_precachedMediaIds.contains(media.mediaId)) {
@@ -119,6 +143,80 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
         }
       }
     });
+
+    _typingMembersSub = twonlyDB.groupsDao.watchTypingGroupMembers().listen((
+      members,
+    ) {
+      if (!mounted) return;
+      _typingMembers = members;
+      _updateTypingGroupIds();
+    });
+    _typingUpdateTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateTypingGroupIds(),
+    );
+    _groupMembersSub = twonlyDB.groupsDao.watchAllGroupMembers().listen((rows) {
+      if (!mounted) return;
+      final contactsByGroup = <String, List<Contact>>{};
+      for (final row in rows) {
+        contactsByGroup.putIfAbsent(row.$2.groupId, () => []).add(row.$1);
+      }
+      setState(() => _contactsByGroup = contactsByGroup);
+    });
+    _unopenedMessagesSub = twonlyDB.messagesDao
+        .watchAllMessagesNotOpened()
+        .listen((messages) {
+          if (!mounted) return;
+          final byGroup = <String, List<Message>>{};
+          for (final message in messages) {
+            byGroup.putIfAbsent(message.groupId, () => []).add(message);
+          }
+          setState(() => _unopenedMessagesByGroup = byGroup);
+        });
+    _reactionsSub = twonlyDB.reactionsDao.watchLatestReactionsByGroup().listen((
+      rows,
+    ) {
+      if (!mounted) return;
+      setState(
+        () => _lastReactionByGroup = {for (final row in rows) row.$1: row.$2},
+      );
+    });
+    _latestMessagesSub = twonlyDB.messagesDao
+        .watchLatestMessagesByGroup()
+        .listen((messages) {
+          if (!mounted) return;
+          setState(
+            () => _lastMessageByGroup = {
+              for (final message in messages) message.groupId: message,
+            },
+          );
+        });
+    _chatListMediaSub = twonlyDB.mediaFilesDao.watchChatListMediaFiles().listen(
+      (mediaFiles) {
+        if (!mounted) return;
+        setState(
+          () => _chatListMediaById = {
+            for (final mediaFile in mediaFiles) mediaFile.mediaId: mediaFile,
+          },
+        );
+      },
+    );
+    _verificationSub = twonlyDB.keyVerificationDao
+        .watchAllGroupsVerificationStatus()
+        .listen((statuses) {
+          if (!mounted) return;
+          setState(() => _verificationByGroup = statuses);
+        });
+    _contactLabelsSub = twonlyDB.labelsDao.watchAllContactLabels().listen((
+      rows,
+    ) {
+      if (!mounted) return;
+      final labels = <int, List<Label>>{};
+      for (final row in rows) {
+        labels.putIfAbsent(row.$1, () => []).add(row.$2);
+      }
+      setState(() => _labelsByContact = labels);
+    });
   }
 
   @override
@@ -132,7 +230,42 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
     _countAnnouncedStream.cancel();
     _userSub?.cancel();
     _precacheSub?.cancel();
+    _typingMembersSub?.cancel();
+    _typingUpdateTimer?.cancel();
+    _groupMembersSub?.cancel();
+    _unopenedMessagesSub?.cancel();
+    _reactionsSub?.cancel();
+    _latestMessagesSub?.cancel();
+    _chatListMediaSub?.cancel();
+    _verificationSub?.cancel();
+    _contactLabelsSub?.cancel();
     super.dispose();
+  }
+
+  void _updateTypingGroupIds() {
+    if (!mounted) return;
+    final typingGroupIds = _typingMembers
+        .where(isTyping)
+        .map((member) => member.groupId)
+        .toSet();
+    if (setEquals(_typingGroupIds, typingGroupIds)) return;
+    setState(() => _typingGroupIds = typingGroupIds);
+  }
+
+  Map<String, MediaFile> _mediaForGroup(String groupId) {
+    final mediaIds = <String>{
+      for (final message
+          in _unopenedMessagesByGroup[groupId] ?? const <Message>[])
+        if (message.mediaId != null) message.mediaId!,
+      if (_lastMessageByGroup[groupId]?.mediaId != null)
+        _lastMessageByGroup[groupId]!.mediaId!,
+    };
+    final mediaFiles = <String, MediaFile>{};
+    for (final mediaId in mediaIds) {
+      final mediaFile = _chatListMediaById[mediaId];
+      if (mediaFile != null) mediaFiles[mediaId] = mediaFile;
+    }
+    return mediaFiles;
   }
 
   @override
@@ -277,6 +410,22 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
                       return GroupListItemComp(
                         key: ValueKey(group.groupId),
                         group: group,
+                        isTyping: _typingGroupIds.contains(group.groupId),
+                        contacts: _contactsByGroup[group.groupId] ?? const [],
+                        unopenedMessages:
+                            _unopenedMessagesByGroup[group.groupId] ?? const [],
+                        lastReaction: _lastReactionByGroup[group.groupId],
+                        lastMessage: _lastMessageByGroup[group.groupId],
+                        mediaFiles: _mediaForGroup(group.groupId),
+                        useSharedSummary: true,
+                        verificationStatus: _verificationByGroup[group.groupId],
+                        contactLabels:
+                            _contactsByGroup[group.groupId]?.isNotEmpty == true
+                            ? _labelsByContact[_contactsByGroup[group.groupId]!
+                                      .first
+                                      .userId] ??
+                                  const []
+                            : const [],
                       );
                     }
 
@@ -296,6 +445,22 @@ class _ChatListViewState extends State<ChatListView> with AutomaticKeepAliveClie
                     return GroupListItemComp(
                       key: ValueKey(group.groupId),
                       group: group,
+                      isTyping: _typingGroupIds.contains(group.groupId),
+                      contacts: _contactsByGroup[group.groupId] ?? const [],
+                      unopenedMessages:
+                          _unopenedMessagesByGroup[group.groupId] ?? const [],
+                      lastReaction: _lastReactionByGroup[group.groupId],
+                      lastMessage: _lastMessageByGroup[group.groupId],
+                      mediaFiles: _mediaForGroup(group.groupId),
+                      useSharedSummary: true,
+                      verificationStatus: _verificationByGroup[group.groupId],
+                      contactLabels:
+                          _contactsByGroup[group.groupId]?.isNotEmpty == true
+                          ? _labelsByContact[_contactsByGroup[group.groupId]!
+                                    .first
+                                    .userId] ??
+                                const []
+                          : const [],
                     );
                   },
                 ),

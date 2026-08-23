@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/database/signal.db.dart';
 
 class SignalSessionStore extends SessionStore {
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
     final sessions =
-        await (twonlyDB.select(twonlyDB.signalSessionStores)..where(
+        await (signalDB.select(signalDB.signalSessionStores)..where(
               (tbl) =>
                   tbl.deviceId.equals(address.getDeviceId()) &
                   tbl.name.equals(address.getName()),
@@ -18,14 +18,14 @@ class SignalSessionStore extends SessionStore {
 
   @override
   Future<void> deleteAllSessions(String name) async {
-    await (twonlyDB.delete(
-      twonlyDB.signalSessionStores,
+    await (signalDB.delete(
+      signalDB.signalSessionStores,
     )..where((tbl) => tbl.name.equals(name))).go();
   }
 
   @override
   Future<void> deleteSession(SignalProtocolAddress address) async {
-    await (twonlyDB.delete(twonlyDB.signalSessionStores)..where(
+    await (signalDB.delete(signalDB.signalSessionStores)..where(
           (tbl) =>
               tbl.deviceId.equals(address.getDeviceId()) &
               tbl.name.equals(address.getName()),
@@ -36,7 +36,7 @@ class SignalSessionStore extends SessionStore {
   @override
   Future<List<int>> getSubDeviceSessions(String name) async {
     final deviceIds =
-        await (twonlyDB.select(twonlyDB.signalSessionStores)..where(
+        await (signalDB.select(signalDB.signalSessionStores)..where(
               (tbl) => tbl.deviceId.equals(1).not() & tbl.name.equals(name),
             ))
             .get();
@@ -46,7 +46,7 @@ class SignalSessionStore extends SessionStore {
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
     final dbSession =
-        await (twonlyDB.select(twonlyDB.signalSessionStores)..where(
+        await (signalDB.select(signalDB.signalSessionStores)..where(
               (tbl) =>
                   tbl.deviceId.equals(address.getDeviceId()) &
                   tbl.name.equals(address.getName()),
@@ -72,11 +72,11 @@ class SignalSessionStore extends SessionStore {
     );
 
     if (!await containsSession(address)) {
-      await twonlyDB
-          .into(twonlyDB.signalSessionStores)
+      await signalDB
+          .into(signalDB.signalSessionStores)
           .insert(sessionCompanion);
     } else {
-      await (twonlyDB.update(twonlyDB.signalSessionStores)..where(
+      await (signalDB.update(signalDB.signalSessionStores)..where(
             (tbl) =>
                 tbl.deviceId.equals(address.getDeviceId()) &
                 tbl.name.equals(address.getName()),

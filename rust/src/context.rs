@@ -1,21 +1,31 @@
+use crate::database::app::{AppDatabase, APP_DATABASE_FILE};
 use crate::signal::engine::RustSignalEngine;
+use crate::user_discovery::stores::{NativeUserDiscoveryStore, NativeUserDiscoveryUtils};
 use crate::user_discovery::UserDiscovery;
 use crate::{
-    bridge::{
-        callbacks::user_discovery::{UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter},
-        InitConfig,
-    },
-    database::Database,
+    bridge::InitConfig,
+    database::signal::Database,
     error::{Result, TwonlyError},
     keys::{DatabaseKey, KeyManager},
     log::init_tracing,
     utils::Shared,
 };
 use std::{path::PathBuf, sync::Arc};
-use tokio::sync::{Mutex, OnceCell};
+use tokio::sync::{Mutex, OnceCell, RwLock};
 use zeroize::Zeroize;
 
-use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage, standalone::TwonlyStandalone};
+use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage};
+
+pub(crate) struct TwonlyStandalone {
+    #[allow(dead_code)]
+    pub(crate) config: InitConfig,
+    #[allow(dead_code)]
+    pub(crate) rust_db: Arc<RwLock<Arc<Database>>>,
+    pub(crate) app_db: Arc<RwLock<Arc<AppDatabase>>>,
+    #[allow(dead_code)]
+    pub(crate) secure_storage: SecureStorage,
+    pub(crate) key_manager: Arc<Mutex<KeyManager>>,
+}
 
 pub(crate) enum Context {
     Flutter(TwonlyFlutter),
@@ -73,9 +83,20 @@ impl Context {
         rust_db.run_migrations().await?;
         let rust_db = Arc::new(rust_db);
 
+        let app_db_path = database_dir.join(APP_DATABASE_FILE);
+        let app_db = AppDatabase::new(
+            &app_db_path.display().to_string(),
+            Some(&key_manager.main_key.get_database_key(DatabaseKey::AppDb)),
+            false,
+        )
+        .await?;
+        app_db.run_migrations().await?;
+        let app_db = Arc::new(RwLock::new(Arc::new(app_db)));
+
         Ok(Context::from_standalone(TwonlyStandalone {
             config,
-            rust_db,
+            rust_db: Arc::new(RwLock::new(rust_db)),
+            app_db,
             secure_storage,
             key_manager: Arc::new(Mutex::new(key_manager)),
         }))
@@ -100,6 +121,7 @@ impl Context {
 
         let database_dir = PathBuf::from(&config.database_dir.clone());
         let rust_db_path = database_dir.join("rust_db.sqlite");
+        let app_db_path = database_dir.join(APP_DATABASE_FILE);
 
         tracing::info!("Initialized twonly workspace.");
         let res: Result<&'static Context> = GLOBAL_CONTEXT
@@ -129,36 +151,59 @@ impl Context {
                 .await?;
                 rust_db.run_migrations().await?;
                 let rust_db = Arc::new(rust_db);
+                let rust_db_handle = Arc::new(RwLock::new(rust_db));
+
+                let mut app_db_key = key_manager.main_key.get_database_key(DatabaseKey::AppDb);
+                let app_db = AppDatabase::new(
+                    &app_db_path.display().to_string(),
+                    Some(app_db_key.as_str()),
+                    false,
+                )
+                .await?;
+                app_db.run_migrations().await?;
+                let app_db = Arc::new(RwLock::new(Arc::new(app_db)));
+                app_db_key.zeroize();
 
                 rust_db_key.zeroize();
 
                 if is_flutter {
-                    let mut signal_engine = Arc::default();
-                    if let Some(user_id) = key_manager.user_id {
-                        if let Some(signal_identity) = &key_manager.signal_identity {
-                            signal_engine = Arc::new(Mutex::new(Some(RustSignalEngine::new_with_pool(
-                                rust_db.pool.clone(),
+                    let key_manager = Arc::new(Mutex::new(key_manager));
+                    let signal_engine = {
+                        let key_manager_guard = key_manager.lock().await;
+                        let engine = match (
+                            key_manager_guard.user_id,
+                            &key_manager_guard.signal_identity,
+                        ) {
+                            (Some(user_id), Some(signal_identity)) => {
+                                Some(RustSignalEngine::new_with_pool(
+                                rust_db_handle.read().await.pool.clone(),
                                 signal_identity.identity_key_pair_structure.clone(),
                                 signal_identity.registration_id as u32,
                                 user_id.to_string(),
-                            )?)));
-                        }
-                    }
+                                )?)
+                            }
+                            _ => None,
+                        };
+                        Arc::new(Mutex::new(engine))
+                    };
+                    let user_discovery = Shared::new(UserDiscovery::new(
+                        NativeUserDiscoveryStore::new(app_db.clone(), &config.data_dir),
+                        NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db_handle.clone()),
+                    )?);
                     Ok(Context::Flutter(TwonlyFlutter {
                         config,
                         secure_storage,
-                        rust_db,
-                        key_manager: Arc::new(Mutex::new(key_manager)),
-                        user_discovery: Shared::new(UserDiscovery::new(
-                            UserDiscoveryStoreFlutter {},
-                            UserDiscoveryUtilsFlutter {},
-                        )?),
+                        rust_db: rust_db_handle,
+                        app_db,
+                        key_manager,
+                        user_discovery,
                         signal_engine,
                     }))
                 } else {
                     Ok(Context::Standalone(TwonlyStandalone {
                         config,
-                        rust_db,
+                        rust_db: rust_db_handle,
+                        app_db,
                         key_manager: Arc::new(Mutex::new(key_manager)),
                         secure_storage,
                     }))
@@ -191,6 +236,52 @@ impl Context {
         match self {
             Self::Flutter(twonly) => Ok(twonly.key_manager.lock().await),
             Self::Standalone(twonly) => Ok(twonly.key_manager.lock().await),
+        }
+    }
+
+    pub(crate) async fn get_app_database(&self) -> Arc<AppDatabase> {
+        match self {
+            Self::Flutter(twonly) => twonly.app_db.read().await.clone(),
+            Self::Standalone(twonly) => twonly.app_db.read().await.clone(),
+        }
+    }
+
+    pub(crate) async fn get_rust_database(&self) -> Arc<Database> {
+        match self {
+            Self::Flutter(twonly) => twonly.rust_db.read().await.clone(),
+            Self::Standalone(twonly) => twonly.rust_db.read().await.clone(),
+        }
+    }
+
+    pub(crate) async fn replace_rust_database(
+        &self,
+        database: Database,
+        key_manager: &KeyManager,
+    ) -> Result<()> {
+        let database = Arc::new(database);
+        match self {
+            Self::Flutter(twonly) => {
+                *twonly.rust_db.write().await = database.clone();
+                let engine = match (key_manager.user_id, &key_manager.signal_identity) {
+                    (Some(user_id), Some(identity)) => Some(RustSignalEngine::new_with_pool(
+                        database.pool.clone(),
+                        identity.identity_key_pair_structure.clone(),
+                        identity.registration_id as u32,
+                        user_id.to_string(),
+                    )?),
+                    _ => None,
+                };
+                *twonly.signal_engine.lock().await = engine;
+            }
+            Self::Standalone(twonly) => *twonly.rust_db.write().await = database,
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn replace_app_database(&self, database: AppDatabase) {
+        match self {
+            Self::Flutter(twonly) => *twonly.app_db.write().await = Arc::new(database),
+            Self::Standalone(twonly) => *twonly.app_db.write().await = Arc::new(database),
         }
     }
 }

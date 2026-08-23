@@ -53,6 +53,27 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return query.map((row) => row.readTable(messages)).watch();
   }
 
+  Stream<List<Message>> watchAllMessagesNotOpened() {
+    final query =
+        select(messages).join([
+            leftOuterJoin(
+              mediaFiles,
+              mediaFiles.mediaId.equalsExp(messages.mediaId),
+            ),
+          ])
+          ..where(
+            messages.openedAt.isNull() &
+                messages.isDeletedFromSender.equals(false) &
+                (messages.mediaId.isNull() |
+                    mediaFiles.downloadState.isNull() |
+                    mediaFiles.downloadState
+                        .equals(DownloadState.reuploadRequested.name)
+                        .not()),
+          )
+          ..orderBy([OrderingTerm.desc(messages.createdAt)]);
+    return query.map((row) => row.readTable(messages)).watch();
+  }
+
   Stream<List<Message>> watchMediaNotOpened(String groupId) {
     final query =
         select(messages).join([
@@ -125,6 +146,38 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..limit(1);
 
     return query.map((row) => row.readTable(messages)).watchSingleOrNull();
+  }
+
+  Stream<List<Message>> watchLatestMessagesByGroup() {
+    return customSelect(
+      '''
+      SELECT message_rows.*
+      FROM (
+        SELECT messages.*,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC
+               ) AS message_rank
+        FROM messages
+        INNER JOIN groups ON groups.group_id = messages.group_id
+        LEFT JOIN media_files ON media_files.media_id = messages.media_id
+        WHERE (
+          messages.opened_at IS NULL OR
+          messages.media_stored = 1 OR
+          messages.opened_at > CAST(strftime('%s', 'now') AS INTEGER) -
+            (groups.delete_messages_after_milliseconds / 1000)
+        )
+        AND (
+          media_files.download_state IS NULL OR
+          media_files.download_state != 'reuploadRequested'
+        )
+      ) AS message_rows
+      WHERE message_rank = 1
+      ''',
+      readsFrom: {messages, groups, mediaFiles},
+    ).watch().map(
+      (rows) => rows.map((row) => messages.map(row.data)).toList(),
+    );
   }
 
   Future<Stream<List<Message>>> watchByGroupId(String groupId) async {
@@ -573,6 +626,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return query
         .map((row) => (row.readTable(messageActions), row.readTable(contacts)))
         .watch();
+  }
+
+  Stream<List<MessageAction>> watchMessageActionsForGroup(
+    String groupId,
+  ) {
+    final query = select(messageActions).join([
+      innerJoin(
+        messages,
+        messages.messageId.equalsExp(messageActions.messageId),
+        useColumns: false,
+      ),
+    ])..where(messages.groupId.equals(groupId));
+    return query.map((row) => row.readTable(messageActions)).watch();
   }
 
   Stream<List<MessageHistory>> watchMessageHistory(String messageId) {

@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                promotion_id,\n                public_id,\n                from_contact_id,\n                threshold,\n                announcement_share,\n                public_key_verified_timestamp\n            FROM user_discovery_other_promotions\n            WHERE public_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "promotion_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "promotion_id"
+          }
+        }
+      },
+      {
+        "name": "public_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "public_id"
+          }
+        }
+      },
+      {
+        "name": "from_contact_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "from_contact_id"
+          }
+        }
+      },
+      {
+        "name": "threshold",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "threshold"
+          }
+        }
+      },
+      {
+        "name": "announcement_share",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "announcement_share"
+          }
+        }
+      },
+      {
+        "name": "public_key_verified_timestamp",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_other_promotions",
+            "name": "public_key_verified_timestamp"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "229b83c3c0777a900e71c71d83920a2b93f5df34f29921263f0c960fe0a34ceb"
+}

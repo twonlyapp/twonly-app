@@ -8,6 +8,5 @@ mod keys;
 mod log;
 mod secure_storage;
 pub mod signal;
-mod standalone;
 mod user_discovery;
 mod utils;

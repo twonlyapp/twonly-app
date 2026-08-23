@@ -177,6 +177,32 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
+  Stream<List<MediaFile>> watchChatListMediaFiles() {
+    return customSelect(
+      '''
+      WITH ranked_messages AS (
+        SELECT messages.media_id,
+               messages.opened_at,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC
+               ) AS message_rank
+        FROM messages
+        WHERE messages.media_id IS NOT NULL
+      )
+      SELECT DISTINCT media_files.*
+      FROM media_files
+      INNER JOIN ranked_messages
+        ON ranked_messages.media_id = media_files.media_id
+      WHERE ranked_messages.message_rank = 1
+         OR ranked_messages.opened_at IS NULL
+      ''',
+      readsFrom: {mediaFiles, db.messages},
+    ).watch().map(
+      (rows) => rows.map((row) => mediaFiles.map(row.data)).toList(),
+    );
+  }
+
   Future<void> updateAllRetransmissionUploadingState() async {
     await (update(mediaFiles)..where(
           (t) =>

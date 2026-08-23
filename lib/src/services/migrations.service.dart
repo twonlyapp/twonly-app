@@ -7,6 +7,7 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/src/database/signal.db.dart';
 import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart'
     show getSignalSignedPreKeyStoreOld;
 import 'package:twonly/src/database/tables/contacts.table.dart';
@@ -129,8 +130,8 @@ Future<void> runMigrations() async {
           signedPreKeyId: Value(entry.key),
           signedPreKey: Value(entry.value),
         );
-        await twonlyDB
-            .into(twonlyDB.signalSignedPreKeyStores)
+        await signalDB
+            .into(signalDB.signalSignedPreKeyStores)
             .insert(
               companion,
               mode: InsertMode.insertOrReplace,

@@ -20,7 +20,7 @@ class FriendlyMessageTime extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusIcon = _buildStatusIcon(Colors.grey.shade400);
+    final statusIcon = _buildStatusIcon(context, Colors.grey.shade400);
 
     return Padding(
       padding: const EdgeInsets.only(left: 6),
@@ -59,7 +59,7 @@ class FriendlyMessageTime extends StatelessWidget {
     );
   }
 
-  Widget? _buildStatusIcon(Color iconColor) {
+  Widget? _buildStatusIcon(BuildContext context, Color iconColor) {
     if (message.type != MessageType.text.name || message.senderId != null) {
       return null;
     }
@@ -82,7 +82,14 @@ class FriendlyMessageTime extends StatelessWidget {
       );
     }
 
-    // Now check message actions for ackByUserAt
+    final sharedAckState = ChatMessageActionScope.maybeOf(context);
+    if (sharedAckState != null) {
+      return _ackIcon(
+        iconColor,
+        sharedAckState.ackedMessageIds.contains(message.messageId),
+      );
+    }
+
     return StreamBuilder<List<(MessageAction, Contact)>>(
       stream: twonlyDB.messagesDao.watchMessageActions(message.messageId),
       builder: (context, snapshot) {
@@ -91,28 +98,36 @@ class FriendlyMessageTime extends StatelessWidget {
           (t) => t.$1.type == MessageActionType.ackByUserAt,
         );
 
-        if (hasAckByUser) {
-          return Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: FaIcon(
-              FontAwesomeIcons.checkDouble,
-              size: 8,
-              color: iconColor,
-            ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: FaIcon(
-            FontAwesomeIcons.check,
-            size: 8,
-            color: iconColor,
-          ),
-        );
+        return _ackIcon(iconColor, hasAckByUser);
       },
     );
   }
+
+  Widget _ackIcon(Color iconColor, bool acknowledged) => Padding(
+    padding: const EdgeInsets.only(left: 4),
+    child: FaIcon(
+      acknowledged ? FontAwesomeIcons.checkDouble : FontAwesomeIcons.check,
+      size: 8,
+      color: iconColor,
+    ),
+  );
+}
+
+class ChatMessageActionScope extends InheritedWidget {
+  const ChatMessageActionScope({
+    required this.ackedMessageIds,
+    required super.child,
+    super.key,
+  });
+
+  final Set<String> ackedMessageIds;
+
+  static ChatMessageActionScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ChatMessageActionScope>();
+
+  @override
+  bool updateShouldNotify(ChatMessageActionScope oldWidget) =>
+      ackedMessageIds != oldWidget.ackedMessageIds;
 }
 
 String friendlyTime(BuildContext context, DateTime dt) {

@@ -1,8 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart'
-    show DriftNativeOptions, driftDatabase;
-import 'package:path_provider/path_provider.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
@@ -13,7 +9,7 @@ import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
 import 'package:twonly/src/database/daos/shortcuts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
-import 'package:twonly/src/database/drift_logging_interceptor.dart';
+import 'package:twonly/src/database/rust_query_executor.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/labels.table.dart';
@@ -22,11 +18,6 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
 import 'package:twonly/src/database/tables/shortcuts.table.dart';
-import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
-import 'package:twonly/src/database/tables/signal_session_store.table.dart';
-import 'package:twonly/src/database/tables/signal_signed_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -45,11 +36,6 @@ part 'twonly.db.g.dart';
     GroupMembers,
     Receipts,
     ReceivedReceipts,
-    SignalIdentityKeyStores,
-    SignalPreKeyStores,
-    SignalSenderKeyStores,
-    SignalSessionStores,
-    SignalSignedPreKeyStores,
     MessageActions,
     GroupHistories,
     KeyVerifications,
@@ -80,7 +66,7 @@ part 'twonly.db.g.dart';
 class TwonlyDB extends _$TwonlyDB {
   TwonlyDB([QueryExecutor? e])
     : super(
-        e ?? _openConnection(),
+        e ?? openRustAppDatabase(),
       );
 
   // ignore: matching_super_parameters
@@ -88,29 +74,6 @@ class TwonlyDB extends _$TwonlyDB {
 
   @override
   int get schemaVersion => 25;
-
-  static QueryExecutor _openConnection() {
-    final connection = driftDatabase(
-      name: 'twonly',
-      native: DriftNativeOptions(
-        databaseDirectory: getApplicationSupportDirectory,
-        shareAcrossIsolates: true,
-        setup: (rawDb) {
-          rawDb
-            ..execute('PRAGMA journal_mode=DELETE;')
-            ..execute('PRAGMA synchronous=FULL;')
-            ..execute('PRAGMA busy_timeout=5000;');
-        },
-      ),
-    );
-    try {
-      if (userService.isUserCreated &&
-          userService.currentUser.enableDatabaseLogging) {
-        return connection.interceptWith(DriftLoggingInterceptor());
-      }
-    } catch (_) {}
-    return connection;
-  }
 
   @override
   MigrationStrategy get migration {

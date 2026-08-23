@@ -11,6 +11,7 @@ class ContactLabels extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     this.emptyText,
     this.showEmptyText = false,
+    this.labels,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class ContactLabels extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final String? emptyText;
   final bool showEmptyText;
+  final List<Label>? labels;
 
   @override
   State<ContactLabels> createState() => _ContactLabelsState();
@@ -31,20 +33,32 @@ class _ContactLabelsState extends State<ContactLabels> {
   @override
   void initState() {
     super.initState();
-    _sub = twonlyDB.labelsDao.watchContactLabels(widget.contactId).listen((
-      labels,
-    ) {
-      if (mounted) {
-        setState(() {
-          _labels = labels;
-        });
-      }
-    });
+    if (widget.labels != null) {
+      _labels = widget.labels!;
+    } else {
+      _sub = twonlyDB.labelsDao.watchContactLabels(widget.contactId).listen((
+        labels,
+      ) {
+        if (mounted) {
+          setState(() {
+            _labels = labels;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(ContactLabels oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.labels != null && widget.labels != oldWidget.labels) {
+      _labels = widget.labels!;
+    }
   }
 
   @override
   void dispose() {
-    _sub.cancel();
+    if (widget.labels == null) _sub.cancel();
     super.dispose();
   }
 
@@ -101,8 +115,7 @@ Widget? buildContactLabelsSubtitle({
       mainAxisSize: MainAxisSize.min,
       children: [
         additionalSubtitle,
-        if (labels.isNotEmpty)
-          ContactLabels(contactId: contactId),
+        if (labels.isNotEmpty) ContactLabels(contactId: contactId),
       ],
     );
   }

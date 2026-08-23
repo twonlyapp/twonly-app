@@ -7,34 +7,10 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_twonly_flutter`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `TwonlyFlutter`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AnnouncedUser`, `OtherPromotion`, `TwonlyFlutter`
 
 Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);
-
-class AnnouncedUser {
-  final PlatformInt64 userId;
-  final Uint8List publicKey;
-  final PlatformInt64 publicId;
-
-  const AnnouncedUser({
-    required this.userId,
-    required this.publicKey,
-    required this.publicId,
-  });
-
-  @override
-  int get hashCode => userId.hashCode ^ publicKey.hashCode ^ publicId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AnnouncedUser &&
-          runtimeType == other.runtimeType &&
-          userId == other.userId &&
-          publicKey == other.publicKey &&
-          publicId == other.publicId;
-}
 
 class InitConfig {
   final String databaseDir;
@@ -55,43 +31,4 @@ class InitConfig {
           runtimeType == other.runtimeType &&
           databaseDir == other.databaseDir &&
           dataDir == other.dataDir;
-}
-
-class OtherPromotion {
-  final int promotionId;
-  final PlatformInt64 publicId;
-  final PlatformInt64 fromContactId;
-  final int threshold;
-  final Uint8List announcementShare;
-  final PlatformInt64? publicKeyVerifiedTimestamp;
-
-  const OtherPromotion({
-    required this.promotionId,
-    required this.publicId,
-    required this.fromContactId,
-    required this.threshold,
-    required this.announcementShare,
-    this.publicKeyVerifiedTimestamp,
-  });
-
-  @override
-  int get hashCode =>
-      promotionId.hashCode ^
-      publicId.hashCode ^
-      fromContactId.hashCode ^
-      threshold.hashCode ^
-      announcementShare.hashCode ^
-      publicKeyVerifiedTimestamp.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OtherPromotion &&
-          runtimeType == other.runtimeType &&
-          promotionId == other.promotionId &&
-          publicId == other.publicId &&
-          fromContactId == other.fromContactId &&
-          threshold == other.threshold &&
-          announcementShare == other.announcementShare &&
-          publicKeyVerifiedTimestamp == other.publicKeyVerifiedTimestamp;
 }

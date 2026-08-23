@@ -1,6 +1,6 @@
 #[tokio::test]
 async fn test_twonly_api_100_messages() -> Result<(), Box<dyn std::error::Error>> {
-    use rust_lib_twonly::database::Database;
+    use rust_lib_twonly::database::signal::Database;
     use rust_lib_twonly::signal::engine::RustSignalEngine;
 
     let _ = pretty_env_logger::try_init();

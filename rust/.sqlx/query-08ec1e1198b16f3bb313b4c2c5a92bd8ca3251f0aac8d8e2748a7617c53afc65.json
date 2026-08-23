@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT identity_key\n            FROM signal_identities\n            WHERE name = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "identity_key",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "signal_identities",
+            "name": "identity_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "08ec1e1198b16f3bb313b4c2c5a92bd8ca3251f0aac8d8e2748a7617c53afc65"
+}

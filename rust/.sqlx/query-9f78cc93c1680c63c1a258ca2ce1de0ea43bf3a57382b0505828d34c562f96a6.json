@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                announced_user_id,\n                announced_public_key,\n                public_id\n            FROM user_discovery_announced_users\n            WHERE public_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "announced_user_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "announced_user_id"
+          }
+        }
+      },
+      {
+        "name": "announced_public_key",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "announced_public_key"
+          }
+        }
+      },
+      {
+        "name": "public_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "public_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9f78cc93c1680c63c1a258ca2ce1de0ea43bf3a57382b0505828d34c562f96a6"
+}

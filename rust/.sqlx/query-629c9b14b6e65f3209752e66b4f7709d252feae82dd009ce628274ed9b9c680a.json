@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE user_discovery_shares\n            SET contact_id = ?\n            WHERE share_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "629c9b14b6e65f3209752e66b4f7709d252feae82dd009ce628274ed9b9c680a"
+}

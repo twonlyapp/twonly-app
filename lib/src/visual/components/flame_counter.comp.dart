@@ -3,17 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 
 class FlameCounterWidget extends StatefulWidget {
   const FlameCounterWidget({
     this.groupId,
     this.contactId,
+    this.group,
     this.prefix = false,
     super.key,
   });
   final String? groupId;
   final int? contactId;
+  final Group? group;
   final bool prefix;
 
   @override
@@ -34,6 +37,14 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
   }
 
   @override
+  void didUpdateWidget(FlameCounterWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.group != null && widget.group != oldWidget.group) {
+      initAsync();
+    }
+  }
+
+  @override
   void dispose() {
     flameCounterSub?.cancel();
     super.dispose();
@@ -41,8 +52,10 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
 
   Future<void> initAsync() async {
     var groupId = widget.groupId;
-    late Group? group;
-    if (widget.groupId == null && widget.contactId != null) {
+    var group = widget.group;
+    if (group != null) {
+      groupId = group.groupId;
+    } else if (widget.groupId == null && widget.contactId != null) {
       group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
       groupId = group?.groupId;
     } else if (groupId != null) {
@@ -52,6 +65,16 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
       isBestFriend =
           userService.currentUser.myBestFriendGroupId == groupId &&
           group.alsoBestFriend;
+      if (widget.group != null) {
+        final result = getFlameCounterFromGroup(group);
+        if (mounted) {
+          setState(() {
+            flameCounter = result.counter;
+            isExpiring = result.isExpiring;
+          });
+        }
+        return;
+      }
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
       flameCounterSub = stream.listen((result) {
         if (mounted) {

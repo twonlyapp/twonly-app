@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/database/signal.db.dart';
 
 class SignalSenderKeyStore extends SenderKeyStore {
   @override
   Future<SenderKeyRecord> loadSenderKey(SenderKeyName senderKeyName) async {
     final identity =
-        await (twonlyDB.select(twonlyDB.signalSenderKeyStores)
+        await (signalDB.select(signalDB.signalSenderKeyStores)
               ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
             .getSingleOrNull();
     if (identity == null) {
@@ -23,8 +23,8 @@ class SignalSenderKeyStore extends SenderKeyStore {
     SenderKeyName senderKeyName,
     SenderKeyRecord record,
   ) async {
-    await twonlyDB
-        .into(twonlyDB.signalSenderKeyStores)
+    await signalDB
+        .into(signalDB.signalSenderKeyStores)
         .insert(
           SignalSenderKeyStoresCompanion(
             senderKey: Value(record.serialize()),

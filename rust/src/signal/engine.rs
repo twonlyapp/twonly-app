@@ -44,7 +44,7 @@ pub struct FrbPqcPreKey {
 impl RustSignalEngine {
     pub async fn new(local_name: String) -> Result<Self> {
         let twonly = get_twonly_flutter()?;
-        let pool = twonly.rust_db.pool.clone();
+        let pool = twonly.rust_db.read().await.pool.clone();
 
         let km = twonly.key_manager.lock().await;
         let signal_identity = km
@@ -541,10 +541,13 @@ mod tests {
         // create the file manually just to be sure
         std::fs::File::create(&db_path).unwrap();
 
-        let db =
-            crate::database::Database::new(&db_path.to_str().unwrap().to_string(), None, false)
-                .await
-                .unwrap();
+        let db = crate::database::signal::Database::new(
+            &db_path.to_str().unwrap().to_string(),
+            None,
+            false,
+        )
+        .await
+        .unwrap();
         db.run_migrations().await.unwrap();
         let pool = db.pool.clone();
 
@@ -567,7 +570,7 @@ mod tests {
     async fn test_generate_pqc_prekeys() {
         let (engine, _dir) = create_test_engine("alice").await;
         let prekeys = engine.generate_pqc_prekeys().await.unwrap();
-        assert_eq!(prekeys.len(), 50);
+        assert_eq!(prekeys.len(), 30);
         for prekey in prekeys {
             assert!(prekey.ecc_pre_key.len() > 0);
             assert!(prekey.kyber_pre_key.len() > 0);

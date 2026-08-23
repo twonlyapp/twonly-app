@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mutex/mutex.dart';
@@ -7,11 +9,13 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/wrapper/app_database.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -55,6 +59,19 @@ Future<bool> twonlyMinimumInitialization() async {
             dataDir: AppEnvironment.supportDir,
           ),
         );
+        if (!await RustAppDatabase.legacyImportComplete()) {
+          final legacyFile = File(
+            '${AppEnvironment.supportDir}/twonly.sqlite',
+          );
+          if (legacyFile.existsSync()) {
+            final legacyDatabase = TwonlyDB(NativeDatabase(legacyFile));
+            // Opening the database applies every existing Drift migration up
+            // to v25 before Rust copies the application tables.
+            await legacyDatabase.customSelect('PRAGMA user_version').getSingle();
+            await legacyDatabase.close();
+          }
+          await RustAppDatabase.migrateLegacyDatabase();
+        }
       } catch (e) {
         Log.error(e);
         return true;

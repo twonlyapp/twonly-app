@@ -13,6 +13,7 @@ class AvatarIcon extends StatefulWidget {
   const AvatarIcon({
     super.key,
     this.group,
+    this.contacts,
     this.contactId,
     this.myAvatar = false,
     this.fontSize = 20,
@@ -20,6 +21,7 @@ class AvatarIcon extends StatefulWidget {
     this.color,
   });
   final Group? group;
+  final List<Contact>? contacts;
   final int? contactId;
   final bool myAvatar;
   final double? fontSize;
@@ -43,6 +45,21 @@ class _AvatarIconState extends State<AvatarIcon> {
   void initState() {
     super.initState();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(AvatarIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.contacts != null && widget.contacts != oldWidget.contacts) {
+      _setAvatarContacts(widget.contacts!);
+    }
+  }
+
+  void _setAvatarContacts(List<Contact> contacts) {
+    _avatarContacts = contacts
+        .where((contact) => contact.avatarSvgCompressed != null)
+        .toList();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -84,7 +101,9 @@ class _AvatarIconState extends State<AvatarIcon> {
   }
 
   Future<void> initAsync() async {
-    if (widget.group != null) {
+    if (widget.contacts != null) {
+      _setAvatarContacts(widget.contacts!);
+    } else if (widget.group != null) {
       groupStream = twonlyDB.groupsDao
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -25,10 +26,51 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/blink.com
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_date_chip.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/in_chat_group_overview.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
+
+class _MessageAnimationState {
+  bool hasReceivedFirstBatch = false;
+  final HashSet<String> knownMessageIds = HashSet<String>();
+  final HashSet<String> animateMessageIds = HashSet<String>();
+}
+
+class _ChatViewData {
+  Map<int, Contact> contactsById = {};
+  Map<String, MediaFile> mediaFilesById = {};
+  Map<String, List<Reaction>> reactionsByMessageId = {};
+  Set<String> ackedMessageIds = {};
+
+  List<ChatItem> chatItems = [];
+  List<Message> allMessages = [];
+  Map<String, Message> messagesById = {};
+  List<GroupHistory> groupActions = [];
+  List<MemoryItem> galleryItems = [];
+  Set<String> galleryMessageIds = {};
+}
+
+class _ChatSubscriptions {
+  StreamSubscription<Group?>? group;
+  StreamSubscription<List<Message>>? messages;
+  StreamSubscription<List<GroupHistory>>? groupActions;
+  StreamSubscription<List<Contact>>? contacts;
+  StreamSubscription<List<MediaFile>>? media;
+  StreamSubscription<List<Reaction>>? reactions;
+  StreamSubscription<List<MessageAction>>? messageActions;
+
+  void cancelAll() {
+    group?.cancel();
+    messages?.cancel();
+    groupActions?.cancel();
+    contacts?.cancel();
+    media?.cancel();
+    reactions?.cancel();
+    messageActions?.cancel();
+  }
+}
 
 class ChatMessagesView extends StatefulWidget {
   const ChatMessagesView(this.groupId, {super.key});
@@ -43,23 +85,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     with WidgetsBindingObserver {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
 
-  bool _hasReceivedFirstMessageBatch = false;
-  final HashSet<String> _knownMessageIds = HashSet<String>();
-  final HashSet<String> _animateMessageIds = HashSet<String>();
-
-  StreamSubscription<Group?>? userSub;
-  StreamSubscription<List<Message>>? messageSub;
-  StreamSubscription<List<GroupHistory>>? groupActionsSub;
-  StreamSubscription<List<Contact>>? contactSub;
+  final _animationState = _MessageAnimationState();
+  final _subscriptions = _ChatSubscriptions();
+  final _data = _ChatViewData();
 
   Group? _group;
-
-  Map<int, Contact> userIdToContact = {};
-
-  List<ChatItem> messages = [];
-  List<Message> allMessages = [];
-  List<GroupHistory> groupActions = [];
-  List<MemoryItem> galleryItems = [];
+  List<Contact> _groupContacts = [];
   Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
   FocusNode? textFieldFocus;
@@ -79,10 +110,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   @override
   void dispose() {
-    userSub?.cancel();
-    messageSub?.cancel();
-    contactSub?.cancel();
-    groupActionsSub?.cancel();
+    _subscriptions.cancelAll();
     _nextTypingIndicator?.cancel();
     try {
       textFieldFocus?.dispose();
@@ -100,43 +128,86 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   Future<void> initStreams() async {
     final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
-    userSub = groupStream.listen((newGroup) {
+    _subscriptions.group = groupStream.listen((newGroup) {
       if (newGroup == null) return;
       if (!mounted) return;
       setState(() {
         _group = newGroup;
       });
 
-      if (groupActionsSub == null) {
+      if (_subscriptions.groupActions == null) {
         final actionsStream = twonlyDB.groupsDao.watchGroupActions(
           newGroup.groupId,
         );
-        groupActionsSub = actionsStream.listen((update) async {
-          groupActions = update;
-          await setMessages(allMessages, update);
+        _subscriptions.groupActions = actionsStream.listen((update) async {
+          _data.groupActions = update;
+          await setMessages(_data.allMessages, update);
         });
 
         final contactsStream = twonlyDB.contactsDao.watchAllContacts();
-        contactSub = contactsStream.listen((contacts) {
+        _subscriptions.contacts = contactsStream.listen((contacts) {
+          final contactMap = <int, Contact>{};
           for (final contact in contacts) {
-            userIdToContact[contact.userId] = contact;
+            contactMap[contact.userId] = contact;
           }
+          if (mounted) setState(() => _data.contactsById = contactMap);
         });
       }
     });
 
     final msgStream = await twonlyDB.messagesDao.watchByGroupId(widget.groupId);
-    messageSub = msgStream.listen((update) async {
-      allMessages = update;
-      await setMessages(update, groupActions);
-      _hasReceivedFirstMessageBatch = true;
+    _subscriptions.messages = msgStream.listen((update) async {
+      _data.allMessages = update;
+      _data.messagesById = {
+        for (final message in update) message.messageId: message,
+      };
+      await setMessages(update, _data.groupActions);
+      _animationState.hasReceivedFirstBatch = true;
     });
+
+    _subscriptions.media = twonlyDB.mediaFilesDao
+        .watchMediaFilesForGroup(widget.groupId)
+        .listen((mediaFiles) {
+          if (!mounted) return;
+          setState(
+            () => _data.mediaFilesById = {
+              for (final mediaFile in mediaFiles) mediaFile.mediaId: mediaFile,
+            },
+          );
+        });
+    _subscriptions.reactions = twonlyDB.reactionsDao
+        .watchReactionsForGroup(widget.groupId)
+        .listen((reactions) {
+          if (!mounted) return;
+          final byMessage = <String, List<Reaction>>{};
+          for (final reaction in reactions) {
+            byMessage.putIfAbsent(reaction.messageId, () => []).add(reaction);
+          }
+          setState(() => _data.reactionsByMessageId = byMessage);
+        });
+    _subscriptions.messageActions = twonlyDB.messagesDao
+        .watchMessageActionsForGroup(widget.groupId)
+        .listen((actions) {
+          if (!mounted) return;
+          setState(
+            () => _data.ackedMessageIds = actions
+                .where(
+                  (action) => action.type == MessageActionType.ackByUserAt,
+                )
+                .map((action) => action.messageId)
+                .toSet(),
+          );
+        });
 
     final groupContacts = await twonlyDB.groupsDao.getGroupContact(
       widget.groupId,
     );
-    if (groupContacts.length == 1) {
-      _receiverDeletedAccount = groupContacts.first.accountDeleted;
+    if (mounted) {
+      setState(() {
+        _groupContacts = groupContacts;
+        _receiverDeletedAccount =
+            groupContacts.length == 1 && groupContacts.first.accountDeleted;
+      });
     }
 
     if (userService.currentUser.typingIndicators) {
@@ -160,12 +231,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     }
 
     for (final msg in newMessages) {
-      if (_hasReceivedFirstMessageBatch &&
-          !_knownMessageIds.contains(msg.messageId) &&
+      if (_animationState.hasReceivedFirstBatch &&
+          !_animationState.knownMessageIds.contains(msg.messageId) &&
           msg.senderId == null) {
-        _animateMessageIds.add(msg.messageId);
+        _animationState.animateMessageIds.add(msg.messageId);
       }
-      _knownMessageIds.add(msg.messageId);
+      _animationState.knownMessageIds.add(msg.messageId);
     }
 
     final chatItems = <ChatItem>[];
@@ -230,13 +301,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     }
 
     final wasSentByMe =
-        _hasReceivedFirstMessageBatch &&
+        _animationState.hasReceivedFirstBatch &&
         newMessages.isNotEmpty &&
         newMessages.last.senderId == null;
 
     if (!mounted) return;
     setState(() {
-      messages = chatItems.reversed.toList();
+      _data.chatItems = chatItems.reversed.toList();
     });
 
     if (wasSentByMe) {
@@ -255,14 +326,20 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
       });
     }
 
+    final galleryMessageIds = storedMediaFiles
+        .map((message) => message.messageId)
+        .toSet();
+    if (setEquals(_data.galleryMessageIds, galleryMessageIds)) return;
     final items = await MemoryItem.convertFromMessages(storedMediaFiles);
     if (!mounted) return;
-    galleryItems = items.values.toList();
-    setState(() {});
+    setState(() {
+      _data.galleryMessageIds = galleryMessageIds;
+      _data.galleryItems = items.values.toList();
+    });
   }
 
   Future<void> scrollToMessage(String messageId) async {
-    final index = messages.indexWhere(
+    final index = _data.chatItems.indexWhere(
       (x) => x.isMessage && x.message!.messageId == messageId,
     );
     if (index == -1) return;
@@ -309,6 +386,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
               children: [
                 AvatarIcon(
                   group: group,
+                  contacts: _groupContacts,
                   fontSize: 19,
                 ),
                 const SizedBox(width: 10),
@@ -330,7 +408,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                               group: group,
                             ),
                             const SizedBox(width: 10),
-                            FlameCounterWidget(groupId: group.groupId),
+                            FlameCounterWidget(group: group),
                           ],
                         ),
                         if (group.isDirectChat)
@@ -362,69 +440,84 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
               Expanded(
                 child: Align(
                   alignment: Alignment.topCenter,
-                  child: ScrollablePositionedList.builder(
-                    shrinkWrap: true,
-                    reverse: true,
-                    itemCount: messages.length + 1 + 1,
-                    itemScrollController: itemScrollController,
-                    itemBuilder: (context, i) {
-                      if (i == 0) {
-                        return userService.currentUser.typingIndicators
-                            ? TypingIndicator(group: group)
-                            : Container();
-                      }
-                      i -= 1;
-                      if (i == messages.length) {
-                        return Padding(
-                          key: Key('overview_${group.groupId}'),
-                          padding: const EdgeInsets.only(top: 10),
-                          child: InChatGroupOverview(
-                            group: group,
-                          ),
-                        );
-                      }
-                      if (messages[i].isDate) {
-                        return ChatDateChip(
-                          item: messages[i],
-                        );
-                      } else if (messages[i].isGroupAction) {
-                        return ChatGroupAction(
-                          key: Key(messages[i].groupAction!.groupHistoryId),
-                          action: messages[i].groupAction!,
-                        );
-                      } else {
-                        final chatMessage = messages[i].message!;
-                        return BlinkWidget(
-                          key: Key('blink_${chatMessage.messageId}'),
-                          enabled: focusedScrollItem == i,
-                          child: AnimatedNewMessage(
-                            key: Key('anim_${chatMessage.messageId}'),
-                            messageId: chatMessage.messageId,
-                            animateIds: _animateMessageIds,
-                            child: ChatListEntry(
-                              key: Key(chatMessage.messageId),
-                              message: messages[i].message!,
-                              nextMessage: (i > 0)
-                                  ? messages[i - 1].message
-                                  : null,
-                              prevMessage: ((i + 1) < messages.length)
-                                  ? messages[i + 1].message
-                                  : null,
+                  child: ChatMessageActionScope(
+                    ackedMessageIds: _data.ackedMessageIds,
+                    child: ScrollablePositionedList.builder(
+                      reverse: true,
+                      itemCount: _data.chatItems.length + 1 + 1,
+                      itemScrollController: itemScrollController,
+                      itemBuilder: (context, i) {
+                        if (i == 0) {
+                          return userService.currentUser.typingIndicators
+                              ? TypingIndicator(group: group)
+                              : Container();
+                        }
+                        i -= 1;
+                        if (i == _data.chatItems.length) {
+                          return Padding(
+                            key: Key('overview_${group.groupId}'),
+                            padding: const EdgeInsets.only(top: 10),
+                            child: InChatGroupOverview(
                               group: group,
-                              galleryItems: galleryItems,
-                              userIdToContact: userIdToContact,
-                              scrollToMessage: scrollToMessage,
-                              onResponseTriggered: () {
-                                setState(() {
-                                  quotesMessage = chatMessage;
-                                });
-                                textFieldFocus?.requestFocus();
-                              },
                             ),
-                          ),
-                        );
-                      }
-                    },
+                          );
+                        }
+                        if (_data.chatItems[i].isDate) {
+                          return ChatDateChip(
+                            item: _data.chatItems[i],
+                          );
+                        } else if (_data.chatItems[i].isGroupAction) {
+                          return ChatGroupAction(
+                            key: Key(
+                              _data.chatItems[i].groupAction!.groupHistoryId,
+                            ),
+                            action: _data.chatItems[i].groupAction!,
+                            contactsById: _data.contactsById,
+                          );
+                        } else {
+                          final chatMessage = _data.chatItems[i].message!;
+                          return BlinkWidget(
+                            key: Key('blink_${chatMessage.messageId}'),
+                            enabled: focusedScrollItem == i,
+                            child: AnimatedNewMessage(
+                              key: Key('anim_${chatMessage.messageId}'),
+                              messageId: chatMessage.messageId,
+                              animateIds: _animationState.animateMessageIds,
+                              child: ChatListEntry(
+                                key: Key(chatMessage.messageId),
+                                message: _data.chatItems[i].message!,
+                                nextMessage: (i > 0)
+                                    ? _data.chatItems[i - 1].message
+                                    : null,
+                                prevMessage: ((i + 1) < _data.chatItems.length)
+                                    ? _data.chatItems[i + 1].message
+                                    : null,
+                                group: group,
+                                galleryItems: _data.galleryItems,
+                                userIdToContact: _data.contactsById,
+                                mediaFile: chatMessage.mediaId == null
+                                    ? null
+                                    : _data.mediaFilesById[chatMessage.mediaId],
+                                reactions:
+                                    _data.reactionsByMessageId[chatMessage
+                                        .messageId] ??
+                                    const [],
+                                messagesById: _data.messagesById,
+                                mediaFilesById: _data.mediaFilesById,
+                                useSharedData: true,
+                                scrollToMessage: scrollToMessage,
+                                onResponseTriggered: () {
+                                  setState(() {
+                                    quotesMessage = chatMessage;
+                                  });
+                                  textFieldFocus?.requestFocus();
+                                },
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),

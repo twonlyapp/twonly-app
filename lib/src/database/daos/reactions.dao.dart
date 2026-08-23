@@ -108,6 +108,20 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .watch();
   }
 
+  Stream<List<Reaction>> watchReactionsForGroup(String groupId) {
+    final query =
+        select(reactions).join([
+            innerJoin(
+              messages,
+              messages.messageId.equalsExp(reactions.messageId),
+              useColumns: false,
+            ),
+          ])
+          ..where(messages.groupId.equals(groupId))
+          ..orderBy([OrderingTerm.desc(reactions.createdAt)]);
+    return query.map((row) => row.readTable(reactions)).watch();
+  }
+
   Stream<Reaction?> watchLastReactions(String groupId) {
     final query =
         (select(reactions)).join(
@@ -123,6 +137,35 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
           ..orderBy([OrderingTerm.desc(messages.createdAt)])
           ..limit(1);
     return query.map((row) => row.readTable(reactions)).watchSingleOrNull();
+  }
+
+  Stream<List<(String, Reaction)>> watchLatestReactionsByGroup() {
+    return customSelect(
+      '''
+      SELECT reaction_rows.*
+      FROM (
+        SELECT reactions.*,
+               messages.group_id AS reaction_group_id,
+               ROW_NUMBER() OVER (
+                 PARTITION BY messages.group_id
+                 ORDER BY messages.created_at DESC, reactions.created_at DESC
+               ) AS reaction_rank
+        FROM reactions
+        INNER JOIN messages ON messages.message_id = reactions.message_id
+      ) AS reaction_rows
+      WHERE reaction_rank = 1
+      ''',
+      readsFrom: {reactions, messages},
+    ).watch().map(
+      (rows) => rows
+          .map(
+            (row) => (
+              row.read<String>('reaction_group_id'),
+              reactions.map(row.data),
+            ),
+          )
+          .toList(),
+    );
   }
 
   Stream<List<(Reaction, Contact?)>> watchReactionWithContacts(

@@ -111,15 +111,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) =>
               json['passwordLessRecovery'] as Map<String, dynamic>,
             )
       ..fcmToken = json['fcmToken'] as String?
-      ..askedForUserStudyPermission =
-          json['askedForUserStudyPermission'] as bool? ?? false
-      ..userStudyParticipantsToken =
-          json['userStudyParticipantsToken'] as String?
-      ..userStudyCountNewFriendsViaSuggestion =
-          (json['userStudyCountNewFriendsViaSuggestion'] as num?)?.toInt() ?? 0
-      ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
-          ? null
-          : DateTime.parse(json['lastUserStudyDataUpload'] as String)
       ..skipSetupPages = json['skipSetupPages'] as bool? ?? false
       ..hasZoomed = json['hasZoomed'] as bool? ?? false;
 
@@ -184,12 +175,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
   'isBackupEnabled': instance.isBackupEnabled,
   'passwordLessRecovery': instance.passwordLessRecovery,
   'fcmToken': instance.fcmToken,
-  'askedForUserStudyPermission': instance.askedForUserStudyPermission,
-  'userStudyParticipantsToken': instance.userStudyParticipantsToken,
-  'userStudyCountNewFriendsViaSuggestion':
-      instance.userStudyCountNewFriendsViaSuggestion,
-  'lastUserStudyDataUpload': instance.lastUserStudyDataUpload
-      ?.toIso8601String(),
   'currentSetupPage': instance.currentSetupPage,
   'skipSetupPages': instance.skipSetupPages,
   'hasZoomed': instance.hasZoomed,

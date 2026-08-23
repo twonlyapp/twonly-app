@@ -37,6 +37,11 @@ class ChatListEntry extends StatefulWidget {
     this.nextMessage,
     this.userIdToContact,
     this.hideReactions = false,
+    this.mediaFile,
+    this.reactions,
+    this.messagesById,
+    this.mediaFilesById,
+    this.useSharedData = false,
     super.key,
   });
   final Message? prevMessage;
@@ -45,6 +50,11 @@ class ChatListEntry extends StatefulWidget {
   final Group group;
   final Map<int, Contact>? userIdToContact;
   final bool hideReactions;
+  final MediaFile? mediaFile;
+  final List<Reaction>? reactions;
+  final Map<String, Message>? messagesById;
+  final Map<String, MediaFile>? mediaFilesById;
+  final bool useSharedData;
   final List<MemoryItem> galleryItems;
   final void Function(String)? scrollToMessage;
   final void Function()? onResponseTriggered;
@@ -64,7 +74,22 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void initState() {
     super.initState();
+    _applySharedData();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(ChatListEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.useSharedData) _applySharedData();
+  }
+
+  void _applySharedData() {
+    if (!widget.useSharedData) return;
+    reactions = widget.reactions ?? const [];
+    mediaService = widget.mediaFile == null
+        ? null
+        : MediaFileService(widget.mediaFile!);
   }
 
   @override
@@ -75,6 +100,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   }
 
   Future<void> initAsync() async {
+    if (widget.useSharedData) return;
     if (widget.message.mediaId != null) {
       final mediaFileStream = twonlyDB.mediaFilesDao.watchMedia(
         widget.message.mediaId!,
@@ -131,6 +157,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         group: widget.group,
         mediaService: mediaService!,
         galleryItems: widget.galleryItems,
+        useSharedData: widget.useSharedData,
         borderRadius: borderRadius,
         info: info,
       );
@@ -225,6 +252,15 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 mediaService: mediaService,
                 borderRadius: borderRadius,
                 scrollToMessage: widget.scrollToMessage,
+                quotedMessage: widget.msgQuote(
+                  messagesById: widget.messagesById,
+                ),
+                quotedMediaFile: widget.msgQuoteMedia(
+                  messagesById: widget.messagesById,
+                  mediaFilesById: widget.mediaFilesById,
+                ),
+                contactsById: widget.userIdToContact,
+                useSharedData: widget.useSharedData,
                 child: _getChatEntry(borderRadius, reactionsForWidth, info),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
@@ -281,6 +317,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
                   ),
                   child: AvatarIcon(
                     contactId: widget.message.senderId,
+                    contacts:
+                        widget.userIdToContact?[widget.message.senderId] == null
+                        ? null
+                        : [widget.userIdToContact![widget.message.senderId]!],
                     fontSize: 12,
                   ),
                 ),
@@ -289,6 +329,21 @@ class _ChatListEntryState extends State<ChatListEntry> {
         ),
       ),
     );
+  }
+}
+
+extension on ChatListEntry {
+  Message? msgQuote({Map<String, Message>? messagesById}) {
+    final quotedId = message.quotesMessageId;
+    return quotedId == null ? null : messagesById?[quotedId];
+  }
+
+  MediaFile? msgQuoteMedia({
+    Map<String, Message>? messagesById,
+    Map<String, MediaFile>? mediaFilesById,
+  }) {
+    final quoted = msgQuote(messagesById: messagesById);
+    return quoted?.mediaId == null ? null : mediaFilesById?[quoted!.mediaId];
   }
 }
 

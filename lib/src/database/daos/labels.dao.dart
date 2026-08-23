@@ -14,11 +14,15 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
   LabelsDao(super.db);
 
   Stream<List<Label>> watchAllLabels() {
-    return (select(labels)..orderBy([(t) => OrderingTerm(expression: t.name)])).watch();
+    return (select(
+      labels,
+    )..orderBy([(t) => OrderingTerm(expression: t.name)])).watch();
   }
 
   Future<List<Label>> getAllLabels() {
-    return (select(labels)..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
+    return (select(
+      labels,
+    )..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
   }
 
   Stream<List<Label>> watchContactLabels(int contactId) {
@@ -27,8 +31,24 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
     ])..where(contactLabels.contactId.equals(contactId));
 
     return query.watch().map(
-          (rows) => rows.map((row) => row.readTable(labels)).toList(),
-        );
+      (rows) => rows.map((row) => row.readTable(labels)).toList(),
+    );
+  }
+
+  Stream<List<(int, Label)>> watchAllContactLabels() {
+    final query = select(contactLabels).join([
+      innerJoin(labels, labels.id.equalsExp(contactLabels.labelId)),
+    ]);
+    return query.watch().map(
+      (rows) => rows
+          .map(
+            (row) => (
+              row.readTable(contactLabels).contactId,
+              row.readTable(labels),
+            ),
+          )
+          .toList(),
+    );
   }
 
   Future<List<Label>> getContactLabels(int contactId) {
@@ -37,14 +57,16 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
     ])..where(contactLabels.contactId.equals(contactId));
 
     return query.get().then(
-          (rows) => rows.map((row) => row.readTable(labels)).toList(),
-        );
+      (rows) => rows.map((row) => row.readTable(labels)).toList(),
+    );
   }
 
   Future<void> setContactLabels(int contactId, List<int> labelIds) async {
     final sanitizedLabelIds = labelIds.take(3).toList();
     await transaction(() async {
-      await (delete(contactLabels)..where((t) => t.contactId.equals(contactId))).go();
+      await (delete(
+        contactLabels,
+      )..where((t) => t.contactId.equals(contactId))).go();
       if (sanitizedLabelIds.isNotEmpty) {
         await batch((b) {
           b.insertAll(
@@ -72,7 +94,12 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
     );
   }
 
-  Future<bool> updateLabel(int id, String name, int textColor, int backgroundColor) {
+  Future<bool> updateLabel(
+    int id,
+    String name,
+    int textColor,
+    int backgroundColor,
+  ) {
     final sanitizedName = name.length > 8 ? name.substring(0, 8) : name;
     return (update(labels)..where((t) => t.id.equals(id)))
         .write(

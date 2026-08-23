@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO user_discovery_own_promotions (\n                contact_id,\n                promotion\n            ) VALUES (?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e026e8c5eb30ca2f7c98c0d4e8f9ccdf388bf7e98f4336ada2ac09224461082f"
+}

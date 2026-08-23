@@ -18,6 +18,7 @@ pub struct MainKey {
 #[derive(Debug)]
 pub(crate) enum DatabaseKey {
     RustDb,
+    AppDb,
 }
 
 impl MainKey {
@@ -42,8 +43,9 @@ impl MainKey {
 
     /// Derives the database encryption key.
     pub(crate) fn get_database_key(&self, db: DatabaseKey) -> String {
-        let db_name = match db {
+        let db_name: &[u8] = match db {
             DatabaseKey::RustDb => b"rust_db",
+            DatabaseKey::AppDb => b"app_db",
         };
         let info = [b"database_key_", db_name as &[u8]].concat();
         let key = self.derive_key(&info);

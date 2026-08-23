@@ -9,10 +9,12 @@ import 'package:twonly/src/utils/misc.dart';
 class ChatGroupAction extends StatefulWidget {
   const ChatGroupAction({
     required this.action,
+    this.contactsById,
     super.key,
   });
 
   final GroupHistory action;
+  final Map<int, Contact>? contactsById;
 
   @override
   State<ChatGroupAction> createState() => _ChatGroupActionState();
@@ -25,7 +27,29 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    if (widget.contactsById == null) {
+      initAsync();
+    } else {
+      _applyContacts();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ChatGroupAction oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.contactsById != null &&
+        widget.contactsById != oldWidget.contactsById) {
+      _applyContacts();
+    }
+  }
+
+  void _applyContacts() {
+    contact = widget.action.contactId == null
+        ? null
+        : widget.contactsById?[widget.action.contactId];
+    affectedContact = widget.action.affectedContactId == null
+        ? null
+        : widget.contactsById?[widget.action.affectedContactId];
   }
 
   Future<void> initAsync() async {

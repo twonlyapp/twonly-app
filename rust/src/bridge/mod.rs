@@ -4,23 +4,22 @@ pub mod wrapper;
 
 use std::sync::Arc;
 
-use crate::bridge::callbacks::user_discovery::{
-    UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter,
-};
 use crate::context::Context;
-use crate::database::Database;
+use crate::database::app::AppDatabase;
+use crate::database::signal::Database;
 use crate::error::Result;
 use crate::error::TwonlyError;
 use crate::keys::KeyManager;
 use crate::secure_storage::SecureStorage;
 use crate::signal::engine::RustSignalEngine;
+use crate::user_discovery::stores::{NativeUserDiscoveryStore, NativeUserDiscoveryUtils};
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use flutter_rust_bridge::frb;
 
 pub use crate::user_discovery::traits::AnnouncedUser;
 pub use crate::user_discovery::traits::OtherPromotion;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 
 pub struct InitConfig {
     pub database_dir: String,
@@ -48,9 +47,10 @@ pub(crate) struct TwonlyFlutter {
     #[allow(dead_code)]
     pub(crate) config: InitConfig,
     pub(crate) user_discovery:
-        Shared<UserDiscovery<UserDiscoveryStoreFlutter, UserDiscoveryUtilsFlutter>>,
+        Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>>,
     #[allow(dead_code)]
-    pub(crate) rust_db: Arc<Database>,
+    pub(crate) rust_db: Arc<RwLock<Arc<Database>>>,
+    pub(crate) app_db: Arc<RwLock<Arc<AppDatabase>>>,
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
     pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,

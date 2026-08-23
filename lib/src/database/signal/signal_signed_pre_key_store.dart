@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/database/signal.db.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 
@@ -26,8 +26,8 @@ Future<HashMap<int, Uint8List>> getSignalSignedPreKeyStoreOld() async {
 class SignalSignedPreKeyStore extends SignedPreKeyStore {
   @override
   Future<SignedPreKeyRecord> loadSignedPreKey(int signedPreKeyId) async {
-    final record = await (twonlyDB.select(
-      twonlyDB.signalSignedPreKeyStores,
+    final record = await (signalDB.select(
+      signalDB.signalSignedPreKeyStores,
     )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).get();
     if (record.isEmpty) {
       throw InvalidKeyIdException(
@@ -39,8 +39,8 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
 
   @override
   Future<List<SignedPreKeyRecord>> loadSignedPreKeys() async {
-    final records = await twonlyDB
-        .select(twonlyDB.signalSignedPreKeyStores)
+    final records = await signalDB
+        .select(signalDB.signalSignedPreKeyStores)
         .get();
     return records
         .map((r) => SignedPreKeyRecord.fromSerialized(r.signedPreKey))
@@ -58,8 +58,8 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
     );
 
     try {
-      await twonlyDB
-          .into(twonlyDB.signalSignedPreKeyStores)
+      await signalDB
+          .into(signalDB.signalSignedPreKeyStores)
           .insert(companion, mode: InsertMode.insertOrReplace);
     } catch (e) {
       Log.error('$e');
@@ -69,16 +69,16 @@ class SignalSignedPreKeyStore extends SignedPreKeyStore {
 
   @override
   Future<bool> containsSignedPreKey(int signedPreKeyId) async {
-    final record = await (twonlyDB.select(
-      twonlyDB.signalSignedPreKeyStores,
+    final record = await (signalDB.select(
+      signalDB.signalSignedPreKeyStores,
     )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).get();
     return record.isNotEmpty;
   }
 
   @override
   Future<void> removeSignedPreKey(int signedPreKeyId) async {
-    await (twonlyDB.delete(
-      twonlyDB.signalSignedPreKeyStores,
+    await (signalDB.delete(
+      signalDB.signalSignedPreKeyStores,
     )..where((tbl) => tbl.signedPreKeyId.equals(signedPreKeyId))).go();
   }
 }

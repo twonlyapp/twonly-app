@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -23,9 +24,27 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/message_s
 class GroupListItemComp extends StatefulWidget {
   const GroupListItemComp({
     required this.group,
+    this.isTyping,
+    this.contacts,
+    this.unopenedMessages,
+    this.lastReaction,
+    this.lastMessage,
+    this.mediaFiles,
+    this.useSharedSummary = false,
+    this.verificationStatus,
+    this.contactLabels = const [],
     super.key,
   });
   final Group group;
+  final bool? isTyping;
+  final List<Contact>? contacts;
+  final List<Message>? unopenedMessages;
+  final Reaction? lastReaction;
+  final Message? lastMessage;
+  final Map<String, MediaFile>? mediaFiles;
+  final bool useSharedSummary;
+  final VerificationStatus? verificationStatus;
+  final List<Label> contactLabels;
 
   @override
   State<GroupListItemComp> createState() => _UserListItem();
@@ -53,7 +72,45 @@ class _UserListItem extends State<GroupListItemComp> {
   @override
   void initState() {
     super.initState();
+    _applyContacts();
+    _lastReaction = widget.lastReaction;
+    _lastMessage = widget.lastMessage;
+    _applyMediaFiles();
+    if (widget.useSharedSummary) {
+      _updateState(widget.lastMessage, widget.unopenedMessages ?? const []);
+    }
     initStreams();
+  }
+
+  @override
+  void didUpdateWidget(GroupListItemComp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.contacts != oldWidget.contacts) _applyContacts();
+    if (widget.lastReaction != oldWidget.lastReaction) {
+      _lastReaction = widget.lastReaction;
+    }
+    if (widget.unopenedMessages != oldWidget.unopenedMessages) {
+      _updateState(widget.lastMessage, widget.unopenedMessages ?? const []);
+    } else if (widget.lastMessage != oldWidget.lastMessage) {
+      _updateState(widget.lastMessage, widget.unopenedMessages ?? const []);
+    }
+    if (widget.mediaFiles != oldWidget.mediaFiles) _applyMediaFiles();
+  }
+
+  void _applyContacts() {
+    if (widget.contacts == null) return;
+    _directContact = widget.group.isDirectChat && widget.contacts!.isNotEmpty
+        ? widget.contacts!.first
+        : null;
+    _receiverDeletedAccount =
+        widget.contacts!.length == 1 && widget.contacts!.first.accountDeleted;
+  }
+
+  void _applyMediaFiles() {
+    if (widget.mediaFiles == null) return;
+    _previewMediaFiles
+      ..clear()
+      ..addAll(widget.mediaFiles!.values);
   }
 
   @override
@@ -67,45 +124,57 @@ class _UserListItem extends State<GroupListItemComp> {
   }
 
   Future<void> initStreams() async {
-    final lastMsgStream = await twonlyDB.messagesDao.watchLastMessage(
-      widget.group.groupId,
-    );
-    if (!mounted) return;
-    _lastMessageStream = lastMsgStream.listen((update) {
-      _updateState(update, _messagesNotOpened);
-    });
+    if (!widget.useSharedSummary) {
+      final lastMsgStream = await twonlyDB.messagesDao.watchLastMessage(
+        widget.group.groupId,
+      );
+      if (!mounted) return;
+      _lastMessageStream = lastMsgStream.listen((update) {
+        _updateState(update, _messagesNotOpened);
+      });
+    }
 
-    _lastReactionStream = twonlyDB.reactionsDao
-        .watchLastReactions(widget.group.groupId)
-        .listen((update) {
-          if (!mounted) return;
-          setState(() {
-            _lastReaction = update;
+    if (!widget.useSharedSummary) {
+      _lastReactionStream = twonlyDB.reactionsDao
+          .watchLastReactions(widget.group.groupId)
+          .listen((update) {
+            if (!mounted) return;
+            setState(() {
+              _lastReaction = update;
+            });
           });
-        });
+    }
 
-    _messagesNotOpenedStream = twonlyDB.messagesDao
-        .watchMessageNotOpened(widget.group.groupId)
-        .listen((update) {
-          _updateState(_lastMessage, update);
-        });
+    if (widget.useSharedSummary) {
+      _messagesNotOpened = widget.unopenedMessages!;
+    } else {
+      _messagesNotOpenedStream = twonlyDB.messagesDao
+          .watchMessageNotOpened(widget.group.groupId)
+          .listen((update) {
+            _updateState(_lastMessage, update);
+          });
+    }
 
-    _lastMediaFilesStream = twonlyDB.mediaFilesDao
-        .watchMediaFilesForGroup(widget.group.groupId)
-        .listen((mediaFiles) {
-          if (!mounted) return;
-          for (final mediaFile in mediaFiles) {
-            final index = _previewMediaFiles.indexWhere(
-              (t) => t.mediaId == mediaFile.mediaId,
-            );
-            if (index >= 0) {
-              _previewMediaFiles[index] = mediaFile;
+    if (!widget.useSharedSummary) {
+      _lastMediaFilesStream = twonlyDB.mediaFilesDao
+          .watchMediaFilesForGroup(widget.group.groupId)
+          .listen((mediaFiles) {
+            if (!mounted) return;
+            for (final mediaFile in mediaFiles) {
+              final index = _previewMediaFiles.indexWhere(
+                (t) => t.mediaId == mediaFile.mediaId,
+              );
+              if (index >= 0) {
+                _previewMediaFiles[index] = mediaFile;
+              }
             }
-          }
-          setState(() {});
-        });
+            setState(() {});
+          });
+    }
 
-    if (widget.group.isDirectChat) {
+    if (widget.contacts != null) {
+      // Contact data is shared by the parent chat list.
+    } else if (widget.group.isDirectChat) {
       _directContactStream = twonlyDB.groupsDao
           .watchGroupContact(widget.group.groupId)
           .listen((contacts) {
@@ -191,6 +260,7 @@ class _UserListItem extends State<GroupListItemComp> {
   /// Fetches any media files referenced by preview messages but not yet in the
   /// local cache. Fire-and-forget; updates state when results arrive.
   Future<void> _fetchMissingMediaFiles() async {
+    if (widget.useSharedSummary) return;
     final missing = <MediaFile>[];
     for (final message in _previewMessages) {
       if (message.mediaId != null &&
@@ -266,6 +336,8 @@ class _UserListItem extends State<GroupListItemComp> {
                 const SizedBox(width: 3),
                 VerificationBadgeComp(
                   group: widget.group,
+                  verificationStatus: widget.verificationStatus,
+                  useProvidedStatus: widget.useSharedSummary,
                   showOnlyIfVerified: true,
                   clickable: false,
                   size: 12,
@@ -278,6 +350,7 @@ class _UserListItem extends State<GroupListItemComp> {
                       physics: const BouncingScrollPhysics(),
                       child: ContactLabels(
                         contactId: _directContact!.userId,
+                        labels: widget.contactLabels,
                       ),
                     ),
                   ),
@@ -296,7 +369,7 @@ class _UserListItem extends State<GroupListItemComp> {
                               dateTime: widget.group.lastMessageExchange,
                             ),
                             FlameCounterWidget(
-                              groupId: widget.group.groupId,
+                              group: widget.group,
                               prefix: true,
                             ),
                           ],
@@ -305,6 +378,7 @@ class _UserListItem extends State<GroupListItemComp> {
                     children: [
                       TypingIndicatorSubtitleComp(
                         groupId: widget.group.groupId,
+                        isTyping: widget.isTyping,
                       ),
                       MessageSendStateIcon(
                         _previewMessages,
@@ -320,7 +394,7 @@ class _UserListItem extends State<GroupListItemComp> {
                           message: _currentMessage,
                         ),
                       FlameCounterWidget(
-                        groupId: widget.group.groupId,
+                        group: widget.group,
                         prefix: true,
                       ),
                     ],
@@ -340,7 +414,7 @@ class _UserListItem extends State<GroupListItemComp> {
                   await context.push(Routes.profileGroup(widget.group.groupId));
                 }
               },
-              child: AvatarIcon(group: widget.group),
+              child: AvatarIcon(group: widget.group, contacts: widget.contacts),
             ),
             trailing: (widget.group.leftGroup || _receiverDeletedAccount)
                 ? null

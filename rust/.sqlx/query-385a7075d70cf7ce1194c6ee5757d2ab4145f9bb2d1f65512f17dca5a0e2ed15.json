@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO user_discovery_shares (share) VALUES (?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "385a7075d70cf7ce1194c6ee5757d2ab4145f9bb2d1f65512f17dca5a0e2ed15"
+}

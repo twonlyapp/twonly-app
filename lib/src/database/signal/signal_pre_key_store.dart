@@ -1,22 +1,22 @@
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/database/signal.db.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class SignalPreKeyStore extends PreKeyStore {
   @override
   Future<bool> containsPreKey(int preKeyId) async {
-    final preKeyRecord = await (twonlyDB.select(
-      twonlyDB.signalPreKeyStores,
+    final preKeyRecord = await (signalDB.select(
+      signalDB.signalPreKeyStores,
     )..where((tbl) => tbl.preKeyId.equals(preKeyId))).get();
     return preKeyRecord.isNotEmpty;
   }
 
   @override
   Future<PreKeyRecord> loadPreKey(int preKeyId) async {
-    final preKeyRecord = await (twonlyDB.select(
-      twonlyDB.signalPreKeyStores,
+    final preKeyRecord = await (signalDB.select(
+      signalDB.signalPreKeyStores,
     )..where((tbl) => tbl.preKeyId.equals(preKeyId))).get();
     if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException(
@@ -29,8 +29,8 @@ class SignalPreKeyStore extends PreKeyStore {
 
   @override
   Future<void> removePreKey(int preKeyId) async {
-    await (twonlyDB.delete(
-      twonlyDB.signalPreKeyStores,
+    await (signalDB.delete(
+      signalDB.signalPreKeyStores,
     )..where((tbl) => tbl.preKeyId.equals(preKeyId))).go();
   }
 
@@ -42,8 +42,8 @@ class SignalPreKeyStore extends PreKeyStore {
     );
 
     try {
-      await twonlyDB
-          .into(twonlyDB.signalPreKeyStores)
+      await signalDB
+          .into(signalDB.signalPreKeyStores)
           .insert(preKeyCompanion, mode: InsertMode.insertOrReplace);
     } catch (e) {
       Log.error('$e');

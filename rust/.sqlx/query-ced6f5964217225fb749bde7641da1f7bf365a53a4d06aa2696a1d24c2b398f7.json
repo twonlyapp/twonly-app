@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO user_discovery_other_promotions (\n                from_contact_id,\n                promotion_id,\n                public_id,\n                threshold,\n                announcement_share,\n                public_key_verified_timestamp\n            ) VALUES (?, ?, ?, ?, ?, ?)\n            ON CONFLICT(from_contact_id, public_id) DO UPDATE SET\n                promotion_id = excluded.promotion_id,\n                threshold = excluded.threshold,\n                announcement_share = excluded.announcement_share,\n                public_key_verified_timestamp = excluded.public_key_verified_timestamp\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "ced6f5964217225fb749bde7641da1f7bf365a53a4d06aa2696a1d24c2b398f7"
+}

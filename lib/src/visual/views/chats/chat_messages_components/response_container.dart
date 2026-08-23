@@ -17,6 +17,10 @@ class ResponseContainer extends StatelessWidget {
     required this.mediaService,
     required this.borderRadius,
     this.scrollToMessage,
+    this.quotedMessage,
+    this.quotedMediaFile,
+    this.contactsById,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -26,6 +30,10 @@ class ResponseContainer extends StatelessWidget {
   final MediaFileService? mediaService;
   final BorderRadius borderRadius;
   final void Function(String)? scrollToMessage;
+  final Message? quotedMessage;
+  final MediaFile? quotedMediaFile;
+  final Map<int, Contact>? contactsById;
+  final bool useSharedData;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +75,12 @@ class ResponseContainer extends StatelessWidget {
                   child: ResponsePreview(
                     group: group,
                     messageId: msg.quotesMessageId,
+                    message: quotedMessage,
+                    mediaFile: quotedMediaFile,
+                    contact: quotedMessage?.senderId == null
+                        ? null
+                        : contactsById?[quotedMessage!.senderId],
+                    useSharedData: useSharedData,
                     showBorder: false,
                     showLeftBorder: false,
                   ),
@@ -89,6 +103,9 @@ class ResponsePreview extends StatefulWidget {
     this.messageId,
     this.showLeftBorder = true,
     this.colorUsername = false,
+    this.mediaFile,
+    this.contact,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -98,6 +115,9 @@ class ResponsePreview extends StatefulWidget {
   final bool showBorder;
   final bool showLeftBorder;
   final bool colorUsername;
+  final MediaFile? mediaFile;
+  final Contact? contact;
+  final bool useSharedData;
 
   @override
   State<ResponsePreview> createState() => _ResponsePreviewState();
@@ -112,17 +132,30 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   void initState() {
     super.initState();
     _message = widget.message;
-    initAsync();
+    if (widget.mediaFile != null) {
+      _mediaService = MediaFileService(widget.mediaFile!);
+    }
+    if (widget.contact != null) {
+      _username = getContactDisplayName(widget.contact!);
+    }
+    if (!widget.useSharedData &&
+        (widget.message == null ||
+            (widget.message?.mediaId != null && widget.mediaFile == null) ||
+            (widget.message?.senderId != null && widget.contact == null))) {
+      initAsync();
+    }
   }
 
   Future<void> initAsync() async {
-    _message ??= await twonlyDB.messagesDao
-        .getMessageById(widget.messageId!)
-        .getSingleOrNull();
-    if (_message?.mediaId != null) {
+    if (_message == null && widget.messageId != null) {
+      _message = await twonlyDB.messagesDao
+          .getMessageById(widget.messageId!)
+          .getSingleOrNull();
+    }
+    if (_message?.mediaId != null && _mediaService == null) {
       _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
-    if (_message?.senderId != null) {
+    if (_message?.senderId != null && _username.isEmpty) {
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(_message!.senderId!)
           .getSingleOrNull();

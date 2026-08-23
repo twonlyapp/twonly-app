@@ -29,6 +29,7 @@ class ChatMediaEntry extends StatefulWidget {
     required this.mediaService,
     required this.borderRadius,
     required this.info,
+    this.useSharedData = false,
     super.key,
   });
 
@@ -38,6 +39,7 @@ class ChatMediaEntry extends StatefulWidget {
   final MediaFileService mediaService;
   final BorderRadius borderRadius;
   final BubbleInfo info;
+  final bool useSharedData;
 
   @override
   State<ChatMediaEntry> createState() => _ChatMediaEntryState();
@@ -179,6 +181,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
                   canBeReopened: _canBeReopened,
                   borderRadius: imageBorderRadius,
                   info: widget.info,
+                  useSharedData: widget.useSharedData,
                 ),
               ),
             ),

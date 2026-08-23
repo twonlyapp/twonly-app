@@ -259,6 +259,51 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
     });
   }
 
+  Stream<Map<String, VerificationStatus>> watchAllGroupsVerificationStatus() {
+    final gm = groupMembers;
+    final directKv = alias(keyVerifications, 'allGroupsDirectKv');
+    final ur = userDiscoveryUserRelations;
+    final verifierKv = alias(keyVerifications, 'allGroupsVerifierKv');
+
+    final query = select(gm).join([
+      leftOuterJoin(directKv, directKv.contactId.equalsExp(gm.contactId)),
+      leftOuterJoin(
+        ur,
+        ur.announcedUserId.equalsExp(gm.contactId) &
+            ur.publicKeyVerifiedTimestamp.isNotNull() &
+            ur.fromContactId.equalsExp(gm.contactId).not(),
+      ),
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(ur.fromContactId),
+      ),
+    ]);
+
+    return query.watch().map((rows) {
+      final groups = <String, Map<int, ({bool direct, bool partial})>>{};
+      for (final row in rows) {
+        final member = row.readTable(gm);
+        final members = groups.putIfAbsent(member.groupId, () => {});
+        final current =
+            members[member.contactId] ?? (direct: false, partial: false);
+        members[member.contactId] = (
+          direct: current.direct || row.readTableOrNull(directKv) != null,
+          partial: current.partial || row.readTableOrNull(verifierKv) != null,
+        );
+      }
+      return {
+        for (final entry in groups.entries)
+          entry.key: entry.value.values.every((member) => member.direct)
+              ? VerificationStatus.trusted
+              : entry.value.values.every(
+                  (member) => member.direct || member.partial,
+                )
+              ? VerificationStatus.partialTrusted
+              : VerificationStatus.notTrusted,
+      };
+    });
+  }
+
   Stream<int> watchUnverifiedGroupMembersCount(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');

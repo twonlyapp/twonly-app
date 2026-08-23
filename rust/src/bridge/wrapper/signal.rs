@@ -8,9 +8,7 @@ impl RustSignal {
     pub async fn generate_bundle() -> Result<FrbPreKeyBundle> {
         let guard = get_twonly_flutter()?.signal_engine.lock().await;
         let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
-        engine
-            .generate_bundle()
-            .await
+        engine.generate_bundle().await
     }
 
     pub async fn generate_pqc_prekeys() -> Result<Vec<FrbPqcPreKey>> {
