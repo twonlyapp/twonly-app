@@ -272,17 +272,18 @@ class _ChatListEntryState extends State<ChatListEntry> {
               : MainAxisAlignment.start,
           children: [
             if (!right && !widget.group.isDirectChat)
-              hideContactAvatar
-                  ? const SizedBox(width: 24)
-                  : GestureDetector(
-                      onTap: () => context.push(
-                        Routes.profileContact(widget.message.senderId!),
-                      ),
-                      child: AvatarIcon(
-                        contactId: widget.message.senderId,
-                        fontSize: 12,
-                      ),
-                    ),
+              if (hideContactAvatar)
+                const SizedBox(width: 24)
+              else
+                GestureDetector(
+                  onTap: () => context.push(
+                    Routes.profileContact(widget.message.senderId!),
+                  ),
+                  child: AvatarIcon(
+                    contactId: widget.message.senderId,
+                    fontSize: 12,
+                  ),
+                ),
             child,
           ],
         ),

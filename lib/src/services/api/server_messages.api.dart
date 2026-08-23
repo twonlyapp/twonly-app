@@ -154,13 +154,13 @@ Future<void> _handleClient2ClientMessage(
           contactWillSendsReceipt: const Value(false),
         ),
       );
-      await tryToSendCompleteMessage(
-        receiptId: receiptId,
-        blocking: false,
-      );
     } catch (e) {
       Log.warn('[$receiptId] Error handling duplicate receipt ACK: $e');
     }
+    await tryToSendCompleteMessage(
+      receiptId: receiptId,
+      blocking: false,
+    );
     return;
   }
 
@@ -289,12 +289,13 @@ Future<void> _handleClient2ClientMessage(
         } catch (e) {
           Log.warn('[$receiptId] Error inserting receipt: $e');
         }
-        if (targetReceiptId != null) {
-          await tryToSendCompleteMessage(
-            receiptId: targetReceiptId,
-            blocking: false,
-          );
-        }
+
+        targetReceiptId ??= receiptIdDB?.value ?? receiptId;
+
+        await tryToSendCompleteMessage(
+          receiptId: targetReceiptId,
+          blocking: false,
+        );
       }
     case Message_Type.TEST_NOTIFICATION:
       break;

@@ -125,7 +125,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             await videoController!.play();
             setState(() {});
           })
-          // ignore: argument_type_not_assignable_to_error_handler, invalid_return_type_for_catch_error
+          // ignore: argument_type_not_assignable_to_error_handler
           .catchError(Log.error);
     }
   }

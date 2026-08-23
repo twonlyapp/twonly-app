@@ -202,11 +202,11 @@ class PasswordlessRecoveryService {
       case SecondFactorType.pin:
 
         // The pin seed - never shared with the server - ensures that the server is unable to brute-force real user's pin
-        config.serverKeyProtection = getRandomUint8List(32);
-
-        // As the pin is heavily protected against brute-forcing e.g. will be deleted by the server after 10 tries, the
-        // unlock token is required to prevent a malicious user (except the trusted friends) to trigger this deletion.
-        config.pinUnlockToken = getRandomUint8List(32);
+        config
+          ..serverKeyProtection = getRandomUint8List(32)
+          // As the pin is heavily protected against brute-forcing e.g. will be deleted by the server after 10 tries, the
+          // unlock token is required to prevent a malicious user (except the trusted friends) to trigger this deletion.
+          ..pinUnlockToken = getRandomUint8List(32);
 
         // Brute-force protection for the user's pin:
         //  - Server: Does not know the seed.

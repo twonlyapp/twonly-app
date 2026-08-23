@@ -26,6 +26,13 @@ analyzer:
     - "**.arb"
     - "test/drift/**"
     - "**.g.dart"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:

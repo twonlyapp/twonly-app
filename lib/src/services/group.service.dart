@@ -347,7 +347,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
           }
           // the state is now updated and the appended_group_state should be removed on the server, so just call this
           // function again, to sync the local database
-          return fetchGroupState(group);
+          return await fetchGroupState(group);
         } catch (e) {
           Log.error(e);
           return null;
