@@ -250,6 +250,25 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         null;
   }
 
+  /// Claims a new delivery-receipt attempt after [cooldown] has elapsed.
+  ///
+  /// Updating the timestamp before sending prevents repeated server batches from
+  /// starting multiple delivery-receipt attempts during the same cooldown.
+  Future<bool> claimDuplicateReceiptResend(
+    String receiptId,
+    Duration cooldown,
+  ) async {
+    final now = clock.now();
+    final updated =
+        await (update(receivedReceipts)..where(
+              (t) =>
+                  t.receiptId.equals(receiptId) &
+                  t.createdAt.isSmallerOrEqualValue(now.subtract(cooldown)),
+            ))
+            .write(ReceivedReceiptsCompanion(createdAt: Value(now)));
+    return updated > 0;
+  }
+
   Future<void> gotReceipt(String receiptId) async {
     await into(
       receivedReceipts,

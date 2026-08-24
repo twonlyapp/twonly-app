@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+
+- Hotfix: Fixed an infinite loop involving delivery receipts
+
 ## 0.5.1
 
 - Improve: Show delivery and read receipt indicators for text messages
