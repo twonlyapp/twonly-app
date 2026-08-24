@@ -80,9 +80,16 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
     ..seq = msg.v0.seq
     ..response = response;
 
-  await apiService.sendResponse(ClientToServer()..v0 = v0);
+  final responseSent = await apiService.sendResponse(ClientToServer()..v0 = v0);
+  if (responseSent) {
+    Log.info(
+      'Successfully queued response for server message ${msg.v0.seq}.',
+    );
+  } else {
+    Log.warn('Could not send response for server message ${msg.v0.seq}.');
+  }
   AppState.gotMessageFromServer = true;
-  Log.info('All messages from the server proccessed.');
+  Log.info('All messages from the server processed.');
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
@@ -141,8 +148,25 @@ Future<void> _handleClient2ClientMessage(
   }
 
   if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
+    if (message.type == Message_Type.SENDER_DELIVERY_RECEIPT) {
+      Log.info(
+        '[$receiptId] Delivery receipt is a duplicate. Skipping receipt response.',
+      );
+      return;
+    }
+    const duplicateReceiptCooldown = Duration(days: 10);
+    final shouldResend = await twonlyDB.receiptsDao.claimDuplicateReceiptResend(
+      receiptId,
+      duplicateReceiptCooldown,
+    );
+    if (!shouldResend) {
+      Log.info(
+        '[$receiptId] Message is a duplicate. Skipping delivery receipt during cooldown.',
+      );
+      return;
+    }
     Log.info(
-      '[$receiptId] Message is a duplicate. Sending delivery receipt again.',
+      '[$receiptId] Message is a duplicate and cooldown elapsed. Sending delivery receipt again.',
     );
     try {
       final response = Message(type: Message_Type.SENDER_DELIVERY_RECEIPT);
