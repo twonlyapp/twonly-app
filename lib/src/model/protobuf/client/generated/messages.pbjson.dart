@@ -15,6 +15,67 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+@$core.Deprecated('Use encryptedMessageEnvelopeDescriptor instead')
+const EncryptedMessageEnvelope$json = {
+  '1': 'EncryptedMessageEnvelope',
+  '2': [
+    {
+      '1': 'ephemeral_public_key',
+      '3': 1,
+      '4': 1,
+      '5': 12,
+      '10': 'ephemeralPublicKey'
+    },
+    {'1': 'nonce', '3': 2, '4': 1, '5': 12, '10': 'nonce'},
+    {'1': 'ciphertext', '3': 3, '4': 1, '5': 12, '10': 'ciphertext'},
+  ],
+};
+
+/// Descriptor for `EncryptedMessageEnvelope`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List encryptedMessageEnvelopeDescriptor = $convert.base64Decode(
+    'ChhFbmNyeXB0ZWRNZXNzYWdlRW52ZWxvcGUSMAoUZXBoZW1lcmFsX3B1YmxpY19rZXkYASABKA'
+    'xSEmVwaGVtZXJhbFB1YmxpY0tleRIUCgVub25jZRgCIAEoDFIFbm9uY2USHgoKY2lwaGVydGV4'
+    'dBgDIAEoDFIKY2lwaGVydGV4dA==');
+
+@$core.Deprecated('Use messageEnvelopeDescriptor instead')
+const MessageEnvelope$json = {
+  '1': 'MessageEnvelope',
+  '2': [
+    {'1': 'signed_payload', '3': 1, '4': 1, '5': 12, '10': 'signedPayload'},
+    {'1': 'signature', '3': 2, '4': 1, '5': 12, '10': 'signature'},
+  ],
+};
+
+/// Descriptor for `MessageEnvelope`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List messageEnvelopeDescriptor = $convert.base64Decode(
+    'Cg9NZXNzYWdlRW52ZWxvcGUSJQoOc2lnbmVkX3BheWxvYWQYASABKAxSDXNpZ25lZFBheWxvYW'
+    'QSHAoJc2lnbmF0dXJlGAIgASgMUglzaWduYXR1cmU=');
+
+@$core.Deprecated('Use messageEnvelopePayloadDescriptor instead')
+const MessageEnvelopePayload$json = {
+  '1': 'MessageEnvelopePayload',
+  '2': [
+    {'1': 'magic', '3': 1, '4': 1, '5': 9, '10': 'magic'},
+    {'1': 'from_user_id', '3': 2, '4': 1, '5': 3, '10': 'fromUserId'},
+    {'1': 'recipient_user_id', '3': 3, '4': 1, '5': 3, '10': 'recipientUserId'},
+    {'1': 'message', '3': 4, '4': 1, '5': 11, '6': '.Message', '10': 'message'},
+    {
+      '1': 'created_at_unix_seconds',
+      '3': 5,
+      '4': 1,
+      '5': 3,
+      '10': 'createdAtUnixSeconds'
+    },
+  ],
+};
+
+/// Descriptor for `MessageEnvelopePayload`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List messageEnvelopePayloadDescriptor = $convert.base64Decode(
+    'ChZNZXNzYWdlRW52ZWxvcGVQYXlsb2FkEhQKBW1hZ2ljGAEgASgJUgVtYWdpYxIgCgxmcm9tX3'
+    'VzZXJfaWQYAiABKANSCmZyb21Vc2VySWQSKgoRcmVjaXBpZW50X3VzZXJfaWQYAyABKANSD3Jl'
+    'Y2lwaWVudFVzZXJJZBIiCgdtZXNzYWdlGAQgASgLMgguTWVzc2FnZVIHbWVzc2FnZRI1Chdjcm'
+    'VhdGVkX2F0X3VuaXhfc2Vjb25kcxgFIAEoA1IUY3JlYXRlZEF0VW5peFNlY29uZHM=');
+
 @$core.Deprecated('Use messageDescriptor instead')
 const Message$json = {
   '1': 'Message',

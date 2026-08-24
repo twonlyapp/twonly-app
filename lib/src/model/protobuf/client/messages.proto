@@ -1,5 +1,64 @@
 syntax = "proto3";
 
+message EncryptedMessageEnvelope {
+  // Fresh 32-byte X25519 public key generated for this envelope. The sender
+  // derives the encryption key from this ephemeral key pair and the recipient's
+  // public identity key using HKDF-SHA-256 with an empty salt and a 32-byte
+  // output. HKDF info must be the UTF-8 bytes of
+  // "twonly-message-envelope-encryption-v1" followed by ephemeral_public_key
+  // and the recipient's serialized public identity key.
+  bytes ephemeral_public_key = 1;
+
+  // Fresh 24-byte XChaCha20-Poly1305 nonce.
+  bytes nonce = 2;
+
+  // Serialized MessageEnvelope encrypted with XChaCha20-Poly1305. This includes
+  // the 16-byte Poly1305 authentication tag. The AEAD associated data is exactly
+  // the UTF-8 bytes of "twonly-message-envelope-encryption-v1".
+  bytes ciphertext = 3;
+}
+
+message MessageEnvelope {
+  // The serialized MessageEnvelope is encrypted into EncryptedMessageEnvelope
+  // before it is sent to the server.
+
+  // Exact serialized MessageEnvelopePayload bytes. The signature is calculated
+  // directly over these bytes. Keeping the serialized payload allows verification
+  // without relying on canonical protobuf serialization.
+  bytes signed_payload = 1;
+
+  // Signature created with the sender's identity key. For a known contact, use
+  // the pinned public identity key. For an unknown sender, fetch the public key
+  // from the trusted server, verify this signature, and only then pin the key and
+  // process the raw message.
+  bytes signature = 2;
+}
+
+message MessageEnvelopePayload {
+  // Domain-separation and protocol-version marker. The receiver must reject the
+  // payload unless this is exactly "twonly-message-envelope-v1".
+  string magic = 1;
+
+  // The sender is protected by the encryption of the outer MessageEnvelope.
+  int64 from_user_id = 2;
+
+  // Bind the sender's signature to the intended recipient. This prevents a
+  // recipient from re-encrypting a valid signed envelope for another user. The
+  // binding is required because raw_message is not always a Signal ciphertext
+  // and therefore is not always independently bound to a Signal session. The
+  // receiver must reject an envelope when this ID does not match its own user ID.
+  int64 recipient_user_id = 3;
+
+  // The mandatory UUIDv4 receipt_id is covered by the envelope signature and is
+  // used by the receiver to reject replayed messages before processing them.
+  Message message = 4;
+
+  // UTC Unix timestamp in seconds when the envelope was created. The receiver
+  // must reject envelopes older than 45 days or more than five minutes in the
+  // future. This field is covered by the envelope signature.
+  int64 created_at_unix_seconds = 5;
+}
+
 message Message {
   enum Type {
     SENDER_DELIVERY_RECEIPT = 0;
@@ -38,29 +97,29 @@ message EncryptedContent {
     /// This can be added, so the receiver can check weather he is up to date with the current profile
   optional int64 sender_profile_counter        = 4;
   optional bytes sender_user_discovery_version = 21;
-  optional bool ask_for_friend_promotions     = 25;
+  optional bool  ask_for_friend_promotions     = 25;
 
-  optional MessageUpdate         message_update          = 5;
-  optional Media                 media                   = 6;
-  optional MediaUpdate           media_update            = 7;
-  optional ContactUpdate         contact_update          = 8;
-  optional ContactRequest        contact_request         = 9;
-  optional FlameSync             flame_sync              = 10;
-  optional PushKeys              push_keys               = 11;
-  optional Reaction              reaction                = 12;
-  optional TextMessage           text_message            = 13;
-  optional GroupCreate           group_create            = 14;
-  optional GroupJoin             group_join              = 15;
-  optional GroupUpdate           group_update            = 16;
-  optional ResendGroupPublicKey  resend_group_public_key = 17;
-  optional ErrorMessages         error_messages          = 18;
-  optional AdditionalDataMessage additional_data_message = 19;
-  optional TypingIndicator       typing_indicator        = 20;
-  optional UserDiscoveryRequest  user_discovery_request  = 22;
-  optional UserDiscoveryUpdate   user_discovery_update   = 23;
-  optional KeyVerificationProof  key_verification_proof  = 24;
-  optional PasswordLessRecovery  passwordless_recovery   = 26;
-  optional PasswordLessRecoveryHeartbeat  passwordless_recovery_heartbeat  = 27;
+  optional MessageUpdate                 message_update                  = 5;
+  optional Media                         media                           = 6;
+  optional MediaUpdate                   media_update                    = 7;
+  optional ContactUpdate                 contact_update                  = 8;
+  optional ContactRequest                contact_request                 = 9;
+  optional FlameSync                     flame_sync                      = 10;
+  optional PushKeys                      push_keys                       = 11;
+  optional Reaction                      reaction                        = 12;
+  optional TextMessage                   text_message                    = 13;
+  optional GroupCreate                   group_create                    = 14;
+  optional GroupJoin                     group_join                      = 15;
+  optional GroupUpdate                   group_update                    = 16;
+  optional ResendGroupPublicKey          resend_group_public_key         = 17;
+  optional ErrorMessages                 error_messages                  = 18;
+  optional AdditionalDataMessage         additional_data_message         = 19;
+  optional TypingIndicator               typing_indicator                = 20;
+  optional UserDiscoveryRequest          user_discovery_request          = 22;
+  optional UserDiscoveryUpdate           user_discovery_update           = 23;
+  optional KeyVerificationProof          key_verification_proof          = 24;
+  optional PasswordLessRecovery          passwordless_recovery           = 26;
+  optional PasswordLessRecoveryHeartbeat passwordless_recovery_heartbeat = 27;
 
   message ErrorMessages {
     enum Type {
@@ -75,9 +134,9 @@ message EncryptedContent {
 
   message GroupCreate {
     // key for the state stored on the server
-    bytes state_key            = 3;
-    bytes group_public_key     = 4;
-    optional string group_name = 5;
+    bytes           state_key        = 3;
+    bytes           group_public_key = 4;
+    optional string group_name       = 5;
   }
 
   message GroupJoin {
@@ -220,8 +279,8 @@ message EncryptedContent {
 
   message PasswordLessRecovery {
     optional bytes recoverySecretShare = 1;
-    bool delete = 2;
-    int64 threshold = 3;
+    bool           delete              = 2;
+    int64          threshold           = 3;
   }
 
   message PasswordLessRecoveryHeartbeat {

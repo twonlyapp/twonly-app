@@ -21,6 +21,291 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 export 'messages.pbenum.dart';
 
+class EncryptedMessageEnvelope extends $pb.GeneratedMessage {
+  factory EncryptedMessageEnvelope({
+    $core.List<$core.int>? ephemeralPublicKey,
+    $core.List<$core.int>? nonce,
+    $core.List<$core.int>? ciphertext,
+  }) {
+    final result = create();
+    if (ephemeralPublicKey != null)
+      result.ephemeralPublicKey = ephemeralPublicKey;
+    if (nonce != null) result.nonce = nonce;
+    if (ciphertext != null) result.ciphertext = ciphertext;
+    return result;
+  }
+
+  EncryptedMessageEnvelope._();
+
+  factory EncryptedMessageEnvelope.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedMessageEnvelope.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedMessageEnvelope',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'ephemeralPublicKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'ciphertext', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedMessageEnvelope clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedMessageEnvelope copyWith(
+          void Function(EncryptedMessageEnvelope) updates) =>
+      super.copyWith((message) => updates(message as EncryptedMessageEnvelope))
+          as EncryptedMessageEnvelope;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedMessageEnvelope create() => EncryptedMessageEnvelope._();
+  @$core.override
+  EncryptedMessageEnvelope createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedMessageEnvelope getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedMessageEnvelope>(create);
+  static EncryptedMessageEnvelope? _defaultInstance;
+
+  /// Fresh 32-byte X25519 public key generated for this envelope. The sender
+  /// derives the encryption key from this ephemeral key pair and the recipient's
+  /// public identity key using HKDF-SHA-256 with an empty salt and a 32-byte
+  /// output. HKDF info must be the UTF-8 bytes of
+  /// "twonly-message-envelope-encryption-v1" followed by ephemeral_public_key
+  /// and the recipient's serialized public identity key.
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get ephemeralPublicKey => $_getN(0);
+  @$pb.TagNumber(1)
+  set ephemeralPublicKey($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEphemeralPublicKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEphemeralPublicKey() => $_clearField(1);
+
+  /// Fresh 24-byte XChaCha20-Poly1305 nonce.
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get nonce => $_getN(1);
+  @$pb.TagNumber(2)
+  set nonce($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasNonce() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearNonce() => $_clearField(2);
+
+  /// Serialized MessageEnvelope encrypted with XChaCha20-Poly1305. This includes
+  /// the 16-byte Poly1305 authentication tag. The AEAD associated data is exactly
+  /// the UTF-8 bytes of "twonly-message-envelope-encryption-v1".
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get ciphertext => $_getN(2);
+  @$pb.TagNumber(3)
+  set ciphertext($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCiphertext() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCiphertext() => $_clearField(3);
+}
+
+class MessageEnvelope extends $pb.GeneratedMessage {
+  factory MessageEnvelope({
+    $core.List<$core.int>? signedPayload,
+    $core.List<$core.int>? signature,
+  }) {
+    final result = create();
+    if (signedPayload != null) result.signedPayload = signedPayload;
+    if (signature != null) result.signature = signature;
+    return result;
+  }
+
+  MessageEnvelope._();
+
+  factory MessageEnvelope.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory MessageEnvelope.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MessageEnvelope',
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'signedPayload', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  MessageEnvelope clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  MessageEnvelope copyWith(void Function(MessageEnvelope) updates) =>
+      super.copyWith((message) => updates(message as MessageEnvelope))
+          as MessageEnvelope;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static MessageEnvelope create() => MessageEnvelope._();
+  @$core.override
+  MessageEnvelope createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static MessageEnvelope getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MessageEnvelope>(create);
+  static MessageEnvelope? _defaultInstance;
+
+  /// Exact serialized MessageEnvelopePayload bytes. The signature is calculated
+  /// directly over these bytes. Keeping the serialized payload allows verification
+  /// without relying on canonical protobuf serialization.
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get signedPayload => $_getN(0);
+  @$pb.TagNumber(1)
+  set signedPayload($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSignedPayload() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignedPayload() => $_clearField(1);
+
+  /// Signature created with the sender's identity key. For a known contact, use
+  /// the pinned public identity key. For an unknown sender, fetch the public key
+  /// from the trusted server, verify this signature, and only then pin the key and
+  /// process the raw message.
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signature => $_getN(1);
+  @$pb.TagNumber(2)
+  set signature($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSignature() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignature() => $_clearField(2);
+}
+
+class MessageEnvelopePayload extends $pb.GeneratedMessage {
+  factory MessageEnvelopePayload({
+    $core.String? magic,
+    $fixnum.Int64? fromUserId,
+    $fixnum.Int64? recipientUserId,
+    Message? message,
+    $fixnum.Int64? createdAtUnixSeconds,
+  }) {
+    final result = create();
+    if (magic != null) result.magic = magic;
+    if (fromUserId != null) result.fromUserId = fromUserId;
+    if (recipientUserId != null) result.recipientUserId = recipientUserId;
+    if (message != null) result.message = message;
+    if (createdAtUnixSeconds != null)
+      result.createdAtUnixSeconds = createdAtUnixSeconds;
+    return result;
+  }
+
+  MessageEnvelopePayload._();
+
+  factory MessageEnvelopePayload.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory MessageEnvelopePayload.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MessageEnvelopePayload',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'magic')
+    ..aInt64(2, _omitFieldNames ? '' : 'fromUserId')
+    ..aInt64(3, _omitFieldNames ? '' : 'recipientUserId')
+    ..aOM<Message>(4, _omitFieldNames ? '' : 'message',
+        subBuilder: Message.create)
+    ..aInt64(5, _omitFieldNames ? '' : 'createdAtUnixSeconds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  MessageEnvelopePayload clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  MessageEnvelopePayload copyWith(
+          void Function(MessageEnvelopePayload) updates) =>
+      super.copyWith((message) => updates(message as MessageEnvelopePayload))
+          as MessageEnvelopePayload;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static MessageEnvelopePayload create() => MessageEnvelopePayload._();
+  @$core.override
+  MessageEnvelopePayload createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static MessageEnvelopePayload getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MessageEnvelopePayload>(create);
+  static MessageEnvelopePayload? _defaultInstance;
+
+  /// Domain-separation and protocol-version marker. The receiver must reject the
+  /// payload unless this is exactly "twonly-message-envelope-v1".
+  @$pb.TagNumber(1)
+  $core.String get magic => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set magic($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMagic() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMagic() => $_clearField(1);
+
+  /// The sender is protected by the encryption of the outer MessageEnvelope.
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get fromUserId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set fromUserId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFromUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFromUserId() => $_clearField(2);
+
+  /// Bind the sender's signature to the intended recipient. This prevents a
+  /// recipient from re-encrypting a valid signed envelope for another user. The
+  /// binding is required because raw_message is not always a Signal ciphertext
+  /// and therefore is not always independently bound to a Signal session. The
+  /// receiver must reject an envelope when this ID does not match its own user ID.
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get recipientUserId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set recipientUserId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRecipientUserId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRecipientUserId() => $_clearField(3);
+
+  /// The mandatory UUIDv4 receipt_id is covered by the envelope signature and is
+  /// used by the receiver to reject replayed messages before processing them.
+  @$pb.TagNumber(4)
+  Message get message => $_getN(3);
+  @$pb.TagNumber(4)
+  set message(Message value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMessage() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMessage() => $_clearField(4);
+  @$pb.TagNumber(4)
+  Message ensureMessage() => $_ensure(3);
+
+  /// UTC Unix timestamp in seconds when the envelope was created. The receiver
+  /// must reject envelopes older than 45 days or more than five minutes in the
+  /// future. This field is covered by the envelope signature.
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get createdAtUnixSeconds => $_getI64(4);
+  @$pb.TagNumber(5)
+  set createdAtUnixSeconds($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCreatedAtUnixSeconds() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCreatedAtUnixSeconds() => $_clearField(5);
+}
+
 class Message extends $pb.GeneratedMessage {
   factory Message({
     Message_Type? type,

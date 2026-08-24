@@ -10,6 +10,7 @@ use crate::{
     log::init_tracing,
     utils::Shared,
 };
+use libsignal_protocol::IdentityKey;
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::{Mutex, OnceCell, RwLock};
 use zeroize::Zeroize;
@@ -251,6 +252,21 @@ impl Context {
             Self::Flutter(twonly) => twonly.rust_db.read().await.clone(),
             Self::Standalone(twonly) => twonly.rust_db.read().await.clone(),
         }
+    }
+
+    pub(crate) async fn get_identity(&self, user_id: i64) -> Result<Option<IdentityKey>> {
+        let database = self.get_rust_database().await;
+        let identity_key: Option<Vec<u8>> =
+            sqlx::query_scalar("SELECT identity_key FROM signal_identities WHERE name = ?")
+                .bind(user_id.to_string())
+                .fetch_optional(&database.pool)
+                .await?;
+
+        identity_key
+            .map(|bytes| {
+                IdentityKey::decode(&bytes).map_err(|error| TwonlyError::Signal(error.to_string()))
+            })
+            .transpose()
     }
 
     pub(crate) async fn replace_rust_database(

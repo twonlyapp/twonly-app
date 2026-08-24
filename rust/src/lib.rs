@@ -6,6 +6,7 @@ mod error;
 mod frb_generated;
 mod keys;
 mod log;
+pub mod sealed_sender;
 mod secure_storage;
 pub mod signal;
 mod user_discovery;
