@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use chacha20poly1305::{
     aead::{Aead, Payload},
     KeyInit, XChaCha20Poly1305, XNonce,
@@ -10,11 +15,8 @@ use sha2::Sha256;
 use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
+use crate::api::proto::client as proto;
 use crate::context::Context;
-
-pub mod proto {
-    include!(concat!(env!("OUT_DIR"), "/client_messages.rs"));
-}
 
 const PAYLOAD_MAGIC: &str = "twonly-message-envelope-v1";
 const ENCRYPTION_CONTEXT: &[u8] = b"twonly-message-envelope-encryption-v1";
@@ -82,6 +84,7 @@ pub enum SealedSenderError {
 pub(crate) struct SealedSender;
 
 impl SealedSender {
+    #[allow(dead_code)]
     pub(crate) fn encrypt<R>(
         from_user_id: i64,
         recipient_user_id: i64,
@@ -104,6 +107,7 @@ impl SealedSender {
         )
     }
 
+    #[allow(dead_code)]
     fn encrypt_at<R>(
         from_user_id: i64,
         recipient_user_id: i64,
@@ -359,12 +363,16 @@ mod tests {
                 pre_key_store: Default::default(),
             });
         }
-        let database = context.get_rust_database().await;
-        sqlx::query(
-            "INSERT INTO signal_identities (name, identity_key, timestamp) VALUES (?, ?, 0)",
+        let database = context.get_rust_db().await;
+        let sender_identity = sender.identity_key().serialize();
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_identities (name, identity_key, timestamp)
+            VALUES (?, ?, 0)
+            "#,
+            "41",
+            sender_identity.as_ref(),
         )
-        .bind("41")
-        .bind(sender.identity_key().serialize().as_ref())
         .execute(&database.pool)
         .await
         .unwrap();

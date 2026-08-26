@@ -49,9 +49,14 @@ class CameraZoomButtons extends StatelessWidget {
       wideCameraIndex = index;
     }
 
-    final isFront = controller.description.lensDirection == CameraLensDirection.front;
+    final isFront =
+        controller.description.lensDirection == CameraLensDirection.front;
 
-    final showWideAngleZoomIOS = !showWideAngleZoom && Platform.isIOS && wideCameraIndex != null && !isFront;
+    final showWideAngleZoomIOS =
+        !showWideAngleZoom &&
+        Platform.isIOS &&
+        wideCameraIndex != null &&
+        !isFront;
 
     final zoomButtonStyle = TextButton.styleFrom(
       padding: EdgeInsets.zero,
@@ -63,11 +68,14 @@ class CameraZoomButtons extends StatelessWidget {
 
     const zoomTextStyle = TextStyle(fontSize: 13);
     final isSmallerFocused =
-        scaleFactor < 1 || (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex);
+        scaleFactor < 1 ||
+        (showWideAngleZoomIOS &&
+            selectedCameraDetails.cameraId == wideCameraIndex);
     final isMiddleFocused =
         scaleFactor >= 1 &&
         scaleFactor < 2 &&
-        !(showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex);
+        !(showWideAngleZoomIOS &&
+            selectedCameraDetails.cameraId == wideCameraIndex);
 
     final maxLevel = max(
       min(selectedCameraDetails.maxAvailableZoom, 2),
@@ -117,14 +125,17 @@ class CameraZoomButtons extends StatelessWidget {
                   ),
                 ),
                 onPressed: () async {
-                  if (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex) {
+                  if (showWideAngleZoomIOS &&
+                      selectedCameraDetails.cameraId == wideCameraIndex) {
                     await selectCamera(0, true);
                   } else {
                     updateScaleFactor(1.0);
                   }
                 },
                 child: Text(
-                  isMiddleFocused ? '${beautifulZoomScale(scaleFactor)}x' : '1.0x',
+                  isMiddleFocused
+                      ? '${beautifulZoomScale(scaleFactor)}x'
+                      : '1.0x',
                   style: zoomTextStyle,
                 ),
               ),
@@ -140,7 +151,8 @@ class CameraZoomButtons extends StatelessWidget {
                     2,
                   ).toDouble();
 
-                  if (showWideAngleZoomIOS && selectedCameraDetails.cameraId == wideCameraIndex) {
+                  if (showWideAngleZoomIOS &&
+                      selectedCameraDetails.cameraId == wideCameraIndex) {
                     await selectCamera(0, true);
                   }
                   updateScaleFactor(level);

@@ -16,7 +16,8 @@ class LoggingCallbacks {
               Log.info(log.split('INFO ')[1]);
             } else if (log.contains('DEBUG ')) {
               Log.info(log.split('DEBUG ')[1]);
-            } else if (kDebugMode && !Platform.environment.containsKey('FLUTTER_TEST')) {
+            } else if (kDebugMode &&
+                !Platform.environment.containsKey('FLUTTER_TEST')) {
               // ignore: avoid_print
               print(log);
             }

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::user_discovery::error::{Result, UserDiscoveryError};
 use crate::user_discovery::traits::{AnnouncedUser, OtherPromotion, UserDiscoveryStore};
 use crate::user_discovery::UserID;

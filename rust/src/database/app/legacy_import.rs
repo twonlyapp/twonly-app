@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use super::{AppDatabase, MigrationReport, TableMigrationCount, APPLICATION_TABLES};
 use crate::error::{Result, TwonlyError};
 use sqlx::{Acquire, AssertSqlSafe, Row};
@@ -6,8 +11,12 @@ use std::path::Path;
 
 impl AppDatabase {
     pub async fn is_legacy_import_complete(&self) -> Result<bool> {
-        let value = sqlx::query_scalar::<_, String>(
-            "SELECT value FROM app_metadata WHERE key = 'legacy_import_complete'",
+        let value = sqlx::query_scalar!(
+            r#"
+            SELECT value
+            FROM app_metadata
+            WHERE key = 'legacy_import_complete'
+            "#
         )
         .fetch_optional(&self.pool)
         .await?;
@@ -16,8 +25,24 @@ impl AppDatabase {
 
     pub async fn complete_empty_legacy_import(&self) -> Result<MigrationReport> {
         let mut transaction = self.pool.begin().await?;
-        sqlx::query("INSERT INTO app_metadata(key, value) VALUES('legacy_schema_version', '25') ON CONFLICT(key) DO UPDATE SET value = excluded.value").execute(&mut *transaction).await?;
-        sqlx::query("INSERT INTO app_metadata(key, value) VALUES('legacy_import_complete', '1') ON CONFLICT(key) DO UPDATE SET value = excluded.value").execute(&mut *transaction).await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO app_metadata(key, value)
+            VALUES('legacy_schema_version', '25')
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            "#
+        )
+        .execute(&mut *transaction)
+        .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO app_metadata(key, value)
+            VALUES('legacy_import_complete', '1')
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            "#
+        )
+        .execute(&mut *transaction)
+        .await?;
         transaction.commit().await?;
         self.migration_report().await
     }
@@ -30,12 +55,14 @@ impl AppDatabase {
             return Err(TwonlyError::DatabaseNotFound);
         }
         let mut connection = self.pool.acquire().await?;
-        sqlx::query("ATTACH DATABASE ? AS legacy KEY ''")
+        // SQLCipher's KEY clause and the attached schema are not available to
+        // SQLx's compile-time SQLite connection.
+        sqlx::query(r#"ATTACH DATABASE ? AS legacy KEY ''"#)
             .bind(legacy_path.to_string_lossy().as_ref())
             .execute(&mut *connection)
             .await?;
         let import_result = import(&mut connection).await;
-        let _ = sqlx::query("DETACH DATABASE legacy")
+        let _ = sqlx::query(r#"DETACH DATABASE legacy"#)
             .execute(&mut *connection)
             .await;
         let report = import_result?;
@@ -44,8 +71,12 @@ impl AppDatabase {
     }
 
     async fn migration_report(&self) -> Result<MigrationReport> {
-        let legacy_version = sqlx::query_scalar::<_, String>(
-            "SELECT value FROM app_metadata WHERE key = 'legacy_schema_version'",
+        let legacy_version = sqlx::query_scalar!(
+            r#"
+            SELECT value
+            FROM app_metadata
+            WHERE key = 'legacy_schema_version'
+            "#
         )
         .fetch_optional(&self.pool)
         .await?
@@ -54,7 +85,7 @@ impl AppDatabase {
         let mut tables = Vec::with_capacity(APPLICATION_TABLES.len());
         for table in APPLICATION_TABLES {
             let rows = sqlx::query_scalar::<_, i64>(AssertSqlSafe(format!(
-                "SELECT COUNT(*) FROM \"{table}\""
+                r#"SELECT COUNT(*) FROM "{table}""#
             )))
             .fetch_one(&self.pool)
             .await?;
@@ -73,14 +104,14 @@ impl AppDatabase {
 async fn import(
     connection: &mut sqlx::pool::PoolConnection<sqlx::Sqlite>,
 ) -> Result<MigrationReport> {
-    let legacy_version: i64 = sqlx::query_scalar("PRAGMA legacy.user_version")
+    let legacy_version: i64 = sqlx::query_scalar(r#"PRAGMA legacy.user_version"#)
         .fetch_one(&mut **connection)
         .await?;
     if legacy_version != 25 {
         return Err(TwonlyError::Generic(format!("Legacy database must be upgraded to Drift schema 25 before import; found {legacy_version}")));
     }
     let mut tx = connection.begin().await?;
-    sqlx::query("PRAGMA defer_foreign_keys = ON")
+    sqlx::query!(r#"PRAGMA defer_foreign_keys = ON"#)
         .execute(&mut *tx)
         .await?;
     let mut counts = Vec::with_capacity(APPLICATION_TABLES.len());
@@ -96,14 +127,18 @@ async fn import(
             .map(|column| format!("\"{}\"", column.replace('"', "\"\"")))
             .collect::<Vec<_>>()
             .join(", ");
-        sqlx::query(AssertSqlSafe(format!("INSERT OR REPLACE INTO main.\"{table}\" ({quoted}) SELECT {quoted} FROM legacy.\"{table}\""))).execute(&mut *tx).await?;
+        sqlx::query(AssertSqlSafe(format!(
+            r#"INSERT OR REPLACE INTO main."{table}" ({quoted}) SELECT {quoted} FROM legacy."{table}""#
+        )))
+        .execute(&mut *tx)
+        .await?;
         let source_count: i64 = sqlx::query_scalar(AssertSqlSafe(format!(
-            "SELECT COUNT(*) FROM legacy.\"{table}\""
+            r#"SELECT COUNT(*) FROM legacy."{table}""#
         )))
         .fetch_one(&mut *tx)
         .await?;
         let target_count: i64 = sqlx::query_scalar(AssertSqlSafe(format!(
-            "SELECT COUNT(*) FROM main.\"{table}\""
+            r#"SELECT COUNT(*) FROM main."{table}""#
         )))
         .fetch_one(&mut *tx)
         .await?;
@@ -112,8 +147,16 @@ async fn import(
                 "Row count mismatch for {table}: source={source_count}, target={target_count}"
             )));
         }
-        let mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!("SELECT 1 FROM (SELECT {quoted} FROM main.\"{table}\" EXCEPT SELECT {quoted} FROM legacy.\"{table}\") LIMIT 1"))).fetch_optional(&mut *tx).await?;
-        let reverse_mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!("SELECT 1 FROM (SELECT {quoted} FROM legacy.\"{table}\" EXCEPT SELECT {quoted} FROM main.\"{table}\") LIMIT 1"))).fetch_optional(&mut *tx).await?;
+        let mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!(
+            r#"SELECT 1 FROM (SELECT {quoted} FROM main."{table}" EXCEPT SELECT {quoted} FROM legacy."{table}") LIMIT 1"#
+        )))
+        .fetch_optional(&mut *tx)
+        .await?;
+        let reverse_mismatch: Option<i64> = sqlx::query_scalar(AssertSqlSafe(format!(
+            r#"SELECT 1 FROM (SELECT {quoted} FROM legacy."{table}" EXCEPT SELECT {quoted} FROM main."{table}") LIMIT 1"#
+        )))
+        .fetch_optional(&mut *tx)
+        .await?;
         if mismatch.is_some() || reverse_mismatch.is_some() {
             return Err(TwonlyError::Generic(format!(
                 "Data mismatch while importing {table}"
@@ -125,8 +168,8 @@ async fn import(
         });
     }
     copy_sequences(&mut tx).await?;
-    let foreign_key_errors: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM pragma_foreign_key_check")
+    let foreign_key_errors =
+        sqlx::query_scalar!(r#"SELECT COUNT(*) FROM pragma_foreign_key_check"#)
             .fetch_one(&mut *tx)
             .await?;
     if foreign_key_errors != 0 {
@@ -134,8 +177,25 @@ async fn import(
             "Imported database has {foreign_key_errors} foreign-key violations"
         )));
     }
-    sqlx::query("INSERT INTO app_metadata(key, value) VALUES('legacy_schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(legacy_version.to_string()).execute(&mut *tx).await?;
-    sqlx::query("INSERT INTO app_metadata(key, value) VALUES('legacy_import_complete', '1') ON CONFLICT(key) DO UPDATE SET value = '1'").execute(&mut *tx).await?;
+    sqlx::query!(
+        r#"
+        INSERT INTO app_metadata(key, value)
+        VALUES('legacy_schema_version', ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value
+        "#,
+        legacy_version.to_string(),
+    )
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query!(
+        r#"
+        INSERT INTO app_metadata(key, value)
+        VALUES('legacy_import_complete', '1')
+        ON CONFLICT(key) DO UPDATE SET value = '1'
+        "#
+    )
+    .execute(&mut *tx)
+    .await?;
     tx.commit().await?;
     Ok(MigrationReport {
         legacy_version,
@@ -148,7 +208,7 @@ async fn common_columns(
     table: &str,
 ) -> Result<Vec<String>> {
     let source_rows = sqlx::query(AssertSqlSafe(format!(
-        "PRAGMA legacy.table_info(\"{table}\")"
+        r#"PRAGMA legacy.table_info("{table}")"#
     )))
     .fetch_all(&mut **connection)
     .await?;
@@ -162,7 +222,7 @@ async fn common_columns(
         .map(|row| row.get::<String, _>("name"))
         .collect();
     let target_rows = sqlx::query(AssertSqlSafe(format!(
-        "PRAGMA main.table_info(\"{table}\")"
+        r#"PRAGMA main.table_info("{table}")"#
     )))
     .fetch_all(&mut **connection)
     .await?;
@@ -184,20 +244,21 @@ async fn copy_sequences(connection: &mut sqlx::Transaction<'_, sqlx::Sqlite>) ->
         "labels",
     ] {
         let source_sequence: Option<i64> =
-            sqlx::query_scalar("SELECT seq FROM legacy.sqlite_sequence WHERE name = ?")
+            sqlx::query_scalar(r#"SELECT seq FROM legacy.sqlite_sequence WHERE name = ?"#)
                 .bind(table)
                 .fetch_optional(&mut **connection)
                 .await?;
         if let Some(sequence) = source_sequence {
-            sqlx::query("DELETE FROM main.sqlite_sequence WHERE name = ?")
-                .bind(table)
+            sqlx::query!(r#"DELETE FROM main.sqlite_sequence WHERE name = ?"#, table)
                 .execute(&mut **connection)
                 .await?;
-            sqlx::query("INSERT INTO main.sqlite_sequence(name, seq) VALUES(?, ?)")
-                .bind(table)
-                .bind(sequence)
-                .execute(&mut **connection)
-                .await?;
+            sqlx::query!(
+                r#"INSERT INTO main.sqlite_sequence(name, seq) VALUES(?, ?)"#,
+                table,
+                sequence,
+            )
+            .execute(&mut **connection)
+            .await?;
         }
     }
     Ok(())
@@ -220,7 +281,7 @@ mod tests {
             .await
             .unwrap();
         legacy.run_migrations().await.unwrap();
-        sqlx::query("PRAGMA user_version = 25")
+        sqlx::query!(r#"PRAGMA user_version = 25"#)
             .execute(&legacy.pool)
             .await
             .unwrap();
@@ -268,11 +329,16 @@ mod tests {
             .raw_execute("ROLLBACK".to_owned(), vec![])
             .await
             .unwrap();
-        let username: String =
-            sqlx::query_scalar("SELECT username FROM contacts WHERE user_id = 7")
-                .fetch_one(&target.pool)
-                .await
-                .unwrap();
+        let username = sqlx::query_scalar!(
+            r#"
+            SELECT username
+            FROM contacts
+            WHERE user_id = 7
+            "#
+        )
+        .fetch_one(&target.pool)
+        .await
+        .unwrap();
         assert_eq!(username, "alice");
 
         let legacy_check = AppDatabase::new(legacy_path.to_str().unwrap(), None, true)
@@ -295,7 +361,7 @@ mod tests {
         ];
         for (table, column, expected) in signal_checks {
             let actual: Vec<u8> = sqlx::query_scalar(AssertSqlSafe(format!(
-                "SELECT {column} FROM {table} LIMIT 1"
+                r#"SELECT {column} FROM {table} LIMIT 1"#
             )))
             .fetch_one(&legacy_check.pool)
             .await

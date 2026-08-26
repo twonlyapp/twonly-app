@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO app_metadata(key, value)\n        VALUES('legacy_import_complete', '1')\n        ON CONFLICT(key) DO UPDATE SET value = '1'\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "f579d5670f62ff8523d668a7789fca0fabae27202f09976f1c0159cc7c3b4329"
+}

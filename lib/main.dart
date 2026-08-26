@@ -67,7 +67,9 @@ Future<bool> twonlyMinimumInitialization() async {
             final legacyDatabase = TwonlyDB(NativeDatabase(legacyFile));
             // Opening the database applies every existing Drift migration up
             // to v25 before Rust copies the application tables.
-            await legacyDatabase.customSelect('PRAGMA user_version').getSingle();
+            await legacyDatabase
+                .customSelect('PRAGMA user_version')
+                .getSingle();
             await legacyDatabase.close();
           }
           await RustAppDatabase.migrateLegacyDatabase();

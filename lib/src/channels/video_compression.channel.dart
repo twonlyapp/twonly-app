@@ -2,8 +2,9 @@ import 'package:flutter/services.dart';
 import 'package:twonly/src/utils/log.dart';
 
 abstract class VideoCompressionChannel {
-  static const MethodChannel _channel =
-      MethodChannel('eu.twonly/videoCompression');
+  static const MethodChannel _channel = MethodChannel(
+    'eu.twonly/videoCompression',
+  );
 
   static void Function(double)? _currentProgressCallback;
   static bool _handlerSetup = false;

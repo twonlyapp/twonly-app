@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package error;
+
+enum ErrorCode {
+    Unknown = 0;
+    BadRequest = 400;
+    TooManyRequests = 429;
+    InternalError = 500;
+
+    InvalidInvitationCode = 1002;
+    UsernameAlreadyTaken = 1003;
+    SignatureNotValid = 1004;
+    UsernameNotFound = 1005;
+    UsernameNotValid = 1006;
+    InvalidPublicKey = 1007;
+    SessionAlreadyAuthenticated = 1008;
+    SessionNotAuthenticated = 1009;
+    OnlyOneSessionAllowed = 1010;
+    UploadLimitReached = 1011;
+    InvalidUpdateToken = 1012;
+    InvalidOffset = 1013;
+    InvalidGoogleFcmToken = 1014;
+    UploadTokenIsBlocked = 1015;
+    UploadChecksumInvalid = 1016;
+    InvalidDownloadToken = 1017;
+    ApiEndpointNotFound = 1018;
+    AuthTokenNotValid = 1019;
+    InvalidPreKeys = 1020;
+    VoucherInValid = 1021;
+    PlanNotAllowed = 1022;
+    PlanLimitReached = 1023;
+    NotEnoughCredit = 1024;
+    PlanDowngrade = 1025;
+    PlanUpgradeNotYearly = 1026;
+    InvalidSignedPreKey = 1027;
+    UserIdNotFound= 1028;
+    UserIdAlreadyTaken = 1029;
+    AppVersionOutdated = 1030;
+    NewDeviceRegistered = 1031;
+    InvalidProofOfWork = 1032;
+    RegistrationDisabled = 1033;
+    IPAPaymentExpired = 1034;
+    UserIsNotInFreePlan = 1035;
+    ForegroundSessionConnected = 1036;
+    NoRecoveryData = 1037;
+    InvalidRecoveryData = 1038;
+}

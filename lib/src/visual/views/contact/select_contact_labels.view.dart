@@ -20,7 +20,8 @@ class SelectContactLabelsView extends StatefulWidget {
   final int contactId;
 
   @override
-  State<SelectContactLabelsView> createState() => _SelectContactLabelsViewState();
+  State<SelectContactLabelsView> createState() =>
+      _SelectContactLabelsViewState();
 }
 
 class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
@@ -35,7 +36,9 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
   @override
   void initState() {
     super.initState();
-    _contactSub = twonlyDB.contactsDao.watchContact(widget.contactId).listen((contact) {
+    _contactSub = twonlyDB.contactsDao.watchContact(widget.contactId).listen((
+      contact,
+    ) {
       if (mounted) {
         setState(() {
           _contact = contact;
@@ -51,13 +54,15 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
       }
     });
 
-    _contactLabelsSub = twonlyDB.labelsDao.watchContactLabels(widget.contactId).listen((labels) {
-      if (mounted) {
-        setState(() {
-          _selectedLabelIds = labels.map((l) => l.id).toSet();
+    _contactLabelsSub = twonlyDB.labelsDao
+        .watchContactLabels(widget.contactId)
+        .listen((labels) {
+          if (mounted) {
+            setState(() {
+              _selectedLabelIds = labels.map((l) => l.id).toSet();
+            });
+          }
         });
-      }
-    });
   }
 
   @override
@@ -88,7 +93,10 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
       _selectedLabelIds = newSet;
     });
 
-    await twonlyDB.labelsDao.setContactLabels(widget.contactId, _selectedLabelIds.toList());
+    await twonlyDB.labelsDao.setContactLabels(
+      widget.contactId,
+      _selectedLabelIds.toList(),
+    );
   }
 
   Future<void> _createLabel() async {
@@ -181,7 +189,10 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
               children: [
                 Text(
                   getContactDisplayName(contact, maxLength: 25),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 if (getContactDisplayName(contact) != contact.username)
                   Text(
@@ -258,7 +269,10 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
                         title: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Color(label.backgroundColor),
                                 borderRadius: BorderRadius.circular(12),
@@ -284,7 +298,10 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
                                 onTap: () => _editLabel(label),
                                 child: const Padding(
                                   padding: EdgeInsets.all(6),
-                                  child: FaIcon(FontAwesomeIcons.penToSquare, size: 16),
+                                  child: FaIcon(
+                                    FontAwesomeIcons.penToSquare,
+                                    size: 16,
+                                  ),
                                 ),
                               ),
                             ),
@@ -296,7 +313,11 @@ class _SelectContactLabelsViewState extends State<SelectContactLabelsView> {
                                 onTap: () => _deleteLabel(label),
                                 child: const Padding(
                                   padding: EdgeInsets.all(6),
-                                  child: FaIcon(FontAwesomeIcons.trashCan, size: 16, color: Colors.red),
+                                  child: FaIcon(
+                                    FontAwesomeIcons.trashCan,
+                                    size: 16,
+                                    color: Colors.red,
+                                  ),
                                 ),
                               ),
                             ),

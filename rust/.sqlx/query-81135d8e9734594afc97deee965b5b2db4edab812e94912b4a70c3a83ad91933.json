@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE messages\n                    SET opened_at = ?, opened_by_all = ?\n                    WHERE message_id = ?\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "81135d8e9734594afc97deee965b5b2db4edab812e94912b4a70c3a83ad91933"
+}

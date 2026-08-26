@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE media_files\n            SET download_state = 'pending',\n                download_token = ?,\n                encryption_key = ?,\n                encryption_mac = ?,\n                encryption_nonce = ?\n            WHERE media_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "b400f362374072f8974fae82ed2a41a7f3445ea2c041dd058312564ac21af3ae"
+}

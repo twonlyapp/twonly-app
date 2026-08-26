@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM main.sqlite_sequence WHERE name = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e52ee5a2c980f153a9b3b901ab74e5646485b1a600c159dc7ac13370d8bba9d9"
+}

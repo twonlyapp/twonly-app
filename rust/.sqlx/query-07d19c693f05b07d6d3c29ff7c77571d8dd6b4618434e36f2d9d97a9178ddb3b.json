@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT my_group_private_key IS NOT NULL\n        FROM groups\n        WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "my_group_private_key IS NOT NULL",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "07d19c693f05b07d6d3c29ff7c77571d8dd6b4618434e36f2d9d97a9178ddb3b"
+}

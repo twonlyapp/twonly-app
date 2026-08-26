@@ -10,7 +10,8 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart' as pb;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
 import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
@@ -60,7 +61,8 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
     final currentPlan = planFromString(
       userService.currentUser.subscriptionPlan,
     );
-    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) && kReleaseMode) {
+    if (!isUserAllowed(currentPlan, PremiumFeatures.RestoreFlames) &&
+        kReleaseMode) {
       await context.push(Routes.settingsSubscription);
       return;
     }

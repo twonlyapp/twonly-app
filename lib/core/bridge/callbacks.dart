@@ -4,16 +4,125 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `FlutterCallbacks`, `Logging`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`, `LegacySignal`, `Logging`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 Future<void> initFlutterCallbacks({
   required int callbackId,
   required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
+  required FutureOr<LegacySignalDecryptResult> Function(
+    PlatformInt64,
+    Uint8List,
+    int,
+  )
+  legacySignalDecrypt,
+  required FutureOr<LegacySignalEncryptResult?> Function(
+    PlatformInt64,
+    Uint8List,
+  )
+  legacySignalEncrypt,
+  required FutureOr<List<LegacySignalPreKey>> Function()
+  legacySignalGeneratePrekeys,
+  required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
+  required FutureOr<void> Function(PlatformInt64) apiPushKeyRequested,
+  required FutureOr<void> Function(PlatformInt64, String, String)
+  apiGroupMembershipError,
+  required FutureOr<void> Function(String, String, PlatformInt64, String)
+  apiMediaAction,
+  required FutureOr<void> Function(PlatformInt64, Uint8List)
+  apiVerificationProof,
+  required FutureOr<Uint8List?> Function(PlatformInt64, String?, Uint8List, int)
+  apiCreatePushData,
+  required FutureOr<void> Function(PlatformInt64) apiCreatePushAvatars,
+  required FutureOr<void> Function() apiRecoveryChanged,
+  required FutureOr<void> Function(String, PlatformInt64) apiMediaReceived,
+  required FutureOr<void> Function(String, bool) apiGroupStateRefresh,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   callbackId: callbackId,
   loggingGetStreamSink: loggingGetStreamSink,
+  legacySignalDecrypt: legacySignalDecrypt,
+  legacySignalEncrypt: legacySignalEncrypt,
+  legacySignalGeneratePrekeys: legacySignalGeneratePrekeys,
+  apiResyncSignalSession: apiResyncSignalSession,
+  apiPushKeyRequested: apiPushKeyRequested,
+  apiGroupMembershipError: apiGroupMembershipError,
+  apiMediaAction: apiMediaAction,
+  apiVerificationProof: apiVerificationProof,
+  apiCreatePushData: apiCreatePushData,
+  apiCreatePushAvatars: apiCreatePushAvatars,
+  apiRecoveryChanged: apiRecoveryChanged,
+  apiMediaReceived: apiMediaReceived,
+  apiGroupStateRefresh: apiGroupStateRefresh,
 );
+
+class LegacySignalDecryptResult {
+  /// Serialized `EncryptedContent` when legacy Signal decryption succeeded.
+  final Uint8List? plaintext;
+
+  /// Serialized protobuf enum value for `DecryptionErrorMessage.Type`.
+  final int? decryptionErrorType;
+
+  const LegacySignalDecryptResult({
+    this.plaintext,
+    this.decryptionErrorType,
+  });
+
+  @override
+  int get hashCode => plaintext.hashCode ^ decryptionErrorType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LegacySignalDecryptResult &&
+          runtimeType == other.runtimeType &&
+          plaintext == other.plaintext &&
+          decryptionErrorType == other.decryptionErrorType;
+}
+
+class LegacySignalEncryptResult {
+  final Uint8List ciphertext;
+
+  /// `Message.Type.CIPHERTEXT` or `Message.Type.PREKEY_BUNDLE`.
+  final int messageType;
+
+  const LegacySignalEncryptResult({
+    required this.ciphertext,
+    required this.messageType,
+  });
+
+  @override
+  int get hashCode => ciphertext.hashCode ^ messageType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LegacySignalEncryptResult &&
+          runtimeType == other.runtimeType &&
+          ciphertext == other.ciphertext &&
+          messageType == other.messageType;
+}
+
+class LegacySignalPreKey {
+  final PlatformInt64 id;
+  final Uint8List publicKey;
+
+  const LegacySignalPreKey({
+    required this.id,
+    required this.publicKey,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ publicKey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LegacySignalPreKey &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          publicKey == other.publicKey;
+}

@@ -96,6 +96,8 @@ enum V0_Kind {
   error,
   newMessages,
   requestNewPqcPreKeys,
+  sealedSenderMessage,
+  sealedSenderMessages,
   notSet
 }
 
@@ -108,6 +110,8 @@ class V0 extends $pb.GeneratedMessage {
     $0.ErrorCode? error,
     NewMessages? newMessages,
     $core.bool? requestNewPqcPreKeys,
+    SealedSenderMessage? sealedSenderMessage,
+    SealedSenderMessages? sealedSenderMessages,
   }) {
     final result = create();
     if (seq != null) result.seq = seq;
@@ -118,6 +122,10 @@ class V0 extends $pb.GeneratedMessage {
     if (newMessages != null) result.newMessages = newMessages;
     if (requestNewPqcPreKeys != null)
       result.requestNewPqcPreKeys = requestNewPqcPreKeys;
+    if (sealedSenderMessage != null)
+      result.sealedSenderMessage = sealedSenderMessage;
+    if (sealedSenderMessages != null)
+      result.sealedSenderMessages = sealedSenderMessages;
     return result;
   }
 
@@ -137,6 +145,8 @@ class V0 extends $pb.GeneratedMessage {
     6: V0_Kind.error,
     7: V0_Kind.newMessages,
     8: V0_Kind.requestNewPqcPreKeys,
+    9: V0_Kind.sealedSenderMessage,
+    10: V0_Kind.sealedSenderMessages,
     0: V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -144,7 +154,7 @@ class V0 extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 6, 7, 8])
+    ..oo(0, [2, 3, 4, 6, 7, 8, 9, 10])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response',
@@ -159,6 +169,13 @@ class V0 extends $pb.GeneratedMessage {
         protoName: 'newMessages', subBuilder: NewMessages.create)
     ..aOB(8, _omitFieldNames ? '' : 'RequestNewPqcPreKeys',
         protoName: 'RequestNewPqcPreKeys')
+    ..aOM<SealedSenderMessage>(9, _omitFieldNames ? '' : 'sealedSenderMessage',
+        protoName: 'sealedSenderMessage',
+        subBuilder: SealedSenderMessage.create)
+    ..aOM<SealedSenderMessages>(
+        10, _omitFieldNames ? '' : 'sealedSenderMessages',
+        protoName: 'sealedSenderMessages',
+        subBuilder: SealedSenderMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -185,6 +202,8 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   V0_Kind whichKind() => _V0_KindByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -192,6 +211,8 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   void clearKind() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -262,6 +283,28 @@ class V0 extends $pb.GeneratedMessage {
   $core.bool hasRequestNewPqcPreKeys() => $_has(6);
   @$pb.TagNumber(8)
   void clearRequestNewPqcPreKeys() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  SealedSenderMessage get sealedSenderMessage => $_getN(7);
+  @$pb.TagNumber(9)
+  set sealedSenderMessage(SealedSenderMessage value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasSealedSenderMessage() => $_has(7);
+  @$pb.TagNumber(9)
+  void clearSealedSenderMessage() => $_clearField(9);
+  @$pb.TagNumber(9)
+  SealedSenderMessage ensureSealedSenderMessage() => $_ensure(7);
+
+  @$pb.TagNumber(10)
+  SealedSenderMessages get sealedSenderMessages => $_getN(8);
+  @$pb.TagNumber(10)
+  set sealedSenderMessages(SealedSenderMessages value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasSealedSenderMessages() => $_has(8);
+  @$pb.TagNumber(10)
+  void clearSealedSenderMessages() => $_clearField(10);
+  @$pb.TagNumber(10)
+  SealedSenderMessages ensureSealedSenderMessages() => $_ensure(8);
 }
 
 class NewMessage extends $pb.GeneratedMessage {
@@ -379,6 +422,124 @@ class NewMessages extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<NewMessage> get newMessages => $_getList(0);
+}
+
+class SealedSenderMessage extends $pb.GeneratedMessage {
+  factory SealedSenderMessage({
+    $core.String? messageId,
+    $core.List<$core.int>? body,
+  }) {
+    final result = create();
+    if (messageId != null) result.messageId = messageId;
+    if (body != null) result.body = body;
+    return result;
+  }
+
+  SealedSenderMessage._();
+
+  factory SealedSenderMessage.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SealedSenderMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SealedSenderMessage',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'messageId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessage copyWith(void Function(SealedSenderMessage) updates) =>
+      super.copyWith((message) => updates(message as SealedSenderMessage))
+          as SealedSenderMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessage create() => SealedSenderMessage._();
+  @$core.override
+  SealedSenderMessage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SealedSenderMessage>(create);
+  static SealedSenderMessage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get messageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set messageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get body => $_getN(1);
+  @$pb.TagNumber(2)
+  set body($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBody() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBody() => $_clearField(2);
+}
+
+class SealedSenderMessages extends $pb.GeneratedMessage {
+  factory SealedSenderMessages({
+    $core.Iterable<SealedSenderMessage>? messages,
+  }) {
+    final result = create();
+    if (messages != null) result.messages.addAll(messages);
+    return result;
+  }
+
+  SealedSenderMessages._();
+
+  factory SealedSenderMessages.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SealedSenderMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SealedSenderMessages',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..pPM<SealedSenderMessage>(1, _omitFieldNames ? '' : 'messages',
+        subBuilder: SealedSenderMessage.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessages clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessages copyWith(void Function(SealedSenderMessages) updates) =>
+      super.copyWith((message) => updates(message as SealedSenderMessages))
+          as SealedSenderMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessages create() => SealedSenderMessages._();
+  @$core.override
+  SealedSenderMessages createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessages getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SealedSenderMessages>(create);
+  static SealedSenderMessages? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<SealedSenderMessage> get messages => $_getList(0);
 }
 
 class Response_Authenticated extends $pb.GeneratedMessage {
@@ -2307,6 +2468,186 @@ class Response_MemoriesUsage extends $pb.GeneratedMessage {
   void clearCount() => $_clearField(3);
 }
 
+class Response_PrivacyPassParameters extends $pb.GeneratedMessage {
+  factory Response_PrivacyPassParameters({
+    $core.List<$core.int>? tokenChallenge,
+    $core.List<$core.int>? publicKey,
+    $core.int? maxBatchSize,
+    $core.int? maxAgeSeconds,
+    $core.int? dailyTokenLimit,
+    $core.int? issuanceCooldownSeconds,
+  }) {
+    final result = create();
+    if (tokenChallenge != null) result.tokenChallenge = tokenChallenge;
+    if (publicKey != null) result.publicKey = publicKey;
+    if (maxBatchSize != null) result.maxBatchSize = maxBatchSize;
+    if (maxAgeSeconds != null) result.maxAgeSeconds = maxAgeSeconds;
+    if (dailyTokenLimit != null) result.dailyTokenLimit = dailyTokenLimit;
+    if (issuanceCooldownSeconds != null)
+      result.issuanceCooldownSeconds = issuanceCooldownSeconds;
+    return result;
+  }
+
+  Response_PrivacyPassParameters._();
+
+  factory Response_PrivacyPassParameters.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PrivacyPassParameters.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PrivacyPassParameters',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'tokenChallenge', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..aI(3, _omitFieldNames ? '' : 'maxBatchSize',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'maxAgeSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'dailyTokenLimit',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(6, _omitFieldNames ? '' : 'issuanceCooldownSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PrivacyPassParameters clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PrivacyPassParameters copyWith(
+          void Function(Response_PrivacyPassParameters) updates) =>
+      super.copyWith(
+              (message) => updates(message as Response_PrivacyPassParameters))
+          as Response_PrivacyPassParameters;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PrivacyPassParameters create() =>
+      Response_PrivacyPassParameters._();
+  @$core.override
+  Response_PrivacyPassParameters createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PrivacyPassParameters getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PrivacyPassParameters>(create);
+  static Response_PrivacyPassParameters? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get tokenChallenge => $_getN(0);
+  @$pb.TagNumber(1)
+  set tokenChallenge($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTokenChallenge() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTokenChallenge() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get publicKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set publicKey($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPublicKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPublicKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get maxBatchSize => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set maxBatchSize($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMaxBatchSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMaxBatchSize() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get maxAgeSeconds => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set maxAgeSeconds($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMaxAgeSeconds() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMaxAgeSeconds() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.int get dailyTokenLimit => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set dailyTokenLimit($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDailyTokenLimit() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDailyTokenLimit() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.int get issuanceCooldownSeconds => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set issuanceCooldownSeconds($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasIssuanceCooldownSeconds() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearIssuanceCooldownSeconds() => $_clearField(6);
+}
+
+class Response_PrivacyPassTokenResponses extends $pb.GeneratedMessage {
+  factory Response_PrivacyPassTokenResponses({
+    $core.Iterable<$core.List<$core.int>>? tokenResponses,
+  }) {
+    final result = create();
+    if (tokenResponses != null) result.tokenResponses.addAll(tokenResponses);
+    return result;
+  }
+
+  Response_PrivacyPassTokenResponses._();
+
+  factory Response_PrivacyPassTokenResponses.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Response_PrivacyPassTokenResponses.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Response.PrivacyPassTokenResponses',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..p<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'tokenResponses', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PrivacyPassTokenResponses clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Response_PrivacyPassTokenResponses copyWith(
+          void Function(Response_PrivacyPassTokenResponses) updates) =>
+      super.copyWith((message) =>
+              updates(message as Response_PrivacyPassTokenResponses))
+          as Response_PrivacyPassTokenResponses;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PrivacyPassTokenResponses create() =>
+      Response_PrivacyPassTokenResponses._();
+  @$core.override
+  Response_PrivacyPassTokenResponses createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Response_PrivacyPassTokenResponses getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Response_PrivacyPassTokenResponses>(
+          create);
+  static Response_PrivacyPassTokenResponses? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.List<$core.int>> get tokenResponses => $_getList(0);
+}
+
 enum Response_Ok_Ok {
   none,
   userid,
@@ -2327,6 +2668,8 @@ enum Response_Ok_Ok {
   memoriesList,
   memoriesUrl,
   memoriesUsage,
+  privacyPassParameters,
+  privacyPassTokenResponses,
   notSet
 }
 
@@ -2351,6 +2694,8 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_MemoriesList? memoriesList,
     Response_MemoriesUrl? memoriesUrl,
     Response_MemoriesUsage? memoriesUsage,
+    Response_PrivacyPassParameters? privacyPassParameters,
+    Response_PrivacyPassTokenResponses? privacyPassTokenResponses,
   }) {
     final result = create();
     if (none != null) result.none = none;
@@ -2377,6 +2722,10 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (memoriesList != null) result.memoriesList = memoriesList;
     if (memoriesUrl != null) result.memoriesUrl = memoriesUrl;
     if (memoriesUsage != null) result.memoriesUsage = memoriesUsage;
+    if (privacyPassParameters != null)
+      result.privacyPassParameters = privacyPassParameters;
+    if (privacyPassTokenResponses != null)
+      result.privacyPassTokenResponses = privacyPassTokenResponses;
     return result;
   }
 
@@ -2409,6 +2758,8 @@ class Response_Ok extends $pb.GeneratedMessage {
     19: Response_Ok_Ok.memoriesList,
     20: Response_Ok_Ok.memoriesUrl,
     21: Response_Ok_Ok.memoriesUsage,
+    22: Response_Ok_Ok.privacyPassParameters,
+    23: Response_Ok_Ok.privacyPassTokenResponses,
     0: Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2416,8 +2767,29 @@ class Response_Ok extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(
-        0, [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+    ..oo(0, [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(
@@ -2459,6 +2831,12 @@ class Response_Ok extends $pb.GeneratedMessage {
         subBuilder: Response_MemoriesUrl.create)
     ..aOM<Response_MemoriesUsage>(21, _omitFieldNames ? '' : 'memoriesUsage',
         subBuilder: Response_MemoriesUsage.create)
+    ..aOM<Response_PrivacyPassParameters>(
+        22, _omitFieldNames ? '' : 'privacyPassParameters',
+        subBuilder: Response_PrivacyPassParameters.create)
+    ..aOM<Response_PrivacyPassTokenResponses>(
+        23, _omitFieldNames ? '' : 'privacyPassTokenResponses',
+        subBuilder: Response_PrivacyPassTokenResponses.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2499,6 +2877,8 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(19)
   @$pb.TagNumber(20)
   @$pb.TagNumber(21)
+  @$pb.TagNumber(22)
+  @$pb.TagNumber(23)
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
@@ -2519,6 +2899,8 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(19)
   @$pb.TagNumber(20)
   @$pb.TagNumber(21)
+  @$pb.TagNumber(22)
+  @$pb.TagNumber(23)
   void clearOk() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -2726,6 +3108,32 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearMemoriesUsage() => $_clearField(21);
   @$pb.TagNumber(21)
   Response_MemoriesUsage ensureMemoriesUsage() => $_ensure(18);
+
+  @$pb.TagNumber(22)
+  Response_PrivacyPassParameters get privacyPassParameters => $_getN(19);
+  @$pb.TagNumber(22)
+  set privacyPassParameters(Response_PrivacyPassParameters value) =>
+      $_setField(22, value);
+  @$pb.TagNumber(22)
+  $core.bool hasPrivacyPassParameters() => $_has(19);
+  @$pb.TagNumber(22)
+  void clearPrivacyPassParameters() => $_clearField(22);
+  @$pb.TagNumber(22)
+  Response_PrivacyPassParameters ensurePrivacyPassParameters() => $_ensure(19);
+
+  @$pb.TagNumber(23)
+  Response_PrivacyPassTokenResponses get privacyPassTokenResponses =>
+      $_getN(20);
+  @$pb.TagNumber(23)
+  set privacyPassTokenResponses(Response_PrivacyPassTokenResponses value) =>
+      $_setField(23, value);
+  @$pb.TagNumber(23)
+  $core.bool hasPrivacyPassTokenResponses() => $_has(20);
+  @$pb.TagNumber(23)
+  void clearPrivacyPassTokenResponses() => $_clearField(23);
+  @$pb.TagNumber(23)
+  Response_PrivacyPassTokenResponses ensurePrivacyPassTokenResponses() =>
+      $_ensure(20);
 }
 
 enum Response_Response { ok, error, notSet }

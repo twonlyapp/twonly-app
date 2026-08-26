@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO contacts(user_id, username, accepted, signal_version)\n            VALUES (?, ?, 1, 'v2')\n            ON CONFLICT(user_id) DO UPDATE SET\n                username = excluded.username,\n                accepted = 1,\n                signal_version = 'v2'\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "d8a8544c1d3eafe0b9c6f0ebd1b7102e792e3d27722294bdc626acde1b46ba2e"
+}

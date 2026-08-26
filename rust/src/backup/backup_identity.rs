@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::{Result, TwonlyError};
 use crate::keys::{BackupPasswordKeys, KeyManager};
 use crate::secure_storage::SecureStorage;

@@ -12704,7 +12704,7 @@ final class $$ContactsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.messages.senderId),
+    aliasName: 'contacts__user_id__messages__sender_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -12722,10 +12722,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
   _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageHistories,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.messageHistories.contactId,
-    ),
+    aliasName: 'contacts__user_id__message_histories__contact_id',
   );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
@@ -12745,7 +12742,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
   _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.reactions,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.reactions.senderId),
+    aliasName: 'contacts__user_id__reactions__sender_id',
   );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
@@ -12763,10 +12760,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
   _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupMembers,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.groupMembers.contactId,
-    ),
+    aliasName: 'contacts__user_id__group_members__contact_id',
   );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
@@ -12785,7 +12779,7 @@ final class $$ContactsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.receipts,
-    aliasName: $_aliasNameGenerator(db.contacts.userId, db.receipts.contactId),
+    aliasName: 'contacts__user_id__receipts__contact_id',
   );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
@@ -12802,10 +12796,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
   _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageActions,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.messageActions.contactId,
-    ),
+    aliasName: 'contacts__user_id__message_actions__contact_id',
   );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
@@ -12823,10 +12814,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
   _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupHistories,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.groupHistories.contactId,
-    ),
+    aliasName: 'contacts__user_id__group_histories__contact_id',
   );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
@@ -12848,10 +12836,8 @@ final class $$ContactsTableReferences
   _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
       MultiTypedResultKey.fromTable(
         db.userDiscoveryUserRelations,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryUserRelations.fromContactId,
-        ),
+        aliasName:
+            'contacts__user_id__user_discovery_user_relations__from_contact_id',
       );
 
   $$UserDiscoveryUserRelationsTableProcessedTableManager
@@ -12877,14 +12863,13 @@ final class $$ContactsTableReferences
     $UserDiscoveryOtherPromotionsTable,
     List<UserDiscoveryOtherPromotion>
   >
-  _userDiscoveryOtherPromotionsRefsTable(_$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(
-        db.userDiscoveryOtherPromotions,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryOtherPromotions.fromContactId,
-        ),
-      );
+  _userDiscoveryOtherPromotionsRefsTable(
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.userDiscoveryOtherPromotions,
+    aliasName:
+        'contacts__user_id__user_discovery_other_promotions__from_contact_id',
+  );
 
   $$UserDiscoveryOtherPromotionsTableProcessedTableManager
   get userDiscoveryOtherPromotionsRefs {
@@ -12912,10 +12897,8 @@ final class $$ContactsTableReferences
   _userDiscoveryOwnPromotionsRefsTable(_$TwonlyDB db) =>
       MultiTypedResultKey.fromTable(
         db.userDiscoveryOwnPromotions,
-        aliasName: $_aliasNameGenerator(
-          db.contacts.userId,
-          db.userDiscoveryOwnPromotions.contactId,
-        ),
+        aliasName:
+            'contacts__user_id__user_discovery_own_promotions__contact_id',
       );
 
   $$UserDiscoveryOwnPromotionsTableProcessedTableManager
@@ -12942,10 +12925,7 @@ final class $$ContactsTableReferences
   >
   _userDiscoverySharesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.userDiscoveryShares,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.userDiscoveryShares.contactId,
-    ),
+    aliasName: 'contacts__user_id__user_discovery_shares__contact_id',
   );
 
   $$UserDiscoverySharesTableProcessedTableManager get userDiscoverySharesRefs {
@@ -12968,10 +12948,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
   _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.contactLabels,
-    aliasName: $_aliasNameGenerator(
-      db.contacts.userId,
-      db.contactLabels.contactId,
-    ),
+    aliasName: 'contacts__user_id__contact_labels__contact_id',
   );
 
   $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
@@ -14574,7 +14551,7 @@ final class $$GroupsTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.groups.groupId, db.messages.groupId),
+    aliasName: 'groups__group_id__messages__group_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -14591,7 +14568,7 @@ final class $$GroupsTableReferences
   static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
   _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupMembers,
-    aliasName: $_aliasNameGenerator(db.groups.groupId, db.groupMembers.groupId),
+    aliasName: 'groups__group_id__group_members__group_id',
   );
 
   $$GroupMembersTableProcessedTableManager get groupMembersRefs {
@@ -14609,10 +14586,7 @@ final class $$GroupsTableReferences
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
   _groupHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.groupHistories,
-    aliasName: $_aliasNameGenerator(
-      db.groups.groupId,
-      db.groupHistories.groupId,
-    ),
+    aliasName: 'groups__group_id__group_histories__group_id',
   );
 
   $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
@@ -14630,10 +14604,7 @@ final class $$GroupsTableReferences
   static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
   _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.shortcutMembers,
-    aliasName: $_aliasNameGenerator(
-      db.groups.groupId,
-      db.shortcutMembers.groupId,
-    ),
+    aliasName: 'groups__group_id__shortcut_members__group_id',
   );
 
   $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
@@ -15587,7 +15558,7 @@ final class $$MediaFilesTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.messages,
-    aliasName: $_aliasNameGenerator(db.mediaFiles.mediaId, db.messages.mediaId),
+    aliasName: 'media_files__media_id__messages__media_id',
   );
 
   $$MessagesTableProcessedTableManager get messagesRefs {
@@ -16282,9 +16253,8 @@ final class $$MessagesTableReferences
     extends BaseReferences<_$TwonlyDB, $MessagesTable, Message> {
   $$MessagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.messages.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('messages__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -16301,9 +16271,7 @@ final class $$MessagesTableReferences
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messages.senderId, db.contacts.userId),
-      );
+      db.contacts.createAlias('messages__sender_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
@@ -16320,9 +16288,7 @@ final class $$MessagesTableReferences
   }
 
   static $MediaFilesTable _mediaIdTable(_$TwonlyDB db) =>
-      db.mediaFiles.createAlias(
-        $_aliasNameGenerator(db.messages.mediaId, db.mediaFiles.mediaId),
-      );
+      db.mediaFiles.createAlias('messages__media_id__media_files__media_id');
 
   $$MediaFilesTableProcessedTableManager? get mediaId {
     final $_column = $_itemColumn<String>('media_id');
@@ -16341,10 +16307,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
   _messageHistoriesRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageHistories,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.messageHistories.messageId,
-    ),
+    aliasName: 'messages__message_id__message_histories__message_id',
   );
 
   $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
@@ -16366,10 +16329,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$ReactionsTable, List<Reaction>>
   _reactionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.reactions,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.reactions.messageId,
-    ),
+    aliasName: 'messages__message_id__reactions__message_id',
   );
 
   $$ReactionsTableProcessedTableManager get reactionsRefs {
@@ -16388,10 +16348,7 @@ final class $$MessagesTableReferences
     _$TwonlyDB db,
   ) => MultiTypedResultKey.fromTable(
     db.receipts,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.receipts.messageId,
-    ),
+    aliasName: 'messages__message_id__receipts__message_id',
   );
 
   $$ReceiptsTableProcessedTableManager get receiptsRefs {
@@ -16409,10 +16366,7 @@ final class $$MessagesTableReferences
   static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
   _messageActionsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.messageActions,
-    aliasName: $_aliasNameGenerator(
-      db.messages.messageId,
-      db.messageActions.messageId,
-    ),
+    aliasName: 'messages__message_id__message_actions__message_id',
   );
 
   $$MessageActionsTableProcessedTableManager get messageActionsRefs {
@@ -17423,13 +17377,8 @@ final class $$MessageHistoriesTableReferences
     super.$_typedResult,
   );
 
-  static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(
-          db.messageHistories.messageId,
-          db.messages.messageId,
-        ),
-      );
+  static $MessagesTable _messageIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('message_histories__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -17445,10 +17394,8 @@ final class $$MessageHistoriesTableReferences
     );
   }
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messageHistories.contactId, db.contacts.userId),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('message_histories__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -17834,9 +17781,7 @@ final class $$ReactionsTableReferences
   $$ReactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(db.reactions.messageId, db.messages.messageId),
-      );
+      db.messages.createAlias('reactions__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -17853,9 +17798,7 @@ final class $$ReactionsTableReferences
   }
 
   static $ContactsTable _senderIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.reactions.senderId, db.contacts.userId),
-      );
+      db.contacts.createAlias('reactions__sender_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get senderId {
     final $_column = $_itemColumn<int>('sender_id');
@@ -18229,9 +18172,8 @@ final class $$GroupMembersTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupMembersTable, GroupMember> {
   $$GroupMembersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.groupMembers.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('group_members__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -18248,9 +18190,7 @@ final class $$GroupMembersTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.groupMembers.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('group_members__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -18713,9 +18653,7 @@ final class $$ReceiptsTableReferences
   $$ReceiptsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.receipts.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('receipts__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -18732,9 +18670,7 @@ final class $$ReceiptsTableReferences
   }
 
   static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(db.receipts.messageId, db.messages.messageId),
-      );
+      db.messages.createAlias('receipts__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager? get messageId {
     final $_column = $_itemColumn<String>('message_id');
@@ -19399,13 +19335,8 @@ final class $$MessageActionsTableReferences
     super.$_typedResult,
   );
 
-  static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias(
-        $_aliasNameGenerator(
-          db.messageActions.messageId,
-          db.messages.messageId,
-        ),
-      );
+  static $MessagesTable _messageIdTable(_$TwonlyDB db) => db.messages
+      .createAlias('message_actions__message_id__messages__message_id');
 
   $$MessagesTableProcessedTableManager get messageId {
     final $_column = $_itemColumn<String>('message_id')!;
@@ -19422,9 +19353,7 @@ final class $$MessageActionsTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.messageActions.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('message_actions__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -19807,9 +19736,8 @@ final class $$GroupHistoriesTableReferences
     super.$_typedResult,
   );
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.groupHistories.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('group_histories__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -19826,9 +19754,7 @@ final class $$GroupHistoriesTableReferences
   }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.groupHistories.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('group_histories__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -20304,10 +20230,8 @@ final class $$KeyVerificationsTableReferences
     super.$_typedResult,
   );
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.keyVerifications.contactId, db.contacts.userId),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('key_verifications__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -20323,13 +20247,8 @@ final class $$KeyVerificationsTableReferences
     );
   }
 
-  static $ContactsTable _verifiedByTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.keyVerifications.verifiedBy,
-          db.contacts.userId,
-        ),
-      );
+  static $ContactsTable _verifiedByTable(_$TwonlyDB db) => db.contacts
+      .createAlias('key_verifications__verified_by__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get verifiedBy {
     final $_column = $_itemColumn<int>('verified_by');
@@ -20899,14 +20818,13 @@ final class $$UserDiscoveryAnnouncedUsersTableReferences
     $UserDiscoveryUserRelationsTable,
     List<UserDiscoveryUserRelation>
   >
-  _userDiscoveryUserRelationsRefsTable(_$TwonlyDB db) =>
-      MultiTypedResultKey.fromTable(
-        db.userDiscoveryUserRelations,
-        aliasName: $_aliasNameGenerator(
-          db.userDiscoveryAnnouncedUsers.announcedUserId,
-          db.userDiscoveryUserRelations.announcedUserId,
-        ),
-      );
+  _userDiscoveryUserRelationsRefsTable(
+    _$TwonlyDB db,
+  ) => MultiTypedResultKey.fromTable(
+    db.userDiscoveryUserRelations,
+    aliasName:
+        'user_discovery_announced_users__announced_user_id__user_discovery_user_relations__announced_user_id',
+  );
 
   $$UserDiscoveryUserRelationsTableProcessedTableManager
   get userDiscoveryUserRelationsRefs {
@@ -21286,10 +21204,7 @@ final class $$UserDiscoveryUserRelationsTableReferences
   static $UserDiscoveryAnnouncedUsersTable _announcedUserIdTable(
     _$TwonlyDB db,
   ) => db.userDiscoveryAnnouncedUsers.createAlias(
-    $_aliasNameGenerator(
-      db.userDiscoveryUserRelations.announcedUserId,
-      db.userDiscoveryAnnouncedUsers.announcedUserId,
-    ),
+    'user_discovery_user_relations__announced_user_id__user_discovery_announced_users__announced_user_id',
   );
 
   $$UserDiscoveryAnnouncedUsersTableProcessedTableManager get announcedUserId {
@@ -21308,10 +21223,7 @@ final class $$UserDiscoveryUserRelationsTableReferences
 
   static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryUserRelations.fromContactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_user_relations__from_contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get fromContactId {
@@ -21703,10 +21615,7 @@ final class $$UserDiscoveryOtherPromotionsTableReferences
 
   static $ContactsTable _fromContactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryOtherPromotions.fromContactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_other_promotions__from_contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get fromContactId {
@@ -22074,10 +21983,7 @@ final class $$UserDiscoveryOwnPromotionsTableReferences
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryOwnPromotions.contactId,
-          db.contacts.userId,
-        ),
+        'user_discovery_own_promotions__contact_id__contacts__user_id',
       );
 
   $$ContactsTableProcessedTableManager get contactId {
@@ -22375,13 +22281,8 @@ final class $$UserDiscoverySharesTableReferences
     super.$_typedResult,
   );
 
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(
-          db.userDiscoveryShares.contactId,
-          db.contacts.userId,
-        ),
-      );
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) => db.contacts
+      .createAlias('user_discovery_shares__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager? get contactId {
     final $_column = $_itemColumn<int>('contact_id');
@@ -22666,10 +22567,7 @@ final class $$ShortcutsTableReferences
   static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
   _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.shortcutMembers,
-    aliasName: $_aliasNameGenerator(
-      db.shortcuts.id,
-      db.shortcutMembers.shortcutId,
-    ),
+    aliasName: 'shortcuts__id__shortcut_members__shortcut_id',
   );
 
   $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
@@ -22934,9 +22832,7 @@ final class $$ShortcutMembersTableReferences
   );
 
   static $ShortcutsTable _shortcutIdTable(_$TwonlyDB db) =>
-      db.shortcuts.createAlias(
-        $_aliasNameGenerator(db.shortcutMembers.shortcutId, db.shortcuts.id),
-      );
+      db.shortcuts.createAlias('shortcut_members__shortcut_id__shortcuts__id');
 
   $$ShortcutsTableProcessedTableManager get shortcutId {
     final $_column = $_itemColumn<int>('shortcut_id')!;
@@ -22952,9 +22848,8 @@ final class $$ShortcutMembersTableReferences
     );
   }
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
-    $_aliasNameGenerator(db.shortcutMembers.groupId, db.groups.groupId),
-  );
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
+      db.groups.createAlias('shortcut_members__group_id__groups__group_id');
 
   $$GroupsTableProcessedTableManager get groupId {
     final $_column = $_itemColumn<String>('group_id')!;
@@ -23293,7 +23188,7 @@ final class $$LabelsTableReferences
   static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
   _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
     db.contactLabels,
-    aliasName: $_aliasNameGenerator(db.labels.id, db.contactLabels.labelId),
+    aliasName: 'labels__id__contact_labels__label_id',
   );
 
   $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
@@ -23585,9 +23480,7 @@ final class $$ContactLabelsTableReferences
   );
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias(
-        $_aliasNameGenerator(db.contactLabels.contactId, db.contacts.userId),
-      );
+      db.contacts.createAlias('contact_labels__contact_id__contacts__user_id');
 
   $$ContactsTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -23603,9 +23496,8 @@ final class $$ContactLabelsTableReferences
     );
   }
 
-  static $LabelsTable _labelIdTable(_$TwonlyDB db) => db.labels.createAlias(
-    $_aliasNameGenerator(db.contactLabels.labelId, db.labels.id),
-  );
+  static $LabelsTable _labelIdTable(_$TwonlyDB db) =>
+      db.labels.createAlias('contact_labels__label_id__labels__id');
 
   $$LabelsTableProcessedTableManager get labelId {
     final $_column = $_itemColumn<int>('label_id')!;

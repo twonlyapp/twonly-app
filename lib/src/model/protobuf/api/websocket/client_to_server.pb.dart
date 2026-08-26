@@ -3301,6 +3301,105 @@ class ApplicationData_DisableMemoriesBackup extends $pb.GeneratedMessage {
   static ApplicationData_DisableMemoriesBackup? _defaultInstance;
 }
 
+class ApplicationData_GetPrivacyPassParameters extends $pb.GeneratedMessage {
+  factory ApplicationData_GetPrivacyPassParameters() => create();
+
+  ApplicationData_GetPrivacyPassParameters._();
+
+  factory ApplicationData_GetPrivacyPassParameters.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_GetPrivacyPassParameters.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.GetPrivacyPassParameters',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetPrivacyPassParameters clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_GetPrivacyPassParameters copyWith(
+          void Function(ApplicationData_GetPrivacyPassParameters) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_GetPrivacyPassParameters))
+          as ApplicationData_GetPrivacyPassParameters;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetPrivacyPassParameters create() =>
+      ApplicationData_GetPrivacyPassParameters._();
+  @$core.override
+  ApplicationData_GetPrivacyPassParameters createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetPrivacyPassParameters getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_GetPrivacyPassParameters>(create);
+  static ApplicationData_GetPrivacyPassParameters? _defaultInstance;
+}
+
+class ApplicationData_IssuePrivacyPassTokens extends $pb.GeneratedMessage {
+  factory ApplicationData_IssuePrivacyPassTokens({
+    $core.Iterable<$core.List<$core.int>>? tokenRequests,
+  }) {
+    final result = create();
+    if (tokenRequests != null) result.tokenRequests.addAll(tokenRequests);
+    return result;
+  }
+
+  ApplicationData_IssuePrivacyPassTokens._();
+
+  factory ApplicationData_IssuePrivacyPassTokens.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_IssuePrivacyPassTokens.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.IssuePrivacyPassTokens',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..p<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'tokenRequests', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IssuePrivacyPassTokens clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IssuePrivacyPassTokens copyWith(
+          void Function(ApplicationData_IssuePrivacyPassTokens) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_IssuePrivacyPassTokens))
+          as ApplicationData_IssuePrivacyPassTokens;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IssuePrivacyPassTokens create() =>
+      ApplicationData_IssuePrivacyPassTokens._();
+  @$core.override
+  ApplicationData_IssuePrivacyPassTokens createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IssuePrivacyPassTokens getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          ApplicationData_IssuePrivacyPassTokens>(create);
+  static ApplicationData_IssuePrivacyPassTokens? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.List<$core.int>> get tokenRequests => $_getList(0);
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -3330,6 +3429,8 @@ enum ApplicationData_ApplicationData {
   deleteMemory,
   disableMemoriesBackup,
   uploadPqcPrekeys,
+  getPrivacyPassParameters,
+  issuePrivacyPassTokens,
   notSet
 }
 
@@ -3363,6 +3464,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_DeleteMemory? deleteMemory,
     ApplicationData_DisableMemoriesBackup? disableMemoriesBackup,
     ApplicationData_UploadPqcPreKeys? uploadPqcPrekeys,
+    ApplicationData_GetPrivacyPassParameters? getPrivacyPassParameters,
+    ApplicationData_IssuePrivacyPassTokens? issuePrivacyPassTokens,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -3404,6 +3507,10 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (disableMemoriesBackup != null)
       result.disableMemoriesBackup = disableMemoriesBackup;
     if (uploadPqcPrekeys != null) result.uploadPqcPrekeys = uploadPqcPrekeys;
+    if (getPrivacyPassParameters != null)
+      result.getPrivacyPassParameters = getPrivacyPassParameters;
+    if (issuePrivacyPassTokens != null)
+      result.issuePrivacyPassTokens = issuePrivacyPassTokens;
     return result;
   }
 
@@ -3446,6 +3553,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     38: ApplicationData_ApplicationData.deleteMemory,
     39: ApplicationData_ApplicationData.disableMemoriesBackup,
     40: ApplicationData_ApplicationData.uploadPqcPrekeys,
+    41: ApplicationData_ApplicationData.getPrivacyPassParameters,
+    42: ApplicationData_ApplicationData.issuePrivacyPassTokens,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -3481,7 +3590,9 @@ class ApplicationData extends $pb.GeneratedMessage {
       37,
       38,
       39,
-      40
+      40,
+      41,
+      42
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -3579,6 +3690,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_UploadPqcPreKeys>(
         40, _omitFieldNames ? '' : 'uploadPqcPrekeys',
         subBuilder: ApplicationData_UploadPqcPreKeys.create)
+    ..aOM<ApplicationData_GetPrivacyPassParameters>(
+        41, _omitFieldNames ? '' : 'getPrivacyPassParameters',
+        subBuilder: ApplicationData_GetPrivacyPassParameters.create)
+    ..aOM<ApplicationData_IssuePrivacyPassTokens>(
+        42, _omitFieldNames ? '' : 'issuePrivacyPassTokens',
+        subBuilder: ApplicationData_IssuePrivacyPassTokens.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3628,6 +3745,8 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(41)
+  @$pb.TagNumber(42)
   ApplicationData_ApplicationData whichApplicationData() =>
       _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -3658,6 +3777,8 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(41)
+  @$pb.TagNumber(42)
   void clearApplicationData() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -4003,6 +4124,35 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUploadPqcPrekeys() => $_clearField(40);
   @$pb.TagNumber(40)
   ApplicationData_UploadPqcPreKeys ensureUploadPqcPrekeys() => $_ensure(27);
+
+  @$pb.TagNumber(41)
+  ApplicationData_GetPrivacyPassParameters get getPrivacyPassParameters =>
+      $_getN(28);
+  @$pb.TagNumber(41)
+  set getPrivacyPassParameters(
+          ApplicationData_GetPrivacyPassParameters value) =>
+      $_setField(41, value);
+  @$pb.TagNumber(41)
+  $core.bool hasGetPrivacyPassParameters() => $_has(28);
+  @$pb.TagNumber(41)
+  void clearGetPrivacyPassParameters() => $_clearField(41);
+  @$pb.TagNumber(41)
+  ApplicationData_GetPrivacyPassParameters ensureGetPrivacyPassParameters() =>
+      $_ensure(28);
+
+  @$pb.TagNumber(42)
+  ApplicationData_IssuePrivacyPassTokens get issuePrivacyPassTokens =>
+      $_getN(29);
+  @$pb.TagNumber(42)
+  set issuePrivacyPassTokens(ApplicationData_IssuePrivacyPassTokens value) =>
+      $_setField(42, value);
+  @$pb.TagNumber(42)
+  $core.bool hasIssuePrivacyPassTokens() => $_has(29);
+  @$pb.TagNumber(42)
+  void clearIssuePrivacyPassTokens() => $_clearField(42);
+  @$pb.TagNumber(42)
+  ApplicationData_IssuePrivacyPassTokens ensureIssuePrivacyPassTokens() =>
+      $_ensure(29);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

@@ -34,7 +34,8 @@ class BackupPasswordTextField extends StatefulWidget {
   final bool obscureByDefault;
 
   @override
-  State<BackupPasswordTextField> createState() => _BackupPasswordTextFieldState();
+  State<BackupPasswordTextField> createState() =>
+      _BackupPasswordTextFieldState();
 }
 
 class _BackupPasswordTextFieldState extends State<BackupPasswordTextField> {

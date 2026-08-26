@@ -49,7 +49,6 @@ class SafetyProfileCard extends StatelessWidget {
         );
         icon = Icons.tune_rounded;
         badgeText = null;
-
     }
 
     return MouseRegion(
@@ -70,8 +69,8 @@ class SafetyProfileCard extends StatelessWidget {
               color: isSelected
                   ? context.color.primary
                   : (isHovered
-                      ? context.color.onSurfaceVariant.withValues(alpha: 0.3)
-                      : context.color.outlineVariant.withValues(alpha: 0.4)),
+                        ? context.color.onSurfaceVariant.withValues(alpha: 0.3)
+                        : context.color.outlineVariant.withValues(alpha: 0.4)),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected

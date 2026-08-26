@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::database::{app::AppDatabase, signal::Database};
 use crate::keys::KeyManager;
 use crate::user_discovery::error::{Result, UserDiscoveryError};
@@ -50,13 +55,13 @@ impl UserDiscoveryStore for NativeUserDiscoveryStore {
     async fn set_shares(&self, shares: Vec<Vec<u8>>) -> Result<()> {
         let db = self.database().await;
         let mut tx = db.pool.begin().await.map_err(store_error)?;
-        sqlx::query!("DELETE FROM user_discovery_shares")
+        sqlx::query!(r#"DELETE FROM user_discovery_shares"#)
             .execute(&mut *tx)
             .await
             .map_err(store_error)?;
         for share in shares {
             sqlx::query!(
-                "INSERT INTO user_discovery_shares (share) VALUES (?)",
+                r#"INSERT INTO user_discovery_shares (share) VALUES (?)"#,
                 share
             )
             .execute(&mut *tx)
@@ -461,10 +466,15 @@ mod tests {
             .await
             .unwrap();
         app_db.run_migrations().await.unwrap();
-        sqlx::query("INSERT INTO contacts (user_id, username) VALUES (1, 'one'), (2, 'two')")
-            .execute(&app_db.pool)
-            .await
-            .unwrap();
+        sqlx::query!(
+            r#"
+            INSERT INTO contacts (user_id, username)
+            VALUES (1, 'one'), (2, 'two')
+            "#
+        )
+        .execute(&app_db.pool)
+        .await
+        .unwrap();
         let app_handle = Arc::new(RwLock::new(Arc::new(app_db)));
         let store = NativeUserDiscoveryStore::new(app_handle, temp.path().to_str().unwrap());
 
@@ -526,10 +536,13 @@ mod tests {
         let mut rng = rand::rng();
         let identity = IdentityKeyPair::generate(&mut rng);
         let public_key = identity.identity_key().serialize().to_vec();
-        sqlx::query(
-            "INSERT INTO signal_identities (name, identity_key, timestamp) VALUES ('1', ?, 0)",
+        sqlx::query!(
+            r#"
+            INSERT INTO signal_identities (name, identity_key, timestamp)
+            VALUES ('1', ?, 0)
+            "#,
+            &public_key,
         )
-        .bind(&public_key)
         .execute(&rust_handle.read().await.pool)
         .await
         .unwrap();

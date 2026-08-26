@@ -23,7 +23,8 @@ class UserContextMenu extends StatelessWidget {
       items: [
         ContextMenuItem(
           title: context.lang.contextMenuUserProfile,
-          onTap: () => navigator.context.push(Routes.profileContact(contact.userId)),
+          onTap: () =>
+              navigator.context.push(Routes.profileContact(contact.userId)),
           icon: FontAwesomeIcons.user,
         ),
       ],

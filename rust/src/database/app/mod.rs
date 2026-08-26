@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::{Result, TwonlyError};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{AssertSqlSafe, Column, ConnectOptions, Row, SqlitePool, TypeInfo, ValueRef};
@@ -7,9 +12,10 @@ use std::time::Duration;
 use tokio::sync::broadcast;
 
 mod legacy_import;
+pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 1;
+pub const APP_SCHEMA_VERSION: i64 = 2;
 
 pub const APPLICATION_TABLES: &[&str] = &[
     "contacts",
@@ -80,10 +86,16 @@ impl AppDatabase {
             .map_err(|error| {
                 TwonlyError::Generic(format!("App database migration failed: {error}"))
             })?;
-        sqlx::query("INSERT INTO app_metadata(key, value) VALUES('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-            .bind(APP_SCHEMA_VERSION.to_string())
-            .execute(&self.pool)
-            .await?;
+        sqlx::query!(
+            r#"
+            INSERT INTO app_metadata(key, value)
+            VALUES('schema_version', ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            "#,
+            APP_SCHEMA_VERSION.to_string()
+        )
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
@@ -152,16 +164,18 @@ impl AppDatabase {
 
     pub async fn create_backup(&self, output_path: &str, encryption_key: &str) -> Result<()> {
         let mut connection = self.pool.acquire().await?;
-        sqlx::query("ATTACH DATABASE ? AS backup KEY ?")
+        // SQLCipher-only syntax cannot be described by the SQLite database
+        // used by SQLx during compile-time query preparation.
+        sqlx::query(r#"ATTACH DATABASE ? AS backup KEY ?"#)
             .bind(output_path)
             .bind(encryption_key)
             .execute(&mut *connection)
             .await
             .map_err(|error| TwonlyError::Generic(format!("Attach app backup failed: {error}")))?;
-        let export = sqlx::query("SELECT sqlcipher_export('backup')")
+        let export = sqlx::query(r#"SELECT sqlcipher_export('backup')"#)
             .execute(&mut *connection)
             .await;
-        let detach = sqlx::query("DETACH DATABASE backup")
+        let detach = sqlx::query(r#"DETACH DATABASE backup"#)
             .execute(&mut *connection)
             .await;
         export.map_err(|error| TwonlyError::Generic(format!("App export failed: {error}")))?;

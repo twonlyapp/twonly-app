@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 pub(crate) mod backup_password_keys;
 mod identity_key;
 mod main_key;

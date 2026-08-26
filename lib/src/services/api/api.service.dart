@@ -15,6 +15,8 @@ import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:twonly/core/bridge/api.dart' as rust_api;
+import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -59,6 +61,41 @@ final lockAuthentication = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
+  Future<Result> _rustCall<T>(Future<T> promise) async {
+    try {
+      final res = await promise;
+      if (res is ServerResultEmpty) {
+        final r = res as ServerResultEmpty;
+        return await r.map(
+          ok: (_) => Result.success(null),
+          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
+        );
+      } else if (res is ServerResultVecU8) {
+        final r = res as ServerResultVecU8;
+        return await r.map(
+          ok: (ok) => Result.success(ok.field0),
+          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
+        );
+      } else if (res is ServerResultI64) {
+        final r = res as ServerResultI64;
+        return await r.map(
+          ok: (ok) => Result.success(ok.field0),
+          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
+        );
+      }
+      return Result.success(res);
+    } catch (e) {
+      final msg = e.toString();
+      final match = RegExp(r'API error code (\\d+)').firstMatch(msg);
+      if (match != null) {
+        final code = int.parse(match.group(1)!);
+        return Result.error(ErrorCode.valueOf(code));
+      }
+      Log.error('Rust API call failed', error: e);
+      return Result.error(ErrorCode.InternalError);
+    }
+  }
+
   final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : 's';
@@ -680,46 +717,35 @@ class ApiService {
   }
 
   Future<Response_UserData?> getUserById(int userId) async {
-    final get = ApplicationData_GetUserById()..userId = Int64(userId);
-    final appData = ApplicationData()..getUserById = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasUserdata()) {
-        return ok.userdata;
-      }
+    final result = await _rustCall(
+      rust_api.RustApi.getUserById(userId: userId),
+    );
+    if (result.isSuccess && result.value != null) {
+      return server.Response_UserData.fromBuffer(result.value as List<int>);
     }
     return null;
   }
 
   Future<(Response_ProofOfWork?, bool)> getProofOfWork() async {
-    final handshake = Handshake()..requestPOW = Handshake_RequestPOW();
-    final req = createClientToServerFromHandshake(handshake);
-    final result = await sendRequestSync(req, authenticated: false);
-    if (result.isError) {
-      Log.error('could not request proof of work params', error: result);
-      if (result.error == ErrorCode.RegistrationDisabled) {
-        return (null, true);
-      }
-      Log.error('could not request proof of work params', error: result);
-      return (null, false);
+    final result = await _rustCall(rust_api.RustApi.getProofOfWork());
+    if (result.isSuccess && result.value != null) {
+      return (
+        Response_ProofOfWork.fromBuffer(result.value as List<int>),
+        false,
+      );
     }
-    return (result.value.proofOfWork as Response_ProofOfWork, false);
+    if (result.isError && result.error == ErrorCode.RegistrationDisabled) {
+      return (null, true);
+    }
+    return (null, false);
   }
 
   Future<Result> downloadDone(List<int> token) async {
-    final get = ApplicationData_DownloadDone()..downloadToken = token;
-    final appData = ApplicationData()..downloadDone = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, ensureRetransmission: true);
+    return _rustCall(rust_api.RustApi.downloadDone(token: token));
   }
 
   Future<Result> _setLoginToken(List<int> token) async {
-    final get = ApplicationData_SetLoginToken()..loginToken = token;
-    final appData = ApplicationData()..setLoginToken = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
+    return _rustCall(rust_api.RustApi.setLoginToken(token: token));
   }
 
   Future<server.Response_MemoriesUploadUrls?> requestMemoriesUpload(
@@ -934,19 +960,13 @@ class ApiService {
   }
 
   Future<Result> reportUser(int userId, String reason) async {
-    final get = ApplicationData_ReportUser()
-      ..reportedUserId = Int64(userId)
-      ..reason = reason;
-    final appData = ApplicationData()..reportUser = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
+    return _rustCall(
+      rust_api.RustApi.reportUser(userId: userId, reason: reason),
+    );
   }
 
   Future<Result> deleteAccount() async {
-    final get = ApplicationData_DeleteAccount();
-    final appData = ApplicationData()..deleteAccount = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
+    return _rustCall(rust_api.RustApi.deleteAccount());
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {
@@ -973,19 +993,11 @@ class ApiService {
   }
 
   Future<Result> changeUsername(String username) async {
-    final get = ApplicationData_ChangeUsername()..username = username;
-    final appData = ApplicationData()..changeUsername = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
+    return _rustCall(rust_api.RustApi.changeUsername(username: username));
   }
 
   Future<Result> forceIpaCheck() async {
-    final req = createClientToServerFromApplicationData(
-      ApplicationData(
-        ipaForceCheck: ApplicationData_IPAForceCheck(),
-      ),
-    );
-    return sendRequestSync(req);
+    return _rustCall(rust_api.RustApi.forceIpaCheck());
   }
 
   Future<Result> updateSignedPreKey(

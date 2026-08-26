@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::bridge::callbacks::CURRENT_CALLBACK_ID;
 use crate::bridge::get_twonly_flutter;
 use crate::error::Result;

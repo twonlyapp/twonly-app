@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT EXISTS(\n            SELECT 1\n            FROM received_receipts\n            WHERE receipt_id = ?\n        )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n            SELECT 1\n            FROM received_receipts\n            WHERE receipt_id = ?\n        )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "96a6b8415b84654e0bc41298aa4ca886e42740dddf2e4db1a4a289e4f75a1ff4"
+}

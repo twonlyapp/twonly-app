@@ -47,7 +47,9 @@ class NextButtonComp extends StatelessWidget {
                   ),
                 )
               : Text(
-                  currentPage.isLast ? context.lang.finishSetup : context.lang.next,
+                  currentPage.isLast
+                      ? context.lang.finishSetup
+                      : context.lang.next,
                 ),
         );
       },

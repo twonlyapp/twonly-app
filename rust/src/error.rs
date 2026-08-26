@@ -1,10 +1,28 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::user_discovery::error::UserDiscoveryError;
 use hex::FromHexError;
 use scrypt::errors::{InvalidOutputLen, InvalidParams};
+use std::string::FromUtf8Error;
 use thiserror::Error;
 use zip::result::ZipError;
 
 pub type Result<T> = core::result::Result<T, TwonlyError>;
+
+macro_rules! twonly_error {
+    ($message:expr) => {
+        $crate::error::TwonlyError::Located {
+            message: ($message).into(),
+            file: file!(),
+            line: line!(),
+        }
+    };
+}
+
+pub(crate) use twonly_error;
 
 #[derive(Error, Debug)]
 pub enum TwonlyError {
@@ -46,6 +64,19 @@ pub enum TwonlyError {
     #[error("{0}")]
     Generic(String),
 
+    #[error("{message} at {file}:{line}")]
+    Located {
+        message: String,
+        file: &'static str,
+        line: u32,
+    },
+
+    #[error("API error code {0}")]
+    Api(i32),
+
+    #[error("API user response is missing required field: {0}")]
+    ApiResponseMissingField(&'static str),
+
     #[error("{0}")]
     IoError(#[from] std::io::Error),
 
@@ -58,8 +89,20 @@ pub enum TwonlyError {
     #[error("{0}")]
     Postcard(#[from] postcard::Error),
 
+    #[error("Protobuf decoding error: {0}")]
+    ProtobufDecode(#[from] prost::DecodeError),
+
+    #[error("Unknown protobuf enum value: {0}")]
+    UnknownProtobufEnumValue(#[from] prost::UnknownEnumValue),
+
+    #[error(transparent)]
+    SealedSender(#[from] crate::sealed_sender::SealedSenderError),
+
     #[error("{0}")]
     HexError(#[from] FromHexError),
+
+    #[error("invalid UTF-8 string: {0}")]
+    Utf8(#[from] FromUtf8Error),
 
     #[error("{0}")]
     InvalidParams(#[from] InvalidParams),

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO messages(\n            group_id,\n            message_id,\n            sender_id,\n            type,\n            additional_message_data,\n            created_at,\n            ack_by_server\n        ) VALUES (?, ?, ?, ?, ?, ?, CAST(strftime('%s', 'now') AS INTEGER))\n        ON CONFLICT(message_id) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "a90a25b72f9fb6269a4943fda3da3c8cc58b2d692fb79e9445e070d949afc9ab"
+}

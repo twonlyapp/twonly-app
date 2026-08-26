@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use std::collections::HashMap;
 
 use crate::bridge::get_twonly_flutter;

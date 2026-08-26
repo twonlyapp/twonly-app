@@ -6,7 +6,10 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 enum MessageType { media, text, contacts, restoreFlameCounter, askAboutUser }
 
 @DataClassName('Message')
-@TableIndex(name: 'idx_messages_group_id_created_at', columns: {#groupId, #createdAt})
+@TableIndex(
+  name: 'idx_messages_group_id_created_at',
+  columns: {#groupId, #createdAt},
+)
 class Messages extends Table {
   TextColumn get groupId =>
       text().references(Groups, #groupId, onDelete: KeyAction.cascade)();

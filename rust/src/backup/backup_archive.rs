@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::context::Context;
 use crate::database::app::APP_DATABASE_FILE;
 use crate::database::signal::Database;
@@ -227,9 +232,14 @@ impl BackupArchive {
             true,
         )
         .await?;
-        let integrity: String = sqlx::query_scalar("PRAGMA integrity_check")
+        let integrity = sqlx::query_scalar!(r#"PRAGMA integrity_check"#)
             .fetch_one(&staged_app_database.pool)
             .await?;
+        let integrity = integrity.ok_or_else(|| {
+            crate::error::TwonlyError::Generic(
+                "Staged app database integrity check returned no result".to_owned(),
+            )
+        })?;
         staged_app_database.pool.close().await;
         if integrity.to_lowercase() != "ok" {
             return Err(crate::error::TwonlyError::Generic(format!(
@@ -252,7 +262,7 @@ impl BackupArchive {
         // unlinked pre-restore database.
         let current_app_database = ctx.get_app_database().await;
         current_app_database.pool.close().await;
-        let current_rust_database = ctx.get_rust_database().await;
+        let current_rust_database = ctx.get_rust_db().await;
         current_rust_database.pool.close().await;
 
         for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx, &key_manager)? {
@@ -398,10 +408,15 @@ mod tests {
         };
         {
             let app_db = ctx.get_app_database().await;
-            sqlx::query("INSERT INTO contacts(user_id, username) VALUES(1, 'original contact')")
-                .execute(&app_db.pool)
-                .await
-                .unwrap();
+            sqlx::query!(
+                r#"
+                INSERT INTO contacts(user_id, username)
+                VALUES(1, 'original contact')
+                "#
+            )
+            .execute(&app_db.pool)
+            .await
+            .unwrap();
         }
 
         // 2. Create backup
@@ -416,10 +431,16 @@ mod tests {
             std::fs::write(config_file, "new config").unwrap();
 
             let app_db = ctx.get_app_database().await;
-            sqlx::query("UPDATE contacts SET username = 'changed contact' WHERE user_id = 1")
-                .execute(&app_db.pool)
-                .await
-                .unwrap();
+            sqlx::query!(
+                r#"
+                UPDATE contacts
+                SET username = 'changed contact'
+                WHERE user_id = 1
+                "#
+            )
+            .execute(&app_db.pool)
+            .await
+            .unwrap();
         }
 
         // 4. Restore backup
@@ -439,11 +460,16 @@ mod tests {
             assert_eq!(key_manager.main_key.get_login_token(), original_login_token);
 
             let app_db = ctx.get_app_database().await;
-            let username: String =
-                sqlx::query_scalar("SELECT username FROM contacts WHERE user_id = 1")
-                    .fetch_one(&app_db.pool)
-                    .await
-                    .unwrap();
+            let username = sqlx::query_scalar!(
+                r#"
+                SELECT username
+                FROM contacts
+                WHERE user_id = 1
+                "#
+            )
+            .fetch_one(&app_db.pool)
+            .await
+            .unwrap();
             assert_eq!(username, "original contact");
         }
     }
@@ -465,35 +491,53 @@ mod tests {
                 .await
                 .unwrap();
         legacy.run_migrations().await.unwrap();
-        sqlx::query("PRAGMA user_version = 25")
+        sqlx::query!(r#"PRAGMA user_version = 25"#)
             .execute(&legacy.pool)
             .await
             .unwrap();
-        sqlx::query("INSERT INTO contacts(user_id, username) VALUES(99, 'from old backup')")
-            .execute(&legacy.pool)
-            .await
-            .unwrap();
+        sqlx::query!(
+            r#"
+            INSERT INTO contacts(user_id, username)
+            VALUES(99, 'from old backup')
+            "#
+        )
+        .execute(&legacy.pool)
+        .await
+        .unwrap();
         legacy.pool.close().await;
 
         let archive_path = BackupArchive::create_backup(&ctx).await.unwrap();
         remove_file_from_encrypted_archive(&ctx, &archive_path, APP_DATABASE_FILE).await;
 
         let app_db = ctx.get_app_database().await;
-        sqlx::query("INSERT INTO contacts(user_id, username) VALUES(1, 'current data')")
-            .execute(&app_db.pool)
-            .await
-            .unwrap();
+        sqlx::query!(
+            r#"
+            INSERT INTO contacts(user_id, username)
+            VALUES(1, 'current data')
+            "#
+        )
+        .execute(&app_db.pool)
+        .await
+        .unwrap();
 
         BackupArchive::restore_from_backup(&ctx, &archive_path)
             .await
             .unwrap();
 
         let restored = ctx.get_app_database().await;
-        let contacts: Vec<(i64, String)> =
-            sqlx::query_as("SELECT user_id, username FROM contacts ORDER BY user_id")
-                .fetch_all(&restored.pool)
-                .await
-                .unwrap();
+        let contacts = sqlx::query!(
+            r#"
+            SELECT user_id, username
+            FROM contacts
+            ORDER BY user_id
+            "#
+        )
+        .fetch_all(&restored.pool)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|row| (row.user_id, row.username))
+        .collect::<Vec<_>>();
         assert_eq!(contacts, vec![(99, "from old backup".to_owned())]);
     }
 

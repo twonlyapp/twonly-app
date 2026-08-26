@@ -14,7 +14,9 @@ bool shouldAttemptResync(int userId) {
   if (attempt == null) return true;
   if (attempt.failureCount >= maxResyncAttempts) return false;
 
-  final cooldown = Duration(minutes: 5 * pow(5, attempt.failureCount - 1).toInt());
+  final cooldown = Duration(
+    minutes: 5 * pow(5, attempt.failureCount - 1).toInt(),
+  );
   return DateTime.now().difference(attempt.lastAttempt) > cooldown;
 }
 

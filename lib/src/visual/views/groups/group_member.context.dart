@@ -133,7 +133,9 @@ class GroupMemberContextMenu extends StatelessWidget {
                 return;
               }
               if (!navigator.mounted) return;
-              await navigator.context.push(Routes.chatsMessages(directChat.groupId));
+              await navigator.context.push(
+                Routes.chatsMessages(directChat.groupId),
+              );
             },
             icon: FontAwesomeIcons.message,
           ),

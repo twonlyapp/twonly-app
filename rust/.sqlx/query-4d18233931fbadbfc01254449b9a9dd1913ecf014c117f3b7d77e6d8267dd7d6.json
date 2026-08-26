@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_identities (name, identity_key, timestamp)\n            VALUES (?, ?, 0)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "4d18233931fbadbfc01254449b9a9dd1913ecf014c117f3b7d77e6d8267dd7d6"
+}

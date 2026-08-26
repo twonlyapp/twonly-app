@@ -51,17 +51,10 @@ Future<void> handleGroupCreate(
     );
   } else {
     // In this case make a group state update and check if the fromUserId is still a admin. otherwise return with an log error message
-    final updatedState = await fetchGroupState(group);
-    if (updatedState == null) {
+    final updated = await fetchGroupState(group);
+    if (!updated) {
       Log.error(
         '[$receiptId] Received group invite/create for $groupId, but failed to fetch group state from server.',
-      );
-      return;
-    }
-    final (_, state) = updatedState;
-    if (!state.adminIds.any((id) => id.toInt() == fromUserId)) {
-      Log.error(
-        '[$receiptId] Received group invite/create for $groupId from $fromUserId, but they are not an admin of this group.',
       );
       return;
     }

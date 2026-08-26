@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::frb_generated::StreamSink;
 use tracing_subscriber::fmt::MakeWriter;
 

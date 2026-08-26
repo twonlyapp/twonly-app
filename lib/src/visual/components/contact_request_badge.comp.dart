@@ -34,7 +34,9 @@ class ContactRequestBadgeComp extends StatelessWidget {
             ),
             Center(
               child: NotificationBadgeComp(
-                backgroundColor: isDarkMode(context) ? Colors.white : Colors.black,
+                backgroundColor: isDarkMode(context)
+                    ? Colors.white
+                    : Colors.black,
                 textColor: isDarkMode(context) ? Colors.black : Colors.white,
                 count: count.toString(),
                 child: IconButton(

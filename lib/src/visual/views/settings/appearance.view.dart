@@ -86,8 +86,9 @@ class _AppearanceViewState extends State<AppearanceView> {
       context: context,
       showDragHandle: true,
       builder: (context) {
-        final activeColor =
-            context.watch<SettingsChangeProvider>().primaryColor;
+        final activeColor = context
+            .watch<SettingsChangeProvider>()
+            .primaryColor;
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
           child: Column(
@@ -97,15 +98,14 @@ class _AppearanceViewState extends State<AppearanceView> {
               Text(
                 context.lang.settingsAppearancePrimaryColor,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: presetColors.map((color) {
-                  final isSelected =
-                      activeColor.toARGB32() == color.toARGB32();
+                  final isSelected = activeColor.toARGB32() == color.toARGB32();
                   return GestureDetector(
                     onTap: () async {
                       await context
@@ -126,8 +126,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                           ),
                         ],
                         border: Border.all(
-                          color:
-                              isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected ? Colors.white : Colors.transparent,
                           width: 3,
                         ),
                       ),

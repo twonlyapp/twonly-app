@@ -96,6 +96,24 @@ const V0$json = {
       '9': 0,
       '10': 'error'
     },
+    {
+      '1': 'sealedSenderMessage',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.SealedSenderMessage',
+      '9': 0,
+      '10': 'sealedSenderMessage'
+    },
+    {
+      '1': 'sealedSenderMessages',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.SealedSenderMessages',
+      '9': 0,
+      '10': 'sealedSenderMessages'
+    },
   ],
   '8': [
     {'1': 'Kind'},
@@ -110,7 +128,10 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
     '0uc2VydmVyX3RvX2NsaWVudC5OZXdNZXNzYWdlc0gAUgtuZXdNZXNzYWdlcxIuChFSZXF1ZXN0'
     'TmV3UHJlS2V5cxgEIAEoCEgAUhFSZXF1ZXN0TmV3UHJlS2V5cxI0ChRSZXF1ZXN0TmV3UHFjUH'
     'JlS2V5cxgIIAEoCEgAUhRSZXF1ZXN0TmV3UHFjUHJlS2V5cxIoCgVlcnJvchgGIAEoDjIQLmVy'
-    'cm9yLkVycm9yQ29kZUgAUgVlcnJvckIGCgRLaW5k');
+    'cm9yLkVycm9yQ29kZUgAUgVlcnJvchJZChNzZWFsZWRTZW5kZXJNZXNzYWdlGAkgASgLMiUuc2'
+    'VydmVyX3RvX2NsaWVudC5TZWFsZWRTZW5kZXJNZXNzYWdlSABSE3NlYWxlZFNlbmRlck1lc3Nh'
+    'Z2USXAoUc2VhbGVkU2VuZGVyTWVzc2FnZXMYCiABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlNlYW'
+    'xlZFNlbmRlck1lc3NhZ2VzSABSFHNlYWxlZFNlbmRlck1lc3NhZ2VzQgYKBEtpbmQ=');
 
 @$core.Deprecated('Use newMessageDescriptor instead')
 const NewMessage$json = {
@@ -145,6 +166,40 @@ const NewMessages$json = {
 final $typed_data.Uint8List newMessagesDescriptor = $convert.base64Decode(
     'CgtOZXdNZXNzYWdlcxI+CgtuZXdNZXNzYWdlcxgBIAMoCzIcLnNlcnZlcl90b19jbGllbnQuTm'
     'V3TWVzc2FnZVILbmV3TWVzc2FnZXM=');
+
+@$core.Deprecated('Use sealedSenderMessageDescriptor instead')
+const SealedSenderMessage$json = {
+  '1': 'SealedSenderMessage',
+  '2': [
+    {'1': 'message_id', '3': 1, '4': 1, '5': 9, '10': 'messageId'},
+    {'1': 'body', '3': 2, '4': 1, '5': 12, '10': 'body'},
+  ],
+};
+
+/// Descriptor for `SealedSenderMessage`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sealedSenderMessageDescriptor = $convert.base64Decode(
+    'ChNTZWFsZWRTZW5kZXJNZXNzYWdlEh0KCm1lc3NhZ2VfaWQYASABKAlSCW1lc3NhZ2VJZBISCg'
+    'Rib2R5GAIgASgMUgRib2R5');
+
+@$core.Deprecated('Use sealedSenderMessagesDescriptor instead')
+const SealedSenderMessages$json = {
+  '1': 'SealedSenderMessages',
+  '2': [
+    {
+      '1': 'messages',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.server_to_client.SealedSenderMessage',
+      '10': 'messages'
+    },
+  ],
+};
+
+/// Descriptor for `SealedSenderMessages`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sealedSenderMessagesDescriptor = $convert.base64Decode(
+    'ChRTZWFsZWRTZW5kZXJNZXNzYWdlcxJBCghtZXNzYWdlcxgBIAMoCzIlLnNlcnZlcl90b19jbG'
+    'llbnQuU2VhbGVkU2VuZGVyTWVzc2FnZVIIbWVzc2FnZXM=');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {
@@ -194,6 +249,8 @@ const Response$json = {
     Response_MemoriesList$json,
     Response_MemoriesUrl$json,
     Response_MemoriesUsage$json,
+    Response_PrivacyPassParameters$json,
+    Response_PrivacyPassTokenResponses$json,
     Response_Ok$json
   ],
   '8': [
@@ -751,6 +808,39 @@ const Response_MemoriesUsage$json = {
 };
 
 @$core.Deprecated('Use responseDescriptor instead')
+const Response_PrivacyPassParameters$json = {
+  '1': 'PrivacyPassParameters',
+  '2': [
+    {'1': 'token_challenge', '3': 1, '4': 1, '5': 12, '10': 'tokenChallenge'},
+    {'1': 'public_key', '3': 2, '4': 1, '5': 12, '10': 'publicKey'},
+    {'1': 'max_batch_size', '3': 3, '4': 1, '5': 13, '10': 'maxBatchSize'},
+    {'1': 'max_age_seconds', '3': 4, '4': 1, '5': 13, '10': 'maxAgeSeconds'},
+    {
+      '1': 'daily_token_limit',
+      '3': 5,
+      '4': 1,
+      '5': 13,
+      '10': 'dailyTokenLimit'
+    },
+    {
+      '1': 'issuance_cooldown_seconds',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '10': 'issuanceCooldownSeconds'
+    },
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
+const Response_PrivacyPassTokenResponses$json = {
+  '1': 'PrivacyPassTokenResponses',
+  '2': [
+    {'1': 'token_responses', '3': 1, '4': 3, '5': 12, '10': 'tokenResponses'},
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
 const Response_Ok$json = {
   '1': 'Ok',
   '2': [
@@ -899,6 +989,24 @@ const Response_Ok$json = {
       '9': 0,
       '10': 'memoriesUsage'
     },
+    {
+      '1': 'privacy_pass_parameters',
+      '3': 22,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.Response.PrivacyPassParameters',
+      '9': 0,
+      '10': 'privacyPassParameters'
+    },
+    {
+      '1': 'privacy_pass_token_responses',
+      '3': 23,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.Response.PrivacyPassTokenResponses',
+      '9': 0,
+      '10': 'privacyPassTokenResponses'
+    },
   ],
   '8': [
     {'1': 'Ok'},
@@ -988,29 +1096,40 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'ZGlhSXRlbVIFaXRlbXMaOQoLTWVtb3JpZXNVcmwSKgoRZnVsbF9kb3dubG9hZF91cmwYASABKA'
     'lSD2Z1bGxEb3dubG9hZFVybBpnCg1NZW1vcmllc1VzYWdlEhsKCW1heF9ieXRlcxgBIAEoA1II'
     'bWF4Qnl0ZXMSIwoNY3VycmVudF9ieXRlcxgCIAEoA1IMY3VycmVudEJ5dGVzEhQKBWNvdW50GA'
-    'MgASgDUgVjb3VudBr1CgoCT2sSFAoETm9uZRgBIAEoCEgAUgROb25lEhgKBnVzZXJpZBgCIAEo'
-    'A0gAUgZ1c2VyaWQSJgoNYXV0aGNoYWxsZW5nZRgDIAEoDEgAUg1hdXRoY2hhbGxlbmdlEkoKC3'
-    'VwbG9hZHRva2VuGAQgASgLMiYuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5VcGxvYWRUb2tl'
-    'bkgAUgt1cGxvYWR0b2tlbhJBCgh1c2VyZGF0YRgFIAEoCzIjLnNlcnZlcl90b19jbGllbnQuUm'
-    'VzcG9uc2UuVXNlckRhdGFIAFIIdXNlcmRhdGESHgoJYXV0aHRva2VuGAYgASgMSABSCWF1dGh0'
-    'b2tlbhJQCg1hdXRoZW50aWNhdGVkGAggASgLMiguc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS'
-    '5BdXRoZW50aWNhdGVkSABSDWF1dGhlbnRpY2F0ZWQSOAoFcGxhbnMYCSABKAsyIC5zZXJ2ZXJf'
-    'dG9fY2xpZW50LlJlc3BvbnNlLlBsYW5zSABSBXBsYW5zEk0KDHBsYW5iYWxsYW5jZRgKIAEoCz'
-    'InLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUGxhbkJhbGxhbmNlSABSDHBsYW5iYWxsYW5j'
-    'ZRJfChJhZGRhY2NvdW50c2ludml0ZXMYDCABKAsyLS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3Bvbn'
-    'NlLkFkZEFjY291bnRzSW52aXRlc0gAUhJhZGRhY2NvdW50c2ludml0ZXMSUwoOZG93bmxvYWR0'
-    'b2tlbnMYDSABKAsyKS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLkRvd25sb2FkVG9rZW5zSA'
-    'BSDmRvd25sb2FkdG9rZW5zEk0KDHNpZ25lZHByZWtleRgOIAEoCzInLnNlcnZlcl90b19jbGll'
-    'bnQuUmVzcG9uc2UuU2lnbmVkUHJlS2V5SABSDHNpZ25lZHByZWtleRJKCgtwcm9vZk9mV29yax'
-    'gPIAEoCzImLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUHJvb2ZPZldvcmtIAFILcHJvb2ZP'
-    'ZldvcmsSSQogcGFzc3dvcmRsZXNzX3JlY292ZXJ5X3NlcnZlcl9rZXkYECABKAxIAFIdcGFzc3'
-    'dvcmRsZXNzUmVjb3ZlcnlTZXJ2ZXJLZXkSiwEKInBhc3N3b3JkbGVzc19ub3RpZmljYXRpb25f'
-    'bWVzc2FnZXMYESABKAsyOy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlBhc3N3b3JkbGVzc0'
-    '5vdGlmaWNhdGlvbk1lc3NhZ2VzSABSIHBhc3N3b3JkbGVzc05vdGlmaWNhdGlvbk1lc3NhZ2Vz'
-    'EmEKFG1lbW9yaWVzX3VwbG9hZF91cmxzGBIgASgLMi0uc2VydmVyX3RvX2NsaWVudC5SZXNwb2'
-    '5zZS5NZW1vcmllc1VwbG9hZFVybHNIAFISbWVtb3JpZXNVcGxvYWRVcmxzEk4KDW1lbW9yaWVz'
-    'X2xpc3QYEyABKAsyJy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLk1lbW9yaWVzTGlzdEgAUg'
-    'xtZW1vcmllc0xpc3QSSwoMbWVtb3JpZXNfdXJsGBQgASgLMiYuc2VydmVyX3RvX2NsaWVudC5S'
-    'ZXNwb25zZS5NZW1vcmllc1VybEgAUgttZW1vcmllc1VybBJRCg5tZW1vcmllc191c2FnZRgVIA'
-    'EoCzIoLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuTWVtb3JpZXNVc2FnZUgAUg1tZW1vcmll'
-    'c1VzYWdlQgQKAk9rSgQIBxAISgQICxAMQgoKCFJlc3BvbnNl');
+    'MgASgDUgVjb3VudBqVAgoVUHJpdmFjeVBhc3NQYXJhbWV0ZXJzEicKD3Rva2VuX2NoYWxsZW5n'
+    'ZRgBIAEoDFIOdG9rZW5DaGFsbGVuZ2USHQoKcHVibGljX2tleRgCIAEoDFIJcHVibGljS2V5Ei'
+    'QKDm1heF9iYXRjaF9zaXplGAMgASgNUgxtYXhCYXRjaFNpemUSJgoPbWF4X2FnZV9zZWNvbmRz'
+    'GAQgASgNUg1tYXhBZ2VTZWNvbmRzEioKEWRhaWx5X3Rva2VuX2xpbWl0GAUgASgNUg9kYWlseV'
+    'Rva2VuTGltaXQSOgoZaXNzdWFuY2VfY29vbGRvd25fc2Vjb25kcxgGIAEoDVIXaXNzdWFuY2VD'
+    'b29sZG93blNlY29uZHMaRAoZUHJpdmFjeVBhc3NUb2tlblJlc3BvbnNlcxInCg90b2tlbl9yZX'
+    'Nwb25zZXMYASADKAxSDnRva2VuUmVzcG9uc2VzGtoMCgJPaxIUCgROb25lGAEgASgISABSBE5v'
+    'bmUSGAoGdXNlcmlkGAIgASgDSABSBnVzZXJpZBImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDW'
+    'F1dGhjaGFsbGVuZ2USSgoLdXBsb2FkdG9rZW4YBCABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlJl'
+    'c3BvbnNlLlVwbG9hZFRva2VuSABSC3VwbG9hZHRva2VuEkEKCHVzZXJkYXRhGAUgASgLMiMuc2'
+    'VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Vc2VyRGF0YUgAUgh1c2VyZGF0YRIeCglhdXRodG9r'
+    'ZW4YBiABKAxIAFIJYXV0aHRva2VuElAKDWF1dGhlbnRpY2F0ZWQYCCABKAsyKC5zZXJ2ZXJfdG'
+    '9fY2xpZW50LlJlc3BvbnNlLkF1dGhlbnRpY2F0ZWRIAFINYXV0aGVudGljYXRlZBI4CgVwbGFu'
+    'cxgJIAEoCzIgLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUGxhbnNIAFIFcGxhbnMSTQoMcG'
+    'xhbmJhbGxhbmNlGAogASgLMicuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5QbGFuQmFsbGFu'
+    'Y2VIAFIMcGxhbmJhbGxhbmNlEl8KEmFkZGFjY291bnRzaW52aXRlcxgMIAEoCzItLnNlcnZlcl'
+    '90b19jbGllbnQuUmVzcG9uc2UuQWRkQWNjb3VudHNJbnZpdGVzSABSEmFkZGFjY291bnRzaW52'
+    'aXRlcxJTCg5kb3dubG9hZHRva2VucxgNIAEoCzIpLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2'
+    'UuRG93bmxvYWRUb2tlbnNIAFIOZG93bmxvYWR0b2tlbnMSTQoMc2lnbmVkcHJla2V5GA4gASgL'
+    'Micuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5TaWduZWRQcmVLZXlIAFIMc2lnbmVkcHJla2'
+    'V5EkoKC3Byb29mT2ZXb3JrGA8gASgLMiYuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Qcm9v'
+    'Zk9mV29ya0gAUgtwcm9vZk9mV29yaxJJCiBwYXNzd29yZGxlc3NfcmVjb3Zlcnlfc2VydmVyX2'
+    'tleRgQIAEoDEgAUh1wYXNzd29yZGxlc3NSZWNvdmVyeVNlcnZlcktleRKLAQoicGFzc3dvcmRs'
+    'ZXNzX25vdGlmaWNhdGlvbl9tZXNzYWdlcxgRIAEoCzI7LnNlcnZlcl90b19jbGllbnQuUmVzcG'
+    '9uc2UuUGFzc3dvcmRsZXNzTm90aWZpY2F0aW9uTWVzc2FnZXNIAFIgcGFzc3dvcmRsZXNzTm90'
+    'aWZpY2F0aW9uTWVzc2FnZXMSYQoUbWVtb3JpZXNfdXBsb2FkX3VybHMYEiABKAsyLS5zZXJ2ZX'
+    'JfdG9fY2xpZW50LlJlc3BvbnNlLk1lbW9yaWVzVXBsb2FkVXJsc0gAUhJtZW1vcmllc1VwbG9h'
+    'ZFVybHMSTgoNbWVtb3JpZXNfbGlzdBgTIAEoCzInLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2'
+    'UuTWVtb3JpZXNMaXN0SABSDG1lbW9yaWVzTGlzdBJLCgxtZW1vcmllc191cmwYFCABKAsyJi5z'
+    'ZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLk1lbW9yaWVzVXJsSABSC21lbW9yaWVzVXJsElEKDm'
+    '1lbW9yaWVzX3VzYWdlGBUgASgLMiguc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5NZW1vcmll'
+    'c1VzYWdlSABSDW1lbW9yaWVzVXNhZ2USagoXcHJpdmFjeV9wYXNzX3BhcmFtZXRlcnMYFiABKA'
+    'syMC5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlByaXZhY3lQYXNzUGFyYW1ldGVyc0gAUhVw'
+    'cml2YWN5UGFzc1BhcmFtZXRlcnMSdwoccHJpdmFjeV9wYXNzX3Rva2VuX3Jlc3BvbnNlcxgXIA'
+    'EoCzI0LnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUHJpdmFjeVBhc3NUb2tlblJlc3BvbnNl'
+    'c0gAUhlwcml2YWN5UGFzc1Rva2VuUmVzcG9uc2VzQgQKAk9rSgQIBxAISgQICxAMQgoKCFJlc3'
+    'BvbnNl');

@@ -221,6 +221,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   workmanager_platform_interface: any
+  freezed: ^4.0.0
 
 flutter_launcher_icons:
   android: true

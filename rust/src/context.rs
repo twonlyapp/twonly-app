@@ -1,23 +1,33 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
+use crate::api::runtime::{ApiClient, ApiRuntime};
+use crate::bridge::InitConfig;
 use crate::database::app::{AppDatabase, APP_DATABASE_FILE};
+use crate::database::signal::Database;
+use crate::error::Result;
+use crate::error::TwonlyError;
+use crate::keys::DatabaseKey;
+use crate::keys::KeyManager;
+#[cfg(not(test))]
+use crate::log::init_tracing;
 use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::stores::{NativeUserDiscoveryStore, NativeUserDiscoveryUtils};
 use crate::user_discovery::UserDiscovery;
-use crate::{
-    bridge::InitConfig,
-    database::signal::Database,
-    error::{Result, TwonlyError},
-    keys::{DatabaseKey, KeyManager},
-    log::init_tracing,
-    utils::Shared,
-};
+use crate::utils::Shared;
+use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage};
 use libsignal_protocol::IdentityKey;
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::{Mutex, OnceCell, RwLock};
+#[cfg(not(test))]
 use zeroize::Zeroize;
 
-use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage};
+#[cfg(not(test))]
+static GLOBAL_CONTEXT: OnceCell<Arc<Context>> = OnceCell::const_new();
 
-pub(crate) struct TwonlyStandalone {
+pub struct TwonlyStandalone {
     #[allow(dead_code)]
     pub(crate) config: InitConfig,
     #[allow(dead_code)]
@@ -26,23 +36,53 @@ pub(crate) struct TwonlyStandalone {
     #[allow(dead_code)]
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
+    pub(crate) user_discovery:
+        Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>>,
+    pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
+    pub(crate) api_client: OnceCell<RwLock<Arc<ApiClient>>>,
 }
 
-pub(crate) enum Context {
+#[allow(private_interfaces)] // for the test
+pub enum Context {
     Flutter(TwonlyFlutter),
     Standalone(TwonlyStandalone),
 }
 
 impl Context {
-    #[cfg(test)]
-    pub(crate) fn from_standalone(standalone: TwonlyStandalone) -> Self {
+    pub(crate) fn get_api_client(&self) -> &OnceCell<RwLock<Arc<ApiClient>>> {
+        match self {
+            Self::Flutter(value) => &value.api_client,
+            Self::Standalone(value) => &value.api_client,
+        }
+    }
+
+    pub(crate) fn data_dir(&self) -> &str {
+        match self {
+            Self::Flutter(value) => &value.config.data_dir,
+            Self::Standalone(value) => &value.config.data_dir,
+        }
+    }
+
+    pub(crate) fn get_user_discovery(
+        &self,
+    ) -> &Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>> {
+        match self {
+            Self::Flutter(value) => &value.user_discovery,
+            Self::Standalone(value) => &value.user_discovery,
+        }
+    }
+
+    pub(crate) fn get_signal_engine(&self) -> &Arc<Mutex<Option<RustSignalEngine>>> {
+        match self {
+            Self::Flutter(value) => &value.signal_engine,
+            Self::Standalone(value) => &value.signal_engine,
+        }
+    }
+
+    pub fn from_standalone(standalone: TwonlyStandalone) -> Self {
         Self::Standalone(standalone)
     }
-}
 
-static GLOBAL_CONTEXT: OnceCell<Context> = OnceCell::const_new();
-
-impl Context {
     pub(crate) async fn init_flutter(config: InitConfig) -> Result<()> {
         Self::init_common(config, true).await
     }
@@ -52,13 +92,10 @@ impl Context {
         Self::init_common(config, false).await
     }
 
-    #[cfg(test)]
-    pub(crate) async fn init_for_testing(
+    pub async fn init_for_testing(
         database_dir: PathBuf,
         data_dir: PathBuf,
-    ) -> Result<Context> {
-        use tokio::sync::Mutex;
-
+    ) -> Result<Arc<Context>> {
         std::fs::create_dir_all(&database_dir)?;
         std::fs::create_dir_all(&data_dir)?;
 
@@ -93,16 +130,72 @@ impl Context {
         .await?;
         app_db.run_migrations().await?;
         let app_db = Arc::new(RwLock::new(Arc::new(app_db)));
+        let rust_db = Arc::new(RwLock::new(rust_db));
+        let key_manager = Arc::new(Mutex::new(key_manager));
+        let user_discovery = Shared::new(UserDiscovery::new(
+            NativeUserDiscoveryStore::new(app_db.clone(), data_dir.to_str().unwrap()),
+            NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db.clone()),
+        )?);
 
-        Ok(Context::from_standalone(TwonlyStandalone {
+        let ctx = Arc::new(Context::from_standalone(TwonlyStandalone {
             config,
-            rust_db: Arc::new(RwLock::new(rust_db)),
+            rust_db,
             app_db,
             secure_storage,
-            key_manager: Arc::new(Mutex::new(key_manager)),
-        }))
+            key_manager,
+            user_discovery,
+            signal_engine: Arc::new(Mutex::new(None)),
+            api_client: OnceCell::const_new(),
+        }));
+        ApiRuntime::initialize(&ctx).await?;
+        ApiRuntime::connect(&ctx).await?;
+        Ok(ctx)
     }
 
+    #[doc(hidden)]
+    #[cfg(any(test, debug_assertions))]
+    pub async fn inject_test_signal_identity(
+        &self,
+        identity_key_pair_structure: Vec<u8>,
+        registration_id: i64,
+        pre_key_store: std::collections::HashMap<i64, Vec<u8>>,
+    ) -> Result<()> {
+        let mut key_manager = self.get_key_manager().await?;
+        key_manager.signal_identity = Some(crate::keys::SignalIdentityKey {
+            identity_key_pair_structure,
+            registration_id,
+            pre_key_store,
+        });
+        Ok(())
+    }
+
+    #[doc(hidden)]
+    #[cfg(any(test, debug_assertions))]
+    pub async fn inject_test_user_id(&self, user_id: i64) -> Result<()> {
+        let mut key_manager = self.get_key_manager().await?;
+        key_manager.user_id = Some(user_id);
+        key_manager.store_to_keychain(self.get_secure_storage())?;
+        let signal_identity = key_manager.signal_identity.as_ref().map(|identity| {
+            (
+                identity.identity_key_pair_structure.clone(),
+                identity.registration_id,
+            )
+        });
+        drop(key_manager);
+
+        if let Some((identity_key_pair_structure, registration_id)) = signal_identity {
+            let database = self.get_rust_db().await;
+            *self.get_signal_engine().lock().await = Some(RustSignalEngine::new_with_pool(
+                database.pool.clone(),
+                identity_key_pair_structure,
+                registration_id as u32,
+                user_id.to_string(),
+            )?);
+        }
+        Ok(())
+    }
+
+    #[cfg(not(test))]
     async fn init_common(config: InitConfig, is_flutter: bool) -> Result<()> {
         if GLOBAL_CONTEXT.initialized() {
             tracing::info!("twonly already initialized. Ensuring storage directories exist.");
@@ -125,7 +218,7 @@ impl Context {
         let app_db_path = database_dir.join(APP_DATABASE_FILE);
 
         tracing::info!("Initialized twonly workspace.");
-        let res: Result<&'static Context> = GLOBAL_CONTEXT
+        let res: Result<&'static Arc<Context>> = GLOBAL_CONTEXT
             .get_or_try_init(|| async {
                 let key_manager = match KeyManager::try_from_keychain(&secure_storage) {
                     Ok(key) => key,
@@ -191,7 +284,7 @@ impl Context {
                         NativeUserDiscoveryStore::new(app_db.clone(), &config.data_dir),
                         NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db_handle.clone()),
                     )?);
-                    Ok(Context::Flutter(TwonlyFlutter {
+                    let ctx = Arc::new(Context::Flutter(TwonlyFlutter {
                         config,
                         secure_storage,
                         rust_db: rust_db_handle,
@@ -199,32 +292,70 @@ impl Context {
                         key_manager,
                         user_discovery,
                         signal_engine,
-                    }))
+                        api_client: OnceCell::const_new(),
+                    }));
+                    ApiRuntime::initialize(&ctx).await?;
+                    Ok(ctx)
                 } else {
-                    Ok(Context::Standalone(TwonlyStandalone {
+                    let key_manager = Arc::new(Mutex::new(key_manager));
+                    let signal_engine = {
+                        let key_manager_guard = key_manager.lock().await;
+                        let engine = match (key_manager_guard.user_id, &key_manager_guard.signal_identity) {
+                            (Some(user_id), Some(identity)) => Some(RustSignalEngine::new_with_pool(
+                                rust_db_handle.read().await.pool.clone(),
+                                identity.identity_key_pair_structure.clone(),
+                                identity.registration_id as u32,
+                                user_id.to_string(),
+                            )?),
+                            _ => None,
+                        };
+                        Arc::new(Mutex::new(engine))
+                    };
+                    let user_discovery = Shared::new(UserDiscovery::new(
+                        NativeUserDiscoveryStore::new(app_db.clone(), &config.data_dir),
+                        NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db_handle.clone()),
+                    )?);
+                    let ctx = Arc::new(Context::Standalone(TwonlyStandalone {
                         config,
                         rust_db: rust_db_handle,
                         app_db,
-                        key_manager: Arc::new(Mutex::new(key_manager)),
+                        key_manager,
                         secure_storage,
-                    }))
+                        user_discovery,
+                        signal_engine,
+                        api_client: OnceCell::const_new(),
+                    }));
+                    ApiRuntime::initialize(&ctx).await?;
+                    Ok(ctx)
                 }
             })
             .await;
-        res?;
+        let ctx = res?;
+        ApiRuntime::connect(ctx).await?;
         Ok(())
     }
 
-    pub(super) fn get_static() -> Result<&'static Context> {
+    #[cfg(test)]
+    async fn init_common(_config: InitConfig, _is_flutter: bool) -> Result<()> {
+        Err(TwonlyError::Initialization)
+    }
+
+    #[cfg(not(test))]
+    pub(super) fn get_static() -> Result<&'static Arc<Context>> {
         GLOBAL_CONTEXT.get().ok_or(TwonlyError::Initialization)
     }
 
-    // pub(crate) fn get_secure_storage(&self) -> Result<&SecureStorage> {
-    //     match self {
-    //         Self::Flutter(twonly) => Ok(&twonly.secure_storage),
-    //         Self::Standalone(twonly) => Ok(&twonly.secure_storage),
-    //     }
-    // }
+    #[cfg(test)]
+    pub(super) fn get_static() -> Result<&'static Arc<Context>> {
+        Err(TwonlyError::Initialization)
+    }
+
+    pub(crate) fn get_secure_storage(&self) -> &SecureStorage {
+        match self {
+            Self::Flutter(twonly) => &twonly.secure_storage,
+            Self::Standalone(twonly) => &twonly.secure_storage,
+        }
+    }
 
     pub(crate) fn get_config(&self) -> Result<&InitConfig> {
         match self {
@@ -240,14 +371,21 @@ impl Context {
         }
     }
 
-    pub(crate) async fn get_app_database(&self) -> Arc<AppDatabase> {
+    pub(crate) async fn user_id(&self) -> Result<i64> {
+        self.get_key_manager()
+            .await?
+            .user_id
+            .ok_or_else(|| TwonlyError::Generic("local user ID is missing".into()))
+    }
+
+    pub async fn get_app_database(&self) -> Arc<AppDatabase> {
         match self {
             Self::Flutter(twonly) => twonly.app_db.read().await.clone(),
             Self::Standalone(twonly) => twonly.app_db.read().await.clone(),
         }
     }
 
-    pub(crate) async fn get_rust_database(&self) -> Arc<Database> {
+    pub(crate) async fn get_rust_db(&self) -> Arc<Database> {
         match self {
             Self::Flutter(twonly) => twonly.rust_db.read().await.clone(),
             Self::Standalone(twonly) => twonly.rust_db.read().await.clone(),
@@ -255,12 +393,14 @@ impl Context {
     }
 
     pub(crate) async fn get_identity(&self, user_id: i64) -> Result<Option<IdentityKey>> {
-        let database = self.get_rust_database().await;
-        let identity_key: Option<Vec<u8>> =
-            sqlx::query_scalar("SELECT identity_key FROM signal_identities WHERE name = ?")
-                .bind(user_id.to_string())
-                .fetch_optional(&database.pool)
-                .await?;
+        let database = self.get_rust_db().await;
+        let user_id = user_id.to_string();
+        let identity_key = sqlx::query_scalar!(
+            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
+            user_id,
+        )
+        .fetch_optional(&database.pool)
+        .await?;
 
         identity_key
             .map(|bytes| {

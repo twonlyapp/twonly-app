@@ -26,7 +26,6 @@ class MyIconButton extends StatefulWidget {
 }
 
 class _MyIconButtonState extends State<MyIconButton> {
-
   @override
   Widget build(BuildContext context) {
     final isEnabled = widget.onPressed != null || widget.onLongPress != null;

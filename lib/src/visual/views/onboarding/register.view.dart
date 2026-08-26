@@ -39,7 +39,6 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final TextEditingController usernameController = TextEditingController();
-  final TextEditingController inviteCodeController = TextEditingController();
 
   bool _registrationDisabled = false;
   bool _isTryingToRegister = false;
@@ -65,7 +64,6 @@ class _RegisterViewState extends State<RegisterView> {
       return;
     }
     final username = usernameController.text;
-    final inviteCode = inviteCodeController.text;
 
     setState(() {
       _isTryingToRegister = true;
@@ -99,7 +97,7 @@ class _RegisterViewState extends State<RegisterView> {
 
       var userId = 0;
 
-      final res = await apiService.register(username, inviteCode, proof);
+      final res = await apiService.register(username, null, proof);
       if (res.isSuccess) {
         Log.info('Got user_id ${res.value} from server');
         userId = res.value.userid.toInt() as int;

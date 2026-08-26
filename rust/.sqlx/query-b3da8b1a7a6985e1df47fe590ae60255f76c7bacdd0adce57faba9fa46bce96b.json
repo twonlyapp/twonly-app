@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_sessions(name, device_id, record_bytes)\n            VALUES (?, ?, ?)\n            ON CONFLICT(name, device_id)\n            DO UPDATE SET record_bytes = excluded.record_bytes\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b3da8b1a7a6985e1df47fe590ae60255f76c7bacdd0adce57faba9fa46bce96b"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_kyber_pre_keys(kyber_pre_key_id, record_bytes)\n            VALUES (?, ?)\n            ON CONFLICT(kyber_pre_key_id)\n            DO UPDATE SET record_bytes = excluded.record_bytes\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "27b030470f79c8fdcd05b10291a9606f04c75c01243c14149a8f7e0e32bb408d"
+}

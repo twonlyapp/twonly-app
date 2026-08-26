@@ -71,7 +71,7 @@ class TestClient {
       final difficulty = powRes.$1!.difficulty.toInt();
       final proof = await calculatePoW(prefix, difficulty);
 
-      final regRes = await api.register(username, '', proof);
+      final regRes = await api.register(username, null, proof);
       if (regRes.isError) {
         throw Exception('Registration failed: ${regRes.error}');
       }

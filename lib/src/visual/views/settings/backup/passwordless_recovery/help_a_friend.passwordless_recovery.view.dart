@@ -152,7 +152,9 @@ class _HelpAFriendPasswordlessRecoveryViewState
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              context.lang.passwordlessRecoverySelectContactDesc,
+                              context
+                                  .lang
+                                  .passwordlessRecoverySelectContactDesc,
                               style: const TextStyle(
                                 fontSize: 14,
                                 height: 1.4,
@@ -174,7 +176,9 @@ class _HelpAFriendPasswordlessRecoveryViewState
                       child: filteredContacts.isEmpty
                           ? Center(
                               child: Text(
-                                context.lang.passwordlessRecoveryNoContactsFound,
+                                context
+                                    .lang
+                                    .passwordlessRecoveryNoContactsFound,
                               ),
                             )
                           : ListView.builder(
@@ -208,7 +212,9 @@ class _HelpAFriendPasswordlessRecoveryViewState
                                     subtitle: hasShare
                                         ? null
                                         : Text(
-                                            context.lang.passwordlessRecoveryCantHelpHim,
+                                            context
+                                                .lang
+                                                .passwordlessRecoveryCantHelpHim,
                                             style: const TextStyle(
                                               color: Colors.grey,
                                             ),

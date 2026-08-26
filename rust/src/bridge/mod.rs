@@ -1,9 +1,17 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 #![allow(unexpected_cfgs)]
+pub mod api;
 pub mod callbacks;
+pub mod groups;
 pub mod wrapper;
 
 use std::sync::Arc;
 
+use crate::api::runtime::ApiClient;
 use crate::context::Context;
 use crate::database::app::AppDatabase;
 use crate::database::signal::Database;
@@ -19,7 +27,7 @@ use flutter_rust_bridge::frb;
 
 pub use crate::user_discovery::traits::AnnouncedUser;
 pub use crate::user_discovery::traits::OtherPromotion;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{Mutex, OnceCell, RwLock};
 
 pub struct InitConfig {
     pub database_dir: String,
@@ -54,11 +62,12 @@ pub(crate) struct TwonlyFlutter {
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
     pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
+    pub(crate) api_client: OnceCell<RwLock<Arc<ApiClient>>>,
 }
 
 pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {
     let ctx = Context::get_static()?;
-    if let Context::Flutter(twonly) = ctx {
+    if let Context::Flutter(twonly) = &**ctx {
         Ok(twonly)
     } else {
         Err(TwonlyError::Initialization)
@@ -68,4 +77,10 @@ pub(super) fn get_twonly_flutter() -> Result<&'static TwonlyFlutter> {
 pub async fn initialize_twonly_flutter(config: InitConfig) -> Result<()> {
     Context::init_flutter(config).await?;
     Ok(())
+}
+
+/// Initializes the complete Rust runtime without Flutter or callback setup.
+/// Background executables should call this before using `RustApi`.
+pub async fn initialize_twonly_standalone(config: InitConfig) -> Result<()> {
+    Context::init_standalone(config).await
 }

@@ -167,6 +167,146 @@ class UploadRequest extends $pb.GeneratedMessage {
   $pb.PbList<TextMessage> get messagesOnSuccess => $_getList(2);
 }
 
+class SealedSenderMessageRequest extends $pb.GeneratedMessage {
+  factory SealedSenderMessageRequest({
+    $fixnum.Int64? recipientUserId,
+    $core.List<$core.int>? sealedSenderMessage,
+    $core.List<$core.int>? privacyPassToken,
+  }) {
+    final result = create();
+    if (recipientUserId != null) result.recipientUserId = recipientUserId;
+    if (sealedSenderMessage != null)
+      result.sealedSenderMessage = sealedSenderMessage;
+    if (privacyPassToken != null) result.privacyPassToken = privacyPassToken;
+    return result;
+  }
+
+  SealedSenderMessageRequest._();
+
+  factory SealedSenderMessageRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SealedSenderMessageRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SealedSenderMessageRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'recipientUserId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'sealedSenderMessage', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'privacyPassToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessageRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessageRequest copyWith(
+          void Function(SealedSenderMessageRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as SealedSenderMessageRequest))
+          as SealedSenderMessageRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessageRequest create() => SealedSenderMessageRequest._();
+  @$core.override
+  SealedSenderMessageRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessageRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SealedSenderMessageRequest>(create);
+  static SealedSenderMessageRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get recipientUserId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set recipientUserId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRecipientUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRecipientUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get sealedSenderMessage => $_getN(1);
+  @$pb.TagNumber(2)
+  set sealedSenderMessage($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSealedSenderMessage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSealedSenderMessage() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get privacyPassToken => $_getN(2);
+  @$pb.TagNumber(3)
+  set privacyPassToken($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPrivacyPassToken() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPrivacyPassToken() => $_clearField(3);
+}
+
+class SealedSenderMessageResponse extends $pb.GeneratedMessage {
+  factory SealedSenderMessageResponse({
+    $core.String? messageId,
+  }) {
+    final result = create();
+    if (messageId != null) result.messageId = messageId;
+    return result;
+  }
+
+  SealedSenderMessageResponse._();
+
+  factory SealedSenderMessageResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SealedSenderMessageResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SealedSenderMessageResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'messageId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessageResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SealedSenderMessageResponse copyWith(
+          void Function(SealedSenderMessageResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as SealedSenderMessageResponse))
+          as SealedSenderMessageResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessageResponse create() =>
+      SealedSenderMessageResponse._();
+  @$core.override
+  SealedSenderMessageResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SealedSenderMessageResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SealedSenderMessageResponse>(create);
+  static SealedSenderMessageResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get messageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set messageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessageId() => $_clearField(1);
+}
+
 class UpdateGroupState_UpdateTBS extends $pb.GeneratedMessage {
   factory UpdateGroupState_UpdateTBS({
     $fixnum.Int64? versionId,

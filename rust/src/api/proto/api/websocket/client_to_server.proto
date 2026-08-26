@@ -1,0 +1,296 @@
+syntax = "proto3";
+package client_to_server;
+import "api/websocket/error.proto";
+
+message ClientToServer {
+  oneof v {
+    V0 V0 = 1;
+  }
+}
+
+message V0 {
+  uint64 seq = 1;
+  oneof Kind {
+    Handshake handshake = 2;
+    ApplicationData applicationdata = 3;
+    Response response = 4;
+  }
+}
+
+message Handshake {
+
+  message RequestPOW {}
+
+  message Register {
+    string username = 1;
+    optional string invite_code = 2;
+    bytes public_identity_key = 3;
+    bytes signed_prekey = 4;
+    bytes signed_prekey_signature = 5;
+    int64 signed_prekey_id = 6;
+    int64 registration_id = 7;
+    bool is_ios = 8;
+    string lang_code = 9;
+    int64 proof_of_work = 10;
+    optional bytes login_token = 11;
+  }
+
+  message GetAuthChallenge {}
+
+  message GetUserIdByUsername {
+    string username = 1;
+  }
+
+  message GetAuthToken {
+    int64 user_id = 1;
+    bytes response = 2;
+  }
+
+  message Authenticate {
+    int64 user_id = 1;
+    bytes auth_token = 2;
+    optional string app_version = 3;
+    optional int64 device_id = 4;
+    optional bool in_background = 5;
+  }
+
+  message AuthenticateWithLoginToken {
+    int64 user_id = 1;
+    bytes secret_login_token = 2;
+    string app_version = 3;
+    int64 device_id = 4;
+    bool in_background = 5;
+  }
+
+  message GetServerKeyForPasswordLessRecovery {
+    int64 user_id = 1;
+    bytes server_key_protection = 2;
+    optional bytes pin_unlock_token = 3;
+    optional bytes pin_protection_key = 4;
+    optional string email = 5;
+  }
+
+  message RegisterPasswordlessNotification {
+    string notification_id = 1;
+    bytes download_auth_token = 2;
+    string lang_code = 3;
+    optional string google_fcm = 4;
+  }
+
+  message CheckForPasswordlessNotification {
+    string notification_id = 1;
+    bytes download_auth_token = 2;
+    repeated int64 already_received_message_ids = 3;
+  }
+
+  oneof Handshake {
+    Register register = 1;
+    GetAuthChallenge getAuthChallenge = 2;
+    GetAuthToken getAuthToken = 3;
+    Authenticate authenticate = 4;
+    RequestPOW requestPOW = 5;
+    AuthenticateWithLoginToken authenticate_with_login_token = 6;
+    GetUserIdByUsername get_userid_by_username = 7;
+    GetServerKeyForPasswordLessRecovery get_server_key_for_passwordless_recovery = 8;
+    RegisterPasswordlessNotification register_passwordless_notification = 9;
+    CheckForPasswordlessNotification check_for_passwordless_notification = 10;
+  }
+}
+
+message ApplicationData {
+  reserved 9, 11, 13 to 17, 19;
+
+  message TextMessage {
+      int64 user_id = 1;
+      bytes body = 3;
+      optional bytes push_data = 4;
+  }
+
+  message GetUserByUsername {
+    string username = 1;
+  }
+
+  message ChangeUsername {
+    string username = 1;
+  }
+
+  message UpdateGoogleFcmToken {
+    string google_fcm = 1;
+  }
+
+  message GetUserById {
+    int64 user_id = 1;
+  }
+
+  message GetAvailablePlans {}
+  message GetCurrentPlanInfos {}
+
+  message RemoveAdditionalUser {
+    int64 user_id = 1;
+  }
+
+  message GetPrekeysByUserId {
+    int64 user_id = 1;
+  }
+
+  message GetSignedPreKeyByUserId {
+    int64 user_id = 1;
+  }
+
+  message UpdateSignedPreKey {
+    int64 signed_prekey_id = 1;
+    bytes signed_prekey = 2;
+    bytes signed_prekey_signature = 3;
+  }
+
+  message PqcPreKey {
+    int64 ecc_pre_key_id = 1;
+    bytes ecc_pre_key = 2;
+    int64 kyber_pre_key_id = 3;
+    bytes kyber_pre_key = 4;
+    bytes kyber_pre_key_signature = 5;
+  }
+
+  message UploadPqcPreKeys {
+    int64 ecc_signed_prekey_id = 1;
+    bytes ecc_signed_prekey = 2;
+    bytes ecc_signed_prekey_signature = 3;
+    int64 kyber_signed_prekey_id = 4;
+    bytes kyber_signed_prekey = 5;
+    bytes kyber_signed_prekey_signature = 6;
+    repeated PqcPreKey prekeys = 7;
+  }
+
+  message DownloadDone {
+    bytes download_token = 1;
+  }
+
+  message ReportUser {
+    int64 reported_user_id = 1;
+    string reason = 2;
+  }
+
+  message IPAPurchase {
+    string product_id = 1;
+    string source = 2;
+    string verification_data = 3;
+  }
+
+  message IPAForceCheck {}
+
+  message DeleteAccount {}
+
+  message AddAdditionalUser {
+    int64 user_id = 1;
+  }
+
+  message SetLoginToken {
+    bytes login_token = 1;
+  }
+
+  message RegisterPasswordLessRecovery {
+    bytes encryptedServerKey = 1;
+    optional bytes pinUnlockToken = 2;
+  }
+
+  message PasswordlessNotification {
+    string notification_id = 1;
+    bytes encrypted_message = 2;
+  }
+
+  message RequestMemoriesUpload {
+    int64 size = 1;
+    int64 original_date = 2;
+    string media_id = 3;
+  }
+
+  message ConfirmMemoriesUpload {
+    string media_id = 1;
+  }
+
+  message GetMemoriesList {
+    int64 offset_date = 1;
+    int64 limit = 2;
+  }
+
+  message GetMemoriesUrl {
+    string media_id = 1;
+    bool thumbnail = 2;
+  }
+
+  message GetMemoriesUsage {}
+
+  message DeleteMemory {
+    string media_id = 1;
+  }
+
+  message DisableMemoriesBackup {}
+
+  message GetPrivacyPassParameters {}
+
+  message IssuePrivacyPassTokens {
+    repeated bytes token_requests = 1;
+  }
+
+  oneof ApplicationData {
+    TextMessage textMessage = 1;
+    GetUserByUsername getUserByUsername = 2;
+    GetPrekeysByUserId getPrekeysByUserId = 3;
+    GetUserById getUserById = 6;
+    UpdateGoogleFcmToken updateGoogleFcmToken = 8;
+    GetCurrentPlanInfos getCurrentPlanInfos = 10;
+    GetAvailablePlans getAvailablePlans = 12;
+    DownloadDone downloadDone = 20;
+    GetSignedPreKeyByUserId getSignedPrekeyByUserid = 22;
+    UpdateSignedPreKey updateSignedPrekey = 23;
+    DeleteAccount deleteAccount = 24;
+    ReportUser reportUser = 25;
+    ChangeUsername changeUsername = 26;
+    IPAPurchase ipaPurchase = 27;
+    IPAForceCheck ipaForceCheck = 28;
+    RemoveAdditionalUser removeAdditionalUser = 18;
+    AddAdditionalUser addAdditionalUser = 29;
+    SetLoginToken set_login_token = 30;
+    RegisterPasswordLessRecovery register_passwordless_recovery = 31;
+    PasswordlessNotification passwordless_notification = 32;
+    RequestMemoriesUpload request_memories_upload = 33;
+    ConfirmMemoriesUpload confirm_memories_upload = 34;
+    GetMemoriesList get_memories_list = 35;
+    GetMemoriesUrl get_memories_url = 36;
+    GetMemoriesUsage get_memories_usage = 37;
+    DeleteMemory delete_memory = 38;
+    DisableMemoriesBackup disable_memories_backup = 39;
+    UploadPqcPreKeys upload_pqc_prekeys = 40;
+    GetPrivacyPassParameters get_privacy_pass_parameters = 41;
+    IssuePrivacyPassTokens issue_privacy_pass_tokens = 42;
+  }
+}
+
+message Response {
+
+  message PreKey {
+    int64 id = 1;
+    bytes prekey = 2;
+  }
+
+  message Prekeys {
+    repeated PreKey prekeys = 1;
+  }
+
+  message PqcPrekeys {
+    repeated ApplicationData.PqcPreKey prekeys = 1;
+  }
+
+  message Ok {
+    oneof Ok {
+      bool None = 1;
+      Prekeys prekeys = 2;
+      PqcPrekeys prekeys_pqc = 3;
+    }
+  }
+
+  oneof Response {
+    Ok ok = 1;
+    error.ErrorCode error = 2;
+  }
+}

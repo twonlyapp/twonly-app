@@ -1,0 +1,232 @@
+
+syntax = "proto3";
+package server_to_client;
+import "api/websocket/error.proto";
+
+message ServerToClient {
+  oneof v {
+    V0 V0 = 1;
+  }
+}
+
+message V0 {
+  uint64 seq = 1;
+  oneof Kind {
+    Response response = 2;
+    NewMessage newMessage = 3;
+    NewMessages newMessages = 7;
+    bool RequestNewPreKeys = 4;
+    bool RequestNewPqcPreKeys = 8;
+    error.ErrorCode error = 6;
+    SealedSenderMessage sealedSenderMessage = 9;
+    SealedSenderMessages sealedSenderMessages = 10;
+  }
+}
+
+message NewMessage {
+  int64 from_user_id = 2;
+  bytes body = 1;
+}
+
+message NewMessages {
+    repeated NewMessage newMessages = 1;
+}
+
+message SealedSenderMessage {
+  string message_id = 1;
+  bytes body = 2;
+}
+
+message SealedSenderMessages {
+  repeated SealedSenderMessage messages = 1;
+}
+
+message Response {
+
+  message Authenticated {
+    string plan = 1;
+  }
+
+  message Plan {
+    string plan_id = 1;
+    int64 upload_size_limit = 2;
+    int64 daily_media_upload_limit = 3;
+    int64 maximal_upload_size_of_single_media_size = 4;
+    int64 additional_plus_accounts = 5;
+    int64 monthly_costs_cent = 7;
+    int64 yearly_costs_cent = 8;
+    bool allowed_to_send_text_messages = 9;
+    bool is_additional_account = 10;
+    int64 memories_size_limit = 11;
+  }
+
+  message Plans {
+    repeated Plan plans = 1;
+  }
+
+  message AddAccountsInvite {
+    string plan_id = 1;
+    string invite_code = 2;
+  }
+
+  message AddAccountsInvites {
+    repeated AddAccountsInvite invites = 1;
+  }
+
+  message AdditionalAccount {
+    int64 user_id = 1;
+    string plan_id = 3;
+  }
+
+  message Transaction {}
+
+  message PlanBallance {
+    int64 used_daily_media_upload_limit = 1;
+    int64 used_upload_media_size_limit = 2;
+    optional int64 payment_period_days = 3;
+    optional int64 last_payment_done_unix_timestamp = 4;
+    repeated Transaction transactions = 5;
+    repeated AdditionalAccount additional_accounts = 6;
+    optional bool auto_renewal = 7;
+    optional int64 additional_account_owner_id = 8;
+  }
+  message PreKey {
+    int64 id = 1;
+    bytes prekey = 2;
+  }
+
+  message SignedPreKey {
+    int64 signed_prekey_id = 1;
+    bytes signed_prekey = 2;
+    bytes signed_prekey_signature = 3;
+  }
+
+  message PqcPreKey {
+    int64 ecc_pre_key_id = 1;
+    bytes ecc_pre_key = 2;
+    int64 kyber_pre_key_id = 3;
+    bytes kyber_pre_key = 4;
+    bytes kyber_pre_key_signature = 5;
+  }
+
+  message PqcBundle {
+    int64 ecc_signed_prekey_id = 1;
+    bytes ecc_signed_prekey = 2;
+    bytes ecc_signed_prekey_signature = 3;
+    int64 kyber_signed_prekey_id = 4;
+    bytes kyber_signed_prekey = 5;
+    bytes kyber_signed_prekey_signature = 6;
+    optional PqcPreKey prekey = 7;
+  }
+
+  message UserData {
+    int64 user_id = 1;
+    repeated PreKey prekeys = 2;
+    optional bytes username = 7;
+    optional bytes public_identity_key = 3;
+    optional bytes signed_prekey = 4;
+    optional bytes signed_prekey_signature = 5;
+    optional int64 signed_prekey_id = 6;
+    optional int64 registration_id = 8;
+    optional PqcBundle pqc_bundle = 9;
+  }
+
+  message UploadToken {
+    bytes upload_token = 1;
+    repeated bytes download_tokens = 2;
+  }
+
+  message DownloadTokens {
+    repeated bytes download_tokens = 1;
+  }
+
+  message ProofOfWork {
+    string prefix = 1;
+    int64 difficulty = 2;
+  }
+
+  message PasswordlessNotificationMessage {
+    int64 id = 1;
+    bytes encrypted_message = 2;
+  }
+
+  message PasswordlessNotificationMessages {
+    repeated PasswordlessNotificationMessage messages = 1;
+  }
+
+  message PresignedPost {
+    string url = 1;
+    map<string, string> fields = 2;
+  }
+
+  message MemoriesUploadUrls {
+    string media_id = 1;
+    PresignedPost thumbnail_upload = 2;
+    PresignedPost full_upload = 3;
+  }
+
+  message MediaItem {
+    string media_id = 1;
+    int64 original_date = 2;
+    string thumbnail_download_url = 3;
+  }
+
+  message MemoriesList {
+    repeated MediaItem items = 1;
+  }
+
+  message MemoriesUrl {
+    string full_download_url = 1;
+  }
+
+  message MemoriesUsage {
+    int64 max_bytes = 1;
+    int64 current_bytes = 2;
+    int64 count = 3;
+  }
+
+  message PrivacyPassParameters {
+    bytes token_challenge = 1;
+    bytes public_key = 2;
+    uint32 max_batch_size = 3;
+    uint32 max_age_seconds = 4;
+    uint32 daily_token_limit = 5;
+    uint32 issuance_cooldown_seconds = 6;
+  }
+
+  message PrivacyPassTokenResponses {
+    repeated bytes token_responses = 1;
+  }
+
+  message Ok {
+    reserved 7, 11;
+    oneof Ok {
+      bool None = 1;
+      int64 userid = 2;
+      bytes authchallenge = 3;
+      UploadToken uploadtoken = 4;
+      UserData userdata = 5;
+      bytes authtoken = 6;
+      Authenticated authenticated = 8;
+      Plans plans = 9;
+      PlanBallance planballance = 10;
+      AddAccountsInvites addaccountsinvites = 12;
+      DownloadTokens downloadtokens = 13;
+      SignedPreKey signedprekey = 14;
+      ProofOfWork proofOfWork = 15;
+      bytes passwordless_recovery_server_key = 16;
+      PasswordlessNotificationMessages passwordless_notification_messages = 17;
+      MemoriesUploadUrls memories_upload_urls = 18;
+      MemoriesList memories_list = 19;
+      MemoriesUrl memories_url = 20;
+      MemoriesUsage memories_usage = 21;
+      PrivacyPassParameters privacy_pass_parameters = 22;
+      PrivacyPassTokenResponses privacy_pass_token_responses = 23;
+    }
+  }
+
+  oneof Response {
+    Ok ok = 1;
+    error.ErrorCode error = 2;
+  }
+}

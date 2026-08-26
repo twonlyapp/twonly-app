@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE groups\n        SET also_best_friend = ?,\n            flame_counter = MAX(flame_counter, ?),\n            max_flame_counter = MAX(max_flame_counter, ?)\n        WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "5b848eba9965a386b9189ff911015c9652305c82281efd37491139b814a4562a"
+}

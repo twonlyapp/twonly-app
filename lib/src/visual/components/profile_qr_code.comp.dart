@@ -28,7 +28,9 @@ class ProfileQrCodeComp extends StatefulWidget {
     StreamSubscription<void>? subscription;
 
     if (openToVerify) {
-      subscription = KeyVerificationService.onVerificationSuccessClose.listen((_) {
+      subscription = KeyVerificationService.onVerificationSuccessClose.listen((
+        _,
+      ) {
         if (context.mounted) {
           KeyVerificationService.closeVerificationFlows(context);
         }
@@ -65,15 +67,15 @@ class ProfileQrCodeComp extends StatefulWidget {
                 Text(
                   openToVerify
                       ? (contact != null
-                          ? context.lang.letUserScanQrCode(
-                              getContactDisplayName(contact),
-                            )
-                          : context.lang.letFriendScanQrToVerify)
+                            ? context.lang.letUserScanQrCode(
+                                getContactDisplayName(contact),
+                              )
+                            : context.lang.letFriendScanQrToVerify)
                       : (contact != null
-                          ? context.lang.letUserScanQrCode(
-                              getContactDisplayName(contact),
-                            )
-                          : context.lang.addContactQrSheetSubtext),
+                            ? context.lang.letUserScanQrCode(
+                                getContactDisplayName(contact),
+                              )
+                            : context.lang.addContactQrSheetSubtext),
                   style: TextStyle(
                     fontSize: 14,
                     color: context.color.onSurface.withValues(alpha: 0.6),

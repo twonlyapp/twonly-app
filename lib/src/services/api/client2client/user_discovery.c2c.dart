@@ -28,7 +28,9 @@ Future<void> checkForUserDiscoveryChanges(
       // Only request a new version once per app session
       return;
     }
-    Log.info('[$receiptId] Having old version from contact. Requesting new version.');
+    Log.info(
+      '[$receiptId] Having old version from contact. Requesting new version.',
+    );
     _requestedUpdates.add(fromUserId);
     await sendCipherText(
       fromUserId,
@@ -67,7 +69,9 @@ Future<void> handleUserDiscoveryRequest(
     request.currentVersion,
   );
   if (newMessages != null && newMessages.isNotEmpty) {
-    Log.info('[$receiptId] Sending ${newMessages.length} user discovery messages');
+    Log.info(
+      '[$receiptId] Sending ${newMessages.length} user discovery messages',
+    );
     await sendCipherText(
       fromUserId,
       EncryptedContent(
@@ -78,7 +82,9 @@ Future<void> handleUserDiscoveryRequest(
       blocking: false,
     );
   } else {
-    Log.info('[$receiptId] Got update request, but there are no new updates for the user');
+    Log.info(
+      '[$receiptId] Got update request, but there are no new updates for the user',
+    );
   }
 }
 
@@ -91,7 +97,9 @@ Future<void> handleUserDiscoveryUpdate(
     Log.warn('[$receiptId] Got a user discovery update while it is disabled');
     return;
   }
-  Log.info('[$receiptId] Got ${update.messages.length} user discovery messages');
+  Log.info(
+    '[$receiptId] Got ${update.messages.length} user discovery messages',
+  );
   await UserDiscoveryService.handleNewMessages(
     fromUserId,
     update.messages.map(Uint8List.fromList).toList(),

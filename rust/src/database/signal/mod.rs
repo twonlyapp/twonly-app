@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::{Result, TwonlyError};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{ConnectOptions, SqlitePool};
@@ -68,24 +73,26 @@ impl Database {
                 .await
                 .map_err(|e| TwonlyError::Generic(e.to_string()))?;
 
-            sqlx::query("ATTACH DATABASE ? AS backup KEY ?")
+            // SQLCipher-only syntax cannot be described by the SQLite database
+            // used by SQLx during compile-time query preparation.
+            sqlx::query(r#"ATTACH DATABASE ? AS backup KEY ?"#)
                 .bind(output_path)
                 .bind(key)
                 .execute(&mut *conn)
                 .await
                 .map_err(|e| TwonlyError::Generic(format!("Attach failed: {}", e)))?;
 
-            sqlx::query("SELECT sqlcipher_export('backup')")
+            sqlx::query(r#"SELECT sqlcipher_export('backup')"#)
                 .execute(&mut *conn)
                 .await
                 .map_err(|e| TwonlyError::Generic(format!("Export failed: {}", e)))?;
 
-            sqlx::query("DETACH DATABASE backup")
+            sqlx::query(r#"DETACH DATABASE backup"#)
                 .execute(&mut *conn)
                 .await
                 .map_err(|e| TwonlyError::Generic(format!("Detach failed: {}", e)))?;
         } else {
-            sqlx::query("VACUUM INTO ?")
+            sqlx::query(r#"VACUUM INTO ?"#)
                 .bind(output_path)
                 .execute(&self.pool)
                 .await
@@ -95,17 +102,19 @@ impl Database {
     }
 
     pub(crate) async fn check_integrity(&self) -> Result<()> {
-        let row: (String,) = sqlx::query_as("PRAGMA integrity_check")
+        let integrity = sqlx::query_scalar!(r#"PRAGMA integrity_check"#)
             .fetch_one(&self.pool)
             .await
             .map_err(|e| TwonlyError::Generic(format!("Integrity check query failed: {}", e)))?;
+        let integrity = integrity
+            .ok_or_else(|| TwonlyError::Generic("Integrity check returned no result".to_owned()))?;
 
-        if row.0.to_lowercase() == "ok" {
+        if integrity.to_lowercase() == "ok" {
             Ok(())
         } else {
             Err(TwonlyError::Generic(format!(
                 "Database integrity check failed: {}",
-                row.0
+                integrity
             )))
         }
     }

@@ -11,7 +11,8 @@ class CustomColorPickerDialog extends StatefulWidget {
   final Color initialColor;
 
   @override
-  State<CustomColorPickerDialog> createState() => _CustomColorPickerDialogState();
+  State<CustomColorPickerDialog> createState() =>
+      _CustomColorPickerDialogState();
 }
 
 class _CustomColorPickerDialogState extends State<CustomColorPickerDialog> {
@@ -54,7 +55,10 @@ class _CustomColorPickerDialogState extends State<CustomColorPickerDialog> {
             ),
             const SizedBox(height: 20),
             // Hue Slider
-            Text(context.lang.hue, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              context.lang.hue,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             Slider(
               value: _hsvColor.hue,
               max: 360,
@@ -66,7 +70,10 @@ class _CustomColorPickerDialogState extends State<CustomColorPickerDialog> {
               },
             ),
             // Saturation Slider
-            Text(context.lang.saturation, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              context.lang.saturation,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             Slider(
               value: _hsvColor.saturation,
               onChanged: (val) {
@@ -76,7 +83,10 @@ class _CustomColorPickerDialogState extends State<CustomColorPickerDialog> {
               },
             ),
             // Brightness / Value Slider
-            Text(context.lang.brightness, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              context.lang.brightness,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             Slider(
               value: _hsvColor.value,
               onChanged: (val) {
@@ -102,7 +112,8 @@ class _CustomColorPickerDialogState extends State<CustomColorPickerDialog> {
             Expanded(
               child: MyButton(
                 variant: MyButtonVariant.primaryMiddle,
-                onPressed: () => Navigator.of(context).pop(currentColor.toARGB32()),
+                onPressed: () =>
+                    Navigator.of(context).pop(currentColor.toARGB32()),
                 child: Text(context.lang.ok),
               ),
             ),

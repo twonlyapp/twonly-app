@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart';
 
-
 enum SignalVersion { v1, v2 }
 
 @DataClassName('Contact')

@@ -105,8 +105,9 @@ class UserDiscoveryService {
 
   static Future<Uint8List?> getCurrentVersion() async {
     try {
-      return await FlutterUserDiscovery.getCurrentVersion(callbackId: isolateCallbackId)
-          .timeout(const Duration(seconds: 5));
+      return await FlutterUserDiscovery.getCurrentVersion(
+        callbackId: isolateCallbackId,
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
       Log.error(e);
       return null;

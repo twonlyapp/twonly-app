@@ -221,7 +221,8 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                         contact: user,
                         child: ContactLabelsSubtitleBuilder(
                           contactId: user.userId,
-                          additionalSubtitle: alreadyInGroup.contains(user.userId)
+                          additionalSubtitle:
+                              alreadyInGroup.contains(user.userId)
                               ? Text(context.lang.alreadyInGroup)
                               : null,
                           builder: (context, subtitleWidget) {
@@ -259,7 +260,9 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                                       return const BorderSide(width: 0);
                                     }
                                     return BorderSide(
-                                      color: Theme.of(context).colorScheme.outline,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
                                     );
                                   },
                                 ),

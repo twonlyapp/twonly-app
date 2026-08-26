@@ -35,16 +35,16 @@ class BetterListTile extends StatelessWidget {
           child: (leading != null)
               ? leading
               : (icon is IconData)
-                  ? Icon(
-                      icon as IconData,
-                      size: iconSize,
-                      color: color,
-                    )
-                  : FaIcon(
-                      icon as FaIconData?,
-                      size: iconSize,
-                      color: color,
-                    ),
+              ? Icon(
+                  icon as IconData,
+                  size: iconSize,
+                  color: color,
+                )
+              : FaIcon(
+                  icon as FaIconData?,
+                  size: iconSize,
+                  color: color,
+                ),
         ),
       ),
       trailing: trailing,

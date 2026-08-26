@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::user_discovery::stores::InMemoryStore;
 use crate::user_discovery::traits::tests::TestingUtils;
 use crate::user_discovery::{UserDiscovery, UserDiscoveryStore, UserDiscoveryVersion, UserID};

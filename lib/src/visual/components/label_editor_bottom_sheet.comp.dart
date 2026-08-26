@@ -60,7 +60,9 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
   }
 
   Future<void> _pickCustomColor({required bool isBgColor}) async {
-    final initial = isBgColor ? Color(_selectedBgColor) : Color(_selectedTextColor);
+    final initial = isBgColor
+        ? Color(_selectedBgColor)
+        : Color(_selectedTextColor);
     final pickedColorInt = await showDialog<int>(
       context: context,
       builder: (context) => CustomColorPickerDialog(initialColor: initial),
@@ -109,20 +111,29 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
               Text(
                 isEditing ? context.lang.editLabel : context.lang.createLabel,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 20),
               // Interactive Inline Label Badge
               Center(
                 child: IntrinsicWidth(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 100, maxWidth: 200),
+                    constraints: const BoxConstraints(
+                      minWidth: 100,
+                      maxWidth: 200,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Color(_selectedBgColor),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       child: TextField(
                         controller: _nameController,
                         autofocus: true,
@@ -137,13 +148,18 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
                         decoration: InputDecoration(
                           hintText: context.lang.labelNameHint,
                           hintStyle: TextStyle(
-                            color: Color(_selectedTextColor).withValues(alpha: 0.6),
+                            color: Color(
+                              _selectedTextColor,
+                            ).withValues(alpha: 0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                           border: InputBorder.none,
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 6,
+                          ),
                           counterText: '',
                         ),
                         onChanged: (_) => setState(() {}),
@@ -157,7 +173,10 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
               Text(
                 context.lang.labelBackgroundColor,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -184,7 +203,8 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
                             ? Icon(
                                 Icons.check,
                                 size: 18,
-                                color: Color(colorValue).computeLuminance() > 0.5
+                                color:
+                                    Color(colorValue).computeLuminance() > 0.5
                                     ? Colors.black
                                     : Colors.white,
                               )
@@ -226,7 +246,10 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
               Text(
                 context.lang.labelTextColor,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -253,7 +276,8 @@ class _LabelEditorBottomSheetState extends State<LabelEditorBottomSheet> {
                             ? Icon(
                                 Icons.check,
                                 size: 18,
-                                color: Color(colorValue).computeLuminance() > 0.5
+                                color:
+                                    Color(colorValue).computeLuminance() > 0.5
                                     ? Colors.black
                                     : Colors.white,
                               )

@@ -1,6 +1,5 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:fixnum/fixnum.dart' show Int64;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart'
     show IdentityKeyPair;
 import 'package:twonly/locator.dart';
@@ -51,10 +50,14 @@ Future<void> handleErrorMessage(
         return;
       }
       // Update group state from the server to ensure the user is still part of the group...
-      final updatedState = await fetchGroupState(group);
-      if (updatedState != null) {
-        final (_, state) = updatedState;
-        final isStillMember = state.memberIds.contains(Int64(fromUserId));
+      final updated = await fetchGroupState(group);
+      if (updated) {
+        final members = await twonlyDB.groupsDao.getGroupNonLeftMembers(
+          groupId,
+        );
+        final isStillMember = members.any(
+          (member) => member.contactId == fromUserId,
+        );
         if (isStillMember) {
           final keyPair = IdentityKeyPair.fromSerialized(
             group.myGroupPrivateKey!,

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT record_bytes FROM signal_pre_keys WHERE pre_key_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "record_bytes",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "signal_pre_keys",
+            "name": "record_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "52b32153dd0cc9f5efca773487839fab7ed13b2124ec6153a0b55a3afe3c4ded"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_identities(name, identity_key, timestamp)\n            VALUES (?, ?, ?)\n            ON CONFLICT(name) DO UPDATE SET\n                identity_key = excluded.identity_key,\n                timestamp = excluded.timestamp\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "64de4aee234dbfab635c65bb995f513be49cc860f298cf6e2cd9dc1f71265047"
+}

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use std::path::PathBuf;
 
 use crate::backup::backup_archive::BackupArchive;

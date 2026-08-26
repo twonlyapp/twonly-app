@@ -112,7 +112,9 @@ class SecondFactorPicker extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? context.color.primary : Colors.transparent,
+                  color: isSelected
+                      ? context.color.primary
+                      : Colors.transparent,
                   borderRadius: borderRadius,
                 ),
                 child: Column(

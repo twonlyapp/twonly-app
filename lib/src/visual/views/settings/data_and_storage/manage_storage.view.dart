@@ -90,7 +90,8 @@ class _ManageStorageViewState extends State<ManageStorageView> {
                       Expanded(
                         child: Text(
                           context.lang.backupFreeSpaceWithCloud,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                         ),

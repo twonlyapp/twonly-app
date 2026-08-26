@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 pub(crate) mod log;
 mod macros;
 use flutter_rust_bridge::DartFnFuture;
@@ -15,11 +20,49 @@ tokio::task_local! {
 pub(crate) static FLUTTER_CALLBACKS: std::sync::RwLock<Option<HashMap<u32, FlutterCallbacks>>> =
     std::sync::RwLock::new(None);
 
+#[derive(Clone, Debug)]
+pub struct LegacySignalDecryptResult {
+    /// Serialized `EncryptedContent` when legacy Signal decryption succeeded.
+    pub plaintext: Option<Vec<u8>>,
+    /// Serialized protobuf enum value for `DecryptionErrorMessage.Type`.
+    pub decryption_error_type: Option<i32>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LegacySignalEncryptResult {
+    pub ciphertext: Vec<u8>,
+    /// `Message.Type.CIPHERTEXT` or `Message.Type.PREKEY_BUNDLE`.
+    pub message_type: i32,
+}
+
+#[derive(Clone, Debug)]
+pub struct LegacySignalPreKey {
+    pub id: i64,
+    pub public_key: Vec<u8>,
+}
+
 // This will also generate the function init_flutter_callbacks which MUST be called from Flutter to initialize the callbacks
 callback_generator! {
     FlutterCallbacks {
         Logging logging {
             get_stream_sink: () => StreamSink<String>
+        },
+        LegacySignal legacy_signal {
+            decrypt: (i64, Vec<u8>, i32) => LegacySignalDecryptResult,
+            encrypt: (i64, Vec<u8>) => Option<LegacySignalEncryptResult>,
+            generate_prekeys: () => Vec<LegacySignalPreKey>
+        },
+        Api api {
+            resync_signal_session: (i64) => (),
+            push_key_requested: (i64) => (),
+            group_membership_error: (i64, String, String) => (),
+            media_action: (String, String, i64, String) => (),
+            verification_proof: (i64, Vec<u8>) => (),
+            create_push_data: (i64, Option<String>, Vec<u8>, i32) => Option<Vec<u8>>,
+            create_push_avatars: (i64) => (),
+            recovery_changed: () => (),
+            media_received: (String, i64) => (),
+            group_state_refresh: (String, bool) => ()
         }
     }
 }

@@ -12,6 +12,11 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);
 
+/// Initializes the complete Rust runtime without Flutter or callback setup.
+/// Background executables should call this before using `RustApi`.
+Future<void> initializeTwonlyStandalone({required InitConfig config}) =>
+    RustLib.instance.api.crateBridgeInitializeTwonlyStandalone(config: config);
+
 class InitConfig {
   final String databaseDir;
   final String dataDir;

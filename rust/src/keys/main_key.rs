@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::Result;
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, AeadCore, KeyInit, OsRng};
@@ -77,7 +82,7 @@ impl MainKey {
         let decrypted = self.decrypt_with_info(info.as_bytes(), encrypted_media_key)?;
 
         if decrypted.len() != 32 {
-            return Err("Invalid decrypted key length".to_string())?;
+            Err("Invalid decrypted key length".to_string())?;
         }
 
         let mut result = [0u8; 32];
@@ -108,7 +113,7 @@ impl MainKey {
 
     fn decrypt_with_info(&self, info: &[u8], encrypted_data: &[u8]) -> Result<Vec<u8>> {
         if encrypted_data.len() < 12 {
-            return Err("Invalid encrypted data length".to_string())?;
+            Err("Invalid encrypted data length".to_string())?;
         }
 
         let derived_key = self.derive_key(info);

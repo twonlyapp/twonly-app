@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE contacts\n                SET requested = 0, deleted_by_user = 0\n                WHERE user_id = ?\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "49a771af89168b9e3d09e2b0cbe49eb2a51189212e1cdb99fb8211bd614c9558"
+}

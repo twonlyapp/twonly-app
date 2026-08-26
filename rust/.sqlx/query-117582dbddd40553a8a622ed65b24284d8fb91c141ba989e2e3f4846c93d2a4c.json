@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE contacts\n        SET username = COALESCE(?, username),\n            display_name = ?,\n            avatar_svg_compressed = ?,\n            sender_profile_counter = COALESCE(?, sender_profile_counter)\n        WHERE user_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "117582dbddd40553a8a622ed65b24284d8fb91c141ba989e2e3f4846c93d2a4c"
+}

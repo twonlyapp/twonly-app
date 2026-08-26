@@ -10,8 +10,8 @@ import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
-  final cloudOnlyCount =
-      await twonlyDB.mediaFilesDao.getCloudOnlyMemoriesCount();
+  final cloudOnlyCount = await twonlyDB.mediaFilesDao
+      .getCloudOnlyMemoriesCount();
 
   if (!context.mounted) return false;
 

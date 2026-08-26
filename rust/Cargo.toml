@@ -47,7 +47,19 @@ walkdir = "2.5.0"
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0", rev = "44a6dd8fc9f9d6903b32842b80b3894a75678418" }
 rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
+uuid = { version = "1", features = ["v4"] }
+flate2 = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 async-trait = "0.1.91"
+futures-util = "0.3.31"
+tokio-tungstenite = { version = "0.28.0", default-features = false, features = [
+    "connect",
+    "rustls-tls-native-roots",
+] }
+rustls = { version = "0.23.43", default-features = false, features = ["ring", "std"] }
+tokio-util = "0.7.16"
+bon = "3.9.3"
+stream-tungstenite = "0.6.1"
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
 apple-native-keyring-store = { version = "1", features = ["protected"] }
@@ -56,6 +68,7 @@ apple-native-keyring-store = { version = "1", features = ["protected"] }
 android-native-keyring-store = "1"
 
 [dev-dependencies]
+anyhow = "1.0.104"
 pretty_env_logger = "0.5.0"
 tempfile = "3.27.0"
 

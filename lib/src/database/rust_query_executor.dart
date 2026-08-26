@@ -8,9 +8,9 @@ import 'package:twonly/core/database/app.dart' as rust;
 /// This keeps the existing generated models, DAO methods and query watches
 /// while moving connection, encryption and storage ownership into Rust.
 QueryExecutor openRustAppDatabase() => DelegatedDatabase(
-      _RustDatabaseDelegate(),
-      isSequential: true,
-    );
+  _RustDatabaseDelegate(),
+  isSequential: true,
+);
 
 class _RustDatabaseDelegate extends DatabaseDelegate {
   @override

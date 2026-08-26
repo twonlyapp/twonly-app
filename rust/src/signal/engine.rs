@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::{Result, TwonlyError};
 use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
@@ -91,16 +96,50 @@ impl RustSignalEngine {
         Ok(key_pair.serialize().to_vec())
     }
 
+    pub async fn generate_prekeys(&self, count: usize) -> Result<Vec<(u32, Vec<u8>)>> {
+        let mut store_guard = self.store.lock().await;
+        let store = &mut *store_guard;
+        let mut csprng = rand::rngs::StdRng::from_os_rng();
+        let mut next_id = sqlx::query_scalar!(
+            r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
+        )
+        .fetch_one(&store.pool)
+        .await?;
+        let mut prekeys = Vec::with_capacity(count);
+
+        for _ in 0..count {
+            next_id = if next_id >= 16_777_215 {
+                1
+            } else {
+                next_id + 1
+            };
+            let key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
+            store
+                .pre_key_store
+                .save_pre_key(
+                    next_id.into(),
+                    &libsignal_protocol::PreKeyRecord::new(next_id.into(), &key_pair),
+                )
+                .assert_send()
+                .await
+                .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+            prekeys.push((next_id, key_pair.public_key.serialize().to_vec()));
+        }
+
+        Ok(prekeys)
+    }
+
     pub async fn generate_bundle(&self) -> Result<FrbPreKeyBundle> {
         let mut store_guard = self.store.lock().await;
         let store = &mut *store_guard;
         let mut csprng = rand::rngs::StdRng::from_os_rng();
 
         let pre_key_id: u32 = {
-            let id: u32 =
-                sqlx::query_scalar("SELECT COALESCE(MAX(pre_key_id), 0) FROM signal_pre_keys")
-                    .fetch_one(&store.pool)
-                    .await?;
+            let id = sqlx::query_scalar!(
+                r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
+            )
+            .fetch_one(&store.pool)
+            .await?;
             if id > 16_777_215 {
                 1
             } else {
@@ -109,11 +148,9 @@ impl RustSignalEngine {
         };
 
         let signed_pre_key_id: u32 = {
-            let id: u32 = sqlx::query_scalar(
-                "SELECT COALESCE(MAX(signed_pre_key_id), 0) FROM signal_signed_pre_keys",
-            )
-            .fetch_one(&store.pool)
-            .await?;
+            let id = sqlx::query_scalar!(
+                r#"SELECT COALESCE(MAX(signed_pre_key_id), 0) AS "id!: u32" FROM signal_signed_pre_keys"#,
+            ).fetch_one(&store.pool).await?;
             if id > 16_777_215 {
                 1
             } else {
@@ -122,11 +159,9 @@ impl RustSignalEngine {
         };
 
         let kyber_pre_key_id: u32 = {
-            let id: u32 = sqlx::query_scalar(
-                "SELECT COALESCE(MAX(kyber_pre_key_id), 0) FROM signal_kyber_pre_keys",
-            )
-            .fetch_one(&store.pool)
-            .await?;
+            let id = sqlx::query_scalar!(
+                r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
+            ).fetch_one(&store.pool).await?;
             if id > 16_777_215 {
                 1
             } else {
@@ -223,10 +258,10 @@ impl RustSignalEngine {
             device_id: 1,
             pre_key_id: Some(pre_key_id),
             pre_key_public: Some(pre_key_pair.public_key.serialize().to_vec()),
-            signed_pre_key_id: signed_pre_key_id,
+            signed_pre_key_id,
             signed_pre_key_public: signed_pre_key_pair.public_key.serialize().to_vec(),
             signed_pre_key_signature: signature.to_vec(),
-            kyber_pre_key_id: kyber_pre_key_id,
+            kyber_pre_key_id,
             kyber_pre_key_public: kyber_key_pair.public_key.serialize().to_vec(),
             kyber_pre_key_signature: kyber_signature.to_vec(),
             identity_key: store
@@ -255,11 +290,9 @@ impl RustSignalEngine {
         );
 
         let mut kyber_pre_key_id: u32 = {
-            let id = sqlx::query_scalar(
-                "SELECT COALESCE(MAX(kyber_pre_key_id), 0) FROM signal_kyber_pre_keys",
-            )
-            .fetch_one(&store.pool)
-            .await?;
+            let id = sqlx::query_scalar!(
+                r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
+            ).fetch_one(&store.pool).await?;
 
             if id > 16_777_215 {
                 1
@@ -269,10 +302,11 @@ impl RustSignalEngine {
         };
 
         let mut pre_key_id: u32 = {
-            let id =
-                sqlx::query_scalar("SELECT COALESCE(MAX(pre_key_id), 0)  FROM signal_pre_keys")
-                    .fetch_one(&store.pool)
-                    .await?;
+            let id = sqlx::query_scalar!(
+                r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
+            )
+            .fetch_one(&store.pool)
+            .await?;
 
             if id > 16_777_215 {
                 1
@@ -450,7 +484,7 @@ impl RustSignalEngine {
 
         let serialized = ciphertext.serialize();
         let mut res = Vec::with_capacity(serialized.len() + 1);
-        res.extend_from_slice(&serialized);
+        res.extend_from_slice(serialized);
         res.push(ciphertext.message_type() as u8);
 
         Ok(res)
@@ -620,5 +654,78 @@ mod tests {
             .unwrap();
 
         assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_twonly_api_100_messages() -> std::result::Result<(), Box<dyn std::error::Error>> {
+        use crate::database::signal::Database;
+
+        let _ = pretty_env_logger::try_init();
+
+        // 1. Setup in-memory databases
+        let alice_db = Database::new(&"sqlite::memory:".to_string(), None, false).await?;
+        alice_db.run_migrations().await?;
+
+        let bob_db = Database::new(&"sqlite::memory:".to_string(), None, false).await?;
+        bob_db.run_migrations().await?;
+
+        // 2. Setup Alice and Bob identity keys
+        let alice_identity_bytes = RustSignalEngine::generate_identity_key_pair()?;
+        let bob_identity_bytes = RustSignalEngine::generate_identity_key_pair()?;
+
+        // 3. Initialize engines with the DB pools
+        let alice_engine = RustSignalEngine::new_with_pool(
+            alice_db.pool.clone(),
+            alice_identity_bytes,
+            1234,
+            "alice".to_string(),
+        )?;
+        let bob_engine = RustSignalEngine::new_with_pool(
+            bob_db.pool.clone(),
+            bob_identity_bytes,
+            5678,
+            "bob".to_string(),
+        )?;
+
+        // 4. Bob generates a bundle
+        let bob_bundle = bob_engine.generate_bundle().await?;
+
+        // 5. Alice processes Bob's bundle
+        alice_engine
+            .process_prekey_bundle("bob".to_string(), 1, bob_bundle)
+            .await?;
+
+        // 6. Exchange 100 messages
+        let mut alice_to_bob = true;
+        for i in 1..=100 {
+            if alice_to_bob {
+                let plaintext = format!("Message {} from Alice to Bob", i).into_bytes();
+
+                let ciphertext = alice_engine
+                    .encrypt_message("bob".to_string(), 1, plaintext.clone())
+                    .await?;
+
+                let decrypted = bob_engine
+                    .decrypt_message("alice".to_string(), 1, ciphertext)
+                    .await?;
+
+                assert_eq!(plaintext, decrypted);
+            } else {
+                let plaintext = format!("Message {} from Bob to Alice", i).into_bytes();
+
+                let ciphertext = bob_engine
+                    .encrypt_message("alice".to_string(), 1, plaintext.clone())
+                    .await?;
+
+                let decrypted = alice_engine
+                    .decrypt_message("bob".to_string(), 1, ciphertext)
+                    .await?;
+
+                assert_eq!(plaintext, decrypted);
+            }
+            alice_to_bob = !alice_to_bob;
+        }
+
+        Ok(())
     }
 }

@@ -65,6 +65,52 @@ final $typed_data.Uint8List uploadRequestDescriptor = $convert.base64Decode(
     'c3VjY2VzcxgDIAMoCzIaLmh0dHBfcmVxdWVzdHMuVGV4dE1lc3NhZ2VSEW1lc3NhZ2VzT25TdW'
     'NjZXNz');
 
+@$core.Deprecated('Use sealedSenderMessageRequestDescriptor instead')
+const SealedSenderMessageRequest$json = {
+  '1': 'SealedSenderMessageRequest',
+  '2': [
+    {'1': 'recipient_user_id', '3': 1, '4': 1, '5': 3, '10': 'recipientUserId'},
+    {
+      '1': 'sealed_sender_message',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'sealedSenderMessage'
+    },
+    {
+      '1': 'privacy_pass_token',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'privacyPassToken'
+    },
+  ],
+  '9': [
+    {'1': 4, '2': 5},
+  ],
+};
+
+/// Descriptor for `SealedSenderMessageRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sealedSenderMessageRequestDescriptor = $convert.base64Decode(
+    'ChpTZWFsZWRTZW5kZXJNZXNzYWdlUmVxdWVzdBIqChFyZWNpcGllbnRfdXNlcl9pZBgBIAEoA1'
+    'IPcmVjaXBpZW50VXNlcklkEjIKFXNlYWxlZF9zZW5kZXJfbWVzc2FnZRgCIAEoDFITc2VhbGVk'
+    'U2VuZGVyTWVzc2FnZRIsChJwcml2YWN5X3Bhc3NfdG9rZW4YAyABKAxSEHByaXZhY3lQYXNzVG'
+    '9rZW5KBAgEEAU=');
+
+@$core.Deprecated('Use sealedSenderMessageResponseDescriptor instead')
+const SealedSenderMessageResponse$json = {
+  '1': 'SealedSenderMessageResponse',
+  '2': [
+    {'1': 'message_id', '3': 1, '4': 1, '5': 9, '10': 'messageId'},
+  ],
+};
+
+/// Descriptor for `SealedSenderMessageResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sealedSenderMessageResponseDescriptor =
+    $convert.base64Decode(
+        'ChtTZWFsZWRTZW5kZXJNZXNzYWdlUmVzcG9uc2USHQoKbWVzc2FnZV9pZBgBIAEoCVIJbWVzc2'
+        'FnZUlk');
+
 @$core.Deprecated('Use updateGroupStateDescriptor instead')
 const UpdateGroupState$json = {
   '1': 'UpdateGroupState',

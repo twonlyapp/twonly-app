@@ -13,15 +13,15 @@ class Labels extends Table {
 @DataClassName('ContactLabel')
 class ContactLabels extends Table {
   IntColumn get contactId => integer().references(
-        Contacts,
-        #userId,
-        onDelete: KeyAction.cascade,
-      )();
+    Contacts,
+    #userId,
+    onDelete: KeyAction.cascade,
+  )();
   IntColumn get labelId => integer().references(
-        Labels,
-        #id,
-        onDelete: KeyAction.cascade,
-      )();
+    Labels,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
 
   @override
   Set<Column> get primaryKey => {contactId, labelId};

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::error::Result;
 use scrypt::{scrypt, Params};
 use serde::{Deserialize, Serialize};

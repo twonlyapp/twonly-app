@@ -1,0 +1,47 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            (SELECT COUNT(*) FROM messages WHERE message_id LIKE 'path-media-%') AS media_count,\n            (SELECT COUNT(*) FROM group_histories WHERE group_id = ?) AS history_count,\n            (SELECT COUNT(*) FROM contact_push_keys WHERE contact_id = ?) AS push_key_count,\n            (SELECT ask_for_friend_promotions FROM contacts WHERE user_id = ?) AS ask_promotions\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_count",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "history_count",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "push_key_count",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "ask_promotions",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "ask_for_friend_promotions"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c1993cbf0d0255b2e68d0bf4ffc80d37fdec7b2d995b2553e534e9dc6e6db195"
+}

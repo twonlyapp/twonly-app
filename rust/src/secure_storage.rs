@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use keyring_core::{Entry, Error as KeyringError};
 
 /// A simple wrapper around `keyring-core` for secure storage on iOS, Android, and other platforms.

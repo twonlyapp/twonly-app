@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO main.sqlite_sequence(name, seq) VALUES(?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "a28ac461ed3b995287f2cfd9480c51562ba580cc34f8835163ee7145833e1455"
+}

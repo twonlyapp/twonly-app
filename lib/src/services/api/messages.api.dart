@@ -1,264 +1,30 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:clock/clock.dart';
-import 'package:drift/drift.dart';
-import 'package:fixnum/fixnum.dart';
-import 'package:mutex/mutex.dart';
-import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/contacts.table.dart';
-import 'package:twonly/src/database/tables/messages.table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    as frb;
+import 'package:twonly/core/bridge/api.dart' as rust_api;
+import 'package:twonly/src/database/twonly.db.dart' show Receipt;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
-import 'package:twonly/src/services/signal/encryption.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
-import 'package:twonly/src/services/user.service.dart' show UserService;
-import 'package:twonly/src/services/user_discovery.service.dart';
-import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
 
-final lockRetransmission = Mutex();
+// Compatibility adapters. All messaging state and behavior lives in Rust.
+Future<void> retransmitAllMessages() =>
+    rust_api.RustApi.retransmitAllMessages();
 
-Future<void> retransmitAllMessages() async {
-  return lockRetransmission.protect(() async {
-    final receipts = await twonlyDB.receiptsDao.getReceiptsForRetransmission();
-
-    if (receipts.isEmpty) return;
-
-    Log.info('Reuploading ${receipts.length} messages to the server.');
-
-    final contacts = <int, Contact>{};
-
-    for (final receipt in receipts) {
-      if (receipt.markForRetryAfterAccepted != null) {
-        if (!contacts.containsKey(receipt.contactId)) {
-          final contact = await twonlyDB.contactsDao
-              .getContactByUserId(receipt.contactId)
-              .getSingleOrNull();
-          if (contact == null) {
-            Log.error(
-              'Contact does not exists, but has a record in receipts, this should not be possible, because of the DELETE CASCADE relation.',
-            );
-            continue;
-          }
-          contacts[receipt.contactId] = contact;
-        }
-        if (!(contacts[receipt.contactId]?.accepted ?? true)) {
-          Log.warn(
-            'Could not send message as contact has still not yet accepted.',
-          );
-          continue;
-        }
-      }
-      await tryToSendCompleteMessage(receipt: receipt);
-    }
-  });
-}
-
-final Map<String, Mutex> _tryToSendLocks = {};
-
-// When the ackByServerAt is set this value is written in the receipted
 Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
   Receipt? receipt,
   bool onlyReturnEncryptedData = false,
   bool blocking = true,
 }) async {
-  final rId = receiptId ?? receipt?.receiptId;
-  if (rId == null) {
-    Log.error(
-      'Cannot try to send complete message as both receiptId and receipt are null.',
-    );
+  final id = receiptId ?? receipt?.receiptId;
+  if (id == null) return null;
+  if (!onlyReturnEncryptedData) {
+    await rust_api.RustApi.sendQueuedMessage(receiptId: id);
     return null;
   }
-
-  final mutex = _tryToSendLocks.putIfAbsent(rId, Mutex.new);
-  return mutex.protect(() async {
-    return _tryToSendCompleteMessageInternal(
-      receiptId: receiptId,
-      receipt: receipt,
-      onlyReturnEncryptedData: onlyReturnEncryptedData,
-      blocking: blocking,
-    );
-  });
-}
-
-Future<(Uint8List, Uint8List?)?> _tryToSendCompleteMessageInternal({
-  String? receiptId,
-  Receipt? receipt,
-  bool onlyReturnEncryptedData = false,
-  bool blocking = true,
-}) async {
-  // this should have a lock for every receiptID, split the function into a _internal withou the lock and a normal with the lock
-  if (apiService.appIsOutdated) return null;
-  if (receiptId == null && receipt == null) return null;
-
-  try {
-    final targetReceiptId = receipt?.receiptId ?? receiptId!;
-    final loadedReceipt = await twonlyDB.receiptsDao.getReceiptById(
-      targetReceiptId,
-    );
-    if (loadedReceipt == null) {
-      Log.info(
-        '[$targetReceiptId] Receipt not found (might have been processed or deleted).',
-      );
-      return null;
-    }
-    // ignore: parameter_assignments
-    receipt = loadedReceipt;
-
-    final contact = await twonlyDB.contactsDao.getContactById(
-      receipt.contactId,
-    );
-    if (contact == null || contact.accountDeleted) {
-      Log.warn('Will not send message again as user does not exist anymore.');
-      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-      return null;
-    }
-
-    if (!onlyReturnEncryptedData &&
-        receipt.ackByServerAt != null &&
-        receipt.markForRetry == null) {
-      Log.info('Message already uploaded and mark for retry is not set.');
-      return null;
-    }
-
-    final message = pb.Message.fromBuffer(receipt.message)
-      ..receiptId = receipt.receiptId;
-
-    final encryptedContent = pb.EncryptedContent.fromBuffer(
-      message.encryptedContent,
-    );
-
-    Uint8List? pushData;
-    if (receipt.retryCount == 0) {
-      final pushNotification = await getPushNotificationFromEncryptedContent(
-        receipt.contactId,
-        receipt.messageId,
-        encryptedContent,
-      );
-
-      if (pushNotification != null) {
-        // Only show the push notification the first two time.
-        pushData = await encryptPushNotification(
-          receipt.contactId,
-          pushNotification,
-        );
-      }
-    }
-
-    if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
-      pushData = (PushNotification()..kind = PushKind.TEST_NOTIFICATION)
-          .writeToBuffer();
-    }
-
-    if (message.type == pb.Message_Type.CIPHERTEXT) {
-      final encryptResult = await signalEncryptMessage(
-        receipt.contactId,
-        Uint8List.fromList(message.encryptedContent),
-      );
-      if (encryptResult == null) {
-        Log.error(
-          '[${receipt.receiptId}] Could not encrypt the message for user ${receipt.contactId}. Aborting and trying again.',
-        );
-        if (receipt.messageId != null) {
-          await twonlyDB.messagesDao.handleMessageAckByServer(
-            receipt.contactId,
-            receipt.messageId!,
-            clock.now(),
-          );
-        }
-        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-        return null;
-      }
-      message
-        ..encryptedContent = encryptResult.ciphertext
-        ..type = encryptResult.type;
-    } else if (message.type == pb.Message_Type.CIPHERTEXT_V2) {
-      final encryptResult = await signalEncryptMessageV2(
-        receipt.contactId,
-        Uint8List.fromList(message.encryptedContent),
-      );
-      if (encryptResult == null) {
-        Log.error(
-          '[${receipt.receiptId}] Could not encrypt the message (V2) for user ${receipt.contactId}. Aborting and trying again.',
-        );
-        if (receipt.messageId != null) {
-          await twonlyDB.messagesDao.handleMessageAckByServer(
-            receipt.contactId,
-            receipt.messageId!,
-            clock.now(),
-          );
-        }
-        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-        return null;
-      }
-      message
-        ..encryptedContent = encryptResult.ciphertext
-        ..type = encryptResult.type;
-    }
-
-    if (onlyReturnEncryptedData) {
-      Log.info('Returning message  with receiptID ${receipt.receiptId}.');
-      return (message.writeToBuffer(), pushData);
-    }
-
-    Log.info('Uploading message with receiptID ${receipt.receiptId}.');
-
-    final resp = await apiService.sendTextMessage(
-      receipt.contactId,
-      message.writeToBuffer(),
-      pushData,
-    );
-
-    if (resp.isError) {
-      Log.warn('Could not transmit ${receipt.receiptId} got ${resp.error}.');
-      if (resp.error == ErrorCode.UserIdNotFound) {
-        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-        await twonlyDB.contactsDao.updateContact(
-          receipt.contactId,
-          const ContactsCompanion(accountDeleted: Value(true)),
-        );
-        return null;
-      }
-    }
-
-    if (resp.isSuccess) {
-      if (receipt.messageId != null) {
-        await twonlyDB.messagesDao.handleMessageAckByServer(
-          receipt.contactId,
-          receipt.messageId!,
-          clock.now(),
-        );
-      }
-      if (!receipt.contactWillSendsReceipt) {
-        await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-      } else {
-        await twonlyDB.receiptsDao.updateReceipt(
-          receipt.receiptId,
-          ReceiptsCompanion(
-            ackByServerAt: Value(clock.now()),
-            retryCount: Value(receipt.retryCount + 1),
-            lastRetry: Value(clock.now()),
-            markForRetry: const Value(null),
-          ),
-        );
-      }
-    }
-  } catch (e) {
-    Log.error('[$receiptId] unknown error when sending message: $e');
-    if (receipt != null) {
-      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-    }
-  }
-  return null;
+  final prepared = await rust_api.RustApi.prepareQueuedMessage(receiptId: id);
+  return prepared == null ? null : (prepared.message, prepared.pushData);
 }
 
 Future<void> insertAndSendTextMessage(
@@ -266,41 +32,10 @@ Future<void> insertAndSendTextMessage(
   String textMessage,
   String? quotesMessageId,
 ) async {
-  await twonlyDB.groupsDao.updateGroup(
-    groupId,
-    const GroupsCompanion(
-      draftMessage: Value(null),
-    ),
-  );
-  final message = await twonlyDB.messagesDao.insertMessage(
-    MessagesCompanion(
-      groupId: Value(groupId),
-      content: Value(textMessage),
-      type: Value(MessageType.text.name),
-      quotesMessageId: Value(quotesMessageId),
-    ),
-  );
-  if (message == null) {
-    Log.error('Could not insert message into database');
-    return;
-  }
-
-  final encryptedContent = pb.EncryptedContent(
-    textMessage: pb.EncryptedContent_TextMessage(
-      senderMessageId: message.messageId,
-      text: textMessage,
-      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-    ),
-  );
-
-  if (quotesMessageId != null) {
-    encryptedContent.textMessage.quoteMessageId = quotesMessageId;
-  }
-
-  await sendCipherTextToGroup(
-    groupId,
-    encryptedContent,
-    messageId: message.messageId,
+  await rust_api.RustApi.insertAndSendText(
+    groupId: groupId,
+    text: textMessage,
+    quoteMessageId: quotesMessageId,
   );
 }
 
@@ -308,54 +43,9 @@ Future<void> insertAndSendContactShareMessage(
   String groupId,
   List<int> contactsToShare,
 ) async {
-  final contacts = <SharedContact>[];
-
-  for (final contactId in contactsToShare) {
-    final contact = await twonlyDB.contactsDao.getContactById(contactId);
-    if (contact != null) {
-      final publicIdentityKey = await getPublicKeyFromContact(contactId);
-
-      contacts.add(
-        SharedContact(
-          userId: Int64(contact.userId),
-          publicIdentityKey: publicIdentityKey,
-          displayName: getContactDisplayName(contact),
-        ),
-      );
-    }
-  }
-
-  final additionalMessageData = AdditionalMessageData(
-    type: AdditionalMessageData_Type.CONTACTS,
-    contacts: contacts,
-  );
-
-  final message = await twonlyDB.messagesDao.insertMessage(
-    MessagesCompanion(
-      groupId: Value(groupId),
-      type: Value(MessageType.contacts.name),
-      additionalMessageData: Value(additionalMessageData.writeToBuffer()),
-    ),
-  );
-
-  if (message == null) {
-    Log.error('Could not insert message into database');
-    return;
-  }
-
-  final encryptedContent = pb.EncryptedContent(
-    additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
-      senderMessageId: message.messageId,
-      additionalMessageData: additionalMessageData.writeToBuffer(),
-      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-      type: MessageType.contacts.name,
-    ),
-  );
-
-  await sendCipherTextToGroup(
-    groupId,
-    encryptedContent,
-    messageId: message.messageId,
+  await rust_api.RustApi.insertAndSendContactShare(
+    groupId: groupId,
+    contactIds: frb.Int64List.fromList(contactsToShare),
   );
 }
 
@@ -363,47 +53,9 @@ Future<void> insertAndSendAskAboutUserMessage(
   int contactId,
   int askAboutUserId,
 ) async {
-  final directChat = await twonlyDB.groupsDao.createOrGetDirectChat(contactId);
-  if (directChat == null) {
-    Log.error(
-      'Failed to get or create direct chat group for contact $contactId',
-    );
-    return;
-  }
-
-  final groupId = directChat.groupId;
-
-  final additionalMessageData = AdditionalMessageData(
-    type: AdditionalMessageData_Type.ASK_ABOUT_USER,
-    askAboutUserId: Int64(askAboutUserId),
-  );
-
-  final message = await twonlyDB.messagesDao.insertMessage(
-    MessagesCompanion(
-      groupId: Value(groupId),
-      type: Value(MessageType.askAboutUser.name),
-      additionalMessageData: Value(additionalMessageData.writeToBuffer()),
-    ),
-  );
-
-  if (message == null) {
-    Log.error('Could not insert message into database');
-    return;
-  }
-
-  final encryptedContent = pb.EncryptedContent(
-    additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
-      senderMessageId: message.messageId,
-      additionalMessageData: additionalMessageData.writeToBuffer(),
-      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-      type: MessageType.askAboutUser.name,
-    ),
-  );
-
-  await sendCipherTextToGroup(
-    groupId,
-    encryptedContent,
-    messageId: message.messageId,
+  await rust_api.RustApi.insertAndSendAskAboutUser(
+    contactId: contactId,
+    askAboutUserId: askAboutUserId,
   );
 }
 
@@ -413,27 +65,12 @@ Future<void> sendCipherTextToGroup(
   String? messageId,
   bool onlySendIfNoReceiptsAreOpen = false,
 }) async {
-  final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
-
-  if (messageId != null ||
-      encryptedContent.hasReaction() ||
-      encryptedContent.hasMedia() ||
-      encryptedContent.hasTextMessage()) {
-    // only update the counter in case this is a actual message
-    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
-  }
-
-  encryptedContent.groupId = groupId;
-
-  for (final groupMember in groupMembers) {
-    await sendCipherText(
-      groupMember.contactId,
-      encryptedContent,
-      messageId: messageId,
-      blocking: false,
-      onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
-    );
-  }
+  await rust_api.RustApi.sendEncryptedContentToGroup(
+    groupId: groupId,
+    content: encryptedContent.writeToBuffer(),
+    messageId: messageId,
+    onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
+  );
 }
 
 Future<(Uint8List, Uint8List?)?> sendCipherText(
@@ -444,190 +81,28 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   String? messageId,
   bool onlySendIfNoReceiptsAreOpen = false,
 }) async {
-  if (onlySendIfNoReceiptsAreOpen) {
-    final openReceipts = await twonlyDB.receiptsDao.getReceiptCountForContact(
-      contactId,
-    );
-    if (openReceipts > 10) {
-      // this prevents that these types of messages are send in case the receiver is offline
-      return null;
-    }
-  }
-  encryptedContent.senderProfileCounter = Int64(
-    userService.currentUser.avatarCounter,
+  final prepared = await rust_api.RustApi.sendEncryptedContent(
+    contactId: contactId,
+    content: encryptedContent.writeToBuffer(),
+    messageId: messageId,
+    onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
+    onlyReturnEncryptedData: onlyReturnEncryptedData,
+    blocking: blocking,
   );
-
-  {
-    if (userService.currentUser.askForFriendPromotions) {
-      final contacts = await twonlyDB.contactsDao.getAllContacts();
-      final contactCount = contacts.where((c) => c.accepted).length;
-      if (contactCount > 5) {
-        await UserService.update((u) {
-          u.askForFriendPromotions = false;
-        });
-      } else {
-        encryptedContent.askForFriendPromotions = true;
-      }
-    }
-
-    if (userService.currentUser.isUserDiscoveryEnabled && messageId != null) {
-      final contact = await twonlyDB.contactsDao.getContactById(contactId);
-      if (UserDiscoveryService.isContactAllowed(contact)) {
-        final version = await UserDiscoveryService.getCurrentVersion();
-        if (version != null) {
-          encryptedContent.senderUserDiscoveryVersion = version;
-        }
-      }
-    }
-  }
-
-  final contact = await twonlyDB.contactsDao.getContactById(contactId);
-  final isV2 = contact?.signalVersion == SignalVersion.v2;
-
-  final response = pb.Message()
-    ..type = isV2 ? pb.Message_Type.CIPHERTEXT_V2 : pb.Message_Type.CIPHERTEXT
-    ..encryptedContent = encryptedContent.writeToBuffer();
-
-  var retryCounter = 0;
-  DateTime? lastRetry;
-
-  if (messageId != null) {
-    final receipts = await twonlyDB.receiptsDao
-        .getReceiptsByContactAndMessageId(contactId, messageId);
-
-    for (final receipt in receipts) {
-      if (receipt.lastRetry != null) {
-        lastRetry = receipt.lastRetry;
-      }
-      retryCounter += 1;
-      Log.info('Removing duplicated receipt for message $messageId');
-      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
-    }
-  }
-
-  final receipt = await twonlyDB.receiptsDao.insertReceipt(
-    ReceiptsCompanion(
-      contactId: Value(contactId),
-      message: Value(response.writeToBuffer()),
-      messageId: Value(messageId),
-      willBeRetriedByMediaUpload: Value(onlyReturnEncryptedData),
-      retryCount: Value(retryCounter),
-      lastRetry: Value(lastRetry),
-    ),
-  );
-
-  if (receipt != null) {
-    try {
-      final typeKeys = _getEncryptedContentTypes(encryptedContent);
-      Log.info(
-        'sendCipherText: type=[$typeKeys] messageId=$messageId receiptId=${receipt.receiptId}',
-      );
-    } catch (_) {
-      Log.info(
-        'sendCipherText: messageId=$messageId receiptId=${receipt.receiptId}',
-      );
-    }
-
-    final tmp = tryToSendCompleteMessage(
-      receipt: receipt,
-      onlyReturnEncryptedData: onlyReturnEncryptedData,
-      blocking: blocking,
-    );
-    if (!blocking) {
-      return null;
-    }
-    return tmp;
-  }
-  return null;
+  if (!onlyReturnEncryptedData || prepared == null) return null;
+  return (prepared.message, prepared.pushData);
 }
 
-Future<void> sendTypingIndication(String groupId, bool isTyping) async {
-  if (!userService.currentUser.typingIndicators) return;
-  await sendCipherTextToGroup(
-    groupId,
-    pb.EncryptedContent(
-      typingIndicator: pb.EncryptedContent_TypingIndicator(
-        isTyping: isTyping,
-        createdAt: Int64(clock.now().millisecondsSinceEpoch),
-      ),
-    ),
-    onlySendIfNoReceiptsAreOpen: true,
-  );
-}
+Future<void> sendTypingIndication(String groupId, bool isTyping) =>
+    rust_api.RustApi.sendTyping(groupId: groupId, isTyping: isTyping);
 
 Future<void> notifyContactAboutOpeningMessage(
   int contactId,
   List<String> messageOtherIds,
-) async {
-  var biggestMessageId = messageOtherIds.first;
+) => rust_api.RustApi.notifyMessagesOpened(
+  contactId: contactId,
+  messageIds: messageOtherIds,
+);
 
-  for (final messageOtherId in messageOtherIds) {
-    if (isUUIDNewer(messageOtherId, biggestMessageId)) {
-      biggestMessageId = messageOtherId;
-    }
-  }
-  Log.info('Opened messages: $messageOtherIds');
-
-  final actionAt = clock.now();
-
-  await sendCipherText(
-    contactId,
-    pb.EncryptedContent(
-      messageUpdate: pb.EncryptedContent_MessageUpdate(
-        type: pb.EncryptedContent_MessageUpdate_Type.OPENED,
-        multipleTargetMessageIds: messageOtherIds,
-        timestamp: Int64(actionAt.millisecondsSinceEpoch),
-      ),
-    ),
-    blocking: false,
-  );
-  await twonlyDB.batch((batch) {
-    for (final messageId in messageOtherIds) {
-      batch.update(
-        twonlyDB.messages,
-        MessagesCompanion(
-          openedAt: Value(actionAt),
-          openedByAll: Value(actionAt),
-        ),
-        where: (tbl) => tbl.messageId.equals(messageId),
-      );
-    }
-  });
-  await updateLastMessageId(contactId, biggestMessageId);
-}
-
-Future<void> sendContactMyProfileData(int contactId) async {
-  List<int>? avatarSvgCompressed;
-  if (userService.currentUser.avatarSvg != null) {
-    avatarSvgCompressed = gzip.encode(
-      utf8.encode(userService.currentUser.avatarSvg!),
-    );
-  }
-  final encryptedContent = pb.EncryptedContent(
-    contactUpdate: pb.EncryptedContent_ContactUpdate(
-      type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
-      avatarSvgCompressed: avatarSvgCompressed,
-      displayName: userService.currentUser.displayName,
-      username: userService.currentUser.username,
-    ),
-  );
-  await sendCipherText(contactId, encryptedContent, blocking: false);
-}
-
-String _getEncryptedContentTypes(pb.EncryptedContent content) {
-  final ignoredFields = {
-    'groupId',
-    'isDirectChat',
-    'senderProfileCounter',
-    'senderUserDiscoveryVersion',
-  };
-
-  final types = <String>[];
-  for (final field in content.info_.byName.values) {
-    if (content.hasField(field.tagNumber) &&
-        !ignoredFields.contains(field.name)) {
-      types.add(field.name);
-    }
-  }
-  return types.join(', ');
-}
+Future<void> sendContactMyProfileData(int contactId) =>
+    rust_api.RustApi.sendContactProfile(contactId: contactId);

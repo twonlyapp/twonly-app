@@ -111,7 +111,10 @@ class MockContactSuggestedActionsComp extends StatelessWidget {
                     children: [
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 6),
-                        child: FaIcon(FontAwesomeIcons.circleQuestion, size: 10),
+                        child: FaIcon(
+                          FontAwesomeIcons.circleQuestion,
+                          size: 10,
+                        ),
                       ),
                       Text(
                         context.lang.friendSuggestionsAskFriend,

@@ -24,7 +24,11 @@ Future<void> handleMessageUpdate(
         Log.warn('[$receiptId] Error handling messages opened: $e');
       }
     case EncryptedContent_MessageUpdate_Type.DELETE:
-      if (!await isSender(contactId, messageUpdate.senderMessageId, receiptId)) {
+      if (!await isSender(
+        contactId,
+        messageUpdate.senderMessageId,
+        receiptId,
+      )) {
         return;
       }
       Log.info('[$receiptId] Delete message ${messageUpdate.senderMessageId}');
@@ -38,7 +42,11 @@ Future<void> handleMessageUpdate(
         Log.warn('[$receiptId] Error handling message deletion: $e');
       }
     case EncryptedContent_MessageUpdate_Type.EDIT_TEXT:
-      if (!await isSender(contactId, messageUpdate.senderMessageId, receiptId)) {
+      if (!await isSender(
+        contactId,
+        messageUpdate.senderMessageId,
+        receiptId,
+      )) {
         return;
       }
       Log.info('[$receiptId] Edit message ${messageUpdate.senderMessageId}');
@@ -55,7 +63,11 @@ Future<void> handleMessageUpdate(
   }
 }
 
-Future<bool> isSender(int fromUserId, String messageId, String receiptId) async {
+Future<bool> isSender(
+  int fromUserId,
+  String messageId,
+  String receiptId,
+) async {
   final message = await twonlyDB.messagesDao
       .getMessageById(messageId)
       .getSingleOrNull();
@@ -63,6 +75,8 @@ Future<bool> isSender(int fromUserId, String messageId, String receiptId) async 
   if (message.senderId == fromUserId) {
     return true;
   }
-  Log.error('[$receiptId] Contact $fromUserId tried to modify the message $messageId');
+  Log.error(
+    '[$receiptId] Contact $fromUserId tried to modify the message $messageId',
+  );
   return false;
 }

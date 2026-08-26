@@ -1,0 +1,40 @@
+syntax = "proto3";
+package http_requests;
+
+message UpdateGroupState {
+  message UpdateTBS {
+    uint64 version_id = 1;
+    bytes encrypted_group_state = 3;
+    bytes public_key = 4;
+    optional bytes remove_admin = 5;
+    optional bytes add_admin = 6;
+    bytes nonce = 7;
+  }
+  UpdateTBS update = 1;
+  bytes signature = 2;
+}
+
+message NewGroupState {
+  string group_id = 1;
+  uint64 version_id = 2;
+  bytes encrypted_group_state = 3;
+  bytes public_key = 4;
+}
+
+message AppendGroupState {
+  message AppendTBS {
+    bytes encrypted_group_state_append = 1;
+    bytes public_key = 2;
+    string group_id = 3;
+    bytes nonce = 4;
+  }
+  bytes signature = 1;
+  AppendTBS append_tbs = 2;
+  uint64 version_id = 3;
+}
+
+message GroupState {
+  uint64 version_id = 1;
+  bytes encrypted_group_state = 2;
+  repeated AppendGroupState appended_group_states = 3;
+}

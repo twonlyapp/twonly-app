@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE contacts\n            SET ask_for_friend_promotions = COALESCE(ask_for_friend_promotions, 1)\n            WHERE user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "9b83943b4b9917ba6e099bbf0bd69d4666813e03732f448f83a884134c300bfd"
+}

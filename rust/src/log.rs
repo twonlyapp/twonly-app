@@ -1,12 +1,123 @@
+/*
+ * Copyright (c) 2026, Tobias Müller git@tsmr.eu
+ *
+ */
+
 use crate::bridge::callbacks::{get_callbacks, log::DartWriter};
+use std::fmt;
+use std::path::Path;
 use std::sync::{Mutex, OnceLock};
+use tracing::{Event, Subscriber};
 use tracing_appender::non_blocking::{NonBlocking, WorkerGuard};
 use tracing_subscriber::{
-    fmt::Layer, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Registry,
+    fmt::{format::Writer, FmtContext, FormatEvent, FormatFields, FormattedFields, Layer},
+    layer::SubscriberExt,
+    registry::LookupSpan,
+    util::SubscriberInitExt,
+    EnvFilter, Registry,
 };
 
 static TRACING_GUARDS: OnceLock<Mutex<Option<(WorkerGuard, WorkerGuard)>>> = OnceLock::new();
 static TRACING_INIT: OnceLock<()> = OnceLock::new();
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ShortEventFormatter {
+    ansi: bool,
+}
+
+impl ShortEventFormatter {
+    pub const fn ansi() -> Self {
+        Self { ansi: true }
+    }
+
+    pub const fn plain() -> Self {
+        Self { ansi: false }
+    }
+}
+
+impl<S, N> FormatEvent<S, N> for ShortEventFormatter
+where
+    S: Subscriber + for<'lookup> LookupSpan<'lookup>,
+    N: for<'writer> FormatFields<'writer> + 'static,
+{
+    fn format_event(
+        &self,
+        ctx: &FmtContext<'_, S, N>,
+        mut writer: Writer<'_>,
+        event: &Event<'_>,
+    ) -> fmt::Result {
+        let metadata = event.metadata();
+
+        let (parent, name) = match metadata.file() {
+            Some(file) => {
+                let path = Path::new(file);
+                match (path.parent().and_then(Path::file_name), path.file_name()) {
+                    (Some(p), Some(n)) => (p, n),
+                    _ => return Ok(()),
+                }
+            }
+            None => return Ok(()),
+        };
+
+        let ansi = self.ansi;
+        let time = chrono::Local::now().format("%H:%M:%S");
+        if ansi {
+            write!(writer, "\x1b[2m{time}\x1b[0m ")?;
+            let level_color = match *metadata.level() {
+                tracing::Level::TRACE => "\x1b[35m",
+                tracing::Level::DEBUG => "\x1b[34m",
+                tracing::Level::INFO => "\x1b[32m",
+                tracing::Level::WARN => "\x1b[33m",
+                tracing::Level::ERROR => "\x1b[31m",
+            };
+            write!(writer, "{level_color}{:<5}\x1b[0m ", metadata.level())?;
+        } else {
+            write!(writer, "{time} {:<5} ", metadata.level())?;
+        }
+
+        if ansi {
+            write!(writer, "\x1b[2m")?;
+        }
+        write!(
+            writer,
+            "{}/{}:{}",
+            parent.to_string_lossy(),
+            name.to_string_lossy(),
+            metadata.line().unwrap_or_default()
+        )?;
+        if ansi {
+            write!(writer, "\x1b[0m")?;
+        }
+        write!(writer, " ")?;
+
+        if let Some(scope) = ctx.event_scope() {
+            for span in scope.from_root() {
+                let extensions = span.extensions();
+                if let Some(fields) = extensions.get::<FormattedFields<N>>() {
+                    if !fields.is_empty() {
+                        if ansi {
+                            for field in fields.fields.split_whitespace() {
+                                let color = if field.starts_with("receipt_id=") {
+                                    "\x1b[36m"
+                                } else if field.starts_with("local_user_id=") {
+                                    "\x1b[35m"
+                                } else {
+                                    ""
+                                };
+                                write!(writer, "{color}{field}\x1b[0m ")?;
+                            }
+                        } else {
+                            write!(writer, "{fields} ")?;
+                        }
+                    }
+                }
+            }
+        }
+
+        ctx.field_format().format_fields(writer.by_ref(), event)?;
+        writeln!(writer)
+    }
+}
 
 pub(crate) async fn init_tracing(logs_dir: &std::path::Path, is_dart_available: bool) {
     let _ = std::fs::create_dir_all(logs_dir);
@@ -25,7 +136,7 @@ pub(crate) async fn init_tracing(logs_dir: &std::path::Path, is_dart_available: 
         let stdout_layer = Layer::new()
             .with_writer(non_blocking_stdout)
             .with_ansi(true)
-            .with_target(true);
+            .event_format(ShortEventFormatter::ansi());
 
         // let file_layer = Layer::new()
         //     .with_writer(non_blocking_file)
@@ -52,7 +163,7 @@ pub(crate) async fn init_tracing(logs_dir: &std::path::Path, is_dart_available: 
             let dart_layer = tracing_subscriber::fmt::Layer::new()
                 .with_writer(dart_writer)
                 .with_ansi(false)
-                .with_target(true);
+                .event_format(ShortEventFormatter::plain());
             let _ = registry.with(dart_layer).try_init();
         } else {
             let _ = registry.try_init();

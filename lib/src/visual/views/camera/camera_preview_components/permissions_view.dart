@@ -48,7 +48,8 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   @override
   void didUpdateWidget(PermissionHandlerView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.triggerPermissionRequest && !oldWidget.triggerPermissionRequest) {
+    if (widget.triggerPermissionRequest &&
+        !oldWidget.triggerPermissionRequest) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await _requestPermissions();
       });

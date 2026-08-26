@@ -48,7 +48,9 @@ Future<bool> handleTextMessage(
     fromTimestamp(textMessage.timestamp),
   );
   if (message != null) {
-    Log.info('[$receiptId] Inserted a new text message with ID: ${message.messageId}');
+    Log.info(
+      '[$receiptId] Inserted a new text message with ID: ${message.messageId}',
+    );
   }
   return message != null;
 }

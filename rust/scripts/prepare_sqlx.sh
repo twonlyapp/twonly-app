@@ -16,6 +16,6 @@ for migration in "$rust_dir"/src/database/signal/migrations/*.sql; do
 done
 
 cd "$rust_dir"
-cargo sqlx prepare -- --lib
+cargo sqlx prepare -- --all-targets
 
 echo "Prepared SQLx schema database and offline query metadata."
