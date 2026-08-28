@@ -25,7 +25,7 @@ pub(crate) async fn decorate_content(
     content.sender_profile_counter = Some(config.avatar_counter);
 
     if config.ask_for_friend_promotions {
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let accepted = sqlx::query_scalar!("SELECT COUNT(*) FROM contacts WHERE accepted = 1")
             .fetch_one(&database.pool)
             .await?;
@@ -34,9 +34,9 @@ pub(crate) async fn decorate_content(
         }
     }
 
-    if config.is_user_discovery_enabled && is_persisted_message {
+    if config.is_user_discovery_enabled & is_persisted_message {
         ctx.initialize_user_discovery_from_config().await?;
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let allowed = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND accepted = 1
                AND blocked = 0 AND media_send_counter >= ? AND user_discovery_excluded = 0
@@ -49,7 +49,7 @@ pub(crate) async fn decorate_content(
         .await?;
         if allowed != 0 {
             content.sender_user_discovery_version = Some(
-                ctx.get_user_discovery()
+                ctx.user_discovery
                     .get()
                     .await
                     .get_current_version()
@@ -74,7 +74,7 @@ pub async fn send_c2c_message_to_contact(
 
     decorate_content(ctx, contact_id, &mut content, message_id.is_some()).await?;
 
-    let db_app = ctx.get_app_database().await;
+    let db_app = ctx.app_db.read().await.clone();
     let mut t = db_app.pool.begin().await?;
 
     if only_send_if_no_receipts_are_open {

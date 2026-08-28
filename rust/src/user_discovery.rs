@@ -77,7 +77,7 @@ impl UserDiscovery {
     /// has authenticated. Cryptographic discovery state remains owned here;
     /// the API runtime only invokes this lifecycle hook.
     pub async fn on_connected(&self, ctx: &Arc<Context>) -> Result<()> {
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let announcements = sqlx::query!(
             r#"SELECT announced_user_id, announced_public_key
                FROM user_discovery_announced_users WHERE username IS NULL"#
@@ -133,6 +133,70 @@ impl UserDiscovery {
             rust_db,
             config_lock: Arc::default(),
         })
+    }
+
+    pub async fn initialize_from_config(&self, ctx: &Context) -> Result<()> {
+        let config = crate::user_config::UserConfig::load_required_from(ctx)?;
+
+        if !config.is_user_discovery_enabled {
+            return Ok(());
+        }
+
+        let discovery_config_path =
+            PathBuf::from(&ctx.config.data_dir).join("user_discovery_config.json");
+
+        let settings_are_current = std::fs::read_to_string(&discovery_config_path)
+            .ok()
+            .and_then(|value| serde_json::from_str::<serde_json::Value>(&value).ok())
+            .is_some_and(|value| {
+                value.get("threshold").and_then(serde_json::Value::as_u64)
+                    == Some(u64::from(config.user_discovery_threshold))
+                    && value
+                        .get("share_promotion")
+                        .and_then(serde_json::Value::as_bool)
+                        == Some(config.user_discovery_share_promotion)
+            });
+
+        if settings_are_current {
+            let database = ctx.app_db.read().await.clone();
+            let has_shares =
+                sqlx::query_scalar!("SELECT EXISTS(SELECT 1 FROM user_discovery_shares LIMIT 1)")
+                    .fetch_one(&database.pool)
+                    .await?
+                    != 0;
+            if has_shares {
+                return Ok(());
+            }
+        }
+
+        let key_manager = ctx.key_manager.lock().await;
+        let user_id = key_manager.user_id.ok_or_else(|| {
+            TwonlyError::Generic("cannot initialize user discovery without user ID".into())
+        })?;
+        let identity = key_manager
+            .signal_identity
+            .as_ref()
+            .ok_or(TwonlyError::SignalIdentityNotFound)?;
+        let identity = IdentityKeyPair::try_from(identity.identity_key_pair_structure.as_slice())
+            .map_err(|error| {
+            TwonlyError::Generic(format!("invalid Signal identity: {error}"))
+        })?;
+        let public_key = identity.identity_key().serialize().to_vec();
+        drop(key_manager);
+
+        let database = ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        self.initialize_or_update(
+                config.user_discovery_threshold,
+                user_id,
+                public_key,
+                config.user_discovery_share_promotion,
+                &mut transaction,
+            )
+            .await?;
+        transaction.commit().await?;
+        database.notify_committed(["user_discovery_shares"]);
+        Ok(())
     }
 
     async fn sign_data(&self, input_data: &[u8]) -> Result<Vec<u8>> {

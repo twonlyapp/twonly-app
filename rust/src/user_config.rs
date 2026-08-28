@@ -333,7 +333,7 @@ pub struct UserConfig {
 
 impl UserConfig {
     fn path(context: &Context) -> PathBuf {
-        PathBuf::from(context.data_dir())
+        PathBuf::from(&context.config.data_dir)
             .join("keyvalue")
             .join("user.json")
     }

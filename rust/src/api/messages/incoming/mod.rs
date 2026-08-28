@@ -101,7 +101,7 @@ pub(crate) async fn handle_sealed_message(ctx: &Arc<Context>, bytes: Vec<u8>) ->
 pub(crate) async fn handle_request_new_pqc_prekeys(
     ctx: &Arc<Context>,
 ) -> Result<client_to_server::response::ok::Ok> {
-    let engine = ctx.get_signal_engine().lock().await;
+    let engine = ctx.signal_engine.lock().await;
 
     let prekeys = engine
         .as_ref()
@@ -160,7 +160,7 @@ pub(crate) async fn handle_decoded_server_message(
         ensure_contact_exists(ctx, from_user_id).await?;
     }
 
-    let database = ctx.get_app_database().await;
+    let database = ctx.app_db.read().await.clone();
 
     let mut tr = database.pool.begin().await?;
 
@@ -232,7 +232,7 @@ pub(crate) async fn handle_decoded_server_message(
                 TwonlyError::Generic("V2 encrypted client message has no ciphertext".into())
             })?;
             let decrypted = {
-                let engine = ctx.get_signal_engine().lock().await;
+                let engine = ctx.signal_engine.lock().await;
                 engine
                     .as_ref()
                     .ok_or(TwonlyError::SignalIdentityNotFound)?
@@ -278,7 +278,7 @@ pub(crate) async fn handle_decoded_server_message(
         Type::TestNotification => {}
     }
 
-    if is_encrypted_message && !sends_error_response {
+    if is_encrypted_message & !sends_error_response {
         queue_sender_delivery_receipt(&mut tr, from_user_id, &message.receipt_id).await?;
     }
 

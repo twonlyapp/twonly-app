@@ -38,7 +38,7 @@ impl ContactService {
 
         self.process_user_prekey_bundle(&user).await?;
 
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         UpdateContact::builder()
             .user_id(user.user_id)
@@ -107,7 +107,7 @@ impl ContactService {
             };
 
         self.ctx
-            .get_signal_engine()
+            .signal_engine
             .lock()
             .await
             .as_ref()
@@ -134,7 +134,7 @@ impl ContactService {
     }
 
     pub async fn accept_request(&self, contact_id: i64, blocking: bool) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         let contact = Contact::get_contact_by_id(&mut transaction, contact_id)
             .await?
@@ -168,7 +168,7 @@ impl ContactService {
     }
 
     pub async fn reject_request(&self, contact_id: i64, blocking: bool) -> Result<()> {
-        let db_app = self.ctx.get_app_database().await;
+        let db_app = self.ctx.app_db.read().await.clone();
 
         let mut t = db_app.pool.begin().await?;
 

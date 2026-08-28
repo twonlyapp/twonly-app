@@ -62,7 +62,7 @@ async fn verify_shared_contacts(
         return Ok(());
     }
 
-    let signal_database = ctx.get_rust_db().await;
+    let signal_database = ctx.rust_db.read().await.clone();
 
     for contact in data.contacts {
         let stored_identity = sqlx::query_scalar!(
@@ -91,7 +91,7 @@ async fn verify_shared_contacts(
         .await?;
 
         let verified_at = chrono::Utc::now().timestamp_millis();
-        ctx.get_user_discovery()
+        ctx.user_discovery
             .get()
             .await
             .update_verification_state_for_user(contact.user_id, Some(verified_at), tr)

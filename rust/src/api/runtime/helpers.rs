@@ -79,7 +79,7 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
         }
 
         if let Err(error) = ctx
-            .get_user_discovery()
+            .user_discovery
             .get()
             .await
             .on_connected(&ctx)
@@ -88,7 +88,7 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
             tracing::warn!("user-discovery post-connection refresh failed: {error}");
         }
 
-        let signal_engine = ctx.get_signal_engine().lock().await;
+        let signal_engine = ctx.signal_engine.lock().await;
         if let Some(engine) = signal_engine.as_ref() {
             if let Err(error) = engine.on_connected(&ctx).await {
                 tracing::warn!("Signal key maintenance failed: {error}");

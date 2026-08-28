@@ -208,7 +208,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         // Find the group_id that tester_a just created (it's the only non-direct-chat group)
         let group_id = {
-            let database = tester_a.context.get_app_database().await;
+            let database = tester_a.context.app_db.read().await.clone();
             sqlx::query_scalar!(
                 "SELECT group_id FROM groups WHERE is_direct_chat = 0 ORDER BY rowid DESC LIMIT 1"
             )
@@ -260,7 +260,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         // tester_a needs tester_b's public key to promote them. We simulate a message from tester_b
         // so that tester_a can request the missing public key.
         {
-            let db_a = tester_a.context.get_app_database().await;
+            let db_a = tester_a.context.app_db.read().await.clone();
             sqlx::query!(
                 "UPDATE group_members SET last_message = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ? AND contact_id = ?",
                 group_id,
@@ -284,7 +284,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .fetch_group_state(group_id.clone())
             .await?;
         {
-            let database = tester_b.context.get_app_database().await;
+            let database = tester_b.context.app_db.read().await.clone();
             let is_admin = sqlx::query_scalar!(
                 "SELECT is_group_admin FROM groups WHERE group_id = ?",
                 group_id
@@ -305,7 +305,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .fetch_group_state(group_id.clone())
             .await?;
         {
-            let database = tester_b.context.get_app_database().await;
+            let database = tester_b.context.app_db.read().await.clone();
             let is_admin = sqlx::query_scalar!(
                 "SELECT is_group_admin FROM groups WHERE group_id = ?",
                 group_id
@@ -380,7 +380,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .await?;
 
         let additional_data = {
-            let database = tester_a.context.get_app_database().await;
+            let database = tester_a.context.app_db.read().await.clone();
             sqlx::query_scalar!(
                 "SELECT additional_message_data FROM messages WHERE message_id = ?",
                 message_id,

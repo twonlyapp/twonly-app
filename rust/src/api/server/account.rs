@@ -21,7 +21,7 @@ impl Server {
         lang_code: String,
         is_ios: bool,
     ) -> Result<ServerResult<i64>> {
-        let key_manager = ctx.get_key_manager().await?;
+        let key_manager = ctx.key_manager.lock().await;
         let identity = key_manager
             .signal_identity
             .as_ref()

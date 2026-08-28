@@ -180,7 +180,7 @@ impl SealedSender {
         context: &Context,
     ) -> Result<proto::MessageEnvelopePayload> {
         let (recipient_user_id, recipient_identity) = {
-            let key_manager = context.get_key_manager().await.map_err(context_error)?;
+            let key_manager = context.key_manager.lock().await;
             let recipient_user_id = key_manager
                 .user_id
                 .ok_or(SealedSenderError::MissingLocalUserId)?;
@@ -355,7 +355,7 @@ mod tests {
         .await
         .unwrap();
         {
-            let mut key_manager = context.get_key_manager().await.unwrap();
+            let mut key_manager = context.key_manager.lock().await;
             key_manager.user_id = Some(42);
             key_manager.signal_identity = Some(crate::keys::SignalIdentityKey {
                 identity_key_pair_structure: recipient.serialize().to_vec(),
@@ -363,7 +363,7 @@ mod tests {
                 pre_key_store: Default::default(),
             });
         }
-        let database = context.get_rust_db().await;
+        let database = context.rust_db.read().await.clone();
         let sender_identity = sender.identity_key().serialize();
         sqlx::query!(
             r#"

@@ -20,7 +20,7 @@ pub(crate) struct Tester {
 
 impl Tester {
     pub async fn set_contact_verified(&self, user_id: i64, verified: bool) -> anyhow::Result<()> {
-        let database = self.context.get_app_database().await;
+        let database = self.context.app_db.read().await.clone();
         if verified {
             sqlx::query!(
                 "INSERT INTO key_verifications(contact_id, type) VALUES (?, 'manualTest')",
@@ -48,7 +48,7 @@ impl Tester {
         expected_data: &[u8],
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let message = sqlx::query!(
                 "SELECT sender_id, type, additional_message_data FROM messages WHERE message_id = ?",
                 message_id,
@@ -75,7 +75,7 @@ impl Tester {
         verified_by: i64,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let exists = sqlx::query_scalar!(
                 "SELECT EXISTS(SELECT 1 FROM key_verifications WHERE contact_id = ? AND type = 'contactSharedByVerified' AND verified_by = ?)",
                 contact_id,
@@ -94,7 +94,7 @@ impl Tester {
     }
 
     pub async fn is_contact_verified(&self, contact_id: i64) -> anyhow::Result<bool> {
-        let database = self.context.get_app_database().await;
+        let database = self.context.app_db.read().await.clone();
         let verified = sqlx::query_scalar!(
             r#"
             SELECT EXISTS(
@@ -124,7 +124,7 @@ impl Tester {
         requested: bool,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let state = sqlx::query!(
                 "SELECT accepted, requested FROM contacts WHERE user_id = ?",
                 user_id
@@ -149,7 +149,7 @@ impl Tester {
         expected_username: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let username =
                 sqlx::query_scalar!("SELECT username FROM contacts WHERE user_id = ?", user_id)
                     .fetch_optional(&database.pool)
@@ -175,7 +175,7 @@ impl Tester {
         expected_text: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let message = sqlx::query!(
                 "SELECT sender_id, content, is_deleted_from_sender FROM messages WHERE message_id = ?",
                 message_id
@@ -203,7 +203,7 @@ impl Tester {
         emoji: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let exists = sqlx::query_scalar!(
                 "SELECT EXISTS(SELECT 1 FROM reactions WHERE message_id = ? AND sender_id = ? AND emoji = ?)",
                 message_id,
@@ -229,7 +229,7 @@ impl Tester {
         emoji: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let exists = sqlx::query_scalar!(
                 "SELECT EXISTS(SELECT 1 FROM reactions WHERE message_id = ? AND sender_id = ? AND emoji = ?)",
                 message_id,
@@ -250,7 +250,7 @@ impl Tester {
 
     pub async fn wait_for_message_deleted(&self, message_id: &str) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let deleted = sqlx::query_scalar!(
                 "SELECT is_deleted_from_sender FROM messages WHERE message_id = ?",
                 message_id
@@ -273,7 +273,7 @@ impl Tester {
         group_name: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let row = sqlx::query!("SELECT group_name FROM groups WHERE group_id = ?", group_id)
                 .fetch_optional(&database.pool)
                 .await?;
@@ -293,7 +293,7 @@ impl Tester {
         contact_id: i64,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let state = sqlx::query_scalar!(
                 "SELECT member_state FROM group_members WHERE group_id = ? AND contact_id = ?",
                 group_id,
@@ -319,7 +319,7 @@ impl Tester {
         expected_name: &str,
     ) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let name =
                 sqlx::query_scalar!("SELECT group_name FROM groups WHERE group_id = ?", group_id)
                     .fetch_optional(&database.pool)
@@ -336,7 +336,7 @@ impl Tester {
 
     pub async fn wait_for_group_left(&self, group_id: &str) -> anyhow::Result<()> {
         for _ in 0..100 {
-            let database = self.context.get_app_database().await;
+            let database = self.context.app_db.read().await.clone();
             let left =
                 sqlx::query_scalar!("SELECT left_group FROM groups WHERE group_id = ?", group_id)
                     .fetch_optional(&database.pool)

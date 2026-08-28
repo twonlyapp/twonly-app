@@ -103,8 +103,9 @@ impl ApiAuthHandshaker {
     ) -> Result<()> {
         let login_token = self
             .context
-            .get_key_manager()
-            .await?
+            .key_manager
+            .lock()
+            .await
             .main_key
             .get_login_token()
             .to_vec();
@@ -131,7 +132,7 @@ impl ApiAuthHandshaker {
         user_id: i64,
     ) -> Result<bool> {
         use base64::Engine as _;
-        let Some(encoded) = self.context.get_secure_storage().read("api_auth_token")? else {
+        let Some(encoded) = self.context.secure_storage.read("api_auth_token")? else {
             return Ok(false);
         };
         let auth_token = base64::engine::general_purpose::STANDARD
@@ -186,8 +187,9 @@ impl ApiAuthHandshaker {
         };
         let serialized_identity = self
             .context
-            .get_key_manager()
-            .await?
+            .key_manager
+            .lock()
+            .await
             .signal_identity
             .as_ref()
             .ok_or(TwonlyError::SignalIdentityNotFound)?
@@ -218,7 +220,7 @@ impl ApiAuthHandshaker {
                 "auth-token response has unexpected payload".into(),
             ));
         };
-        self.context.get_secure_storage().write(
+        self.context.secure_storage.write(
             "api_auth_token",
             &base64::engine::general_purpose::STANDARD.encode(token),
         )?;
@@ -232,8 +234,9 @@ impl ApiAuthHandshaker {
     ) -> Result<()> {
         let token = self
             .context
-            .get_key_manager()
-            .await?
+            .key_manager
+            .lock()
+            .await
             .main_key
             .get_login_token()
             .to_vec();
@@ -269,7 +272,7 @@ impl ApiAuthHandshaker {
             ServerResult::Ok(_) => {}
             ServerResult::ErrorCode(code) => return Err(TwonlyError::Api(code)),
         }
-        self.context.get_secure_storage().delete("api_auth_token")?;
+        self.context.secure_storage.delete("api_auth_token")?;
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::LoginTokenMigrated,
             state: None,

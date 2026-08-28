@@ -33,7 +33,7 @@ impl MessageService {
     ) -> Result<()> {
         let mut content = proto::EncryptedContent::decode(encrypted_content.as_slice())?;
         content.group_id = Some(group_id.clone());
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         if message_id.is_some()
             || content.reaction.is_some()
             || content.media.is_some()
@@ -174,7 +174,7 @@ impl MessageService {
         text: String,
         quote_message_id: Option<String>,
     ) -> Result<String> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
         let timestamp = chrono::Utc::now().timestamp_millis();
         sqlx::query!(
@@ -221,7 +221,7 @@ impl MessageService {
         message_type: String,
         additional_data: Vec<u8>,
     ) -> Result<String> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
         let timestamp = chrono::Utc::now().timestamp_millis();
         sqlx::query!(
@@ -260,8 +260,8 @@ impl MessageService {
         group_id: String,
         contact_ids: Vec<i64>,
     ) -> Result<String> {
-        let app = self.ctx.get_app_database().await;
-        let signal = self.ctx.get_rust_db().await;
+        let app = self.ctx.app_db.read().await.clone();
+        let signal = self.ctx.rust_db.read().await.clone();
         let mut contacts = Vec::new();
         for contact_id in contact_ids {
             let contact = sqlx::query!(
@@ -303,12 +303,11 @@ impl MessageService {
     ) -> Result<String> {
         let local_user_id = self
             .ctx
-            .get_key_manager()
-            .await?
+            .key_manager.lock().await
             .user_id
             .ok_or_else(|| TwonlyError::Generic("local user ID is unavailable".into()))?;
         let group_id = Group::direct_chat_id(local_user_id, contact_id);
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         let contact = Contact::get_contact_by_id(&mut transaction, contact_id)
             .await?
@@ -438,7 +437,7 @@ impl MessageService {
             .encrypted_content(content.encode_to_vec())
             .call()
             .await?;
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         for message_id in message_ids {
             sqlx::query!(
                 "UPDATE messages SET opened_at = ?, opened_by_all = ? WHERE message_id = ?",

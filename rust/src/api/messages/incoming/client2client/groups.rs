@@ -260,7 +260,7 @@ pub(crate) async fn handle_flame_sync(
     };
 
     let update_counters = flame.force_update
-        || (is_today(group_last_flame_counter_change) && is_today(last_flame_counter_change));
+        || (is_today(group_last_flame_counter_change) & is_today(last_flame_counter_change));
 
     let flame_counter = if update_counters {
         group.flame_counter.max(flame.flame_counter)

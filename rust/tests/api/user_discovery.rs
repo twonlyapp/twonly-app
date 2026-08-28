@@ -42,7 +42,7 @@ async fn send_trigger(from: &Tester, to: &Tester, label: &str) -> anyhow::Result
 
 async fn wait_for_promotion(relay: &Tester, contact_id: i64) -> anyhow::Result<()> {
     for _ in 0..300 {
-        let database = relay.context.get_app_database().await;
+        let database = relay.context.app_db.read().await.clone();
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(
                 SELECT 1 FROM user_discovery_own_promotions
@@ -70,7 +70,7 @@ async fn wait_for_discovery(
     expected_relations: i64,
 ) -> anyhow::Result<()> {
     for _ in 0..300 {
-        let database = observer.context.get_app_database().await;
+        let database = observer.context.app_db.read().await.clone();
         let announced = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM user_discovery_announced_users WHERE announced_user_id = ?)",
             discovered_user_id,
@@ -103,7 +103,7 @@ async fn user_discovery_reconstructs_an_unknown_user_from_three_contacts() -> an
     let discoverable = create_tester().await?;
 
     for tester in [&observer, &relay_a, &relay_b, &relay_c, &discoverable] {
-        let database = tester.context.get_app_database().await;
+        let database = tester.context.app_db.read().await.clone();
         let share_count = sqlx::query_scalar!("SELECT COUNT(*) FROM user_discovery_shares")
             .fetch_one(&database.pool)
             .await?;
@@ -134,7 +134,7 @@ async fn user_discovery_reconstructs_an_unknown_user_from_three_contacts() -> an
 
     wait_for_discovery(&observer, discoverable.user_id, 3).await?;
 
-    let database = observer.context.get_app_database().await;
+    let database = observer.context.app_db.read().await.clone();
     let direct_contact = sqlx::query_scalar!(
         "SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ?)",
         discoverable.user_id,

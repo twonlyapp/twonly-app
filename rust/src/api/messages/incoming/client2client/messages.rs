@@ -154,7 +154,7 @@ async fn queue_retry_control(
 }
 
 pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64) -> Result<()> {
-    let db_app = ctx.get_app_database().await;
+    let db_app = ctx.app_db.read().await.clone();
 
     let exists = sqlx::query_scalar!(
         "SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ?)",
@@ -206,7 +206,7 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
     .await?;
 
     if let Some(identity_key) = user.public_identity_key {
-        let rust_database = ctx.get_rust_db().await;
+        let rust_database = ctx.rust_db.read().await.clone();
         sqlx::query!(
             r#"
             INSERT INTO signal_identities(name, identity_key, timestamp)
@@ -271,7 +271,7 @@ async fn encrypt_v2_with_session_recovery(
     plaintext: Vec<u8>,
 ) -> Result<Vec<u8>> {
     let encrypt = |plaintext| async move {
-        let engine = ctx.get_signal_engine().lock().await;
+        let engine = ctx.signal_engine.lock().await;
         engine
             .as_ref()
             .ok_or(TwonlyError::SignalIdentityNotFound)?
@@ -281,7 +281,7 @@ async fn encrypt_v2_with_session_recovery(
 
     match encrypt(plaintext.clone()).await {
         Err(TwonlyError::Signal(message))
-            if message.contains("session with") && message.contains("not found") =>
+            if message.contains("session with") & message.contains("not found") =>
         {
             tracing::warn!(
                 contact_id,
@@ -314,7 +314,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         locks.retain(|_, time| time.elapsed() < std::time::Duration::from_secs(120));
     }
 
-    let app_db = ctx.get_app_database().await;
+    let app_db = ctx.app_db.read().await.clone();
     let row = sqlx::query!(
         r#"
         SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
@@ -418,7 +418,7 @@ pub(crate) async fn prepare_queued_receipt(
     ctx: &Arc<Context>,
     receipt_id: &str,
 ) -> Result<Option<(Vec<u8>, Option<Vec<u8>>)>> {
-    let database = ctx.get_app_database().await;
+    let database = ctx.app_db.read().await.clone();
     let row = sqlx::query!(
         r#"SELECT contact_id, message, message_id, retry_count
            FROM receipts WHERE receipt_id = ?"#,
@@ -462,7 +462,7 @@ pub(crate) async fn prepare_queued_receipt(
 }
 
 pub(crate) async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
-    let database = ctx.get_app_database().await;
+    let database = ctx.app_db.read().await.clone();
     let receipt_ids = sqlx::query_scalar!(
         r#"
         SELECT receipt_id FROM receipts

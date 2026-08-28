@@ -105,7 +105,7 @@ impl ApiClient {
     ) -> Result<Vec<u8>> {
         let sequence = self.next_sequence().await;
         let context = self.context.upgrade().ok_or(TwonlyError::Initialization)?;
-        let database = context.get_app_database().await;
+        let database = context.app_db.read().await.clone();
 
         sqlx::query!(
             "INSERT INTO api_outbox(sequence_id, operation_kind, payload) VALUES(?, ?, ?)",
@@ -224,7 +224,7 @@ impl ApiClient {
         if code == ErrorCode::UserIdNotFound as i32 {
             if let Some(contact_id) = contact_id {
                 let context = self.context.upgrade().ok_or(TwonlyError::Initialization)?;
-                let database = context.get_app_database().await;
+                let database = context.app_db.read().await.clone();
                 let mut transaction = database.pool.begin().await?;
                 sqlx::query!(
                     "UPDATE contacts SET account_deleted = 1 WHERE user_id = ?",

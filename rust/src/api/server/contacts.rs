@@ -36,7 +36,7 @@ impl Server {
     }
 
     pub async fn check_for_deleted_usernames(ctx: &Arc<Context>) -> Result<()> {
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let contacts = sqlx::query_scalar!(
             "SELECT user_id FROM contacts WHERE username IN ('[deleted]', '[Unknown]')"
         )

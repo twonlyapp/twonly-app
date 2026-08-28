@@ -23,7 +23,7 @@ use crate::signal::store::DbSignalProtocolStore;
 use crate::utils::current_time;
 use rand::SeedableRng;
 
-pub struct RustSignalEngine {
+pub(crate) struct RustSignalEngine {
     store: Arc<Mutex<DbSignalProtocolStore>>,
     local_name: String,
 }
@@ -141,43 +141,11 @@ impl RustSignalEngine {
         })
     }
 
-    pub fn generate_identity_key_pair() -> Result<Vec<u8>> {
+    #[cfg(test)]
+    fn generate_identity_key_pair() -> Result<Vec<u8>> {
         let mut csprng = rand::rngs::StdRng::from_os_rng();
         let key_pair = IdentityKeyPair::generate(&mut csprng);
         Ok(key_pair.serialize().to_vec())
-    }
-
-    pub async fn generate_prekeys(&self, count: usize) -> Result<Vec<(u32, Vec<u8>)>> {
-        let mut store_guard = self.store.lock().await;
-        let store = &mut *store_guard;
-        let mut csprng = rand::rngs::StdRng::from_os_rng();
-        let mut next_id = sqlx::query_scalar!(
-            r#"SELECT COALESCE(MAX(pre_key_id), 0) AS "id!: u32" FROM signal_pre_keys"#,
-        )
-        .fetch_one(&store.pool)
-        .await?;
-        let mut prekeys = Vec::with_capacity(count);
-
-        for _ in 0..count {
-            next_id = if next_id >= 16_777_215 {
-                1
-            } else {
-                next_id + 1
-            };
-            let key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
-            store
-                .pre_key_store
-                .save_pre_key(
-                    next_id.into(),
-                    &libsignal_protocol::PreKeyRecord::new(next_id.into(), &key_pair),
-                )
-                .assert_send()
-                .await
-                .map_err(|error| TwonlyError::Signal(error.to_string()))?;
-            prekeys.push((next_id, key_pair.public_key.serialize().to_vec()));
-        }
-
-        Ok(prekeys)
     }
 
     pub async fn generate_bundle(&self) -> Result<FrbPreKeyBundle> {

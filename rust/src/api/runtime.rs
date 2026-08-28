@@ -24,7 +24,7 @@ pub struct ApiRuntime {}
 impl ApiRuntime {
     pub(crate) async fn initialize(ctx: &Arc<Context>) -> Result<()> {
         let config = ApiConfig::from_rust_state(ctx).await?;
-        ctx.get_api_client()
+        ctx.api_client
             .set(tokio::sync::RwLock::new(ApiClient::new(ctx, config)))
             .map_err(|_| TwonlyError::Initialization)
     }
@@ -33,7 +33,7 @@ impl ApiRuntime {
         let replacement = ApiClient::new(ctx, ApiConfig::from_rust_state(ctx).await?);
         let current = Self::client(ctx).await?;
         let slot = ctx
-            .get_api_client()
+            .api_client
             .get()
             .ok_or(TwonlyError::Initialization)?;
         *slot.write().await = replacement;
@@ -129,7 +129,7 @@ impl ApiRuntime {
     }
 
     pub(crate) async fn replay_outbox(ctx: &Arc<Context>) -> Result<()> {
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let rows = sqlx::query!("SELECT sequence_id, payload FROM api_outbox ORDER BY created_at")
             .fetch_all(&database.pool)
             .await?;
@@ -154,7 +154,7 @@ impl ApiRuntime {
 
     pub(crate) async fn replay_legacy_raw_outbox(ctx: &Arc<Context>) -> Result<()> {
         use base64::Engine as _;
-        let path = std::path::Path::new(&ctx.get_config()?.data_dir)
+        let path = std::path::Path::new(&ctx.config.data_dir)
             .join("keyvalue")
             .join("rawbytes-to-retransmit.json");
         if !path.exists() {
@@ -229,7 +229,7 @@ impl ApiRuntime {
 
     pub(crate) async fn client(ctx: &Arc<Context>) -> Result<Arc<ApiClient>> {
         let client = ctx
-            .get_api_client()
+            .api_client
             .get()
             .ok_or(TwonlyError::Initialization)?;
         Ok(client.read().await.clone())

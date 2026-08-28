@@ -87,7 +87,7 @@ pub(crate) async fn handle_user_discovery_request(
         ));
     }
     let messages = ctx
-        .get_user_discovery()
+        .user_discovery
         .get()
         .await
         .get_new_messages(from_user_id, &request.current_version, t)
@@ -124,7 +124,7 @@ pub(crate) async fn handle_user_discovery_update(
     }
 
     Ok(ctx
-        .get_user_discovery()
+        .user_discovery
         .get()
         .await
         .handle_new_messages(from_user_id, None, update.messages, t)

@@ -90,7 +90,7 @@ pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
             .last_contact_heartbeat
             .is_none_or(|last| now.signed_duration_since(last).num_hours() >= 24);
         if contacts_due {
-            let database = ctx.get_app_database().await;
+            let database = ctx.app_db.read().await.clone();
             let contacts = sqlx::query!(
                 r#"SELECT user_id, recovery_secret_share FROM contacts
                    WHERE recovery_is_trusted_friend = 1
@@ -121,7 +121,7 @@ pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
         }
     }
 
-    let database = ctx.get_app_database().await;
+    let database = ctx.app_db.read().await.clone();
     let contacts = sqlx::query!(
         r#"SELECT user_id, recovery_contacts_secret_share FROM contacts
            WHERE recovery_contacts_secret_share IS NOT NULL
@@ -153,7 +153,7 @@ pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
             .call()
             .await?;
 
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         sqlx::query!(
             "UPDATE contacts SET recovery_contacts_last_heartbeat = ? WHERE user_id = ?",
             now.timestamp(),
@@ -253,7 +253,7 @@ mod tests {
     }
 
     async fn insert_contact(ctx: &Arc<Context>, user_id: i64) -> Result<()> {
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         sqlx::query!(
             "INSERT INTO contacts(user_id, username, accepted) VALUES (?, ?, 1)",
             user_id,
@@ -268,7 +268,7 @@ mod tests {
     async fn recovery_share_is_stored_and_deleted() -> anyhow::Result<()> {
         let (_temp, ctx) = context().await?;
         insert_contact(&ctx, 7).await?;
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
 
         let mut transaction = database.pool.begin().await?;
         handle_passwordless_recovery(
@@ -317,7 +317,7 @@ mod tests {
     async fn valid_and_invalid_heartbeat_update_the_expected_state() -> anyhow::Result<()> {
         let (_temp, ctx) = context().await?;
         insert_contact(&ctx, 8).await?;
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let share = vec![4, 5, 6];
         sqlx::query!(
             "UPDATE contacts SET recovery_secret_share = ? WHERE user_id = 8",
@@ -362,7 +362,7 @@ mod tests {
     async fn heartbeat_without_share_queues_deletion_response() -> anyhow::Result<()> {
         let (_temp, ctx) = context().await?;
         insert_contact(&ctx, 9).await?;
-        let database = ctx.get_app_database().await;
+        let database = ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         handle_passwordless_recovery_heartbeat(
             &mut transaction,

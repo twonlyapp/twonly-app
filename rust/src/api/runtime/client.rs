@@ -202,8 +202,8 @@ impl ApiClient {
     pub(crate) async fn set_network_available(self: &Arc<Self>, available: bool) -> Result<()> {
         self.network_available.store(available, Ordering::Release);
         if available
-            && !self.in_background.load(Ordering::Acquire)
-            && self.ws_client.lock().await.is_none()
+            & !self.in_background.load(Ordering::Acquire)
+            & self.ws_client.lock().await.is_none()
         {
             self.connect().await?;
         }

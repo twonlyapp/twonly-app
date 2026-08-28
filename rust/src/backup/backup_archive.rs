@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::fs::{remove_file, File};
 use std::io::{copy, Cursor};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use walkdir::WalkDir;
 use zeroize::Zeroize;
 use zip::write::SimpleFileOptions;
@@ -44,7 +45,7 @@ impl BackupArchive {
         ctx: &Context,
         keys: &KeyManager,
     ) -> Result<Vec<(&'static str, PathBuf, bool, Option<String>)>> {
-        let config = ctx.get_config()?;
+        let config = &ctx.config;
         let database_dir = PathBuf::from(&config.database_dir);
         let data_dir = PathBuf::from(&config.data_dir);
         let rust_db_key = keys.main_key.get_database_key(DatabaseKey::RustDb);
@@ -65,7 +66,7 @@ impl BackupArchive {
     }
 
     pub(crate) async fn create_backup(ctx: &Context) -> Result<PathBuf> {
-        let config = ctx.get_config()?;
+        let config = &ctx.config;
         let data_dir = PathBuf::from(&config.data_dir);
 
         let backup_data_dir = data_dir.join("temp_backup_dir");
@@ -74,7 +75,7 @@ impl BackupArchive {
         }
         std::fs::create_dir_all(&backup_data_dir)?;
 
-        let keys = ctx.get_key_manager().await?;
+        let keys = ctx.key_manager.lock().await;
 
         for (file_name, source_dir, is_db, mut encryption_key) in
             Self::get_backup_files(ctx, &keys)?
@@ -91,7 +92,7 @@ impl BackupArchive {
             if is_db {
                 if file_name == APP_DATABASE_FILE {
                     let backup_database_file = backup_data_dir.join(file_name);
-                    let app_database = ctx.get_app_database().await;
+                    let app_database = ctx.app_db.read().await.clone();
                     app_database
                         .create_backup(
                             &backup_database_file.display().to_string(),
@@ -178,8 +179,8 @@ impl BackupArchive {
     }
 
     pub(crate) async fn restore_from_backup(ctx: &Context, file_path: &Path) -> Result<()> {
-        let data_dir = PathBuf::from(&ctx.get_config()?.data_dir);
-        let key_manager = ctx.get_key_manager().await?;
+        let data_dir = PathBuf::from(&ctx.config.data_dir);
+        let key_manager = ctx.key_manager.lock().await;
 
         let encrypted_zip = std::fs::read(file_path)?;
         let zip_content = key_manager.main_key.decrypt_backup(&encrypted_zip)?;
@@ -260,9 +261,9 @@ impl BackupArchive {
         // app_db.sqlite is owned by a replaceable Rust handle. Close it before
         // replacing the file so subsequent DAO calls cannot continue using an
         // unlinked pre-restore database.
-        let current_app_database = ctx.get_app_database().await;
+        let current_app_database = ctx.app_db.read().await.clone();
         current_app_database.pool.close().await;
-        let current_rust_database = ctx.get_rust_db().await;
+        let current_rust_database = ctx.rust_db.read().await.clone();
         current_rust_database.pool.close().await;
 
         for (file_name, target_dir, is_db, _) in Self::get_backup_files(ctx, &key_manager)? {
@@ -281,7 +282,7 @@ impl BackupArchive {
             }
         }
 
-        let database_dir = PathBuf::from(&ctx.get_config()?.database_dir);
+        let database_dir = PathBuf::from(&ctx.config.database_dir);
         let app_database_path = database_dir.join(APP_DATABASE_FILE);
         let app_database = crate::database::app::AppDatabase::new(
             &app_database_path.display().to_string(),
@@ -290,7 +291,8 @@ impl BackupArchive {
         )
         .await?;
         app_database.run_migrations().await?;
-        ctx.replace_app_database(app_database).await;
+
+        *ctx.app_db.write().await = Arc::new(app_database);
 
         let rust_database_path = database_dir.join("rust_db.sqlite");
         let rust_database = Database::new(
@@ -397,8 +399,8 @@ mod tests {
         // 1. Add some data
         let original_login_token = {
             let secure_storage = SecureStorage::new("testing");
-            let config = ctx.get_config().unwrap();
-            let key_manager = ctx.get_key_manager().await.unwrap();
+            let config = &ctx.config;
+            let key_manager = ctx.key_manager.lock().await;
             key_manager.store_to_keychain(&secure_storage).unwrap();
 
             // Add a file
@@ -407,7 +409,7 @@ mod tests {
             key_manager.main_key.get_login_token()
         };
         {
-            let app_db = ctx.get_app_database().await;
+            let app_db = ctx.app_db.read().await.clone();
             sqlx::query!(
                 r#"
                 INSERT INTO contacts(user_id, username)
@@ -425,12 +427,12 @@ mod tests {
 
         // 3. Modify data (to simulate state before restore)
         {
-            let config = ctx.get_config().unwrap();
+            let config = &ctx.config;
 
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             std::fs::write(config_file, "new config").unwrap();
 
-            let app_db = ctx.get_app_database().await;
+            let app_db = ctx.app_db.read().await.clone();
             sqlx::query!(
                 r#"
                 UPDATE contacts
@@ -450,8 +452,8 @@ mod tests {
 
         // 5. Verify restored data
         {
-            let config = ctx.get_config().unwrap();
-            let key_manager = ctx.get_key_manager().await.unwrap();
+            let config = &ctx.config;
+            let key_manager = ctx.key_manager.lock().await;
 
             let config_file = PathBuf::from(&config.data_dir).join("user_discovery_config.json");
             let config_content = std::fs::read_to_string(config_file).unwrap();
@@ -459,7 +461,7 @@ mod tests {
 
             assert_eq!(key_manager.main_key.get_login_token(), original_login_token);
 
-            let app_db = ctx.get_app_database().await;
+            let app_db = ctx.app_db.read().await.clone();
             let username = sqlx::query_scalar!(
                 r#"
                 SELECT username
@@ -484,7 +486,7 @@ mod tests {
         )
         .await
         .unwrap();
-        let database_dir = PathBuf::from(&ctx.get_config().unwrap().database_dir);
+        let database_dir = PathBuf::from(&ctx.config.database_dir);
         let legacy_path = database_dir.join("twonly.sqlite");
         let legacy =
             crate::database::app::AppDatabase::new(&legacy_path.display().to_string(), None, false)
@@ -509,7 +511,7 @@ mod tests {
         let archive_path = BackupArchive::create_backup(&ctx).await.unwrap();
         remove_file_from_encrypted_archive(&ctx, &archive_path, APP_DATABASE_FILE).await;
 
-        let app_db = ctx.get_app_database().await;
+        let app_db = ctx.app_db.read().await.clone();
         sqlx::query!(
             r#"
             INSERT INTO contacts(user_id, username)
@@ -524,7 +526,7 @@ mod tests {
             .await
             .unwrap();
 
-        let restored = ctx.get_app_database().await;
+        let restored = ctx.app_db.read().await.clone();
         let contacts = sqlx::query!(
             r#"
             SELECT user_id, username
@@ -546,7 +548,7 @@ mod tests {
         archive_path: &Path,
         excluded_name: &str,
     ) {
-        let keys = ctx.get_key_manager().await.unwrap();
+        let keys = ctx.key_manager.lock().await;
         let encrypted = std::fs::read(archive_path).unwrap();
         let decrypted = keys.main_key.decrypt_backup(&encrypted).unwrap();
         let mut source = ZipArchive::new(Cursor::new(decrypted)).unwrap();

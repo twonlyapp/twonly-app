@@ -20,7 +20,7 @@ pub struct PqcPreKeyInput {
 impl Server {
     #[doc(hidden)]
     pub async fn generate_and_upload_pqc_pre_keys(ctx: &Arc<Context>) -> Result<Vec<u8>> {
-        let engine = ctx.get_signal_engine().lock().await;
+        let engine = ctx.signal_engine.lock().await;
         let bundle = engine
             .as_ref()
             .ok_or(crate::error::TwonlyError::SignalIdentityNotFound)?

@@ -45,7 +45,7 @@ impl MediaFileService {
     }
 
     pub async fn download_pending(&self) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         // A terminated process can leave a download in this intermediate state.
         sqlx::query!(
             "UPDATE media_files SET download_state = 'pending' WHERE download_state = 'downloading'"
@@ -68,7 +68,7 @@ impl MediaFileService {
     }
 
     pub async fn download(&self, media_id: &str) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let claimed = sqlx::query!(
             r#"UPDATE media_files SET download_state = 'downloading'
                WHERE media_id = ? AND download_state = 'pending'"#,
@@ -99,7 +99,7 @@ impl MediaFileService {
     /// handler. Wait until that transaction becomes visible before claiming it.
     pub async fn download_when_available(&self, media_id: &str) -> Result<()> {
         for _ in 0..40 {
-            let database = self.ctx.get_app_database().await;
+            let database = self.ctx.app_db.read().await.clone();
             let state = sqlx::query_scalar!(
                 "SELECT download_state FROM media_files WHERE media_id = ?",
                 media_id,
@@ -119,7 +119,7 @@ impl MediaFileService {
     }
 
     async fn download_claimed(&self, media_id: &str) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let messages = sqlx::query!(
             r#"SELECT m.message_id, m.sender_id, c.account_deleted
                FROM messages m
@@ -267,7 +267,7 @@ impl MediaFileService {
 
         // Keep the file update and state transition ordered: ready is only
         // visible after the plaintext has been written successfully.
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         sqlx::query!(
             r#"UPDATE media_files SET download_state = 'ready', stored_file_hash = ?
                WHERE media_id = ?"#,
@@ -282,7 +282,7 @@ impl MediaFileService {
     }
 
     pub async fn request_reupload(&self, media_id: &str) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         sqlx::query!(
             "UPDATE media_files SET download_state = 'reuploadRequested' WHERE media_id = ?",
             media_id,
@@ -353,7 +353,7 @@ impl MediaFileService {
 
     fn paths(&self, media_id: &str, media_type: &str) -> Vec<PathBuf> {
         let extension = Self::extension(media_type);
-        let base = PathBuf::from(self.ctx.data_dir()).join("mediafiles");
+        let base = PathBuf::from(&self.ctx.config.data_dir).join("mediafiles");
         vec![
             base.join("tmp").join(format!("{media_id}.{extension}")),
             base.join("tmp")
@@ -372,13 +372,13 @@ impl MediaFileService {
     }
 
     fn temp_path(&self, media_id: &str, media_type: &str) -> PathBuf {
-        PathBuf::from(self.ctx.data_dir())
+        PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
             .join(format!("{media_id}.{}", Self::extension(media_type)))
     }
 
     fn encrypted_path(&self, media_id: &str, media_type: &str) -> PathBuf {
-        PathBuf::from(self.ctx.data_dir())
+        PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
             .join(format!(
                 "{media_id}.encrypted.{}",

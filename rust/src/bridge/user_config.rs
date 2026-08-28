@@ -37,10 +37,10 @@ impl UserConfigApi {
         let ctx = Context::get_static()?;
         let normalized = UserConfig::save_json(ctx, &serde_json::to_string(&config)?)?;
         let config: UserConfig = serde_json::from_str(&normalized)?;
-        let mut key_manager = ctx.get_key_manager().await?;
+        let mut key_manager = ctx.key_manager.lock().await;
         if key_manager.user_id != Some(config.user_id) {
             key_manager.user_id = Some(config.user_id);
-            key_manager.store_to_keychain(ctx.get_secure_storage())?;
+            key_manager.store_to_keychain(&ctx.secure_storage)?;
         }
         drop(key_manager);
         if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {

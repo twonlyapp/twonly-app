@@ -45,7 +45,7 @@ impl GroupService {
     }
 
     async fn sync_flame_counters(&self) -> Result<()> {
-        let db = self.ctx.get_app_database().await;
+        let db = self.ctx.app_db.read().await.clone();
         let groups = Group::flame_sync_candidates(&db.pool).await?;
 
         let Some(best_friend) = groups.iter().max_by_key(|group| group.total_media_counter) else {
@@ -184,7 +184,7 @@ impl GroupService {
         })
         .await?;
 
-        let db = self.ctx.get_app_database().await;
+        let db = self.ctx.app_db.read().await.clone();
         let mut tr = db.pool.begin().await?;
         let serialized_identity = identity.serialize().to_vec();
         InsertGroup::builder()
@@ -227,7 +227,7 @@ impl GroupService {
     }
 
     pub async fn fetch_group_state(&self, group_id: String) -> Result<bool> {
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let mut t = database.pool.begin().await?;
         let updated = self
             .fetch_group_state_in_transaction(&mut t, &group_id)
@@ -293,7 +293,7 @@ impl GroupService {
                 appended_changes = true;
             }
         }
-        if appended_changes && group_state.admin_ids.contains(&self.ctx.user_id().await?) {
+        if appended_changes & group_state.admin_ids.contains(&self.ctx.user_id().await?) {
             GroupApi::update_remote(&group, server.version_id, &group_state, None, None).await?;
         }
         self.apply_state(t, group_id, server.version_id as i64, &group_state)
@@ -521,7 +521,7 @@ impl GroupService {
             user.username
                 .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?,
         )?;
-        let database = self.ctx.get_app_database().await;
+        let database = self.ctx.app_db.read().await.clone();
         let mut tr = database.pool.begin().await?;
         UpdateContact::builder()
             .user_id(contact_id)
@@ -592,7 +592,7 @@ impl GroupService {
     }
 
     pub async fn fetch_group_states_for_unjoined_groups(&self) -> Result<()> {
-        let db = self.ctx.get_app_database().await;
+        let db = self.ctx.app_db.read().await.clone();
         let mut t = db.pool.begin().await?;
         self.fetch_group_states_for_unjoined_groups_in_transaction(&mut t)
             .await?;
@@ -617,7 +617,7 @@ impl GroupService {
     }
 
     pub async fn fetch_missing_group_public_keys(&self) -> Result<()> {
-        let db = self.ctx.get_app_database().await;
+        let db = self.ctx.app_db.read().await.clone();
         let rows = GetMissingGroupPublicKeys::builder()
             .build()
             .fetch_all(&db.pool)
@@ -646,7 +646,7 @@ impl GroupService {
         &self,
         group_id: &str,
     ) -> Result<(Arc<crate::database::app::AppDatabase>, GroupRecord)> {
-        let db = self.ctx.get_app_database().await;
+        let db = self.ctx.app_db.read().await.clone();
         let row = GroupRecord::load(&db.pool, group_id).await?;
         Ok((db, row))
     }

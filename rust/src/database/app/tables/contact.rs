@@ -6,6 +6,7 @@
 use crate::{
     context::Context,
     error::{Result, TwonlyError},
+    user_config::UserConfig,
 };
 use sqlx::{Sqlite, Transaction};
 
@@ -76,7 +77,7 @@ impl Contact {
             .unwrap_or_else(|| self.username.clone())
     }
 
-    pub async fn update(tr: &mut Transaction<'_, Sqlite>, contact: UpdateContact) -> Result<()> {
+    pub async fn update(t: &mut Transaction<'_, Sqlite>, contact: UpdateContact) -> Result<()> {
         let update_display_name = contact.display_name.is_some();
         let display_name = contact.display_name.flatten();
         let update_avatar = contact.avatar_svg_compressed.is_some();
@@ -109,14 +110,14 @@ impl Contact {
             contact.user_id,
             contact.only_if_not_requested,
         )
-        .execute(&mut **tr)
+        .execute(&mut **t)
         .await?;
 
         Ok(())
     }
 
     pub async fn insert_on_conflict_update(
-        tr: &mut Transaction<'_, Sqlite>,
+        t: &mut Transaction<'_, Sqlite>,
         contact: UpdateContact,
     ) -> Result<()> {
         sqlx::query!(
@@ -147,25 +148,25 @@ impl Contact {
             contact.blocked,
             contact.only_if_not_requested,
         )
-        .execute(&mut **tr)
+        .execute(&mut **t)
         .await?;
 
         Ok(())
     }
 
     pub async fn get_contact_by_id(
-        transaction: &mut Transaction<'_, Sqlite>,
+        t: &mut Transaction<'_, Sqlite>,
         user_id: i64,
     ) -> Result<Option<Self>> {
         let contact = sqlx::query_as!(Self, "SELECT * FROM contacts WHERE user_id = ?", user_id)
-            .fetch_optional(&mut **transaction)
+            .fetch_optional(&mut **t)
             .await?;
 
         Ok(contact)
     }
 
     pub async fn update_ask_for_friend_promotions(
-        transaction: &mut Transaction<'_, Sqlite>,
+        t: &mut Transaction<'_, Sqlite>,
         user_id: i64,
     ) -> Result<()> {
         sqlx::query!(
@@ -176,7 +177,7 @@ impl Contact {
             "#,
             user_id,
         )
-        .execute(&mut **transaction)
+        .execute(&mut **t)
         .await?;
         Ok(())
     }
@@ -186,7 +187,7 @@ impl Contact {
         t: &mut Transaction<'_, Sqlite>,
         contact_id: i64,
     ) -> Result<bool> {
-        let config = crate::user_config::UserConfig::load_required_from(context)?;
+        let config = UserConfig::load_required_from(context)?;
         let contact = sqlx::query!(
             r#"SELECT accepted, blocked, media_send_counter, user_discovery_excluded,
                       user_discovery_manual_approved
@@ -205,22 +206,19 @@ impl Contact {
         }))
     }
 
-    pub async fn exists(transaction: &mut Transaction<'_, Sqlite>, user_id: i64) -> Result<bool> {
+    pub async fn exists(t: &mut Transaction<'_, Sqlite>, user_id: i64) -> Result<bool> {
         let exists = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ?)",
             user_id
         )
-        .fetch_one(&mut **transaction)
+        .fetch_one(&mut **t)
         .await?
             != 0;
         Ok(exists)
     }
 
-    pub async fn ensure_exists(
-        transaction: &mut Transaction<'_, Sqlite>,
-        user_id: i64,
-    ) -> Result<()> {
-        if !Self::exists(transaction, user_id).await? {
+    pub async fn ensure_exists(t: &mut Transaction<'_, Sqlite>, user_id: i64) -> Result<()> {
+        if !Self::exists(t, user_id).await? {
             return Err(TwonlyError::Generic(format!(
                 "contact {user_id} does not exist"
             )));
