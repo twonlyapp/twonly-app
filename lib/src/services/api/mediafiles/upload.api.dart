@@ -691,11 +691,13 @@ Future<void> _createUploadRequest(MediaFileService media) async {
         );
       }
 
-      final cipherText = await sendCipherText(
-        groupMember.contactId,
-        notEncryptedContent,
+      final cipherText = await RustApi.sendEncryptedContent(
+        contactId: groupMember.contactId,
+        content: notEncryptedContent.writeToBuffer(),
         messageId: message.messageId,
+        onlySendIfNoReceiptsAreOpen: false,
         onlyReturnEncryptedData: true,
+        blocking: true,
       );
 
       if (cipherText == null) {
@@ -706,12 +708,8 @@ Future<void> _createUploadRequest(MediaFileService media) async {
       }
 
       final messageOnSuccess = TextMessage()
-        ..body = cipherText.$1
+        ..body = cipherText
         ..userId = Int64(groupMember.contactId);
-
-      if (cipherText.$2 != null) {
-        messageOnSuccess.pushData = cipherText.$2!;
-      }
 
       messagesOnSuccess.add(messageOnSuccess);
       downloadTokens.add(downloadToken);

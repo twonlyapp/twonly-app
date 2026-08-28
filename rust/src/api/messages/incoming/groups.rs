@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use crate::api::messages::incoming::client2client::messages::queue_encrypted_content;
+use crate::api::messages::incoming::messages::queue_encrypted_content;
 use crate::api::proto::client::encrypted_content;
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group};

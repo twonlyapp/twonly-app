@@ -6,7 +6,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -56,15 +55,16 @@ class _AllReactionsViewState extends State<AllReactionsView> {
       emoji,
       true,
     );
-    await sendCipherTextToGroup(
-      widget.message.groupId,
-      pb.EncryptedContent(
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: widget.message.groupId,
+      content: pb.EncryptedContent(
         reaction: pb.EncryptedContent_Reaction(
           targetMessageId: widget.message.messageId,
           emoji: emoji,
           remove: true,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
     );
   }
 

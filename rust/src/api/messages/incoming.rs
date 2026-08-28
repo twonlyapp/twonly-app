@@ -3,9 +3,21 @@
  *
  */
 
-pub mod client2client;
+mod additional_data;
+pub(crate) mod contact;
+mod errors;
+mod groups;
+mod media;
+pub mod messages;
+mod reaction;
+pub mod recovery;
+mod text_message;
+mod typing_indicator;
+mod user_discovery;
+mod verification;
 
-use crate::api::messages::incoming::client2client::messages::{
+use crate::api::messages::content_type_kind;
+use crate::api::messages::incoming::messages::{
     decrypt_legacy_signal_with_error, ensure_contact_exists, handle_plaintext_content,
     handle_sender_delivery_receipt, process_encrypted_or_queue_error, queue_decryption_error,
     queue_sender_delivery_receipt, retransmit_queued_receipts, spawn_receipt_delivery,
@@ -15,13 +27,14 @@ use crate::api::proto::server_to_client::NewMessage;
 use crate::api::proto::{client_to_server, server_to_client};
 use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
-use crate::database::app::tables::Receipt;
+use crate::database::app::tables::{Contact, Group, Receipt};
 use crate::error::{Result, TwonlyError};
 use crate::sealed_sender::SealedSender;
 use client_to_server::response::{ok, Response};
 use prost::Message as _;
 use proto::message::Type;
 use server_to_client::v0::Kind;
+use sqlx::{Sqlite, Transaction};
 use std::sync::Arc;
 
 pub(crate) async fn handle_server_message(
@@ -162,25 +175,29 @@ pub(crate) async fn handle_decoded_server_message(
 
     let database = ctx.app_db.read().await.clone();
 
-    let mut tr = database.pool.begin().await?;
+    let mut t = database.pool.begin().await?;
 
-    let claimed = Receipt::claim_received(&mut tr, &message.receipt_id).await?;
+    let claimed = Receipt::claim_received(&mut t, &message.receipt_id).await?;
 
     if !claimed {
         // Delivery receipts are terminal messages and must never themselves be
         // acknowledged. For regular messages Dart retries the delivery receipt
         // after ten days, atomically claiming the retry by moving created_at.
         let should_resend = message_type != Type::SenderDeliveryReceipt
-            && Receipt::claim_received_retry(&mut tr, &message.receipt_id).await?;
+            && Receipt::claim_received_retry(&mut t, &message.receipt_id).await?;
+
         if should_resend {
             tracing::info!("Queueing sender delivery receipt for retry");
-            queue_sender_delivery_receipt(&mut tr, from_user_id, &message.receipt_id).await?;
+            queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
-        tr.commit().await?;
+
+        t.commit().await?;
+
         if should_resend {
             tracing::info!("Spawning receipt delivery for retry");
             spawn_receipt_delivery(ctx, message.receipt_id);
         }
+
         tracing::info!("Returning early because receipt was already claimed");
         return Ok(());
     }
@@ -190,7 +207,7 @@ pub(crate) async fn handle_decoded_server_message(
     match message_type {
         Type::SenderDeliveryReceipt => {
             tracing::info!("Received sender delivery receipt");
-            handle_sender_delivery_receipt(&mut tr, from_user_id, &message.receipt_id).await?;
+            handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
         Type::Ciphertext | Type::PrekeyBundle => {
             let ciphertext = message.encrypted_content.ok_or_else(|| {
@@ -203,7 +220,7 @@ pub(crate) async fn handle_decoded_server_message(
                     tracing::info!("Decrypted successfully, processing...");
                     sends_error_response = process_encrypted_or_queue_error(
                         ctx,
-                        &mut tr,
+                        &mut t,
                         from_user_id,
                         &message.receipt_id,
                         content,
@@ -221,7 +238,7 @@ pub(crate) async fn handle_decoded_server_message(
                             (callbacks.api.resync_signal_session)(from_user_id).await;
                         }
                     }
-                    queue_decryption_error(&mut tr, from_user_id, &message.receipt_id, error_type)
+                    queue_decryption_error(&mut t, from_user_id, &message.receipt_id, error_type)
                         .await?;
                     sends_error_response = true;
                 }
@@ -249,7 +266,7 @@ pub(crate) async fn handle_decoded_server_message(
                         })?;
                     sends_error_response = process_encrypted_or_queue_error(
                         ctx,
-                        &mut tr,
+                        &mut t,
                         from_user_id,
                         &message.receipt_id,
                         content,
@@ -262,7 +279,7 @@ pub(crate) async fn handle_decoded_server_message(
                         receipt_id = message.receipt_id,
                         "V2 decryption failed: {error}"
                     );
-                    queue_decryption_error(&mut tr, from_user_id, &message.receipt_id, 0).await?;
+                    queue_decryption_error(&mut t, from_user_id, &message.receipt_id, 0).await?;
                     sends_error_response = true;
                 }
             }
@@ -272,17 +289,17 @@ pub(crate) async fn handle_decoded_server_message(
             let plaintext = message.plaintext_content.ok_or_else(|| {
                 TwonlyError::Generic("plaintext client message has no content".into())
             })?;
-            handle_plaintext_content(ctx, &mut tr, from_user_id, &message.receipt_id, plaintext)
+            handle_plaintext_content(ctx, &mut t, from_user_id, &message.receipt_id, plaintext)
                 .await?;
         }
         Type::TestNotification => {}
     }
 
     if is_encrypted_message & !sends_error_response {
-        queue_sender_delivery_receipt(&mut tr, from_user_id, &message.receipt_id).await?;
+        queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
     }
 
-    tr.commit().await?;
+    t.commit().await?;
 
     database.notify_committed([
         "received_receipts",
@@ -302,4 +319,188 @@ pub(crate) async fn handle_decoded_server_message(
     });
 
     Ok(())
+}
+
+/// Dispatches already-decrypted client-to-client content to its concrete
+/// feature module. Transport decoding and Signal decryption do not belong in
+/// this dispatcher.
+pub(crate) async fn handle_encrypted(
+    ctx: &Arc<Context>,
+    t: &mut Transaction<'_, Sqlite>,
+    from_user_id: i64,
+    receipt_id: &str,
+    content: proto::EncryptedContent,
+) -> Result<()> {
+    Receipt::mark_all_for_retry(t, from_user_id).await?;
+
+    if let Some(version) = content.sender_user_discovery_version.clone() {
+        user_discovery::check_sender_version(ctx, t, from_user_id, version).await?;
+    }
+
+    contact::check_for_profile_update(t, from_user_id, &content).await?;
+
+    if content.ask_for_friend_promotions == Some(true) {
+        Contact::update_ask_for_friend_promotions(t, from_user_id).await?;
+    }
+
+    let type_kind = content_type_kind(&content);
+
+    tracing::Span::current().record("kind", type_kind);
+    tracing::info!("Handling incoming message: {type_kind}");
+
+    if let Some(request) = content.contact_request {
+        return contact::handle_contact_request(ctx, t, from_user_id, request).await;
+    }
+
+    if let Some(update) = content.contact_update {
+        return contact::handle_contact_update(
+            ctx,
+            t,
+            from_user_id,
+            content.sender_profile_counter,
+            update,
+        )
+        .await;
+    }
+
+    if let Some(update) = content.message_update {
+        return text_message::handle_message_update(ctx, t, from_user_id, update).await;
+    }
+
+    if let Some(update) = content.media_update {
+        return media::handle_media_update(t, from_user_id, update).await;
+    }
+
+    if let Some(error) = content.error_messages {
+        return errors::handle_error_message(
+            ctx,
+            t,
+            from_user_id,
+            content.group_id.as_deref(),
+            error,
+        )
+        .await;
+    }
+
+    if let Some(update) = content.user_discovery_update {
+        return user_discovery::handle_user_discovery_update(ctx, t, from_user_id, update).await;
+    }
+
+    if let Some(request) = content.user_discovery_request {
+        return user_discovery::handle_user_discovery_request(ctx, t, from_user_id, request).await;
+    }
+
+    if let Some(proof) = content.key_verification_proof {
+        return verification::handle_key_verification_proof(t, from_user_id, proof).await;
+    }
+
+    if let Some(recovery) = content.passwordless_recovery {
+        return recovery::handle_passwordless_recovery(t, from_user_id, recovery).await;
+    }
+
+    if let Some(heartbeat) = content.passwordless_recovery_heartbeat {
+        return recovery::handle_passwordless_recovery_heartbeat(t, from_user_id, heartbeat).await;
+    }
+
+    let group_id = content
+        .group_id
+        .ok_or_else(|| TwonlyError::Generic("group-scoped message has no group ID".into()))?;
+
+    if let Some(create) = content.group_create {
+        return groups::handle_group_create(ctx, t, from_user_id, &group_id, create).await;
+    }
+
+    if let Some(join) = content.group_join {
+        return groups::handle_group_join(t, from_user_id, &group_id, join).await;
+    }
+
+    let is_member = sqlx::query_scalar!(
+        "SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND contact_id = ?)",
+        group_id,
+        from_user_id,
+    )
+    .fetch_one(&mut **t)
+    .await?
+        != 0;
+
+    if !is_member {
+        let local_user_id = ctx.user_id().await?;
+
+        if Group::direct_chat_id(local_user_id, from_user_id) == group_id {
+            let contact = Contact::get_contact_by_id(t, from_user_id).await?;
+
+            if let Some(contact) =
+                contact.filter(|value| value.accepted != 0 && value.deleted_by_user == 0)
+            {
+                Group::create_direct_chat(ctx, t, contact).await?;
+            } else {
+                sqlx::query!(
+                    "UPDATE contacts SET requested = 1, deleted_by_user = 0 WHERE user_id = ?",
+                    from_user_id,
+                )
+                .execute(&mut **t)
+                .await?;
+                messages::queue_encrypted_content(
+                    t,
+                    from_user_id,
+                    proto::EncryptedContent {
+                        error_messages: Some(proto::encrypted_content::ErrorMessages {
+                            r#type: proto::encrypted_content::error_messages::Type::ErrorProcessingMessageCreatedAccountRequestInstead as i32,
+                            related_receipt_id: receipt_id.to_owned(),
+                        }),
+                        ..Default::default()
+                    },
+                    false,
+                )
+                .await?;
+                return Ok(());
+            }
+        }
+    }
+
+    groups::ensure_group_member(t, from_user_id, &group_id).await?;
+
+    if content.resend_group_public_key.is_some() {
+        return groups::handle_resend_group_public_key(t, from_user_id, &group_id).await;
+    }
+
+    if let Some(update) = content.group_update {
+        return groups::handle_group_update(ctx, t, from_user_id, &group_id, update).await;
+    }
+
+    if let Some(flame) = content.flame_sync {
+        return groups::handle_flame_sync(t, &group_id, flame).await;
+    }
+
+    if let Some(message) = content.text_message {
+        return text_message::handle_text_message(t, from_user_id, &group_id, message).await;
+    }
+
+    if let Some(message) = content.additional_data_message {
+        return additional_data::handle_additional_data_message(
+            ctx,
+            t,
+            from_user_id,
+            &group_id,
+            message,
+        )
+        .await;
+    }
+
+    if let Some(media) = content.media {
+        return media::handle_media(t, from_user_id, &group_id, media).await;
+    }
+
+    if let Some(reaction) = content.reaction {
+        return reaction::handle_reaction(t, from_user_id, &group_id, reaction).await;
+    }
+
+    if let Some(indicator) = content.typing_indicator {
+        return typing_indicator::handle_typing_indicator(t, from_user_id, &group_id, indicator)
+            .await;
+    }
+
+    Err(TwonlyError::Generic(format!(
+        "client2client content in receipt {receipt_id} is not implemented in Rust"
+    )))
 }

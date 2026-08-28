@@ -4,7 +4,7 @@
  */
 
 use crate::api::messages::content_type_kind;
-use crate::api::messages::incoming::client2client::messages;
+use crate::api::messages::incoming::messages;
 use crate::api::proto::client as proto;
 use crate::context::Context;
 use crate::error::Result;
@@ -48,13 +48,8 @@ pub(crate) async fn decorate_content(
         .fetch_one(&database.pool)
         .await?;
         if allowed != 0 {
-            content.sender_user_discovery_version = Some(
-                ctx.user_discovery
-                    .get()
-                    .await
-                    .get_current_version()
-                    .await?,
-            );
+            content.sender_user_discovery_version =
+                Some(ctx.user_discovery.get().await.get_current_version().await?);
         }
     }
     Ok(())
@@ -69,7 +64,7 @@ pub async fn send_c2c_message_to_contact(
     #[builder(default)] only_send_if_no_receipts_are_open: bool,
     #[builder(default)] only_return_encrypted_data: bool,
     #[builder(default)] blocking: bool,
-) -> Result<Option<(Vec<u8>, Option<Vec<u8>>)>> {
+) -> Result<Option<Vec<u8>>> {
     let mut content = proto::EncryptedContent::decode(encrypted_content.as_slice())?;
 
     decorate_content(ctx, contact_id, &mut content, message_id.is_some()).await?;

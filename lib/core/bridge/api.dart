@@ -56,27 +56,6 @@ enum ApiEventKind {
   loginTokenMigrated,
 }
 
-class PreparedOutgoingMessage {
-  final Uint8List message;
-  final Uint8List? pushData;
-
-  const PreparedOutgoingMessage({
-    required this.message,
-    this.pushData,
-  });
-
-  @override
-  int get hashCode => message.hashCode ^ pushData.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PreparedOutgoingMessage &&
-          runtimeType == other.runtimeType &&
-          message == other.message &&
-          pushData == other.pushData;
-}
-
 /// Flutter-facing facade for the Rust-owned API runtime.
 class RustApi {
   const RustApi();
@@ -255,11 +234,10 @@ class RustApi {
       .api
       .crateBridgeApiRustApiPerformPasswordlessRecoveryHeartbeat();
 
-  static Future<PreparedOutgoingMessage?> prepareQueuedMessage({
-    required String receiptId,
-  }) => RustLib.instance.api.crateBridgeApiRustApiPrepareQueuedMessage(
-    receiptId: receiptId,
-  );
+  static Future<Uint8List?> prepareQueuedMessage({required String receiptId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiPrepareQueuedMessage(
+        receiptId: receiptId,
+      );
 
   static Future<PlatformInt64> register({
     required String username,
@@ -348,7 +326,7 @@ class RustApi {
         contactId: contactId,
       );
 
-  static Future<PreparedOutgoingMessage?> sendEncryptedContent({
+  static Future<Uint8List?> sendEncryptedContent({
     required PlatformInt64 contactId,
     required List<int> content,
     String? messageId,
@@ -384,11 +362,9 @@ class RustApi {
   static Future<void> sendTextMessage({
     required PlatformInt64 userId,
     required List<int> body,
-    Uint8List? pushData,
   }) => RustLib.instance.api.crateBridgeApiRustApiSendTextMessage(
     userId: userId,
     body: body,
-    pushData: pushData,
   );
 
   static Future<void> sendTyping({

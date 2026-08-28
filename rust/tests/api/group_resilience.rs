@@ -84,7 +84,7 @@ async fn test_group_membership_error_healing() -> anyhow::Result<()> {
 
     // Wait a brief moment for group join to be acknowledged, then ensure queued receipts are retransmitted
     tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-    let _ = rust_lib_twonly::api::messages::incoming::client2client::messages::retransmit_queued_receipts(&tester_a.context).await;
+    let _ = rust_lib_twonly::api::messages::incoming::messages::retransmit_queued_receipts(&tester_a.context).await;
 
     tester_b
         .wait_for_text_message(&msg_id, tester_a.user_id, "Message triggering heal")

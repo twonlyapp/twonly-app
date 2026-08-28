@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -64,10 +63,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
               final serializedSession = originalSession.serialize();
 
               for (var i = 0; i < 10; i++) {
-                await insertAndSendTextMessage(
-                  group.groupId,
-                  'DesyncTest_1',
-                  null,
+                await RustApi.insertAndSendText(
+                  groupId: group.groupId,
+                  text: 'DesyncTest_1',
                 );
               }
 
@@ -79,10 +77,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
                 corruptedSession,
               );
 
-              await insertAndSendTextMessage(
-                group.groupId,
-                'DesyncTest_2',
-                null,
+              await RustApi.insertAndSendText(
+                groupId: group.groupId,
+                text: 'DesyncTest_2',
               );
 
               // The other client should res
@@ -110,10 +107,9 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
                     lotsOfMessagesStatus =
                         'At message $i to ${contact.username}.';
                   });
-                  await insertAndSendTextMessage(
-                    group!.groupId,
-                    'Message $i.',
-                    null,
+                  await RustApi.insertAndSendText(
+                    groupId: group!.groupId,
+                    text: 'Message $i.',
                   );
                 }
               }

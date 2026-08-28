@@ -22,7 +22,6 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -152,13 +151,16 @@ class PasswordlessRecoveryService {
 
     for (final contact in oldTrustedFriends) {
       try {
-        await sendCipherText(
-          contact.userId,
-          pb.EncryptedContent(
+        await RustApi.sendEncryptedContent(
+          contactId: contact.userId,
+          content: pb.EncryptedContent(
             passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
               delete: true,
             ),
-          ),
+          ).writeToBuffer(),
+          onlySendIfNoReceiptsAreOpen: false,
+          onlyReturnEncryptedData: false,
+          blocking: true,
         );
       } catch (e) {
         Log.error(
@@ -482,13 +484,16 @@ class PasswordlessRecoveryService {
       // It's PIN, we can't migrate it because we don't have the PIN. We delete it so the user has to do it again.
       for (final contact in oldTrustedFriends) {
         try {
-          await sendCipherText(
-            contact.userId,
-            pb.EncryptedContent(
+          await RustApi.sendEncryptedContent(
+            contactId: contact.userId,
+            content: pb.EncryptedContent(
               passwordlessRecovery: pb.EncryptedContent_PasswordLessRecovery(
                 delete: true,
               ),
-            ),
+            ).writeToBuffer(),
+            onlySendIfNoReceiptsAreOpen: false,
+            onlyReturnEncryptedData: false,
+            blocking: true,
           );
         } catch (e) {
           Log.error(

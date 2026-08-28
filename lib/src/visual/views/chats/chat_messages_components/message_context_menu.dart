@@ -12,7 +12,6 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/emoji_picker.bottom.dart';
@@ -53,14 +52,17 @@ class MessageContextMenu extends StatelessWidget {
 
     if (message.senderId != null) {
       // notify the sender
-      await sendCipherText(
-        message.senderId!,
-        pb.EncryptedContent(
+      await RustApi.sendEncryptedContent(
+        contactId: message.senderId!,
+        content: pb.EncryptedContent(
           mediaUpdate: pb.EncryptedContent_MediaUpdate(
             type: pb.EncryptedContent_MediaUpdate_Type.REOPENED,
             targetMessageId: message.messageId,
           ),
-        ),
+        ).writeToBuffer(),
+        onlySendIfNoReceiptsAreOpen: false,
+        onlyReturnEncryptedData: false,
+        blocking: true,
       );
       await twonlyDB.messagesDao.updateMessageId(
         message.messageId,
@@ -125,15 +127,16 @@ class MessageContextMenu extends StatelessWidget {
                 false,
               );
 
-              await sendCipherTextToGroup(
-                message.groupId,
-                pb.EncryptedContent(
+              await RustApi.sendEncryptedContentToGroup(
+                groupId: message.groupId,
+                content: pb.EncryptedContent(
                   reaction: pb.EncryptedContent_Reaction(
                     targetMessageId: message.messageId,
                     emoji: layer.text,
                     remove: false,
                   ),
-                ),
+                ).writeToBuffer(),
+                onlySendIfNoReceiptsAreOpen: false,
               );
             },
             icon: FontAwesomeIcons.faceLaugh,
@@ -186,14 +189,15 @@ class MessageContextMenu extends StatelessWidget {
                 message.messageId,
                 clock.now(),
               );
-              await sendCipherTextToGroup(
-                message.groupId,
-                pb.EncryptedContent(
+              await RustApi.sendEncryptedContentToGroup(
+                groupId: message.groupId,
+                content: pb.EncryptedContent(
                   messageUpdate: pb.EncryptedContent_MessageUpdate(
                     type: pb.EncryptedContent_MessageUpdate_Type.DELETE,
                     senderMessageId: message.messageId,
                   ),
-                ),
+                ).writeToBuffer(),
+                onlySendIfNoReceiptsAreOpen: false,
               );
             } else if (action == 'delete_for_me') {
               await twonlyDB.messagesDao.deleteMessagesById(
@@ -403,9 +407,9 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                                 newText!,
                                 timestamp,
                               );
-                              await sendCipherTextToGroup(
-                                message.groupId,
-                                pb.EncryptedContent(
+                              await RustApi.sendEncryptedContentToGroup(
+                                groupId: message.groupId,
+                                content: pb.EncryptedContent(
                                   messageUpdate:
                                       pb.EncryptedContent_MessageUpdate(
                                         type: pb
@@ -417,7 +421,8 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                                           timestamp.millisecondsSinceEpoch,
                                         ),
                                       ),
-                                ),
+                                ).writeToBuffer(),
+                                onlySendIfNoReceiptsAreOpen: false,
                               );
                             }
                             if (!context.mounted) return;

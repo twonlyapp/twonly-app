@@ -3,7 +3,7 @@
  *
  */
 
-use crate::api::messages::incoming::client2client::messages::{
+use crate::api::messages::incoming::messages::{
     self, queue_encrypted_content, send_queued_receipt,
 };
 use crate::api::messages::outgoing::{decorate_content, send_c2c_message_to_contact};

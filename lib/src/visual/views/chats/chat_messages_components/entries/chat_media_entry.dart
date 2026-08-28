@@ -12,7 +12,6 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     hide Message;
 import 'package:twonly/src/services/api/mediafiles/download.api.dart'
     as received;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
@@ -78,14 +77,17 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     }
     if (widget.mediaService.canBeOpenedAgain &&
         widget.message.senderId != null) {
-      await sendCipherText(
-        widget.message.senderId!,
-        EncryptedContent(
+      await RustApi.sendEncryptedContent(
+        contactId: widget.message.senderId!,
+        content: EncryptedContent(
           mediaUpdate: EncryptedContent_MediaUpdate(
             type: EncryptedContent_MediaUpdate_Type.REOPENED,
             targetMessageId: widget.message.messageId,
           ),
-        ),
+        ).writeToBuffer(),
+        onlySendIfNoReceiptsAreOpen: false,
+        onlyReturnEncryptedData: false,
+        blocking: true,
       );
       await twonlyDB.messagesDao.updateMessageId(
         widget.message.messageId,

@@ -352,8 +352,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 
     let message_type = proto::message::Type::try_from(message.r#type)?;
 
-    let push_data: Option<Vec<u8>> = None;
-
     match message_type {
         proto::message::Type::Ciphertext | proto::message::Type::PrekeyBundle => {
             let plaintext = message.encrypted_content.take().ok_or_else(|| {
@@ -375,8 +373,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         _ => {}
     }
 
-    match Server::send_text_message(ctx, row.contact_id, message.encode_to_vec(), push_data).await?
-    {
+    match Server::send_text_message(ctx, row.contact_id, message.encode_to_vec()).await? {
         ServerResult::Ok(()) => {}
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
@@ -426,7 +423,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 pub(crate) async fn prepare_queued_receipt(
     ctx: &Arc<Context>,
     receipt_id: &str,
-) -> Result<Option<(Vec<u8>, Option<Vec<u8>>)>> {
+) -> Result<Option<Vec<u8>>> {
     let database = ctx.app_db.read().await.clone();
     let row = sqlx::query!(
         r#"SELECT contact_id, message, message_id, retry_count
@@ -439,7 +436,6 @@ pub(crate) async fn prepare_queued_receipt(
     let mut message = proto::Message::decode(row.message.as_slice())
         .map_err(|error| TwonlyError::Generic(format!("invalid queued message: {error}")))?;
     message.receipt_id = receipt_id.to_owned();
-    let push_data: Option<Vec<u8>> = None;
 
     match proto::message::Type::try_from(message.r#type)
         .map_err(|_| TwonlyError::Generic("queued message has invalid type".into()))?
@@ -467,7 +463,7 @@ pub(crate) async fn prepare_queued_receipt(
         }
         _ => {}
     }
-    Ok(Some((message.encode_to_vec(), push_data)))
+    Ok(Some(message.encode_to_vec()))
 }
 
 pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
@@ -579,6 +575,7 @@ pub(crate) async fn handle_sender_delivery_receipt(
     .fetch_optional(&mut **transaction)
     .await?
     .flatten();
+
     if let Some(message_id) = message_id {
         sqlx::query!(
             r#"
@@ -605,6 +602,7 @@ pub(crate) async fn handle_sender_delivery_receipt(
     )
     .execute(&mut **transaction)
     .await?;
+
     Ok(())
 }
 

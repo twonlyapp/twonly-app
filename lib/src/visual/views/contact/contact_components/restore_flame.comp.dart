@@ -12,7 +12,6 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -100,10 +99,11 @@ class _RestoreFlameCompState extends State<RestoreFlameComp> {
     );
 
     await syncFlameCounters(forceForGroup: _groupId);
-    await sendCipherTextToGroup(
-      _groupId,
-      encryptedContent,
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: _groupId,
+      content: encryptedContent.writeToBuffer(),
       messageId: message.messageId,
+      onlySendIfNoReceiptsAreOpen: false,
     );
   }
 

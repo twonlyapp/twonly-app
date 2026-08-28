@@ -10,7 +10,6 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -62,14 +61,17 @@ Future<void> handleMediaError(MediaFile media) async {
   if (messages.length != 1) return;
   final message = messages.first;
   if (message.senderId == null) return;
-  await sendCipherText(
-    message.senderId!,
-    EncryptedContent(
+  await RustApi.sendEncryptedContent(
+    contactId: message.senderId!,
+    content: EncryptedContent(
       mediaUpdate: EncryptedContent_MediaUpdate(
         type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
         targetMessageId: message.messageId,
       ),
-    ),
+    ).writeToBuffer(),
+    onlySendIfNoReceiptsAreOpen: false,
+    onlyReturnEncryptedData: false,
+    blocking: true,
   );
 }
 
@@ -81,13 +83,16 @@ Future<bool> importSignalContactAndCreateRequest(
   }
 
   // 2. Then send user request
-  await sendCipherText(
-    userdata.userId.toInt(),
-    EncryptedContent(
+  await RustApi.sendEncryptedContent(
+    contactId: userdata.userId.toInt(),
+    content: EncryptedContent(
       contactRequest: EncryptedContent_ContactRequest(
         type: EncryptedContent_ContactRequest_Type.REQUEST,
       ),
-    ),
+    ).writeToBuffer(),
+    onlySendIfNoReceiptsAreOpen: false,
+    onlyReturnEncryptedData: false,
+    blocking: true,
   );
 
   return true;

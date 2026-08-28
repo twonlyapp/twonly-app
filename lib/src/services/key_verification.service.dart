@@ -10,7 +10,6 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -56,13 +55,16 @@ class KeyVerificationService {
       false,
     );
 
-    await sendCipherText(
-      contactId,
-      pb.EncryptedContent(
+    await RustApi.sendEncryptedContent(
+      contactId: contactId,
+      content: pb.EncryptedContent(
         keyVerificationProof: pb.EncryptedContent_KeyVerificationProof(
           calculatedMac: calculatedMac,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
+      onlyReturnEncryptedData: false,
+      blocking: true,
     );
   }
 

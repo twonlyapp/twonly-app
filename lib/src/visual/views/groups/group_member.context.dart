@@ -8,7 +8,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -99,13 +98,16 @@ class GroupMemberContextMenu extends StatelessWidget {
         deletedByUser: Value(false),
       ),
     );
-    await sendCipherText(
-      member.contactId,
-      EncryptedContent(
+    await RustApi.sendEncryptedContent(
+      contactId: member.contactId,
+      content: EncryptedContent(
         contactRequest: EncryptedContent_ContactRequest(
           type: EncryptedContent_ContactRequest_Type.REQUEST,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
+      onlyReturnEncryptedData: false,
+      blocking: true,
     );
     if (context.mounted) {
       showSnackbar(

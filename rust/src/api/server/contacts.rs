@@ -136,7 +136,6 @@ impl Server {
         ctx: &Arc<Context>,
         user_id: i64,
         body: Vec<u8>,
-        push_data: Option<Vec<u8>>,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application_for_contact(
@@ -145,7 +144,7 @@ impl Server {
                     client_to_server::application_data::TextMessage {
                         user_id,
                         body,
-                        push_data,
+                        push_data: None,
                     },
                 ),
                 user_id,

@@ -5,7 +5,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -150,7 +149,10 @@ class FriendSuggestionsComp extends StatelessWidget {
 
     if (result == true && selectedFriends.isNotEmpty) {
       for (final contactId in selectedFriends) {
-        await insertAndSendAskAboutUserMessage(contactId, user.announcedUserId);
+        await RustApi.insertAndSendAskAboutUser(
+          contactId: contactId,
+          askAboutUserId: user.announcedUserId,
+        );
       }
 
       await twonlyDB.userDiscoveryDao.updateAnnouncedUser(

@@ -14,7 +14,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
@@ -64,10 +63,10 @@ class _MessageInputState extends State<MessageInput> {
   Future<void> _sendMessage() async {
     if (_textFieldController.text == '') return;
 
-    await insertAndSendTextMessage(
-      widget.group.groupId,
-      _textFieldController.text,
-      widget.quotesMessage?.messageId,
+    await RustApi.insertAndSendText(
+      groupId: widget.group.groupId,
+      text: _textFieldController.text,
+      quoteMessageId: widget.quotesMessage?.messageId,
     );
 
     _textFieldController.clear();
@@ -93,7 +92,7 @@ class _MessageInputState extends State<MessageInput> {
             _lastTextChangeTime != null &&
             DateTime.now().difference(_lastTextChangeTime!) <=
                 const Duration(seconds: 6)) {
-          await sendTypingIndication(widget.group.groupId, true);
+          await RustApi.sendTyping(groupId: widget.group.groupId, isTyping: true);
         }
       });
     }

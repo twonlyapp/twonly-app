@@ -3,7 +3,7 @@
  *
  */
 
-use crate::api::messages::incoming::client2client::messages;
+use crate::api::messages::incoming::messages;
 use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
 use crate::api::runtime::helpers::decode_ok_value;
 use crate::api::ApiRuntime;
@@ -103,11 +103,6 @@ pub enum ApiEventKind {
 
 /// Flutter-facing facade for the Rust-owned API runtime.
 pub struct RustApi {}
-
-pub struct PreparedOutgoingMessage {
-    pub message: Vec<u8>,
-    pub push_data: Option<Vec<u8>>,
-}
 
 impl RustApi {
     pub async fn request_contact_by_username(username: String) -> Result<()> {
@@ -334,7 +329,7 @@ impl RustApi {
     }
     pub async fn perform_passwordless_recovery_heartbeat() -> Result<()> {
         let ctx = Context::get_static()?;
-        crate::api::messages::incoming::client2client::recovery::perform_heartbeat(ctx).await
+        crate::api::messages::incoming::recovery::perform_heartbeat(ctx).await
     }
     pub async fn get_server_key_for_passwordless_recovery(
         user_id: i64,
@@ -459,13 +454,9 @@ impl RustApi {
         .await
         .and_then(empty_api_response)
     }
-    pub async fn send_text_message(
-        user_id: i64,
-        body: Vec<u8>,
-        push_data: Option<Vec<u8>>,
-    ) -> Result<()> {
+    pub async fn send_text_message(user_id: i64, body: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::send_text_message(ctx, user_id, body, push_data)
+        Server::send_text_message(ctx, user_id, body)
             .await
             .and_then(api_result)
     }
@@ -477,21 +468,19 @@ impl RustApi {
         only_send_if_no_receipts_are_open: bool,
         only_return_encrypted_data: bool,
         blocking: bool,
-    ) -> Result<Option<PreparedOutgoingMessage>> {
+    ) -> Result<Option<Vec<u8>>> {
         let ctx = Context::get_static()?;
-        Ok(
-            crate::api::messages::outgoing::send_c2c_message_to_contact()
-                .ctx(ctx)
-                .contact_id(contact_id)
-                .encrypted_content(content)
-                .maybe_message_id(message_id)
-                .only_send_if_no_receipts_are_open(only_send_if_no_receipts_are_open)
-                .only_return_encrypted_data(only_return_encrypted_data)
-                .blocking(blocking)
-                .call()
-                .await?
-                .map(|(message, push_data)| PreparedOutgoingMessage { message, push_data }),
-        )
+        crate::api::messages::outgoing::send_c2c_message_to_contact()
+            .ctx(ctx)
+            .contact_id(contact_id)
+            .encrypted_content(content)
+            .maybe_message_id(message_id)
+            .only_send_if_no_receipts_are_open(only_send_if_no_receipts_are_open)
+            .only_return_encrypted_data(only_return_encrypted_data)
+            .blocking(blocking)
+            .call()
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn send_encrypted_content_to_group(
@@ -574,14 +563,10 @@ impl RustApi {
             .await
     }
 
-    pub async fn prepare_queued_message(
-        receipt_id: String,
-    ) -> Result<Option<PreparedOutgoingMessage>> {
-        Ok(
-            messages::prepare_queued_receipt(Context::get_static()?, &receipt_id)
-                .await?
-                .map(|(message, push_data)| PreparedOutgoingMessage { message, push_data }),
-        )
+    pub async fn prepare_queued_message(receipt_id: String) -> Result<Option<Vec<u8>>> {
+        messages::prepare_queued_receipt(Context::get_static()?, &receipt_id)
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn notify_messages_opened(contact_id: i64, message_ids: Vec<String>) -> Result<()> {

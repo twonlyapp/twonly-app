@@ -1,9 +1,10 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/shared/select_contacts.view.dart';
 
@@ -40,9 +41,9 @@ class _ShareAdditionalViewState extends State<ShareAdditionalView> {
             )
             as List<int>?;
     if (selectedContacts != null && selectedContacts.isNotEmpty) {
-      await insertAndSendContactShareMessage(
-        widget.group.groupId,
-        selectedContacts,
+      await RustApi.insertAndSendContactShare(
+        groupId: widget.group.groupId,
+        contactIds: Int64List.fromList(selectedContacts),
       );
       if (widget.group.isDirectChat) {
         final members = await twonlyDB.groupsDao.getGroupContact(

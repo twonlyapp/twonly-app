@@ -5,7 +5,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -111,15 +110,18 @@ class OpenRequestsListComp extends StatelessWidget {
                 groupName: Value(getContactDisplayName(contact)),
               ),
             );
-            await sendCipherText(
-              contact.userId,
-              EncryptedContent(
+            await RustApi.sendEncryptedContent(
+              contactId: contact.userId,
+              content: EncryptedContent(
                 contactRequest: EncryptedContent_ContactRequest(
                   type: EncryptedContent_ContactRequest_Type.ACCEPT,
                 ),
-              ),
+              ).writeToBuffer(),
+              onlySendIfNoReceiptsAreOpen: false,
+              onlyReturnEncryptedData: false,
+              blocking: true,
             );
-            await sendContactMyProfileData(contact.userId);
+            await RustApi.sendContactProfile(contactId: contact.userId);
           },
         ),
       ),
@@ -131,13 +133,16 @@ class OpenRequestsListComp extends StatelessWidget {
         constraints: const BoxConstraints(),
         icon: const Icon(Icons.close, size: 18),
         onPressed: () async {
-          await sendCipherText(
-            contact.userId,
-            EncryptedContent(
+          await RustApi.sendEncryptedContent(
+            contactId: contact.userId,
+            content: EncryptedContent(
               contactRequest: EncryptedContent_ContactRequest(
                 type: EncryptedContent_ContactRequest_Type.REJECT,
               ),
-            ),
+            ).writeToBuffer(),
+            onlySendIfNoReceiptsAreOpen: false,
+            onlyReturnEncryptedData: false,
+            blocking: true,
           );
           await twonlyDB.contactsDao.updateContact(
             contact.userId,

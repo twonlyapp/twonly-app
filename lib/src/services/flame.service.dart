@@ -5,7 +5,6 @@ import 'package:fixnum/fixnum.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -39,9 +38,9 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
       continue;
     }
 
-    await sendCipherTextToGroup(
-      group.groupId,
-      EncryptedContent(
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: group.groupId,
+      content: EncryptedContent(
         flameSync: EncryptedContent_FlameSync(
           flameCounter: Int64(flameResult.counter),
           lastFlameCounterChange: Int64(
@@ -50,7 +49,8 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
           bestFriend: group.groupId == bestFriend.groupId,
           forceUpdate: group.groupId == forceForGroup,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
     );
 
     await twonlyDB.groupsDao.updateGroup(

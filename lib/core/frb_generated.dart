@@ -292,7 +292,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateBridgeApiRustApiPerformPasswordlessRecoveryHeartbeat();
 
-  Future<PreparedOutgoingMessage?> crateBridgeApiRustApiPrepareQueuedMessage({
+  Future<Uint8List?> crateBridgeApiRustApiPrepareQueuedMessage({
     required String receiptId,
   });
 
@@ -352,7 +352,7 @@ abstract class RustLibApi extends BaseApi {
     required PlatformInt64 contactId,
   });
 
-  Future<PreparedOutgoingMessage?> crateBridgeApiRustApiSendEncryptedContent({
+  Future<Uint8List?> crateBridgeApiRustApiSendEncryptedContent({
     required PlatformInt64 contactId,
     required List<int> content,
     String? messageId,
@@ -375,7 +375,6 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBridgeApiRustApiSendTextMessage({
     required PlatformInt64 userId,
     required List<int> body,
-    Uint8List? pushData,
   });
 
   Future<void> crateBridgeApiRustApiSendTyping({
@@ -2329,7 +2328,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<PreparedOutgoingMessage?> crateBridgeApiRustApiPrepareQueuedMessage({
+  Future<Uint8List?> crateBridgeApiRustApiPrepareQueuedMessage({
     required String receiptId,
   }) {
     return handler.executeNormal(
@@ -2345,8 +2344,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_opt_box_autoadd_prepared_outgoing_message,
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiPrepareQueuedMessageConstMeta,
@@ -2812,7 +2810,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<PreparedOutgoingMessage?> crateBridgeApiRustApiSendEncryptedContent({
+  Future<Uint8List?> crateBridgeApiRustApiSendEncryptedContent({
     required PlatformInt64 contactId,
     required List<int> content,
     String? messageId,
@@ -2838,8 +2836,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_opt_box_autoadd_prepared_outgoing_message,
+          decodeSuccessData: sse_decode_opt_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiSendEncryptedContentConstMeta,
@@ -2951,7 +2948,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<void> crateBridgeApiRustApiSendTextMessage({
     required PlatformInt64 userId,
     required List<int> body,
-    Uint8List? pushData,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -2959,7 +2955,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_i_64(userId, serializer);
           sse_encode_list_prim_u_8_loose(body, serializer);
-          sse_encode_opt_list_prim_u_8_strict(pushData, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2972,7 +2967,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiSendTextMessageConstMeta,
-        argValues: [userId, body, pushData],
+        argValues: [userId, body],
         apiImpl: this,
       ),
     );
@@ -2981,7 +2976,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBridgeApiRustApiSendTextMessageConstMeta =>
       const TaskConstMeta(
         debugName: "rust_api_send_text_message",
-        argNames: ["userId", "body", "pushData"],
+        argNames: ["userId", "body"],
       );
 
   @override
@@ -5303,14 +5298,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PreparedOutgoingMessage dco_decode_box_autoadd_prepared_outgoing_message(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_prepared_outgoing_message(raw);
-  }
-
-  @protected
   TwonlySafeBackup dco_decode_box_autoadd_twonly_safe_backup(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_twonly_safe_backup(raw);
@@ -5619,16 +5606,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PreparedOutgoingMessage? dco_decode_opt_box_autoadd_prepared_outgoing_message(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_prepared_outgoing_message(raw);
-  }
-
-  @protected
   TwonlySafeBackup? dco_decode_opt_box_autoadd_twonly_safe_backup(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_twonly_safe_backup(raw);
@@ -5689,18 +5666,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kyberPreKeyId: dco_decode_i_64(arr[2]),
       kyberPreKey: dco_decode_list_prim_u_8_strict(arr[3]),
       kyberPreKeySignature: dco_decode_list_prim_u_8_strict(arr[4]),
-    );
-  }
-
-  @protected
-  PreparedOutgoingMessage dco_decode_prepared_outgoing_message(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return PreparedOutgoingMessage(
-      message: dco_decode_list_prim_u_8_strict(arr[0]),
-      pushData: dco_decode_opt_list_prim_u_8_strict(arr[1]),
     );
   }
 
@@ -6198,14 +6163,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PreparedOutgoingMessage sse_decode_box_autoadd_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_prepared_outgoing_message(deserializer));
-  }
-
-  @protected
   TwonlySafeBackup sse_decode_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   ) {
@@ -6633,19 +6590,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PreparedOutgoingMessage? sse_decode_opt_box_autoadd_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_prepared_outgoing_message(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   TwonlySafeBackup? sse_decode_opt_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   ) {
@@ -6751,19 +6695,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kyberPreKeyId: var_kyberPreKeyId,
       kyberPreKey: var_kyberPreKey,
       kyberPreKeySignature: var_kyberPreKeySignature,
-    );
-  }
-
-  @protected
-  PreparedOutgoingMessage sse_decode_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_message = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_pushData = sse_decode_opt_list_prim_u_8_strict(deserializer);
-    return PreparedOutgoingMessage(
-      message: var_message,
-      pushData: var_pushData,
     );
   }
 
@@ -7443,15 +7374,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_prepared_outgoing_message(
-    PreparedOutgoingMessage self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepared_outgoing_message(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_twonly_safe_backup(
     TwonlySafeBackup self,
     SseSerializer serializer,
@@ -7835,19 +7757,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_prepared_outgoing_message(
-    PreparedOutgoingMessage? self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_prepared_outgoing_message(self, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_opt_box_autoadd_twonly_safe_backup(
     TwonlySafeBackup? self,
     SseSerializer serializer,
@@ -7938,16 +7847,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_64(self.kyberPreKeyId, serializer);
     sse_encode_list_prim_u_8_strict(self.kyberPreKey, serializer);
     sse_encode_list_prim_u_8_strict(self.kyberPreKeySignature, serializer);
-  }
-
-  @protected
-  void sse_encode_prepared_outgoing_message(
-    PreparedOutgoingMessage self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_list_prim_u_8_strict(self.message, serializer);
-    sse_encode_opt_list_prim_u_8_strict(self.pushData, serializer);
   }
 
   @protected

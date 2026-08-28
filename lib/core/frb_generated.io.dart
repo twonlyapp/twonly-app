@@ -151,11 +151,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_box_autoadd_passwordless_recovery_config(dynamic raw);
 
   @protected
-  PreparedOutgoingMessage dco_decode_box_autoadd_prepared_outgoing_message(
-    dynamic raw,
-  );
-
-  @protected
   TwonlySafeBackup dco_decode_box_autoadd_twonly_safe_backup(dynamic raw);
 
   @protected
@@ -284,11 +279,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_opt_box_autoadd_passwordless_recovery_config(dynamic raw);
 
   @protected
-  PreparedOutgoingMessage? dco_decode_opt_box_autoadd_prepared_outgoing_message(
-    dynamic raw,
-  );
-
-  @protected
   TwonlySafeBackup? dco_decode_opt_box_autoadd_twonly_safe_backup(dynamic raw);
 
   @protected
@@ -310,9 +300,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
-
-  @protected
-  PreparedOutgoingMessage dco_decode_prepared_outgoing_message(dynamic raw);
 
   @protected
   (PlatformInt64, Uint8List) dco_decode_record_i_64_list_prim_u_8_strict(
@@ -489,11 +476,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  PreparedOutgoingMessage sse_decode_box_autoadd_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   TwonlySafeBackup sse_decode_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   );
@@ -642,11 +624,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  PreparedOutgoingMessage? sse_decode_opt_box_autoadd_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   TwonlySafeBackup? sse_decode_opt_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   );
@@ -672,11 +649,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
-
-  @protected
-  PreparedOutgoingMessage sse_decode_prepared_outgoing_message(
-    SseDeserializer deserializer,
-  );
 
   @protected
   (PlatformInt64, Uint8List) sse_decode_record_i_64_list_prim_u_8_strict(
@@ -939,12 +911,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_prepared_outgoing_message(
-    PreparedOutgoingMessage self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_twonly_safe_backup(
     TwonlySafeBackup self,
     SseSerializer serializer,
@@ -1125,12 +1091,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_opt_box_autoadd_prepared_outgoing_message(
-    PreparedOutgoingMessage? self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_opt_box_autoadd_twonly_safe_backup(
     TwonlySafeBackup? self,
     SseSerializer serializer,
@@ -1163,12 +1123,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_pqc_pre_key_input(
     PqcPreKeyInput self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_prepared_outgoing_message(
-    PreparedOutgoingMessage self,
     SseSerializer serializer,
   );
 

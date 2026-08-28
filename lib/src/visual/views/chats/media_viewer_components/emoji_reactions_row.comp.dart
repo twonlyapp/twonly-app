@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/media_viewer_components/reaction_buttons.comp.dart';
 
@@ -29,15 +28,16 @@ Future<void> sendReaction(
     emoji,
     false,
   );
-  await sendCipherTextToGroup(
-    groupId,
-    EncryptedContent(
+  await RustApi.sendEncryptedContentToGroup(
+    groupId: groupId,
+    content: EncryptedContent(
       reaction: EncryptedContent_Reaction(
         targetMessageId: messageId,
         emoji: emoji,
         remove: false,
       ),
-    ),
+    ).writeToBuffer(),
+    onlySendIfNoReceiptsAreOpen: false,
   );
 }
 

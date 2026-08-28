@@ -1,6 +1,6 @@
 use super::Tester;
 use prost::Message as _;
-use rust_lib_twonly::api::messages::incoming::client2client::recovery::perform_heartbeat;
+use rust_lib_twonly::api::messages::incoming::recovery::perform_heartbeat;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};
 use rust_lib_twonly::bridge::api::ApiConnectionState;

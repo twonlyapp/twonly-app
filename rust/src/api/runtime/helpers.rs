@@ -3,7 +3,7 @@
  *
  */
 
-use crate::api::messages::incoming::client2client::{messages, recovery};
+use crate::api::messages::incoming::{messages, recovery};
 use crate::api::proto::server_to_client;
 use crate::api::runtime::ApiRuntime;
 use crate::api::Server;

@@ -4,7 +4,6 @@
  */
 
 pub mod incoming;
-#[doc(hidden)]
 pub mod outgoing;
 
 pub(crate) fn content_type_kind(

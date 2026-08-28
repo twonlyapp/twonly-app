@@ -1,9 +1,9 @@
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
@@ -217,9 +217,9 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
                     _playerController.startPlayer();
                     if (widget.message.senderId != null &&
                         widget.message.openedAt == null) {
-                      notifyContactAboutOpeningMessage(
-                        widget.message.senderId!,
-                        [widget.message.messageId],
+                      RustApi.notifyMessagesOpened(
+                        contactId: widget.message.senderId!,
+                        messageIds: [widget.message.messageId],
                       );
                     }
                   }

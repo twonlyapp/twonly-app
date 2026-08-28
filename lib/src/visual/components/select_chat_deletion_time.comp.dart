@@ -8,7 +8,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
@@ -96,14 +95,15 @@ class _SelectChatDeletionTimeListTitleState
             ),
           ),
         );
-        await sendCipherTextToGroup(
-          group!.groupId,
-          EncryptedContent(
+        await RustApi.sendEncryptedContentToGroup(
+          groupId: group!.groupId,
+          content: EncryptedContent(
             groupUpdate: EncryptedContent_GroupUpdate(
               groupActionType: GroupActionType.changeDisplayMaxTime.name,
               newDeleteMessagesAfterMilliseconds: Int64(selected),
             ),
-          ),
+          ).writeToBuffer(),
+          onlySendIfNoReceiptsAreOpen: false,
         );
       } else {
         if (!await updateChatDeletionTime(group!, selected)) {

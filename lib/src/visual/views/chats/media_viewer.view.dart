@@ -17,7 +17,6 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
@@ -417,9 +416,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       markAsOpenMessageIDs = messageIds;
     }
 
-    await notifyContactAboutOpeningMessage(
-      currentMessage!.senderId!,
-      markAsOpenMessageIDs,
+    await RustApi.notifyMessagesOpened(
+      contactId: currentMessage!.senderId!,
+      messageIds: markAsOpenMessageIDs,
     );
   }
 
@@ -531,14 +530,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         mediaStored: Value(true),
       ),
     );
-    await sendCipherTextToGroup(
-      widget.group.groupId,
-      pb.EncryptedContent(
+    await RustApi.sendEncryptedContentToGroup(
+      groupId: widget.group.groupId,
+      content: pb.EncryptedContent(
         mediaUpdate: pb.EncryptedContent_MediaUpdate(
           type: pb.EncryptedContent_MediaUpdate_Type.STORED,
           targetMessageId: msg.messageId,
         ),
-      ),
+      ).writeToBuffer(),
+      onlySendIfNoReceiptsAreOpen: false,
     );
     setState(() {
       imageSaved = true;
@@ -620,10 +620,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void _sendTextMessage() {
     if (textMessageController.text.isNotEmpty) {
       unawaited(
-        insertAndSendTextMessage(
-          widget.group.groupId,
-          textMessageController.text,
-          currentMessage!.messageId,
+        RustApi.insertAndSendText(
+          groupId: widget.group.groupId,
+          text: textMessageController.text,
+          quoteMessageId: currentMessage!.messageId,
         ),
       );
       textMessageController.clear();
