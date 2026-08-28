@@ -63,7 +63,7 @@ pub(crate) async fn handle_passwordless_recovery(
 }
 
 pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
-    let now = chrono::Utc::now();
+    let now = crate::utils::current_time().with_timezone(&chrono::Utc);
     let base_config = UserConfig::load_required_from(ctx)?;
     let mut config = base_config.clone();
 
@@ -164,11 +164,15 @@ pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
     }
 
     if config != base_config {
-        UserConfig::update_json(
-            ctx,
-            &serde_json::to_string(&base_config)?,
-            &serde_json::to_string(&config)?,
-        )?;
+        let updated_recovery = config.password_less_recovery.as_ref();
+        let last_server_heartbeat = updated_recovery.and_then(|r| r.last_server_heartbeat);
+        let last_contact_heartbeat = updated_recovery.and_then(|r| r.last_contact_heartbeat);
+        let config = UserConfig::update(ctx, |current| {
+            if let Some(recovery) = current.password_less_recovery.as_mut() {
+                recovery.last_server_heartbeat = last_server_heartbeat;
+                recovery.last_contact_heartbeat = last_contact_heartbeat;
+            }
+        })?;
         if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
             (callbacks.api.user_config_changed)(config).await;
         }

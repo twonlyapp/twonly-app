@@ -4,9 +4,11 @@
  */
 
 use crate::api::proto::client::encrypted_content;
+use crate::context::Context;
 use crate::database::app::tables::{Group, Message, MessageType, NewMessage};
 use crate::error::Result;
-use crate::utils::milliseconds_to_seconds;
+use crate::services::mediafiles::MediaFileService;
+use crate::utils::{current_time, milliseconds_to_seconds};
 use encrypted_content::message_update::Type;
 use sqlx::{Sqlite, Transaction};
 
@@ -28,7 +30,7 @@ pub(crate) async fn handle_text_message(
         .sender_id(from_user_id)
         .content(&message.text)
         .maybe_quotes_message_id(message.quote_message_id.as_deref())
-        .ack_by_server(chrono::Utc::now().timestamp())
+        .ack_by_server(current_time().timestamp())
         .build()
         .insert(t)
         .await?;
@@ -39,6 +41,7 @@ pub(crate) async fn handle_text_message(
 }
 
 pub(crate) async fn handle_message_update(
+    ctx: &std::sync::Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     update: encrypted_content::MessageUpdate,
@@ -51,146 +54,32 @@ pub(crate) async fn handle_message_update(
     match update_type {
         Type::Opened => {
             for message_id in update.multiple_target_message_ids {
-                let action_at = sqlx::query_scalar::<_, i64>(
-                    "SELECT MAX(created_at, ?) FROM messages WHERE message_id = ?",
-                )
-                .bind(timestamp)
-                .bind(&message_id)
-                .fetch_optional(&mut **t)
-                .await?;
-
-                let Some(action_at) = action_at else { continue };
-
-                sqlx::query!(
-                    r#"
-                    INSERT INTO message_actions(message_id, contact_id, type, action_at)
-                    VALUES (?, ?, 'openedAt', ?)
-                    ON CONFLICT(message_id, contact_id, type)
-                    DO UPDATE SET action_at = excluded.action_at
-                    "#,
-                    message_id,
-                    from_user_id,
-                    action_at,
-                )
-                .execute(&mut **t)
-                .await?;
-
-                sqlx::query!(
-                    r#"UPDATE messages SET opened_at = ?, opened_by_all = CASE WHEN NOT EXISTS(
-                           SELECT 1 FROM group_members gm
-                           WHERE gm.group_id = messages.group_id AND NOT EXISTS(
-                               SELECT 1 FROM message_actions ma
-                               WHERE ma.message_id = messages.message_id
-                                 AND ma.contact_id = gm.contact_id AND ma.type = 'openedAt'
-                           )
-                       ) THEN ? ELSE NULL END
-                       WHERE message_id = ?"#,
-                    action_at,
-                    action_at,
-                    message_id,
-                )
-                .execute(&mut **t)
-                .await?;
+                Message::record_opened(t, &message_id, from_user_id, timestamp).await?;
             }
         }
         Type::Delete => {
-            let media_id = sqlx::query_scalar!(
-                "SELECT media_id FROM messages WHERE message_id = ? AND sender_id = ?",
-                update.sender_message_id,
+            let deleted_media = Message::delete_from_sender(
+                t,
+                update.sender_message_id.as_deref(),
                 from_user_id,
-            )
-            .fetch_optional(&mut **t)
-            .await?
-            .flatten();
-
-            sqlx::query!(
-                "DELETE FROM message_histories WHERE message_id = ?",
-                update.sender_message_id
-            )
-            .execute(&mut **t)
-            .await?;
-
-            sqlx::query!(
-                "DELETE FROM receipts WHERE message_id = ?",
-                update.sender_message_id
-            )
-            .execute(&mut **t)
-            .await?;
-
-            sqlx::query!(
-                r#"
-                UPDATE messages
-                SET is_deleted_from_sender = 1, content = NULL, media_id = NULL, modified_at = ?
-                WHERE message_id = ? AND sender_id = ?
-                "#,
                 timestamp,
-                update.sender_message_id,
-                from_user_id,
             )
-            .execute(&mut **t)
             .await?;
 
-            if let Some(media_id) = media_id {
-                let references = sqlx::query_scalar!(
-                    "SELECT COUNT(*) FROM messages WHERE media_id = ?",
-                    media_id,
-                )
-                .fetch_one(&mut **t)
-                .await?;
-
-                if references == 0 {
-                    let media_type = sqlx::query_scalar!(
-                        "SELECT type FROM media_files WHERE media_id = ?",
-                        media_id,
-                    )
-                    .fetch_optional(&mut **t)
+            if let Some(media) = deleted_media {
+                MediaFileService::new(ctx)
+                    .remove_files_if_deleted(t, &media.media_id, &media.media_type)
                     .await?;
-                    sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
-                        .execute(&mut **t)
-                        .await?;
-                    if let Some(media_type) = media_type {
-                        let ctx = crate::context::Context::get_static()?;
-                        let ctx = ctx.clone();
-                        tokio::spawn(async move {
-                            // Let the surrounding message transaction commit before
-                            // applying its corresponding filesystem side effect.
-                            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                            if let Err(error) =
-                                crate::services::mediafiles::MediaFileService::new(&ctx)
-                                    .remove_files_if_deleted(&media_id, &media_type)
-                                    .await
-                            {
-                                tracing::warn!(media_id, %error, "could not remove media files");
-                            }
-                        });
-                    }
-                }
             }
         }
         Type::EditText => {
-            sqlx::query!(
-                r#"INSERT INTO message_histories(message_id, content, created_at)
-                   SELECT message_id, content, ? FROM messages
-                   WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL"#,
-                timestamp,
-                update.sender_message_id,
+            Message::edit_text(
+                t,
+                update.sender_message_id.as_deref(),
                 from_user_id,
-            )
-            .execute(&mut **t)
-            .await?;
-
-            sqlx::query!(
-                r#"
-                UPDATE messages
-                SET content = ?, modified_at = ?
-                WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL
-                "#,
-                update.text,
+                update.text.as_deref(),
                 timestamp,
-                update.sender_message_id,
-                from_user_id,
             )
-            .execute(&mut **t)
             .await?;
         }
     }

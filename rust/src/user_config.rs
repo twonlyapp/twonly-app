@@ -375,7 +375,7 @@ impl UserConfig {
     /// Atomically updates the latest persisted configuration with a typed Rust
     /// mutation. Unlike `update_json`, this does not need a caller snapshot:
     /// loading, mutation, and saving all happen while holding the write lock.
-    pub(crate) fn update(context: &Context, mutate: impl FnOnce(&mut Self)) -> Result<()> {
+    pub(crate) fn update(context: &Context, mutate: impl FnOnce(&mut Self)) -> Result<Self> {
         let _guard = config_lock()
             .write()
             .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
@@ -383,7 +383,7 @@ impl UserConfig {
             .ok_or_else(|| twonly_error!("user configuration is unavailable"))?;
         mutate(&mut config);
         Self::save_unlocked(context, &config)?;
-        Ok(())
+        Ok(config)
     }
 
     /// Applies only fields changed relative to the caller's original snapshot.

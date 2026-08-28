@@ -26,12 +26,12 @@ static ALREADY_QUEUED_RECEIPTS: LazyLock<std::sync::Mutex<HashMap<String, std::t
     LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
 
 pub(crate) async fn queue_encrypted_content(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     target_user_id: i64,
     content: proto::EncryptedContent,
     contact_will_send_receipt: bool,
 ) -> Result<String> {
-    let Ok(Some(contact)) = Contact::get_contact_by_id(transaction, target_user_id).await else {
+    let Some(contact) = Contact::get_contact_by_id(t, target_user_id).await? else {
         return Err(twonly_error!("missing contact"));
     };
 
@@ -48,9 +48,10 @@ pub(crate) async fn queue_encrypted_content(
     .encode_to_vec();
 
     let receipt_id = new_uuid_v4();
+
     NewReceipt::new(&receipt_id, target_user_id, &message)
         .contact_will_send_receipt(contact_will_send_receipt)
-        .insert(transaction)
+        .insert(t)
         .await?;
 
     Ok(receipt_id)
@@ -58,21 +59,22 @@ pub(crate) async fn queue_encrypted_content(
 
 pub(crate) async fn process_encrypted_or_queue_error(
     ctx: &Arc<Context>,
-    tr: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     receipt_id: &str,
     content: proto::EncryptedContent,
 ) -> Result<Option<String>> {
     let group_id = content.group_id.clone();
 
-    match handle_encrypted(ctx, tr, from_user_id, receipt_id, content).await {
+    match handle_encrypted(ctx, t, from_user_id, receipt_id, content).await {
         Ok(()) => Ok(None),
         Err(error) => {
             let description = error.to_string();
             if description.contains("group join arrived before") {
-                queue_retry_control(tr, from_user_id, receipt_id).await?;
+                queue_retry_control(t, from_user_id, receipt_id).await?;
                 return Ok(Some(receipt_id.to_owned()));
             }
+
             let error_type = if description.contains("not a member") {
                 Some(Type::GroupNotFoundOrNotAMember)
             } else if description.contains("not implemented in Rust") {
@@ -80,9 +82,11 @@ pub(crate) async fn process_encrypted_or_queue_error(
             } else {
                 None
             };
+
             let Some(error_type) = error_type else {
                 return Err(error);
             };
+
             let outgoing_receipt_id = new_uuid_v4();
             let response_content = proto::EncryptedContent {
                 group_id,
@@ -92,6 +96,7 @@ pub(crate) async fn process_encrypted_or_queue_error(
                 }),
                 ..Default::default()
             };
+
             let response = proto::Message {
                 r#type: proto::message::Type::Ciphertext as i32,
                 receipt_id: String::new(),
@@ -99,6 +104,7 @@ pub(crate) async fn process_encrypted_or_queue_error(
                 plaintext_content: None,
             }
             .encode_to_vec();
+
             sqlx::query!(
                 r#"
                 INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)
@@ -108,15 +114,16 @@ pub(crate) async fn process_encrypted_or_queue_error(
                 from_user_id,
                 response,
             )
-            .execute(&mut **tr)
+            .execute(&mut **t)
             .await?;
+
             Ok(Some(outgoing_receipt_id))
         }
     }
 }
 
 async fn queue_retry_control(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     receipt_id: &str,
 ) -> Result<()> {
@@ -130,6 +137,7 @@ async fn queue_retry_control(
         }),
     }
     .encode_to_vec();
+
     sqlx::query!(
         r#"
         INSERT OR REPLACE INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)
@@ -139,8 +147,9 @@ async fn queue_retry_control(
         from_user_id,
         response,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     Ok(())
 }
 
@@ -175,6 +184,7 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
         .map(String::from_utf8)
         .transpose()?
         .unwrap_or_else(|| "[Unknown]".into());
+
     let signal_version = if user.pqc_bundle.is_some() {
         "v2"
     } else {
@@ -215,7 +225,7 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
 }
 
 pub(crate) async fn queue_sender_delivery_receipt(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     receipt_id: &str,
 ) -> Result<()> {
@@ -226,6 +236,7 @@ pub(crate) async fn queue_sender_delivery_receipt(
         plaintext_content: None,
     }
     .encode_to_vec();
+
     sqlx::query!(
         r#"
         INSERT OR IGNORE INTO receipts(
@@ -236,8 +247,9 @@ pub(crate) async fn queue_sender_delivery_receipt(
         from_user_id,
         response,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     Ok(())
 }
 
@@ -275,9 +287,11 @@ async fn encrypt_v2_with_session_recovery(
                 contact_id,
                 "Signal session missing; rebuilding it from the server prekey bundle"
             );
+
             ContactService::new(ctx)
                 .establish_signal_session(contact_id)
                 .await?;
+
             encrypt(plaintext).await
         }
         result => result,

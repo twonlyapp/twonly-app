@@ -51,13 +51,16 @@ impl GroupService {
         let Some(best_friend) = groups.iter().max_by_key(|group| group.total_media_counter) else {
             return Ok(());
         };
+
         let best_friend_id = best_friend.group_id.clone();
         let now = current_time().timestamp();
         let start_today = now - now.rem_euclid(86_400);
+
         for group in groups {
             let Some(changed) = group.last_flame_counter_change else {
                 continue;
             };
+
             if changed < start_today
                 || group
                     .last_flame_sync
@@ -65,9 +68,11 @@ impl GroupService {
             {
                 continue;
             }
+
             if group.flame_counter <= 2 && group.group_id != best_friend_id {
                 continue;
             }
+
             MessageService::new(&self.ctx)
                 .send_to_group(
                     group.group_id.clone(),
@@ -85,6 +90,7 @@ impl GroupService {
                     false,
                 )
                 .await?;
+
             Group::set_last_flame_sync(&db.pool, &group.group_id, now).await?;
         }
         db.notify_committed(["groups"]);

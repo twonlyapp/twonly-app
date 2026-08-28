@@ -5,12 +5,14 @@
 
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::{self as proto, encrypted_content};
+use crate::api::proto::server_to_client;
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group, UpdateContact};
 use crate::error::{Result, TwonlyError};
 use crate::signal::engine::FrbPreKeyBundle;
+use crate::user_config::UserConfig;
 use prost::Message as _;
 use std::io::Write as _;
 use std::sync::Arc;
@@ -73,7 +75,7 @@ impl ContactService {
 
     async fn process_user_prekey_bundle(
         &self,
-        user: &crate::api::proto::server_to_client::response::UserData,
+        user: &server_to_client::response::UserData,
     ) -> Result<()> {
         let missing = TwonlyError::ApiResponseMissingField;
         let pqc_bundle = user.pqc_bundle.as_ref().ok_or(missing("pqc_bundle"))?;
@@ -81,6 +83,7 @@ impl ContactService {
             .public_identity_key
             .clone()
             .ok_or(missing("public_identity_key"))?;
+
         let registration_id = user.registration_id.ok_or(missing("registration_id"))?;
 
         let (pre_key_id, pre_key_public, kyber_pre_key_id, kyber_pre_key_public, kyber_signature) =
@@ -136,6 +139,7 @@ impl ContactService {
         let contact = Contact::get_contact_by_id(&mut transaction, contact_id)
             .await?
             .ok_or_else(|| TwonlyError::Generic("contact request does not exist".into()))?;
+
         if contact.requested == 0 {
             return Err(TwonlyError::Generic(
                 "contact has no pending request".into(),
@@ -150,6 +154,7 @@ impl ContactService {
             .build()
             .update(&mut transaction)
             .await?;
+
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
         transaction.commit().await?;
         database.notify_committed(["contacts", "groups"]);
@@ -198,7 +203,7 @@ impl ContactService {
     }
 
     pub async fn send_profile(&self, contact_id: i64) -> Result<()> {
-        let config = crate::user_config::UserConfig::load_required_from(&self.ctx)?;
+        let config = UserConfig::load_required_from(&self.ctx)?;
 
         let avatar_svg_compressed = config
             .avatar_svg

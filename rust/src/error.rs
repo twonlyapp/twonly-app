@@ -125,6 +125,8 @@ pub enum TwonlyError {
     InvalidParams(#[from] InvalidParams),
     #[error("{0}")]
     InvalidOutputLen(#[from] InvalidOutputLen),
+    #[error("{0}")]
+    InvalidDigestLength(#[from] sha2::digest::InvalidLength),
     #[error("AES-GCM error")]
     AesGcm,
 

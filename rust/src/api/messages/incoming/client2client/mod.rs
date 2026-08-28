@@ -68,7 +68,7 @@ pub(crate) async fn handle_encrypted(
     }
 
     if let Some(update) = content.message_update {
-        return text_message::handle_message_update(t, from_user_id, update).await;
+        return text_message::handle_message_update(ctx, t, from_user_id, update).await;
     }
 
     if let Some(update) = content.media_update {

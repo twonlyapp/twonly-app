@@ -3,6 +3,7 @@
  *
  */
 
+use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::{encrypted_content, EncryptedContent};
 use crate::bridge::api::RustApi;
 use crate::context::Context;
@@ -11,7 +12,7 @@ use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce, Tag};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
-use sqlx::FromRow;
+use sqlx::{FromRow, Sqlite, Transaction};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -240,26 +241,28 @@ impl MediaFileService {
         let mac = media.encryption_mac.as_deref().ok_or_else(|| {
             TwonlyError::Generic(format!("media {} has no encryption MAC", media.media_id))
         })?;
-        let cipher = ChaCha20Poly1305::new_from_slice(key)
-            .map_err(|_| TwonlyError::Generic("invalid media encryption key".into()))?;
+
+        let cipher = ChaCha20Poly1305::new_from_slice(key)?;
+
         if nonce.len() != 12 {
             return Err(TwonlyError::Generic(
                 "invalid media encryption nonce".into(),
             ));
         }
+
         if mac.len() != 16 {
             return Err(TwonlyError::Generic("invalid media encryption MAC".into()));
         }
+
         let nonce = Nonce::from_slice(nonce);
         let tag = Tag::from_slice(mac);
         let mut bytes = std::fs::read(encrypted_path)?;
-        cipher
-            .decrypt_in_place_detached(nonce, b"", &mut bytes, tag)
-            .map_err(|_| TwonlyError::Generic("media authentication failed".into()))?;
+        cipher.decrypt_in_place_detached(nonce, b"", &mut bytes, tag)?;
 
         let temp_path = self.temp_path(&media.media_id, &media.media_type);
         Self::ensure_parent(&temp_path)?;
         std::fs::write(&temp_path, &bytes)?;
+
         let hash = Sha256::digest(&bytes).to_vec();
 
         // Keep the file update and state transition ordered: ready is only
@@ -273,6 +276,7 @@ impl MediaFileService {
         )
         .execute(&database.pool)
         .await?;
+
         std::fs::remove_file(encrypted_path)?;
         Ok(())
     }
@@ -285,6 +289,7 @@ impl MediaFileService {
         )
         .execute(&database.pool)
         .await?;
+
         let targets = sqlx::query_as::<_, ReuploadTarget>(
             r#"SELECT message_id, sender_id FROM messages
                WHERE media_id = ? AND opened_at IS NULL AND sender_id IS NOT NULL"#,
@@ -292,6 +297,7 @@ impl MediaFileService {
         .bind(media_id)
         .fetch_all(&database.pool)
         .await?;
+
         database.notify_committed(["media_files"]);
         drop(database);
 
@@ -303,7 +309,8 @@ impl MediaFileService {
                 }),
                 ..Default::default()
             };
-            crate::api::messages::outgoing::send_c2c_message_to_contact()
+
+            send_c2c_message_to_contact()
                 .ctx(&self.ctx)
                 .contact_id(target.sender_id)
                 .encrypted_content(content.encode_to_vec())
@@ -324,15 +331,20 @@ impl MediaFileService {
         Ok(())
     }
 
-    pub async fn remove_files_if_deleted(&self, media_id: &str, media_type: &str) -> Result<()> {
-        let database = self.ctx.get_app_database().await;
+    pub async fn remove_files_if_deleted(
+        &self,
+        t: &mut Transaction<'_, Sqlite>,
+        media_id: &str,
+        media_type: &str,
+    ) -> Result<()> {
         let still_exists = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM media_files WHERE media_id = ?)",
             media_id,
         )
-        .fetch_one(&database.pool)
+        .fetch_one(&mut **t)
         .await?
             != 0;
+
         if !still_exists {
             self.remove_files(media_id, media_type)?;
         }

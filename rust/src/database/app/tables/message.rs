@@ -9,6 +9,11 @@ use crate::error::{Result, TwonlyError};
 
 pub struct Message;
 
+pub struct DeletedMessageMedia {
+    pub media_id: String,
+    pub media_type: String,
+}
+
 pub enum MessageType<'a> {
     Text,
     Media,
@@ -37,6 +42,142 @@ impl<'a> NewMessage<'a> {
 }
 
 impl Message {
+    pub async fn record_opened(
+        t: &mut Transaction<'_, Sqlite>,
+        message_id: &str,
+        contact_id: i64,
+        timestamp: i64,
+    ) -> Result<()> {
+        let action_at = sqlx::query_scalar::<_, i64>(
+            "SELECT MAX(created_at, ?) FROM messages WHERE message_id = ?",
+        )
+        .bind(timestamp)
+        .bind(message_id)
+        .fetch_optional(&mut **t)
+        .await?;
+        let Some(action_at) = action_at else {
+            return Ok(());
+        };
+
+        sqlx::query!(
+            r#"INSERT INTO message_actions(message_id, contact_id, type, action_at)
+               VALUES (?, ?, 'openedAt', ?)
+               ON CONFLICT(message_id, contact_id, type)
+               DO UPDATE SET action_at = excluded.action_at"#,
+            message_id,
+            contact_id,
+            action_at,
+        )
+        .execute(&mut **t)
+        .await?;
+
+        sqlx::query!(
+            r#"UPDATE messages SET opened_at = ?, opened_by_all = CASE WHEN NOT EXISTS(
+                   SELECT 1 FROM group_members gm
+                   WHERE gm.group_id = messages.group_id AND NOT EXISTS(
+                       SELECT 1 FROM message_actions ma
+                       WHERE ma.message_id = messages.message_id
+                         AND ma.contact_id = gm.contact_id AND ma.type = 'openedAt'
+                   )
+               ) THEN ? ELSE NULL END
+               WHERE message_id = ?"#,
+            action_at,
+            action_at,
+            message_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn delete_from_sender(
+        t: &mut Transaction<'_, Sqlite>,
+        message_id: Option<&str>,
+        sender_id: i64,
+        timestamp: i64,
+    ) -> Result<Option<DeletedMessageMedia>> {
+        let media_id = sqlx::query_scalar!(
+            "SELECT media_id FROM messages WHERE message_id = ? AND sender_id = ?",
+            message_id,
+            sender_id,
+        )
+        .fetch_optional(&mut **t)
+        .await?
+        .flatten();
+
+        sqlx::query!(
+            "DELETE FROM message_histories WHERE message_id = ?",
+            message_id
+        )
+        .execute(&mut **t)
+        .await?;
+        sqlx::query!("DELETE FROM receipts WHERE message_id = ?", message_id)
+            .execute(&mut **t)
+            .await?;
+        sqlx::query!(
+            r#"UPDATE messages
+               SET is_deleted_from_sender = 1, content = NULL, media_id = NULL, modified_at = ?
+               WHERE message_id = ? AND sender_id = ?"#,
+            timestamp,
+            message_id,
+            sender_id,
+        )
+        .execute(&mut **t)
+        .await?;
+
+        let Some(media_id) = media_id else {
+            return Ok(None);
+        };
+        let references =
+            sqlx::query_scalar!("SELECT COUNT(*) FROM messages WHERE media_id = ?", media_id,)
+                .fetch_one(&mut **t)
+                .await?;
+        if references != 0 {
+            return Ok(None);
+        }
+        let media_type =
+            sqlx::query_scalar!("SELECT type FROM media_files WHERE media_id = ?", media_id,)
+                .fetch_optional(&mut **t)
+                .await?;
+        sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
+            .execute(&mut **t)
+            .await?;
+        Ok(media_type.map(|media_type| DeletedMessageMedia {
+            media_id,
+            media_type,
+        }))
+    }
+
+    pub async fn edit_text(
+        t: &mut Transaction<'_, Sqlite>,
+        message_id: Option<&str>,
+        sender_id: i64,
+        text: Option<&str>,
+        timestamp: i64,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"INSERT INTO message_histories(message_id, content, created_at)
+               SELECT message_id, content, ? FROM messages
+               WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL"#,
+            timestamp,
+            message_id,
+            sender_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        sqlx::query!(
+            r#"UPDATE messages SET content = ?, modified_at = ?
+               WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL"#,
+            text,
+            timestamp,
+            message_id,
+            sender_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        Ok(())
+    }
+
     pub async fn insert(tr: &mut Transaction<'_, Sqlite>, message: NewMessage<'_>) -> Result<()> {
         sqlx::query!(
             r#"
