@@ -153,7 +153,6 @@ void main() async {
     binding.addPostFrameCallback((_) async {
       await Future.delayed(const Duration(seconds: 1));
       unawaited(postStartupTasks());
-      unawaited(apiService.connect());
     });
   }
 

@@ -372,6 +372,20 @@ impl UserConfig {
         Self::save_json_unlocked(context, json)
     }
 
+    /// Atomically updates the latest persisted configuration with a typed Rust
+    /// mutation. Unlike `update_json`, this does not need a caller snapshot:
+    /// loading, mutation, and saving all happen while holding the write lock.
+    pub(crate) fn update(context: &Context, mutate: impl FnOnce(&mut Self)) -> Result<()> {
+        let _guard = config_lock()
+            .write()
+            .map_err(|_| twonly_error!("user configuration lock was poisoned"))?;
+        let mut config = Self::load_from_unlocked(context)?
+            .ok_or_else(|| twonly_error!("user configuration is unavailable"))?;
+        mutate(&mut config);
+        Self::save_unlocked(context, &config)?;
+        Ok(())
+    }
+
     /// Applies only fields changed relative to the caller's original snapshot.
     /// Concurrent updates from Flutter isolates or Rust therefore do not
     /// overwrite unrelated fields with stale values.
@@ -399,6 +413,10 @@ impl UserConfig {
         let config: Self = serde_json::from_str(json).map_err(|error| {
             TwonlyError::Generic(format!("invalid user configuration update: {error}"))
         })?;
+        Self::save_unlocked(context, &config)
+    }
+
+    fn save_unlocked(context: &Context, config: &Self) -> Result<String> {
         let normalized = serde_json::to_string(&config)?;
         let path = Self::path(context);
         let parent = path

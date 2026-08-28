@@ -23,10 +23,10 @@ class BackupService {
   static final Mutex _protected = Mutex();
 
   static String _getIdentityBackupUrl(String backupId) =>
-      '${apiService.apiEndpoint}/backup/identity/$backupId';
+      '${RustApi.apiBaseUrl(protocol: 'https')}backup/identity/$backupId';
 
   static String _getArchiveBackupUrl(String backupDownloadToken, int? userId) =>
-      '${apiService.apiEndpoint}/backup/archive/${userId == null ? '' : '${userId.toRadixString(16).padLeft(16, '0').toUpperCase()}/'}$backupDownloadToken';
+      '${RustApi.apiBaseUrl(protocol: 'https')}backup/archive/${userId == null ? '' : '${userId.toRadixString(16).padLeft(16, '0').toUpperCase()}/'}$backupDownloadToken';
 
   static final _backupUpdateController = StreamController<void>.broadcast();
   static Stream<void> get onBackupUpdated => _backupUpdateController.stream;

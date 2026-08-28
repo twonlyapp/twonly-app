@@ -9,7 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`, `LegacySignal`, `Logging`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`
 
 Future<void> initFlutterCallbacks({
   required int callbackId,
@@ -25,8 +25,6 @@ Future<void> initFlutterCallbacks({
     Uint8List,
   )
   legacySignalEncrypt,
-  required FutureOr<List<LegacySignalPreKey>> Function()
-  legacySignalGeneratePrekeys,
   required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
   required FutureOr<void> Function(String, String, PlatformInt64, String)
   apiMediaAction,
@@ -40,7 +38,6 @@ Future<void> initFlutterCallbacks({
   loggingGetStreamSink: loggingGetStreamSink,
   legacySignalDecrypt: legacySignalDecrypt,
   legacySignalEncrypt: legacySignalEncrypt,
-  legacySignalGeneratePrekeys: legacySignalGeneratePrekeys,
   apiResyncSignalSession: apiResyncSignalSession,
   apiMediaAction: apiMediaAction,
   apiVerificationProof: apiVerificationProof,
@@ -94,25 +91,4 @@ class LegacySignalEncryptResult {
           runtimeType == other.runtimeType &&
           ciphertext == other.ciphertext &&
           messageType == other.messageType;
-}
-
-class LegacySignalPreKey {
-  final PlatformInt64 id;
-  final Uint8List publicKey;
-
-  const LegacySignalPreKey({
-    required this.id,
-    required this.publicKey,
-  });
-
-  @override
-  int get hashCode => id.hashCode ^ publicKey.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LegacySignalPreKey &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          publicKey == other.publicKey;
 }

@@ -176,7 +176,7 @@ class _RegisterViewState extends State<RegisterView> {
 
       unawaited(FcmNotificationService.initAfterUserLoaded());
 
-      await apiService.authenticate();
+      await RustApi.reloadConfiguration();
       widget.callbackOnSuccess();
     } catch (e, stack) {
       Log.error('Error creating new user', error: e, stackTrace: stack);

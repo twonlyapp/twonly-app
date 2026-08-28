@@ -59,12 +59,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FutureOr<List<LegacySignalPreKey>> Function()
-  dco_decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
   FutureOr<void> Function(PlatformInt64)
   dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
 
@@ -213,9 +207,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  LegacySignalPreKey dco_decode_legacy_signal_pre_key(dynamic raw);
-
-  @protected
   LegacyTableMigrationCount dco_decode_legacy_table_migration_count(
     dynamic raw,
   );
@@ -225,9 +216,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw);
-
-  @protected
-  List<LegacySignalPreKey> dco_decode_list_legacy_signal_pre_key(dynamic raw);
 
   @protected
   List<LegacyTableMigrationCount> dco_decode_list_legacy_table_migration_count(
@@ -565,11 +553,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  LegacySignalPreKey sse_decode_legacy_signal_pre_key(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   LegacyTableMigrationCount sse_decode_legacy_table_migration_count(
     SseDeserializer deserializer,
   );
@@ -579,11 +562,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<FrbPqcPreKey> sse_decode_list_frb_pqc_pre_key(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  List<LegacySignalPreKey> sse_decode_list_legacy_signal_pre_key(
     SseDeserializer deserializer,
   );
 
@@ -823,13 +801,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-    FutureOr<List<LegacySignalPreKey>> Function() self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64) self,
     SseSerializer serializer,
@@ -1045,12 +1016,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_legacy_signal_pre_key(
-    LegacySignalPreKey self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_legacy_table_migration_count(
     LegacyTableMigrationCount self,
     SseSerializer serializer,
@@ -1062,12 +1027,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_frb_pqc_pre_key(
     List<FrbPqcPreKey> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_legacy_signal_pre_key(
-    List<LegacySignalPreKey> self,
     SseSerializer serializer,
   );
 

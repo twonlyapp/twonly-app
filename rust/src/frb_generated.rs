@@ -334,7 +334,6 @@ fn wire__crate__bridge__callbacks__init_flutter_callbacks_impl(
 let api_logging_get_stream_sink = decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_legacy_signal_decrypt = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_i_32_Output_legacy_signal_decrypt_result_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_legacy_signal_encrypt = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_opt_box_autoadd_legacy_signal_encrypt_result_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_legacy_signal_generate_prekeys = decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_resync_signal_session = decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_media_action = decode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_verification_proof = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
@@ -342,7 +341,7 @@ let api_api_create_push_avatars = decode_DartFn_Inputs_i_64_Output_unit_AnyhowEx
 let api_api_media_received = decode_DartFn_Inputs_String_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_user_config_changed = decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
                     transform_result_sse::<_, ()>((move ||  {
-                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_callback_id, api_logging_get_stream_sink, api_legacy_signal_decrypt, api_legacy_signal_encrypt, api_legacy_signal_generate_prekeys, api_api_resync_signal_session, api_api_media_action, api_api_verification_proof, api_api_create_push_avatars, api_api_media_received, api_api_user_config_changed); })?;   Ok(output_ok)
+                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_callback_id, api_logging_get_stream_sink, api_legacy_signal_decrypt, api_legacy_signal_encrypt, api_api_resync_signal_session, api_api_media_action, api_api_verification_proof, api_api_create_push_avatars, api_api_media_received, api_api_user_config_changed); })?;   Ok(output_ok)
                     })())
                 } })
 }
@@ -4202,40 +4201,6 @@ fn decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
         flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(dart_opaque.clone()))
     }
 }
-fn decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-    dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn() -> flutter_rust_bridge::DartFnFuture<Vec<crate::bridge::callbacks::LegacySignalPreKey>>
-{
-    use flutter_rust_bridge::IntoDart;
-
-    async fn body(
-        dart_opaque: flutter_rust_bridge::DartOpaque,
-    ) -> Vec<crate::bridge::callbacks::LegacySignalPreKey> {
-        let args = vec![];
-        let message = FLUTTER_RUST_BRIDGE_HANDLER
-            .dart_fn_invoke(dart_opaque, args)
-            .await;
-
-        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-        let action = deserializer.cursor.read_u8().unwrap();
-        let ans = match action {
-            0 => std::result::Result::Ok(
-                <Vec<crate::bridge::callbacks::LegacySignalPreKey>>::sse_decode(&mut deserializer),
-            ),
-            1 => std::result::Result::Err(
-                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
-            ),
-            _ => unreachable!(),
-        };
-        deserializer.end();
-        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
-        ans
-    }
-
-    move || {
-        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(dart_opaque.clone()))
-    }
-}
 fn decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     dart_opaque: flutter_rust_bridge::DartOpaque,
 ) -> impl Fn(i64) -> flutter_rust_bridge::DartFnFuture<()> {
@@ -4728,18 +4693,6 @@ impl SseDecode for crate::bridge::callbacks::LegacySignalEncryptResult {
     }
 }
 
-impl SseDecode for crate::bridge::callbacks::LegacySignalPreKey {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_id = <i64>::sse_decode(deserializer);
-        let mut var_publicKey = <Vec<u8>>::sse_decode(deserializer);
-        return crate::bridge::callbacks::LegacySignalPreKey {
-            id: var_id,
-            public_key: var_publicKey,
-        };
-    }
-}
-
 impl SseDecode for crate::bridge::wrapper::app_database::LegacyTableMigrationCount {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4771,20 +4724,6 @@ impl SseDecode for Vec<crate::signal::engine::FrbPqcPreKey> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::signal::engine::FrbPqcPreKey>::sse_decode(
-                deserializer,
-            ));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<crate::bridge::callbacks::LegacySignalPreKey> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<crate::bridge::callbacks::LegacySignalPreKey>::sse_decode(
                 deserializer,
             ));
         }
@@ -5913,27 +5852,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::callbacks::LegacySignalEnc
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bridge::callbacks::LegacySignalPreKey {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.id.into_into_dart().into_dart(),
-            self.public_key.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::bridge::callbacks::LegacySignalPreKey
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::bridge::callbacks::LegacySignalPreKey>
-    for crate::bridge::callbacks::LegacySignalPreKey
-{
-    fn into_into_dart(self) -> crate::bridge::callbacks::LegacySignalPreKey {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart
     for crate::bridge::wrapper::app_database::LegacyTableMigrationCount
 {
@@ -6651,14 +6569,6 @@ impl SseEncode for crate::bridge::callbacks::LegacySignalEncryptResult {
     }
 }
 
-impl SseEncode for crate::bridge::callbacks::LegacySignalPreKey {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.id, serializer);
-        <Vec<u8>>::sse_encode(self.public_key, serializer);
-    }
-}
-
 impl SseEncode for crate::bridge::wrapper::app_database::LegacyTableMigrationCount {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6683,16 +6593,6 @@ impl SseEncode for Vec<crate::signal::engine::FrbPqcPreKey> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::signal::engine::FrbPqcPreKey>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<crate::bridge::callbacks::LegacySignalPreKey> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <crate::bridge::callbacks::LegacySignalPreKey>::sse_encode(item, serializer);
         }
     }
 }

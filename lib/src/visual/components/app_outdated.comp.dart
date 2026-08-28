@@ -19,33 +19,25 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
   bool appIsOutdated = false;
   bool newDeviceRegistered = false;
 
-  late StreamSubscription<void> _subOutdated;
-  late StreamSubscription<void> _subNewDevice;
+  late StreamSubscription<ApiEvent> _apiEventSubscription;
 
   @override
   void dispose() {
-    _subOutdated.cancel();
-    _subNewDevice.cancel();
+    _apiEventSubscription.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _subOutdated = apiService.onAppOutdated.listen((_) async {
-      if (mounted) {
+    _apiEventSubscription = apiService.events.listen((event) async {
+      if (!mounted) return;
+      if (event.kind == ApiEventKind.appOutdated ||
+          event.kind == ApiEventKind.newDeviceRegistered) {
         await context.read<CustomChangeProvider>().updateConnectionState(false);
         setState(() {
-          appIsOutdated = true;
-        });
-      }
-    });
-
-    _subNewDevice = apiService.onNewDeviceRegistered.listen((_) async {
-      if (mounted) {
-        await context.read<CustomChangeProvider>().updateConnectionState(false);
-        setState(() {
-          newDeviceRegistered = true;
+          appIsOutdated = event.kind == ApiEventKind.appOutdated;
+          newDeviceRegistered = event.kind == ApiEventKind.newDeviceRegistered;
         });
       }
     });

@@ -3,13 +3,16 @@
  *
  */
 
-use crate::api::messages::incoming::client2client::messages;
+use crate::api::messages::incoming::client2client::{messages, recovery};
 use crate::api::proto::server_to_client;
 use crate::api::runtime::ApiRuntime;
+use crate::api::Server;
 
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
+use crate::services::groups::GroupService;
+use crate::services::mediafiles::MediaFileService;
 use prost::Message as ProstMessage;
 use std::future::Future;
 use std::pin::Pin;
@@ -37,9 +40,6 @@ pub(crate) fn response_error_code(bytes: &[u8]) -> Result<Option<i32>> {
 }
 
 pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bool) {
-    if in_background {
-        return;
-    }
     let ctx = ctx.clone();
     tokio::spawn(async move {
         // Wait a bit to let other initial state settle
@@ -50,11 +50,49 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
         if let Err(error) = replay.await {
             tracing::warn!("failed to replay API outbox: {error}");
         }
+
         if let Err(error) = ApiRuntime::replay_legacy_raw_outbox(&ctx).await {
             tracing::warn!("failed to replay legacy raw-byte outbox: {error}");
         }
+
         if let Err(error) = messages::retransmit_queued_receipts(&ctx).await {
             tracing::warn!("failed to retransmit queued receipts: {error}");
+        }
+        if let Err(error) = MediaFileService::new(&ctx).download_pending().await {
+            tracing::warn!("failed to download pending media: {error}");
+        }
+
+        if in_background {
+            return;
+        }
+
+        if let Err(error) = GroupService::new(&ctx).on_connected().await {
+            tracing::warn!("group post-connection maintenance failed: {error}");
+        }
+
+        if let Err(error) = Server::check_for_deleted_usernames(&ctx).await {
+            tracing::warn!("deleted-username refresh failed: {error}");
+        }
+
+        if let Err(error) = recovery::perform_heartbeat(&ctx).await {
+            tracing::warn!("passwordless recovery heartbeat failed: {error}");
+        }
+
+        if let Err(error) = ctx
+            .get_user_discovery()
+            .get()
+            .await
+            .on_connected(&ctx)
+            .await
+        {
+            tracing::warn!("user-discovery post-connection refresh failed: {error}");
+        }
+
+        let signal_engine = ctx.get_signal_engine().lock().await;
+        if let Some(engine) = signal_engine.as_ref() {
+            if let Err(error) = engine.on_connected(&ctx).await {
+                tracing::warn!("Signal key maintenance failed: {error}");
+            }
         }
     });
 }

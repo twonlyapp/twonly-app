@@ -37,14 +37,21 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       onError: _updateStreamOnError,
     );
 
-    _planSub = apiService.onPlanUpdated.listen(updatePlan);
-    _connSub = apiService.onConnectionStateUpdated.listen((_) async {
-      try {
-        if (userService.isUserCreated) {
-          updatePlan(planFromString(userService.currentUser.subscriptionPlan));
+    _apiSub = apiService.events.listen((event) async {
+      if (event.kind == ApiEventKind.planUpdated) {
+        updatePlan(planFromString(event.message ?? ''));
+      }
+
+      if (event.kind == ApiEventKind.connectionStateChanged) {
+        try {
+          if (userService.isUserCreated) {
+            updatePlan(
+              planFromString(userService.currentUser.subscriptionPlan),
+            );
+          }
+        } catch (e) {
+          Log.error(e);
         }
-      } catch (e) {
-        Log.error(e);
       }
     });
 
@@ -63,8 +70,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   late StreamSubscription<List<PurchaseDetails>> _subscription;
   final InAppPurchase iapConnection = IAPConnection.instance;
 
-  late StreamSubscription<SubscriptionPlan> _planSub;
-  late StreamSubscription<bool> _connSub;
+  late StreamSubscription<ApiEvent> _apiSub;
   bool _userTriggeredBuyButton = false;
 
   void updatePlan(SubscriptionPlan newPlan) {
@@ -228,7 +234,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       if (currentPlan != SubscriptionPlan.Family.name &&
           currentPlan != SubscriptionPlan.Pro.name) {
         for (var i = 0; i < 100; i++) {
-          if (apiService.isAuthenticated) {
+          if (await RustApi.connectionState() ==
+              ApiConnectionState.authenticated) {
             Log.info(
               'current user does not have a sub: ${purchaseDetails.productID}',
             );
@@ -251,8 +258,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   @override
   void dispose() {
-    _planSub.cancel();
-    _connSub.cancel();
+    _apiSub.cancel();
     _subscription.cancel();
     super.dispose();
   }

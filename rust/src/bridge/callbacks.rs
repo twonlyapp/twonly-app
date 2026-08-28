@@ -35,12 +35,6 @@ pub struct LegacySignalEncryptResult {
     pub message_type: i32,
 }
 
-#[derive(Clone, Debug)]
-pub struct LegacySignalPreKey {
-    pub id: i64,
-    pub public_key: Vec<u8>,
-}
-
 // This will also generate the function init_flutter_callbacks which MUST be called from Flutter to initialize the callbacks
 callback_generator! {
     FlutterCallbacks {
@@ -49,8 +43,7 @@ callback_generator! {
         },
         LegacySignal legacy_signal {
             decrypt: (i64, Vec<u8>, i32) => LegacySignalDecryptResult,
-            encrypt: (i64, Vec<u8>) => Option<LegacySignalEncryptResult>,
-            generate_prekeys: () => Vec<LegacySignalPreKey>
+            encrypt: (i64, Vec<u8>) => Option<LegacySignalEncryptResult>
         },
         Api api {
             resync_signal_session: (i64) => (),

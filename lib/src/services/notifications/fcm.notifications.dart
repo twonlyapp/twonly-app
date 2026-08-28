@@ -97,7 +97,8 @@ class FcmNotificationService {
             ..updateFcmToken = true
             ..fcmToken = fcmToken;
         });
-        if (apiService.isAuthenticated) {
+        if (await RustApi.connectionState() ==
+            ApiConnectionState.authenticated) {
           if (await _uploadFcmToken(fcmToken)) {
             await UserService.update((u) {
               u.updateFcmToken = false;
@@ -114,7 +115,8 @@ class FcmNotificationService {
                 ..updateFcmToken = true
                 ..fcmToken = fcmToken;
             });
-            if (apiService.isAuthenticated) {
+            if (await RustApi.connectionState() ==
+                ApiConnectionState.authenticated) {
               if (await _uploadFcmToken(fcmToken)) {
                 await UserService.update((u) {
                   u.updateFcmToken = false;
@@ -161,7 +163,10 @@ class FcmNotificationService {
     // This is just a workarround until the new Rust decryption is enrolled fully.
     final pushDataString = message.data['push_data'] as String?;
     if (pushDataString != null) {
-      if (apiService.isConnected) {
+      final apiState = await RustApi.connectionState();
+      if (apiState == ApiConnectionState.connected ||
+          apiState == ApiConnectionState.authenticating ||
+          apiState == ApiConnectionState.authenticated) {
         Log.info('Got FCM message, but API is connected...');
       } else {
         Log.info('Trying to connect to the API in the background.');

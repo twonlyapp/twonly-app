@@ -3,7 +3,7 @@
  *
  */
 
-use super::client::ApiClient;
+use super::client::{ApiClient, API_PERMANENTLY_REJECTED};
 use crate::api::messages::incoming::handle_server_message;
 use crate::api::proto::{client_to_server, server_to_client};
 use crate::bridge::api::{ApiConnectionState, ApiEvent, ApiEventKind};
@@ -203,6 +203,7 @@ impl ApiClient {
         {
             self.set_state(ApiConnectionState::PermanentlyRejected)
                 .await;
+            API_PERMANENTLY_REJECTED.store(true, Ordering::Release);
             self.deliberately_closed.store(true, Ordering::Release);
             let kind = if code == ErrorCode::AppVersionOutdated as i32 {
                 ApiEventKind::AppOutdated
@@ -214,8 +215,10 @@ impl ApiClient {
                 state: Some(ApiConnectionState::PermanentlyRejected),
                 message: None,
             });
-            if let Some(_) = self.ws_client.lock().await.take() {
-                // Drop client to disconnect
+            if let Some(client) = self.ws_client.lock().await.take() {
+                if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
+                    tracing::warn!(%error, "permanently rejected WebSocket did not shut down cleanly");
+                }
             }
         }
         if code == ErrorCode::UserIdNotFound as i32 {

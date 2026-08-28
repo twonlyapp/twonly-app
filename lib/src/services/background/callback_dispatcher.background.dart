@@ -127,17 +127,20 @@ Future<bool> backgroundFetch({
 
   final stopwatch = Stopwatch()..start();
 
-  // Issue: Because the background isolate can be reused across multiple periodic tasks,
-  // the API connection state might be stale or disconnected from a previous run.
-  // Explicitly close it here to ensure a clean slate before connecting.
-  await apiService.close(null);
-
-  if (!await apiService.connect()) {
-    Log.info('Could not connect to the api. Returning early.');
-    return false;
+  var authenticated = false;
+  for (var attempt = 0; attempt < 100; attempt++) {
+    final state = await RustApi.connectionState();
+    if (state == ApiConnectionState.authenticated) {
+      authenticated = true;
+      break;
+    }
+    if (state == ApiConnectionState.permanentlyRejected ||
+        state == ApiConnectionState.suspended) {
+      break;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
   }
-
-  if (!apiService.isAuthenticated) {
+  if (!authenticated) {
     Log.info('Api is not authenticated. Returning early.');
     return false;
   }
@@ -164,7 +167,7 @@ Future<bool> backgroundFetch({
       await Future.delayed(const Duration(milliseconds: 2000));
     }
   } finally {
-    await apiService.close(() {});
+    await RustApi.close();
     stopwatch.stop();
   }
 

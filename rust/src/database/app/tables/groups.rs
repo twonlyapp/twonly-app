@@ -15,6 +15,32 @@ const MAX_FUTURE_TIMESTAMP_SKEW_SECONDS: i64 = 10 * 60;
 pub struct Group;
 
 impl Group {
+    pub async fn flame_sync_candidates(pool: &sqlx::Pool<Sqlite>) -> Result<Vec<FlameSyncGroup>> {
+        Ok(sqlx::query_as!(
+            FlameSyncGroup,
+            r#"SELECT group_id, total_media_counter, last_flame_counter_change,
+                      last_flame_sync, flame_counter
+               FROM groups WHERE last_flame_counter_change IS NOT NULL"#
+        )
+        .fetch_all(pool)
+        .await?)
+    }
+
+    pub async fn set_last_flame_sync(
+        pool: &sqlx::Pool<Sqlite>,
+        group_id: &str,
+        timestamp: i64,
+    ) -> Result<()> {
+        sqlx::query!(
+            "UPDATE groups SET last_flame_sync = ? WHERE group_id = ?",
+            timestamp,
+            group_id,
+        )
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+
     pub async fn ensure_exists(tr: &mut Transaction<'_, Sqlite>, group_id: &str) -> Result<()> {
         let exists = sqlx::query_scalar!(
             "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ?)",
@@ -147,6 +173,14 @@ impl Group {
 
         Ok(())
     }
+}
+
+pub struct FlameSyncGroup {
+    pub group_id: String,
+    pub total_media_counter: i64,
+    pub last_flame_counter_change: Option<i64>,
+    pub last_flame_sync: Option<i64>,
+    pub flame_counter: i64,
 }
 
 #[derive(bon::Builder)]
@@ -462,8 +496,5 @@ impl GetMissingGroupPublicKeys {
 }
 
 fn current_unix_timestamp() -> Result<i64> {
-    Ok(std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|error| TwonlyError::Generic(error.to_string()))?
-        .as_secs() as i64)
+    Ok(crate::utils::current_time().timestamp())
 }

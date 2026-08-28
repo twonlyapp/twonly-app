@@ -19,6 +19,7 @@ pub(super) type PendingRequests = Arc<Mutex<HashMap<u64, oneshot::Sender<Vec<u8>
 
 pub(crate) static API_EVENTS: LazyLock<broadcast::Sender<ApiEvent>> =
     LazyLock::new(|| broadcast::channel(256).0);
+pub(crate) static API_PERMANENTLY_REJECTED: AtomicBool = AtomicBool::new(false);
 
 pub(crate) struct ApiClient {
     pub(crate) context: Weak<Context>,
@@ -65,6 +66,13 @@ impl ApiClient {
     }
 
     pub async fn connect(self: &Arc<Self>) -> Result<()> {
+        if API_PERMANENTLY_REJECTED.load(Ordering::Acquire) {
+            self.set_state(ApiConnectionState::PermanentlyRejected)
+                .await;
+            return Err(crate::error::TwonlyError::Generic(
+                "API connection was permanently rejected for this process".into(),
+            ));
+        }
         self.deliberately_closed.store(false, Ordering::Release);
 
         let mut client_guard = self.ws_client.lock().await;
@@ -139,7 +147,11 @@ impl ApiClient {
                             }
                             Ok(ConnectionEvent::Disconnected { .. }) => {
                                 self_clone.is_authenticated.store(false, Ordering::Release);
-                                self_clone.set_state(ApiConnectionState::Stopped).await;
+                                if API_PERMANENTLY_REJECTED.load(Ordering::Acquire) {
+                                    self_clone.set_state(ApiConnectionState::PermanentlyRejected).await;
+                                } else {
+                                    self_clone.set_state(ApiConnectionState::Stopped).await;
+                                }
                             }
                             Ok(ConnectionEvent::Connecting { .. }) => {
                                 self_clone.set_state(ApiConnectionState::Connecting).await;

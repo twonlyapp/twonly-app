@@ -3,7 +3,10 @@
  *
  */
 
+use crate::api::server::Server;
 use crate::error::{Result, TwonlyError};
+use crate::user_config::UserConfig;
+use chrono::{Duration, Utc};
 use libsignal_protocol::{
     message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
     IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
@@ -17,6 +20,7 @@ use tokio::sync::Mutex;
 use crate::bridge::get_twonly_flutter;
 use crate::signal::assert_send::AssertSendFutureExt;
 use crate::signal::store::DbSignalProtocolStore;
+use crate::utils::current_time;
 use rand::SeedableRng;
 
 pub struct RustSignalEngine {
@@ -47,6 +51,53 @@ pub struct FrbPqcPreKey {
 }
 
 impl RustSignalEngine {
+    pub async fn on_connected(&self, ctx: &Arc<crate::context::Context>) -> Result<()> {
+        let base = UserConfig::load_required_from(ctx)?;
+        let now = current_time().with_timezone(&Utc);
+
+        let refresh_signed = base
+            .signal_last_signed_pre_key_updated
+            .is_none_or(|last| last < now - Duration::hours(48));
+        let refresh_pqc = base
+            .signal_last_pqc_pre_keys_uploaded
+            .is_none_or(|last| last < now - Duration::days(7));
+
+        if !refresh_signed && !refresh_pqc {
+            return Ok(());
+        }
+
+        let bundle = self.generate_bundle().await?;
+        if refresh_signed {
+            Server::update_signed_pre_key(
+                ctx,
+                i64::from(bundle.signed_pre_key_id),
+                bundle.signed_pre_key_public.clone(),
+                bundle.signed_pre_key_signature.clone(),
+            )
+            .await?;
+            UserConfig::update(ctx, |config| {
+                config.signal_last_signed_pre_key_updated = Some(now);
+            })?;
+        }
+        if refresh_pqc {
+            Server::upload_pqc_pre_keys(
+                ctx,
+                i64::from(bundle.signed_pre_key_id),
+                bundle.signed_pre_key_public,
+                bundle.signed_pre_key_signature,
+                i64::from(bundle.kyber_pre_key_id),
+                bundle.kyber_pre_key_public,
+                bundle.kyber_pre_key_signature,
+                Vec::new(),
+            )
+            .await?;
+            UserConfig::update(ctx, |config| {
+                config.signal_last_pqc_pre_keys_uploaded = Some(now);
+            })?;
+        }
+        Ok(())
+    }
+
     pub async fn new(local_name: String) -> Result<Self> {
         let twonly = get_twonly_flutter()?;
         let pool = twonly.rust_db.read().await.pool.clone();

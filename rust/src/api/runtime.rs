@@ -38,7 +38,7 @@ impl ApiRuntime {
             .ok_or(TwonlyError::Initialization)?;
         *slot.write().await = replacement;
         current.close().await;
-        Ok(())
+        Self::client(ctx).await?.connect().await
     }
 
     pub async fn connect(ctx: &Arc<Context>) -> Result<()> {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart' show SharedFile;
 import 'package:provider/provider.dart';
+import 'package:twonly/core/bridge/api.dart' as rust_api;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
@@ -59,11 +60,16 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       if (_wasPaused) {
         AppState.isAppInBackground = false;
         twonlyDB.markUpdated();
-        unawaited(apiService.connect());
+        unawaited(
+          rust_api.RustApi.setBackground(inBackground: false),
+        );
       }
     } else if (state == AppLifecycleState.paused) {
       _wasPaused = true;
       AppState.isAppInBackground = true;
+      unawaited(
+        rust_api.RustApi.setBackground(inBackground: true),
+      );
     }
   }
 

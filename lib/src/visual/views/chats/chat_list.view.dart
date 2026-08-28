@@ -361,8 +361,8 @@ class _ChatListViewState extends State<ChatListView>
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await apiService.close(() {});
-          await apiService.connect();
+          await RustApi.close();
+          await RustApi.connect();
           await Future.delayed(const Duration(seconds: 1));
         },
         child: Column(

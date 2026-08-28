@@ -4,6 +4,9 @@
  */
 
 use std::collections::HashSet;
+use crate::api::server::Server;
+use crate::bridge::api::ServerResult;
+use crate::context::Context;
 use std::path::PathBuf;
 use std::sync::Arc;
 use blahaj::{Share, Sharks};
@@ -70,6 +73,55 @@ pub struct UserDiscovery {
 }
 
 impl UserDiscovery {
+    /// Refreshes server-owned data for announcements after the API connection
+    /// has authenticated. Cryptographic discovery state remains owned here;
+    /// the API runtime only invokes this lifecycle hook.
+    pub async fn on_connected(&self, ctx: &Arc<Context>) -> Result<()> {
+        let database = ctx.get_app_database().await;
+        let announcements = sqlx::query!(
+            r#"SELECT announced_user_id, announced_public_key
+               FROM user_discovery_announced_users WHERE username IS NULL"#
+        )
+        .fetch_all(&database.pool)
+        .await?;
+
+        for announcement in announcements {
+            let user = match Server::get_user_by_id(ctx, announcement.announced_user_id).await? {
+                ServerResult::Ok(user) => user,
+                ServerResult::ErrorCode(code) => {
+                    tracing::warn!(
+                        user_id = announcement.announced_user_id,
+                        code,
+                        "could not refresh announced user"
+                    );
+                    continue;
+                }
+            };
+            if user.public_identity_key.as_deref()
+                != Some(announcement.announced_public_key.as_slice())
+            {
+                tracing::error!(
+                    user_id = announcement.announced_user_id,
+                    "server returned a different identity key for announced user"
+                );
+                continue;
+            }
+            let Some(username) = user.username else {
+                continue;
+            };
+
+            let username = String::from_utf8(username)?;
+            sqlx::query!(
+                "UPDATE user_discovery_announced_users SET username = ? WHERE announced_user_id = ?",
+                username,
+                announcement.announced_user_id,
+            )
+            .execute(&database.pool)
+            .await?;
+        }
+        database.notify_committed(["user_discovery_announced_users"]);
+        Ok(())
+    }
     pub fn new(
         data_dir: &str,
         key_manager: Arc<Mutex<KeyManager>>,

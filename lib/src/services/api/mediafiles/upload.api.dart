@@ -779,8 +779,7 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
     return;
   }
 
-  final apiUrl =
-      'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
+  final apiUrl = '${RustApi.apiBaseUrl(protocol: 'https')}upload';
 
   Log.info('Starting upload from ${media.mediaFile.mediaId}');
 

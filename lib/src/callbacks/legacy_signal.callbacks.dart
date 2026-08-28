@@ -3,7 +3,6 @@ import 'package:twonly/core/bridge/callbacks.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/signal/encryption.signal.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// Flutter boundary for the legacy libsignal_protocol_dart implementation.
@@ -59,25 +58,6 @@ abstract final class LegacySignalCallbacks {
     } catch (error) {
       Log.error('Legacy Signal encryption callback failed: $error');
       return null;
-    }
-  }
-
-  static Future<List<LegacySignalPreKey>> generatePrekeys() async {
-    try {
-      final prekeys = await signalGetPreKeys();
-      return prekeys
-          .map(
-            (prekey) => LegacySignalPreKey(
-              id: prekey.id,
-              publicKey: Uint8List.fromList(
-                prekey.getKeyPair().publicKey.serialize(),
-              ),
-            ),
-          )
-          .toList(growable: false);
-    } catch (error) {
-      Log.error('Legacy Signal prekey callback failed: $error');
-      return const [];
     }
   }
 

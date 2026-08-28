@@ -68,8 +68,7 @@ class _ContactUsState extends State<ContactUsView> {
 
     final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-    final apiUrl =
-        'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
+    final apiUrl = '${RustApi.apiBaseUrl(protocol: 'https')}upload';
 
     final requestMultipart = http.MultipartRequest('POST', Uri.parse(apiUrl));
 

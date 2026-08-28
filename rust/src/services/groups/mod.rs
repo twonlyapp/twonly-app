@@ -19,7 +19,7 @@ use crate::api::server::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::database::app::tables::{
-    Contact, GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups, InsertGroup,
+    Contact, GetGroupPublicKey, GetMissingGroupPublicKeys, GetUnjoinedGroups, Group, InsertGroup,
     InsertGroupHistory, InsertGroupMember, UpdateContact, UpdateGroup, UpdateGroupMemberState,
 };
 use crate::error::{Result, TwonlyError};
@@ -38,6 +38,59 @@ pub struct GroupService {
 }
 
 impl GroupService {
+    pub async fn on_connected(&self) -> Result<()> {
+        self.fetch_group_states_for_unjoined_groups().await?;
+        self.fetch_missing_group_public_keys().await?;
+        self.sync_flame_counters().await
+    }
+
+    async fn sync_flame_counters(&self) -> Result<()> {
+        let db = self.ctx.get_app_database().await;
+        let groups = Group::flame_sync_candidates(&db.pool).await?;
+
+        let Some(best_friend) = groups.iter().max_by_key(|group| group.total_media_counter) else {
+            return Ok(());
+        };
+        let best_friend_id = best_friend.group_id.clone();
+        let now = current_time().timestamp();
+        let start_today = now - now.rem_euclid(86_400);
+        for group in groups {
+            let Some(changed) = group.last_flame_counter_change else {
+                continue;
+            };
+            if changed < start_today
+                || group
+                    .last_flame_sync
+                    .is_some_and(|sync| sync >= start_today)
+            {
+                continue;
+            }
+            if group.flame_counter <= 2 && group.group_id != best_friend_id {
+                continue;
+            }
+            MessageService::new(&self.ctx)
+                .send_to_group(
+                    group.group_id.clone(),
+                    EncryptedContent {
+                        flame_sync: Some(encrypted_content::FlameSync {
+                            flame_counter: group.flame_counter,
+                            last_flame_counter_change: changed * 1000,
+                            best_friend: group.group_id == best_friend_id,
+                            force_update: false,
+                        }),
+                        ..Default::default()
+                    }
+                    .encode_to_vec(),
+                    None,
+                    false,
+                )
+                .await?;
+            Group::set_last_flame_sync(&db.pool, &group.group_id, now).await?;
+        }
+        db.notify_committed(["groups"]);
+        Ok(())
+    }
+
     pub fn new(ctx: &Arc<Context>) -> Self {
         Self { ctx: ctx.clone() }
     }

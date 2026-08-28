@@ -149,8 +149,6 @@ abstract class RustLibApi extends BaseApi {
       Uint8List,
     )
     legacySignalEncrypt,
-    required FutureOr<List<LegacySignalPreKey>> Function()
-    legacySignalGeneratePrekeys,
     required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
     required FutureOr<void> Function(String, String, PlatformInt64, String)
     apiMediaAction,
@@ -933,8 +931,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       Uint8List,
     )
     legacySignalEncrypt,
-    required FutureOr<List<LegacySignalPreKey>> Function()
-    legacySignalGeneratePrekeys,
     required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
     required FutureOr<void> Function(String, String, PlatformInt64, String)
     apiMediaAction,
@@ -959,10 +955,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
           sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_opt_box_autoadd_legacy_signal_encrypt_result_AnyhowException(
             legacySignalEncrypt,
-            serializer,
-          );
-          sse_encode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-            legacySignalGeneratePrekeys,
             serializer,
           );
           sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
@@ -1006,7 +998,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           loggingGetStreamSink,
           legacySignalDecrypt,
           legacySignalEncrypt,
-          legacySignalGeneratePrekeys,
           apiResyncSignalSession,
           apiMediaAction,
           apiVerificationProof,
@@ -1027,7 +1018,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "loggingGetStreamSink",
           "legacySignalDecrypt",
           "legacySignalEncrypt",
-          "legacySignalGeneratePrekeys",
           "apiResyncSignalSession",
           "apiMediaAction",
           "apiVerificationProof",
@@ -4893,43 +4883,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     };
   }
 
-  Future<void> Function(
-    int,
-  )
-  encode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-    FutureOr<List<LegacySignalPreKey>> Function() raw,
-  ) {
-    return (
-      callId,
-    ) async {
-      Box<List<LegacySignalPreKey>>? rawOutput;
-      Box<AnyhowException>? rawError;
-      try {
-        rawOutput = Box(await raw());
-      } catch (e, s) {
-        rawError = Box(AnyhowException("$e\n\n$s"));
-      }
-
-      final serializer = SseSerializer(generalizedFrbRustBinding);
-      assert((rawOutput != null) ^ (rawError != null));
-      if (rawOutput != null) {
-        serializer.buffer.putUint8(0);
-        sse_encode_list_legacy_signal_pre_key(rawOutput.value, serializer);
-      } else {
-        serializer.buffer.putUint8(1);
-        sse_encode_AnyhowException(rawError!.value, serializer);
-      }
-      final output = serializer.intoRaw();
-
-      generalizedFrbRustBinding.dartFnDeliverOutput(
-        callId: callId,
-        ptr: output.ptr,
-        rustVecLen: output.rustVecLen,
-        dataLen: output.dataLen,
-      );
-    };
-  }
-
   Future<void> Function(int, dynamic)
   encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64) raw,
@@ -5146,15 +5099,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   FutureOr<RustStreamSink<String>> Function()
   dco_decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError('');
-  }
-
-  @protected
-  FutureOr<List<LegacySignalPreKey>> Function()
-  dco_decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -5512,18 +5456,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  LegacySignalPreKey dco_decode_legacy_signal_pre_key(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return LegacySignalPreKey(
-      id: dco_decode_i_64(arr[0]),
-      publicKey: dco_decode_list_prim_u_8_strict(arr[1]),
-    );
-  }
-
-  @protected
   LegacyTableMigrationCount dco_decode_legacy_table_migration_count(
     dynamic raw,
   ) {
@@ -5547,14 +5479,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frb_pqc_pre_key).toList();
-  }
-
-  @protected
-  List<LegacySignalPreKey> dco_decode_list_legacy_signal_pre_key(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>)
-        .map(dco_decode_legacy_signal_pre_key)
-        .toList();
   }
 
   @protected
@@ -6442,16 +6366,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  LegacySignalPreKey sse_decode_legacy_signal_pre_key(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_id = sse_decode_i_64(deserializer);
-    var var_publicKey = sse_decode_list_prim_u_8_strict(deserializer);
-    return LegacySignalPreKey(id: var_id, publicKey: var_publicKey);
-  }
-
-  @protected
   LegacyTableMigrationCount sse_decode_legacy_table_migration_count(
     SseDeserializer deserializer,
   ) {
@@ -6483,20 +6397,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <FrbPqcPreKey>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_frb_pqc_pre_key(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
-  List<LegacySignalPreKey> sse_decode_list_legacy_signal_pre_key(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <LegacySignalPreKey>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_legacy_signal_pre_key(deserializer));
     }
     return ans_;
   }
@@ -7270,21 +7170,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-  sse_encode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-    FutureOr<List<LegacySignalPreKey>> Function() self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_DartOpaque(
-      encode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
-        self,
-      ),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64) self,
     SseSerializer serializer,
@@ -7698,16 +7583,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_legacy_signal_pre_key(
-    LegacySignalPreKey self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.id, serializer);
-    sse_encode_list_prim_u_8_strict(self.publicKey, serializer);
-  }
-
-  @protected
   void sse_encode_legacy_table_migration_count(
     LegacyTableMigrationCount self,
     SseSerializer serializer,
@@ -7735,18 +7610,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_frb_pqc_pre_key(item, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_list_legacy_signal_pre_key(
-    List<LegacySignalPreKey> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_legacy_signal_pre_key(item, serializer);
     }
   }
 

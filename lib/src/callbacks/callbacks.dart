@@ -33,7 +33,6 @@ Future<void> initFlutterCallbacksForRust() async {
     loggingGetStreamSink: LoggingCallbacks.getStreamSink,
     legacySignalDecrypt: LegacySignalCallbacks.decrypt,
     legacySignalEncrypt: LegacySignalCallbacks.encrypt,
-    legacySignalGeneratePrekeys: LegacySignalCallbacks.generatePrekeys,
     apiResyncSignalSession: handleSessionResync,
     apiMediaAction: _apiMediaAction,
     apiVerificationProof: KeyVerificationService.handleVerificationProof,

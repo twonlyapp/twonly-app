@@ -29,15 +29,6 @@ pub(crate) async fn handle_server_message(
     kind: server_to_client::v0::Kind,
 ) -> Result<client_to_server::Response> {
     let ok = match kind {
-        // These booleans are presence-only request markers. Their value is not part of
-        // the protocol; the Dart client likewise checks hasRequestNewPreKeys() only.
-        Kind::RequestNewPreKeys(_) => match handle_request_new_prekeys(ctx).await {
-            Ok(response) => response,
-            Err(error) => {
-                tracing::error!("failed to generate requested prekeys: {error}");
-                ok::Ok::None(true)
-            }
-        },
         Kind::RequestNewPqcPreKeys(_) => match handle_request_new_pqc_prekeys(ctx).await {
             Ok(response) => response,
             Err(error) => {
@@ -105,40 +96,6 @@ pub(crate) async fn handle_sealed_message(ctx: &Arc<Context>, bytes: Vec<u8>) ->
         .ok_or_else(|| TwonlyError::Generic("sealed message contains no client message".into()))?;
 
     handle_decoded_server_message(ctx, payload.from_user_id, message).await
-}
-
-pub(crate) async fn handle_request_new_prekeys(
-    ctx: &Arc<Context>,
-) -> Result<client_to_server::response::ok::Ok> {
-    let prekeys = match get_callbacks() {
-        Ok(callbacks) => (callbacks.legacy_signal.generate_prekeys)()
-            .await
-            .into_iter()
-            .map(|key| client_to_server::response::PreKey {
-                id: key.id,
-                prekey: key.public_key,
-            })
-            .collect(),
-        Err(TwonlyError::MissingCallbackInitialization) => {
-            let engine = ctx.get_signal_engine().lock().await;
-            engine
-                .as_ref()
-                .ok_or(TwonlyError::SignalIdentityNotFound)?
-                .generate_prekeys(200)
-                .await?
-                .into_iter()
-                .map(|(id, public_key)| client_to_server::response::PreKey {
-                    id: i64::from(id),
-                    prekey: public_key,
-                })
-                .collect()
-        }
-        Err(error) => return Err(error),
-    };
-
-    Ok(client_to_server::response::ok::Ok::Prekeys(
-        client_to_server::response::Prekeys { prekeys },
-    ))
 }
 
 pub(crate) async fn handle_request_new_pqc_prekeys(
