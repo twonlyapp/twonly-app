@@ -1,11 +1,9 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'receipts.dao.g.dart';
@@ -18,36 +16,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   ReceiptsDao(super.db);
-
-  Future<void> confirmReceipt(String receiptId, int fromUserId) async {
-    final receipt =
-        await (select(receipts)..where(
-              (t) =>
-                  t.receiptId.equals(receiptId) &
-                  t.contactId.equals(fromUserId),
-            ))
-            .getSingleOrNull();
-
-    if (receipt == null) return;
-
-    if (receipt.messageId != null) {
-      await into(messageActions).insertOnConflictUpdate(
-        MessageActionsCompanion(
-          messageId: Value(receipt.messageId!),
-          contactId: Value(fromUserId),
-          type: const Value(MessageActionType.ackByUserAt),
-        ),
-      );
-      await handleMediaRelatedResponseFromReceiver(receipt.messageId!);
-    }
-
-    await (delete(receipts)..where(
-          (t) => t.receiptId.equals(receiptId) & t.contactId.equals(fromUserId),
-        ))
-        .go();
-  }
-
-  Future<void> deleteReceipt(String receiptId) async {
+Future<void> deleteReceipt(String receiptId) async {
     await (delete(receipts)..where(
           (t) => t.receiptId.equals(receiptId),
         ))
@@ -89,27 +58,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
           .go();
     }
   }
-
-  Future<Receipt?> insertReceipt(ReceiptsCompanion entry) async {
-    try {
-      var insertEntry = entry;
-      if (entry.receiptId == const Value.absent()) {
-        insertEntry = entry.copyWith(
-          receiptId: Value(uuid.v4()),
-        );
-      }
-      await into(receipts).insert(insertEntry);
-      final receiptId = insertEntry.receiptId.value;
-      return await (select(
-        receipts,
-      )..where((t) => t.receiptId.equals(receiptId))).getSingle();
-    } catch (e) {
-      // ignore error, receipts is already in the database...
-      return null;
-    }
-  }
-
-  Future<Receipt?> getReceiptById(String receiptId) async {
+Future<Receipt?> getReceiptById(String receiptId) async {
     try {
       return await (select(receipts)..where(
             (t) => t.receiptId.equals(receiptId),
@@ -120,37 +69,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
       return null;
     }
   }
-
-  Future<List<Receipt>> getReceiptsByContactAndMessageId(
-    int contactId,
-    String messageId,
-  ) async {
-    return (select(receipts)..where(
-          (t) => t.contactId.equals(contactId) & t.messageId.equals(messageId),
-        ))
-        .get();
-  }
-
-  Future<List<Receipt>> getReceiptsForRetransmission() async {
-    final markedRetriesTime = clock.now().subtract(
-      const Duration(
-        // give the server time to transmit all messages to the client
-        seconds: 20,
-      ),
-    );
-    return (select(receipts)..where(
-          (t) =>
-              (t.ackByServerAt.isNull() |
-                  t.markForRetry.isSmallerThanValue(markedRetriesTime) |
-                  t.markForRetryAfterAccepted.isSmallerThanValue(
-                    markedRetriesTime,
-                  )) &
-              t.willBeRetriedByMediaUpload.equals(false),
-        ))
-        .get();
-  }
-
-  Future<List<Receipt>> getReceiptsForMediaRetransmissions() async {
+Future<List<Receipt>> getReceiptsForMediaRetransmissions() async {
     final markedRetriesTime = clock.now().subtract(
       const Duration(
         // give the server time to transmit all messages to the client
@@ -171,18 +90,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   Stream<List<Receipt>> watchAll() {
     return select(receipts).watch();
   }
-
-  Future<int> getReceiptCountForContact(int contactId) {
-    final countExp = countAll();
-
-    final query = selectOnly(receipts)
-      ..addColumns([countExp])
-      ..where(receipts.contactId.equals(contactId));
-
-    return query.map((row) => row.read(countExp)!).getSingle();
-  }
-
-  Future<void> updateReceipt(
+Future<void> updateReceipt(
     String receiptId,
     ReceiptsCompanion updates,
   ) async {
@@ -190,25 +98,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
       receipts,
     )..where((c) => c.receiptId.equals(receiptId))).write(updates);
   }
-
-  Future<Receipt?> rotateReceiptId(String oldReceiptId) async {
-    final newReceiptId = uuid.v4();
-    await updateReceipt(
-      oldReceiptId,
-      ReceiptsCompanion(
-        receiptId: Value(newReceiptId),
-      ),
-    );
-    final updatedReceipt = await getReceiptById(newReceiptId);
-    if (updatedReceipt == null) {
-      Log.warn(
-        '[$oldReceiptId] Tried to change the receipt ID to $newReceiptId, but could not get the updated receipt...',
-      );
-    }
-    return updatedReceipt;
-  }
-
-  Future<void> updateReceiptByContactAndMessageId(
+Future<void> updateReceiptByContactAndMessageId(
     int contactId,
     String messageId,
     ReceiptsCompanion updates,
@@ -220,61 +110,8 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
         ))
         .write(updates);
   }
-
-  Future<void> updateReceiptWidthUserId(
-    int fromUserId,
-    String receiptId,
-    ReceiptsCompanion updates,
-  ) async {
-    await (update(receipts)..where(
-          (c) => c.receiptId.equals(receiptId) & c.contactId.equals(fromUserId),
-        ))
-        .write(updates);
-  }
-
-  Future<void> markMessagesForRetry(int contactId) async {
-    await (update(receipts)..where(
-          (c) => c.contactId.equals(contactId) & c.markForRetry.isNull(),
-        ))
-        .write(
-          ReceiptsCompanion(
-            markForRetry: Value(clock.now()),
-          ),
-        );
-  }
-
-  Future<bool> isDuplicated(String receiptId) async {
-    return await (select(
-          receivedReceipts,
-        )..where((t) => t.receiptId.equals(receiptId))).getSingleOrNull() !=
-        null;
-  }
-
-  /// Claims a new delivery-receipt attempt after [cooldown] has elapsed.
+/// Claims a new delivery-receipt attempt after [cooldown] has elapsed.
   ///
   /// Updating the timestamp before sending prevents repeated server batches from
   /// starting multiple delivery-receipt attempts during the same cooldown.
-  Future<bool> claimDuplicateReceiptResend(
-    String receiptId,
-    Duration cooldown,
-  ) async {
-    final now = clock.now();
-    final updated =
-        await (update(receivedReceipts)..where(
-              (t) =>
-                  t.receiptId.equals(receiptId) &
-                  t.createdAt.isSmallerOrEqualValue(now.subtract(cooldown)),
-            ))
-            .write(ReceivedReceiptsCompanion(createdAt: Value(now)));
-    return updated > 0;
-  }
-
-  Future<void> gotReceipt(String receiptId) async {
-    await into(
-      receivedReceipts,
-    ).insert(
-      ReceivedReceiptsCompanion(receiptId: Value(receiptId)),
-      mode: InsertMode.insertOrIgnore,
-    );
-  }
 }

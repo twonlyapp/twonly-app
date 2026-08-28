@@ -12,17 +12,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   ContactsDao(super.db);
-
-  Future<int?> insertContact(ContactsCompanion contact) async {
-    try {
-      return await into(contacts).insert(contact);
-    } catch (e) {
-      Log.error(e);
-      return null;
-    }
-  }
-
-  Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
+Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
     try {
       return await into(contacts).insertOnConflictUpdate(contact);
     } catch (e) {
@@ -174,27 +164,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
         }))
         .watch();
   }
-
-  Future<List<Contact>> getContactsAnnouncedViaUserDiscovery() async {
-    return (select(contacts)..where((t) {
-          var expr =
-              t.userDiscoveryVersion.isNotNull() &
-              t.userDiscoveryExcluded.equals(false) &
-              t.accountDeleted.equals(false) &
-              t.mediaSendCounter.isBiggerOrEqualValue(
-                userService.currentUser.requiredSendImages,
-              );
-
-          if (userService.currentUser.userDiscoveryRequiresManualApproval) {
-            expr = expr & t.userDiscoveryManualApproved.equals(true);
-          }
-
-          return expr;
-        }))
-        .get();
-  }
-
-  Stream<List<Contact>> watchAllContacts() {
+Stream<List<Contact>> watchAllContacts() {
     return select(contacts).watch();
   }
 }

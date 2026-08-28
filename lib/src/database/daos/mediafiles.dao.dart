@@ -88,21 +88,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
       mediaFiles,
     )..where((t) => t.mediaId.equals(mediaId))).watchSingleOrNull();
   }
-
-  Future<void> resetPendingDownloadState() async {
-    await (update(mediaFiles)..where(
-          (c) => c.downloadState.equals(
-            DownloadState.downloading.name,
-          ),
-        ))
-        .write(
-          const MediaFilesCompanion(
-            downloadState: Value(DownloadState.pending),
-          ),
-        );
-  }
-
-  Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
+Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
     return (select(mediaFiles)..where(
           (t) =>
               t.downloadState.equals(DownloadState.pending.name) |
@@ -158,15 +144,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           ]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
-
-  Stream<List<MediaFile>> watchNewestMediaFiles() {
-    return (select(mediaFiles)
-          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-          ..limit(100))
-        .watch();
-  }
-
-  Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
+Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
     if (mediaIds.isEmpty) return Stream.value(const []);
     return (select(
       mediaFiles,

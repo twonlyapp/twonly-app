@@ -285,20 +285,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .map((row) => (row.readTable(groupMembers), row.readTable(contacts)))
         .watch();
   }
-
-  Stream<List<MessageAction>> watchMessageActionChanges(String messageId) {
-    return (select(
-      messageActions,
-    )..where((t) => t.messageId.equals(messageId))).watch();
-  }
-
-  Stream<Message?> watchMessageById(String messageId) {
-    return (select(
-      messages,
-    )..where((t) => t.messageId.equals(messageId))).watchSingleOrNull();
-  }
-
-  Future<void> purgeMessageTable() async {
+Future<void> purgeMessageTable() async {
     final allGroups = await select(groups).get();
 
     final groupedByTime = <int, List<String>>{};
@@ -635,26 +622,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       return null;
     }
   }
-
-  Future<MessageAction?> getLastMessageAction(String messageId) async {
-    return (((select(messageActions)..where(
-              (t) => t.messageId.equals(messageId),
-            ))
-            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
-          ..limit(1))
-        .getSingleOrNull();
-  }
-
-  Stream<MessageAction?> watchLastMessageAction(String messageId) {
-    return (((select(messageActions)..where(
-              (t) => t.messageId.equals(messageId),
-            ))
-            ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
-          ..limit(1))
-        .watchSingleOrNull();
-  }
-
-  Future<void> deleteMessagesById(String messageId) {
+Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
@@ -697,19 +665,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         ))
         .watch();
   }
-
-  Stream<List<MessageAction>> watchMessageActionsForGroup(String groupId) {
-    final query = select(messageActions).join([
-      innerJoin(
-        messages,
-        messages.messageId.equalsExp(messageActions.messageId),
-        useColumns: false,
-      ),
-    ])..where(messages.groupId.equals(groupId));
-    return query.map((row) => row.readTable(messageActions)).watch();
-  }
-
-  Stream<List<MessageHistory>> watchMessageHistory(String messageId) {
+Stream<List<MessageHistory>> watchMessageHistory(String messageId) {
     return (select(messageHistories)
           ..where((t) => t.messageId.equals(messageId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))

@@ -18,14 +18,7 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
       labels,
     )..orderBy([(t) => OrderingTerm(expression: t.name)])).watch();
   }
-
-  Future<List<Label>> getAllLabels() {
-    return (select(
-      labels,
-    )..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
-  }
-
-  Stream<List<Label>> watchContactLabels(int contactId) {
+Stream<List<Label>> watchContactLabels(int contactId) {
     final query = select(contactLabels).join([
       innerJoin(labels, labels.id.equalsExp(contactLabels.labelId)),
     ])..where(contactLabels.contactId.equals(contactId));
@@ -50,18 +43,7 @@ class LabelsDao extends DatabaseAccessor<TwonlyDB> with _$LabelsDaoMixin {
           .toList(),
     );
   }
-
-  Future<List<Label>> getContactLabels(int contactId) {
-    final query = select(contactLabels).join([
-      innerJoin(labels, labels.id.equalsExp(contactLabels.labelId)),
-    ])..where(contactLabels.contactId.equals(contactId));
-
-    return query.get().then(
-      (rows) => rows.map((row) => row.readTable(labels)).toList(),
-    );
-  }
-
-  Future<void> setContactLabels(int contactId, List<int> labelIds) async {
+Future<void> setContactLabels(int contactId, List<int> labelIds) async {
     final sanitizedLabelIds = labelIds.take(3).toList();
     await transaction(() async {
       await (delete(

@@ -43,42 +43,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
 
   /// Returns a map of contactId → the verification type of the earliest
   /// [KeyVerification] row for that contact.
-  Future<Map<int, VerificationType>>
-  getFirstVerificationTypeByContacts() async {
-    final rows = await (select(
-      keyVerifications,
-    )..orderBy([(kv) => OrderingTerm.asc(kv.createdAt)])).get();
-
-    final result = <int, VerificationType>{};
-    for (final row in rows) {
-      result.putIfAbsent(row.contactId, () => row.type);
-    }
-    return result;
-  }
-
-  Future<bool> isContactVerified(int contactId) async {
-    final verifierKv = alias(keyVerifications, 'verifierKv');
-    final query = select(keyVerifications).join([
-      leftOuterJoin(
-        verifierKv,
-        verifierKv.contactId.equalsExp(keyVerifications.verifiedBy),
-      ),
-    ])..where(keyVerifications.contactId.equals(contactId));
-
-    final rows = await query.get();
-    for (final row in rows) {
-      final kv = row.readTable(keyVerifications);
-      final hasVerifierKv = row.readTableOrNull(verifierKv) != null;
-      if (kv.type == VerificationType.contactSharedByVerified) {
-        if (hasVerifierKv) return true;
-      } else {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  Stream<List<(KeyVerification, Contact?)>> watchContactVerification(
+Stream<List<(KeyVerification, Contact?)>> watchContactVerification(
     int contactId,
   ) {
     final verifier = alias(contacts, 'verifier');
@@ -159,57 +124,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       }).toList();
     });
   }
-
-  Future<int> getTransferredTrustVerificationsCount() async {
-    final kv = keyVerifications;
-    final ur = userDiscoveryUserRelations;
-
-    final query = selectOnly(ur, distinct: true)
-      ..addColumns([ur.announcedUserId])
-      ..join([
-        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
-        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
-      ])
-      ..where(
-        ur.publicKeyVerifiedTimestamp.isNotNull() &
-            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
-      )
-      ..groupBy([ur.announcedUserId]);
-
-    final rows = await query.get();
-    return rows.length;
-  }
-
-  Future<int> getCountOfContactsWithVerificationBadge() async {
-    final kv = keyVerifications;
-    final ur = userDiscoveryUserRelations;
-
-    final query = selectOnly(ur, distinct: true)
-      ..addColumns([ur.announcedUserId])
-      ..join([
-        innerJoin(contacts, contacts.userId.equalsExp(ur.fromContactId)),
-        innerJoin(kv, kv.contactId.equalsExp(ur.fromContactId)),
-      ])
-      ..where(
-        ur.publicKeyVerifiedTimestamp.isNotNull() &
-            ur.announcedUserId.equalsExp(ur.fromContactId).not(),
-      )
-      ..groupBy([ur.announcedUserId]);
-
-    final rows = await query.get();
-    final transferredIds = rows.map((r) => r.read(ur.announcedUserId)!).toSet();
-
-    final directVerifications = await select(kv).get();
-    final directIds = directVerifications.map((v) => v.contactId).toSet();
-
-    // Reduce transferred contacts where announcedUserId is already in KeyVerifications
-    transferredIds.removeWhere(directIds.contains);
-
-    // Add count of all users who are in the KeyVerification table
-    return transferredIds.length + directIds.length;
-  }
-
-  Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
+Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
     final gm = groupMembers;
     final directKv = alias(keyVerifications, 'directKv');
     final ur = userDiscoveryUserRelations;
@@ -376,24 +291,7 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
       Log.error(e);
     }
   }
-
-  Future<void> deleteKeyVerification(int contactId) async {
-    try {
-      await (delete(
-        keyVerifications,
-      )..where((kv) => kv.contactId.equals(contactId))).go();
-      if (userService.currentUser.isUserDiscoveryEnabled) {
-        await FlutterUserDiscovery.updateVerificationStateForUser(
-          callbackId: isolateCallbackId,
-          contactId: contactId,
-        );
-      }
-    } catch (e) {
-      Log.error(e);
-    }
-  }
-
-  Future<void> deleteKeyVerificationById(
+Future<void> deleteKeyVerificationById(
     int verificationId,
     int contactId,
   ) async {
