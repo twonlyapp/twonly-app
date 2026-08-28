@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/subscription.keys.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -107,7 +106,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
           Log.info(
             'Force Ipa check was not stopped. Requesting forced check...',
           );
-          await apiService.forceIpaCheck();
+          await RustApi.forceIpaCheck();
         });
       }
 
@@ -181,10 +180,13 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       Log.info(purchaseDetails.productID);
       Log.info(purchaseDetails.verificationData.source);
     }
-    final res = await apiService.ipaPurchase(
-      purchaseDetails.productID,
-      purchaseDetails.verificationData.source,
-      purchaseDetails.verificationData.serverVerificationData,
+    final res = await rustApiResult(
+      RustApi.ipaPurchase(
+        productId: purchaseDetails.productID,
+        source: purchaseDetails.verificationData.source,
+        verificationData:
+            purchaseDetails.verificationData.serverVerificationData,
+      ),
     );
     // plan is updated in the apiProvider, as the server updates its states and responses with
     // an ok authenticated which is processed in the apiProvider...

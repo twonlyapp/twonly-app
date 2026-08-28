@@ -98,10 +98,8 @@ Future<void> runMigrations() async {
           ..canUseLoginTokenForAuth = false
           // As usernames changes where not considered in the old version force users
           // to reenter there passwords.
-          // ignore: deprecated_member_use_from_same_package
-          ..twonlySafeBackup?.encryptionKey = []
-          // ignore: deprecated_member_use_from_same_package
-          ..twonlySafeBackup?.backupId = [];
+          ..twonlySafeBackup?.encryptionKey = Uint8List(0)
+          ..twonlySafeBackup?.backupId = Uint8List(0);
       });
     }
   }

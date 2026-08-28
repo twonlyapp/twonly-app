@@ -24,31 +24,8 @@ impl Server {
         .await
     }
 
-    pub async fn load_plan_balance(ctx: &Arc<Context>, use_cache: bool) -> Result<Vec<u8>> {
-        let database = ctx.get_app_database().await;
-        match Self::get_plan_balance(ctx).await {
-            Ok(response) => {
-                sqlx::query!(
-                    r#"
-                INSERT INTO api_state(key, value) VALUES('plan_balance', ?)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value,
-                    updated_at = CAST(strftime('%s', 'now') AS INTEGER)
-                "#,
-                    response,
-                )
-                .execute(&database.pool)
-                .await?;
-                database.notify_committed(["api_state"]);
-                Ok(response)
-            }
-            Err(network_error) if use_cache => {
-                sqlx::query_scalar!("SELECT value FROM api_state WHERE key = 'plan_balance'")
-                    .fetch_optional(&database.pool)
-                    .await?
-                    .ok_or(network_error)
-            }
-            Err(error) => Err(error),
-        }
+    pub async fn load_plan_balance(ctx: &Arc<Context>) -> Result<Vec<u8>> {
+        Self::get_plan_balance(ctx).await
     }
 
     pub async fn ipa_purchase(

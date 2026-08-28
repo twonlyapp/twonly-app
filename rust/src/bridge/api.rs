@@ -4,12 +4,15 @@
  */
 
 use crate::api::messages::incoming::client2client::messages;
+use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
+use crate::api::runtime::helpers::decode_ok_value;
 use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
 use crate::context::Context;
-use crate::error::Result;
+use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
+use crate::services::contacts::ContactService;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use prost::Message;
@@ -20,49 +23,25 @@ pub enum ServerResult<T> {
     ErrorCode(i32),
 }
 
-#[frb]
-pub enum ServerResultEmpty {
-    Ok,
-    ErrorCode(i32),
-}
-
-#[frb]
-pub enum ServerResultVecU8 {
-    Ok(Vec<u8>),
-    ErrorCode(i32),
-}
-
-#[frb]
-pub enum ServerResultI64 {
-    Ok(i64),
-    ErrorCode(i32),
-}
-
-impl ServerResult<()> {
-    pub fn into_bridge(self) -> ServerResultEmpty {
-        match self {
-            ServerResult::Ok(()) => ServerResultEmpty::Ok,
-            ServerResult::ErrorCode(c) => ServerResultEmpty::ErrorCode(c),
-        }
+fn api_result<T>(result: ServerResult<T>) -> Result<T> {
+    match result {
+        ServerResult::Ok(value) => Ok(value),
+        ServerResult::ErrorCode(code) => Err(TwonlyError::Api(code)),
     }
 }
 
-impl ServerResult<Vec<u8>> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(v),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
-    }
+fn empty_api_response(bytes: Vec<u8>) -> Result<()> {
+    api_result(decode_ok_value(bytes, |value| match value {
+        ResponseOk::None(_) => Some(()),
+        _ => None,
+    })?)
 }
 
-impl ServerResult<i64> {
-    pub fn into_bridge(self) -> ServerResultI64 {
-        match self {
-            ServerResult::Ok(v) => ServerResultI64::Ok(v),
-            ServerResult::ErrorCode(c) => ServerResultI64::ErrorCode(c),
-        }
-    }
+fn encoded_api_response<T: Message>(
+    bytes: Vec<u8>,
+    extract: impl FnOnce(ResponseOk) -> Option<T>,
+) -> Result<Vec<u8>> {
+    api_result(decode_ok_value(bytes, extract)?).map(|value| value.encode_to_vec())
 }
 
 #[derive(Clone, Debug)]
@@ -133,7 +112,7 @@ pub struct PreparedOutgoingMessage {
 impl RustApi {
     pub async fn request_contact_by_username(username: String) -> Result<()> {
         let ctx = Context::get_static()?;
-        crate::services::contacts::ContactService::new(ctx)
+        ContactService::new(ctx)
             .request_by_username(username, false)
             .await
     }
@@ -206,122 +185,156 @@ impl RustApi {
         proof_of_work: i64,
         lang_code: String,
         is_ios: bool,
-    ) -> Result<ServerResultI64> {
+    ) -> Result<i64> {
         let ctx = Context::get_static()?;
         Server::register(ctx, username, proof_of_work, lang_code, is_ios)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
 
-    pub async fn get_user_by_id(user_id: i64) -> Result<ServerResultVecU8> {
+    pub async fn get_user_by_id(user_id: i64) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::get_user_by_id(ctx, user_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
     pub async fn check_for_deleted_usernames() -> Result<()> {
         let ctx = Context::get_static()?;
         Server::check_for_deleted_usernames(ctx).await
     }
-    pub async fn get_user_id_from_username(username: String) -> Result<ServerResultI64> {
+    pub async fn get_user_id_from_username(username: String) -> Result<i64> {
         let ctx = Context::get_static()?;
         Server::get_user_id_from_username(ctx, username)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn get_user_data(username: String) -> Result<ServerResultVecU8> {
+    pub async fn get_user_data(username: String) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::get_user_by_username(ctx, username)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
-    pub async fn get_proof_of_work() -> Result<ServerResultVecU8> {
+    pub async fn get_proof_of_work() -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
-        Server::get_proof_of_work(ctx).await.map(|r| match r {
-            ServerResult::Ok(data) => ServerResultVecU8::Ok(data.encode_to_vec()),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        })
-    }
-    pub async fn download_done(token: Vec<u8>) -> Result<ServerResultEmpty> {
-        let ctx = Context::get_static()?;
-        Server::download_done(ctx, token)
+        Server::get_proof_of_work(ctx)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
-    pub async fn set_login_token(token: Vec<u8>) -> Result<ServerResultEmpty> {
+    pub async fn download_done(token: Vec<u8>) -> Result<()> {
+        let ctx = Context::get_static()?;
+        Server::download_done(ctx, token).await.and_then(api_result)
+    }
+
+    pub async fn download_media(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::mediafiles::MediaFileService::new(ctx)
+            .download_when_available(&media_id)
+            .await
+    }
+
+    pub async fn download_pending_media() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::mediafiles::MediaFileService::new(ctx)
+            .download_pending()
+            .await
+    }
+
+    pub async fn request_media_reupload(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::mediafiles::MediaFileService::new(ctx)
+            .request_reupload(&media_id)
+            .await
+    }
+    pub async fn set_login_token(token: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::set_login_token(ctx, token)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
     pub async fn request_memories_upload(
         size: i64,
         original_date: i64,
         media_id: String,
-    ) -> Result<ServerResultVecU8> {
+    ) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::request_memories_upload(ctx, size, original_date, media_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
-    pub async fn get_memories_usage() -> Result<ServerResultVecU8> {
+    pub async fn get_memories_usage() -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::get_memories_usage(ctx)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
-    pub async fn get_memories_url(media_id: String, thumbnail: bool) -> Result<ServerResultVecU8> {
+    pub async fn get_memories_url(media_id: String, thumbnail: bool) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::get_memories_url(ctx, media_id, thumbnail)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+            .map(|value| value.encode_to_vec())
     }
-    pub async fn confirm_memories_upload(media_id: String) -> Result<ServerResultEmpty> {
+    pub async fn confirm_memories_upload(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::confirm_memories_upload(ctx, media_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn delete_memory(media_id: String) -> Result<ServerResultEmpty> {
+    pub async fn delete_memory(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::delete_memory(ctx, media_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn disable_memories_backup() -> Result<ServerResultEmpty> {
+    pub async fn disable_memories_backup() -> Result<()> {
         let ctx = Context::get_static()?;
         Server::disable_memories_backup(ctx)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
     pub async fn get_plan_balance() -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
-        Server::get_plan_balance(ctx).await
+        encoded_api_response(Server::get_plan_balance(ctx).await?, |value| match value {
+            ResponseOk::Planballance(balance) => Some(balance),
+            _ => None,
+        })
     }
-    pub async fn load_plan_balance(use_cache: bool) -> Result<Vec<u8>> {
+    pub async fn load_plan_balance() -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
-        Server::load_plan_balance(ctx, use_cache).await
+        encoded_api_response(Server::load_plan_balance(ctx).await?, |value| match value {
+            ResponseOk::Planballance(balance) => Some(balance),
+            _ => None,
+        })
     }
-    pub async fn remove_additional_user(user_id: i64) -> Result<ServerResultEmpty> {
+    pub async fn remove_additional_user(user_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::remove_additional_user(ctx, user_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn add_additional_user(user_id: i64) -> Result<ServerResultEmpty> {
+    pub async fn add_additional_user(user_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::add_additional_user(ctx, user_id)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
     pub async fn register_passwordless_recovery(
         encrypted_server_key: Vec<u8>,
         pin_unlock_token: Option<Vec<u8>>,
-    ) -> Result<ServerResultEmpty> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::register_passwordless_recovery(ctx, encrypted_server_key, pin_unlock_token)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
+    }
+    pub async fn perform_passwordless_recovery_heartbeat() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::api::messages::incoming::client2client::recovery::perform_heartbeat(ctx).await
     }
     pub async fn get_server_key_for_passwordless_recovery(
         user_id: i64,
@@ -329,7 +342,7 @@ impl RustApi {
         pin_unlock_token: Option<Vec<u8>>,
         pin_protection_key: Option<Vec<u8>>,
         email: Option<String>,
-    ) -> Result<ServerResultVecU8> {
+    ) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::get_server_key_for_passwordless_recovery(
             ctx,
@@ -340,23 +353,23 @@ impl RustApi {
             email,
         )
         .await
-        .map(|r| r.into_bridge())
+        .and_then(api_result)
     }
     pub async fn submit_recovery_share(
         notification_id: String,
         encrypted_message: Vec<u8>,
-    ) -> Result<ServerResultEmpty> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::submit_recovery_share(ctx, notification_id, encrypted_message)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
     pub async fn register_passwordless_notification(
         notification_id: String,
         download_auth_token: Vec<u8>,
         lang_code: String,
         google_fcm: Option<String>,
-    ) -> Result<ServerResultEmpty> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::register_passwordless_notification(
             ctx,
@@ -366,13 +379,13 @@ impl RustApi {
             google_fcm,
         )
         .await
-        .map(|r| r.into_bridge())
+        .and_then(api_result)
     }
     pub async fn check_for_passwordless_notification(
         notification_id: String,
         download_auth_token: Vec<u8>,
         already_received_message_ids: Vec<i64>,
-    ) -> Result<ServerResultVecU8> {
+    ) -> Result<Vec<u8>> {
         let ctx = Context::get_static()?;
         Server::check_for_passwordless_notification(
             ctx,
@@ -381,49 +394,46 @@ impl RustApi {
             already_received_message_ids,
         )
         .await
-        .map(|r| r.into_bridge())
+        .and_then(api_result)
+        .map(|value| value.encode_to_vec())
     }
-    pub async fn report_user(user_id: i64, reason: String) -> Result<ServerResultEmpty> {
+    pub async fn report_user(user_id: i64, reason: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::report_user(ctx, user_id, reason)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn delete_account() -> Result<ServerResultEmpty> {
+    pub async fn delete_account() -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::delete_account(ctx).await.map(|r| r.into_bridge())
+        Server::delete_account(ctx).await.and_then(api_result)
     }
-    pub async fn update_fcm_token(token: String) -> Result<ServerResultEmpty> {
+    pub async fn update_fcm_token(token: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::update_fcm_token(ctx, token)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
     pub async fn ipa_purchase(
         product_id: String,
         source: String,
         verification_data: String,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::ipa_purchase(ctx, product_id, source, verification_data).await
+        empty_api_response(Server::ipa_purchase(ctx, product_id, source, verification_data).await?)
     }
-    pub async fn change_username(username: String) -> Result<ServerResultEmpty> {
+    pub async fn change_username(username: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::change_username(ctx, username)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
-    pub async fn force_ipa_check() -> Result<ServerResultEmpty> {
+    pub async fn force_ipa_check() -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::force_ipa_check(ctx).await.map(|r| r.into_bridge())
+        Server::force_ipa_check(ctx).await.and_then(api_result)
     }
-    pub async fn update_signed_pre_key(
-        id: i64,
-        key: Vec<u8>,
-        signature: Vec<u8>,
-    ) -> Result<Vec<u8>> {
+    pub async fn update_signed_pre_key(id: i64, key: Vec<u8>, signature: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::update_signed_pre_key(ctx, id, key, signature).await
+        empty_api_response(Server::update_signed_pre_key(ctx, id, key, signature).await?)
     }
     #[allow(clippy::too_many_arguments)]
     pub async fn upload_pqc_pre_keys(
@@ -434,7 +444,7 @@ impl RustApi {
         kyber_signed_prekey: Vec<u8>,
         kyber_signed_prekey_signature: Vec<u8>,
         prekeys: Vec<PqcPreKeyInput>,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::upload_pqc_pre_keys(
             ctx,
@@ -447,16 +457,17 @@ impl RustApi {
             prekeys,
         )
         .await
+        .and_then(empty_api_response)
     }
     pub async fn send_text_message(
         user_id: i64,
         body: Vec<u8>,
         push_data: Option<Vec<u8>>,
-    ) -> Result<ServerResultEmpty> {
+    ) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::send_text_message(ctx, user_id, body, push_data)
             .await
-            .map(|r| r.into_bridge())
+            .and_then(api_result)
     }
 
     pub async fn send_encrypted_content(
@@ -585,50 +596,5 @@ impl RustApi {
         crate::services::contacts::ContactService::new(ctx)
             .send_profile(contact_id)
             .await
-    }
-}
-
-impl ServerResult<crate::api::proto::server_to_client::response::UserData> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(prost::Message::encode_to_vec(&v)),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
-    }
-}
-
-impl ServerResult<crate::api::proto::server_to_client::response::PasswordlessNotificationMessages> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(prost::Message::encode_to_vec(&v)),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
-    }
-}
-
-impl ServerResult<crate::api::proto::server_to_client::response::MemoriesUploadUrls> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(prost::Message::encode_to_vec(&v)),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
-    }
-}
-
-impl ServerResult<crate::api::proto::server_to_client::response::MemoriesUsage> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(prost::Message::encode_to_vec(&v)),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
-    }
-}
-
-impl ServerResult<crate::api::proto::server_to_client::response::MemoriesUrl> {
-    pub fn into_bridge(self) -> ServerResultVecU8 {
-        match self {
-            ServerResult::Ok(v) => ServerResultVecU8::Ok(prost::Message::encode_to_vec(&v)),
-            ServerResult::ErrorCode(c) => ServerResultVecU8::ErrorCode(c),
-        }
     }
 }

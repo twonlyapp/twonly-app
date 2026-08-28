@@ -6,30 +6,26 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
-    as client;
-import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
 
 class Result<T, E> {
-  Result.error(this.error) : value = null;
-  Result.success(this.value) : error = null;
+  Result.error(this.error) : value = null, _isSuccess = false;
+  Result.success(this.value) : error = null, _isSuccess = true;
 
   final T? value;
   final E? error;
+  final bool _isSuccess;
 
-  bool get isSuccess => value != null;
-  bool get isError => error != null;
+  bool get isSuccess => _isSuccess;
+  bool get isError => !_isSuccess;
 }
 
 DateTime fromTimestamp(Int64 timeStamp) {
@@ -51,22 +47,6 @@ Result asResult(server.ServerToClient? msg) {
   } else {
     return Result.error(msg.v0.response.error);
   }
-}
-
-ClientToServer createClientToServerFromHandshake(Handshake handshake) {
-  final v0 = client.V0()
-    ..seq = Int64()
-    ..handshake = handshake;
-  return ClientToServer()..v0 = v0;
-}
-
-ClientToServer createClientToServerFromApplicationData(
-  ApplicationData applicationData,
-) {
-  final v0 = client.V0()
-    ..seq = Int64()
-    ..applicationdata = applicationData;
-  return ClientToServer()..v0 = v0;
 }
 
 Future<void> handleMediaError(MediaFile media) async {
@@ -99,11 +79,6 @@ Future<bool> importSignalContactAndCreateRequest(
   if (!await processSignalUserData(userdata)) {
     return false;
   }
-
-  // 1. Setup notifications keys with the other user
-  await setupNotificationWithUsers(
-    forceContact: userdata.userId.toInt(),
-  );
 
   // 2. Then send user request
   await sendCipherText(

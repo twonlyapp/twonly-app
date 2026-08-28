@@ -1,27 +1,24 @@
-// ignore_for_file: avoid_dynamic_calls
-
 import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:fixnum/fixnum.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
+import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/api/rust_api_result.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
 
+import 'user_config.dart';
 import 'user_environment.dart';
 
 class RealHttpOverrides extends HttpOverrides {
@@ -63,22 +60,25 @@ class TestClient {
       if (!connected) throw Exception('Failed to connect to API');
 
       Log.info('Requesting POW...');
-      final powRes = await api.getProofOfWork();
-      Log.info('POW result: $powRes');
-      if (powRes.$1 == null) throw Exception('Failed to get POW');
+      final pow = await rustApiProtobuf(
+        RustApi.getProofOfWork(),
+        decodeProofOfWork,
+      );
+      if (pow == null) throw Exception('Failed to get POW');
+      Log.info('POW result: $pow');
 
-      final prefix = powRes.$1!.prefix;
-      final difficulty = powRes.$1!.difficulty.toInt();
+      final prefix = pow.prefix;
+      final difficulty = pow.difficulty.toInt();
       final proof = await calculatePoW(prefix, difficulty);
 
-      final regRes = await api.register(username, null, proof);
-      if (regRes.isError) {
-        throw Exception('Registration failed: ${regRes.error}');
-      }
+      realUserId = await RustApi.register(
+        username: username,
+        proofOfWork: proof,
+        langCode: 'en',
+        isIos: false,
+      );
 
-      realUserId = regRes.value.userid.toInt() as int;
-
-      final userData = UserData(
+      final userData = testUserConfig(
         userId: realUserId,
         username: username,
         displayName: username,
@@ -107,32 +107,10 @@ class TestClient {
         GroupsCompanion(groupName: Value(other.username)),
       );
 
-      final dummyPushKeys = [
-        PushUser()
-          ..userId = Int64(other.realUserId)
-          ..pushKeys.add(
-            PushKey()
-              ..key = Uint8List(32)
-              ..id = Int64(12345)
-              ..createdAtUnixTimestamp = Int64(
-                DateTime.now().millisecondsSinceEpoch,
-              ),
-          ),
-        PushUser()
-          ..userId = Int64(realUserId)
-          ..pushKeys.add(
-            PushKey()
-              ..key = Uint8List(32)
-              ..id = Int64(67890)
-              ..createdAtUnixTimestamp = Int64(
-                DateTime.now().millisecondsSinceEpoch,
-              ),
-          ),
-      ];
-      await setPushKeys(SecureStorageKeys.sendingPushKeys, dummyPushKeys);
-      await setPushKeys(SecureStorageKeys.receivingPushKeys, dummyPushKeys);
-
-      final userData = await api.getUserById(other.realUserId);
+      final userData = await rustApiProtobuf(
+        RustApi.getUserById(userId: other.realUserId),
+        decodeUserData,
+      );
       final sessionStarted = await processSignalUserData(userData!);
       if (!sessionStarted) throw Exception('Failed to start session');
     });
@@ -242,7 +220,10 @@ class TestClient {
     final msg = pb.Message()
       ..type = pb.Message_Type.SENDER_DELIVERY_RECEIPT
       ..receiptId = receiptId;
-    await api.sendTextMessage(target.realUserId, msg.writeToBuffer(), null);
+    await RustApi.sendTextMessage(
+      userId: target.realUserId,
+      body: msg.writeToBuffer(),
+    );
   }
 
   Future<void> sendReaction(

@@ -177,7 +177,7 @@ class _SynchronizedImageViewerScreenState
 
     if (deleteCompletely) {
       item.mediaService.fullMediaRemoval();
-      await apiService.deleteMemory(mediaId);
+      await RustApi.deleteMemory(mediaId: mediaId);
       await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
 
       widget.galleryItems.removeAt(_currentIndex);

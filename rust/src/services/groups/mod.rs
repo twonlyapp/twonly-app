@@ -7,7 +7,9 @@ pub(crate) mod crypto;
 pub(crate) mod model;
 
 use crate::api::groups::GroupApi;
+use crate::api::messages::incoming::client2client::messages::queue_encrypted_content;
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
+use crate::api::proto::client::encrypted_content::GroupJoin;
 use crate::api::proto::client::{
     encrypted_appended_group_state, encrypted_content, EncryptedAppendedGroupState,
     EncryptedContent, EncryptedGroupState,
@@ -22,9 +24,9 @@ use crate::database::app::tables::{
 };
 use crate::error::{Result, TwonlyError};
 use crate::services::messages::MessageService;
-use crate::utils::new_uuid_v4;
+use crate::utils::{current_time, new_uuid_v4};
 use model::GroupRecord;
-use prost::Message as _;
+use prost::Message;
 use rand::{RngCore, SeedableRng};
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -38,6 +40,61 @@ pub struct GroupService {
 impl GroupService {
     pub fn new(ctx: &Arc<Context>) -> Self {
         Self { ctx: ctx.clone() }
+    }
+
+    pub(crate) async fn handle_membership_error(
+        &self,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        from_user_id: i64,
+        group_id: String,
+        related_receipt_id: String,
+    ) -> Result<()> {
+        if !self.fetch_group_state_in_transaction(t, &group_id).await? {
+            return Ok(());
+        }
+
+        let group = GroupRecord::load_in_transaction(t, &group_id).await?;
+        let is_still_member = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                SELECT 1 FROM group_members
+                WHERE group_id = ? AND contact_id = ? AND member_state != 'leftGroup'
+            )"#,
+            group_id,
+            from_user_id,
+        )
+        .fetch_one(&mut **t)
+        .await?
+            != 0;
+
+        if is_still_member {
+            queue_encrypted_content(
+                t,
+                from_user_id,
+                EncryptedContent {
+                    group_id: Some(group_id.clone()),
+                    group_create: Some(encrypted_content::GroupCreate {
+                        state_key: group.state_key()?.to_vec(),
+                        group_public_key: group.identity()?.identity_key().serialize().to_vec(),
+                        group_name: None,
+                    }),
+                    ..Default::default()
+                },
+                true,
+            )
+            .await?;
+        }
+
+        sqlx::query!(
+            r#"UPDATE receipts
+               SET mark_for_retry = ?, retry_count = retry_count + 1
+               WHERE receipt_id = ? AND contact_id = ?"#,
+            current_time().timestamp(),
+            related_receipt_id,
+            from_user_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        Ok(())
     }
 
     pub async fn create_group(&self, group_name: String, member_ids: Vec<i64>) -> Result<bool> {
@@ -112,17 +169,28 @@ impl GroupService {
 
     pub async fn fetch_group_state(&self, group_id: String) -> Result<bool> {
         let database = self.ctx.get_app_database().await;
-        let group = GroupRecord::load(&database.pool, &group_id).await?;
+        let mut t = database.pool.begin().await?;
+        let updated = self
+            .fetch_group_state_in_transaction(&mut t, &group_id)
+            .await?;
+        t.commit().await?;
+        database.notify_committed(["groups", "group_members", "contacts"]);
+        Ok(updated)
+    }
+
+    async fn fetch_group_state_in_transaction(
+        &self,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        group_id: &str,
+    ) -> Result<bool> {
+        let group = GroupRecord::load_in_transaction(t, group_id).await?;
         let Some(server) = GroupApi::fetch_group_state(&group_id).await? else {
-            let mut tr = database.pool.begin().await?;
             UpdateGroup::builder()
-                .group_id(group_id.clone())
+                .group_id(group_id.to_owned())
                 .left_group(true)
                 .build()
-                .execute(&mut tr)
+                .execute(t)
                 .await?;
-            tr.commit().await?;
-            database.notify_committed(["groups"]);
             return Ok(false);
         };
         let raw = crypto::decrypt(group.state_key()?, &server.encrypted_group_state)?;
@@ -157,7 +225,7 @@ impl GroupService {
                     group_id,
                     tbs.public_key,
                 )
-                .fetch_optional(&database.pool)
+                .fetch_optional(&mut **t)
                 .await?
             };
             if let Some(leaving_id) = leaving_id {
@@ -169,14 +237,8 @@ impl GroupService {
         if appended_changes && group_state.admin_ids.contains(&self.ctx.user_id().await?) {
             GroupApi::update_remote(&group, server.version_id, &group_state, None, None).await?;
         }
-        self.apply_state(
-            &database.pool,
-            &group_id,
-            server.version_id as i64,
-            &group_state,
-        )
-        .await?;
-        database.notify_committed(["groups", "group_members", "contacts"]);
+        self.apply_state(t, group_id, server.version_id as i64, &group_state)
+            .await?;
         Ok(true)
     }
 
@@ -414,14 +476,81 @@ impl GroupService {
         Ok(true)
     }
 
+    pub async fn refresh_group_state(
+        &self,
+        tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        group_id: String,
+        created: bool,
+    ) {
+        if created {
+            let _ = self
+                .fetch_group_states_for_unjoined_groups_in_transaction(tr)
+                .await;
+            let _ = self.broadcast_group_public_key(tr, &group_id).await;
+        } else {
+            let _ = self.fetch_group_state_in_transaction(tr, &group_id).await;
+        }
+    }
+
+    pub async fn broadcast_group_public_key(
+        &self,
+        tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        group_id: &str,
+    ) -> Result<()> {
+        let group = sqlx::query!(
+            "SELECT my_group_private_key FROM groups WHERE group_id = ?",
+            group_id
+        )
+        .fetch_optional(&mut **tr)
+        .await
+        .ok()
+        .flatten();
+
+        if let Some(record) = group {
+            if let Some(private_key) = record.my_group_private_key {
+                if let Ok(identity) =
+                    libsignal_protocol::IdentityKeyPair::try_from(private_key.as_slice())
+                {
+                    let content = EncryptedContent {
+                        group_join: Some(GroupJoin {
+                            group_public_key: identity.identity_key().serialize().to_vec(),
+                        }),
+                        ..Default::default()
+                    };
+                    let _ = MessageService::new(&self.ctx)
+                        .send_to_group_in_transaction(
+                            tr,
+                            group_id.to_string(),
+                            content.encode_to_vec(),
+                            None,
+                            false,
+                        )
+                        .await;
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub async fn fetch_group_states_for_unjoined_groups(&self) -> Result<()> {
         let db = self.ctx.get_app_database().await;
+        let mut t = db.pool.begin().await?;
+        self.fetch_group_states_for_unjoined_groups_in_transaction(&mut t)
+            .await?;
+        t.commit().await?;
+        Ok(())
+    }
+
+    pub async fn fetch_group_states_for_unjoined_groups_in_transaction(
+        &self,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    ) -> Result<()> {
         let ids = GetUnjoinedGroups::builder()
             .build()
-            .fetch_all(&db.pool)
+            .fetch_all(&mut **t)
             .await?;
         for id in ids {
-            if let Err(e) = self.fetch_group_state(id.clone()).await {
+            if let Err(e) = self.fetch_group_state_in_transaction(t, &id).await {
                 tracing::warn!(group_id = id, "group state refresh failed: {e}")
             }
         }
@@ -491,7 +620,7 @@ impl GroupService {
     }
 
     async fn history(
-        tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         group_id: &str,
         kind: &str,
         affected: Option<i64>,
@@ -505,14 +634,14 @@ impl GroupService {
             .maybe_new_group_name(name.map(|n| n.to_string()))
             .maybe_new_delete_messages_after_milliseconds(delete_ms)
             .build()
-            .execute(tr)
+            .execute(t)
             .await?;
         Ok(())
     }
 
     async fn apply_state(
         &self,
-        pool: &sqlx::SqlitePool,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         group_id: &str,
         version: i64,
         group_state: &EncryptedGroupState,
@@ -520,8 +649,6 @@ impl GroupService {
         let local_user_id = self.ctx.user_id().await?;
         let joined = group_state.member_ids.contains(&local_user_id);
         let admin = group_state.admin_ids.contains(&local_user_id);
-
-        let mut tr = pool.begin().await?;
 
         UpdateGroup::builder()
             .group_id(group_id.to_string())
@@ -532,14 +659,14 @@ impl GroupService {
             .left_group(!joined)
             .state_version_id(version as u64)
             .build()
-            .execute(&mut tr)
+            .execute(t)
             .await?;
 
         UpdateGroupMemberState::builder()
             .group_id(group_id.to_string())
             .member_state("leftGroup".into())
             .build()
-            .execute(&mut tr)
+            .execute(t)
             .await?;
 
         for &contact_id in &group_state.member_ids {
@@ -547,7 +674,7 @@ impl GroupService {
                 continue;
             }
 
-            let exists = Contact::exists(&mut tr, contact_id).await?;
+            let exists = Contact::exists(t, contact_id).await?;
 
             if !exists {
                 let user = match Server::get_user_by_id(&self.ctx, contact_id).await? {
@@ -567,7 +694,7 @@ impl GroupService {
                     .username(username)
                     .deleted_by_user(true)
                     .build()
-                    .insert_on_conflict_update(&mut tr)
+                    .insert_on_conflict_update(t)
                     .await?;
             }
 
@@ -583,11 +710,9 @@ impl GroupService {
                 .member_state(member_state.into())
                 .on_conflict_update(true)
                 .build()
-                .execute(&mut tr)
+                .execute(t)
                 .await?;
         }
-
-        tr.commit().await?;
         Ok(())
     }
 }

@@ -15,9 +15,6 @@ import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
@@ -262,10 +259,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
         );
 
         // Fetch serverKey
-        final res = await apiService.getServerKeyForPasswordlessRecovery(
-          userId: userId,
-          pinUnlockToken: reconstructed.pinUnlockToken,
-          pinProtectionKey: await pinKey.extractBytes(),
+        final res = await rustApiResult(
+          RustApi.getServerKeyForPasswordlessRecovery(
+            userId: userId,
+            serverKeyProtection: const [],
+            pinUnlockToken: Uint8List.fromList(reconstructed.pinUnlockToken),
+            pinProtectionKey: Uint8List.fromList(await pinKey.extractBytes()),
+          ),
         );
 
         if (res.isError) {
@@ -281,8 +281,7 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           return;
         }
 
-        final ok = res.value as server.Response_Ok;
-        serverKey = Uint8List.fromList(ok.passwordlessRecoveryServerKey);
+        serverKey = Uint8List.fromList(res.value!);
       } else if (reconstructed.hasEmailHint()) {
         final state = _onboardingState;
         if (state == null) return;
@@ -302,10 +301,12 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
           }
 
           // Fetch serverKey (sends recovery email)
-          final res = await apiService.getServerKeyForPasswordlessRecovery(
-            userId: userId,
-            email: email,
-            serverKeyProtection: reconstructed.serverKeyProtection,
+          final res = await rustApiResult(
+            RustApi.getServerKeyForPasswordlessRecovery(
+              userId: userId,
+              email: email,
+              serverKeyProtection: reconstructed.serverKeyProtection,
+            ),
           );
 
           if (res.isError) {
@@ -444,11 +445,13 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
   Future<void> _registerPasswordlessNotification(OnboardingState state) async {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (!mounted) return;
-    final res = await apiService.registerPasswordlessNotification(
-      notificationId: state.notificationId!,
-      downloadAuthToken: state.downloadAuthToken!,
-      langCode: Localizations.localeOf(context).languageCode,
-      googleFcm: fcmToken,
+    final res = await rustApiResult(
+      RustApi.registerPasswordlessNotification(
+        notificationId: state.notificationId!,
+        downloadAuthToken: state.downloadAuthToken!,
+        langCode: Localizations.localeOf(context).languageCode,
+        googleFcm: fcmToken,
+      ),
     );
     if (res.isSuccess) {
       state.serverRegistered = true;

@@ -54,7 +54,7 @@ class _BackupViewState extends State<BackupView> {
   Future<void> _loadBackupStatus() async {
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
-    final memoriesUsage = await apiService.getMemoriesUsage();
+    final memoriesUsage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
     if (!mounted) return;
     setState(() {
       _backupStatus = status;

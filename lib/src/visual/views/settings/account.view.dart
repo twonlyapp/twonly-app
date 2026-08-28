@@ -56,7 +56,7 @@ class AccountView extends StatelessWidget {
                 context.lang.settingsAccountDeleteModalBody,
               );
               if (ok) {
-                final res = await apiService.deleteAccount();
+                final res = await rustApiResult(RustApi.deleteAccount());
                 if (res.isError) {
                   if (!context.mounted) return;
                   showSnackbar(

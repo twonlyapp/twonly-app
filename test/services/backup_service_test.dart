@@ -14,14 +14,13 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/model/json/userdata.model.dart'
-    hide LastBackupUploadState;
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 
 import '../mocks/platform_channels.dart';
+import '../mocks/user_config.dart';
 
 void main() {
   if (!Platform.isMacOS) {
@@ -90,7 +89,7 @@ void main() {
       ..registerSingleton<UserService>(UserService())
       ..registerSingleton<ApiService>(ApiService());
 
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 1,
       username: 'test_user',
       displayName: 'Test User',

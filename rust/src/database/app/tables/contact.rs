@@ -3,7 +3,10 @@
  *
  */
 
-use crate::{context::Context, error::Result};
+use crate::{
+    context::Context,
+    error::{Result, TwonlyError},
+};
 use sqlx::{Sqlite, Transaction};
 
 #[derive(sqlx::FromRow, Debug, Clone)]
@@ -119,7 +122,7 @@ impl Contact {
         sqlx::query!(
             r#"
             INSERT INTO contacts(user_id, username, signal_version, accepted, requested, deleted_by_user, blocked)
-            VALUES (?, COALESCE(?, '[Unknown]'), COALESCE(?, 'v1'), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0))
+            VALUES (?, COALESCE(?, '[Unknown]'), COALESCE(?, 'v2'), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0))
             ON CONFLICT(user_id) DO UPDATE SET
                 username = COALESCE(?, contacts.username),
                 signal_version = COALESCE(?, contacts.signal_version),
@@ -211,5 +214,18 @@ impl Contact {
         .await?
             != 0;
         Ok(exists)
+    }
+
+    pub async fn ensure_exists(
+        transaction: &mut Transaction<'_, Sqlite>,
+        user_id: i64,
+    ) -> Result<()> {
+        if !Self::exists(transaction, user_id).await? {
+            return Err(TwonlyError::Generic(format!(
+                "contact {user_id} does not exist"
+            )));
+        }
+
+        Ok(())
     }
 }

@@ -30,10 +30,12 @@ class SignalIdentityService {
         await UserService.update((user) {
           user.signalLastSignedPreKeyUpdated = now;
         });
-        final res = await apiService.updateSignedPreKey(
-          signedPreKey.id,
-          signedPreKey.getKeyPair().publicKey.serialize(),
-          signedPreKey.signature,
+        final res = await rustApiResult(
+          RustApi.updateSignedPreKey(
+            id: signedPreKey.id,
+            key: signedPreKey.getKeyPair().publicKey.serialize(),
+            signature: signedPreKey.signature,
+          ),
         );
         if (res.isError) {
           Log.error('could not update the signed pre key: ${res.error}');
@@ -52,14 +54,16 @@ class SignalIdentityService {
         )) {
       final bundle = await RustSignal.generateBundle();
 
-      final pqcRes = await apiService.uploadPqcPreKeys(
-        bundle.signedPreKeyId,
-        bundle.signedPreKeyPublic,
-        bundle.signedPreKeySignature,
-        bundle.kyberPreKeyId,
-        bundle.kyberPreKeyPublic,
-        bundle.kyberPreKeySignature,
-        [],
+      final pqcRes = await rustApiResult(
+        RustApi.uploadPqcPreKeys(
+          eccSignedPrekeyId: bundle.signedPreKeyId,
+          eccSignedPrekey: bundle.signedPreKeyPublic,
+          eccSignedPrekeySignature: bundle.signedPreKeySignature,
+          kyberSignedPrekeyId: bundle.kyberPreKeyId,
+          kyberSignedPrekey: bundle.kyberPreKeyPublic,
+          kyberSignedPrekeySignature: bundle.kyberPreKeySignature,
+          prekeys: const [],
+        ),
       );
 
       if (pqcRes.isError) {

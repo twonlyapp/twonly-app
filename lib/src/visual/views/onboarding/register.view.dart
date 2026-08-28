@@ -1,15 +1,16 @@
 // ignore_for_file: avoid_dynamic_calls
 
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -77,7 +78,12 @@ class _RegisterViewState extends State<RegisterView> {
       if (proofOfWork != null) {
         proof = await proofOfWork!;
       } else {
-        final (pow, registrationDisabled) = await apiService.getProofOfWork();
+        final proofResult = await rustApiResult(RustApi.getProofOfWork());
+        final pow = proofResult.value == null
+            ? null
+            : decodeProofOfWork(proofResult.value!);
+        final registrationDisabled =
+            proofResult.error == ErrorCode.RegistrationDisabled;
         if (pow == null) {
           setState(() {
             _registrationDisabled = registrationDisabled;
@@ -97,10 +103,17 @@ class _RegisterViewState extends State<RegisterView> {
 
       var userId = 0;
 
-      final res = await apiService.register(username, null, proof);
+      final res = await rustApiResult(
+        RustApi.register(
+          username: username,
+          proofOfWork: proof,
+          langCode: ui.PlatformDispatcher.instance.locale.languageCode,
+          isIos: Platform.isIOS,
+        ),
+      );
       if (res.isSuccess) {
         Log.info('Got user_id ${res.value} from server');
-        userId = res.value.userid.toInt() as int;
+        userId = res.value!;
       } else {
         proofOfWork = null;
         if (res.error == ErrorCode.RegistrationDisabled) {
@@ -120,7 +133,7 @@ class _RegisterViewState extends State<RegisterView> {
           setState(() {
             _usernameErrorText = errorCodeToText(
               context,
-              res.error as ErrorCode,
+              res.error!,
             );
             _isTryingToRegister = false;
           });
@@ -141,7 +154,7 @@ class _RegisterViewState extends State<RegisterView> {
           await showAlertDialog(
             context,
             'Oh no!',
-            errorCodeToText(context, res.error as ErrorCode),
+            errorCodeToText(context, res.error!),
           );
         }
         return;
@@ -151,11 +164,10 @@ class _RegisterViewState extends State<RegisterView> {
         _isTryingToRegister = false;
       });
 
-      final userData = UserData(
+      final userData = await UserConfigApi.create(
         userId: userId,
         username: username,
         displayName: username,
-        subscriptionPlan: 'Free',
         currentSetupPage: SetupPages.profile.name,
         appVersion: AppState.latestAppVersionId,
       );

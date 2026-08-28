@@ -177,11 +177,17 @@ void main() {
         // Both clients now fetch the updated contacts from the dev server
         // This will invoke processSignalUserData and migrate the signal version to V2
         await clientA.run(() async {
-          final userData = await clientA.api.getUserById(clientB.realUserId);
+          final userData = await rustApiProtobuf(
+            RustApi.getUserById(userId: clientB.realUserId),
+            decodeUserData,
+          );
           if (userData != null) await processSignalUserData(userData);
         });
         await clientB.run(() async {
-          final userData = await clientB.api.getUserById(clientA.realUserId);
+          final userData = await rustApiProtobuf(
+            RustApi.getUserById(userId: clientA.realUserId),
+            decodeUserData,
+          );
           if (userData != null) await processSignalUserData(userData);
         });
 

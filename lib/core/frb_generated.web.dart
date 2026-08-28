@@ -11,6 +11,7 @@ import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
 import 'bridge/groups.dart';
+import 'bridge/user_config.dart';
 import 'bridge/wrapper.dart';
 import 'bridge/wrapper/app_database.dart';
 import 'bridge/wrapper/backup.dart';
@@ -25,6 +26,7 @@ import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 import 'signal/engine.dart';
+import 'user_config.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -38,14 +40,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
+  DateTime dco_decode_Chrono_Utc(dynamic raw);
+
+  @protected
   FutureOr<void> Function(String, String, PlatformInt64, String)
   dco_decode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(
     dynamic raw,
   );
-
-  @protected
-  FutureOr<void> Function(String, bool)
-  dco_decode_DartFn_Inputs_String_bool_Output_unit_AnyhowException(dynamic raw);
 
   @protected
   FutureOr<void> Function(String, PlatformInt64)
@@ -64,18 +65,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FutureOr<void> Function()
-  dco_decode_DartFn_Inputs__Output_unit_AnyhowException(dynamic raw);
-
-  @protected
   FutureOr<void> Function(PlatformInt64)
   dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
-
-  @protected
-  FutureOr<void> Function(PlatformInt64, String, String)
-  dco_decode_DartFn_Inputs_i_64_String_String_Output_unit_AnyhowException(
-    dynamic raw,
-  );
 
   @protected
   FutureOr<LegacySignalEncryptResult?> Function(PlatformInt64, Uint8List)
@@ -96,13 +87,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  FutureOr<Uint8List?> Function(PlatformInt64, String?, Uint8List, int)
-  dco_decode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_list_prim_u_8_strict_AnyhowException(
-    dynamic raw,
-  );
+  FutureOr<void> Function(UserConfig)
+  dco_decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(dynamic raw);
 
   @protected
   Object dco_decode_DartOpaque(dynamic raw);
+
+  @protected
+  Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
 
   @protected
   Map<PlatformInt64, Uint8List> dco_decode_Map_i_64_list_prim_u_8_strict_None(
@@ -134,6 +126,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  DateTime dco_decode_box_autoadd_Chrono_Utc(dynamic raw);
+
+  @protected
   ApiConnectionState dco_decode_box_autoadd_api_connection_state(dynamic raw);
 
   @protected
@@ -160,12 +155,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PasswordlessRecoveryConfig
+  dco_decode_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
   PreparedOutgoingMessage dco_decode_box_autoadd_prepared_outgoing_message(
     dynamic raw,
   );
 
   @protected
+  TwonlySafeBackup dco_decode_box_autoadd_twonly_safe_backup(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  UserConfig dco_decode_box_autoadd_user_config(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -190,6 +195,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
+  LastBackupUploadState dco_decode_last_backup_upload_state(dynamic raw);
 
   @protected
   LegacyMigrationReport dco_decode_legacy_migration_report(dynamic raw);
@@ -246,13 +254,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_list_record_i_64_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<(String, List<String>)> dco_decode_list_record_string_list_string(
+    dynamic raw,
+  );
+
+  @protected
   List<SqlRow> dco_decode_list_sql_row(dynamic raw);
 
   @protected
   List<SqlValue> dco_decode_list_sql_value(dynamic raw);
 
   @protected
+  Map<String, List<String>>? dco_decode_opt_Map_String_list_String_None(
+    dynamic raw,
+  );
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  DateTime? dco_decode_opt_box_autoadd_Chrono_Utc(dynamic raw);
 
   @protected
   ApiConnectionState? dco_decode_opt_box_autoadd_api_connection_state(
@@ -273,15 +294,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_opt_box_autoadd_legacy_signal_encrypt_result(dynamic raw);
 
   @protected
+  PasswordlessRecoveryConfig?
+  dco_decode_opt_box_autoadd_passwordless_recovery_config(dynamic raw);
+
+  @protected
   PreparedOutgoingMessage? dco_decode_opt_box_autoadd_prepared_outgoing_message(
     dynamic raw,
   );
 
   @protected
+  TwonlySafeBackup? dco_decode_opt_box_autoadd_twonly_safe_backup(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
+  UserConfig? dco_decode_opt_box_autoadd_user_config(dynamic raw);
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
+
+  @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  PasswordlessRecoveryConfig dco_decode_passwordless_recovery_config(
+    dynamic raw,
+  );
 
   @protected
   PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
@@ -298,6 +337,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (Uint8List, PlatformInt64) dco_decode_record_list_prim_u_8_strict_i_64(
     dynamic raw,
   );
+
+  @protected
+  (String, List<String>) dco_decode_record_string_list_string(dynamic raw);
 
   @protected
   (String, String) dco_decode_record_string_string(dynamic raw);
@@ -324,13 +366,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustUtils dco_decode_rust_utils(dynamic raw);
 
   @protected
-  ServerResultEmpty dco_decode_server_result_empty(dynamic raw);
-
-  @protected
-  ServerResultI64 dco_decode_server_result_i_64(dynamic raw);
-
-  @protected
-  ServerResultVecU8 dco_decode_server_result_vec_u_8(dynamic raw);
+  SetupProfile dco_decode_setup_profile(dynamic raw);
 
   @protected
   SqlExecutionResult dco_decode_sql_execution_result(dynamic raw);
@@ -343,6 +379,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue dco_decode_sql_value(dynamic raw);
+
+  @protected
+  ThemeMode dco_decode_theme_mode(dynamic raw);
+
+  @protected
+  TwonlySafeBackup dco_decode_twonly_safe_backup(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -360,13 +402,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
+  UserConfig dco_decode_user_config(dynamic raw);
+
+  @protected
+  UserConfigApi dco_decode_user_config_api(dynamic raw);
+
+  @protected
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
+  DateTime sse_decode_Chrono_Utc(SseDeserializer deserializer);
+
+  @protected
   Object sse_decode_DartOpaque(SseDeserializer deserializer);
+
+  @protected
+  Map<String, List<String>> sse_decode_Map_String_list_String_None(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Map<PlatformInt64, Uint8List> sse_decode_Map_i_64_list_prim_u_8_strict_None(
@@ -406,6 +462,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  DateTime sse_decode_box_autoadd_Chrono_Utc(SseDeserializer deserializer);
+
+  @protected
   ApiConnectionState sse_decode_box_autoadd_api_connection_state(
     SseDeserializer deserializer,
   );
@@ -438,12 +497,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PasswordlessRecoveryConfig
+  sse_decode_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreparedOutgoingMessage sse_decode_box_autoadd_prepared_outgoing_message(
     SseDeserializer deserializer,
   );
 
   @protected
+  TwonlySafeBackup sse_decode_box_autoadd_twonly_safe_backup(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  UserConfig sse_decode_box_autoadd_user_config(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -470,6 +543,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
+  LastBackupUploadState sse_decode_last_backup_upload_state(
+    SseDeserializer deserializer,
+  );
 
   @protected
   LegacyMigrationReport sse_decode_legacy_migration_report(
@@ -540,13 +618,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<(String, List<String>)> sse_decode_list_record_string_list_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<SqlRow> sse_decode_list_sql_row(SseDeserializer deserializer);
 
   @protected
   List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
 
   @protected
+  Map<String, List<String>>? sse_decode_opt_Map_String_list_String_None(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  DateTime? sse_decode_opt_box_autoadd_Chrono_Utc(SseDeserializer deserializer);
 
   @protected
   ApiConnectionState? sse_decode_opt_box_autoadd_api_connection_state(
@@ -569,7 +660,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PasswordlessRecoveryConfig?
+  sse_decode_opt_box_autoadd_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreparedOutgoingMessage? sse_decode_opt_box_autoadd_prepared_outgoing_message(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TwonlySafeBackup? sse_decode_opt_box_autoadd_twonly_safe_backup(
     SseDeserializer deserializer,
   );
 
@@ -577,7 +679,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
+  UserConfig? sse_decode_opt_box_autoadd_user_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+
+  @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  PasswordlessRecoveryConfig sse_decode_passwordless_recovery_config(
+    SseDeserializer deserializer,
+  );
 
   @protected
   PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
@@ -594,6 +709,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (Uint8List, PlatformInt64) sse_decode_record_list_prim_u_8_strict_i_64(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  (String, List<String>) sse_decode_record_string_list_string(
     SseDeserializer deserializer,
   );
 
@@ -628,17 +748,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustUtils sse_decode_rust_utils(SseDeserializer deserializer);
 
   @protected
-  ServerResultEmpty sse_decode_server_result_empty(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  ServerResultI64 sse_decode_server_result_i_64(SseDeserializer deserializer);
-
-  @protected
-  ServerResultVecU8 sse_decode_server_result_vec_u_8(
-    SseDeserializer deserializer,
-  );
+  SetupProfile sse_decode_setup_profile(SseDeserializer deserializer);
 
   @protected
   SqlExecutionResult sse_decode_sql_execution_result(
@@ -653,6 +763,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SqlValue sse_decode_sql_value(SseDeserializer deserializer);
+
+  @protected
+  ThemeMode sse_decode_theme_mode(SseDeserializer deserializer);
+
+  @protected
+  TwonlySafeBackup sse_decode_twonly_safe_backup(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -670,6 +786,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
+  UserConfig sse_decode_user_config(SseDeserializer deserializer);
+
+  @protected
+  UserConfigApi sse_decode_user_config_api(SseDeserializer deserializer);
+
+  @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
@@ -679,15 +801,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_Chrono_Utc(DateTime self, SseSerializer serializer);
+
+  @protected
   void
   sse_encode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(
     FutureOr<void> Function(String, String, PlatformInt64, String) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_DartFn_Inputs_String_bool_Output_unit_AnyhowException(
-    FutureOr<void> Function(String, bool) self,
     SseSerializer serializer,
   );
 
@@ -711,20 +830,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_DartFn_Inputs__Output_unit_AnyhowException(
-    FutureOr<void> Function() self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_DartFn_Inputs_i_64_String_String_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, String, String) self,
     SseSerializer serializer,
   );
 
@@ -752,14 +859,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_list_prim_u_8_strict_AnyhowException(
-    FutureOr<Uint8List?> Function(PlatformInt64, String?, Uint8List, int) self,
+  void sse_encode_DartFn_Inputs_user_config_Output_unit_AnyhowException(
+    FutureOr<void> Function(UserConfig) self,
     SseSerializer serializer,
   );
 
   @protected
   void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Map_String_list_String_None(
+    Map<String, List<String>> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_Map_i_64_list_prim_u_8_strict_None(
@@ -804,6 +916,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_Chrono_Utc(
+    DateTime self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_api_connection_state(
     ApiConnectionState self,
     SseSerializer serializer,
@@ -846,13 +964,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_passwordless_recovery_config(
+    PasswordlessRecoveryConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_prepared_outgoing_message(
     PreparedOutgoingMessage self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_box_autoadd_twonly_safe_backup(
+    TwonlySafeBackup self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_user_config(
+    UserConfig self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -883,6 +1019,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_last_backup_upload_state(
+    LastBackupUploadState self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_legacy_migration_report(
@@ -969,13 +1111,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_record_string_list_string(
+    List<(String, List<String>)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_sql_row(List<SqlRow> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_Map_String_list_String_None(
+    Map<String, List<String>>? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_Chrono_Utc(
+    DateTime? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_api_connection_state(
@@ -1002,8 +1162,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_passwordless_recovery_config(
+    PasswordlessRecoveryConfig? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_prepared_outgoing_message(
     PreparedOutgoingMessage? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_twonly_safe_backup(
+    TwonlySafeBackup? self,
     SseSerializer serializer,
   );
 
@@ -1011,8 +1183,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_user_config(
+    UserConfig? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_list_prim_u_8_strict(
     Uint8List? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_passwordless_recovery_config(
+    PasswordlessRecoveryConfig self,
     SseSerializer serializer,
   );
 
@@ -1037,6 +1224,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_list_prim_u_8_strict_i_64(
     (Uint8List, PlatformInt64) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_list_string(
+    (String, List<String>) self,
     SseSerializer serializer,
   );
 
@@ -1080,22 +1273,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_rust_utils(RustUtils self, SseSerializer serializer);
 
   @protected
-  void sse_encode_server_result_empty(
-    ServerResultEmpty self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_server_result_i_64(
-    ServerResultI64 self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_server_result_vec_u_8(
-    ServerResultVecU8 self,
-    SseSerializer serializer,
-  );
+  void sse_encode_setup_profile(SetupProfile self, SseSerializer serializer);
 
   @protected
   void sse_encode_sql_execution_result(
@@ -1113,6 +1291,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_sql_value(SqlValue self, SseSerializer serializer);
 
   @protected
+  void sse_encode_theme_mode(ThemeMode self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_twonly_safe_backup(
+    TwonlySafeBackup self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -1126,6 +1313,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_user_config(UserConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_user_config_api(UserConfigApi self, SseSerializer serializer);
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);

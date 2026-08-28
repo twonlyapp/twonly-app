@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/core/user_config.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/profile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/onboarding/setup/components/next_button.comp.dart';

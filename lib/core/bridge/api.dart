@@ -5,15 +5,11 @@
 
 import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-part 'api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `from_rust_state`
+// These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `encoded_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`
-// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `into_bridge`, `into_bridge`, `into_bridge`, `into_bridge`, `into_bridge`, `into_bridge`, `into_bridge`, `into_bridge`
 
 enum ApiConnectionState {
   stopped,
@@ -85,11 +81,10 @@ class PreparedOutgoingMessage {
 class RustApi {
   const RustApi();
 
-  static Future<ServerResultEmpty> addAdditionalUser({
-    required PlatformInt64 userId,
-  }) => RustLib.instance.api.crateBridgeApiRustApiAddAdditionalUser(
-    userId: userId,
-  );
+  static Future<void> addAdditionalUser({required PlatformInt64 userId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiAddAdditionalUser(
+        userId: userId,
+      );
 
   static Future<BigInt> allocateSequence() =>
       RustLib.instance.api.crateBridgeApiRustApiAllocateSequence();
@@ -97,15 +92,15 @@ class RustApi {
   static String apiBaseUrl({required String protocol}) =>
       RustLib.instance.api.crateBridgeApiRustApiApiBaseUrl(protocol: protocol);
 
-  static Future<ServerResultEmpty> changeUsername({required String username}) =>
-      RustLib.instance.api.crateBridgeApiRustApiChangeUsername(
-        username: username,
-      );
+  static Future<void> changeUsername({required String username}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiChangeUsername(username: username);
 
   static Future<void> checkForDeletedUsernames() =>
       RustLib.instance.api.crateBridgeApiRustApiCheckForDeletedUsernames();
 
-  static Future<ServerResultVecU8> checkForPasswordlessNotification({
+  static Future<Uint8List> checkForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     required Int64List alreadyReceivedMessageIds,
@@ -119,11 +114,10 @@ class RustApi {
   static Future<void> close() =>
       RustLib.instance.api.crateBridgeApiRustApiClose();
 
-  static Future<ServerResultEmpty> confirmMemoriesUpload({
-    required String mediaId,
-  }) => RustLib.instance.api.crateBridgeApiRustApiConfirmMemoriesUpload(
-    mediaId: mediaId,
-  );
+  static Future<void> confirmMemoriesUpload({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiConfirmMemoriesUpload(
+        mediaId: mediaId,
+      );
 
   static Future<void> connect() =>
       RustLib.instance.api.crateBridgeApiRustApiConnect();
@@ -131,25 +125,31 @@ class RustApi {
   static Future<ApiConnectionState> connectionState() =>
       RustLib.instance.api.crateBridgeApiRustApiConnectionState();
 
-  static Future<ServerResultEmpty> deleteAccount() =>
+  static Future<void> deleteAccount() =>
       RustLib.instance.api.crateBridgeApiRustApiDeleteAccount();
 
-  static Future<ServerResultEmpty> deleteMemory({required String mediaId}) =>
+  static Future<void> deleteMemory({required String mediaId}) =>
       RustLib.instance.api.crateBridgeApiRustApiDeleteMemory(mediaId: mediaId);
 
-  static Future<ServerResultEmpty> disableMemoriesBackup() =>
+  static Future<void> disableMemoriesBackup() =>
       RustLib.instance.api.crateBridgeApiRustApiDisableMemoriesBackup();
 
-  static Future<ServerResultEmpty> downloadDone({required List<int> token}) =>
+  static Future<void> downloadDone({required List<int> token}) =>
       RustLib.instance.api.crateBridgeApiRustApiDownloadDone(token: token);
+
+  static Future<void> downloadMedia({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiDownloadMedia(mediaId: mediaId);
+
+  static Future<void> downloadPendingMedia() =>
+      RustLib.instance.api.crateBridgeApiRustApiDownloadPendingMedia();
 
   static Stream<ApiEvent> events() =>
       RustLib.instance.api.crateBridgeApiRustApiEvents();
 
-  static Future<ServerResultEmpty> forceIpaCheck() =>
+  static Future<void> forceIpaCheck() =>
       RustLib.instance.api.crateBridgeApiRustApiForceIpaCheck();
 
-  static Future<ServerResultVecU8> getMemoriesUrl({
+  static Future<Uint8List> getMemoriesUrl({
     required String mediaId,
     required bool thumbnail,
   }) => RustLib.instance.api.crateBridgeApiRustApiGetMemoriesUrl(
@@ -157,16 +157,16 @@ class RustApi {
     thumbnail: thumbnail,
   );
 
-  static Future<ServerResultVecU8> getMemoriesUsage() =>
+  static Future<Uint8List> getMemoriesUsage() =>
       RustLib.instance.api.crateBridgeApiRustApiGetMemoriesUsage();
 
   static Future<Uint8List> getPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiGetPlanBalance();
 
-  static Future<ServerResultVecU8> getProofOfWork() =>
+  static Future<Uint8List> getProofOfWork() =>
       RustLib.instance.api.crateBridgeApiRustApiGetProofOfWork();
 
-  static Future<ServerResultVecU8> getServerKeyForPasswordlessRecovery({
+  static Future<Uint8List> getServerKeyForPasswordlessRecovery({
     required PlatformInt64 userId,
     required List<int> serverKeyProtection,
     Uint8List? pinUnlockToken,
@@ -181,14 +181,13 @@ class RustApi {
         email: email,
       );
 
-  static Future<ServerResultVecU8> getUserById({
-    required PlatformInt64 userId,
-  }) => RustLib.instance.api.crateBridgeApiRustApiGetUserById(userId: userId);
+  static Future<Uint8List> getUserById({required PlatformInt64 userId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiGetUserById(userId: userId);
 
-  static Future<ServerResultVecU8> getUserData({required String username}) =>
+  static Future<Uint8List> getUserData({required String username}) =>
       RustLib.instance.api.crateBridgeApiRustApiGetUserData(username: username);
 
-  static Future<ServerResultI64> getUserIdFromUsername({
+  static Future<PlatformInt64> getUserIdFromUsername({
     required String username,
   }) => RustLib.instance.api.crateBridgeApiRustApiGetUserIdFromUsername(
     username: username,
@@ -230,7 +229,7 @@ class RustApi {
     quoteMessageId: quoteMessageId,
   );
 
-  static Future<Uint8List> ipaPurchase({
+  static Future<void> ipaPurchase({
     required String productId,
     required String source,
     required String verificationData,
@@ -240,10 +239,8 @@ class RustApi {
     verificationData: verificationData,
   );
 
-  static Future<Uint8List> loadPlanBalance({required bool useCache}) => RustLib
-      .instance
-      .api
-      .crateBridgeApiRustApiLoadPlanBalance(useCache: useCache);
+  static Future<Uint8List> loadPlanBalance() =>
+      RustLib.instance.api.crateBridgeApiRustApiLoadPlanBalance();
 
   static Future<void> notifyMessagesOpened({
     required PlatformInt64 contactId,
@@ -253,13 +250,18 @@ class RustApi {
     messageIds: messageIds,
   );
 
+  static Future<void> performPasswordlessRecoveryHeartbeat() => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiPerformPasswordlessRecoveryHeartbeat();
+
   static Future<PreparedOutgoingMessage?> prepareQueuedMessage({
     required String receiptId,
   }) => RustLib.instance.api.crateBridgeApiRustApiPrepareQueuedMessage(
     receiptId: receiptId,
   );
 
-  static Future<ServerResultI64> register({
+  static Future<PlatformInt64> register({
     required String username,
     required PlatformInt64 proofOfWork,
     required String langCode,
@@ -271,7 +273,7 @@ class RustApi {
     isIos: isIos,
   );
 
-  static Future<ServerResultEmpty> registerPasswordlessNotification({
+  static Future<void> registerPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     required String langCode,
@@ -284,7 +286,7 @@ class RustApi {
         googleFcm: googleFcm,
       );
 
-  static Future<ServerResultEmpty> registerPasswordlessRecovery({
+  static Future<void> registerPasswordlessRecovery({
     required List<int> encryptedServerKey,
     Uint8List? pinUnlockToken,
   }) => RustLib.instance.api.crateBridgeApiRustApiRegisterPasswordlessRecovery(
@@ -297,13 +299,12 @@ class RustApi {
   static Future<void> reloadConfiguration() =>
       RustLib.instance.api.crateBridgeApiRustApiReloadConfiguration();
 
-  static Future<ServerResultEmpty> removeAdditionalUser({
-    required PlatformInt64 userId,
-  }) => RustLib.instance.api.crateBridgeApiRustApiRemoveAdditionalUser(
-    userId: userId,
-  );
+  static Future<void> removeAdditionalUser({required PlatformInt64 userId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiRemoveAdditionalUser(
+        userId: userId,
+      );
 
-  static Future<ServerResultEmpty> reportUser({
+  static Future<void> reportUser({
     required PlatformInt64 userId,
     required String reason,
   }) => RustLib.instance.api.crateBridgeApiRustApiReportUser(
@@ -321,7 +322,12 @@ class RustApi {
         username: username,
       );
 
-  static Future<ServerResultVecU8> requestMemoriesUpload({
+  static Future<void> requestMediaReupload({required String mediaId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiRequestMediaReupload(mediaId: mediaId);
+
+  static Future<Uint8List> requestMemoriesUpload({
     required PlatformInt64 size,
     required PlatformInt64 originalDate,
     required String mediaId,
@@ -375,7 +381,7 @@ class RustApi {
       .api
       .crateBridgeApiRustApiSendQueuedMessage(receiptId: receiptId);
 
-  static Future<ServerResultEmpty> sendTextMessage({
+  static Future<void> sendTextMessage({
     required PlatformInt64 userId,
     required List<int> body,
     Uint8List? pushData,
@@ -398,7 +404,7 @@ class RustApi {
       .api
       .crateBridgeApiRustApiSetBackground(inBackground: inBackground);
 
-  static Future<ServerResultEmpty> setLoginToken({required List<int> token}) =>
+  static Future<void> setLoginToken({required List<int> token}) =>
       RustLib.instance.api.crateBridgeApiRustApiSetLoginToken(token: token);
 
   static Future<void> setNetworkAvailable({required bool available}) => RustLib
@@ -406,7 +412,7 @@ class RustApi {
       .api
       .crateBridgeApiRustApiSetNetworkAvailable(available: available);
 
-  static Future<ServerResultEmpty> submitRecoveryShare({
+  static Future<void> submitRecoveryShare({
     required String notificationId,
     required List<int> encryptedMessage,
   }) => RustLib.instance.api.crateBridgeApiRustApiSubmitRecoveryShare(
@@ -414,10 +420,10 @@ class RustApi {
     encryptedMessage: encryptedMessage,
   );
 
-  static Future<ServerResultEmpty> updateFcmToken({required String token}) =>
+  static Future<void> updateFcmToken({required String token}) =>
       RustLib.instance.api.crateBridgeApiRustApiUpdateFcmToken(token: token);
 
-  static Future<Uint8List> updateSignedPreKey({
+  static Future<void> updateSignedPreKey({
     required PlatformInt64 id,
     required List<int> key,
     required List<int> signature,
@@ -427,7 +433,7 @@ class RustApi {
     signature: signature,
   );
 
-  static Future<Uint8List> uploadPqcPreKeys({
+  static Future<void> uploadPqcPreKeys({
     required PlatformInt64 eccSignedPrekeyId,
     required List<int> eccSignedPrekey,
     required List<int> eccSignedPrekeySignature,
@@ -452,38 +458,4 @@ class RustApi {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RustApi && runtimeType == other.runtimeType;
-}
-
-@freezed
-sealed class ServerResultEmpty with _$ServerResultEmpty {
-  const ServerResultEmpty._();
-
-  const factory ServerResultEmpty.ok() = ServerResultEmpty_Ok;
-  const factory ServerResultEmpty.errorCode(
-    int field0,
-  ) = ServerResultEmpty_ErrorCode;
-}
-
-@freezed
-sealed class ServerResultI64 with _$ServerResultI64 {
-  const ServerResultI64._();
-
-  const factory ServerResultI64.ok(
-    PlatformInt64 field0,
-  ) = ServerResultI64_Ok;
-  const factory ServerResultI64.errorCode(
-    int field0,
-  ) = ServerResultI64_ErrorCode;
-}
-
-@freezed
-sealed class ServerResultVecU8 with _$ServerResultVecU8 {
-  const ServerResultVecU8._();
-
-  const factory ServerResultVecU8.ok(
-    Uint8List field0,
-  ) = ServerResultVecU8_Ok;
-  const factory ServerResultVecU8.errorCode(
-    int field0,
-  ) = ServerResultVecU8_ErrorCode;
 }

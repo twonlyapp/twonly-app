@@ -12,7 +12,6 @@ mod error;
 pub use error::TwonlyError;
 mod frb_generated;
 mod keys;
-#[doc(hidden)]
 pub mod log;
 pub mod sealed_sender;
 mod secure_storage;

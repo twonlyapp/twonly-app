@@ -6,7 +6,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -62,7 +61,9 @@ class _ProfileViewState extends State<ProfileView> {
       filteredUsername = filteredUsername.substring(0, 12);
     }
 
-    final result = await apiService.changeUsername(filteredUsername);
+    final result = await rustApiResult(
+      RustApi.changeUsername(username: filteredUsername),
+    );
     if (result.isError) {
       if (!mounted) return;
 

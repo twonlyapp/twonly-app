@@ -3,31 +3,25 @@
  *
  */
 
+use std::sync::Arc;
+
+use crate::api::messages::incoming::client2client::messages::queue_encrypted_content;
 use crate::api::proto::client::encrypted_content;
+use crate::context::Context;
+use crate::database::app::tables::{Contact, Group};
 use crate::error::{Result, TwonlyError};
-use crate::utils::{milliseconds_to_seconds, new_uuid_v4};
+use crate::services::groups::GroupService;
+use crate::utils::{is_today, milliseconds_to_seconds, new_uuid_v4};
 use rand::SeedableRng;
 use sqlx::{Sqlite, Transaction};
 
 pub(crate) async fn ensure_group_member(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
 ) -> Result<()> {
-    let allowed = sqlx::query_scalar!(
-        r#"
-        SELECT EXISTS(
-            SELECT 1
-            FROM group_members
-            WHERE group_id = ? AND contact_id = ?
-        )
-        "#,
-        group_id,
-        from_user_id,
-    )
-    .fetch_one(&mut **transaction)
-    .await?
-        != 0;
+    let allowed = Group::is_member(t, group_id, from_user_id).await?;
+
     if !allowed {
         return Err(TwonlyError::Generic(format!(
             "user {from_user_id} is not a member of group {group_id}"
@@ -37,32 +31,19 @@ pub(crate) async fn ensure_group_member(
 }
 
 pub(crate) async fn handle_group_create(
-    transaction: &mut Transaction<'_, Sqlite>,
+    ctx: &std::sync::Arc<crate::context::Context>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
     create: encrypted_content::GroupCreate,
 ) -> Result<()> {
-    let contact_exists = sqlx::query_scalar!(
-        r#"
-        SELECT EXISTS(
-            SELECT 1 FROM contacts WHERE user_id = ?
-        )
-        "#,
-        from_user_id,
-    )
-    .fetch_one(&mut **transaction)
-    .await?
-        != 0;
-    if !contact_exists {
-        return Err(TwonlyError::Generic(
-            "only known contacts may create a group".into(),
-        ));
-    }
+    Contact::ensure_exists(t, from_user_id).await?;
 
     let mut rng = rand::rngs::StdRng::from_os_rng();
     let identity = libsignal_protocol::IdentityKeyPair::generate(&mut rng);
     let private_key = identity.serialize().to_vec();
     let group_name = create.group_name.unwrap_or_default();
+
     sqlx::query!(
         r#"
         INSERT INTO groups(
@@ -83,8 +64,9 @@ pub(crate) async fn handle_group_create(
         private_key,
         group_name,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     sqlx::query!(
         r#"
         INSERT INTO group_members(group_id, contact_id, group_public_key)
@@ -96,8 +78,9 @@ pub(crate) async fn handle_group_create(
         from_user_id,
         create.group_public_key,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     sqlx::query!(
         r#"INSERT INTO group_histories(group_history_id, group_id, contact_id, type)
            VALUES (?, ?, ?, 'addMember')"#,
@@ -105,42 +88,24 @@ pub(crate) async fn handle_group_create(
         group_id,
         from_user_id,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
-    if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
-        let group_id = group_id.to_owned();
-        tokio::spawn(async move {
-            (callbacks.api.group_state_refresh)(group_id, true).await;
-        });
-    }
+
+    GroupService::new(ctx)
+        .refresh_group_state(t, group_id.to_owned(), true)
+        .await;
+
     Ok(())
 }
 
 pub(crate) async fn handle_group_join(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
     join: encrypted_content::GroupJoin,
 ) -> Result<()> {
-    let group_exists = sqlx::query_scalar!(
-        r#"SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ?)"#,
-        group_id,
-    )
-    .fetch_one(&mut **transaction)
-    .await?
-        != 0;
-    let contact_exists = sqlx::query_scalar!(
-        r#"SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ?)"#,
-        from_user_id,
-    )
-    .fetch_one(&mut **transaction)
-    .await?
-        != 0;
-    if !group_exists || !contact_exists {
-        return Err(TwonlyError::Generic(
-            "group join arrived before group/contact state".into(),
-        ));
-    }
+    Contact::ensure_exists(t, from_user_id).await?;
+    Group::ensure_exists(t, group_id).await?;
 
     sqlx::query!(
         r#"
@@ -153,13 +118,14 @@ pub(crate) async fn handle_group_join(
         from_user_id,
         join.group_public_key,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     Ok(())
 }
 
 pub(crate) async fn handle_resend_group_public_key(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
 ) -> Result<()> {
@@ -171,18 +137,19 @@ pub(crate) async fn handle_resend_group_public_key(
         "#,
         group_id,
     )
-    .fetch_optional(&mut **transaction)
+    .fetch_optional(&mut **t)
     .await?
     .flatten();
+
     let Some(private_key) = private_key else {
         return Err(TwonlyError::Generic(format!(
             "cannot resend the group public key for {group_id} to {from_user_id}"
         )));
     };
-    let identity = libsignal_protocol::IdentityKeyPair::try_from(private_key.as_slice())
-        .map_err(|error| TwonlyError::Signal(error.to_string()))?;
-    super::messages::queue_encrypted_content(
-        transaction,
+
+    let identity = libsignal_protocol::IdentityKeyPair::try_from(private_key.as_slice())?;
+    queue_encrypted_content(
+        t,
         from_user_id,
         crate::api::proto::client::EncryptedContent {
             group_id: Some(group_id.to_owned()),
@@ -194,31 +161,25 @@ pub(crate) async fn handle_resend_group_public_key(
         true,
     )
     .await?;
+
     Ok(())
 }
 
 pub(crate) async fn handle_group_update(
-    transaction: &mut Transaction<'_, Sqlite>,
+    ctx: &Arc<Context>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
     update: encrypted_content::GroupUpdate,
 ) -> Result<()> {
-    let is_direct = sqlx::query_scalar!(
-        "SELECT is_direct_chat FROM groups WHERE group_id = ?",
-        group_id
-    )
-    .fetch_optional(&mut **transaction)
-    .await?
-    .unwrap_or(0)
-        != 0;
+    let is_direct = Group::is_direct_chat(t, group_id).await?;
+
     if !is_direct {
-        if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
-            let group_id = group_id.to_owned();
-            tokio::spawn(async move {
-                (callbacks.api.group_state_refresh)(group_id, false).await;
-            });
-        }
+        GroupService::new(ctx)
+            .refresh_group_state(t, group_id.to_owned(), false)
+            .await;
     }
+
     if update.group_action_type == "updatedGroupName" {
         sqlx::query!(
             r#"
@@ -229,7 +190,7 @@ pub(crate) async fn handle_group_update(
             update.new_group_name,
             group_id,
         )
-        .execute(&mut **transaction)
+        .execute(&mut **t)
         .await?;
     } else if update.group_action_type == "changeDisplayMaxTime" && is_direct {
         sqlx::query!(
@@ -243,7 +204,7 @@ pub(crate) async fn handle_group_update(
             update.new_delete_messages_after_milliseconds,
             group_id,
         )
-        .execute(&mut **transaction)
+        .execute(&mut **t)
         .await?;
     }
 
@@ -267,43 +228,66 @@ pub(crate) async fn handle_group_update(
         update.new_delete_messages_after_milliseconds,
         update.group_action_type,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     Ok(())
 }
 
 pub(crate) async fn handle_flame_sync(
-    transaction: &mut Transaction<'_, Sqlite>,
+    t: &mut Transaction<'_, Sqlite>,
     group_id: &str,
     flame: encrypted_content::FlameSync,
 ) -> Result<()> {
     let last_flame_counter_change = milliseconds_to_seconds(flame.last_flame_counter_change);
+
+    let Some(group) = sqlx::query!(
+        r#"
+        SELECT last_flame_counter_change, flame_counter, max_flame_counter
+        FROM groups
+        WHERE group_id = ?
+        "#,
+        group_id,
+    )
+    .fetch_optional(&mut **t)
+    .await?
+    else {
+        return Ok(());
+    };
+
+    let Some(group_last_flame_counter_change) = group.last_flame_counter_change else {
+        return Ok(());
+    };
+
+    let update_counters = flame.force_update
+        || (is_today(group_last_flame_counter_change) && is_today(last_flame_counter_change));
+
+    let flame_counter = if update_counters {
+        group.flame_counter.max(flame.flame_counter)
+    } else {
+        group.flame_counter
+    };
+    let max_flame_counter = if update_counters {
+        group.max_flame_counter.max(flame.flame_counter)
+    } else {
+        group.max_flame_counter
+    };
+
     sqlx::query!(
         r#"
         UPDATE groups
         SET also_best_friend = ?,
-            flame_counter = CASE WHEN (
-                (date(last_flame_counter_change, 'unixepoch', 'localtime') = date('now', 'localtime')
-                 AND date(?, 'unixepoch', 'localtime') = date('now', 'localtime'))
-                OR ?
-            ) THEN MAX(flame_counter, ?) ELSE flame_counter END,
-            max_flame_counter = CASE WHEN (
-                (date(last_flame_counter_change, 'unixepoch', 'localtime') = date('now', 'localtime')
-                 AND date(?, 'unixepoch', 'localtime') = date('now', 'localtime'))
-                OR ?
-            ) THEN MAX(max_flame_counter, ?) ELSE max_flame_counter END
-        WHERE group_id = ? AND last_flame_counter_change IS NOT NULL
+            flame_counter = ?,
+            max_flame_counter = ?
+        WHERE group_id = ?
         "#,
         flame.best_friend,
-        last_flame_counter_change,
-        flame.force_update,
-        flame.flame_counter,
-        last_flame_counter_change,
-        flame.force_update,
-        flame.flame_counter,
+        flame_counter,
+        max_flame_counter,
         group_id,
     )
-    .execute(&mut **transaction)
+    .execute(&mut **t)
     .await?;
+
     Ok(())
 }

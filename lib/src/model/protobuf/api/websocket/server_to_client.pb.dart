@@ -1618,7 +1618,7 @@ class Response_UserData extends $pb.GeneratedMessage {
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.UserData',
+      _omitMessageNames ? '' : 'Response.UserConfig',
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)

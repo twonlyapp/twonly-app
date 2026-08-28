@@ -198,8 +198,8 @@ impl ContactService {
                 proto::EncryptedContent {
                     contact_update: Some(encrypted_content::ContactUpdate {
                         r#type: encrypted_content::contact_update::Type::Update as i32,
-                        username: config.username,
-                        display_name: config.display_name,
+                        username: Some(config.username),
+                        display_name: Some(config.display_name),
                         avatar_svg_compressed,
                     }),
                     ..Default::default()

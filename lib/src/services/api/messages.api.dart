@@ -7,10 +7,6 @@ import 'package:twonly/src/database/twonly.db.dart' show Receipt;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 
-// Compatibility adapters. All messaging state and behavior lives in Rust.
-Future<void> retransmitAllMessages() =>
-    rust_api.RustApi.retransmitAllMessages();
-
 Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
   Receipt? receipt,

@@ -5,12 +5,30 @@
 
 use crate::api::proto::client::encrypted_content;
 use crate::bridge::callbacks::get_callbacks;
+use crate::context::Context;
 use crate::database::app::tables::Group;
 use crate::error::{Result, TwonlyError};
+use crate::services::mediafiles::MediaFileService;
 use crate::utils::{milliseconds_to_seconds, new_uuid_v4};
 use encrypted_content::media::Type as MediaType;
 use encrypted_content::media_update::Type as MediaUpdateType;
 use sqlx::{Sqlite, Transaction};
+
+fn spawn_media_download(media_id: String) {
+    let Ok(ctx) = Context::get_static() else {
+        tracing::warn!(media_id, "could not start media download without context");
+        return;
+    };
+    let ctx = ctx.clone();
+    tokio::spawn(async move {
+        if let Err(error) = MediaFileService::new(&ctx)
+            .download_when_available(&media_id)
+            .await
+        {
+            tracing::warn!(media_id, %error, "media download failed");
+        }
+    });
+}
 
 fn spawn_media_action(kind: &'static str, media_id: String, contact_id: i64, message_id: String) {
     if let Ok(callbacks) = get_callbacks() {
@@ -65,7 +83,7 @@ pub(crate) async fn handle_media(
         .execute(&mut **t)
         .await?;
 
-        spawn_media_action("download", media_id, from_user_id, media.sender_message_id);
+        spawn_media_download(media_id);
 
         return Ok(());
     }
@@ -122,7 +140,7 @@ pub(crate) async fn handle_media(
         .execute(&mut **t)
         .await?;
 
-        spawn_media_action("download", media_id, from_user_id, media.sender_message_id);
+        spawn_media_download(media_id);
 
         return Ok(());
     }
@@ -178,7 +196,9 @@ pub(crate) async fn handle_media(
     )
     .execute(&mut **t)
     .await?;
+
     Group::increase_last_message_exchange(t, group_id, timestamp).await?;
+
     if let Ok(callbacks) = get_callbacks() {
         let group_id = group_id.to_owned();
         let timestamp = media.timestamp;
@@ -186,7 +206,9 @@ pub(crate) async fn handle_media(
             (callbacks.api.media_received)(group_id, timestamp).await;
         });
     }
-    spawn_media_action("download", media_id, from_user_id, media.sender_message_id);
+
+    spawn_media_download(media_id);
+
     Ok(())
 }
 

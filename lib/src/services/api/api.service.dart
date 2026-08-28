@@ -1,101 +1,27 @@
-// ignore_for_file: avoid_dynamic_calls, strict_raw_type
-
 import 'dart:async';
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:drift/drift.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-// ignore: implementation_imports
-import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
-import 'package:mutex/mutex.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/core/bridge/api.dart' as rust_api;
-import 'package:twonly/core/bridge/api.dart';
-import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
-    as client;
-import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/client2client/user_discovery.c2c.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
-import 'package:twonly/src/services/api/server_messages.api.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
-import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/protocol_state.signal.dart';
-import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
-import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
-import 'package:web_socket_channel/io.dart';
-
-final lockConnecting = Mutex();
-final lockRetransStore = Mutex();
-final lockAuthentication = Mutex();
 
 /// The ApiProvider is responsible for communicating with the server.
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiService {
   ApiService();
-  Future<Result> _rustCall<T>(Future<T> promise) async {
-    try {
-      final res = await promise;
-      if (res is ServerResultEmpty) {
-        final r = res as ServerResultEmpty;
-        return await r.map(
-          ok: (_) => Result.success(null),
-          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
-        );
-      } else if (res is ServerResultVecU8) {
-        final r = res as ServerResultVecU8;
-        return await r.map(
-          ok: (ok) => Result.success(ok.field0),
-          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
-        );
-      } else if (res is ServerResultI64) {
-        final r = res as ServerResultI64;
-        return await r.map(
-          ok: (ok) => Result.success(ok.field0),
-          errorCode: (e) => Result.error(ErrorCode.valueOf(e.field0)),
-        );
-      }
-      return Result.success(res);
-    } catch (e) {
-      final msg = e.toString();
-      final match = RegExp(r'API error code (\\d+)').firstMatch(msg);
-      if (match != null) {
-        final code = int.parse(match.group(1)!);
-        return Result.error(ErrorCode.valueOf(code));
-      }
-      Log.error('Rust API call failed', error: e);
-      return Result.error(ErrorCode.InternalError);
-    }
-  }
-
   final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev-api.twonly.eu';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : 's';
@@ -118,41 +44,10 @@ class ApiService {
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
+  bool isConnected = false;
 
-  // reconnection params
-  Timer? reconnectionTimer;
-  int _reconnectionDelay = 5;
-
-  final HashMap<Int64, Completer<server.ServerToClient?>> _pendingRequests =
-      HashMap();
-  IOWebSocketChannel? _channel;
   // ignore: cancel_subscriptions
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
-
-  Future<bool> _connectTo(String apiUrl) async {
-    if (appIsOutdated) return false;
-    try {
-      final channel = IOWebSocketChannel.connect(
-        Uri.parse(apiUrl),
-        pingInterval: const Duration(seconds: 30),
-      );
-
-      try {
-        await channel.ready.timeout(const Duration(seconds: 10));
-      } catch (e) {
-        channel.sink.close().ignore();
-        rethrow;
-      }
-
-      _channel = channel;
-      _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
-      Log.info('websocket connected to $apiUrl');
-      return true;
-    } catch (e) {
-      _channel = null;
-      return false;
-    }
-  }
 
   // Function is called after the user is authenticated at the server
   Future<void> onAuthenticated() async {
@@ -160,84 +55,69 @@ class ApiService {
     _connectionStateController.add(true);
 
     if (AppState.isInBackgroundTask) {
-      await retransmitRawBytes();
-      await retransmitAllMessages();
+      await RustApi.retransmitAllMessages();
       await reuploadMediaFiles();
       await tryDownloadAllMediaFiles();
     } else if (!AppState.isAppInBackground) {
-      unawaited(retransmitRawBytes());
-      unawaited(retransmitAllMessages());
+      unawaited(RustApi.retransmitAllMessages());
       unawaited(tryDownloadAllMediaFiles());
       unawaited(reuploadMediaFiles());
 
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
-      unawaited(setupNotificationWithUsers());
       unawaited(SignalIdentityService.onAuthenticated());
       resetResyncedUsers();
-      resetUserDiscoveryRequestUpdates();
+      // resetUserDiscoveryRequestUpdates();
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
-      unawaited(checkForDeletedUsernames());
-      unawaited(PasswordlessRecoveryService.performHeartbeat());
+      unawaited(rust_api.RustApi.checkForDeletedUsernames());
+      unawaited(RustApi.performPasswordlessRecoveryHeartbeat());
 
       unawaited(UserDiscoveryService.checkForNewAnnouncedUsers());
       memoriesCloudService.init();
     }
   }
 
-  Future<void> onConnected() async {
-    await authenticate();
-    _reconnectionDelay = 1;
-    _connectionStateController.add(true);
+  Future<bool> connect() async {
+    try {
+      await rust_api.RustApi.connect();
+      for (var attempt = 0; attempt < 100; attempt++) {
+        final state = await rust_api.RustApi.connectionState();
+        isConnected =
+            state == ApiConnectionState.connected ||
+            state == ApiConnectionState.authenticated;
+        isAuthenticated = state == ApiConnectionState.authenticated;
+        if (isAuthenticated ||
+            (!userService.isUserCreated &&
+                state == ApiConnectionState.connected)) {
+          return true;
+        }
+        if (state == ApiConnectionState.permanentlyRejected ||
+            state == ApiConnectionState.suspended) {
+          return false;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      return false;
+    } catch (error) {
+      isConnected = false;
+      isAuthenticated = false;
+      Log.error('Rust API connection failed', error: error);
+      return false;
+    }
   }
 
-  Future<void> onClosed() async {
-    if (_channel == null) return;
-    Log.info('websocket connection closed');
-    _channel = null;
+  Future<void> close(VoidCallback? callback) async {
+    await rust_api.RustApi.close();
+    isConnected = false;
     isAuthenticated = false;
     _connectionStateController.add(false);
-    // Complete all pending requests with null on disconnect
-    for (final completer in _pendingRequests.values) {
-      if (!completer.isCompleted) {
-        completer.complete(null);
-      }
-    }
-    _pendingRequests.clear();
-    await twonlyDB.mediaFilesDao.resetPendingDownloadState();
-    await startReconnectionTimer();
-  }
-
-  Future<void> startReconnectionTimer() async {
-    if (AppState.isInBackgroundTask) return;
-    if (reconnectionTimer?.isActive ?? false) {
-      return;
-    }
-    reconnectionTimer?.cancel();
-    reconnectionTimer = Timer(Duration(seconds: _reconnectionDelay), () async {
-      reconnectionTimer = null;
-      // only try to reconnect in case the app is in the foreground
-      if (!AppState.isAppInBackground) {
-        await connect();
-      }
-    });
-    _reconnectionDelay = 3;
-  }
-
-  Future<void> close(Function? callback) async {
-    Log.info('closing websocket connection');
-    if (_channel != null) {
-      try {
-        await _channel!.sink.close().timeout(const Duration(seconds: 2));
-      } catch (e) {
-        Log.warn('Timeout or error closing websocket: $e');
-      }
-      await onClosed();
-      callback?.call();
-      return;
-    }
     callback?.call();
+  }
+
+  Future<void> authenticate() async {
+    await rust_api.RustApi.reloadConfiguration();
+    await connect();
   }
 
   Future<void> listenToNetworkChanges() async {
@@ -252,851 +132,5 @@ class ApiService {
       }
       // Received changes in available connectivity types!
     });
-  }
-
-  Future<bool> connect() async {
-    return lockConnecting.protect<bool>(() async {
-      if (_channel != null) {
-        return true;
-      }
-      // ensure that the connect function is not called again by the timer.
-      reconnectionTimer?.cancel();
-      reconnectionTimer = null;
-
-      isAuthenticated = false;
-
-      final apiUrl = 'ws$apiSecure://$apiHost/api/client';
-
-      Log.info('connecting to $apiUrl');
-
-      if (await _connectTo(apiUrl)) {
-        await onConnected();
-        return true;
-      }
-      return false;
-    });
-  }
-
-  bool get isConnected => _channel != null && _channel!.closeCode == null;
-
-  Future<void> _onDone() async {
-    _reconnectionDelay = 3;
-    await onClosed();
-  }
-
-  Future<void> _onError(dynamic e) async {
-    if (e.toString().contains('Failed host lookup')) {
-      Log.info('WebSocket connection failed: Host not reachable.');
-    } else {
-      Log.warn('websocket error: $e');
-    }
-    await onClosed();
-  }
-
-  Future<void> _onData(dynamic msgBuffer) async {
-    try {
-      if (msgBuffer is! Uint8List) {
-        msgBuffer = Uint8List.fromList(msgBuffer as List<int>);
-      }
-      final msg = server.ServerToClient.fromBuffer(msgBuffer);
-      if (msg.v0.hasResponse()) {
-        final completer = _pendingRequests.remove(msg.v0.seq);
-        if (completer != null && !completer.isCompleted) {
-          completer.complete(msg);
-        }
-        unawaited(removeFromRetransmissionBuffer(msg.v0.seq));
-      } else {
-        unawaited(handleServerMessage(msg));
-      }
-    } catch (e) {
-      Log.error('Error parsing the servers message: $e');
-    }
-  }
-
-  Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
-    final completer = Completer<server.ServerToClient?>();
-    _pendingRequests[seq] = completer;
-
-    final timer = Timer(const Duration(seconds: 60), () {
-      if (!completer.isCompleted) {
-        Log.warn('Timeout for message $seq');
-        _pendingRequests.remove(seq);
-        completer.complete(null);
-      }
-    });
-
-    final result = await completer.future;
-    timer.cancel();
-    return result;
-  }
-
-  Future<bool> sendResponse(ClientToServer response) async {
-    final channel = _channel;
-    if (channel == null || channel.closeCode != null) {
-      return false;
-    }
-    try {
-      channel.sink.add(response.writeToBuffer());
-      return true;
-    } catch (e) {
-      Log.warn('Could not send response to server: $e');
-      return false;
-    }
-  }
-
-  Future<Map<String, dynamic>> getRetransmission() async {
-    return (await KeyValueStore.get('rawbytes-to-retransmit')) ?? {};
-  }
-
-  Future<void> retransmitRawBytes() async {
-    await lockRetransStore.protect(() async {
-      final retransmit = await getRetransmission();
-      if (retransmit.keys.isEmpty) return;
-      Log.info('retransmitting ${retransmit.keys.length} raw bytes messages');
-      var gotError = false;
-      for (final seq in retransmit.keys) {
-        try {
-          _channel!.sink.add(base64Decode(retransmit[seq] as String));
-        } catch (e) {
-          gotError = true;
-          Log.error('$e');
-        }
-      }
-      if (!gotError) {
-        await KeyValueStore.put('rawbytes-to-retransmit', {});
-      }
-    });
-  }
-
-  Future<void> addToRetransmissionBuffer(Int64 seq, Uint8List bytes) async {
-    await lockRetransStore.protect(() async {
-      final retransmit = await getRetransmission();
-      retransmit[seq.toString()] = base64Encode(bytes);
-      await KeyValueStore.put('rawbytes-to-retransmit', retransmit);
-    });
-  }
-
-  Future<void> removeFromRetransmissionBuffer(Int64 seq) async {
-    await lockRetransStore.protect(() async {
-      final retransmit = await getRetransmission();
-      if (retransmit.isEmpty) return;
-      retransmit.remove(seq.toString());
-      await KeyValueStore.put('rawbytes-to-retransmit', retransmit);
-    });
-  }
-
-  Future<Result> sendRequestSync(
-    ClientToServer request, {
-    bool authenticated = true,
-    bool ensureRetransmission = false,
-    int? contactId,
-  }) async {
-    var seq = Int64(Random().nextInt(4294967296));
-    while (_pendingRequests.containsKey(seq)) {
-      seq = Int64(Random().nextInt(4294967296));
-    }
-
-    request.v0.seq = seq;
-    final requestBytes = request.writeToBuffer();
-
-    if (ensureRetransmission) {
-      await addToRetransmissionBuffer(seq, requestBytes);
-    }
-
-    if (_channel == null) {
-      Log.warn('sending request while api is not connected');
-      if (!await connect()) {
-        Log.warn('could not connected again');
-        return Result.error(ErrorCode.InternalError);
-      }
-      if (_channel == null) {
-        return Result.error(ErrorCode.InternalError);
-      }
-    }
-
-    _channel!.sink.add(requestBytes);
-
-    final res = asResult(await _waitForResponse(seq));
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasAuthenticated()) {
-        final authenticated = ok.authenticated;
-        await UserService.update((user) {
-          user.subscriptionPlan = authenticated.plan;
-        });
-        _planUpdateController.add(planFromString(authenticated.plan));
-
-        // this was triggered by apiService.ipaPurchase, so call the onAuthenticated again
-        if (isAuthenticated) {
-          // Trigger the re-upload from images, after Plan change, in case the limit was reached before...
-          unawaited(finishStartedPreprocessing());
-        }
-      }
-    }
-    if (res.isError) {
-      if (res.error != ErrorCode.ForegroundSessionConnected) {
-        Log.warn('Got error from server: ${res.error}');
-      }
-      if (res.error == ErrorCode.AppVersionOutdated) {
-        _appOutdatedController.add(null);
-        Log.warn('App Version is OUTDATED.');
-        appIsOutdated = true;
-        await close(() {});
-        return Result.error(ErrorCode.InternalError);
-      }
-      if (res.error == ErrorCode.NewDeviceRegistered) {
-        _newDeviceRegisteredController.add(null);
-        Log.warn(
-          'Device is disabled, as a newer device restore twonly Backup.',
-        );
-        appIsOutdated = true;
-        await close(() {});
-        return Result.error(ErrorCode.InternalError);
-      }
-      if (res.error == ErrorCode.SessionNotAuthenticated) {
-        if (authenticated) {
-          await authenticate();
-          if (isAuthenticated) {
-            // this will send the request one more time.
-            return sendRequestSync(request, authenticated: false);
-          } else {
-            Log.warn('Session is not authenticated');
-            return Result.error(ErrorCode.InternalError);
-          }
-        }
-      }
-      if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
-        Log.warn('Contact deleted their account $contactId.');
-        final contact = await twonlyDB.contactsDao
-            .getContactByUserId(contactId)
-            .getSingleOrNull();
-        if (contact != null) {
-          await twonlyDB.contactsDao.updateContact(
-            contactId,
-            const ContactsCompanion(
-              accountDeleted: Value(true),
-            ),
-          );
-        }
-        await twonlyDB.receiptsDao.deleteReceiptForUser(contactId);
-      }
-    }
-    return res;
-  }
-
-  Future<bool> tryAuthenticateWithToken() async {
-    final apiAuthToken = await SecureStorage.instance.read(
-      key: 'api_auth_token',
-    );
-
-    if (apiAuthToken != null) {
-      if (userService.currentUser.appVersion < 62) {
-        Log.error(
-          'DID NOT authenticate the user, as he still has the old version!',
-        );
-        return false;
-      }
-      final authenticate = Handshake_Authenticate()
-        ..userId = Int64(userService.currentUser.userId)
-        ..appVersion = (await PackageInfo.fromPlatform()).version
-        ..deviceId = Int64(userService.currentUser.deviceId)
-        ..inBackground = AppState.isInBackgroundTask
-        ..authToken = base64Decode(apiAuthToken);
-
-      final handshake = Handshake()..authenticate = authenticate;
-      final req = createClientToServerFromHandshake(handshake);
-
-      final result = await sendRequestSync(req, authenticated: false);
-
-      if (result.isSuccess) {
-        Log.info('websocket is authenticated');
-        isAuthenticated = true;
-        if (AppState.isInBackgroundTask) {
-          await onAuthenticated();
-        } else {
-          unawaited(onAuthenticated());
-
-          try {
-            Log.info('Switching authentication to login token');
-            final loginToken = await RustKeyManager.getLoginToken();
-            final res = await _setLoginToken(loginToken);
-            if (res.isSuccess) {
-              Log.info('Switch was successfully.');
-              await UserService.update((u) => u.canUseLoginTokenForAuth = true);
-              await SecureStorage.instance.delete(
-                key: 'api_auth_token',
-              );
-            }
-          } catch (e) {
-            Log.error(e);
-          }
-        }
-        return true;
-      }
-      if (result.isError) {
-        if (result.error != ErrorCode.AuthTokenNotValid &&
-            result.error != ErrorCode.ForegroundSessionConnected) {
-          Log.error(
-            'got error while authenticating to the server: ${result.error}',
-          );
-          return false;
-        }
-      }
-    }
-    return false;
-  }
-
-  Future<bool> tryAuthenticateWithLoginToken() async {
-    try {
-      final loginToken = await RustKeyManager.getLoginToken();
-
-      final authenticate = Handshake_AuthenticateWithLoginToken()
-        ..userId = Int64(userService.currentUser.userId)
-        ..appVersion = (await PackageInfo.fromPlatform()).version
-        ..deviceId = Int64(userService.currentUser.deviceId)
-        ..inBackground = AppState.isInBackgroundTask
-        ..secretLoginToken = loginToken.toList();
-
-      final handshake = Handshake()..authenticateWithLoginToken = authenticate;
-      final req = createClientToServerFromHandshake(handshake);
-
-      final result = await sendRequestSync(req, authenticated: false);
-
-      if (result.isSuccess) {
-        Log.info('websocket is authenticated');
-        isAuthenticated = true;
-        if (AppState.isInBackgroundTask) {
-          await onAuthenticated();
-        } else {
-          unawaited(onAuthenticated());
-        }
-        return true;
-      }
-      if (result.isError) {
-        if (result.error != ErrorCode.AuthTokenNotValid &&
-            result.error != ErrorCode.ForegroundSessionConnected) {
-          Log.error(
-            'got error while authenticating to the server: ${result.error}',
-          );
-          return false;
-        }
-      }
-    } catch (e) {
-      Log.error(e);
-    }
-    return false;
-  }
-
-  Future<void> authenticate() async {
-    return lockAuthentication.protect(() async {
-      if (isAuthenticated) return;
-
-      if (!userService.isUserCreated) {
-        return;
-      }
-
-      if (!userService.isUserCreated) return;
-
-      if (userService.currentUser.canUseLoginTokenForAuth) {
-        await tryAuthenticateWithLoginToken();
-        return;
-      }
-
-      if (await tryAuthenticateWithToken()) {
-        return;
-      }
-
-      final handshake = Handshake()
-        ..getAuthChallenge = Handshake_GetAuthChallenge();
-      final req = createClientToServerFromHandshake(handshake);
-
-      final result = await sendRequestSync(req, authenticated: false);
-      if (result.isError) {
-        Log.warn('could not request auth challenge', result);
-        return;
-      }
-
-      final challenge = result.value.authchallenge;
-
-      var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
-      if (privKey == null) return;
-      final random = getRandomUint8List(32);
-      final signature = sign(
-        privKey.serialize(),
-        challenge as Uint8List,
-        random,
-      );
-      privKey = null;
-
-      final getAuthToken = Handshake_GetAuthToken()
-        ..response = signature
-        ..userId = Int64(userService.currentUser.userId);
-
-      final getauthtoken = Handshake()..getAuthToken = getAuthToken;
-
-      final req2 = createClientToServerFromHandshake(getauthtoken);
-
-      final result2 = await sendRequestSync(req2, authenticated: false);
-      if (result2.isError) {
-        Log.error('could not send auth response: ${result2.error}');
-        return;
-      }
-
-      final apiAuthToken = result2.value.authtoken as Uint8List;
-      final apiAuthTokenB64 = base64Encode(apiAuthToken);
-
-      await SecureStorage.instance.write(
-        key: 'api_auth_token',
-        value: apiAuthTokenB64,
-      );
-
-      await tryAuthenticateWithToken();
-    });
-  }
-
-  Future<Result> register(
-    String username,
-    String? inviteCode,
-    int proofOfWorkResult,
-  ) async {
-    final signalIdentity = await getSignalIdentity();
-    if (signalIdentity == null) {
-      return Result.error(ErrorCode.InternalError);
-    }
-
-    final signalStore = await getSignalStoreFromIdentity(signalIdentity);
-
-    final signedPreKeysList = await signalStore.loadSignedPreKeys();
-    if (signedPreKeysList.isEmpty) {
-      throw Exception(
-        'Signal Signed PreKeys list is empty. Database insertion likely failed due to lack of storage space or a corrupted database.',
-      );
-    }
-    final signedPreKey = signedPreKeysList[0];
-
-    final loginToken = await RustKeyManager.getLoginToken();
-
-    final register = Handshake_Register()
-      ..username = username
-      ..publicIdentityKey = (await signalStore.getIdentityKeyPair())
-          .getPublicKey()
-          .serialize()
-      ..registrationId = Int64(signalIdentity.registrationId)
-      ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
-      ..signedPrekeySignature = signedPreKey.signature
-      ..signedPrekeyId = Int64(signedPreKey.id)
-      ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
-      ..loginToken = loginToken
-      ..proofOfWork = Int64(proofOfWorkResult)
-      ..isIos = Platform.isIOS;
-
-    if (inviteCode != null && inviteCode != '') {
-      register.inviteCode = inviteCode;
-    }
-
-    final handshake = Handshake()..register = register;
-    final req = createClientToServerFromHandshake(handshake);
-
-    return sendRequestSync(req);
-  }
-
-  Future<void> checkForDeletedUsernames() async {
-    final users = await twonlyDB.contactsDao.getContactsByUsername(
-      '[deleted]',
-      username2: '[Unknown]',
-    );
-    for (final user in users) {
-      final userData = await getUserById(user.userId);
-      if (userData != null) {
-        await twonlyDB.contactsDao.updateContact(
-          user.userId,
-          ContactsCompanion(username: Value(utf8.decode(userData.username))),
-        );
-      }
-    }
-  }
-
-  Future<Response_UserData?> getUserById(int userId) async {
-    final result = await _rustCall(
-      rust_api.RustApi.getUserById(userId: userId),
-    );
-    if (result.isSuccess && result.value != null) {
-      return server.Response_UserData.fromBuffer(result.value as List<int>);
-    }
-    return null;
-  }
-
-  Future<(Response_ProofOfWork?, bool)> getProofOfWork() async {
-    final result = await _rustCall(rust_api.RustApi.getProofOfWork());
-    if (result.isSuccess && result.value != null) {
-      return (
-        Response_ProofOfWork.fromBuffer(result.value as List<int>),
-        false,
-      );
-    }
-    if (result.isError && result.error == ErrorCode.RegistrationDisabled) {
-      return (null, true);
-    }
-    return (null, false);
-  }
-
-  Future<Result> downloadDone(List<int> token) async {
-    return _rustCall(rust_api.RustApi.downloadDone(token: token));
-  }
-
-  Future<Result> _setLoginToken(List<int> token) async {
-    return _rustCall(rust_api.RustApi.setLoginToken(token: token));
-  }
-
-  Future<server.Response_MemoriesUploadUrls?> requestMemoriesUpload(
-    int sizeBytes,
-    DateTime originalDate,
-    String mediaId,
-  ) async {
-    final get = ApplicationData_RequestMemoriesUpload()
-      ..size = Int64(sizeBytes)
-      ..originalDate = Int64(originalDate.millisecondsSinceEpoch)
-      ..mediaId = mediaId;
-    final appData = ApplicationData()..requestMemoriesUpload = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasMemoriesUploadUrls()) {
-        return ok.memoriesUploadUrls;
-      }
-    }
-    return null;
-  }
-
-  Future<server.Response_MemoriesUsage?> getMemoriesUsage() async {
-    final appData = ApplicationData()
-      ..getMemoriesUsage = ApplicationData_GetMemoriesUsage();
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasMemoriesUsage()) {
-        return ok.memoriesUsage;
-      }
-    }
-    return null;
-  }
-
-  Future<server.Response_MemoriesUrl?> getMemoriesUrl(
-    String mediaId,
-    bool thumbnail,
-  ) async {
-    final appData = ApplicationData()
-      ..getMemoriesUrl = ApplicationData_GetMemoriesUrl(
-        mediaId: mediaId,
-        thumbnail: thumbnail,
-      );
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasMemoriesUrl()) {
-        return ok.memoriesUrl;
-      }
-    }
-    return null;
-  }
-
-  Future<Result> confirmMemoriesUpload(String mediaId) async {
-    final get = ApplicationData_ConfirmMemoriesUpload()..mediaId = mediaId;
-    final appData = ApplicationData()..confirmMemoriesUpload = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> deleteMemory(String mediaId) async {
-    final get = ApplicationData_DeleteMemory()..mediaId = mediaId;
-    final appData = ApplicationData()..deleteMemory = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> disableMemoriesBackup() async {
-    final get = ApplicationData_DisableMemoriesBackup();
-    final appData = ApplicationData()..disableMemoriesBackup = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<int?> getUserIdFromUsername(String username) async {
-    final appData = Handshake(
-      getUseridByUsername: Handshake_GetUserIdByUsername(username: username),
-    );
-    final req = createClientToServerFromHandshake(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasUserid()) {
-        return ok.userid.toInt();
-      }
-    }
-    return null;
-  }
-
-  Future<Response_UserData?> getUserData(String username) async {
-    final get = ApplicationData_GetUserByUsername()..username = username;
-    final appData = ApplicationData()..getUserByUsername = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasUserdata()) {
-        return ok.userdata;
-      }
-    }
-    return null;
-  }
-
-  Future<Response_PlanBallance?> getPlanBallance() async {
-    final get = ApplicationData_GetCurrentPlanInfos();
-    final appData = ApplicationData()..getCurrentPlanInfos = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasPlanballance()) {
-        return ok.planballance;
-      }
-    }
-    return null;
-  }
-
-  Future<Result> removeAdditionalUser(Int64 userId) async {
-    final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
-    final appData = ApplicationData()..removeAdditionalUser = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, contactId: userId.toInt());
-  }
-
-  Future<Result> registerPasswordLessRecovery(
-    List<int> encryptedServerKey,
-    List<int>? pinUnlockToken,
-  ) async {
-    final req = createClientToServerFromApplicationData(
-      ApplicationData(
-        registerPasswordlessRecovery:
-            ApplicationData_RegisterPasswordLessRecovery(
-              encryptedServerKey: encryptedServerKey,
-              pinUnlockToken: pinUnlockToken,
-            ),
-      ),
-    );
-    return sendRequestSync(req);
-  }
-
-  Future<Result> getServerKeyForPasswordlessRecovery({
-    required int userId,
-    List<int>? serverKeyProtection,
-    List<int>? pinUnlockToken,
-    List<int>? pinProtectionKey,
-    String? email,
-  }) async {
-    final get = Handshake_GetServerKeyForPasswordLessRecovery()
-      ..userId = Int64(userId);
-    if (serverKeyProtection != null) {
-      get.serverKeyProtection = serverKeyProtection;
-    }
-    if (pinUnlockToken != null) {
-      get.pinUnlockToken = pinUnlockToken;
-    }
-    if (pinProtectionKey != null) {
-      get.pinProtectionKey = pinProtectionKey;
-    }
-    if (email != null) {
-      get.email = email;
-    }
-
-    final handshake = Handshake()..getServerKeyForPasswordlessRecovery = get;
-    final req = createClientToServerFromHandshake(handshake);
-    return sendRequestSync(req, authenticated: false);
-  }
-
-  Future<Result> submitRecoveryShare({
-    required String notificationId,
-    required List<int> encryptedMessage,
-  }) async {
-    final req = createClientToServerFromApplicationData(
-      ApplicationData(
-        passwordlessNotification: ApplicationData_PasswordlessNotification(
-          notificationId: notificationId,
-          encryptedMessage: encryptedMessage,
-        ),
-      ),
-    );
-    return sendRequestSync(req);
-  }
-
-  Future<Result> registerPasswordlessNotification({
-    required String notificationId,
-    required List<int> downloadAuthToken,
-    required String langCode,
-    required String? googleFcm,
-  }) async {
-    final registerNotif = Handshake_RegisterPasswordlessNotification()
-      ..notificationId = notificationId
-      ..downloadAuthToken = downloadAuthToken
-      ..langCode = langCode;
-    if (googleFcm != null) {
-      registerNotif.googleFcm = googleFcm;
-    }
-
-    final handshake = Handshake()
-      ..registerPasswordlessNotification = registerNotif;
-    final req = createClientToServerFromHandshake(handshake);
-    return sendRequestSync(req, authenticated: false);
-  }
-
-  Future<Result> addAdditionalUser(Int64 userId) async {
-    final get = ApplicationData_AddAdditionalUser()..userId = userId;
-    final appData = ApplicationData()..addAdditionalUser = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, contactId: userId.toInt());
-  }
-
-  Future<Result> reportUser(int userId, String reason) async {
-    return _rustCall(
-      rust_api.RustApi.reportUser(userId: userId, reason: reason),
-    );
-  }
-
-  Future<Result> deleteAccount() async {
-    return _rustCall(rust_api.RustApi.deleteAccount());
-  }
-
-  Future<Result> updateFCMToken(String googleFcm) async {
-    final get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
-    final appData = ApplicationData()..updateGoogleFcmToken = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> ipaPurchase(
-    String productId,
-    String source,
-    String verificationData,
-  ) async {
-    final appData = ApplicationData(
-      ipaPurchase: ApplicationData_IPAPurchase(
-        productId: productId,
-        source: source,
-        verificationData: verificationData,
-      ),
-    );
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> changeUsername(String username) async {
-    return _rustCall(rust_api.RustApi.changeUsername(username: username));
-  }
-
-  Future<Result> forceIpaCheck() async {
-    return _rustCall(rust_api.RustApi.forceIpaCheck());
-  }
-
-  Future<Result> updateSignedPreKey(
-    int signedPreKeyId,
-    Uint8List signedPreKey,
-    Uint8List signedPreKeySignature,
-  ) async {
-    final get = ApplicationData_UpdateSignedPreKey()
-      ..signedPrekeyId = Int64(signedPreKeyId)
-      ..signedPrekey = signedPreKey
-      ..signedPrekeySignature = signedPreKeySignature;
-    final appData = ApplicationData()..updateSignedPrekey = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Result> uploadPqcPreKeys(
-    int eccSignedPreKeyId,
-    Uint8List eccSignedPreKey,
-    Uint8List eccSignedPreKeySignature,
-    int kyberSignedPreKeyId,
-    Uint8List kyberSignedPreKey,
-    Uint8List kyberSignedPreKeySignature,
-    List<client.ApplicationData_PqcPreKey> prekeys,
-  ) async {
-    final get = ApplicationData_UploadPqcPreKeys()
-      ..eccSignedPrekeyId = Int64(eccSignedPreKeyId)
-      ..eccSignedPrekey = eccSignedPreKey
-      ..eccSignedPrekeySignature = eccSignedPreKeySignature
-      ..kyberSignedPrekeyId = Int64(kyberSignedPreKeyId)
-      ..kyberSignedPrekey = kyberSignedPreKey
-      ..kyberSignedPrekeySignature = kyberSignedPreKeySignature
-      ..prekeys.addAll(prekeys);
-    final appData = ApplicationData()..uploadPqcPrekeys = get;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
-  }
-
-  Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
-    final ballance = await getPlanBallance();
-    if (ballance != null) {
-      await UserService.update((u) {
-        u.lastPlanBallance = ballance.writeToJson();
-      });
-      return ballance;
-    }
-    if (userService.currentUser.lastPlanBallance != null && useCache) {
-      try {
-        return Response_PlanBallance.fromJson(
-          userService.currentUser.lastPlanBallance!,
-        );
-      } catch (e) {
-        Log.error('from json: $e');
-      }
-    }
-    return ballance;
-  }
-
-  Future<Result> sendTextMessage(
-    int target,
-    Uint8List msg,
-    List<int>? pushData,
-  ) async {
-    final testMessage = ApplicationData_TextMessage()
-      ..userId = Int64(target)
-      ..body = msg;
-
-    if (pushData != null) {
-      testMessage.pushData = pushData;
-    }
-    final appData = ApplicationData()..textMessage = testMessage;
-    final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, contactId: target);
-  }
-
-  /// Polls the server for new passwordless recovery notification messages.
-  /// [alreadyReceivedIds] prevents the server from sending duplicates.
-  Future<server.Response_PasswordlessNotificationMessages?>
-  checkForPasswordlessNotification({
-    required String notificationId,
-    required List<int> downloadAuthToken,
-    List<Int64>? alreadyReceivedIds,
-  }) async {
-    final check = Handshake_CheckForPasswordlessNotification()
-      ..notificationId = notificationId
-      ..downloadAuthToken = downloadAuthToken;
-    if (alreadyReceivedIds != null && alreadyReceivedIds.isNotEmpty) {
-      check.alreadyReceivedMessageIds.addAll(alreadyReceivedIds);
-    }
-
-    final handshake = Handshake()..checkForPasswordlessNotification = check;
-    final req = createClientToServerFromHandshake(handshake);
-    final res = await sendRequestSync(req, authenticated: false);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasPasswordlessNotificationMessages()) {
-        return ok.passwordlessNotificationMessages;
-      }
-    }
-    return null;
   }
 }

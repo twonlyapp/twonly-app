@@ -1,6 +1,8 @@
-mod api_testing;
+#[path = "api/tester.rs"]
+mod tester;
+#[path = "api/user_discovery.rs"]
+mod user_discovery;
 
-pub(crate) use api_testing::tester::Tester;
 use rust_lib_twonly::api::Server;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::bridge::api::ServerResult;
@@ -8,6 +10,7 @@ use rust_lib_twonly::database::app::tables::Group;
 use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::groups::GroupService;
 use rust_lib_twonly::services::messages::MessageService;
+pub(crate) use tester::Tester;
 
 #[tokio::test]
 async fn test_connect_to_dev_server() -> anyhow::Result<()> {
@@ -160,25 +163,25 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         // TesterA -> TesterB: Delete this text message
         MessageService::new(&tester_a.context)
-            .delete_message(group_id, message_id.clone())
+            .delete_message(group_id.clone(), message_id.clone())
             .await?;
         tester_b.wait_for_message_deleted(&message_id).await?;
     }
+
+    // Setup tester_c for group and contact-sharing tests.
+    let tester_c = {
+        let mut tester = Tester::new().await?;
+        tester.wait_until(ApiConnectionState::Connected).await?;
+        tester.register_and_authenticate().await?;
+        tester.wait_until(ApiConnectionState::Authenticated).await?;
+        tester
+    };
+    tracing::info!(tester = "c", user_id = tester_c.user_id, "Tester is ready");
 
     //
     // Testing: Testing the group
     //
     {
-        // Setup tester_c
-        let tester_c = {
-            let mut tester = Tester::new().await?;
-            tester.wait_until(ApiConnectionState::Connected).await?;
-            tester.register_and_authenticate().await?;
-            tester.wait_until(ApiConnectionState::Authenticated).await?;
-            tester
-        };
-        tracing::info!(tester = "c", user_id = tester_c.user_id, "Tester is ready");
-
         // Tester A adds Tester C as a contact (request → accept)
         {
             ContactService::new(&tester_a.context)
@@ -350,6 +353,69 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .await?;
 
         tracing::info!("tester_b left the group");
+    }
+
+    //
+    // Testing: Testing additional data
+    //
+    {
+        // B must know C's identity key before it can verify the key shared by A.
+        ContactService::new(&tester_b.context)
+            .request_by_username(tester_c.username.clone(), true)
+            .await?;
+        tester_c
+            .wait_for_contact_state(tester_b.user_id, false, true)
+            .await?;
+        ContactService::new(&tester_c.context)
+            .accept_request(tester_b.user_id, true)
+            .await?;
+        tester_b
+            .wait_for_contact_state(tester_c.user_id, true, false)
+            .await?;
+
+        // A shares C with B. Receiving the message stores both the opaque
+        // additional data and a verification edge from C to A.
+        let message_id = MessageService::new(&tester_a.context)
+            .insert_and_send_contact_share(group_id.clone(), vec![tester_c.user_id])
+            .await?;
+
+        let additional_data = {
+            let database = tester_a.context.get_app_database().await;
+            sqlx::query_scalar!(
+                "SELECT additional_message_data FROM messages WHERE message_id = ?",
+                message_id,
+            )
+            .fetch_one(&database.pool)
+            .await?
+            .expect("contact-share messages contain additional data")
+        };
+        tester_b
+            .wait_for_additional_data_message(
+                &message_id,
+                tester_a.user_id,
+                "contacts",
+                &additional_data,
+            )
+            .await?;
+        tester_b
+            .wait_for_shared_contact_verification(tester_c.user_id, tester_a.user_id)
+            .await?;
+
+        // Shared-contact trust is only effective while the sender is verified.
+        tester_b
+            .set_contact_verified(tester_a.user_id, false)
+            .await?;
+        assert!(!tester_b.is_contact_verified(tester_c.user_id).await?);
+
+        tester_b
+            .set_contact_verified(tester_a.user_id, true)
+            .await?;
+        assert!(tester_b.is_contact_verified(tester_c.user_id).await?);
+
+        tester_b
+            .set_contact_verified(tester_a.user_id, false)
+            .await?;
+        assert!(!tester_b.is_contact_verified(tester_c.user_id).await?);
     }
 
     Ok(())

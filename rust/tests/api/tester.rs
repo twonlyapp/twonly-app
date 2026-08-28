@@ -19,6 +19,104 @@ pub(crate) struct Tester {
 }
 
 impl Tester {
+    pub async fn set_contact_verified(&self, user_id: i64, verified: bool) -> anyhow::Result<()> {
+        let database = self.context.get_app_database().await;
+        if verified {
+            sqlx::query!(
+                "INSERT INTO key_verifications(contact_id, type) VALUES (?, 'manualTest')",
+                user_id,
+            )
+            .execute(&database.pool)
+            .await?;
+        } else {
+            sqlx::query!(
+                "DELETE FROM key_verifications WHERE contact_id = ? AND type = 'manualTest'",
+                user_id,
+            )
+            .execute(&database.pool)
+            .await?;
+        }
+        database.notify_committed(["key_verifications"]);
+        Ok(())
+    }
+
+    pub async fn wait_for_additional_data_message(
+        &self,
+        message_id: &str,
+        sender_id: i64,
+        message_type: &str,
+        expected_data: &[u8],
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.get_app_database().await;
+            let message = sqlx::query!(
+                "SELECT sender_id, type, additional_message_data FROM messages WHERE message_id = ?",
+                message_id,
+            )
+            .fetch_optional(&database.pool)
+            .await?;
+            if message.is_some_and(|message| {
+                message.sender_id == Some(sender_id)
+                    && message.r#type == message_type
+                    && message.additional_message_data.as_deref() == Some(expected_data)
+            }) {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "additional-data message {message_id} from {sender_id} did not arrive"
+        ))
+    }
+
+    pub async fn wait_for_shared_contact_verification(
+        &self,
+        contact_id: i64,
+        verified_by: i64,
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.get_app_database().await;
+            let exists = sqlx::query_scalar!(
+                "SELECT EXISTS(SELECT 1 FROM key_verifications WHERE contact_id = ? AND type = 'contactSharedByVerified' AND verified_by = ?)",
+                contact_id,
+                verified_by,
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            if exists != 0 {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "contact {contact_id} was not verified through {verified_by}"
+        ))
+    }
+
+    pub async fn is_contact_verified(&self, contact_id: i64) -> anyhow::Result<bool> {
+        let database = self.context.get_app_database().await;
+        let verified = sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS(
+                SELECT 1
+                FROM key_verifications AS verification
+                WHERE verification.contact_id = ?
+                  AND (
+                    verification.type != 'contactSharedByVerified'
+                    OR EXISTS(
+                        SELECT 1 FROM key_verifications AS verifier_verification
+                        WHERE verifier_verification.contact_id = verification.verified_by
+                    )
+                  )
+            )
+            "#,
+            contact_id,
+        )
+        .fetch_one(&database.pool)
+        .await?;
+        Ok(verified != 0)
+    }
+
     pub async fn wait_for_contact_state(
         &self,
         user_id: i64,
@@ -189,30 +287,6 @@ impl Tester {
         ))
     }
 
-    pub async fn wait_for_group_member(
-        &self,
-        group_id: &str,
-        contact_id: i64,
-    ) -> anyhow::Result<()> {
-        for _ in 0..100 {
-            let database = self.context.get_app_database().await;
-            let state = sqlx::query_scalar!(
-                "SELECT member_state FROM group_members WHERE group_id = ? AND contact_id = ?",
-                group_id,
-                contact_id,
-            )
-            .fetch_optional(&database.pool)
-            .await?;
-            if state.is_some_and(|s| s.as_deref() != Some("leftGroup")) {
-                return Ok(());
-            }
-            sleep(Duration::from_millis(100)).await;
-        }
-        Err(anyhow::anyhow!(
-            "member {contact_id} did not appear in group {group_id}"
-        ))
-    }
-
     pub async fn wait_for_group_member_removed(
         &self,
         group_id: &str,
@@ -275,30 +349,6 @@ impl Tester {
         Err(anyhow::anyhow!("group {group_id} was not marked as left"))
     }
 
-    pub async fn get_group_public_key(
-        &self,
-        group_id: &str,
-        contact_id: i64,
-    ) -> anyhow::Result<Vec<u8>> {
-        for _ in 0..100 {
-            let database = self.context.get_app_database().await;
-            let key = sqlx::query_scalar!(
-                "SELECT group_public_key FROM group_members WHERE group_id = ? AND contact_id = ?",
-                group_id,
-                contact_id,
-            )
-            .fetch_optional(&database.pool)
-            .await?;
-            if let Some(Some(key)) = key {
-                return Ok(key);
-            }
-            sleep(Duration::from_millis(100)).await;
-        }
-        Err(anyhow::anyhow!(
-            "group_public_key for contact {contact_id} in group {group_id} not found"
-        ))
-    }
-
     pub async fn new() -> anyhow::Result<Self> {
         let temp_dir = tempfile::tempdir()?;
         let db_dir = temp_dir.path().join("db");
@@ -310,6 +360,9 @@ impl Tester {
             app_version: 100,
             device_id: 1,
             can_use_login_token_for_auth: true,
+            is_user_discovery_enabled: true,
+            user_discovery_threshold: 3,
+            user_discovery_share_promotion: true,
             ..Default::default()
         };
         std::fs::write(
@@ -384,7 +437,7 @@ impl Tester {
             .join("user.json");
         let content = std::fs::read_to_string(&path)?;
         let mut config: rust_lib_twonly::user_config::UserConfig = serde_json::from_str(&content)?;
-        config.username = Some(new_username);
+        config.username = new_username;
         config.avatar_counter += 1;
 
         std::fs::write(&path, serde_json::to_string(&config)?)?;
@@ -453,7 +506,7 @@ impl Tester {
     pub(crate) async fn wait_until(&self, required: ApiConnectionState) -> anyhow::Result<()> {
         let mut state = ApiRuntime::connection_state(&self.context).await?;
 
-        for _ in 0..100 {
+        for _ in 0..1_000 {
             state = ApiRuntime::connection_state(&self.context).await?;
             if state == required {
                 break;

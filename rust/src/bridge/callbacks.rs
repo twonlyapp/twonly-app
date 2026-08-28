@@ -54,15 +54,11 @@ callback_generator! {
         },
         Api api {
             resync_signal_session: (i64) => (),
-            push_key_requested: (i64) => (),
-            group_membership_error: (i64, String, String) => (),
             media_action: (String, String, i64, String) => (),
             verification_proof: (i64, Vec<u8>) => (),
-            create_push_data: (i64, Option<String>, Vec<u8>, i32) => Option<Vec<u8>>,
             create_push_avatars: (i64) => (),
-            recovery_changed: () => (),
             media_received: (String, i64) => (),
-            group_state_refresh: (String, bool) => ()
+            user_config_changed: (crate::user_config::UserConfig) => ()
         }
     }
 }

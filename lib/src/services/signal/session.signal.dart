@@ -206,7 +206,10 @@ Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
 }
 
 Future<bool> handleSessionResync(int fromUserId) async {
-  final userData = await apiService.getUserById(fromUserId);
+  final userData = await rustApiProtobuf(
+    RustApi.getUserById(userId: fromUserId),
+    decodeUserData,
+  );
   if (userData != null) {
     Log.info('Got new session data from the server to re-sync the session');
     return processSignalUserData(userData);

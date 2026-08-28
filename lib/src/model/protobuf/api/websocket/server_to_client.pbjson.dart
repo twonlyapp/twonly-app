@@ -564,7 +564,7 @@ const Response_PqcBundle$json = {
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response_UserData$json = {
-  '1': 'UserData',
+  '1': 'UserConfig',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {
@@ -868,7 +868,7 @@ const Response_Ok$json = {
       '3': 5,
       '4': 1,
       '5': 11,
-      '6': '.server_to_client.Response.UserData',
+      '6': '.server_to_client.Response.UserConfig',
       '9': 0,
       '10': 'userdata'
     },

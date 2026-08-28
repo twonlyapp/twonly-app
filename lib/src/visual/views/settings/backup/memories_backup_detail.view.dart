@@ -29,7 +29,7 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
   }
 
   Future<void> _loadStats() async {
-    final memoriesUsage = await apiService.getMemoriesUsage();
+    final memoriesUsage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
     if (mounted) {
       setState(() {
         _memoriesUsage = memoriesUsage;

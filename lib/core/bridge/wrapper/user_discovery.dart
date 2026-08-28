@@ -9,62 +9,25 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 class FlutterUserDiscovery {
   const FlutterUserDiscovery();
 
+  static Future<void> changeExclusionForContact({
+    required int callbackId,
+    required PlatformInt64 contactId,
+    required bool exclude,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryChangeExclusionForContact(
+        callbackId: callbackId,
+        contactId: contactId,
+        exclude: exclude,
+      );
+
+  /// UI-facing read used to display the current discovery version.
   static Future<Uint8List> getCurrentVersion({required int callbackId}) =>
       RustLib.instance.api
           .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetCurrentVersion(
             callbackId: callbackId,
           );
 
-  static Future<List<Uint8List>> getNewMessages({
-    required int callbackId,
-    required PlatformInt64 contactId,
-    required List<int> receivedVersion,
-  }) => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryGetNewMessages(
-        callbackId: callbackId,
-        contactId: contactId,
-        receivedVersion: receivedVersion,
-      );
-
-  static Future<void> handleNewMessages({
-    required int callbackId,
-    required PlatformInt64 contactId,
-    PlatformInt64? publicKeyVerifiedTimestamp,
-    required List<Uint8List> messages,
-  }) => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryHandleNewMessages(
-        callbackId: callbackId,
-        contactId: contactId,
-        publicKeyVerifiedTimestamp: publicKeyVerifiedTimestamp,
-        messages: messages,
-      );
-
-  static Future<void> initializeOrUpdate({
-    required int callbackId,
-    required int threshold,
-    required PlatformInt64 userId,
-    required List<int> publicKey,
-    required bool sharePromotion,
-  }) => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryInitializeOrUpdate(
-        callbackId: callbackId,
-        threshold: threshold,
-        userId: userId,
-        publicKey: publicKey,
-        sharePromotion: sharePromotion,
-      );
-
-  static Future<Uint8List?> shouldRequestNewMessages({
-    required int callbackId,
-    required PlatformInt64 contactId,
-    required List<int> version,
-  }) => RustLib.instance.api
-      .crateBridgeWrapperUserDiscoveryFlutterUserDiscoveryShouldRequestNewMessages(
-        callbackId: callbackId,
-        contactId: contactId,
-        version: version,
-      );
-
+  /// UI-facing hook used when a user manually changes contact verification.
   static Future<void> updateVerificationStateForUser({
     required int callbackId,
     required PlatformInt64 contactId,

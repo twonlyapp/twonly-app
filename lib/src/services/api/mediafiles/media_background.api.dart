@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -19,10 +18,6 @@ Future<void> initFileDownloader() async {
         if (update.task.taskId.contains('upload_')) {
           await handleUploadStatusUpdate(update);
         }
-        if (update.task.taskId.contains('download_')) {
-          await handleDownloadStatusUpdate(update);
-        }
-
         if (update.task.taskId.contains('backup_')) {
           await BackupService.handleBackupStatusUpdate(
             update.task.taskId,

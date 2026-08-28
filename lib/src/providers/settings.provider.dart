@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/core/user_config.dart' as rust_config;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/visual/themes/light.dart';
@@ -13,8 +14,15 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   void loadSettings() {
     if (userService.isUserCreated) {
-      _themeMode = userService.currentUser.themeMode;
-      _primaryColor = userService.currentUser.primaryColor;
+      _themeMode = switch (userService.currentUser.themeMode) {
+        rust_config.ThemeMode.system => ThemeMode.system,
+        rust_config.ThemeMode.light => ThemeMode.light,
+        rust_config.ThemeMode.dark => ThemeMode.dark,
+      };
+      final primaryColorValue = userService.currentUser.primaryColorValue;
+      _primaryColor = primaryColorValue == null
+          ? defaultPrimaryColor
+          : Color(primaryColorValue);
       notifyListeners();
     } else {
       _themeMode = ThemeMode.system;
@@ -31,7 +39,13 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
     notifyListeners();
 
-    await UserService.update((u) => u.themeMode = newThemeMode);
+    await UserService.update(
+      (u) => u.themeMode = switch (newThemeMode) {
+        ThemeMode.system => rust_config.ThemeMode.system,
+        ThemeMode.light => rust_config.ThemeMode.light,
+        ThemeMode.dark => rust_config.ThemeMode.dark,
+      },
+    );
   }
 
   Future<void> updatePrimaryColor(Color newColor) async {

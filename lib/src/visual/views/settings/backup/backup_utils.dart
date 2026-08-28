@@ -82,7 +82,7 @@ Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
 
   if (confirmed == true) {
     try {
-      await apiService.disableMemoriesBackup();
+      await RustApi.disableMemoriesBackup();
       final allMedias = await (twonlyDB.select(
         twonlyDB.mediaFiles,
       )..where((t) => t.stored.equals(true))).get();

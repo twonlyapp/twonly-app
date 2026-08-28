@@ -47,7 +47,7 @@ class FriendSuggestionsComp extends StatelessWidget {
   ) async {
     Log.info('Requesting user via friend suggestions');
 
-    final userdata = await apiService.getUserById(user.announcedUserId);
+    final userdata = await rustApiProtobuf(RustApi.getUserById(userId: user.announcedUserId), decodeUserData);
 
     if (userdata == null) {
       if (context.mounted) {

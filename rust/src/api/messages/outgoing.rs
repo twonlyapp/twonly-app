@@ -12,7 +12,7 @@ use crate::user_config::UserConfig;
 use prost::Message as _;
 use std::sync::Arc;
 
-async fn decorate_content(
+pub(crate) async fn decorate_content(
     ctx: &Context,
     contact_id: i64,
     content: &mut proto::EncryptedContent,
@@ -35,6 +35,7 @@ async fn decorate_content(
     }
 
     if config.is_user_discovery_enabled && is_persisted_message {
+        ctx.initialize_user_discovery_from_config().await?;
         let database = ctx.get_app_database().await;
         let allowed = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND accepted = 1

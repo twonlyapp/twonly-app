@@ -4,8 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/user.service.dart';
+
+import '../mocks/user_config.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,7 @@ void main() {
       )
       ..registerSingleton<UserService>(UserService());
 
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 1,
       username: 'test_user',
       displayName: 'Test User',

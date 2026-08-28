@@ -17,8 +17,68 @@ use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use encrypted_content::contact_request::Type;
 use sqlx::{Sqlite, Transaction};
+use std::collections::HashMap;
 use std::io::Write as _;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, OnceLock};
+
+static REQUESTED_PROFILES: OnceLock<Mutex<HashMap<i64, i64>>> = OnceLock::new();
+
+pub(crate) async fn check_for_profile_update(
+    t: &mut Transaction<'_, Sqlite>,
+    from_user_id: i64,
+    content: &EncryptedContent,
+) -> Result<()> {
+    let Some(sender_profile_counter) = content.sender_profile_counter else {
+        return Ok(());
+    };
+
+    let current_counter = sqlx::query_scalar!(
+        "SELECT sender_profile_counter FROM contacts WHERE user_id = ?",
+        from_user_id,
+    )
+    .fetch_optional(&mut **t)
+    .await?
+    .unwrap_or(0);
+
+    if content.contact_update.is_some() || sender_profile_counter <= current_counter {
+        return Ok(());
+    }
+
+    let should_request = {
+        let mut requested = REQUESTED_PROFILES
+            .get_or_init(|| Mutex::new(HashMap::new()))
+            .lock()
+            .unwrap();
+        let last_requested = requested.get(&from_user_id).copied().unwrap_or(0);
+
+        if sender_profile_counter > last_requested {
+            requested.insert(from_user_id, sender_profile_counter);
+            true
+        } else {
+            false
+        }
+    };
+
+    if should_request {
+        queue_encrypted_content(
+            t,
+            from_user_id,
+            EncryptedContent {
+                contact_update: Some(encrypted_content::ContactUpdate {
+                    r#type: encrypted_content::contact_update::Type::Request as i32,
+                    username: None,
+                    display_name: None,
+                    avatar_svg_compressed: None,
+                }),
+                ..Default::default()
+            },
+            true,
+        )
+        .await?;
+    }
+
+    Ok(())
+}
 
 pub(crate) async fn handle_contact_request(
     ctx: &Arc<Context>,
@@ -73,6 +133,7 @@ pub(crate) async fn handle_contact_request(
                         )));
                     }
                 };
+
                 let username = user
                     .username
                     .ok_or_else(|| TwonlyError::Generic("user response has no username".into()))?;
@@ -149,8 +210,8 @@ pub(crate) async fn handle_contact_update(
             EncryptedContent {
                 contact_update: Some(encrypted_content::ContactUpdate {
                     r#type: encrypted_content::contact_update::Type::Update as i32,
-                    username: user.username,
-                    display_name: user.display_name,
+                    username: Some(user.username),
+                    display_name: Some(user.display_name),
                     avatar_svg_compressed,
                 }),
                 sender_profile_counter: Some(user.avatar_counter),

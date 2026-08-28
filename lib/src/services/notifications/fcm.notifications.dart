@@ -36,22 +36,16 @@ class FcmNotificationService {
 
   static Future<void> initFCMAfterAuthenticated({bool force = false}) async {
     final fcmToken = userService.currentUser.fcmToken;
-    if (userService.currentUser.updateFCMToken || force) {
+    if (userService.currentUser.updateFcmToken || force) {
       if (fcmToken == null) {
         Log.error('FCM token could not be updated as it is empty');
         await _checkForTokenUpdates();
         return;
       }
-      final res = await apiService.updateFCMToken(
-        fcmToken,
-      );
-      if (res.isSuccess) {
-        Log.info('Uploaded new FCM token!');
+      if (await _uploadFcmToken(fcmToken)) {
         await UserService.update((u) {
-          u.updateFCMToken = false;
+          u.updateFcmToken = false;
         });
-      } else {
-        Log.error('Could not update FCM token!');
       }
     }
   }
@@ -100,18 +94,14 @@ class FcmNotificationService {
         Log.info('Got new FCM token.');
         await UserService.update((u) {
           u
-            ..updateFCMToken = true
+            ..updateFcmToken = true
             ..fcmToken = fcmToken;
         });
         if (apiService.isAuthenticated) {
-          final res = await apiService.updateFCMToken(fcmToken);
-          if (res.isSuccess) {
-            Log.info('Uploaded new FCM token!');
+          if (await _uploadFcmToken(fcmToken)) {
             await UserService.update((u) {
-              u.updateFCMToken = false;
+              u.updateFcmToken = false;
             });
-          } else {
-            Log.error('Could not update FCM token!');
           }
         }
       }
@@ -121,18 +111,14 @@ class FcmNotificationService {
           .listen((String fcmToken) async {
             await UserService.update((u) {
               u
-                ..updateFCMToken = true
+                ..updateFcmToken = true
                 ..fcmToken = fcmToken;
             });
             if (apiService.isAuthenticated) {
-              final res = await apiService.updateFCMToken(fcmToken);
-              if (res.isSuccess) {
-                Log.info('Uploaded new FCM token!');
+              if (await _uploadFcmToken(fcmToken)) {
                 await UserService.update((u) {
-                  u.updateFCMToken = false;
+                  u.updateFcmToken = false;
                 });
-              } else {
-                Log.error('Could not update FCM token!');
               }
             }
           })
@@ -141,6 +127,17 @@ class FcmNotificationService {
           });
     } catch (e) {
       Log.error('could not load fcm token: $e');
+    }
+  }
+
+  static Future<bool> _uploadFcmToken(String token) async {
+    try {
+      await RustApi.updateFcmToken(token: token);
+      Log.info('Uploaded new FCM token!');
+      return true;
+    } catch (error) {
+      Log.error('Could not update FCM token!', error: error);
+      return false;
     }
   }
 

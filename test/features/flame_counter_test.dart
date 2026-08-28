@@ -6,9 +6,10 @@ import 'package:mutex/mutex.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+
+import '../mocks/user_config.dart';
 
 Future<void> expectFlame(DateTime time, String groupId, int counter) async {
   await withClock(
@@ -77,7 +78,7 @@ void main() {
       )
       ..registerSingleton<UserService>(UserService());
 
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 0x133337,
       username: 'test_user',
       displayName: 'Test User',

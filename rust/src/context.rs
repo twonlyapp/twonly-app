@@ -14,11 +14,11 @@ use crate::keys::KeyManager;
 #[cfg(not(test))]
 use crate::log::init_tracing;
 use crate::signal::engine::RustSignalEngine;
-use crate::user_discovery::stores::{NativeUserDiscoveryStore, NativeUserDiscoveryUtils};
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use crate::{bridge::TwonlyFlutter, secure_storage::SecureStorage};
 use libsignal_protocol::IdentityKey;
+use libsignal_protocol::IdentityKeyPair;
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::{Mutex, OnceCell, RwLock};
 #[cfg(not(test))]
@@ -36,8 +36,7 @@ pub struct TwonlyStandalone {
     #[allow(dead_code)]
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
-    pub(crate) user_discovery:
-        Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>>,
+    pub(crate) user_discovery: Shared<UserDiscovery>,
     pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
     pub(crate) api_client: OnceCell<RwLock<Arc<ApiClient>>>,
 }
@@ -63,9 +62,7 @@ impl Context {
         }
     }
 
-    pub(crate) fn get_user_discovery(
-        &self,
-    ) -> &Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>> {
+    pub(crate) fn get_user_discovery(&self) -> &Shared<UserDiscovery> {
         match self {
             Self::Flutter(value) => &value.user_discovery,
             Self::Standalone(value) => &value.user_discovery,
@@ -133,8 +130,9 @@ impl Context {
         let rust_db = Arc::new(RwLock::new(rust_db));
         let key_manager = Arc::new(Mutex::new(key_manager));
         let user_discovery = Shared::new(UserDiscovery::new(
-            NativeUserDiscoveryStore::new(app_db.clone(), data_dir.to_str().unwrap()),
-            NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db.clone()),
+            data_dir.to_str().unwrap(),
+            key_manager.clone(),
+            rust_db.clone(),
         )?);
 
         let ctx = Arc::new(Context::from_standalone(TwonlyStandalone {
@@ -192,6 +190,73 @@ impl Context {
                 user_id.to_string(),
             )?);
         }
+        self.initialize_user_discovery_from_config().await?;
+        Ok(())
+    }
+
+    pub(crate) async fn initialize_user_discovery_from_config(&self) -> Result<()> {
+        let Some(config) = crate::user_config::UserConfig::load_from(self)? else {
+            return Ok(());
+        };
+        if !config.is_user_discovery_enabled {
+            return Ok(());
+        }
+
+        let discovery_config_path =
+            PathBuf::from(self.data_dir()).join("user_discovery_config.json");
+        let settings_are_current = std::fs::read_to_string(&discovery_config_path)
+            .ok()
+            .and_then(|value| serde_json::from_str::<serde_json::Value>(&value).ok())
+            .is_some_and(|value| {
+                value.get("threshold").and_then(serde_json::Value::as_u64)
+                    == Some(u64::from(config.user_discovery_threshold))
+                    && value
+                        .get("share_promotion")
+                        .and_then(serde_json::Value::as_bool)
+                        == Some(config.user_discovery_share_promotion)
+            });
+        if settings_are_current {
+            let database = self.get_app_database().await;
+            let has_shares =
+                sqlx::query_scalar!("SELECT EXISTS(SELECT 1 FROM user_discovery_shares LIMIT 1)")
+                    .fetch_one(&database.pool)
+                    .await?
+                    != 0;
+            if has_shares {
+                return Ok(());
+            }
+        }
+
+        let key_manager = self.get_key_manager().await?;
+        let user_id = key_manager.user_id.ok_or_else(|| {
+            TwonlyError::Generic("cannot initialize user discovery without user ID".into())
+        })?;
+        let identity = key_manager
+            .signal_identity
+            .as_ref()
+            .ok_or(TwonlyError::SignalIdentityNotFound)?;
+        let identity = IdentityKeyPair::try_from(identity.identity_key_pair_structure.as_slice())
+            .map_err(|error| {
+            TwonlyError::Generic(format!("invalid Signal identity: {error}"))
+        })?;
+        let public_key = identity.identity_key().serialize().to_vec();
+        drop(key_manager);
+
+        let database = self.get_app_database().await;
+        let mut transaction = database.pool.begin().await?;
+        self.get_user_discovery()
+            .get()
+            .await
+            .initialize_or_update(
+                config.user_discovery_threshold,
+                user_id,
+                public_key,
+                config.user_discovery_share_promotion,
+                &mut transaction,
+            )
+            .await?;
+        transaction.commit().await?;
+        database.notify_committed(["user_discovery_shares"]);
         Ok(())
     }
 
@@ -281,8 +346,9 @@ impl Context {
                         Arc::new(Mutex::new(engine))
                     };
                     let user_discovery = Shared::new(UserDiscovery::new(
-                        NativeUserDiscoveryStore::new(app_db.clone(), &config.data_dir),
-                        NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db_handle.clone()),
+                        &config.data_dir,
+                        key_manager.clone(),
+                        rust_db_handle.clone(),
                     )?);
                     let ctx = Arc::new(Context::Flutter(TwonlyFlutter {
                         config,
@@ -294,6 +360,9 @@ impl Context {
                         signal_engine,
                         api_client: OnceCell::const_new(),
                     }));
+                    if let Err(error) = ctx.initialize_user_discovery_from_config().await {
+                        tracing::warn!("failed to initialize user discovery: {error}");
+                    }
                     ApiRuntime::initialize(&ctx).await?;
                     Ok(ctx)
                 } else {
@@ -312,8 +381,9 @@ impl Context {
                         Arc::new(Mutex::new(engine))
                     };
                     let user_discovery = Shared::new(UserDiscovery::new(
-                        NativeUserDiscoveryStore::new(app_db.clone(), &config.data_dir),
-                        NativeUserDiscoveryUtils::new(key_manager.clone(), rust_db_handle.clone()),
+                        &config.data_dir,
+                        key_manager.clone(),
+                        rust_db_handle.clone(),
                     )?);
                     let ctx = Arc::new(Context::Standalone(TwonlyStandalone {
                         config,
@@ -325,6 +395,9 @@ impl Context {
                         signal_engine,
                         api_client: OnceCell::const_new(),
                     }));
+                    if let Err(error) = ctx.initialize_user_discovery_from_config().await {
+                        tracing::warn!("failed to initialize user discovery: {error}");
+                    }
                     ApiRuntime::initialize(&ctx).await?;
                     Ok(ctx)
                 }

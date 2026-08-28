@@ -9,6 +9,7 @@ use crate::error::Result;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Weak};
+use std::time::Duration;
 use stream_tungstenite::WebSocketClient;
 use tokio::sync::{broadcast, oneshot, Mutex, RwLock};
 
@@ -90,6 +91,7 @@ impl ApiClient {
         };
 
         let client = WebSocketClient::builder(host)
+            .receive_timeout(Duration::from_secs(60))
             .handshaker(handshaker)
             .build();
 
@@ -155,8 +157,11 @@ impl ApiClient {
 
     pub async fn close(&self) {
         self.deliberately_closed.store(true, Ordering::Release);
-        if let Some(_) = self.ws_client.lock().await.take() {
-            // Drop client to disconnect
+        let client = self.ws_client.lock().await.take();
+        if let Some(client) = client {
+            if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
+                tracing::warn!("WebSocket shutdown did not finish cleanly: {error}");
+            }
         }
         self.fail_pending().await;
         self.set_state(ApiConnectionState::Stopped).await;

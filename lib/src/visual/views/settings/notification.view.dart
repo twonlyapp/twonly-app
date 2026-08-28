@@ -1,14 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hashlib/random.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 
@@ -47,8 +42,6 @@ class _NotificationViewState extends State<NotificationView> {
 
     await FcmNotificationService.initFCMAfterAuthenticated(force: true);
 
-    await setupNotificationWithUsers(force: true);
-
     if (!mounted) return;
 
     if (userService.currentUser.fcmToken == null) {
@@ -66,18 +59,6 @@ class _NotificationViewState extends State<NotificationView> {
       );
 
       if (run) {
-        final pushData = await encryptPushNotification(
-          userService.currentUser.userId,
-          PushNotification(
-            messageId: uuid.v4(),
-            kind: PushKind.TEST_NOTIFICATION,
-          ),
-        );
-        await apiService.sendTextMessage(
-          userService.currentUser.userId,
-          Uint8List(0),
-          pushData,
-        );
         _troubleshootingDidRun = true;
       }
     }

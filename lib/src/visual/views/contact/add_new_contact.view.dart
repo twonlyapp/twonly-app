@@ -117,7 +117,10 @@ class _SearchUsernameView extends State<AddNewUserView> {
       _isLoading = true;
     });
 
-    final userdata = await apiService.getUserData(username);
+    final userdata = await rustApiProtobuf(
+      RustApi.getUserData(username: username),
+      decodeUserData,
+    );
     if (!mounted) return;
 
     setState(() {

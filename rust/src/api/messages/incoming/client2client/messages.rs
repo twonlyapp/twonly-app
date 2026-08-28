@@ -4,13 +4,12 @@
  */
 
 use super::handle_encrypted;
-use crate::api::proto::client::{self as proto, encrypted_content};
-
+use crate::api::proto::client::{self as proto};
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
-use crate::database::app::tables::{Contact, NewReceipt, Receipt};
+use crate::database::app::tables::{Contact, MediaFile, NewReceipt, Receipt};
 use crate::error::{twonly_error, Result, TwonlyError};
 use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
@@ -24,26 +23,6 @@ use std::{collections::HashMap, sync::LazyLock};
 #[cfg(not(debug_assertions))]
 static ALREADY_QUEUED_RECEIPTS: LazyLock<std::sync::Mutex<HashMap<String, std::time::Instant>>> =
     LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
-
-async fn native_push_data(
-    _ctx: &Context,
-    contact_id: i64,
-    message_id: Option<String>,
-    plaintext: &[u8],
-    message_type: i32,
-) -> Result<Option<Vec<u8>>> {
-    let callbacks = match get_callbacks() {
-        Ok(callbacks) => callbacks,
-        Err(TwonlyError::MissingCallbackInitialization) => {
-            return Ok(None);
-        }
-        Err(error) => return Err(error),
-    };
-    Ok(
-        (callbacks.api.create_push_data)(contact_id, message_id, plaintext.to_vec(), message_type)
-            .await,
-    )
-}
 
 pub(crate) async fn queue_encrypted_content(
     transaction: &mut Transaction<'_, Sqlite>,
@@ -103,7 +82,7 @@ pub(crate) async fn process_encrypted_or_queue_error(
             let Some(error_type) = error_type else {
                 return Err(error);
             };
-            let outgoing_receipt_id = uuid::Uuid::new_v4().to_string();
+            let outgoing_receipt_id = new_uuid_v4();
             let response_content = proto::EncryptedContent {
                 group_id,
                 error_messages: Some(proto::encrypted_content::ErrorMessages {
@@ -318,18 +297,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 
     let message_type = proto::message::Type::try_from(message.r#type)?;
 
-    let push_data = if row.retry_count == 0 {
-        native_push_data(
-            ctx,
-            row.contact_id,
-            row.message_id.clone(),
-            &message.encrypted_content.clone().unwrap_or_default(),
-            message.r#type,
-        )
-        .await?
-    } else {
-        None
-    };
+    let push_data: Option<Vec<u8>> = None;
 
     match message_type {
         proto::message::Type::Ciphertext | proto::message::Type::PrekeyBundle => {
@@ -422,18 +390,7 @@ pub(crate) async fn prepare_queued_receipt(
     let mut message = proto::Message::decode(row.message.as_slice())
         .map_err(|error| TwonlyError::Generic(format!("invalid queued message: {error}")))?;
     message.receipt_id = receipt_id.to_owned();
-    let push_data = if row.retry_count == 0 {
-        native_push_data(
-            ctx,
-            row.contact_id,
-            row.message_id,
-            &message.encrypted_content.clone().unwrap_or_default(),
-            message.r#type,
-        )
-        .await?
-    } else {
-        None
-    };
+    let push_data: Option<Vec<u8>> = None;
 
     match proto::message::Type::try_from(message.r#type)
         .map_err(|_| TwonlyError::Generic("queued message has invalid type".into()))?
@@ -593,6 +550,8 @@ pub(crate) async fn handle_sender_delivery_receipt(
         )
         .execute(&mut **transaction)
         .await?;
+
+        MediaFile::handle_response_from_receiver(transaction, &message_id).await?;
     }
     sqlx::query!(
         r#"
@@ -634,145 +593,4 @@ pub async fn handle_plaintext_content(
         return Ok(Some(new_receipt_id));
     }
     Ok(None)
-}
-
-pub(crate) async fn handle_message_update(
-    transaction: &mut Transaction<'_, Sqlite>,
-    from_user_id: i64,
-    update: encrypted_content::MessageUpdate,
-) -> Result<()> {
-    use encrypted_content::message_update::Type;
-    let timestamp = crate::utils::milliseconds_to_seconds(update.timestamp);
-
-    match Type::try_from(update.r#type)
-        .map_err(|_| TwonlyError::Generic("invalid message update".into()))?
-    {
-        Type::Opened => {
-            for message_id in update.multiple_target_message_ids {
-                let action_at = sqlx::query_scalar::<_, i64>(
-                    "SELECT MAX(created_at, ?) FROM messages WHERE message_id = ?",
-                )
-                .bind(timestamp)
-                .bind(&message_id)
-                .fetch_optional(&mut **transaction)
-                .await?;
-                let Some(action_at) = action_at else { continue };
-                sqlx::query!(
-                    r#"
-                    INSERT INTO message_actions(message_id, contact_id, type, action_at)
-                    VALUES (?, ?, 'openedAt', ?)
-                    ON CONFLICT(message_id, contact_id, type)
-                    DO UPDATE SET action_at = excluded.action_at
-                    "#,
-                    message_id,
-                    from_user_id,
-                    action_at,
-                )
-                .execute(&mut **transaction)
-                .await?;
-                sqlx::query!(
-                    r#"UPDATE messages SET opened_at = ?, opened_by_all = CASE WHEN NOT EXISTS(
-                           SELECT 1 FROM group_members gm
-                           WHERE gm.group_id = messages.group_id AND NOT EXISTS(
-                               SELECT 1 FROM message_actions ma
-                               WHERE ma.message_id = messages.message_id
-                                 AND ma.contact_id = gm.contact_id AND ma.type = 'openedAt'
-                           )
-                       ) THEN ? ELSE NULL END
-                       WHERE message_id = ?"#,
-                    action_at,
-                    action_at,
-                    message_id,
-                )
-                .execute(&mut **transaction)
-                .await?;
-            }
-        }
-        Type::Delete => {
-            let media_id = sqlx::query_scalar!(
-                "SELECT media_id FROM messages WHERE message_id = ? AND sender_id = ?",
-                update.sender_message_id,
-                from_user_id,
-            )
-            .fetch_optional(&mut **transaction)
-            .await?
-            .flatten();
-            sqlx::query!(
-                "DELETE FROM message_histories WHERE message_id = ?",
-                update.sender_message_id
-            )
-            .execute(&mut **transaction)
-            .await?;
-            sqlx::query!(
-                "DELETE FROM receipts WHERE message_id = ?",
-                update.sender_message_id
-            )
-            .execute(&mut **transaction)
-            .await?;
-            sqlx::query!(
-                r#"
-                UPDATE messages
-                SET is_deleted_from_sender = 1, content = NULL, media_id = NULL, modified_at = ?
-                WHERE message_id = ? AND sender_id = ?
-                "#,
-                timestamp,
-                update.sender_message_id,
-                from_user_id,
-            )
-            .execute(&mut **transaction)
-            .await?;
-            if let Some(media_id) = media_id {
-                let references = sqlx::query_scalar!(
-                    "SELECT COUNT(*) FROM messages WHERE media_id = ?",
-                    media_id,
-                )
-                .fetch_one(&mut **transaction)
-                .await?;
-                if references == 0 {
-                    sqlx::query!("DELETE FROM media_files WHERE media_id = ?", media_id)
-                        .execute(&mut **transaction)
-                        .await?;
-                    if let Ok(callbacks) = get_callbacks() {
-                        if let Some(message_id) = update.sender_message_id.clone() {
-                            tokio::spawn(async move {
-                                (callbacks.api.media_action)(
-                                    "delete".into(),
-                                    media_id,
-                                    from_user_id,
-                                    message_id,
-                                )
-                                .await;
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        Type::EditText => {
-            sqlx::query!(
-                r#"INSERT INTO message_histories(message_id, content, created_at)
-                   SELECT message_id, content, ? FROM messages
-                   WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL"#,
-                timestamp,
-                update.sender_message_id,
-                from_user_id,
-            )
-            .execute(&mut **transaction)
-            .await?;
-            sqlx::query!(
-                r#"
-                UPDATE messages
-                SET content = ?, modified_at = ?
-                WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL
-                "#,
-                update.text,
-                timestamp,
-                update.sender_message_id,
-                from_user_id,
-            )
-            .execute(&mut **transaction)
-            .await?;
-        }
-    }
-    Ok(())
 }

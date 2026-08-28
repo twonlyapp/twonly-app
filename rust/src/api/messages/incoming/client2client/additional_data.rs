@@ -91,11 +91,10 @@ async fn verify_shared_contacts(
         .await?;
 
         let verified_at = chrono::Utc::now().timestamp_millis();
-
         ctx.get_user_discovery()
             .get()
             .await
-            .update_verification_state_for_user(contact.user_id, Some(verified_at))
+            .update_verification_state_for_user(contact.user_id, Some(verified_at), tr)
             .await?;
 
         tracing::info!("verified a contact from shared additional data");

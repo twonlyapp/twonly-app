@@ -117,8 +117,9 @@ class _ContactRowState extends State<_ContactRow> {
     });
 
     try {
-      final userdata = await apiService.getUserById(
-        widget.contact.userId.toInt(),
+      final userdata = await rustApiProtobuf(
+        RustApi.getUserById(userId: widget.contact.userId.toInt()),
+        decodeUserData,
       );
       if (userdata == null) return;
 

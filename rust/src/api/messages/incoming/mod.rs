@@ -333,6 +333,8 @@ pub(crate) async fn handle_decoded_server_message(
         "messages",
         "groups",
         "contacts",
+        "key_verifications",
+        "user_discovery_own_promotions",
     ]);
 
     let ctx = ctx.clone();

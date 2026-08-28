@@ -8,9 +8,10 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.model.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
+
+import '../mocks/user_config.dart';
 
 void main() {
   if (!Platform.isMacOS) {
@@ -35,7 +36,7 @@ void main() {
 
     // isUserDiscoveryEnabled defaults to false, so no Rust bridge calls happen
     // in addKeyVerification / deleteKeyVerification.
-    userService.currentUser = UserData(
+    userService.currentUser = testUserConfig(
       userId: 1,
       username: 'me',
       displayName: 'Me',

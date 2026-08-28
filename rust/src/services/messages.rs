@@ -3,8 +3,10 @@
  *
  */
 
-use crate::api::messages::incoming::client2client::messages;
-use crate::api::messages::outgoing::send_c2c_message_to_contact;
+use crate::api::messages::incoming::client2client::messages::{
+    self, queue_encrypted_content, send_queued_receipt,
+};
+use crate::api::messages::outgoing::{decorate_content, send_c2c_message_to_contact};
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group};
@@ -58,6 +60,110 @@ impl MessageService {
                 .only_send_if_no_receipts_are_open(only_send_if_no_receipts_are_open)
                 .call()
                 .await?;
+        }
+        Ok(())
+    }
+
+    pub async fn send_to_group_in_transaction(
+        &self,
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        group_id: String,
+        encrypted_content: Vec<u8>,
+        message_id: Option<String>,
+        only_send_if_no_receipts_are_open: bool,
+    ) -> Result<()> {
+        let mut content = proto::EncryptedContent::decode(encrypted_content.as_slice())?;
+        content.group_id = Some(group_id.clone());
+        if message_id.is_some()
+            || content.reaction.is_some()
+            || content.media.is_some()
+            || content.text_message.is_some()
+        {
+            sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ?", group_id)
+                .execute(&mut **t).await?;
+        }
+        let members = sqlx::query_scalar!(
+            r#"SELECT contact_id FROM group_members
+               WHERE group_id = ? AND (member_state IS NULL OR member_state != 'leftGroup')"#,
+            group_id,
+        )
+        .fetch_all(&mut **t)
+        .await?;
+
+        let bytes = content.encode_to_vec();
+        let mut receipt_ids = Vec::new();
+
+        for contact_id in members {
+            let mut contact_content = proto::EncryptedContent::decode(bytes.as_slice())?;
+            decorate_content(
+                &self.ctx,
+                contact_id,
+                &mut contact_content,
+                message_id.is_some(),
+            )
+            .await?;
+
+            if only_send_if_no_receipts_are_open {
+                let count = sqlx::query_scalar!(
+                    "SELECT COUNT(*) FROM receipts WHERE contact_id = ?",
+                    contact_id
+                )
+                .fetch_one(&mut **t)
+                .await?;
+                if count > 10 {
+                    continue;
+                }
+            }
+
+            let mut retry_count = 0_i64;
+            let mut last_retry = None;
+            if let Some(msg_id) = &message_id {
+                let previous = sqlx::query!(
+                    r#"SELECT COUNT(*) AS "count!: i64", MAX(last_retry) AS last_retry
+                       FROM receipts WHERE contact_id = ? AND message_id = ?"#,
+                    contact_id,
+                    msg_id,
+                )
+                .fetch_one(&mut **t)
+                .await?;
+                retry_count = previous.count;
+                last_retry = previous.last_retry;
+                sqlx::query!(
+                    "DELETE FROM receipts WHERE contact_id = ? AND message_id = ?",
+                    contact_id,
+                    msg_id
+                )
+                .execute(&mut **t)
+                .await?;
+            }
+
+            let receipt_id = queue_encrypted_content(t, contact_id, contact_content, true).await?;
+
+            sqlx::query!(
+                r#"UPDATE receipts SET message_id = ?, will_be_retried_by_media_upload = ?,
+                   retry_count = ?, last_retry = ? WHERE receipt_id = ?"#,
+                message_id,
+                false, // only_return_encrypted_data is false for send_to_group
+                retry_count,
+                last_retry,
+                receipt_id
+            )
+            .execute(&mut **t)
+            .await?;
+
+            receipt_ids.push(receipt_id);
+        }
+
+        // We CANNOT spawn the sending here immediately because the transaction is NOT committed yet!
+        for receipt_id in receipt_ids {
+            let ctx = self.ctx.clone();
+            tokio::spawn(async move {
+                // Sleep slightly to let the transaction commit
+                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                if let Err(error) = send_queued_receipt(&ctx, &receipt_id).await {
+                    tracing::warn!(receipt_id, "queued group message send failed: {error}");
+                }
+            });
         }
         Ok(())
     }

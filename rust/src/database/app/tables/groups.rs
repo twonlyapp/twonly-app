@@ -15,6 +15,24 @@ const MAX_FUTURE_TIMESTAMP_SKEW_SECONDS: i64 = 10 * 60;
 pub struct Group;
 
 impl Group {
+    pub async fn ensure_exists(tr: &mut Transaction<'_, Sqlite>, group_id: &str) -> Result<()> {
+        let exists = sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM groups WHERE group_id = ?)",
+            group_id
+        )
+        .fetch_one(&mut **tr)
+        .await?
+            != 0;
+
+        if !exists {
+            return Err(TwonlyError::Generic(format!(
+                "group {group_id} does not exist"
+            )));
+        }
+
+        Ok(())
+    }
+
     pub async fn create_direct_chat(
         ctx: &Context,
         tr: &mut Transaction<'_, Sqlite>,
@@ -63,6 +81,40 @@ impl Group {
             &hex[16..20],
             &hex[20..32]
         )
+    }
+
+    pub async fn is_direct_chat(tr: &mut Transaction<'_, Sqlite>, group_id: &str) -> Result<bool> {
+        let is_direct = sqlx::query_scalar!(
+            "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+            group_id
+        )
+        .fetch_optional(&mut **tr)
+        .await?
+        .unwrap_or(0)
+            != 0;
+        Ok(is_direct)
+    }
+
+    pub async fn is_member(
+        tr: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        contact_id: i64,
+    ) -> Result<bool> {
+        let is_member = sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS(
+                SELECT 1
+                FROM group_members
+                WHERE group_id = ? AND contact_id = ?
+            )
+            "#,
+            group_id,
+            contact_id,
+        )
+        .fetch_one(&mut **tr)
+        .await?
+            != 0;
+        Ok(is_member)
     }
 
     pub async fn increase_last_message_exchange_to_now(
@@ -368,7 +420,10 @@ impl InsertGroupHistory {
 pub struct GetUnjoinedGroups {}
 
 impl GetUnjoinedGroups {
-    pub async fn fetch_all(self, pool: &sqlx::Pool<Sqlite>) -> Result<Vec<String>> {
+    pub async fn fetch_all(
+        self,
+        pool: impl sqlx::Executor<'_, Database = sqlx::Sqlite>,
+    ) -> Result<Vec<String>> {
         let ids = sqlx::query_scalar!(
             "SELECT group_id FROM groups WHERE joined_group = 0 AND left_group = 0"
         )

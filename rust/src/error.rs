@@ -3,7 +3,6 @@
  *
  */
 
-use crate::user_discovery::error::UserDiscoveryError;
 use hex::FromHexError;
 use scrypt::errors::{InvalidOutputLen, InvalidParams};
 use std::string::FromUtf8Error;
@@ -47,8 +46,23 @@ pub enum TwonlyError {
     #[error("main_key could not be loaded from the key_chain")]
     MissingMainKey,
 
-    #[error("{0}")]
-    UserDiscoveryError(#[from] UserDiscoveryError),
+    #[error("User discovery store error: `{0}`")]
+    UserDiscoveryStore(String),
+
+    #[error("The encrypted announcement data contains malicious data: `{0}`")]
+    MaliciousAnnouncementData(String),
+
+    #[error("no user-discovery shares left")]
+    NoSharesLeft,
+
+    #[error("User discovery contains no configuration")]
+    UserDiscoveryNotInitialized,
+
+    #[error("error while calculating Shamir's secret shares: `{0}`")]
+    ShamirsSecret(String),
+
+    #[error("tried to push an invalid user-discovery version")]
+    PushedInvalidVersion,
 
     #[error("Error in dart callback")]
     DartError,
@@ -79,6 +93,9 @@ pub enum TwonlyError {
 
     #[error("{0}")]
     IoError(#[from] std::io::Error),
+
+    #[error("{0}")]
+    JsonError(#[from] serde_json::Error),
 
     #[error("{0}")]
     ZipError(#[from] ZipError),
@@ -121,14 +138,14 @@ impl From<String> for TwonlyError {
     }
 }
 
-impl From<TwonlyError> for UserDiscoveryError {
-    fn from(error: TwonlyError) -> Self {
-        UserDiscoveryError::Store(error.to_string())
-    }
-}
-
 impl From<aes_gcm::Error> for TwonlyError {
     fn from(_: aes_gcm::Error) -> Self {
         TwonlyError::AesGcm
+    }
+}
+
+impl From<libsignal_protocol::SignalProtocolError> for TwonlyError {
+    fn from(error: libsignal_protocol::SignalProtocolError) -> Self {
+        TwonlyError::Signal(error.to_string())
     }
 }

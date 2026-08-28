@@ -171,7 +171,10 @@ class MemoriesCloudService {
         return true;
       }
 
-      final urls = await apiService.getMemoriesUrl(mediaId, isThumbnail);
+      final urls = await rustApiProtobuf(
+        RustApi.getMemoriesUrl(mediaId: mediaId, thumbnail: isThumbnail),
+        decodeMemoriesUrl,
+      );
       if (urls == null || !urls.hasFullDownloadUrl()) return false;
 
       try {
@@ -205,10 +208,13 @@ class MemoriesCloudService {
       }
 
       final sizeBytes = ms.storedPath.lengthSync();
-      final urls = await apiService.requestMemoriesUpload(
-        sizeBytes,
-        mediaFile.createdAt,
-        mediaFile.mediaId,
+      final urls = await rustApiProtobuf(
+        RustApi.requestMemoriesUpload(
+          size: sizeBytes,
+          originalDate: mediaFile.createdAt.millisecondsSinceEpoch,
+          mediaId: mediaFile.mediaId,
+        ),
+        decodeMemoriesUploadUrls,
       );
 
       if (urls == null) {
@@ -268,8 +274,8 @@ class MemoriesCloudService {
       }
 
       // 3. Confirm upload
-      final confirmRes = await apiService.confirmMemoriesUpload(
-        mediaFile.mediaId,
+      final confirmRes = await rustApiResult(
+        RustApi.confirmMemoriesUpload(mediaId: mediaFile.mediaId),
       );
       if (confirmRes.isSuccess) {
         await twonlyDB.mediaFilesDao.updateMedia(

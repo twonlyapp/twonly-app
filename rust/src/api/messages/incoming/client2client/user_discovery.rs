@@ -9,13 +9,10 @@ use crate::context::Context;
 use crate::database::app::tables::Contact;
 use crate::error::{twonly_error, Result, TwonlyError};
 use crate::user_config::UserConfig;
+use crate::user_discovery::UserDiscoveryVersion;
+use prost::Message;
 use sqlx::{Sqlite, Transaction};
-use std::collections::HashSet;
-use std::sync::LazyLock;
-use tokio::sync::Mutex;
-
-static REQUESTED_UPDATES: LazyLock<Mutex<HashSet<i64>>> =
-    LazyLock::new(|| Mutex::new(HashSet::new()));
+use std::sync::Arc;
 
 pub(crate) async fn check_sender_version(
     ctx: &Context,
@@ -33,19 +30,29 @@ pub(crate) async fn check_sender_version(
         ));
     }
 
-    let Some(current_version) = ctx
-        .get_user_discovery()
-        .get()
-        .await
-        .should_request_new_messages(from_user_id, &version)
-        .await?
-    else {
-        return Ok(());
-    };
+    // The inbound message transaction owns the app database's sole connection.
+    // Going through `UserDiscovery::should_request_new_messages` here would ask
+    // the native store to acquire that same connection and deadlock until the
+    // pool's 30-second acquire timeout expires.
+    let received_version = UserDiscoveryVersion::decode(version.as_slice())?;
+    let stored_version = sqlx::query_scalar!(
+        "SELECT user_discovery_version FROM contacts WHERE user_id = ?",
+        from_user_id,
+    )
+    .fetch_optional(&mut **t)
+    .await?
+    .flatten()
+    .map(|version| UserDiscoveryVersion::decode(version.as_slice()))
+    .transpose()?
+    .unwrap_or_default();
 
-    if !REQUESTED_UPDATES.lock().await.insert(from_user_id) {
+    if received_version.announcement <= stored_version.announcement
+        && received_version.promotion <= stored_version.promotion
+    {
         return Ok(());
     }
+
+    let current_version = stored_version.encode_to_vec();
 
     queue_encrypted_content(
         t,
@@ -62,8 +69,9 @@ pub(crate) async fn check_sender_version(
 
     Ok(())
 }
+
 pub(crate) async fn handle_user_discovery_request(
-    ctx: &Context,
+    ctx: &Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     request: encrypted_content::UserDiscoveryRequest,
@@ -82,7 +90,7 @@ pub(crate) async fn handle_user_discovery_request(
         .get_user_discovery()
         .get()
         .await
-        .get_new_messages(from_user_id, &request.current_version)
+        .get_new_messages(from_user_id, &request.current_version, t)
         .await?;
     if !messages.is_empty() {
         queue_encrypted_content(
@@ -98,23 +106,27 @@ pub(crate) async fn handle_user_discovery_request(
     }
     Ok(())
 }
+
 pub(crate) async fn handle_user_discovery_update(
-    ctx: &Context,
+    ctx: &Arc<Context>,
+    t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     update: encrypted_content::UserDiscoveryUpdate,
 ) -> Result<()> {
     if !UserConfig::load_required_from(ctx)?.is_user_discovery_enabled {
         return Ok(());
     }
+
     if update.messages.iter().any(|message| message.is_empty()) {
         return Err(TwonlyError::Generic(
             "user-discovery update contains an empty message".into(),
         ));
     }
+
     Ok(ctx
         .get_user_discovery()
         .get()
         .await
-        .handle_new_messages(from_user_id, None, update.messages)
+        .handle_new_messages(from_user_id, None, update.messages, t)
         .await?)
 }

@@ -29,6 +29,49 @@ pub struct NewReceipt<'a> {
 }
 
 impl Receipt {
+    pub async fn insert_reaction(
+        transaction: &mut Transaction<'_, Sqlite>,
+        message_id: &str,
+        sender_id: i64,
+        emoji: &str,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            INSERT INTO reactions(message_id, emoji, sender_id)
+            VALUES (?, ?, ?)
+            ON CONFLICT(message_id, sender_id, emoji) DO NOTHING
+            "#,
+            message_id,
+            emoji,
+            sender_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_reaction(
+        transaction: &mut Transaction<'_, Sqlite>,
+        message_id: &str,
+        sender_id: i64,
+        emoji: &str,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            DELETE FROM reactions
+            WHERE message_id = ? AND sender_id = ? AND emoji = ?
+            "#,
+            message_id,
+            sender_id,
+            emoji,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn claim_received(
         transaction: &mut Transaction<'_, Sqlite>,
         receipt_id: &str,

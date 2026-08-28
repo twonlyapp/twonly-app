@@ -46,7 +46,7 @@ class MemoriesViewState extends State<MemoriesView>
   }
 
   Future<void> _checkUsage() async {
-    final usage = await apiService.getMemoriesUsage();
+    final usage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
     if (usage != null &&
         usage.maxBytes > 0 &&
         usage.currentBytes >= usage.maxBytes) {
@@ -320,7 +320,7 @@ class MemoriesViewState extends State<MemoriesView>
           if (item != null) {
             if (isCompletely) {
               item.mediaService.fullMediaRemoval();
-              await apiService.deleteMemory(mediaId);
+              await RustApi.deleteMemory(mediaId: mediaId);
               await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
             } else {
               if (item.mediaService.storedPath.existsSync()) {

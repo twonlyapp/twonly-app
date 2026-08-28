@@ -3,7 +3,7 @@
  *
  */
 
-use sqlx::SqlitePool;
+use sqlx::{Sqlite, SqlitePool, Transaction};
 
 use crate::error::{Result, TwonlyError};
 
@@ -26,6 +26,22 @@ impl GroupRecord {
             group_id,
         )
         .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| TwonlyError::Generic(format!("group {group_id} does not exist")))
+    }
+
+    pub async fn load_in_transaction(
+        transaction: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+    ) -> Result<Self> {
+        sqlx::query_as!(
+            Self,
+            r#"SELECT group_id, group_name, state_version_id,
+                      state_encryption_key, my_group_private_key
+               FROM groups WHERE group_id = ?"#,
+            group_id,
+        )
+        .fetch_optional(&mut **transaction)
         .await?
         .ok_or_else(|| TwonlyError::Generic(format!("group {group_id} does not exist")))
     }

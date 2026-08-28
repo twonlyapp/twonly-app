@@ -29,7 +29,6 @@ import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
-import 'package:twonly/src/services/user_discovery.service.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -203,8 +202,6 @@ Future<void> postStartupTasks() async {
       }
     }),
   );
-
-  unawaited(UserDiscoveryService.verifyInitializationOnStartup());
 
   await Future.delayed(const Duration(seconds: 10));
   unawaited(initializeBackgroundTaskManager());

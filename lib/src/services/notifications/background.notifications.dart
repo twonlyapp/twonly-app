@@ -9,14 +9,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/localization/generated/app_localizations_de.dart';
 import 'package:twonly/src/localization/generated/app_localizations_en.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -48,29 +45,6 @@ Future<void> customLocalPushNotification(String title, String msg) async {
     msg,
     notificationDetails,
   );
-}
-
-Future<void> showPushNotificationFromServerMessages(
-  int fromUserId,
-  EncryptedContent encryptedContent,
-) async {
-  final pushData = await getPushNotificationFromEncryptedContent(
-    null, // this is the toUserID which must be null as this means that the targetMessageId was send from this user.
-    null,
-    encryptedContent,
-  );
-  if (pushData != null) {
-    final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
-    for (final pushUser in pushUsers) {
-      if (pushUser.userId.toInt() == fromUserId) {
-        String? groupId;
-        if (encryptedContent.hasGroupId()) {
-          groupId = encryptedContent.groupId;
-        }
-        return showLocalPushNotification(pushUser, pushData, groupId: groupId);
-      }
-    }
-  }
 }
 
 Future<PushNotification?> tryDecryptMessage(

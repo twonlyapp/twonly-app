@@ -37,7 +37,7 @@ impl ApiAuthHandshaker {
             .ok_or_else(|| TwonlyError::Generic("User configuration not found".into()))?;
         let device_id = user.device_id;
         let app_version = user.app_version.to_string();
-        Ok((user.user_id, device_id, app_version))
+        Ok((Some(user.user_id), device_id, app_version))
     }
 
     async fn request_handshake(

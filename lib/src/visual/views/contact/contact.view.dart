@@ -123,7 +123,7 @@ class _ContactViewState extends State<ContactView> {
   Future<void> handleReportUser(Contact contact) async {
     final reason = await showReportDialog(context, contact);
     if (reason == null) return;
-    final res = await apiService.reportUser(contact.userId, reason);
+    final res = await rustApiResult(RustApi.reportUser(userId: contact.userId, reason: reason));
     if (!mounted) return;
     if (res.isSuccess) {
       showSnackbar(
@@ -281,7 +281,7 @@ class _ContactViewState extends State<ContactView> {
                 icon: FontAwesomeIcons.arrowsRotate,
                 text: 'Update Connection to V2 (PQXDH)',
                 onTap: () async {
-                  final userData = await apiService.getUserById(contact.userId);
+                  final userData = await rustApiProtobuf(RustApi.getUserById(userId: contact.userId), decodeUserData);
                   if (userData != null) {
                     await processSignalUserData(userData);
                     final updatedContact = await twonlyDB.contactsDao

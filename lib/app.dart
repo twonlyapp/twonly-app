@@ -220,7 +220,11 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     } else {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final (proof, disabled) = await apiService.getProofOfWork();
+      final proofResult = await rustApiResult(RustApi.getProofOfWork());
+      final proof = proofResult.value == null
+          ? null
+          : decodeProofOfWork(proofResult.value!);
+      final disabled = proofResult.error == ErrorCode.RegistrationDisabled;
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
         _proofOfWork = (

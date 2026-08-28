@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/services/profile.service.dart';
+import 'package:twonly/core/user_config.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SafetyProfileCard extends StatelessWidget {

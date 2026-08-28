@@ -309,8 +309,11 @@ class BackupService {
     String username,
     String password,
   ) async {
-    final userId = await apiService.getUserIdFromUsername(username);
-    if (userId == null) {
+    late final int userId;
+    try {
+      userId = await RustApi.getUserIdFromUsername(username: username);
+    } catch (error) {
+      Log.error('Could not resolve backup username', error: error);
       return RecoveryError.usernameNotValid;
     }
 

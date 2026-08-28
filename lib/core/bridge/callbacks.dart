@@ -4,7 +4,7 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-
+import '../user_config.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
@@ -28,19 +28,13 @@ Future<void> initFlutterCallbacks({
   required FutureOr<List<LegacySignalPreKey>> Function()
   legacySignalGeneratePrekeys,
   required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
-  required FutureOr<void> Function(PlatformInt64) apiPushKeyRequested,
-  required FutureOr<void> Function(PlatformInt64, String, String)
-  apiGroupMembershipError,
   required FutureOr<void> Function(String, String, PlatformInt64, String)
   apiMediaAction,
   required FutureOr<void> Function(PlatformInt64, Uint8List)
   apiVerificationProof,
-  required FutureOr<Uint8List?> Function(PlatformInt64, String?, Uint8List, int)
-  apiCreatePushData,
   required FutureOr<void> Function(PlatformInt64) apiCreatePushAvatars,
-  required FutureOr<void> Function() apiRecoveryChanged,
   required FutureOr<void> Function(String, PlatformInt64) apiMediaReceived,
-  required FutureOr<void> Function(String, bool) apiGroupStateRefresh,
+  required FutureOr<void> Function(UserConfig) apiUserConfigChanged,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   callbackId: callbackId,
   loggingGetStreamSink: loggingGetStreamSink,
@@ -48,15 +42,11 @@ Future<void> initFlutterCallbacks({
   legacySignalEncrypt: legacySignalEncrypt,
   legacySignalGeneratePrekeys: legacySignalGeneratePrekeys,
   apiResyncSignalSession: apiResyncSignalSession,
-  apiPushKeyRequested: apiPushKeyRequested,
-  apiGroupMembershipError: apiGroupMembershipError,
   apiMediaAction: apiMediaAction,
   apiVerificationProof: apiVerificationProof,
-  apiCreatePushData: apiCreatePushData,
   apiCreatePushAvatars: apiCreatePushAvatars,
-  apiRecoveryChanged: apiRecoveryChanged,
   apiMediaReceived: apiMediaReceived,
-  apiGroupStateRefresh: apiGroupStateRefresh,
+  apiUserConfigChanged: apiUserConfigChanged,
 );
 
 class LegacySignalDecryptResult {

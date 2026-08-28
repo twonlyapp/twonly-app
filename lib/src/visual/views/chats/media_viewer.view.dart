@@ -369,7 +369,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
     );
     unawaited(
-      apiService.downloadDone(currentMediaLocal.mediaFile.downloadToken!),
+      RustApi.downloadDone(token: currentMediaLocal.mediaFile.downloadToken!),
     );
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {

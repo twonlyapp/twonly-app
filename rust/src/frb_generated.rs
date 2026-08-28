@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -392823520;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -937778436;
 
 // Section: executor
 
@@ -272,6 +272,23 @@ fn wire__crate__bridge__groups__fetch_missing_group_public_keys_impl(
         },
     )
 }
+fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_change_exclusion_for_contact_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_change_exclusion_for_contact", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_callback_id = <u32>::sse_decode(&mut deserializer);
+let api_contact_id = <i64>::sse_decode(&mut deserializer);
+let api_exclude = <bool>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
+                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
+                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::change_exclusion_for_contact(api_callback_id, api_contact_id, api_exclude).await?;   Ok(output_ok)
+                    })().await)
+                } })
+}
 fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_current_version_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -284,77 +301,6 @@ fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_curr
             let api_callback_id = <u32>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
                     transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
                          let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::get_current_version(api_callback_id).await?;   Ok(output_ok)
-                    })().await)
-                } })
-}
-fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_new_messages_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_get_new_messages", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_callback_id = <u32>::sse_decode(&mut deserializer);
-let api_contact_id = <i64>::sse_decode(&mut deserializer);
-let api_received_version = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
-                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::get_new_messages(api_callback_id, api_contact_id, &api_received_version).await?;   Ok(output_ok)
-                    })().await)
-                } })
-}
-fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_new_messages_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_handle_new_messages", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_callback_id = <u32>::sse_decode(&mut deserializer);
-let api_contact_id = <i64>::sse_decode(&mut deserializer);
-let api_public_key_verified_timestamp = <Option<i64>>::sse_decode(&mut deserializer);
-let api_messages = <Vec<Vec<u8>>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
-                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::handle_new_messages(api_callback_id, api_contact_id, api_public_key_verified_timestamp, api_messages).await?;   Ok(output_ok)
-                    })().await)
-                } })
-}
-fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_initialize_or_update_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_initialize_or_update", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_callback_id = <u32>::sse_decode(&mut deserializer);
-let api_threshold = <u8>::sse_decode(&mut deserializer);
-let api_user_id = <i64>::sse_decode(&mut deserializer);
-let api_public_key = <Vec<u8>>::sse_decode(&mut deserializer);
-let api_share_promotion = <bool>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
-                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::initialize_or_update(api_callback_id, api_threshold, api_user_id, api_public_key, api_share_promotion).await?;   Ok(output_ok)
-                    })().await)
-                } })
-}
-fn wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_should_request_new_messages_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "flutter_user_discovery_should_request_new_messages", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
-            let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_callback_id = <u32>::sse_decode(&mut deserializer);
-let api_contact_id = <i64>::sse_decode(&mut deserializer);
-let api_version = <Vec<u8>>::sse_decode(&mut deserializer);deserializer.end(); move |context| async move {
-                    transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>((move || async move {
-                         let output_ok = crate::bridge::wrapper::user_discovery::FlutterUserDiscovery::should_request_new_messages(api_callback_id, api_contact_id, &api_version).await?;   Ok(output_ok)
                     })().await)
                 } })
 }
@@ -390,17 +336,13 @@ let api_legacy_signal_decrypt = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_i
 let api_legacy_signal_encrypt = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_opt_box_autoadd_legacy_signal_encrypt_result_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_legacy_signal_generate_prekeys = decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_resync_signal_session = decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_api_push_key_requested = decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_api_group_membership_error = decode_DartFn_Inputs_i_64_String_String_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_media_action = decode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_verification_proof = decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_api_create_push_data = decode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_list_prim_u_8_strict_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_create_push_avatars = decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_api_recovery_changed = decode_DartFn_Inputs__Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
 let api_api_media_received = decode_DartFn_Inputs_String_i_64_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));
-let api_api_group_state_refresh = decode_DartFn_Inputs_String_bool_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
+let api_api_user_config_changed = decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(<flutter_rust_bridge::DartOpaque>::sse_decode(&mut deserializer));deserializer.end(); move |context|  {
                     transform_result_sse::<_, ()>((move ||  {
-                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_callback_id, api_logging_get_stream_sink, api_legacy_signal_decrypt, api_legacy_signal_encrypt, api_legacy_signal_generate_prekeys, api_api_resync_signal_session, api_api_push_key_requested, api_api_group_membership_error, api_api_media_action, api_api_verification_proof, api_api_create_push_data, api_api_create_push_avatars, api_api_recovery_changed, api_api_media_received, api_api_group_state_refresh); })?;   Ok(output_ok)
+                         let output_ok = Result::<_,()>::Ok({ crate::bridge::callbacks::init_flutter_callbacks(api_callback_id, api_logging_get_stream_sink, api_legacy_signal_decrypt, api_legacy_signal_encrypt, api_legacy_signal_generate_prekeys, api_api_resync_signal_session, api_api_media_action, api_api_verification_proof, api_api_create_push_avatars, api_api_media_received, api_api_user_config_changed); })?;   Ok(output_ok)
                     })())
                 } })
 }
@@ -1110,6 +1052,79 @@ fn wire__crate__bridge__api__rust_api_download_done_impl(
         },
     )
 }
+fn wire__crate__bridge__api__rust_api_download_media_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_api_download_media",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_media_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::api::RustApi::download_media(api_media_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__api__rust_api_download_pending_media_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_api_download_pending_media",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::api::RustApi::download_pending_media().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bridge__api__rust_api_events_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1725,13 +1740,11 @@ fn wire__crate__bridge__api__rust_api_load_plan_balance_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_use_cache = <bool>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok =
-                            crate::bridge::api::RustApi::load_plan_balance(api_use_cache).await?;
+                        let output_ok = crate::bridge::api::RustApi::load_plan_balance().await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -1773,6 +1786,43 @@ fn wire__crate__bridge__api__rust_api_notify_messages_opened_impl(
                             api_message_ids,
                         )
                         .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__api__rust_api_perform_passwordless_recovery_heartbeat_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_api_perform_passwordless_recovery_heartbeat",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::api::RustApi::perform_passwordless_recovery_heartbeat()
+                                .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -2130,6 +2180,44 @@ fn wire__crate__bridge__api__rust_api_request_contact_by_username_impl(
                     (move || async move {
                         let output_ok =
                             crate::bridge::api::RustApi::request_contact_by_username(api_username)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__api__rust_api_request_media_reupload_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "rust_api_request_media_reupload",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_media_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::api::RustApi::request_media_reupload(api_media_id)
                                 .await?;
                         Ok(output_ok)
                     })()
@@ -3765,6 +3853,234 @@ fn wire__crate__bridge__groups__update_group_name_impl(
         },
     )
 }
+fn wire__crate__bridge__user_config__user_config_api_clone_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_clone",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_config = <crate::user_config::UserConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let output_ok = Result::<_, ()>::Ok(
+                    crate::bridge::user_config::UserConfigApi::clone(api_config),
+                )?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__bridge__user_config__user_config_api_create_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_create",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_user_id = <i64>::sse_decode(&mut deserializer);
+            let api_username = <String>::sse_decode(&mut deserializer);
+            let api_display_name = <String>::sse_decode(&mut deserializer);
+            let api_current_setup_page = <Option<String>>::sse_decode(&mut deserializer);
+            let api_app_version = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::bridge::user_config::UserConfigApi::create(
+                            api_user_id,
+                            api_username,
+                            api_display_name,
+                            api_current_setup_page,
+                            api_app_version,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__user_config__user_config_api_import_json_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_import_json",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_json = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::user_config::UserConfigApi::import_json(api_json)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__user_config__user_config_api_load_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_load",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::bridge::user_config::UserConfigApi::load().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__user_config__user_config_api_save_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_save",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_config = <crate::user_config::UserConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::user_config::UserConfigApi::save(api_config).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bridge__user_config__user_config_api_update_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "user_config_api_update",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_base = <crate::user_config::UserConfig>::sse_decode(&mut deserializer);
+            let api_config = <crate::user_config::UserConfig>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::bridge::user_config::UserConfigApi::update(api_base, api_config)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 
 // Section: related_funcs
 
@@ -3811,42 +4127,6 @@ fn decode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(
             arg1,
             arg2,
             arg3,
-        ))
-    }
-}
-fn decode_DartFn_Inputs_String_bool_Output_unit_AnyhowException(
-    dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn(String, bool) -> flutter_rust_bridge::DartFnFuture<()> {
-    use flutter_rust_bridge::IntoDart;
-
-    async fn body(dart_opaque: flutter_rust_bridge::DartOpaque, arg0: String, arg1: bool) -> () {
-        let args = vec![
-            arg0.into_into_dart().into_dart(),
-            arg1.into_into_dart().into_dart(),
-        ];
-        let message = FLUTTER_RUST_BRIDGE_HANDLER
-            .dart_fn_invoke(dart_opaque, args)
-            .await;
-
-        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-        let action = deserializer.cursor.read_u8().unwrap();
-        let ans = match action {
-            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
-            1 => std::result::Result::Err(
-                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
-            ),
-            _ => unreachable!(),
-        };
-        deserializer.end();
-        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
-        ans
-    }
-
-    move |arg0: String, arg1: bool| {
-        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
-            dart_opaque.clone(),
-            arg0,
-            arg1,
         ))
     }
 }
@@ -3956,35 +4236,6 @@ fn decode_DartFn_Inputs__Output_list_legacy_signal_pre_key_AnyhowException(
         flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(dart_opaque.clone()))
     }
 }
-fn decode_DartFn_Inputs__Output_unit_AnyhowException(
-    dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn() -> flutter_rust_bridge::DartFnFuture<()> {
-    use flutter_rust_bridge::IntoDart;
-
-    async fn body(dart_opaque: flutter_rust_bridge::DartOpaque) -> () {
-        let args = vec![];
-        let message = FLUTTER_RUST_BRIDGE_HANDLER
-            .dart_fn_invoke(dart_opaque, args)
-            .await;
-
-        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-        let action = deserializer.cursor.read_u8().unwrap();
-        let ans = match action {
-            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
-            1 => std::result::Result::Err(
-                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
-            ),
-            _ => unreachable!(),
-        };
-        deserializer.end();
-        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
-        ans
-    }
-
-    move || {
-        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(dart_opaque.clone()))
-    }
-}
 fn decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     dart_opaque: flutter_rust_bridge::DartOpaque,
 ) -> impl Fn(i64) -> flutter_rust_bridge::DartFnFuture<()> {
@@ -4014,49 +4265,6 @@ fn decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
         flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
             dart_opaque.clone(),
             arg0,
-        ))
-    }
-}
-fn decode_DartFn_Inputs_i_64_String_String_Output_unit_AnyhowException(
-    dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn(i64, String, String) -> flutter_rust_bridge::DartFnFuture<()> {
-    use flutter_rust_bridge::IntoDart;
-
-    async fn body(
-        dart_opaque: flutter_rust_bridge::DartOpaque,
-        arg0: i64,
-        arg1: String,
-        arg2: String,
-    ) -> () {
-        let args = vec![
-            arg0.into_into_dart().into_dart(),
-            arg1.into_into_dart().into_dart(),
-            arg2.into_into_dart().into_dart(),
-        ];
-        let message = FLUTTER_RUST_BRIDGE_HANDLER
-            .dart_fn_invoke(dart_opaque, args)
-            .await;
-
-        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-        let action = deserializer.cursor.read_u8().unwrap();
-        let ans = match action {
-            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
-            1 => std::result::Result::Err(
-                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
-            ),
-            _ => unreachable!(),
-        };
-        deserializer.end();
-        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
-        ans
-    }
-
-    move |arg0: i64, arg1: String, arg2: String| {
-        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
-            dart_opaque.clone(),
-            arg0,
-            arg1,
-            arg2,
         ))
     }
 }
@@ -4194,25 +4402,16 @@ fn decode_DartFn_Inputs_i_64_list_prim_u_8_strict_i_32_Output_legacy_signal_decr
         ))
     }
 }
-fn decode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+fn decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(
     dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn(i64, Option<String>, Vec<u8>, i32) -> flutter_rust_bridge::DartFnFuture<Option<Vec<u8>>>
-{
+) -> impl Fn(crate::user_config::UserConfig) -> flutter_rust_bridge::DartFnFuture<()> {
     use flutter_rust_bridge::IntoDart;
 
     async fn body(
         dart_opaque: flutter_rust_bridge::DartOpaque,
-        arg0: i64,
-        arg1: Option<String>,
-        arg2: Vec<u8>,
-        arg3: i32,
-    ) -> Option<Vec<u8>> {
-        let args = vec![
-            arg0.into_into_dart().into_dart(),
-            arg1.into_into_dart().into_dart(),
-            arg2.into_into_dart().into_dart(),
-            arg3.into_into_dart().into_dart(),
-        ];
+        arg0: crate::user_config::UserConfig,
+    ) -> () {
+        let args = vec![arg0.into_into_dart().into_dart()];
         let message = FLUTTER_RUST_BRIDGE_HANDLER
             .dart_fn_invoke(dart_opaque, args)
             .await;
@@ -4220,7 +4419,7 @@ fn decode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_lis
         let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
         let action = deserializer.cursor.read_u8().unwrap();
         let ans = match action {
-            0 => std::result::Result::Ok(<Option<Vec<u8>>>::sse_decode(&mut deserializer)),
+            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
             1 => std::result::Result::Err(
                 <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
             ),
@@ -4231,13 +4430,10 @@ fn decode_DartFn_Inputs_i_64_opt_String_list_prim_u_8_strict_i_32_Output_opt_lis
         ans
     }
 
-    move |arg0: i64, arg1: Option<String>, arg2: Vec<u8>, arg3: i32| {
+    move |arg0: crate::user_config::UserConfig| {
         flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
             dart_opaque.clone(),
             arg0,
-            arg1,
-            arg2,
-            arg3,
         ))
     }
 }
@@ -4252,11 +4448,32 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
+impl SseDecode for chrono::DateTime<chrono::Utc> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i64>::sse_decode(deserializer);
+        return chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(
+            chrono::DateTime::from_timestamp_micros(inner)
+                .expect("invalid or out-of-range datetime")
+                .naive_utc(),
+            chrono::Utc,
+        );
+    }
+}
+
 impl SseDecode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
         return unsafe { flutter_rust_bridge::for_generated::sse_decode_dart_opaque(inner) };
+    }
+}
+
+impl SseDecode for std::collections::HashMap<String, Vec<String>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <Vec<(String, Vec<String>)>>::sse_decode(deserializer);
+        return inner.into_iter().collect();
     }
 }
 
@@ -4458,6 +4675,20 @@ impl SseDecode for isize {
     }
 }
 
+impl SseDecode for crate::user_config::LastBackupUploadState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::user_config::LastBackupUploadState::None,
+            1 => crate::user_config::LastBackupUploadState::Pending,
+            2 => crate::user_config::LastBackupUploadState::Failed,
+            3 => crate::user_config::LastBackupUploadState::Success,
+            _ => unreachable!("Invalid variant for LastBackupUploadState: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for crate::bridge::wrapper::app_database::LegacyMigrationReport {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4639,6 +4870,18 @@ impl SseDecode for Vec<(i64, Vec<u8>)> {
     }
 }
 
+impl SseDecode for Vec<(String, Vec<String>)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<(String, Vec<String>)>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::database::app::SqlRow> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4663,11 +4906,35 @@ impl SseDecode for Vec<crate::database::app::SqlValue> {
     }
 }
 
+impl SseDecode for Option<std::collections::HashMap<String, Vec<String>>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(
+                <std::collections::HashMap<String, Vec<String>>>::sse_decode(deserializer),
+            );
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<String>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<chrono::DateTime<chrono::Utc>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<chrono::DateTime<chrono::Utc>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -4733,11 +5000,37 @@ impl SseDecode for Option<crate::bridge::callbacks::LegacySignalEncryptResult> {
     }
 }
 
+impl SseDecode for Option<crate::user_config::PasswordlessRecoveryConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(
+                <crate::user_config::PasswordlessRecoveryConfig>::sse_decode(deserializer),
+            );
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::bridge::api::PreparedOutgoingMessage> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::bridge::api::PreparedOutgoingMessage>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::user_config::TwonlySafeBackup> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::user_config::TwonlySafeBackup>::sse_decode(
                 deserializer,
             ));
         } else {
@@ -4757,6 +5050,28 @@ impl SseDecode for Option<u32> {
     }
 }
 
+impl SseDecode for Option<crate::user_config::UserConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::user_config::UserConfig>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<String>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<String>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<u8>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4765,6 +5080,30 @@ impl SseDecode for Option<Vec<u8>> {
         } else {
             return None;
         }
+    }
+}
+
+impl SseDecode for crate::user_config::PasswordlessRecoveryConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_email = <Option<String>>::sse_decode(deserializer);
+        let mut var_threshold = <i64>::sse_decode(deserializer);
+        let mut var_serverKeyProtection = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_pinUnlockToken = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_lastServerHeartbeat =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_lastContactHeartbeat =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_encryptedServerKey = <Option<Vec<u8>>>::sse_decode(deserializer);
+        return crate::user_config::PasswordlessRecoveryConfig {
+            email: var_email,
+            threshold: var_threshold,
+            server_key_protection: var_serverKeyProtection,
+            pin_unlock_token: var_pinUnlockToken,
+            last_server_heartbeat: var_lastServerHeartbeat,
+            last_contact_heartbeat: var_lastContactHeartbeat,
+            encrypted_server_key: var_encryptedServerKey,
+        };
     }
 }
 
@@ -4812,6 +5151,15 @@ impl SseDecode for (Vec<u8>, i64) {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
         let mut var_field1 = <i64>::sse_decode(deserializer);
+        return (var_field0, var_field1);
+    }
+}
+
+impl SseDecode for (String, Vec<String>) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_field0 = <String>::sse_decode(deserializer);
+        let mut var_field1 = <Vec<String>>::sse_decode(deserializer);
         return (var_field0, var_field1);
     }
 }
@@ -4874,62 +5222,15 @@ impl SseDecode for crate::bridge::wrapper::RustUtils {
     }
 }
 
-impl SseDecode for crate::bridge::api::ServerResultEmpty {
+impl SseDecode for crate::user_config::SetupProfile {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                return crate::bridge::api::ServerResultEmpty::Ok;
-            }
-            1 => {
-                let mut var_field0 = <i32>::sse_decode(deserializer);
-                return crate::bridge::api::ServerResultEmpty::ErrorCode(var_field0);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseDecode for crate::bridge::api::ServerResultI64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_field0 = <i64>::sse_decode(deserializer);
-                return crate::bridge::api::ServerResultI64::Ok(var_field0);
-            }
-            1 => {
-                let mut var_field0 = <i32>::sse_decode(deserializer);
-                return crate::bridge::api::ServerResultI64::ErrorCode(var_field0);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseDecode for crate::bridge::api::ServerResultVecU8 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut tag_ = <i32>::sse_decode(deserializer);
-        match tag_ {
-            0 => {
-                let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
-                return crate::bridge::api::ServerResultVecU8::Ok(var_field0);
-            }
-            1 => {
-                let mut var_field0 = <i32>::sse_decode(deserializer);
-                return crate::bridge::api::ServerResultVecU8::ErrorCode(var_field0);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::user_config::SetupProfile::Standard,
+            1 => crate::user_config::SetupProfile::Customized,
+            _ => unreachable!("Invalid variant for SetupProfile: {}", inner),
+        };
     }
 }
 
@@ -4983,6 +5284,39 @@ impl SseDecode for crate::database::app::SqlValue {
     }
 }
 
+impl SseDecode for crate::user_config::ThemeMode {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::user_config::ThemeMode::System,
+            1 => crate::user_config::ThemeMode::Light,
+            2 => crate::user_config::ThemeMode::Dark,
+            _ => unreachable!("Invalid variant for ThemeMode: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::user_config::TwonlySafeBackup {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_lastBackupSize = <i64>::sse_decode(deserializer);
+        let mut var_backupUploadState =
+            <crate::user_config::LastBackupUploadState>::sse_decode(deserializer);
+        let mut var_lastBackupDone =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_backupId = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_encryptionKey = <Vec<u8>>::sse_decode(deserializer);
+        return crate::user_config::TwonlySafeBackup {
+            last_backup_size: var_lastBackupSize,
+            backup_upload_state: var_backupUploadState,
+            last_backup_done: var_lastBackupDone,
+            backup_id: var_backupId,
+            encryption_key: var_encryptionKey,
+        };
+    }
+}
+
 impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -5017,6 +5351,144 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
+impl SseDecode for crate::user_config::UserConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_userId = <i64>::sse_decode(deserializer);
+        let mut var_username = <String>::sse_decode(deserializer);
+        let mut var_displayName = <String>::sse_decode(deserializer);
+        let mut var_avatarSvg = <Option<String>>::sse_decode(deserializer);
+        let mut var_appVersion = <i64>::sse_decode(deserializer);
+        let mut var_avatarCounter = <i64>::sse_decode(deserializer);
+        let mut var_videoStabilizationEnabled = <bool>::sse_decode(deserializer);
+        let mut var_isDeveloper = <bool>::sse_decode(deserializer);
+        let mut var_deviceId = <i64>::sse_decode(deserializer);
+        let mut var_setupProfile = <crate::user_config::SetupProfile>::sse_decode(deserializer);
+        let mut var_subscriptionPlan = <String>::sse_decode(deserializer);
+        let mut var_subscriptionPlanIdStore = <Option<String>>::sse_decode(deserializer);
+        let mut var_lastImageSend =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_todaysImageCounter = <Option<i64>>::sse_decode(deserializer);
+        let mut var_lastPlanBallance = <Option<String>>::sse_decode(deserializer);
+        let mut var_additionalUserInvites = <Option<String>>::sse_decode(deserializer);
+        let mut var_themeMode = <crate::user_config::ThemeMode>::sse_decode(deserializer);
+        let mut var_primaryColorValue = <Option<i64>>::sse_decode(deserializer);
+        let mut var_defaultShowTime = <Option<i64>>::sse_decode(deserializer);
+        let mut var_requestedAudioPermission = <bool>::sse_decode(deserializer);
+        let mut var_enableDatabaseLogging = <bool>::sse_decode(deserializer);
+        let mut var_automaticallyMarkEqualMediaFilesAsOpened = <bool>::sse_decode(deserializer);
+        let mut var_showNewsShortcut = <bool>::sse_decode(deserializer);
+        let mut var_showShowImagePreviewWhenSending = <bool>::sse_decode(deserializer);
+        let mut var_startWithCameraOpen = <bool>::sse_decode(deserializer);
+        let mut var_preSelectedEmojies = <Option<Vec<String>>>::sse_decode(deserializer);
+        let mut var_autoDownloadOptions =
+            <Option<std::collections::HashMap<String, Vec<String>>>>::sse_decode(deserializer);
+        let mut var_storeMediaFilesInGallery = <bool>::sse_decode(deserializer);
+        let mut var_autoStoreAllSendUnlimitedMediaFiles = <bool>::sse_decode(deserializer);
+        let mut var_typingIndicators = <bool>::sse_decode(deserializer);
+        let mut var_showRestoreFlame = <bool>::sse_decode(deserializer);
+        let mut var_myBestFriendGroupId = <Option<String>>::sse_decode(deserializer);
+        let mut var_signalLastSignedPreKeyUpdated =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_signalLastPqcPreKeysUploaded =
+            <Option<chrono::DateTime<chrono::Utc>>>::sse_decode(deserializer);
+        let mut var_allowErrorTrackingViaSentry = <bool>::sse_decode(deserializer);
+        let mut var_screenLockEnabled = <bool>::sse_decode(deserializer);
+        let mut var_isCloudBackupEnabled = <bool>::sse_decode(deserializer);
+        let mut var_isUserDiscoveryEnabled = <bool>::sse_decode(deserializer);
+        let mut var_requiredSendImages = <i64>::sse_decode(deserializer);
+        let mut var_userDiscoveryThreshold = <u8>::sse_decode(deserializer);
+        let mut var_userDiscoveryRequiresManualApproval = <bool>::sse_decode(deserializer);
+        let mut var_userDiscoverySharePromotion = <bool>::sse_decode(deserializer);
+        let mut var_userDiscoveryInitializationError = <bool>::sse_decode(deserializer);
+        let mut var_askForFriendPromotions = <bool>::sse_decode(deserializer);
+        let mut var_currentPreKeyIndexStart = <i64>::sse_decode(deserializer);
+        let mut var_currentSignedPreKeyIndexStart = <i64>::sse_decode(deserializer);
+        let mut var_lastChangeLogHash = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_hideChangeLog = <bool>::sse_decode(deserializer);
+        let mut var_hideMemoriesBackupPromo = <bool>::sse_decode(deserializer);
+        let mut var_updateFcmToken = <bool>::sse_decode(deserializer);
+        let mut var_canUseLoginTokenForAuth = <bool>::sse_decode(deserializer);
+        let mut var_twonlySafeBackup =
+            <Option<crate::user_config::TwonlySafeBackup>>::sse_decode(deserializer);
+        let mut var_isBackupEnabled = <bool>::sse_decode(deserializer);
+        let mut var_passwordLessRecovery =
+            <Option<crate::user_config::PasswordlessRecoveryConfig>>::sse_decode(deserializer);
+        let mut var_fcmToken = <Option<String>>::sse_decode(deserializer);
+        let mut var_currentSetupPage = <Option<String>>::sse_decode(deserializer);
+        let mut var_skipSetupPages = <bool>::sse_decode(deserializer);
+        let mut var_hasZoomed = <bool>::sse_decode(deserializer);
+        return crate::user_config::UserConfig {
+            user_id: var_userId,
+            username: var_username,
+            display_name: var_displayName,
+            avatar_svg: var_avatarSvg,
+            app_version: var_appVersion,
+            avatar_counter: var_avatarCounter,
+            video_stabilization_enabled: var_videoStabilizationEnabled,
+            is_developer: var_isDeveloper,
+            device_id: var_deviceId,
+            setup_profile: var_setupProfile,
+            subscription_plan: var_subscriptionPlan,
+            subscription_plan_id_store: var_subscriptionPlanIdStore,
+            last_image_send: var_lastImageSend,
+            todays_image_counter: var_todaysImageCounter,
+            last_plan_ballance: var_lastPlanBallance,
+            additional_user_invites: var_additionalUserInvites,
+            theme_mode: var_themeMode,
+            primary_color_value: var_primaryColorValue,
+            default_show_time: var_defaultShowTime,
+            requested_audio_permission: var_requestedAudioPermission,
+            enable_database_logging: var_enableDatabaseLogging,
+            automatically_mark_equal_media_files_as_opened:
+                var_automaticallyMarkEqualMediaFilesAsOpened,
+            show_news_shortcut: var_showNewsShortcut,
+            show_show_image_preview_when_sending: var_showShowImagePreviewWhenSending,
+            start_with_camera_open: var_startWithCameraOpen,
+            pre_selected_emojies: var_preSelectedEmojies,
+            auto_download_options: var_autoDownloadOptions,
+            store_media_files_in_gallery: var_storeMediaFilesInGallery,
+            auto_store_all_send_unlimited_media_files: var_autoStoreAllSendUnlimitedMediaFiles,
+            typing_indicators: var_typingIndicators,
+            show_restore_flame: var_showRestoreFlame,
+            my_best_friend_group_id: var_myBestFriendGroupId,
+            signal_last_signed_pre_key_updated: var_signalLastSignedPreKeyUpdated,
+            signal_last_pqc_pre_keys_uploaded: var_signalLastPqcPreKeysUploaded,
+            allow_error_tracking_via_sentry: var_allowErrorTrackingViaSentry,
+            screen_lock_enabled: var_screenLockEnabled,
+            is_cloud_backup_enabled: var_isCloudBackupEnabled,
+            is_user_discovery_enabled: var_isUserDiscoveryEnabled,
+            required_send_images: var_requiredSendImages,
+            user_discovery_threshold: var_userDiscoveryThreshold,
+            user_discovery_requires_manual_approval: var_userDiscoveryRequiresManualApproval,
+            user_discovery_share_promotion: var_userDiscoverySharePromotion,
+            user_discovery_initialization_error: var_userDiscoveryInitializationError,
+            ask_for_friend_promotions: var_askForFriendPromotions,
+            current_pre_key_index_start: var_currentPreKeyIndexStart,
+            current_signed_pre_key_index_start: var_currentSignedPreKeyIndexStart,
+            last_change_log_hash: var_lastChangeLogHash,
+            hide_change_log: var_hideChangeLog,
+            hide_memories_backup_promo: var_hideMemoriesBackupPromo,
+            update_fcm_token: var_updateFcmToken,
+            can_use_login_token_for_auth: var_canUseLoginTokenForAuth,
+            twonly_safe_backup: var_twonlySafeBackup,
+            is_backup_enabled: var_isBackupEnabled,
+            password_less_recovery: var_passwordLessRecovery,
+            fcm_token: var_fcmToken,
+            current_setup_page: var_currentSetupPage,
+            skip_setup_pages: var_skipSetupPages,
+            has_zoomed: var_hasZoomed,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::user_config::UserConfigApi {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        return crate::bridge::user_config::UserConfigApi {};
+    }
+}
+
 impl SseDecode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -5039,48 +5511,48 @@ fn pde_ffi_dispatcher_primary_impl(
 4 => wire__crate__bridge__groups__fetch_group_state_impl(port, ptr, rust_vec_len, data_len),
 5 => wire__crate__bridge__groups__fetch_group_states_for_unjoined_groups_impl(port, ptr, rust_vec_len, data_len),
 6 => wire__crate__bridge__groups__fetch_missing_group_public_keys_impl(port, ptr, rust_vec_len, data_len),
-7 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_current_version_impl(port, ptr, rust_vec_len, data_len),
-8 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_new_messages_impl(port, ptr, rust_vec_len, data_len),
-9 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_handle_new_messages_impl(port, ptr, rust_vec_len, data_len),
-10 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_initialize_or_update_impl(port, ptr, rust_vec_len, data_len),
-11 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_should_request_new_messages_impl(port, ptr, rust_vec_len, data_len),
-12 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_update_verification_state_for_user_impl(port, ptr, rust_vec_len, data_len),
-13 => wire__crate__bridge__callbacks__init_flutter_callbacks_impl(port, ptr, rust_vec_len, data_len),
-14 => wire__crate__bridge__initialize_twonly_flutter_impl(port, ptr, rust_vec_len, data_len),
-15 => wire__crate__bridge__initialize_twonly_standalone_impl(port, ptr, rust_vec_len, data_len),
-16 => wire__crate__bridge__groups__leave_group_impl(port, ptr, rust_vec_len, data_len),
-17 => wire__crate__bridge__groups__manage_admin_state_impl(port, ptr, rust_vec_len, data_len),
-18 => wire__crate__bridge__groups__remove_member_from_group_impl(port, ptr, rust_vec_len, data_len),
-19 => wire__crate__bridge__api__rust_api_add_additional_user_impl(port, ptr, rust_vec_len, data_len),
-20 => wire__crate__bridge__api__rust_api_allocate_sequence_impl(port, ptr, rust_vec_len, data_len),
-22 => wire__crate__bridge__api__rust_api_change_username_impl(port, ptr, rust_vec_len, data_len),
-23 => wire__crate__bridge__api__rust_api_check_for_deleted_usernames_impl(port, ptr, rust_vec_len, data_len),
-24 => wire__crate__bridge__api__rust_api_check_for_passwordless_notification_impl(port, ptr, rust_vec_len, data_len),
-25 => wire__crate__bridge__api__rust_api_close_impl(port, ptr, rust_vec_len, data_len),
-26 => wire__crate__bridge__api__rust_api_confirm_memories_upload_impl(port, ptr, rust_vec_len, data_len),
-27 => wire__crate__bridge__api__rust_api_connect_impl(port, ptr, rust_vec_len, data_len),
-28 => wire__crate__bridge__api__rust_api_connection_state_impl(port, ptr, rust_vec_len, data_len),
-29 => wire__crate__bridge__api__rust_api_delete_account_impl(port, ptr, rust_vec_len, data_len),
-30 => wire__crate__bridge__api__rust_api_delete_memory_impl(port, ptr, rust_vec_len, data_len),
-31 => wire__crate__bridge__api__rust_api_disable_memories_backup_impl(port, ptr, rust_vec_len, data_len),
-32 => wire__crate__bridge__api__rust_api_download_done_impl(port, ptr, rust_vec_len, data_len),
-33 => wire__crate__bridge__api__rust_api_events_impl(port, ptr, rust_vec_len, data_len),
-34 => wire__crate__bridge__api__rust_api_force_ipa_check_impl(port, ptr, rust_vec_len, data_len),
-35 => wire__crate__bridge__api__rust_api_get_memories_url_impl(port, ptr, rust_vec_len, data_len),
-36 => wire__crate__bridge__api__rust_api_get_memories_usage_impl(port, ptr, rust_vec_len, data_len),
-37 => wire__crate__bridge__api__rust_api_get_plan_balance_impl(port, ptr, rust_vec_len, data_len),
-38 => wire__crate__bridge__api__rust_api_get_proof_of_work_impl(port, ptr, rust_vec_len, data_len),
-39 => wire__crate__bridge__api__rust_api_get_server_key_for_passwordless_recovery_impl(port, ptr, rust_vec_len, data_len),
-40 => wire__crate__bridge__api__rust_api_get_user_by_id_impl(port, ptr, rust_vec_len, data_len),
-41 => wire__crate__bridge__api__rust_api_get_user_data_impl(port, ptr, rust_vec_len, data_len),
-42 => wire__crate__bridge__api__rust_api_get_user_id_from_username_impl(port, ptr, rust_vec_len, data_len),
-43 => wire__crate__bridge__api__rust_api_insert_and_send_additional_data_impl(port, ptr, rust_vec_len, data_len),
-44 => wire__crate__bridge__api__rust_api_insert_and_send_ask_about_user_impl(port, ptr, rust_vec_len, data_len),
-45 => wire__crate__bridge__api__rust_api_insert_and_send_contact_share_impl(port, ptr, rust_vec_len, data_len),
-46 => wire__crate__bridge__api__rust_api_insert_and_send_text_impl(port, ptr, rust_vec_len, data_len),
-47 => wire__crate__bridge__api__rust_api_ipa_purchase_impl(port, ptr, rust_vec_len, data_len),
-48 => wire__crate__bridge__api__rust_api_load_plan_balance_impl(port, ptr, rust_vec_len, data_len),
-49 => wire__crate__bridge__api__rust_api_notify_messages_opened_impl(port, ptr, rust_vec_len, data_len),
+7 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_change_exclusion_for_contact_impl(port, ptr, rust_vec_len, data_len),
+8 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_get_current_version_impl(port, ptr, rust_vec_len, data_len),
+9 => wire__crate__bridge__wrapper__user_discovery__flutter_user_discovery_update_verification_state_for_user_impl(port, ptr, rust_vec_len, data_len),
+10 => wire__crate__bridge__callbacks__init_flutter_callbacks_impl(port, ptr, rust_vec_len, data_len),
+11 => wire__crate__bridge__initialize_twonly_flutter_impl(port, ptr, rust_vec_len, data_len),
+12 => wire__crate__bridge__initialize_twonly_standalone_impl(port, ptr, rust_vec_len, data_len),
+13 => wire__crate__bridge__groups__leave_group_impl(port, ptr, rust_vec_len, data_len),
+14 => wire__crate__bridge__groups__manage_admin_state_impl(port, ptr, rust_vec_len, data_len),
+15 => wire__crate__bridge__groups__remove_member_from_group_impl(port, ptr, rust_vec_len, data_len),
+16 => wire__crate__bridge__api__rust_api_add_additional_user_impl(port, ptr, rust_vec_len, data_len),
+17 => wire__crate__bridge__api__rust_api_allocate_sequence_impl(port, ptr, rust_vec_len, data_len),
+19 => wire__crate__bridge__api__rust_api_change_username_impl(port, ptr, rust_vec_len, data_len),
+20 => wire__crate__bridge__api__rust_api_check_for_deleted_usernames_impl(port, ptr, rust_vec_len, data_len),
+21 => wire__crate__bridge__api__rust_api_check_for_passwordless_notification_impl(port, ptr, rust_vec_len, data_len),
+22 => wire__crate__bridge__api__rust_api_close_impl(port, ptr, rust_vec_len, data_len),
+23 => wire__crate__bridge__api__rust_api_confirm_memories_upload_impl(port, ptr, rust_vec_len, data_len),
+24 => wire__crate__bridge__api__rust_api_connect_impl(port, ptr, rust_vec_len, data_len),
+25 => wire__crate__bridge__api__rust_api_connection_state_impl(port, ptr, rust_vec_len, data_len),
+26 => wire__crate__bridge__api__rust_api_delete_account_impl(port, ptr, rust_vec_len, data_len),
+27 => wire__crate__bridge__api__rust_api_delete_memory_impl(port, ptr, rust_vec_len, data_len),
+28 => wire__crate__bridge__api__rust_api_disable_memories_backup_impl(port, ptr, rust_vec_len, data_len),
+29 => wire__crate__bridge__api__rust_api_download_done_impl(port, ptr, rust_vec_len, data_len),
+30 => wire__crate__bridge__api__rust_api_download_media_impl(port, ptr, rust_vec_len, data_len),
+31 => wire__crate__bridge__api__rust_api_download_pending_media_impl(port, ptr, rust_vec_len, data_len),
+32 => wire__crate__bridge__api__rust_api_events_impl(port, ptr, rust_vec_len, data_len),
+33 => wire__crate__bridge__api__rust_api_force_ipa_check_impl(port, ptr, rust_vec_len, data_len),
+34 => wire__crate__bridge__api__rust_api_get_memories_url_impl(port, ptr, rust_vec_len, data_len),
+35 => wire__crate__bridge__api__rust_api_get_memories_usage_impl(port, ptr, rust_vec_len, data_len),
+36 => wire__crate__bridge__api__rust_api_get_plan_balance_impl(port, ptr, rust_vec_len, data_len),
+37 => wire__crate__bridge__api__rust_api_get_proof_of_work_impl(port, ptr, rust_vec_len, data_len),
+38 => wire__crate__bridge__api__rust_api_get_server_key_for_passwordless_recovery_impl(port, ptr, rust_vec_len, data_len),
+39 => wire__crate__bridge__api__rust_api_get_user_by_id_impl(port, ptr, rust_vec_len, data_len),
+40 => wire__crate__bridge__api__rust_api_get_user_data_impl(port, ptr, rust_vec_len, data_len),
+41 => wire__crate__bridge__api__rust_api_get_user_id_from_username_impl(port, ptr, rust_vec_len, data_len),
+42 => wire__crate__bridge__api__rust_api_insert_and_send_additional_data_impl(port, ptr, rust_vec_len, data_len),
+43 => wire__crate__bridge__api__rust_api_insert_and_send_ask_about_user_impl(port, ptr, rust_vec_len, data_len),
+44 => wire__crate__bridge__api__rust_api_insert_and_send_contact_share_impl(port, ptr, rust_vec_len, data_len),
+45 => wire__crate__bridge__api__rust_api_insert_and_send_text_impl(port, ptr, rust_vec_len, data_len),
+46 => wire__crate__bridge__api__rust_api_ipa_purchase_impl(port, ptr, rust_vec_len, data_len),
+47 => wire__crate__bridge__api__rust_api_load_plan_balance_impl(port, ptr, rust_vec_len, data_len),
+48 => wire__crate__bridge__api__rust_api_notify_messages_opened_impl(port, ptr, rust_vec_len, data_len),
+49 => wire__crate__bridge__api__rust_api_perform_passwordless_recovery_heartbeat_impl(port, ptr, rust_vec_len, data_len),
 50 => wire__crate__bridge__api__rust_api_prepare_queued_message_impl(port, ptr, rust_vec_len, data_len),
 51 => wire__crate__bridge__api__rust_api_register_impl(port, ptr, rust_vec_len, data_len),
 52 => wire__crate__bridge__api__rust_api_register_passwordless_notification_impl(port, ptr, rust_vec_len, data_len),
@@ -5090,58 +5562,64 @@ fn pde_ffi_dispatcher_primary_impl(
 56 => wire__crate__bridge__api__rust_api_report_user_impl(port, ptr, rust_vec_len, data_len),
 57 => wire__crate__bridge__api__rust_api_request_binary_impl(port, ptr, rust_vec_len, data_len),
 58 => wire__crate__bridge__api__rust_api_request_contact_by_username_impl(port, ptr, rust_vec_len, data_len),
-59 => wire__crate__bridge__api__rust_api_request_memories_upload_impl(port, ptr, rust_vec_len, data_len),
-60 => wire__crate__bridge__api__rust_api_retransmit_all_messages_impl(port, ptr, rust_vec_len, data_len),
-61 => wire__crate__bridge__api__rust_api_send_binary_impl(port, ptr, rust_vec_len, data_len),
-62 => wire__crate__bridge__api__rust_api_send_contact_profile_impl(port, ptr, rust_vec_len, data_len),
-63 => wire__crate__bridge__api__rust_api_send_encrypted_content_impl(port, ptr, rust_vec_len, data_len),
-64 => wire__crate__bridge__api__rust_api_send_encrypted_content_to_group_impl(port, ptr, rust_vec_len, data_len),
-65 => wire__crate__bridge__api__rust_api_send_queued_message_impl(port, ptr, rust_vec_len, data_len),
-66 => wire__crate__bridge__api__rust_api_send_text_message_impl(port, ptr, rust_vec_len, data_len),
-67 => wire__crate__bridge__api__rust_api_send_typing_impl(port, ptr, rust_vec_len, data_len),
-68 => wire__crate__bridge__api__rust_api_set_background_impl(port, ptr, rust_vec_len, data_len),
-69 => wire__crate__bridge__api__rust_api_set_login_token_impl(port, ptr, rust_vec_len, data_len),
-70 => wire__crate__bridge__api__rust_api_set_network_available_impl(port, ptr, rust_vec_len, data_len),
-71 => wire__crate__bridge__api__rust_api_submit_recovery_share_impl(port, ptr, rust_vec_len, data_len),
-72 => wire__crate__bridge__api__rust_api_update_fcm_token_impl(port, ptr, rust_vec_len, data_len),
-73 => wire__crate__bridge__api__rust_api_update_signed_pre_key_impl(port, ptr, rust_vec_len, data_len),
-74 => wire__crate__bridge__api__rust_api_upload_pqc_pre_keys_impl(port, ptr, rust_vec_len, data_len),
-75 => wire__crate__bridge__wrapper__app_database__rust_app_database_execute_impl(port, ptr, rust_vec_len, data_len),
-76 => wire__crate__bridge__wrapper__app_database__rust_app_database_legacy_import_complete_impl(port, ptr, rust_vec_len, data_len),
-77 => wire__crate__bridge__wrapper__app_database__rust_app_database_migrate_legacy_database_impl(port, ptr, rust_vec_len, data_len),
-78 => wire__crate__bridge__wrapper__app_database__rust_app_database_select_impl(port, ptr, rust_vec_len, data_len),
-79 => wire__crate__bridge__wrapper__backup__rust_backup_archive_create_backup_archive_impl(port, ptr, rust_vec_len, data_len),
-80 => wire__crate__bridge__wrapper__backup__rust_backup_archive_get_backup_download_token_impl(port, ptr, rust_vec_len, data_len),
-81 => wire__crate__bridge__wrapper__backup__rust_backup_archive_restore_backup_archive_impl(port, ptr, rust_vec_len, data_len),
-82 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_backup_id_impl(port, ptr, rust_vec_len, data_len),
-83 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
-84 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_identity_backup_bytes_impl(port, ptr, rust_vec_len, data_len),
-85 => wire__crate__bridge__wrapper__backup__rust_backup_identity_import_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
-86 => wire__crate__bridge__wrapper__backup__rust_backup_identity_restore_identity_backup_impl(port, ptr, rust_vec_len, data_len),
-87 => wire__crate__bridge__wrapper__backup__rust_backup_identity_set_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
-88 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_decrypt_cloud_media_key_impl(port, ptr, rust_vec_len, data_len),
-89 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_encrypt_cloud_media_key_impl(port, ptr, rust_vec_len, data_len),
-90 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_login_token_impl(port, ptr, rust_vec_len, data_len),
-91 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_signal_identity_impl(port, ptr, rust_vec_len, data_len),
-92 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_user_id_impl(port, ptr, rust_vec_len, data_len),
-93 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_import_serialized_impl(port, ptr, rust_vec_len, data_len),
-94 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_import_signal_identity_impl(port, ptr, rust_vec_len, data_len),
-95 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_load_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
-96 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_load_signed_prekeys_impl(port, ptr, rust_vec_len, data_len),
-97 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_key_manager_impl(port, ptr, rust_vec_len, data_len),
-98 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
-99 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_serialize_impl(port, ptr, rust_vec_len, data_len),
-100 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(port, ptr, rust_vec_len, data_len),
-101 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
-102 => wire__crate__bridge__wrapper__signal__rust_signal_decrypt_impl(port, ptr, rust_vec_len, data_len),
-103 => wire__crate__bridge__wrapper__signal__rust_signal_encrypt_impl(port, ptr, rust_vec_len, data_len),
-104 => wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(port, ptr, rust_vec_len, data_len),
-105 => wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(port, ptr, rust_vec_len, data_len),
-106 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
-107 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
-108 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
-109 => wire__crate__bridge__groups__update_chat_deletion_time_impl(port, ptr, rust_vec_len, data_len),
-110 => wire__crate__bridge__groups__update_group_name_impl(port, ptr, rust_vec_len, data_len),
+59 => wire__crate__bridge__api__rust_api_request_media_reupload_impl(port, ptr, rust_vec_len, data_len),
+60 => wire__crate__bridge__api__rust_api_request_memories_upload_impl(port, ptr, rust_vec_len, data_len),
+61 => wire__crate__bridge__api__rust_api_retransmit_all_messages_impl(port, ptr, rust_vec_len, data_len),
+62 => wire__crate__bridge__api__rust_api_send_binary_impl(port, ptr, rust_vec_len, data_len),
+63 => wire__crate__bridge__api__rust_api_send_contact_profile_impl(port, ptr, rust_vec_len, data_len),
+64 => wire__crate__bridge__api__rust_api_send_encrypted_content_impl(port, ptr, rust_vec_len, data_len),
+65 => wire__crate__bridge__api__rust_api_send_encrypted_content_to_group_impl(port, ptr, rust_vec_len, data_len),
+66 => wire__crate__bridge__api__rust_api_send_queued_message_impl(port, ptr, rust_vec_len, data_len),
+67 => wire__crate__bridge__api__rust_api_send_text_message_impl(port, ptr, rust_vec_len, data_len),
+68 => wire__crate__bridge__api__rust_api_send_typing_impl(port, ptr, rust_vec_len, data_len),
+69 => wire__crate__bridge__api__rust_api_set_background_impl(port, ptr, rust_vec_len, data_len),
+70 => wire__crate__bridge__api__rust_api_set_login_token_impl(port, ptr, rust_vec_len, data_len),
+71 => wire__crate__bridge__api__rust_api_set_network_available_impl(port, ptr, rust_vec_len, data_len),
+72 => wire__crate__bridge__api__rust_api_submit_recovery_share_impl(port, ptr, rust_vec_len, data_len),
+73 => wire__crate__bridge__api__rust_api_update_fcm_token_impl(port, ptr, rust_vec_len, data_len),
+74 => wire__crate__bridge__api__rust_api_update_signed_pre_key_impl(port, ptr, rust_vec_len, data_len),
+75 => wire__crate__bridge__api__rust_api_upload_pqc_pre_keys_impl(port, ptr, rust_vec_len, data_len),
+76 => wire__crate__bridge__wrapper__app_database__rust_app_database_execute_impl(port, ptr, rust_vec_len, data_len),
+77 => wire__crate__bridge__wrapper__app_database__rust_app_database_legacy_import_complete_impl(port, ptr, rust_vec_len, data_len),
+78 => wire__crate__bridge__wrapper__app_database__rust_app_database_migrate_legacy_database_impl(port, ptr, rust_vec_len, data_len),
+79 => wire__crate__bridge__wrapper__app_database__rust_app_database_select_impl(port, ptr, rust_vec_len, data_len),
+80 => wire__crate__bridge__wrapper__backup__rust_backup_archive_create_backup_archive_impl(port, ptr, rust_vec_len, data_len),
+81 => wire__crate__bridge__wrapper__backup__rust_backup_archive_get_backup_download_token_impl(port, ptr, rust_vec_len, data_len),
+82 => wire__crate__bridge__wrapper__backup__rust_backup_archive_restore_backup_archive_impl(port, ptr, rust_vec_len, data_len),
+83 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_backup_id_impl(port, ptr, rust_vec_len, data_len),
+84 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
+85 => wire__crate__bridge__wrapper__backup__rust_backup_identity_get_identity_backup_bytes_impl(port, ptr, rust_vec_len, data_len),
+86 => wire__crate__bridge__wrapper__backup__rust_backup_identity_import_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
+87 => wire__crate__bridge__wrapper__backup__rust_backup_identity_restore_identity_backup_impl(port, ptr, rust_vec_len, data_len),
+88 => wire__crate__bridge__wrapper__backup__rust_backup_identity_set_backup_password_keys_impl(port, ptr, rust_vec_len, data_len),
+89 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_decrypt_cloud_media_key_impl(port, ptr, rust_vec_len, data_len),
+90 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_encrypt_cloud_media_key_impl(port, ptr, rust_vec_len, data_len),
+91 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_login_token_impl(port, ptr, rust_vec_len, data_len),
+92 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_signal_identity_impl(port, ptr, rust_vec_len, data_len),
+93 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_get_user_id_impl(port, ptr, rust_vec_len, data_len),
+94 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_import_serialized_impl(port, ptr, rust_vec_len, data_len),
+95 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_import_signal_identity_impl(port, ptr, rust_vec_len, data_len),
+96 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_load_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
+97 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_load_signed_prekeys_impl(port, ptr, rust_vec_len, data_len),
+98 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_key_manager_impl(port, ptr, rust_vec_len, data_len),
+99 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_remove_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
+100 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_serialize_impl(port, ptr, rust_vec_len, data_len),
+101 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_set_user_id_impl(port, ptr, rust_vec_len, data_len),
+102 => wire__crate__bridge__wrapper__key_manager__rust_key_manager_store_signed_prekey_impl(port, ptr, rust_vec_len, data_len),
+103 => wire__crate__bridge__wrapper__signal__rust_signal_decrypt_impl(port, ptr, rust_vec_len, data_len),
+104 => wire__crate__bridge__wrapper__signal__rust_signal_encrypt_impl(port, ptr, rust_vec_len, data_len),
+105 => wire__crate__bridge__wrapper__signal__rust_signal_generate_bundle_impl(port, ptr, rust_vec_len, data_len),
+106 => wire__crate__bridge__wrapper__signal__rust_signal_generate_pqc_prekeys_impl(port, ptr, rust_vec_len, data_len),
+107 => wire__crate__bridge__wrapper__signal__rust_signal_process_prekey_bundle_impl(port, ptr, rust_vec_len, data_len),
+108 => wire__crate__bridge__wrapper__rust_utils_generate_shares_impl(port, ptr, rust_vec_len, data_len),
+109 => wire__crate__bridge__wrapper__rust_utils_recover_secret_impl(port, ptr, rust_vec_len, data_len),
+110 => wire__crate__bridge__groups__update_chat_deletion_time_impl(port, ptr, rust_vec_len, data_len),
+111 => wire__crate__bridge__groups__update_group_name_impl(port, ptr, rust_vec_len, data_len),
+113 => wire__crate__bridge__user_config__user_config_api_create_impl(port, ptr, rust_vec_len, data_len),
+114 => wire__crate__bridge__user_config__user_config_api_import_json_impl(port, ptr, rust_vec_len, data_len),
+115 => wire__crate__bridge__user_config__user_config_api_load_impl(port, ptr, rust_vec_len, data_len),
+116 => wire__crate__bridge__user_config__user_config_api_save_impl(port, ptr, rust_vec_len, data_len),
+117 => wire__crate__bridge__user_config__user_config_api_update_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -5154,7 +5632,12 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        21 => wire__crate__bridge__api__rust_api_api_base_url_impl(ptr, rust_vec_len, data_len),
+        18 => wire__crate__bridge__api__rust_api_api_base_url_impl(ptr, rust_vec_len, data_len),
+        112 => wire__crate__bridge__user_config__user_config_api_clone_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
         _ => unreachable!(),
     }
 }
@@ -5344,6 +5827,29 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::InitConfig> for crate::bri
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::LastBackupUploadState {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::None => 0.into_dart(),
+            Self::Pending => 1.into_dart(),
+            Self::Failed => 2.into_dart(),
+            Self::Success => 3.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::user_config::LastBackupUploadState
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::LastBackupUploadState>
+    for crate::user_config::LastBackupUploadState
+{
+    fn into_into_dart(self) -> crate::user_config::LastBackupUploadState {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::bridge::wrapper::app_database::LegacyMigrationReport {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5449,6 +5955,32 @@ impl
     > for crate::bridge::wrapper::app_database::LegacyTableMigrationCount
 {
     fn into_into_dart(self) -> crate::bridge::wrapper::app_database::LegacyTableMigrationCount {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::PasswordlessRecoveryConfig {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.email.into_into_dart().into_dart(),
+            self.threshold.into_into_dart().into_dart(),
+            self.server_key_protection.into_into_dart().into_dart(),
+            self.pin_unlock_token.into_into_dart().into_dart(),
+            self.last_server_heartbeat.into_into_dart().into_dart(),
+            self.last_contact_heartbeat.into_into_dart().into_dart(),
+            self.encrypted_server_key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::user_config::PasswordlessRecoveryConfig
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::PasswordlessRecoveryConfig>
+    for crate::user_config::PasswordlessRecoveryConfig
+{
+    fn into_into_dart(self) -> crate::user_config::PasswordlessRecoveryConfig {
         self
     }
 }
@@ -5614,81 +6146,23 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::RustUtils>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bridge::api::ServerResultEmpty {
+impl flutter_rust_bridge::IntoDart for crate::user_config::SetupProfile {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::bridge::api::ServerResultEmpty::Ok => [0.into_dart()].into_dart(),
-            crate::bridge::api::ServerResultEmpty::ErrorCode(field0) => {
-                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
+            Self::Standard => 0.into_dart(),
+            Self::Customized => 1.into_dart(),
+            _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::bridge::api::ServerResultEmpty
+    for crate::user_config::SetupProfile
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::ServerResultEmpty>
-    for crate::bridge::api::ServerResultEmpty
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::SetupProfile>
+    for crate::user_config::SetupProfile
 {
-    fn into_into_dart(self) -> crate::bridge::api::ServerResultEmpty {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bridge::api::ServerResultI64 {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            crate::bridge::api::ServerResultI64::Ok(field0) => {
-                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            crate::bridge::api::ServerResultI64::ErrorCode(field0) => {
-                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::bridge::api::ServerResultI64
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::ServerResultI64>
-    for crate::bridge::api::ServerResultI64
-{
-    fn into_into_dart(self) -> crate::bridge::api::ServerResultI64 {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bridge::api::ServerResultVecU8 {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            crate::bridge::api::ServerResultVecU8::Ok(field0) => {
-                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            crate::bridge::api::ServerResultVecU8::ErrorCode(field0) => {
-                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::bridge::api::ServerResultVecU8
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::ServerResultVecU8>
-    for crate::bridge::api::ServerResultVecU8
-{
-    fn into_into_dart(self) -> crate::bridge::api::ServerResultVecU8 {
+    fn into_into_dart(self) -> crate::user_config::SetupProfile {
         self
     }
 }
@@ -5769,6 +6243,171 @@ impl flutter_rust_bridge::IntoIntoDart<crate::database::app::SqlValue>
         self
     }
 }
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::ThemeMode {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::System => 0.into_dart(),
+            Self::Light => 1.into_dart(),
+            Self::Dark => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::user_config::ThemeMode {}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::ThemeMode>
+    for crate::user_config::ThemeMode
+{
+    fn into_into_dart(self) -> crate::user_config::ThemeMode {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::TwonlySafeBackup {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.last_backup_size.into_into_dart().into_dart(),
+            self.backup_upload_state.into_into_dart().into_dart(),
+            self.last_backup_done.into_into_dart().into_dart(),
+            self.backup_id.into_into_dart().into_dart(),
+            self.encryption_key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::user_config::TwonlySafeBackup
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::TwonlySafeBackup>
+    for crate::user_config::TwonlySafeBackup
+{
+    fn into_into_dart(self) -> crate::user_config::TwonlySafeBackup {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.user_id.into_into_dart().into_dart(),
+            self.username.into_into_dart().into_dart(),
+            self.display_name.into_into_dart().into_dart(),
+            self.avatar_svg.into_into_dart().into_dart(),
+            self.app_version.into_into_dart().into_dart(),
+            self.avatar_counter.into_into_dart().into_dart(),
+            self.video_stabilization_enabled
+                .into_into_dart()
+                .into_dart(),
+            self.is_developer.into_into_dart().into_dart(),
+            self.device_id.into_into_dart().into_dart(),
+            self.setup_profile.into_into_dart().into_dart(),
+            self.subscription_plan.into_into_dart().into_dart(),
+            self.subscription_plan_id_store.into_into_dart().into_dart(),
+            self.last_image_send.into_into_dart().into_dart(),
+            self.todays_image_counter.into_into_dart().into_dart(),
+            self.last_plan_ballance.into_into_dart().into_dart(),
+            self.additional_user_invites.into_into_dart().into_dart(),
+            self.theme_mode.into_into_dart().into_dart(),
+            self.primary_color_value.into_into_dart().into_dart(),
+            self.default_show_time.into_into_dart().into_dart(),
+            self.requested_audio_permission.into_into_dart().into_dart(),
+            self.enable_database_logging.into_into_dart().into_dart(),
+            self.automatically_mark_equal_media_files_as_opened
+                .into_into_dart()
+                .into_dart(),
+            self.show_news_shortcut.into_into_dart().into_dart(),
+            self.show_show_image_preview_when_sending
+                .into_into_dart()
+                .into_dart(),
+            self.start_with_camera_open.into_into_dart().into_dart(),
+            self.pre_selected_emojies.into_into_dart().into_dart(),
+            self.auto_download_options.into_into_dart().into_dart(),
+            self.store_media_files_in_gallery
+                .into_into_dart()
+                .into_dart(),
+            self.auto_store_all_send_unlimited_media_files
+                .into_into_dart()
+                .into_dart(),
+            self.typing_indicators.into_into_dart().into_dart(),
+            self.show_restore_flame.into_into_dart().into_dart(),
+            self.my_best_friend_group_id.into_into_dart().into_dart(),
+            self.signal_last_signed_pre_key_updated
+                .into_into_dart()
+                .into_dart(),
+            self.signal_last_pqc_pre_keys_uploaded
+                .into_into_dart()
+                .into_dart(),
+            self.allow_error_tracking_via_sentry
+                .into_into_dart()
+                .into_dart(),
+            self.screen_lock_enabled.into_into_dart().into_dart(),
+            self.is_cloud_backup_enabled.into_into_dart().into_dart(),
+            self.is_user_discovery_enabled.into_into_dart().into_dart(),
+            self.required_send_images.into_into_dart().into_dart(),
+            self.user_discovery_threshold.into_into_dart().into_dart(),
+            self.user_discovery_requires_manual_approval
+                .into_into_dart()
+                .into_dart(),
+            self.user_discovery_share_promotion
+                .into_into_dart()
+                .into_dart(),
+            self.user_discovery_initialization_error
+                .into_into_dart()
+                .into_dart(),
+            self.ask_for_friend_promotions.into_into_dart().into_dart(),
+            self.current_pre_key_index_start
+                .into_into_dart()
+                .into_dart(),
+            self.current_signed_pre_key_index_start
+                .into_into_dart()
+                .into_dart(),
+            self.last_change_log_hash.into_into_dart().into_dart(),
+            self.hide_change_log.into_into_dart().into_dart(),
+            self.hide_memories_backup_promo.into_into_dart().into_dart(),
+            self.update_fcm_token.into_into_dart().into_dart(),
+            self.can_use_login_token_for_auth
+                .into_into_dart()
+                .into_dart(),
+            self.twonly_safe_backup.into_into_dart().into_dart(),
+            self.is_backup_enabled.into_into_dart().into_dart(),
+            self.password_less_recovery.into_into_dart().into_dart(),
+            self.fcm_token.into_into_dart().into_dart(),
+            self.current_setup_page.into_into_dart().into_dart(),
+            self.skip_setup_pages.into_into_dart().into_dart(),
+            self.has_zoomed.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::user_config::UserConfig
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::user_config::UserConfig>
+    for crate::user_config::UserConfig
+{
+    fn into_into_dart(self) -> crate::user_config::UserConfig {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::user_config::UserConfigApi {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        Vec::<u8>::new().into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::user_config::UserConfigApi
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::user_config::UserConfigApi>
+    for crate::bridge::user_config::UserConfigApi
+{
+    fn into_into_dart(self) -> crate::bridge::user_config::UserConfigApi {
+        self
+    }
+}
 
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -5777,10 +6416,24 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
+impl SseEncode for chrono::DateTime<chrono::Utc> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.timestamp_micros(), serializer);
+    }
+}
+
 impl SseEncode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <usize>::sse_encode(self.encode(), serializer);
+    }
+}
+
+impl SseEncode for std::collections::HashMap<String, Vec<String>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<(String, Vec<String>)>>::sse_encode(self.into_iter().collect(), serializer);
     }
 }
 
@@ -5953,6 +6606,24 @@ impl SseEncode for isize {
     }
 }
 
+impl SseEncode for crate::user_config::LastBackupUploadState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::user_config::LastBackupUploadState::None => 0,
+                crate::user_config::LastBackupUploadState::Pending => 1,
+                crate::user_config::LastBackupUploadState::Failed => 2,
+                crate::user_config::LastBackupUploadState::Success => 3,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::bridge::wrapper::app_database::LegacyMigrationReport {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6088,6 +6759,16 @@ impl SseEncode for Vec<(i64, Vec<u8>)> {
     }
 }
 
+impl SseEncode for Vec<(String, Vec<String>)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <(String, Vec<String>)>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::database::app::SqlRow> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6108,12 +6789,32 @@ impl SseEncode for Vec<crate::database::app::SqlValue> {
     }
 }
 
+impl SseEncode for Option<std::collections::HashMap<String, Vec<String>>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <std::collections::HashMap<String, Vec<String>>>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <String>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<chrono::DateTime<chrono::Utc>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <chrono::DateTime<chrono::Utc>>::sse_encode(value, serializer);
         }
     }
 }
@@ -6168,12 +6869,32 @@ impl SseEncode for Option<crate::bridge::callbacks::LegacySignalEncryptResult> {
     }
 }
 
+impl SseEncode for Option<crate::user_config::PasswordlessRecoveryConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::user_config::PasswordlessRecoveryConfig>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::bridge::api::PreparedOutgoingMessage> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::bridge::api::PreparedOutgoingMessage>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::user_config::TwonlySafeBackup> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::user_config::TwonlySafeBackup>::sse_encode(value, serializer);
         }
     }
 }
@@ -6188,6 +6909,26 @@ impl SseEncode for Option<u32> {
     }
 }
 
+impl SseEncode for Option<crate::user_config::UserConfig> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::user_config::UserConfig>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<String>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<String>>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<Vec<u8>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6195,6 +6936,22 @@ impl SseEncode for Option<Vec<u8>> {
         if let Some(value) = self {
             <Vec<u8>>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::user_config::PasswordlessRecoveryConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.email, serializer);
+        <i64>::sse_encode(self.threshold, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.server_key_protection, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.pin_unlock_token, serializer);
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(self.last_server_heartbeat, serializer);
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(
+            self.last_contact_heartbeat,
+            serializer,
+        );
+        <Option<Vec<u8>>>::sse_encode(self.encrypted_server_key, serializer);
     }
 }
 
@@ -6230,6 +6987,14 @@ impl SseEncode for (Vec<u8>, i64) {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.0, serializer);
         <i64>::sse_encode(self.1, serializer);
+    }
+}
+
+impl SseEncode for (String, Vec<String>) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.0, serializer);
+        <Vec<String>>::sse_encode(self.1, serializer);
     }
 }
 
@@ -6276,59 +7041,19 @@ impl SseEncode for crate::bridge::wrapper::RustUtils {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
-impl SseEncode for crate::bridge::api::ServerResultEmpty {
+impl SseEncode for crate::user_config::SetupProfile {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crate::bridge::api::ServerResultEmpty::Ok => {
-                <i32>::sse_encode(0, serializer);
-            }
-            crate::bridge::api::ServerResultEmpty::ErrorCode(field0) => {
-                <i32>::sse_encode(1, serializer);
-                <i32>::sse_encode(field0, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseEncode for crate::bridge::api::ServerResultI64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crate::bridge::api::ServerResultI64::Ok(field0) => {
-                <i32>::sse_encode(0, serializer);
-                <i64>::sse_encode(field0, serializer);
-            }
-            crate::bridge::api::ServerResultI64::ErrorCode(field0) => {
-                <i32>::sse_encode(1, serializer);
-                <i32>::sse_encode(field0, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
-    }
-}
-
-impl SseEncode for crate::bridge::api::ServerResultVecU8 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        match self {
-            crate::bridge::api::ServerResultVecU8::Ok(field0) => {
-                <i32>::sse_encode(0, serializer);
-                <Vec<u8>>::sse_encode(field0, serializer);
-            }
-            crate::bridge::api::ServerResultVecU8::ErrorCode(field0) => {
-                <i32>::sse_encode(1, serializer);
-                <i32>::sse_encode(field0, serializer);
-            }
-            _ => {
-                unimplemented!("");
-            }
-        }
+        <i32>::sse_encode(
+            match self {
+                crate::user_config::SetupProfile::Standard => 0,
+                crate::user_config::SetupProfile::Customized => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -6363,6 +7088,37 @@ impl SseEncode for crate::database::app::SqlValue {
         <Option<f64>>::sse_encode(self.real_value, serializer);
         <Option<String>>::sse_encode(self.text_value, serializer);
         <Option<Vec<u8>>>::sse_encode(self.blob_value, serializer);
+    }
+}
+
+impl SseEncode for crate::user_config::ThemeMode {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::user_config::ThemeMode::System => 0,
+                crate::user_config::ThemeMode::Light => 1,
+                crate::user_config::ThemeMode::Dark => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::user_config::TwonlySafeBackup {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.last_backup_size, serializer);
+        <crate::user_config::LastBackupUploadState>::sse_encode(
+            self.backup_upload_state,
+            serializer,
+        );
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(self.last_backup_done, serializer);
+        <Vec<u8>>::sse_encode(self.backup_id, serializer);
+        <Vec<u8>>::sse_encode(self.encryption_key, serializer);
     }
 }
 
@@ -6401,6 +7157,93 @@ impl SseEncode for [u8; 32] {
 }
 
 impl SseEncode for () {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for crate::user_config::UserConfig {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.user_id, serializer);
+        <String>::sse_encode(self.username, serializer);
+        <String>::sse_encode(self.display_name, serializer);
+        <Option<String>>::sse_encode(self.avatar_svg, serializer);
+        <i64>::sse_encode(self.app_version, serializer);
+        <i64>::sse_encode(self.avatar_counter, serializer);
+        <bool>::sse_encode(self.video_stabilization_enabled, serializer);
+        <bool>::sse_encode(self.is_developer, serializer);
+        <i64>::sse_encode(self.device_id, serializer);
+        <crate::user_config::SetupProfile>::sse_encode(self.setup_profile, serializer);
+        <String>::sse_encode(self.subscription_plan, serializer);
+        <Option<String>>::sse_encode(self.subscription_plan_id_store, serializer);
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(self.last_image_send, serializer);
+        <Option<i64>>::sse_encode(self.todays_image_counter, serializer);
+        <Option<String>>::sse_encode(self.last_plan_ballance, serializer);
+        <Option<String>>::sse_encode(self.additional_user_invites, serializer);
+        <crate::user_config::ThemeMode>::sse_encode(self.theme_mode, serializer);
+        <Option<i64>>::sse_encode(self.primary_color_value, serializer);
+        <Option<i64>>::sse_encode(self.default_show_time, serializer);
+        <bool>::sse_encode(self.requested_audio_permission, serializer);
+        <bool>::sse_encode(self.enable_database_logging, serializer);
+        <bool>::sse_encode(
+            self.automatically_mark_equal_media_files_as_opened,
+            serializer,
+        );
+        <bool>::sse_encode(self.show_news_shortcut, serializer);
+        <bool>::sse_encode(self.show_show_image_preview_when_sending, serializer);
+        <bool>::sse_encode(self.start_with_camera_open, serializer);
+        <Option<Vec<String>>>::sse_encode(self.pre_selected_emojies, serializer);
+        <Option<std::collections::HashMap<String, Vec<String>>>>::sse_encode(
+            self.auto_download_options,
+            serializer,
+        );
+        <bool>::sse_encode(self.store_media_files_in_gallery, serializer);
+        <bool>::sse_encode(self.auto_store_all_send_unlimited_media_files, serializer);
+        <bool>::sse_encode(self.typing_indicators, serializer);
+        <bool>::sse_encode(self.show_restore_flame, serializer);
+        <Option<String>>::sse_encode(self.my_best_friend_group_id, serializer);
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(
+            self.signal_last_signed_pre_key_updated,
+            serializer,
+        );
+        <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(
+            self.signal_last_pqc_pre_keys_uploaded,
+            serializer,
+        );
+        <bool>::sse_encode(self.allow_error_tracking_via_sentry, serializer);
+        <bool>::sse_encode(self.screen_lock_enabled, serializer);
+        <bool>::sse_encode(self.is_cloud_backup_enabled, serializer);
+        <bool>::sse_encode(self.is_user_discovery_enabled, serializer);
+        <i64>::sse_encode(self.required_send_images, serializer);
+        <u8>::sse_encode(self.user_discovery_threshold, serializer);
+        <bool>::sse_encode(self.user_discovery_requires_manual_approval, serializer);
+        <bool>::sse_encode(self.user_discovery_share_promotion, serializer);
+        <bool>::sse_encode(self.user_discovery_initialization_error, serializer);
+        <bool>::sse_encode(self.ask_for_friend_promotions, serializer);
+        <i64>::sse_encode(self.current_pre_key_index_start, serializer);
+        <i64>::sse_encode(self.current_signed_pre_key_index_start, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.last_change_log_hash, serializer);
+        <bool>::sse_encode(self.hide_change_log, serializer);
+        <bool>::sse_encode(self.hide_memories_backup_promo, serializer);
+        <bool>::sse_encode(self.update_fcm_token, serializer);
+        <bool>::sse_encode(self.can_use_login_token_for_auth, serializer);
+        <Option<crate::user_config::TwonlySafeBackup>>::sse_encode(
+            self.twonly_safe_backup,
+            serializer,
+        );
+        <bool>::sse_encode(self.is_backup_enabled, serializer);
+        <Option<crate::user_config::PasswordlessRecoveryConfig>>::sse_encode(
+            self.password_less_recovery,
+            serializer,
+        );
+        <Option<String>>::sse_encode(self.fcm_token, serializer);
+        <Option<String>>::sse_encode(self.current_setup_page, serializer);
+        <bool>::sse_encode(self.skip_setup_pages, serializer);
+        <bool>::sse_encode(self.has_zoomed, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::user_config::UserConfigApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }

@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
@@ -50,7 +48,10 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 
   Future<void> initAsync({required bool force}) async {
     if (force) {
-      ballance = await apiService.loadPlanBalance();
+      ballance = await rustApiProtobuf(
+        RustApi.loadPlanBalance(),
+        decodePlanBalance,
+      );
       _unusedAdditionalAccounts =
           _planLimit - (ballance?.additionalAccounts.length ?? _planLimit);
     }
@@ -72,7 +73,9 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
             as List<int>?;
     if (selectedUserIds == null) return;
     for (final selectedUserId in selectedUserIds) {
-      final res = await apiService.addAdditionalUser(Int64(selectedUserId));
+      final res = await rustApiResult(
+        RustApi.addAdditionalUser(userId: selectedUserId),
+      );
       if (res.isError && mounted) {
         final contact = await twonlyDB.contactsDao.getContactById(
           selectedUserId,
@@ -220,8 +223,10 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                   context.lang.additionalUserRemoveDesc,
                 );
                 if (remove) {
-                  final res = await apiService.removeAdditionalUser(
-                    widget.account.userId,
+                  final res = await rustApiResult(
+                    RustApi.removeAdditionalUser(
+                      userId: widget.account.userId.toInt(),
+                    ),
                   );
                   if (!context.mounted) return;
                   if (res.isSuccess) {
@@ -231,7 +236,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                       context,
                       errorCodeToText(
                         context,
-                        res.error as ErrorCode,
+                        res.error!,
                       ),
                     );
                   }

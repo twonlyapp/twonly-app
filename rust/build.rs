@@ -25,7 +25,7 @@ fn main() -> Result<()> {
         .include_file("websocket_protocol.rs")
         .compile_protos(&websocket_protos, &[websocket_proto_root])?;
 
-    prost_build::compile_protos(&["src/user_discovery/types.proto"], &["src/"])?;
+    prost_build::compile_protos(&["models/user_discovery.proto"], &["src/"])?;
     prost_build::Config::new()
         .include_file("client_messages.rs")
         .compile_protos(

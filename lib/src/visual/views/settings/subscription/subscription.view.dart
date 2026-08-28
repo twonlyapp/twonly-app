@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> initAsync() async {
-    ballance = await apiService.loadPlanBalance();
+    ballance = await rustApiProtobuf(
+      RustApi.loadPlanBalance(),
+      decodePlanBalance,
+    );
     if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
       final ownerId = ballance!.additionalAccountOwnerId.toInt();
       final contact = await twonlyDB.contactsDao
@@ -49,7 +53,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
     if (!mounted) return;
     setState(() {});
-    await apiService.forceIpaCheck();
+    await RustApi.forceIpaCheck();
   }
 
   @override

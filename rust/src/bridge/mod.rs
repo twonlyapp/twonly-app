@@ -7,6 +7,7 @@
 pub mod api;
 pub mod callbacks;
 pub mod groups;
+pub mod user_config;
 pub mod wrapper;
 
 use std::sync::Arc;
@@ -20,13 +21,12 @@ use crate::error::TwonlyError;
 use crate::keys::KeyManager;
 use crate::secure_storage::SecureStorage;
 use crate::signal::engine::RustSignalEngine;
-use crate::user_discovery::stores::{NativeUserDiscoveryStore, NativeUserDiscoveryUtils};
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use flutter_rust_bridge::frb;
 
-pub use crate::user_discovery::traits::AnnouncedUser;
-pub use crate::user_discovery::traits::OtherPromotion;
+pub use crate::user_discovery::AnnouncedUser;
+pub use crate::user_discovery::OtherPromotion;
 use tokio::sync::{Mutex, OnceCell, RwLock};
 
 pub struct InitConfig {
@@ -54,8 +54,7 @@ pub struct _AnnouncedUser {
 pub(crate) struct TwonlyFlutter {
     #[allow(dead_code)]
     pub(crate) config: InitConfig,
-    pub(crate) user_discovery:
-        Shared<UserDiscovery<NativeUserDiscoveryStore, NativeUserDiscoveryUtils>>,
+    pub(crate) user_discovery: Shared<UserDiscovery>,
     #[allow(dead_code)]
     pub(crate) rust_db: Arc<RwLock<Arc<Database>>>,
     pub(crate) app_db: Arc<RwLock<Arc<AppDatabase>>>,

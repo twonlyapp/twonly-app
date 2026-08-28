@@ -1,1 +1,0 @@
-enum SetupProfile { standard, customized }
