@@ -11,6 +11,7 @@ use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
 use crate::database::app::tables::{Contact, MediaFile, NewReceipt, Receipt};
 use crate::error::{twonly_error, Result, TwonlyError};
+use crate::services::contacts::ContactService;
 use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
 use proto::encrypted_content::error_messages::Type;
@@ -252,6 +253,37 @@ pub(crate) fn spawn_receipt_delivery(ctx: &Arc<Context>, receipt_id: String) {
     });
 }
 
+async fn encrypt_v2_with_session_recovery(
+    ctx: &Arc<Context>,
+    contact_id: i64,
+    plaintext: Vec<u8>,
+) -> Result<Vec<u8>> {
+    let encrypt = |plaintext| async move {
+        let engine = ctx.get_signal_engine().lock().await;
+        engine
+            .as_ref()
+            .ok_or(TwonlyError::SignalIdentityNotFound)?
+            .encrypt_message(contact_id.to_string(), 1, plaintext)
+            .await
+    };
+
+    match encrypt(plaintext.clone()).await {
+        Err(TwonlyError::Signal(message))
+            if message.contains("session with") && message.contains("not found") =>
+        {
+            tracing::warn!(
+                contact_id,
+                "Signal session missing; rebuilding it from the server prekey bundle"
+            );
+            ContactService::new(ctx)
+                .establish_signal_session(contact_id)
+                .await?;
+            encrypt(plaintext).await
+        }
+        result => result,
+    }
+}
+
 pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) -> Result<()> {
     #[cfg(not(debug_assertions))]
     {
@@ -314,14 +346,8 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
                 .encrypted_content
                 .take()
                 .ok_or_else(|| TwonlyError::Generic("queued V2 message has no plaintext".into()))?;
-            let engine = ctx.get_signal_engine().lock().await;
-            message.encrypted_content = Some(
-                engine
-                    .as_ref()
-                    .ok_or(TwonlyError::SignalIdentityNotFound)?
-                    .encrypt_message(row.contact_id.to_string(), 1, plaintext)
-                    .await?,
-            );
+            message.encrypted_content =
+                Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);
         }
         _ => {}
     }
@@ -375,7 +401,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
 }
 
 pub(crate) async fn prepare_queued_receipt(
-    ctx: &Context,
+    ctx: &Arc<Context>,
     receipt_id: &str,
 ) -> Result<Option<(Vec<u8>, Option<Vec<u8>>)>> {
     let database = ctx.get_app_database().await;
@@ -413,15 +439,8 @@ pub(crate) async fn prepare_queued_receipt(
                 .take()
                 .ok_or_else(|| TwonlyError::Generic("queued message has no content".into()))?;
 
-            let engine = ctx.get_signal_engine().lock().await;
-
-            message.encrypted_content = Some(
-                engine
-                    .as_ref()
-                    .ok_or(TwonlyError::SignalIdentityNotFound)?
-                    .encrypt_message(row.contact_id.to_string(), 1, plaintext)
-                    .await?,
-            );
+            message.encrypted_content =
+                Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);
         }
         _ => {}
     }

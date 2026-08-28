@@ -469,11 +469,6 @@ impl Tester {
 
         // Reload the API configuration so the new login_token/user_id is picked up by the API Client
         ApiRuntime::reload_configuration(&self.context).await?;
-
-        // After the user has register, it should reconnected and reauthenticated
-        ApiRuntime::close(&self.context).await?;
-        ApiRuntime::connect(&self.context).await?;
-
         self.wait_until(ApiConnectionState::Authenticated).await?;
 
         Server::generate_and_upload_pqc_pre_keys(&self.context).await?;

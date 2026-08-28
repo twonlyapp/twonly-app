@@ -34,6 +34,47 @@ impl ContactService {
             }
         };
 
+        self.process_user_prekey_bundle(&user).await?;
+
+        let database = self.ctx.get_app_database().await;
+        let mut transaction = database.pool.begin().await?;
+        UpdateContact::builder()
+            .user_id(user.user_id)
+            .username(username)
+            .signal_version("v2".to_owned())
+            .requested(false)
+            .blocked(false)
+            .deleted_by_user(false)
+            .build()
+            .insert_on_conflict_update(&mut transaction)
+            .await?;
+        transaction.commit().await?;
+        database.notify_committed(["contacts"]);
+
+        self.send_contact_request(
+            user.user_id,
+            encrypted_content::contact_request::Type::Request,
+            blocking,
+        )
+        .await
+    }
+
+    pub(crate) async fn establish_signal_session(&self, user_id: i64) -> Result<()> {
+        let user = match Server::get_user_by_id(&self.ctx, user_id).await? {
+            ServerResult::Ok(user) => user,
+            ServerResult::ErrorCode(code) => {
+                return Err(TwonlyError::Generic(format!(
+                    "Could not load prekey bundle for user {user_id}: server error {code}"
+                )));
+            }
+        };
+        self.process_user_prekey_bundle(&user).await
+    }
+
+    async fn process_user_prekey_bundle(
+        &self,
+        user: &crate::api::proto::server_to_client::response::UserData,
+    ) -> Result<()> {
         let missing = TwonlyError::ApiResponseMissingField;
         let pqc_bundle = user.pqc_bundle.as_ref().ok_or(missing("pqc_bundle"))?;
         let identity_key = user
@@ -86,28 +127,7 @@ impl ContactService {
                 },
             )
             .await?;
-
-        let database = self.ctx.get_app_database().await;
-        let mut transaction = database.pool.begin().await?;
-        UpdateContact::builder()
-            .user_id(user.user_id)
-            .username(username)
-            .signal_version("v2".to_owned())
-            .requested(false)
-            .blocked(false)
-            .deleted_by_user(false)
-            .build()
-            .insert_on_conflict_update(&mut transaction)
-            .await?;
-        transaction.commit().await?;
-        database.notify_committed(["contacts"]);
-
-        self.send_contact_request(
-            user.user_id,
-            encrypted_content::contact_request::Type::Request,
-            blocking,
-        )
-        .await
+        Ok(())
     }
 
     pub async fn accept_request(&self, contact_id: i64, blocking: bool) -> Result<()> {
