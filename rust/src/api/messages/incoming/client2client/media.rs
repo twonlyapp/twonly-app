@@ -221,10 +221,9 @@ pub(crate) async fn handle_media_update(
         r#"
         SELECT media_id
         FROM messages
-        WHERE message_id = ? AND sender_id = ?
+        WHERE message_id = ?
         "#,
         update.target_message_id,
-        from_user_id,
     )
     .fetch_optional(&mut **t)
     .await?

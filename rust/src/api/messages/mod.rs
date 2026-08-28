@@ -3,7 +3,7 @@
  *
  */
 
-pub(crate) mod incoming;
+pub mod incoming;
 #[doc(hidden)]
 pub mod outgoing;
 

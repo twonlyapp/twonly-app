@@ -108,9 +108,7 @@ impl GroupService {
         group_id: String,
         related_receipt_id: String,
     ) -> Result<()> {
-        if !self.fetch_group_state_in_transaction(t, &group_id).await? {
-            return Ok(());
-        }
+        let _ = self.fetch_group_state_in_transaction(t, &group_id).await;
 
         let group = GroupRecord::load_in_transaction(t, &group_id).await?;
         let is_still_member = sqlx::query_scalar!(
@@ -134,7 +132,7 @@ impl GroupService {
                     group_create: Some(encrypted_content::GroupCreate {
                         state_key: group.state_key()?.to_vec(),
                         group_public_key: group.identity()?.identity_key().serialize().to_vec(),
-                        group_name: None,
+                        group_name: Some(group.group_name.clone()),
                     }),
                     ..Default::default()
                 },
@@ -143,10 +141,15 @@ impl GroupService {
             .await?;
         }
 
+        let new_receipt_id = new_uuid_v4();
         sqlx::query!(
             r#"UPDATE receipts
-               SET mark_for_retry = ?, retry_count = retry_count + 1
+               SET receipt_id = ?,
+                   mark_for_retry = ?,
+                   retry_count = retry_count + 1,
+                   ack_by_server_at = NULL
                WHERE receipt_id = ? AND contact_id = ?"#,
+            new_receipt_id,
             current_time().timestamp(),
             related_receipt_id,
             from_user_id,

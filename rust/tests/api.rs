@@ -1,5 +1,17 @@
 #[path = "api/tester.rs"]
 mod tester;
+#[path = "api/contacts.rs"]
+mod contacts;
+#[path = "api/group_resilience.rs"]
+mod group_resilience;
+#[path = "api/media.rs"]
+mod media;
+#[path = "api/recovery.rs"]
+mod recovery;
+#[path = "api/server_api.rs"]
+mod server_api;
+#[path = "api/session_recovery.rs"]
+mod session_recovery;
 #[path = "api/user_discovery.rs"]
 mod user_discovery;
 
@@ -102,7 +114,11 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         }
 
         // We also need to update the local UserConfig so send_profile picks it up.
-        tester_a.update_username(new_username.clone())?;
+        tester_a.update_profile(
+            Some(new_username.clone()),
+            Some("Alice Custom".into()),
+            Some("<svg height='100' width='100'><circle cx='50' cy='50' r='40'/></svg>".into()),
+        )?;
 
         // 2. Instead of directly sending the profile, we send a text message.
         // The sender_profile_counter is incremented in user.json, so the text message
@@ -115,12 +131,29 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_b
             .wait_for_contact_username(tester_a.user_id, &new_username)
             .await?;
+        tester_b
+            .wait_for_contact_display_name(tester_a.user_id, "Alice Custom")
+            .await?;
+        tester_b
+            .wait_for_contact_avatar_exists(tester_a.user_id)
+            .await?;
     }
 
     //
     // Testing: Text message related messages
     //
     {
+        // TesterA sets a draft message in the database to verify it is cleared on send
+        {
+            let db_a = tester_a.context.app_db.read().await.clone();
+            sqlx::query!(
+                "UPDATE groups SET draft_message = 'draft text' WHERE group_id = ?",
+                group_id
+            )
+            .execute(&db_a.pool)
+            .await?;
+        }
+
         // TesterA -> TesterB: Send a text message
         let message_id = MessageService::new(&tester_a.context)
             .insert_and_send_text(group_id.clone(), "Initial text".into(), None)
@@ -128,6 +161,56 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_b
             .wait_for_text_message(&message_id, tester_a.user_id, "Initial text")
             .await?;
+
+        // Verify draft was cleared
+        {
+            let db_a = tester_a.context.app_db.read().await.clone();
+            let draft = sqlx::query_scalar!(
+                "SELECT draft_message FROM groups WHERE group_id = ?",
+                group_id
+            )
+            .fetch_one(&db_a.pool)
+            .await?;
+            assert_eq!(draft, None, "draft_message must be cleared on send");
+        }
+
+        // TesterA -> TesterB: Typing indicator
+        MessageService::new(&tester_a.context)
+            .send_typing(group_id.clone(), true)
+            .await?;
+        tester_b
+            .wait_for_typing_indicator(&group_id, tester_a.user_id, true)
+            .await?;
+
+        MessageService::new(&tester_a.context)
+            .send_typing(group_id.clone(), false)
+            .await?;
+        tester_b
+            .wait_for_typing_indicator(&group_id, tester_a.user_id, false)
+            .await?;
+
+        // TesterB -> TesterA: Quoted reply
+        let reply_id = MessageService::new(&tester_b.context)
+            .insert_and_send_text(
+                group_id.clone(),
+                "Replying to initial text".into(),
+                Some(message_id.clone()),
+            )
+            .await?;
+        tester_a
+            .wait_for_quoted_text_message(
+                &reply_id,
+                tester_b.user_id,
+                "Replying to initial text",
+                &message_id,
+            )
+            .await?;
+
+        // TesterB -> TesterA: Notify opened message
+        MessageService::new(&tester_b.context)
+            .notify_opened(tester_a.user_id, vec![message_id.clone()])
+            .await?;
+        tester_a.wait_for_message_opened(&message_id).await?;
 
         // TesterA -> TesterB: Edit this text message
         MessageService::new(&tester_a.context)
@@ -178,6 +261,16 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
     };
     tracing::info!(tester = "c", user_id = tester_c.user_id, "Tester is ready");
 
+    // Setup tester_d for testing adding members to existing groups
+    let tester_d = {
+        let mut tester = Tester::new().await?;
+        tester.wait_until(ApiConnectionState::Connected).await?;
+        tester.register_and_authenticate().await?;
+        tester.wait_until(ApiConnectionState::Authenticated).await?;
+        tester
+    };
+    tracing::info!(tester = "d", user_id = tester_d.user_id, "Tester is ready");
+
     //
     // Testing: Testing the group
     //
@@ -195,6 +288,22 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
                 .await?;
             tester_a
                 .wait_for_contact_state(tester_c.user_id, true, false)
+                .await?;
+        }
+
+        // Tester A adds Tester D as a contact (request → accept)
+        {
+            ContactService::new(&tester_a.context)
+                .request_by_username(tester_d.username.clone(), true)
+                .await?;
+            tester_d
+                .wait_for_contact_state(tester_a.user_id, false, true)
+                .await?;
+            ContactService::new(&tester_d.context)
+                .accept_request(tester_a.user_id, true)
+                .await?;
+            tester_a
+                .wait_for_contact_state(tester_d.user_id, true, false)
                 .await?;
         }
 
@@ -226,7 +335,16 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .await?;
         tracing::info!("All testers see the group");
 
-        // 2. Send a text message in the group
+        // 2. Add tester_d to the existing group
+        group_service_a
+            .add_members(group_id.clone(), vec![tester_d.user_id])
+            .await?;
+        tester_d
+            .wait_for_group_exists(&group_id, group_name)
+            .await?;
+        tracing::info!("tester_d added to existing group");
+
+        // 3. Send a text message in the group
         let group_msg_id = MessageService::new(&tester_a.context)
             .insert_and_send_text(group_id.clone(), "Hello group!".into(), None)
             .await?;
@@ -237,10 +355,13 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_c
             .wait_for_text_message(&group_msg_id, tester_a.user_id, "Hello group!")
             .await?;
+        tester_d
+            .wait_for_text_message(&group_msg_id, tester_a.user_id, "Hello group!")
+            .await?;
 
         tracing::info!("Group text message received by all members");
 
-        // 3. Update the group name
+        // 4. Update the group name
         let new_group_name = "Renamed Group";
 
         group_service_a
@@ -253,10 +374,25 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_c
             .wait_for_group_name(&group_id, new_group_name)
             .await?;
+        tester_d
+            .wait_for_group_name(&group_id, new_group_name)
+            .await?;
 
         tracing::info!("Group name updated and visible to all members");
 
-        // 4. Promote tester_b to admin
+        // 5. Update disappearing chat deletion timer
+        group_service_a
+            .update_chat_deletion_time(group_id.clone(), 3_600_000)
+            .await?;
+        tester_b
+            .wait_for_group_chat_deletion_time(&group_id, 3_600_000)
+            .await?;
+        tester_c
+            .wait_for_group_chat_deletion_time(&group_id, 3_600_000)
+            .await?;
+        tracing::info!("Group chat deletion timer updated to 1 hour");
+
+        // 6. Promote tester_b to admin
         // tester_a needs tester_b's public key to promote them. We simulate a message from tester_b
         // so that tester_a can request the missing public key.
         {
@@ -296,7 +432,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         tracing::info!("tester_b promoted to admin");
 
-        // 5. Demote tester_b from admin
+        // 7. Demote tester_b from admin
         group_service_a
             .manage_admin(group_id.clone(), tester_b.user_id, true)
             .await?;
@@ -317,7 +453,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
 
         tracing::info!("tester_b demoted from admin");
 
-        // 6. Remove tester_c from the group
+        // 8. Remove tester_c from the group
         // Note: tester_c is not an admin, so their public key is not needed to remove them.
         // We pass an empty vec![] instead of waiting for a key exchange.
         group_service_a
@@ -340,7 +476,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_c.wait_for_group_left(&group_id).await?;
         tracing::info!("tester_c removed from the group");
 
-        // 7. tester_b leaves the group
+        // 9. tester_b leaves the group
         GroupService::new(&tester_b.context)
             .leave_group(group_id.clone())
             .await?;
@@ -356,7 +492,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
     }
 
     //
-    // Testing: Testing additional data
+    // Testing: Testing additional data (Contact sharing & AskAboutUser)
     //
     {
         // B must know C's identity key before it can verify the key shared by A.
@@ -416,6 +552,29 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
             .set_contact_verified(tester_a.user_id, false)
             .await?;
         assert!(!tester_b.is_contact_verified(tester_c.user_id).await?);
+
+        // A asks B about C using AskAboutUser
+        let ask_msg_id = MessageService::new(&tester_a.context)
+            .insert_and_send_ask_about_user(tester_b.user_id, tester_c.user_id)
+            .await?;
+        let ask_additional_data = {
+            let database = tester_a.context.app_db.read().await.clone();
+            sqlx::query_scalar!(
+                "SELECT additional_message_data FROM messages WHERE message_id = ?",
+                ask_msg_id,
+            )
+            .fetch_one(&database.pool)
+            .await?
+            .expect("ask-about-user message contains additional data")
+        };
+        tester_b
+            .wait_for_additional_data_message(
+                &ask_msg_id,
+                tester_a.user_id,
+                "askAboutUser",
+                &ask_additional_data,
+            )
+            .await?;
     }
 
     Ok(())

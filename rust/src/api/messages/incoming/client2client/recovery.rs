@@ -50,9 +50,8 @@ pub(crate) async fn handle_passwordless_recovery(
         .execute(&mut **t)
         .await?;
     }
-    #[cfg(not(test))]
-    {
-        let ctx = Context::get_static()?.clone();
+    if let Ok(ctx) = Context::get_static() {
+        let ctx = ctx.clone();
         tokio::spawn(async move {
             if let Err(error) = perform_heartbeat(&ctx).await {
                 tracing::warn!(%error, "passwordless recovery heartbeat failed");
@@ -62,7 +61,7 @@ pub(crate) async fn handle_passwordless_recovery(
     Ok(())
 }
 
-pub(crate) async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
+pub async fn perform_heartbeat(ctx: &Arc<Context>) -> Result<()> {
     let now = crate::utils::current_time().with_timezone(&chrono::Utc);
     let base_config = UserConfig::load_required_from(ctx)?;
     let mut config = base_config.clone();

@@ -97,8 +97,17 @@ pub(crate) async fn process_encrypted_or_queue_error(
                 ..Default::default()
             };
 
+            let signal_version = Contact::get_contact_by_id(t, from_user_id)
+                .await?
+                .map(|c| c.signal_version)
+                .unwrap_or_else(|| "v2".to_string());
+
             let response = proto::Message {
-                r#type: proto::message::Type::Ciphertext as i32,
+                r#type: if signal_version == "v2" {
+                    proto::message::Type::CiphertextV2 as i32
+                } else {
+                    proto::message::Type::Ciphertext as i32
+                },
                 receipt_id: String::new(),
                 encrypted_content: Some(response_content.encode_to_vec()),
                 plaintext_content: None,
@@ -461,7 +470,7 @@ pub(crate) async fn prepare_queued_receipt(
     Ok(Some((message.encode_to_vec(), push_data)))
 }
 
-pub(crate) async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
+pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
     let receipt_ids = sqlx::query_scalar!(
         r#"

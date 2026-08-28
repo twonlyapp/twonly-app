@@ -19,7 +19,7 @@ mod groups;
 mod media;
 pub mod messages;
 mod reaction;
-pub(crate) mod recovery;
+pub mod recovery;
 mod text_message;
 mod typing_indicator;
 mod user_discovery;

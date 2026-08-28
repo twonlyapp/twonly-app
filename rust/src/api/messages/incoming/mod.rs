@@ -3,7 +3,7 @@
  *
  */
 
-pub(crate) mod client2client;
+pub mod client2client;
 
 use crate::api::messages::incoming::client2client::messages::{
     decrypt_legacy_signal_with_error, ensure_contact_exists, handle_plaintext_content,

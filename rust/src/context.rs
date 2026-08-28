@@ -24,8 +24,8 @@ use zeroize::Zeroize;
 static GLOBAL_CONTEXT: OnceCell<Arc<Context>> = OnceCell::const_new();
 
 pub struct Context {
-    pub(crate) config: InitConfig,
-    pub(crate) rust_db: Arc<RwLock<Arc<Database>>>,
+    pub config: InitConfig,
+    pub rust_db: Arc<RwLock<Arc<Database>>>,
     pub app_db: Arc<RwLock<Arc<AppDatabase>>>,
     pub(crate) secure_storage: SecureStorage,
     pub(crate) key_manager: Arc<Mutex<KeyManager>>,
