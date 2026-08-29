@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT is_direct_chat FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_direct_chat",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_direct_chat"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "87eac4d0b721d8726db7fe81b8842c877dbc1de54b276baca6f4f90d58e77406"
+}

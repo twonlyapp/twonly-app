@@ -47,6 +47,10 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Use your camera to make photos or videos and share them encrypted with your friends.</string>
 	<key>NSFaceIDUsageDescription</key>

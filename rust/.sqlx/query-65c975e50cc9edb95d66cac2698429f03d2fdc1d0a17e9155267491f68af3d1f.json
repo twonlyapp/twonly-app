@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT my_group_private_key\n        FROM groups\n        WHERE group_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "my_group_private_key",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "my_group_private_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "65c975e50cc9edb95d66cac2698429f03d2fdc1d0a17e9155267491f68af3d1f"
+}

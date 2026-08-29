@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT draft_message FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "draft_message",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "draft_message"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "5a183a98692dd2aa25f61799cfbcf794e507a69be0524624b4ba75d69fc9fa1a"
+}

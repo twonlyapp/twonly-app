@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT member_state FROM group_members WHERE group_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "member_state",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "member_state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "fb9d21dc469738356e38205fc0addbbf82b85d6e4ec3090f7718dc692d7dbdf5"
+}

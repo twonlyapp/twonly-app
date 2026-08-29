@@ -52,6 +52,19 @@ class LegacyTableMigrationCount {
 class RustAppDatabase {
   const RustAppDatabase();
 
+  /// Streams the tables Rust has committed to.
+  ///
+  /// Rust owns the connection, so writes it makes on its own never pass
+  /// through the Drift compatibility executor and cannot invalidate Drift's
+  /// query streams. Dart forwards each batch into `notifyUpdates` so
+  /// `watch()` keeps reflecting Rust-side writes.
+  ///
+  /// An empty list means "assume every table changed". It is sent right
+  /// after (re)subscribing, and whenever the broadcast channel drops
+  /// notifications, so Dart never silently keeps stale rows on screen.
+  static Stream<List<String>> changes() => RustLib.instance.api
+      .crateBridgeWrapperAppDatabaseRustAppDatabaseChanges();
+
   static Future<SqlExecutionResult> execute({
     required String statement,
     required List<SqlValue> arguments,

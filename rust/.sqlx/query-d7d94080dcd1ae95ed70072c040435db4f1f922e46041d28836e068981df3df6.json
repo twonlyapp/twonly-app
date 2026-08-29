@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT username, deleted_by_user FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "username",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "username"
+          }
+        }
+      },
+      {
+        "name": "deleted_by_user",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "deleted_by_user"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "d7d94080dcd1ae95ed70072c040435db4f1f922e46041d28836e068981df3df6"
+}

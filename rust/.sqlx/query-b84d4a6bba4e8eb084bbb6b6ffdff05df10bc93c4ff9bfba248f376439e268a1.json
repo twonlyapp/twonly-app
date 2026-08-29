@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id FROM media_files WHERE download_state = 'pending'",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b84d4a6bba4e8eb084bbb6b6ffdff05df10bc93c4ff9bfba248f376439e268a1"
+}

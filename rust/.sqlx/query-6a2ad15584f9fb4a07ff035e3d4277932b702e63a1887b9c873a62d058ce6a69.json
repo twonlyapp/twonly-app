@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO messages(group_id, message_id, type, media_id, created_at) VALUES (?, ?, 'media', ?, CAST(strftime('%s','now') AS INTEGER))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "6a2ad15584f9fb4a07ff035e3d4277932b702e63a1887b9c873a62d058ce6a69"
+}

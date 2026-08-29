@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_id, total_media_counter, last_flame_counter_change,\n                      last_flame_sync, flame_counter\n               FROM groups WHERE last_flame_counter_change IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "total_media_counter",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "total_media_counter"
+          }
+        }
+      },
+      {
+        "name": "last_flame_counter_change",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
+          }
+        }
+      },
+      {
+        "name": "last_flame_sync",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_sync"
+          }
+        }
+      },
+      {
+        "name": "flame_counter",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "10facb63e1057c6acfe8b60cfe5f6deb3535eed60977d917f57cae97bb220e30"
+}

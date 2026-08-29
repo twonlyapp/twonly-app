@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT promotion FROM user_discovery_own_promotions WHERE version_id > ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "promotion",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "promotion"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a0e47f74f1f40f409dd51e4a3cc2638d5ca30a0f7db6fd3d620c597ad630cecc"
+}

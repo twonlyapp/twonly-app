@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM receipts WHERE contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "83913e710fbd04e98cd6de21e7c917ed6472ef90230a10a69f74cb07d31a99fa"
+}

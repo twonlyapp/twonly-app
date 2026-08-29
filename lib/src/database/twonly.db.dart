@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
@@ -9,6 +11,7 @@ import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
 import 'package:twonly/src/database/daos/shortcuts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
+import 'package:twonly/src/database/rust_change_notifier.dart';
 import 'package:twonly/src/database/rust_query_executor.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -64,13 +67,26 @@ part 'twonly.db.g.dart';
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
-  TwonlyDB([QueryExecutor? e])
-    : super(
-        e ?? openRustAppDatabase(),
-      );
+  TwonlyDB([QueryExecutor? e]) : super(e ?? openRustAppDatabase()) {
+    // Only the Rust-backed connection needs external change notifications.
+    // An explicit executor is a plain Drift-owned database (tests, and the
+    // legacy import in main.dart), where Drift already sees every write.
+    if (e == null) {
+      _rustChanges = listenToRustDatabaseChanges(this);
+    }
+  }
 
   // ignore: matching_super_parameters
   TwonlyDB.forTesting(DatabaseConnection super.connection);
+
+  StreamSubscription<List<String>>? _rustChanges;
+
+  @override
+  Future<void> close() async {
+    await _rustChanges?.cancel();
+    _rustChanges = null;
+    return super.close();
+  }
 
   @override
   int get schemaVersion => 25;

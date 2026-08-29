@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM key_verifications WHERE contact_id = ? AND type = 'manualTest'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "869eb7007b683a3415ac0bc00e929aa117302944f52b95f6dece05c52b4fc905"
+}

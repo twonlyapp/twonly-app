@@ -158,6 +158,11 @@ class UserConfig {
   bool isBackupEnabled;
   PasswordlessRecoveryConfig? passwordLessRecovery;
   String? fcmToken;
+
+  /// Unix seconds of the last opaque FCM/APNs wake-up that reached the native
+  /// notification worker. Recorded in Rust because Flutter is no longer
+  /// started for background delivery on either platform.
+  PlatformInt64? lastFcmWakeupAt;
   String? currentSetupPage;
   bool skipSetupPages;
   bool hasZoomed;
@@ -218,6 +223,7 @@ class UserConfig {
     required this.isBackupEnabled,
     this.passwordLessRecovery,
     this.fcmToken,
+    this.lastFcmWakeupAt,
     this.currentSetupPage,
     required this.skipSetupPages,
     required this.hasZoomed,
@@ -280,6 +286,7 @@ class UserConfig {
       isBackupEnabled.hashCode ^
       passwordLessRecovery.hashCode ^
       fcmToken.hashCode ^
+      lastFcmWakeupAt.hashCode ^
       currentSetupPage.hashCode ^
       skipSetupPages.hashCode ^
       hasZoomed.hashCode;
@@ -351,6 +358,7 @@ class UserConfig {
           isBackupEnabled == other.isBackupEnabled &&
           passwordLessRecovery == other.passwordLessRecovery &&
           fcmToken == other.fcmToken &&
+          lastFcmWakeupAt == other.lastFcmWakeupAt &&
           currentSetupPage == other.currentSetupPage &&
           skipSetupPages == other.skipSetupPages &&
           hasZoomed == other.hasZoomed;

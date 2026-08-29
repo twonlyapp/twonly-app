@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT accepted, blocked, media_send_counter, user_discovery_excluded,\n                      user_discovery_manual_approved\n               FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "accepted",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "accepted"
+          }
+        }
+      },
+      {
+        "name": "blocked",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "blocked"
+          }
+        }
+      },
+      {
+        "name": "media_send_counter",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "media_send_counter"
+          }
+        }
+      },
+      {
+        "name": "user_discovery_excluded",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_excluded"
+          }
+        }
+      },
+      {
+        "name": "user_discovery_manual_approved",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_manual_approved"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "b9ac2c9ad836219b0851fa2acb5cf28bbec02249744c104086ce643b4e5fc6b4"
+}

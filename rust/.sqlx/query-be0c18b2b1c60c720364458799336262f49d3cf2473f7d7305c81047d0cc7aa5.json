@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE contacts SET\n                username = COALESCE(?, username),\n                display_name = CASE WHEN ? THEN ? ELSE display_name END,\n                avatar_svg_compressed = CASE WHEN ? THEN ? ELSE avatar_svg_compressed END,\n                sender_profile_counter = COALESCE(?, sender_profile_counter),\n                signal_version = COALESCE(?, signal_version),\n                accepted = COALESCE(?, accepted),\n                requested = COALESCE(?, requested),\n                deleted_by_user = COALESCE(?, deleted_by_user),\n                blocked = COALESCE(?, blocked)\n            WHERE user_id = ? AND (? = 0 OR requested = 0)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 13
+    },
+    "nullable": []
+  },
+  "hash": "be0c18b2b1c60c720364458799336262f49d3cf2473f7d7305c81047d0cc7aa5"
+}

@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_id, group_name, state_version_id,\n                      state_encryption_key, my_group_private_key\n               FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "group_name",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      },
+      {
+        "name": "state_version_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "state_version_id"
+          }
+        }
+      },
+      {
+        "name": "state_encryption_key",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "state_encryption_key"
+          }
+        }
+      },
+      {
+        "name": "my_group_private_key",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "my_group_private_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "408e8205bae9e1640fbaf2f91eef3e3896323fce641a76b9cab489cd40e4506c"
+}

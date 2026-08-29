@@ -8,6 +8,8 @@ use std::path::PathBuf;
 use crate::bridge::get_twonly_flutter;
 pub use crate::database::app::{SqlExecutionResult, SqlRow, SqlRows, SqlValue};
 use crate::error::Result;
+use crate::frb_generated::StreamSink;
+use tokio::sync::broadcast::error::RecvError;
 
 pub struct RustAppDatabase {}
 
@@ -74,5 +76,52 @@ impl RustAppDatabase {
             .await
             .raw_execute(statement, arguments)
             .await
+    }
+
+    /// Streams the tables Rust has committed to.
+    ///
+    /// Rust owns the connection, so writes it makes on its own never pass
+    /// through the Drift compatibility executor and cannot invalidate Drift's
+    /// query streams. Dart forwards each batch into `notifyUpdates` so
+    /// `watch()` keeps reflecting Rust-side writes.
+    ///
+    /// An empty list means "assume every table changed". It is sent right
+    /// after (re)subscribing, and whenever the broadcast channel drops
+    /// notifications, so Dart never silently keeps stale rows on screen.
+    pub async fn changes(sink: StreamSink<Vec<String>>) -> Result<()> {
+        let context = get_twonly_flutter()?;
+
+        tokio::spawn(async move {
+            loop {
+                let mut receiver = context.app_db.read().await.subscribe();
+
+                // Anything committed between this subscription and the
+                // previous one is unobservable, so start from a clean slate.
+                if sink.add(Vec::new()).is_err() {
+                    return;
+                }
+
+                loop {
+                    match receiver.recv().await {
+                        Ok(change) => {
+                            if sink.add(change.tables.into_iter().collect()).is_err() {
+                                return;
+                            }
+                        }
+                        Err(RecvError::Lagged(skipped)) => {
+                            tracing::warn!(skipped, "Drift change stream lagged");
+                            if sink.add(Vec::new()).is_err() {
+                                return;
+                            }
+                        }
+                        // The database was replaced, most likely by a backup
+                        // restore. Attach to the new one.
+                        Err(RecvError::Closed) => break,
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 }

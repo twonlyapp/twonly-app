@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT display_name FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "display_name",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "display_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "0dbbfbbf830b11f3e15c85e9e6004196d69f202929f836ac0c0500ea57804dfc"
+}

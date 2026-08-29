@@ -45,13 +45,13 @@ pub(crate) async fn handle_server_message(
         Kind::RequestNewPqcPreKeys(_) => match handle_request_new_pqc_prekeys(ctx).await {
             Ok(response) => response,
             Err(error) => {
-                tracing::error!("failed to generate requested PQC prekeys: {error}");
+                tracing::warn!("failed to generate requested PQC prekeys: {error}");
                 ok::Ok::None(true)
             }
         },
         Kind::NewMessage(message) => {
             if let Err(error) = handle_new_server_message(ctx, message).await {
-                tracing::error!("failed to process client message: {error}");
+                tracing::warn!("failed to process client message: {error}");
             }
             ok::Ok::None(true)
         }
@@ -59,29 +59,33 @@ pub(crate) async fn handle_server_message(
             for message in messages.new_messages {
                 if let Err(error) = handle_new_server_message(ctx, message).await {
                     // One bad item must not block the rest of a server batch.
-                    tracing::error!("failed to process client message in batch: {error}");
+                    tracing::warn!("failed to process client message in batch: {error}");
                 }
             }
             ok::Ok::None(true)
         }
         Kind::SealedSenderMessage(message) => {
             if let Err(error) = handle_sealed_message(ctx, message.body).await {
-                tracing::error!("failed to process sealed-sender message: {error}");
+                tracing::warn!("failed to process sealed-sender message: {error}");
             }
             ok::Ok::None(true)
         }
         Kind::SealedSenderMessages(messages) => {
             for message in messages.messages {
                 if let Err(error) = handle_sealed_message(ctx, message.body).await {
-                    tracing::error!("failed to process sealed-sender message in batch: {error}");
+                    tracing::warn!("failed to process sealed-sender message in batch: {error}");
                 }
             }
+            ok::Ok::None(true)
+        }
+        Kind::MailboxDrained(_) => {
+            ctx.mark_mailbox_drained();
             ok::Ok::None(true)
         }
         other => {
             // Dart logged unknown unsolicited messages but still acknowledged
             // their envelope, preventing an infinite server redelivery loop.
-            tracing::error!("unsupported unsolicited server message: {other:?}");
+            tracing::warn!("unsupported unsolicited server message: {other:?}");
             ok::Ok::None(true)
         }
     };
@@ -305,6 +309,7 @@ pub(crate) async fn handle_decoded_server_message(
     }
 
     t.commit().await?;
+    ctx.mark_incoming_committed();
 
     database.notify_committed([
         "received_receipts",
@@ -314,6 +319,7 @@ pub(crate) async fn handle_decoded_server_message(
         "contacts",
         "key_verifications",
         "user_discovery_own_promotions",
+        "notification_outbox",
     ]);
 
     let ctx = ctx.clone();
@@ -330,6 +336,24 @@ pub(crate) async fn handle_decoded_server_message(
 /// feature module. Transport decoding and Signal decryption do not belong in
 /// this dispatcher.
 pub(crate) async fn handle_encrypted(
+    ctx: &Arc<Context>,
+    t: &mut Transaction<'_, Sqlite>,
+    from_user_id: i64,
+    receipt_id: &str,
+    content: proto::EncryptedContent,
+) -> Result<()> {
+    let notification_content = content.clone();
+    handle_encrypted_inner(ctx, t, from_user_id, receipt_id, content).await?;
+    crate::services::notifications::record_incoming_event(
+        t,
+        from_user_id,
+        receipt_id,
+        &notification_content,
+    )
+    .await
+}
+
+async fn handle_encrypted_inner(
     ctx: &Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,

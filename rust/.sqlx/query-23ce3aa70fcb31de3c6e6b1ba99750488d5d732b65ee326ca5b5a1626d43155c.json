@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups SET draft_message = 'draft text' WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "23ce3aa70fcb31de3c6e6b1ba99750488d5d732b65ee326ca5b5a1626d43155c"
+}

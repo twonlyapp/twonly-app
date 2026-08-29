@@ -303,7 +303,9 @@ impl MessageService {
     ) -> Result<String> {
         let local_user_id = self
             .ctx
-            .key_manager.lock().await
+            .key_manager
+            .lock()
+            .await
             .user_id
             .ok_or_else(|| TwonlyError::Generic("local user ID is unavailable".into()))?;
         let group_id = Group::direct_chat_id(local_user_id, contact_id);
@@ -438,17 +440,25 @@ impl MessageService {
             .call()
             .await?;
         let database = self.ctx.app_db.read().await.clone();
-        for message_id in message_ids {
+        let mut transaction = database.pool.begin().await?;
+        for message_id in &message_ids {
             sqlx::query!(
                 "UPDATE messages SET opened_at = ?, opened_by_all = ? WHERE message_id = ?",
                 timestamp / 1000,
                 timestamp / 1000,
                 message_id
             )
-            .execute(&database.pool)
+            .execute(&mut *transaction)
             .await?;
         }
-        database.notify_committed(["messages"]);
+        crate::services::notifications::clear_opened_messages(
+            &mut transaction,
+            &message_ids,
+            timestamp / 1000,
+        )
+        .await?;
+        transaction.commit().await?;
+        database.notify_committed(["messages", "notification_outbox"]);
         Ok(())
     }
 

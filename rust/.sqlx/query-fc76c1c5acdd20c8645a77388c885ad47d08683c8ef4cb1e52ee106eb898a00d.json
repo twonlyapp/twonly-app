@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO group_members(group_id, contact_id) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "fc76c1c5acdd20c8645a77388c885ad47d08683c8ef4cb1e52ee106eb898a00d"
+}

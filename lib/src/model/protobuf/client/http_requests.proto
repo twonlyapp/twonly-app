@@ -4,7 +4,8 @@ package http_requests;
 message TextMessage {
   int64 user_id = 1;
   bytes body = 2;
-  optional bytes push_data = 3;
+  reserved 3;  // was: bytes push_data
+  bool wake_receiver = 4;
 }
 
 message UploadRequest {

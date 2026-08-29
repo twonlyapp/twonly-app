@@ -9,7 +9,7 @@ use crate::api::runtime::ApiRuntime;
 use crate::api::Server;
 
 use crate::bridge::api::ServerResult;
-use crate::context::Context;
+use crate::context::{Context, RuntimeMode};
 use crate::error::{Result, TwonlyError};
 use crate::services::groups::GroupService;
 use crate::services::mediafiles::MediaFileService;
@@ -40,6 +40,11 @@ pub(crate) fn response_error_code(bytes: &[u8]) -> Result<Option<i32>> {
 }
 
 pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bool) {
+    // Notification workers only drain and commit the mailbox. Media downloads,
+    // maintenance, and outbox replay belong to the main application runtime.
+    if ctx.runtime_mode == RuntimeMode::Notification {
+        return;
+    }
     let ctx = ctx.clone();
     tokio::spawn(async move {
         // Wait a bit to let other initial state settle
@@ -78,13 +83,7 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
             tracing::warn!("passwordless recovery heartbeat failed: {error}");
         }
 
-        if let Err(error) = ctx
-            .user_discovery
-            .get()
-            .await
-            .on_connected(&ctx)
-            .await
-        {
+        if let Err(error) = ctx.user_discovery.get().await.on_connected(&ctx).await {
             tracing::warn!("user-discovery post-connection refresh failed: {error}");
         }
 

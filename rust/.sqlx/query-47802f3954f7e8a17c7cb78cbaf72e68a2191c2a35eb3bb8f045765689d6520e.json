@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO contacts(user_id, username, signal_version, accepted, requested, deleted_by_user, blocked)\n            VALUES (?, COALESCE(?, '[Unknown]'), COALESCE(?, 'v2'), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0))\n            ON CONFLICT(user_id) DO UPDATE SET\n                username = COALESCE(?, contacts.username),\n                signal_version = COALESCE(?, contacts.signal_version),\n                accepted = COALESCE(?, contacts.accepted),\n                requested = COALESCE(?, contacts.requested),\n                deleted_by_user = COALESCE(?, contacts.deleted_by_user),\n                blocked = COALESCE(?, contacts.blocked)\n            WHERE ? = 0 OR contacts.requested = 0\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 14
+    },
+    "nullable": []
+  },
+  "hash": "47802f3954f7e8a17c7cb78cbaf72e68a2191c2a35eb3bb8f045765689d6520e"
+}

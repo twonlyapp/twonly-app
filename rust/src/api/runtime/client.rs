@@ -37,6 +37,7 @@ pub(crate) struct ApiClient {
 
 impl ApiClient {
     pub(crate) fn new(context: &Arc<Context>, config: ApiConfig) -> Arc<Self> {
+        let in_background = config.in_background;
         Arc::new(Self {
             context: Arc::downgrade(context),
             config,
@@ -46,7 +47,7 @@ impl ApiClient {
             next_sequence: Mutex::const_new(1),
             events: API_EVENTS.clone(),
             deliberately_closed: AtomicBool::new(false),
-            in_background: AtomicBool::new(false),
+            in_background: AtomicBool::new(in_background),
             network_available: AtomicBool::new(true),
             is_authenticated: Arc::new(AtomicBool::new(false)),
         })
@@ -167,6 +168,7 @@ impl ApiClient {
 
     pub async fn close(&self) {
         self.deliberately_closed.store(true, Ordering::Release);
+        self.is_authenticated.store(false, Ordering::Release);
         let client = self.ws_client.lock().await.take();
         if let Some(client) = client {
             if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {

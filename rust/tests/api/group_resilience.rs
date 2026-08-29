@@ -84,7 +84,10 @@ async fn test_group_membership_error_healing() -> anyhow::Result<()> {
 
     // Wait a brief moment for group join to be acknowledged, then ensure queued receipts are retransmitted
     tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-    let _ = rust_lib_twonly::api::messages::incoming::messages::retransmit_queued_receipts(&tester_a.context).await;
+    let _ = rust_lib_twonly::api::messages::incoming::messages::retransmit_queued_receipts(
+        &tester_a.context,
+    )
+    .await;
 
     tester_b
         .wait_for_text_message(&msg_id, tester_a.user_id, "Message triggering heal")
@@ -112,7 +115,10 @@ async fn test_add_hidden_contact() -> anyhow::Result<()> {
     .await?;
 
     assert_eq!(contact.username, tester_b.username);
-    assert_eq!(contact.deleted_by_user, 1, "hidden contact must have deleted_by_user=1");
+    assert_eq!(
+        contact.deleted_by_user, 1,
+        "hidden contact must have deleted_by_user=1"
+    );
 
     Ok(())
 }
@@ -165,8 +171,12 @@ async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
         .await?
     };
 
-    tester_b.wait_for_group_exists(&group_id, group_name).await?;
-    tester_c.wait_for_group_exists(&group_id, group_name).await?;
+    tester_b
+        .wait_for_group_exists(&group_id, group_name)
+        .await?;
+    tester_c
+        .wait_for_group_exists(&group_id, group_name)
+        .await?;
 
     // Fetch missing public key for tester_b
     {
@@ -178,7 +188,9 @@ async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
         )
         .execute(&db_a.pool)
         .await?;
-        GroupService::new(&tester_a.context).fetch_missing_group_public_keys().await?;
+        GroupService::new(&tester_a.context)
+            .fetch_missing_group_public_keys()
+            .await?;
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
     }
 
@@ -242,4 +254,3 @@ async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
 
     Ok(())
 }
-

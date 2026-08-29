@@ -16,7 +16,6 @@ message EncryptedContent {
   optional ContactUpdate                 contact_update                  = 8;
   optional ContactRequest                contact_request                 = 9;
   optional FlameSync                     flame_sync                      = 10;
-  optional PushKeys                      push_keys                       = 11;
   optional Reaction                      reaction                        = 12;
   optional TextMessage                   text_message                    = 13;
   optional GroupCreate                   group_create                    = 14;
@@ -150,18 +149,6 @@ message EncryptedContent {
     optional bytes  avatar_svg_compressed = 2;
     optional string username              = 3;
     optional string display_name          = 4;
-  }
-
-  message PushKeys {
-    enum Type {
-      REQUEST = 0;
-      UPDATE  = 1;
-    }
-
-    Type           type       = 1;
-    optional int64 key_id     = 2;
-    optional bytes key        = 3;
-    optional int64 created_at = 4;
   }
 
   message FlameSync {

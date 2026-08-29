@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT sender_profile_counter FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "sender_profile_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "sender_profile_counter"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9e7086794e7e4cb9b9db781830423875720f5458d209f9ff4ecbed856dd45e08"
+}

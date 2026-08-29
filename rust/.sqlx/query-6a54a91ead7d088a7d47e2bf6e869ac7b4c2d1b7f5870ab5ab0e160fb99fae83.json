@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT notification_id FROM notification_outbox WHERE conversation_id = ? AND cleared_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "notification_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "notification_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6a54a91ead7d088a7d47e2bf6e869ac7b4c2d1b7f5870ab5ab0e160fb99fae83"
+}

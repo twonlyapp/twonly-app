@@ -5,7 +5,7 @@
 
 use crate::api::runtime::{ApiClient, ApiRuntime};
 use crate::bridge::InitConfig;
-use crate::database::app::{APP_DATABASE_FILE, AppDatabase};
+use crate::database::app::{AppDatabase, APP_DATABASE_FILE};
 use crate::database::signal::Database;
 use crate::error::Result;
 use crate::error::TwonlyError;
@@ -17,14 +17,23 @@ use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use libsignal_protocol::IdentityKey;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::{path::PathBuf, sync::Arc};
-use tokio::sync::{Mutex, OnceCell, RwLock};
+use tokio::sync::{Mutex, Notify, OnceCell, RwLock};
 use zeroize::Zeroize;
 
 static GLOBAL_CONTEXT: OnceCell<Arc<Context>> = OnceCell::const_new();
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RuntimeMode {
+    Flutter,
+    Standalone,
+    Notification,
+}
+
 pub struct Context {
     pub config: InitConfig,
+    pub(crate) runtime_mode: RuntimeMode,
     pub rust_db: Arc<RwLock<Arc<Database>>>,
     pub app_db: Arc<RwLock<Arc<AppDatabase>>>,
     pub(crate) secure_storage: SecureStorage,
@@ -32,16 +41,24 @@ pub struct Context {
     pub(crate) user_discovery: Shared<UserDiscovery>,
     pub(crate) signal_engine: Arc<Mutex<Option<RustSignalEngine>>>,
     pub(crate) api_client: OnceCell<RwLock<Arc<ApiClient>>>,
+    mailbox_generation: AtomicU64,
+    mailbox_drained: Notify,
+    incoming_generation: AtomicU64,
+    incoming_committed: Notify,
 }
 
 impl Context {
     pub(crate) async fn init_flutter(config: InitConfig) -> Result<()> {
-        Self::init_common(config, true).await
+        Self::init_common(config, RuntimeMode::Flutter).await
     }
 
     #[allow(dead_code)]
     pub(crate) async fn init_standalone(config: InitConfig) -> Result<()> {
-        Self::init_common(config, false).await
+        Self::init_common(config, RuntimeMode::Standalone).await
+    }
+
+    pub(crate) async fn init_notification(config: InitConfig) -> Result<()> {
+        Self::init_common(config, RuntimeMode::Notification).await
     }
 
     pub async fn init_for_testing(
@@ -92,6 +109,7 @@ impl Context {
 
         let ctx = Arc::new(Context {
             config,
+            runtime_mode: RuntimeMode::Standalone,
             rust_db,
             app_db,
             secure_storage,
@@ -99,6 +117,10 @@ impl Context {
             user_discovery,
             signal_engine: Arc::new(Mutex::new(None)),
             api_client: OnceCell::const_new(),
+            mailbox_generation: AtomicU64::new(0),
+            mailbox_drained: Notify::new(),
+            incoming_generation: AtomicU64::new(0),
+            incoming_committed: Notify::new(),
         });
         ApiRuntime::initialize(&ctx).await?;
         ApiRuntime::connect(&ctx).await?;
@@ -155,19 +177,20 @@ impl Context {
             .await
     }
 
-    async fn init_common(config: InitConfig, is_flutter: bool) -> Result<()> {
-        if GLOBAL_CONTEXT.initialized() {
-            tracing::info!("twonly already initialized. Ensuring storage directories exist.");
-            std::fs::create_dir_all(&config.database_dir)?;
-            std::fs::create_dir_all(&config.data_dir)?;
-            return Ok(());
-        }
-
+    async fn init_common(config: InitConfig, runtime_mode: RuntimeMode) -> Result<()> {
         std::fs::create_dir_all(&config.database_dir)?;
         std::fs::create_dir_all(&config.data_dir)?;
 
+        // Ahead of the already-initialized check: the context is a process-wide
+        // OnceCell, but the calling isolate may be a new one that has to hand
+        // tracing a live log sink.
         let log_dir = PathBuf::from(&config.data_dir).join("log");
-        init_tracing(&log_dir, is_flutter).await;
+        init_tracing(&log_dir, runtime_mode == RuntimeMode::Flutter).await;
+
+        if GLOBAL_CONTEXT.initialized() {
+            tracing::info!("twonly already initialized. Ensuring storage directories exist.");
+            return Ok(());
+        }
 
         SecureStorage::init()?;
         let secure_storage = SecureStorage::new("eu.twonly");
@@ -182,7 +205,7 @@ impl Context {
                 let key_manager = match KeyManager::try_from_keychain(&secure_storage) {
                     Ok(key) => key,
                     Err(err) => {
-                        tracing::error!("{err}");
+                        tracing::warn!("{err}");
                         if rust_db_path.exists() {
                             tracing::error!("Rust Database exists, while the key manager not. This must be a secure storage error.");
                             return Err(TwonlyError::SecureStorageError);
@@ -218,7 +241,7 @@ impl Context {
                 app_db_key.zeroize();
                 rust_db_key.zeroize();
 
-                if is_flutter {
+                if runtime_mode == RuntimeMode::Flutter {
                     let key_manager = Arc::new(Mutex::new(key_manager));
                     let signal_engine = {
                         let key_manager_guard = key_manager.lock().await;
@@ -245,6 +268,7 @@ impl Context {
                     )?);
                     let ctx = Arc::new(Context {
                         config,
+                        runtime_mode,
                         secure_storage,
                         rust_db: rust_db_handle,
                         app_db,
@@ -252,6 +276,10 @@ impl Context {
                         user_discovery,
                         signal_engine,
                         api_client: OnceCell::const_new(),
+                        mailbox_generation: AtomicU64::new(0),
+                        mailbox_drained: Notify::new(),
+                        incoming_generation: AtomicU64::new(0),
+                        incoming_committed: Notify::new(),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -280,6 +308,7 @@ impl Context {
                     )?);
                     let ctx = Arc::new(Context {
                         config,
+                        runtime_mode,
                         rust_db: rust_db_handle,
                         app_db,
                         key_manager,
@@ -287,6 +316,10 @@ impl Context {
                         user_discovery,
                         signal_engine,
                         api_client: OnceCell::const_new(),
+                        mailbox_generation: AtomicU64::new(0),
+                        mailbox_drained: Notify::new(),
+                        incoming_generation: AtomicU64::new(0),
+                        incoming_committed: Notify::new(),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -297,12 +330,52 @@ impl Context {
             })
             .await;
         let ctx = res?;
-        ApiRuntime::connect(ctx).await?;
+        if runtime_mode != RuntimeMode::Notification {
+            ApiRuntime::connect(ctx).await?;
+        }
         Ok(())
     }
 
     pub(super) fn get_static() -> Result<&'static Arc<Context>> {
         GLOBAL_CONTEXT.get().ok_or(TwonlyError::Initialization)
+    }
+
+    pub(crate) fn mailbox_generation(&self) -> u64 {
+        self.mailbox_generation.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn mark_mailbox_drained(&self) {
+        self.mailbox_generation.fetch_add(1, Ordering::AcqRel);
+        self.mailbox_drained.notify_waiters();
+    }
+
+    pub(crate) async fn wait_for_mailbox_after(&self, generation: u64) {
+        while self.mailbox_generation() <= generation {
+            let notified = self.mailbox_drained.notified();
+            if self.mailbox_generation() > generation {
+                break;
+            }
+            notified.await;
+        }
+    }
+
+    pub(crate) fn incoming_generation(&self) -> u64 {
+        self.incoming_generation.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn mark_incoming_committed(&self) {
+        self.incoming_generation.fetch_add(1, Ordering::AcqRel);
+        self.incoming_committed.notify_waiters();
+    }
+
+    pub(crate) async fn wait_for_incoming_after(&self, generation: u64) {
+        while self.incoming_generation() <= generation {
+            let notified = self.incoming_committed.notified();
+            if self.incoming_generation() > generation {
+                break;
+            }
+            notified.await;
+        }
     }
 
     pub(crate) async fn user_id(&self) -> Result<i64> {

@@ -32,10 +32,7 @@ impl ApiRuntime {
     pub async fn reload_configuration(ctx: &Arc<Context>) -> Result<()> {
         let replacement = ApiClient::new(ctx, ApiConfig::from_rust_state(ctx).await?);
         let current = Self::client(ctx).await?;
-        let slot = ctx
-            .api_client
-            .get()
-            .ok_or(TwonlyError::Initialization)?;
+        let slot = ctx.api_client.get().ok_or(TwonlyError::Initialization)?;
         *slot.write().await = replacement;
         current.close().await;
         Self::client(ctx).await?.connect().await
@@ -228,10 +225,7 @@ impl ApiRuntime {
     }
 
     pub(crate) async fn client(ctx: &Arc<Context>) -> Result<Arc<ApiClient>> {
-        let client = ctx
-            .api_client
-            .get()
-            .ok_or(TwonlyError::Initialization)?;
+        let client = ctx.api_client.get().ok_or(TwonlyError::Initialization)?;
         Ok(client.read().await.clone())
     }
 }

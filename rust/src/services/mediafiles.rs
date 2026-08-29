@@ -12,12 +12,11 @@ use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce, Tag};
 use prost::Message as _;
 use sha2::{Digest, Sha256};
-use sqlx::{FromRow, Sqlite, Transaction};
+use sqlx::{Sqlite, Transaction};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-#[derive(FromRow)]
 struct DownloadMedia {
     media_id: String,
     media_type: String,
@@ -27,7 +26,6 @@ struct DownloadMedia {
     encryption_nonce: Option<Vec<u8>>,
 }
 
-#[derive(FromRow)]
 struct ReuploadTarget {
     message_id: String,
     sender_id: i64,
@@ -177,12 +175,13 @@ impl MediaFileService {
             return Ok(());
         }
 
-        let media = sqlx::query_as::<_, DownloadMedia>(
+        let media = sqlx::query_as!(
+            DownloadMedia,
             r#"SELECT media_id, type AS media_type, download_token,
                       encryption_key, encryption_mac, encryption_nonce
                FROM media_files WHERE media_id = ?"#,
+            media_id,
         )
-        .bind(media_id)
         .fetch_optional(&database.pool)
         .await?
         .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} not found")))?;
@@ -290,11 +289,12 @@ impl MediaFileService {
         .execute(&database.pool)
         .await?;
 
-        let targets = sqlx::query_as::<_, ReuploadTarget>(
-            r#"SELECT message_id, sender_id FROM messages
+        let targets = sqlx::query_as!(
+            ReuploadTarget,
+            r#"SELECT message_id, sender_id AS "sender_id!: i64" FROM messages
                WHERE media_id = ? AND opened_at IS NULL AND sender_id IS NOT NULL"#,
+            media_id,
         )
-        .bind(media_id)
         .fetch_all(&database.pool)
         .await?;
 

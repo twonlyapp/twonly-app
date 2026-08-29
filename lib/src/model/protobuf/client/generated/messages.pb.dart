@@ -1140,98 +1140,6 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   void clearDisplayName() => $_clearField(4);
 }
 
-class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
-  factory EncryptedContent_PushKeys({
-    EncryptedContent_PushKeys_Type? type,
-    $fixnum.Int64? keyId,
-    $core.List<$core.int>? key,
-    $fixnum.Int64? createdAt,
-  }) {
-    final result = create();
-    if (type != null) result.type = type;
-    if (keyId != null) result.keyId = keyId;
-    if (key != null) result.key = key;
-    if (createdAt != null) result.createdAt = createdAt;
-    return result;
-  }
-
-  EncryptedContent_PushKeys._();
-
-  factory EncryptedContent_PushKeys.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory EncryptedContent_PushKeys.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'EncryptedContent.PushKeys',
-      createEmptyInstance: create)
-    ..aE<EncryptedContent_PushKeys_Type>(1, _omitFieldNames ? '' : 'type',
-        enumValues: EncryptedContent_PushKeys_Type.values)
-    ..aInt64(2, _omitFieldNames ? '' : 'keyId')
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(4, _omitFieldNames ? '' : 'createdAt')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_PushKeys clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EncryptedContent_PushKeys copyWith(
-          void Function(EncryptedContent_PushKeys) updates) =>
-      super.copyWith((message) => updates(message as EncryptedContent_PushKeys))
-          as EncryptedContent_PushKeys;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static EncryptedContent_PushKeys create() => EncryptedContent_PushKeys._();
-  @$core.override
-  EncryptedContent_PushKeys createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static EncryptedContent_PushKeys getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<EncryptedContent_PushKeys>(create);
-  static EncryptedContent_PushKeys? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  EncryptedContent_PushKeys_Type get type => $_getN(0);
-  @$pb.TagNumber(1)
-  set type(EncryptedContent_PushKeys_Type value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasType() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearType() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get keyId => $_getI64(1);
-  @$pb.TagNumber(2)
-  set keyId($fixnum.Int64 value) => $_setInt64(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasKeyId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearKeyId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get key => $_getN(2);
-  @$pb.TagNumber(3)
-  set key($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasKey() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearKey() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $fixnum.Int64 get createdAt => $_getI64(3);
-  @$pb.TagNumber(4)
-  set createdAt($fixnum.Int64 value) => $_setInt64(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-}
-
 class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   factory EncryptedContent_FlameSync({
     $fixnum.Int64? flameCounter,
@@ -1724,7 +1632,6 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_ContactUpdate? contactUpdate,
     EncryptedContent_ContactRequest? contactRequest,
     EncryptedContent_FlameSync? flameSync,
-    EncryptedContent_PushKeys? pushKeys,
     EncryptedContent_Reaction? reaction,
     EncryptedContent_TextMessage? textMessage,
     EncryptedContent_GroupCreate? groupCreate,
@@ -1754,7 +1661,6 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (contactUpdate != null) result.contactUpdate = contactUpdate;
     if (contactRequest != null) result.contactRequest = contactRequest;
     if (flameSync != null) result.flameSync = flameSync;
-    if (pushKeys != null) result.pushKeys = pushKeys;
     if (reaction != null) result.reaction = reaction;
     if (textMessage != null) result.textMessage = textMessage;
     if (groupCreate != null) result.groupCreate = groupCreate;
@@ -1813,8 +1719,6 @@ class EncryptedContent extends $pb.GeneratedMessage {
         subBuilder: EncryptedContent_ContactRequest.create)
     ..aOM<EncryptedContent_FlameSync>(10, _omitFieldNames ? '' : 'flameSync',
         subBuilder: EncryptedContent_FlameSync.create)
-    ..aOM<EncryptedContent_PushKeys>(11, _omitFieldNames ? '' : 'pushKeys',
-        subBuilder: EncryptedContent_PushKeys.create)
     ..aOM<EncryptedContent_Reaction>(12, _omitFieldNames ? '' : 'reaction',
         subBuilder: EncryptedContent_Reaction.create)
     ..aOM<EncryptedContent_TextMessage>(
@@ -1976,208 +1880,197 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   EncryptedContent_FlameSync ensureFlameSync() => $_ensure(8);
 
-  @$pb.TagNumber(11)
-  EncryptedContent_PushKeys get pushKeys => $_getN(9);
-  @$pb.TagNumber(11)
-  set pushKeys(EncryptedContent_PushKeys value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasPushKeys() => $_has(9);
-  @$pb.TagNumber(11)
-  void clearPushKeys() => $_clearField(11);
-  @$pb.TagNumber(11)
-  EncryptedContent_PushKeys ensurePushKeys() => $_ensure(9);
-
   @$pb.TagNumber(12)
-  EncryptedContent_Reaction get reaction => $_getN(10);
+  EncryptedContent_Reaction get reaction => $_getN(9);
   @$pb.TagNumber(12)
   set reaction(EncryptedContent_Reaction value) => $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasReaction() => $_has(10);
+  $core.bool hasReaction() => $_has(9);
   @$pb.TagNumber(12)
   void clearReaction() => $_clearField(12);
   @$pb.TagNumber(12)
-  EncryptedContent_Reaction ensureReaction() => $_ensure(10);
+  EncryptedContent_Reaction ensureReaction() => $_ensure(9);
 
   @$pb.TagNumber(13)
-  EncryptedContent_TextMessage get textMessage => $_getN(11);
+  EncryptedContent_TextMessage get textMessage => $_getN(10);
   @$pb.TagNumber(13)
   set textMessage(EncryptedContent_TextMessage value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasTextMessage() => $_has(11);
+  $core.bool hasTextMessage() => $_has(10);
   @$pb.TagNumber(13)
   void clearTextMessage() => $_clearField(13);
   @$pb.TagNumber(13)
-  EncryptedContent_TextMessage ensureTextMessage() => $_ensure(11);
+  EncryptedContent_TextMessage ensureTextMessage() => $_ensure(10);
 
   @$pb.TagNumber(14)
-  EncryptedContent_GroupCreate get groupCreate => $_getN(12);
+  EncryptedContent_GroupCreate get groupCreate => $_getN(11);
   @$pb.TagNumber(14)
   set groupCreate(EncryptedContent_GroupCreate value) => $_setField(14, value);
   @$pb.TagNumber(14)
-  $core.bool hasGroupCreate() => $_has(12);
+  $core.bool hasGroupCreate() => $_has(11);
   @$pb.TagNumber(14)
   void clearGroupCreate() => $_clearField(14);
   @$pb.TagNumber(14)
-  EncryptedContent_GroupCreate ensureGroupCreate() => $_ensure(12);
+  EncryptedContent_GroupCreate ensureGroupCreate() => $_ensure(11);
 
   @$pb.TagNumber(15)
-  EncryptedContent_GroupJoin get groupJoin => $_getN(13);
+  EncryptedContent_GroupJoin get groupJoin => $_getN(12);
   @$pb.TagNumber(15)
   set groupJoin(EncryptedContent_GroupJoin value) => $_setField(15, value);
   @$pb.TagNumber(15)
-  $core.bool hasGroupJoin() => $_has(13);
+  $core.bool hasGroupJoin() => $_has(12);
   @$pb.TagNumber(15)
   void clearGroupJoin() => $_clearField(15);
   @$pb.TagNumber(15)
-  EncryptedContent_GroupJoin ensureGroupJoin() => $_ensure(13);
+  EncryptedContent_GroupJoin ensureGroupJoin() => $_ensure(12);
 
   @$pb.TagNumber(16)
-  EncryptedContent_GroupUpdate get groupUpdate => $_getN(14);
+  EncryptedContent_GroupUpdate get groupUpdate => $_getN(13);
   @$pb.TagNumber(16)
   set groupUpdate(EncryptedContent_GroupUpdate value) => $_setField(16, value);
   @$pb.TagNumber(16)
-  $core.bool hasGroupUpdate() => $_has(14);
+  $core.bool hasGroupUpdate() => $_has(13);
   @$pb.TagNumber(16)
   void clearGroupUpdate() => $_clearField(16);
   @$pb.TagNumber(16)
-  EncryptedContent_GroupUpdate ensureGroupUpdate() => $_ensure(14);
+  EncryptedContent_GroupUpdate ensureGroupUpdate() => $_ensure(13);
 
   @$pb.TagNumber(17)
-  EncryptedContent_ResendGroupPublicKey get resendGroupPublicKey => $_getN(15);
+  EncryptedContent_ResendGroupPublicKey get resendGroupPublicKey => $_getN(14);
   @$pb.TagNumber(17)
   set resendGroupPublicKey(EncryptedContent_ResendGroupPublicKey value) =>
       $_setField(17, value);
   @$pb.TagNumber(17)
-  $core.bool hasResendGroupPublicKey() => $_has(15);
+  $core.bool hasResendGroupPublicKey() => $_has(14);
   @$pb.TagNumber(17)
   void clearResendGroupPublicKey() => $_clearField(17);
   @$pb.TagNumber(17)
   EncryptedContent_ResendGroupPublicKey ensureResendGroupPublicKey() =>
-      $_ensure(15);
+      $_ensure(14);
 
   @$pb.TagNumber(18)
-  EncryptedContent_ErrorMessages get errorMessages => $_getN(16);
+  EncryptedContent_ErrorMessages get errorMessages => $_getN(15);
   @$pb.TagNumber(18)
   set errorMessages(EncryptedContent_ErrorMessages value) =>
       $_setField(18, value);
   @$pb.TagNumber(18)
-  $core.bool hasErrorMessages() => $_has(16);
+  $core.bool hasErrorMessages() => $_has(15);
   @$pb.TagNumber(18)
   void clearErrorMessages() => $_clearField(18);
   @$pb.TagNumber(18)
-  EncryptedContent_ErrorMessages ensureErrorMessages() => $_ensure(16);
+  EncryptedContent_ErrorMessages ensureErrorMessages() => $_ensure(15);
 
   @$pb.TagNumber(19)
   EncryptedContent_AdditionalDataMessage get additionalDataMessage =>
-      $_getN(17);
+      $_getN(16);
   @$pb.TagNumber(19)
   set additionalDataMessage(EncryptedContent_AdditionalDataMessage value) =>
       $_setField(19, value);
   @$pb.TagNumber(19)
-  $core.bool hasAdditionalDataMessage() => $_has(17);
+  $core.bool hasAdditionalDataMessage() => $_has(16);
   @$pb.TagNumber(19)
   void clearAdditionalDataMessage() => $_clearField(19);
   @$pb.TagNumber(19)
   EncryptedContent_AdditionalDataMessage ensureAdditionalDataMessage() =>
-      $_ensure(17);
+      $_ensure(16);
 
   @$pb.TagNumber(20)
-  EncryptedContent_TypingIndicator get typingIndicator => $_getN(18);
+  EncryptedContent_TypingIndicator get typingIndicator => $_getN(17);
   @$pb.TagNumber(20)
   set typingIndicator(EncryptedContent_TypingIndicator value) =>
       $_setField(20, value);
   @$pb.TagNumber(20)
-  $core.bool hasTypingIndicator() => $_has(18);
+  $core.bool hasTypingIndicator() => $_has(17);
   @$pb.TagNumber(20)
   void clearTypingIndicator() => $_clearField(20);
   @$pb.TagNumber(20)
-  EncryptedContent_TypingIndicator ensureTypingIndicator() => $_ensure(18);
+  EncryptedContent_TypingIndicator ensureTypingIndicator() => $_ensure(17);
 
   @$pb.TagNumber(21)
-  $core.List<$core.int> get senderUserDiscoveryVersion => $_getN(19);
+  $core.List<$core.int> get senderUserDiscoveryVersion => $_getN(18);
   @$pb.TagNumber(21)
   set senderUserDiscoveryVersion($core.List<$core.int> value) =>
-      $_setBytes(19, value);
+      $_setBytes(18, value);
   @$pb.TagNumber(21)
-  $core.bool hasSenderUserDiscoveryVersion() => $_has(19);
+  $core.bool hasSenderUserDiscoveryVersion() => $_has(18);
   @$pb.TagNumber(21)
   void clearSenderUserDiscoveryVersion() => $_clearField(21);
 
   @$pb.TagNumber(22)
-  EncryptedContent_UserDiscoveryRequest get userDiscoveryRequest => $_getN(20);
+  EncryptedContent_UserDiscoveryRequest get userDiscoveryRequest => $_getN(19);
   @$pb.TagNumber(22)
   set userDiscoveryRequest(EncryptedContent_UserDiscoveryRequest value) =>
       $_setField(22, value);
   @$pb.TagNumber(22)
-  $core.bool hasUserDiscoveryRequest() => $_has(20);
+  $core.bool hasUserDiscoveryRequest() => $_has(19);
   @$pb.TagNumber(22)
   void clearUserDiscoveryRequest() => $_clearField(22);
   @$pb.TagNumber(22)
   EncryptedContent_UserDiscoveryRequest ensureUserDiscoveryRequest() =>
-      $_ensure(20);
+      $_ensure(19);
 
   @$pb.TagNumber(23)
-  EncryptedContent_UserDiscoveryUpdate get userDiscoveryUpdate => $_getN(21);
+  EncryptedContent_UserDiscoveryUpdate get userDiscoveryUpdate => $_getN(20);
   @$pb.TagNumber(23)
   set userDiscoveryUpdate(EncryptedContent_UserDiscoveryUpdate value) =>
       $_setField(23, value);
   @$pb.TagNumber(23)
-  $core.bool hasUserDiscoveryUpdate() => $_has(21);
+  $core.bool hasUserDiscoveryUpdate() => $_has(20);
   @$pb.TagNumber(23)
   void clearUserDiscoveryUpdate() => $_clearField(23);
   @$pb.TagNumber(23)
   EncryptedContent_UserDiscoveryUpdate ensureUserDiscoveryUpdate() =>
-      $_ensure(21);
+      $_ensure(20);
 
   @$pb.TagNumber(24)
-  EncryptedContent_KeyVerificationProof get keyVerificationProof => $_getN(22);
+  EncryptedContent_KeyVerificationProof get keyVerificationProof => $_getN(21);
   @$pb.TagNumber(24)
   set keyVerificationProof(EncryptedContent_KeyVerificationProof value) =>
       $_setField(24, value);
   @$pb.TagNumber(24)
-  $core.bool hasKeyVerificationProof() => $_has(22);
+  $core.bool hasKeyVerificationProof() => $_has(21);
   @$pb.TagNumber(24)
   void clearKeyVerificationProof() => $_clearField(24);
   @$pb.TagNumber(24)
   EncryptedContent_KeyVerificationProof ensureKeyVerificationProof() =>
-      $_ensure(22);
+      $_ensure(21);
 
   @$pb.TagNumber(25)
-  $core.bool get askForFriendPromotions => $_getBF(23);
+  $core.bool get askForFriendPromotions => $_getBF(22);
   @$pb.TagNumber(25)
-  set askForFriendPromotions($core.bool value) => $_setBool(23, value);
+  set askForFriendPromotions($core.bool value) => $_setBool(22, value);
   @$pb.TagNumber(25)
-  $core.bool hasAskForFriendPromotions() => $_has(23);
+  $core.bool hasAskForFriendPromotions() => $_has(22);
   @$pb.TagNumber(25)
   void clearAskForFriendPromotions() => $_clearField(25);
 
   @$pb.TagNumber(26)
-  EncryptedContent_PasswordLessRecovery get passwordlessRecovery => $_getN(24);
+  EncryptedContent_PasswordLessRecovery get passwordlessRecovery => $_getN(23);
   @$pb.TagNumber(26)
   set passwordlessRecovery(EncryptedContent_PasswordLessRecovery value) =>
       $_setField(26, value);
   @$pb.TagNumber(26)
-  $core.bool hasPasswordlessRecovery() => $_has(24);
+  $core.bool hasPasswordlessRecovery() => $_has(23);
   @$pb.TagNumber(26)
   void clearPasswordlessRecovery() => $_clearField(26);
   @$pb.TagNumber(26)
   EncryptedContent_PasswordLessRecovery ensurePasswordlessRecovery() =>
-      $_ensure(24);
+      $_ensure(23);
 
   @$pb.TagNumber(27)
   EncryptedContent_PasswordLessRecoveryHeartbeat
-      get passwordlessRecoveryHeartbeat => $_getN(25);
+      get passwordlessRecoveryHeartbeat => $_getN(24);
   @$pb.TagNumber(27)
   set passwordlessRecoveryHeartbeat(
           EncryptedContent_PasswordLessRecoveryHeartbeat value) =>
       $_setField(27, value);
   @$pb.TagNumber(27)
-  $core.bool hasPasswordlessRecoveryHeartbeat() => $_has(25);
+  $core.bool hasPasswordlessRecoveryHeartbeat() => $_has(24);
   @$pb.TagNumber(27)
   void clearPasswordlessRecoveryHeartbeat() => $_clearField(27);
   @$pb.TagNumber(27)
   EncryptedContent_PasswordLessRecoveryHeartbeat
-      ensurePasswordlessRecoveryHeartbeat() => $_ensure(25);
+      ensurePasswordlessRecoveryHeartbeat() => $_ensure(24);
 }
 
 const $core.bool _omitFieldNames =

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT sequence_id, payload FROM api_outbox ORDER BY created_at",
+  "describe": {
+    "columns": [
+      {
+        "name": "sequence_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "api_outbox",
+            "name": "sequence_id"
+          }
+        }
+      },
+      {
+        "name": "payload",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "api_outbox",
+            "name": "payload"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "3c5c07a73316e7e31ef06c5a6c5b273cb4e2665bd78cb5cbc38b73447af9eaf2"
+}

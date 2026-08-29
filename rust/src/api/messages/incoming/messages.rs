@@ -32,6 +32,8 @@ pub(crate) async fn queue_encrypted_content(
 ) -> Result<String> {
     Contact::ensure_exists(t, target_user_id).await?;
 
+    let wake_receiver = crate::services::notifications::should_wake_receiver(&content);
+
     let message = proto::Message {
         r#type: proto::message::Type::CiphertextV2 as i32,
         receipt_id: String::new(),
@@ -44,6 +46,7 @@ pub(crate) async fn queue_encrypted_content(
 
     NewReceipt::new(&receipt_id, target_user_id, &message)
         .contact_will_send_receipt(contact_will_send_receipt)
+        .wake_receiver(wake_receiver)
         .insert(t)
         .await?;
 
@@ -297,6 +300,17 @@ pub(crate) struct PreparedQueuedReceipt {
     pub contact_will_sends_receipt: i64,
     pub account_deleted: i64,
     pub payload: Vec<u8>,
+    pub wake_receiver: bool,
+}
+
+struct PreparedQueuedReceiptRow {
+    contact_id: i64,
+    message: Vec<u8>,
+    message_id: Option<String>,
+    contact_will_sends_receipt: i64,
+    wake_receiver: i64,
+    account_deleted: i64,
+    signal_version: String,
 }
 
 pub(crate) async fn prepare_queued_receipt_details(
@@ -304,10 +318,11 @@ pub(crate) async fn prepare_queued_receipt_details(
     receipt_id: &str,
 ) -> Result<Option<PreparedQueuedReceipt>> {
     let app_db = ctx.app_db.read().await.clone();
-    let row = sqlx::query!(
+    let row = sqlx::query_as!(
+        PreparedQueuedReceiptRow,
         r#"
         SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
-               r.retry_count, c.account_deleted, c.signal_version
+               r.wake_receiver, c.account_deleted, c.signal_version
         FROM receipts r
         JOIN contacts c ON c.user_id = r.contact_id
         WHERE r.receipt_id = ?
@@ -357,6 +372,7 @@ pub(crate) async fn prepare_queued_receipt_details(
         contact_will_sends_receipt: row.contact_will_sends_receipt,
         account_deleted: row.account_deleted,
         payload: message.encode_to_vec(),
+        wake_receiver: row.wake_receiver != 0,
     }))
 }
 
@@ -396,7 +412,14 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
-    match Server::send_text_message(ctx, receipt.contact_id, receipt.payload).await? {
+    match Server::send_text_message(
+        ctx,
+        receipt.contact_id,
+        receipt.payload,
+        receipt.wake_receiver,
+    )
+    .await?
+    {
         ServerResult::Ok(()) => {}
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
@@ -420,6 +443,15 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         )
         .execute(&mut *t)
         .await?;
+
+        // `message_actions` keeps the per-recipient acknowledgement used by
+        // group chats. The message row also carries the aggregate value used
+        // by message bubbles and chat previews to leave the "sending" state.
+        sqlx::query("UPDATE messages SET ack_by_server = ? WHERE message_id = ?")
+            .bind(chrono::Utc::now().timestamp())
+            .bind(&message_id)
+            .execute(&mut *t)
+            .await?;
     }
     if receipt.contact_will_sends_receipt == 0 {
         Receipt::delete(&mut *t, receipt_id).await?;
@@ -439,7 +471,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         .await?;
     }
     t.commit().await?;
-    app_db.notify_committed(["receipts", "message_actions"]);
+    app_db.notify_committed(["receipts", "message_actions", "messages"]);
     Ok(())
 }
 

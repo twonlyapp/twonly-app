@@ -15,7 +15,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_labels.comp.dart';
@@ -354,10 +354,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     List<GroupHistory> groupActions, {
     bool reportOpened = false,
   }) async {
-    if (reportOpened && _isViewActive()) {
-      unawaited(flutterLocalNotificationsPlugin.cancelAll());
-    }
-
     for (final msg in newMessages) {
       if (_animationState.hasReceivedFirstBatch &&
           !_animationState.knownMessageIds.contains(msg.messageId) &&
@@ -435,12 +431,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
         _animationState.reportedOpenedMessageIds.addAll(
           openedMessages[contactId]!,
         );
-        unawaited(
-          RustApi.notifyMessagesOpened(
-            contactId: contactId,
-            messageIds: openedMessages[contactId]!,
-          ),
-        );
+        unawaited(_reportMessagesOpened(contactId, openedMessages[contactId]!));
       }
     }
 
@@ -470,6 +461,23 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     }
 
     _updateGalleryItems(messages: storedMediaFiles);
+  }
+
+  Future<void> _reportMessagesOpened(
+    int contactId,
+    List<String> messageIds,
+  ) async {
+    // Cancel once immediately for an already visible alert, and once after the
+    // durable outbox update to close the small race with a native push worker.
+    await NativeNotificationService.cancelNotifications(messageIds);
+    try {
+      await RustApi.notifyMessagesOpened(
+        contactId: contactId,
+        messageIds: messageIds,
+      );
+    } finally {
+      await NativeNotificationService.cancelNotifications(messageIds);
+    }
   }
 
   void _updateGalleryItems({List<Message>? messages, bool force = false}) {

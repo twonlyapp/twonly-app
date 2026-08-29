@@ -7,6 +7,7 @@ import android.view.KeyEvent.KEYCODE_VOLUME_DOWN
 import android.view.KeyEvent.KEYCODE_VOLUME_UP
 import io.flutter.embedding.engine.FlutterEngine
 import android.content.Context
+import android.content.Intent
 import io.crates.keyring.Keyring
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.os.Bundle
@@ -16,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import io.flutter.plugin.common.MethodChannel
+import eu.twonly.notifications.NotificationTapChannel
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "eu.twonly/photo_picker"
@@ -25,6 +27,10 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+
+        // Buffer a notification tap before the Flutter engine exists so the
+        // cold-start route is not lost.
+        NotificationTapChannel.handleIntent(intent)
         
         pickMultipleMedia = registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
             if (uris.isNotEmpty()) {
@@ -37,6 +43,12 @@ class MainActivity : FlutterFragmentActivity() {
         }
         
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationTapChannel.handleIntent(intent)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -57,6 +69,8 @@ class MainActivity : FlutterFragmentActivity() {
         Keyring.initializeNdkContext(applicationContext)
 
         VideoCompressionChannel.configure(flutterEngine, applicationContext)
+
+        NotificationTapChannel.configure(flutterEngine, applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -87,5 +101,10 @@ class MainActivity : FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        NotificationTapChannel.detach()
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 }

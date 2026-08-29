@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT promotion FROM user_discovery_own_promotions\n               WHERE contact_id = ? ORDER BY version_id DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "promotion",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_own_promotions",
+            "name": "promotion"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "06bde3698b9256418111975b79dc581ea72a4f68f7dfd4ceb63bfac45aa031b3"
+}

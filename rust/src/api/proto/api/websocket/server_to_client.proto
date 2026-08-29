@@ -20,6 +20,7 @@ message V0 {
     error.ErrorCode error = 6;
     SealedSenderMessage sealedSenderMessage = 9;
     SealedSenderMessages sealedSenderMessages = 10;
+    bool mailboxDrained = 11;
   }
 }
 

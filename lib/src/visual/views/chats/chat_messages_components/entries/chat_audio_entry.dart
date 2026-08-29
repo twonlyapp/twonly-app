@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
@@ -217,10 +220,7 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
                     _playerController.startPlayer();
                     if (widget.message.senderId != null &&
                         widget.message.openedAt == null) {
-                      RustApi.notifyMessagesOpened(
-                        contactId: widget.message.senderId!,
-                        messageIds: [widget.message.messageId],
-                      );
+                      unawaited(_notifyMessageOpened());
                     }
                   }
                   setState(() {
@@ -258,6 +258,21 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
         ),
       ],
     );
+  }
+
+  Future<void> _notifyMessageOpened() async {
+    final senderId = widget.message.senderId;
+    if (senderId == null) return;
+    final messageIds = [widget.message.messageId];
+    await NativeNotificationService.cancelNotifications(messageIds);
+    try {
+      await RustApi.notifyMessagesOpened(
+        contactId: senderId,
+        messageIds: messageIds,
+      );
+    } finally {
+      await NativeNotificationService.cancelNotifications(messageIds);
+    }
   }
 }
 

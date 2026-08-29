@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT recovery_contacts_secret_share, recovery_contacts_threshold FROM contacts WHERE user_id = 7",
+  "describe": {
+    "columns": [
+      {
+        "name": "recovery_contacts_secret_share",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_secret_share"
+          }
+        }
+      },
+      {
+        "name": "recovery_contacts_threshold",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_contacts_threshold"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "a93838b8031d794e21141424f5a7856c33d05ff01422e040df34783dffcc9b91"
+}

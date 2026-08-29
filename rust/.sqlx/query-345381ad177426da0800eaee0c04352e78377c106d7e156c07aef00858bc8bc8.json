@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT sender_id\n            FROM messages\n            WHERE message_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "sender_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "sender_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "345381ad177426da0800eaee0c04352e78377c106d7e156c07aef00858bc8bc8"
+}

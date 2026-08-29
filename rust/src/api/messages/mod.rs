@@ -21,8 +21,6 @@ pub(crate) fn content_type_kind(
         "ContactRequest"
     } else if content.flame_sync.is_some() {
         "FlameSync"
-    } else if content.push_keys.is_some() {
-        "PushKeys"
     } else if content.reaction.is_some() {
         "Reaction"
     } else if content.text_message.is_some() {

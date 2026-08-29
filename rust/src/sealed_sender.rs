@@ -4,8 +4,8 @@
  */
 
 use chacha20poly1305::{
-    KeyInit, XChaCha20Poly1305, XNonce,
     aead::{Aead, Payload},
+    KeyInit, XChaCha20Poly1305, XNonce,
 };
 use hkdf::Hkdf;
 use libsignal_protocol::{IdentityKeyPair, KeyPair, PublicKey};
@@ -319,7 +319,7 @@ fn derive_encryption_key(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{SeedableRng, rngs::StdRng};
+    use rand::{rngs::StdRng, SeedableRng};
 
     fn test_message() -> proto::Message {
         proto::Message {

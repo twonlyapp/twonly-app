@@ -21,25 +21,17 @@ const TextMessage$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'body', '3': 2, '4': 1, '5': 12, '10': 'body'},
-    {
-      '1': 'push_data',
-      '3': 3,
-      '4': 1,
-      '5': 12,
-      '9': 0,
-      '10': 'pushData',
-      '17': true
-    },
+    {'1': 'wake_receiver', '3': 4, '4': 1, '5': 8, '10': 'wakeReceiver'},
   ],
-  '8': [
-    {'1': '_push_data'},
+  '9': [
+    {'1': 3, '2': 4},
   ],
 };
 
 /// Descriptor for `TextMessage`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List textMessageDescriptor = $convert.base64Decode(
     'CgtUZXh0TWVzc2FnZRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoEYm9keRgCIAEoDFIEYm'
-    '9keRIgCglwdXNoX2RhdGEYAyABKAxIAFIIcHVzaERhdGGIAQFCDAoKX3B1c2hfZGF0YQ==');
+    '9keRIjCg13YWtlX3JlY2VpdmVyGAQgASgIUgx3YWtlUmVjZWl2ZXJKBAgDEAQ=');
 
 @$core.Deprecated('Use uploadRequestDescriptor instead')
 const UploadRequest$json = {

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET opened_at = ?, opened_by_all = CASE WHEN NOT EXISTS(\n                   SELECT 1 FROM group_members gm\n                   WHERE gm.group_id = messages.group_id AND NOT EXISTS(\n                       SELECT 1 FROM message_actions ma\n                       WHERE ma.message_id = messages.message_id\n                         AND ma.contact_id = gm.contact_id AND ma.type = 'openedAt'\n                   )\n               ) THEN ? ELSE NULL END\n               WHERE message_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "02f92beaef5af931c37b62b9ebfbdcf0490b17343ba0e11427f572cc9c41b8b4"
+}

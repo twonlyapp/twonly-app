@@ -169,25 +169,5 @@ class EncryptedContent_ContactUpdate_Type extends $pb.ProtobufEnum {
   const EncryptedContent_ContactUpdate_Type._(super.value, super.name);
 }
 
-class EncryptedContent_PushKeys_Type extends $pb.ProtobufEnum {
-  static const EncryptedContent_PushKeys_Type REQUEST =
-      EncryptedContent_PushKeys_Type._(0, _omitEnumNames ? '' : 'REQUEST');
-  static const EncryptedContent_PushKeys_Type UPDATE =
-      EncryptedContent_PushKeys_Type._(1, _omitEnumNames ? '' : 'UPDATE');
-
-  static const $core.List<EncryptedContent_PushKeys_Type> values =
-      <EncryptedContent_PushKeys_Type>[
-    REQUEST,
-    UPDATE,
-  ];
-
-  static final $core.List<EncryptedContent_PushKeys_Type?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 1);
-  static EncryptedContent_PushKeys_Type? valueOf($core.int value) =>
-      value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const EncryptedContent_PushKeys_Type._(super.value, super.name);
-}
-
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

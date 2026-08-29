@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT is_group_admin FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_group_admin",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "is_group_admin"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7da111f61862ce2262bb377213c780e8a817a1bd5f53f9493c0f5314df312b44"
+}

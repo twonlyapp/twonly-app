@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT recovery_last_heartbeat FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "recovery_last_heartbeat",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "recovery_last_heartbeat"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "1e27aa2db6de33b41610d8fe9394b7d54224d8717dd687516da0ced5268e4899"
+}

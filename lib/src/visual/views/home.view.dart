@@ -14,6 +14,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -50,6 +51,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
+  StreamSubscription<String?>? _nativeNotificationSub;
   StreamSubscription<(String, MediaType)>? _sharedMediaSub;
 
   static Uri? pendingSharedLink;
@@ -112,6 +114,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       Log.info('Opened app from iOS/Remote push notification tap.');
       streamHomeViewPageIndex.add(0);
     });
+
+    _nativeNotificationSub = NativeNotificationService.taps.listen(
+      _openNativeNotification,
+    );
 
     _sharedLinkSub = streamSharedLink.stream.listen((uri) {
       HomeViewState.pendingSharedLink = null;
@@ -192,7 +198,20 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
   }
 
+  void _openNativeNotification(String? conversationId) {
+    Log.info('Opened app from a native push notification tap.');
+    if (conversationId != null) {
+      routerProvider.go(Routes.chatsMessages(conversationId));
+    }
+    streamHomeViewPageIndex.add(0);
+  }
+
   Future<void> _initAsync() async {
+    final initialNativeTap = await NativeNotificationService.consumeInitialTap();
+    if (initialNativeTap != null) {
+      _openNativeNotification(initialNativeTap.conversationId);
+    }
+
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
         .getNotificationAppLaunchDetails();
 
@@ -245,6 +264,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _onMessageOpenedAppSub?.cancel();
     _homeViewPageIndexSub?.cancel();
     _selectNotificationSub?.cancel();
+    _nativeNotificationSub?.cancel();
     _disableCameraTimer?.cancel();
     _mainCameraController.setState = null;
     _mainCameraController.closeCamera();

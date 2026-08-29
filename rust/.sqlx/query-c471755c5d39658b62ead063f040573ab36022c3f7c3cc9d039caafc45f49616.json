@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT is_deleted_from_sender FROM messages WHERE message_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_deleted_from_sender",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "is_deleted_from_sender"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c471755c5d39658b62ead063f040573ab36022c3f7c3cc9d039caafc45f49616"
+}

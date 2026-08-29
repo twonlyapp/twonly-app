@@ -20,12 +20,14 @@ pub struct Receipt {
     pub retry_count: i64,
     pub last_retry: Option<i64>,
     pub created_at: i64,
+    pub wake_receiver: i64,
 }
 pub struct NewReceipt<'a> {
     receipt_id: &'a str,
     contact_id: i64,
     message: &'a [u8],
     contact_will_send_receipt: bool,
+    wake_receiver: bool,
 }
 
 impl Receipt {
@@ -149,6 +151,7 @@ impl<'a> NewReceipt<'a> {
             contact_id,
             message,
             contact_will_send_receipt: true,
+            wake_receiver: false,
         }
     }
 
@@ -157,16 +160,22 @@ impl<'a> NewReceipt<'a> {
         self
     }
 
+    pub fn wake_receiver(mut self, val: bool) -> Self {
+        self.wake_receiver = val;
+        self
+    }
+
     pub async fn insert(&self, transaction: &mut Transaction<'_, Sqlite>) -> Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt, wake_receiver)
+            VALUES (?, ?, ?, ?, ?)
             "#,
             self.receipt_id,
             self.contact_id,
             self.message,
             self.contact_will_send_receipt,
+            self.wake_receiver,
         )
         .execute(&mut **transaction)
         .await?;
@@ -177,13 +186,14 @@ impl<'a> NewReceipt<'a> {
     pub async fn insert_or_replace(&self, transaction: &mut Transaction<'_, Sqlite>) -> Result<()> {
         sqlx::query!(
             r#"
-            INSERT OR REPLACE INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)
-            VALUES (?, ?, ?, ?)
+            INSERT OR REPLACE INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt, wake_receiver)
+            VALUES (?, ?, ?, ?, ?)
             "#,
             self.receipt_id,
             self.contact_id,
             self.message,
             self.contact_will_send_receipt,
+            self.wake_receiver,
         )
         .execute(&mut **transaction)
         .await?;

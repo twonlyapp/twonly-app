@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_id FROM group_members WHERE contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "986b8712045ce40ce4c6cd7b46f28472f0d22b0b37453c5d53bab12aeb153553"
+}

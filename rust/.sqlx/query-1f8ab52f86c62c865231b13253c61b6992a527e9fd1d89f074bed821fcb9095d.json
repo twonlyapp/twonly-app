@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET recovery_secret_share = ?, recovery_is_trusted_friend = 1 WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "1f8ab52f86c62c865231b13253c61b6992a527e9fd1d89f074bed821fcb9095d"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(created_at, ?) AS \"action_at!: i64\" FROM messages WHERE message_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "action_at!: i64",
+        "ordinal": 0,
+        "type_info": "Null",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4cf56a4c69c3f809333c83aae082980edd05095bf43bc00b481d613ad250724c"
+}

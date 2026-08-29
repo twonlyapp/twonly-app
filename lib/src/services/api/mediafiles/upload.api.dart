@@ -710,7 +710,10 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
       final messageOnSuccess = TextMessage()
         ..body = cipherText
-        ..userId = Int64(groupMember.contactId);
+        ..userId = Int64(groupMember.contactId)
+        // A media message is user visible, so the server may send the opaque
+        // FCM wake-up once the upload completes.
+        ..wakeReceiver = true;
 
       messagesOnSuccess.add(messageOnSuccess);
       downloadTokens.add(downloadToken);

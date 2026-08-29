@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE user_discovery_announced_users SET username = ? WHERE announced_user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c92d114f6a87655124f8bbdf8df3564966e6ab55725b417f44d353279627dac9"
+}

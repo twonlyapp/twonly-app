@@ -115,7 +115,10 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         }
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }
-    assert!(!media_id_on_b.is_empty(), "media_id must be generated on receiver");
+    assert!(
+        !media_id_on_b.is_empty(),
+        "media_id must be generated on receiver"
+    );
     tester_b
         .wait_for_media_download_state(&media_id_on_b, "pending")
         .await?;

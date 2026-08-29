@@ -48,11 +48,11 @@ impl Message {
         contact_id: i64,
         timestamp: i64,
     ) -> Result<()> {
-        let action_at = sqlx::query_scalar::<_, i64>(
-            "SELECT MAX(created_at, ?) FROM messages WHERE message_id = ?",
+        let action_at = sqlx::query_scalar!(
+            r#"SELECT MAX(created_at, ?) AS "action_at!: i64" FROM messages WHERE message_id = ?"#,
+            timestamp,
+            message_id,
         )
-        .bind(timestamp)
-        .bind(message_id)
         .fetch_optional(&mut **t)
         .await?;
         let Some(action_at) = action_at else {

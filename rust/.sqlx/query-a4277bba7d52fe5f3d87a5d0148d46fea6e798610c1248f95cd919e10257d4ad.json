@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(\n                SELECT 1\n                FROM group_members\n                WHERE group_id = ? AND contact_id = ?\n            )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n                SELECT 1\n                FROM group_members\n                WHERE group_id = ? AND contact_id = ?\n            )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a4277bba7d52fe5f3d87a5d0148d46fea6e798610c1248f95cd919e10257d4ad"
+}

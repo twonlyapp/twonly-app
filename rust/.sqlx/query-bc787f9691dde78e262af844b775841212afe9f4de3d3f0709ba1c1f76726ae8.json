@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id FROM messages WHERE message_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "bc787f9691dde78e262af844b775841212afe9f4de3d3f0709ba1c1f76726ae8"
+}

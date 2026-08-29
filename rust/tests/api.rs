@@ -1,17 +1,19 @@
-#[path = "api/tester.rs"]
-mod tester;
 #[path = "api/contacts.rs"]
 mod contacts;
 #[path = "api/group_resilience.rs"]
 mod group_resilience;
 #[path = "api/media.rs"]
 mod media;
+#[path = "api/notifications.rs"]
+mod notifications;
 #[path = "api/recovery.rs"]
 mod recovery;
 #[path = "api/server_api.rs"]
 mod server_api;
 #[path = "api/session_recovery.rs"]
 mod session_recovery;
+#[path = "api/tester.rs"]
+mod tester;
 #[path = "api/user_discovery.rs"]
 mod user_discovery;
 
@@ -161,6 +163,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tester_b
             .wait_for_text_message(&message_id, tester_a.user_id, "Initial text")
             .await?;
+        tester_a.wait_for_message_ack_by_server(&message_id).await?;
 
         // Verify draft was cleared
         {

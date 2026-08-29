@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO signal_identities(name, identity_key, timestamp)\n            VALUES (?, ?, CAST(strftime('%s', 'now') AS INTEGER))\n            ON CONFLICT(name) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6d2c616fc02e1fdc3686b34de0440936a9cb54e5921b5b17bfe17c021e12ca23"
+}

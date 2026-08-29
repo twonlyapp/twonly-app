@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT group_id, contact_id \n            FROM group_members \n            WHERE group_public_key IS NULL \n              AND last_message >= CAST(strftime('%s','now','-2 days') AS INTEGER)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "group_id"
+          }
+        }
+      },
+      {
+        "name": "contact_id",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "contact_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "6d6a5fb10742309ab6e4242179ef86b64ac9f751f1c6d647d4ecfa5ecac5d332"
+}

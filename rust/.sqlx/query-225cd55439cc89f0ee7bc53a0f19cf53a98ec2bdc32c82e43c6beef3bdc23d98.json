@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM api_outbox WHERE sequence_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "225cd55439cc89f0ee7bc53a0f19cf53a98ec2bdc32c82e43c6beef3bdc23d98"
+}

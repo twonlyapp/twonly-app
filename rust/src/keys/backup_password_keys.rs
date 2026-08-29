@@ -4,7 +4,7 @@
  */
 
 use crate::error::Result;
-use scrypt::{Params, scrypt};
+use scrypt::{scrypt, Params};
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 

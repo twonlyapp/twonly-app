@@ -93,6 +93,7 @@ class SetupView extends StatefulWidget {
 class _SetupViewState extends State<SetupView> {
   StreamSubscription<void>? _userUpdateStream;
   late UserDiscoverySetupState state;
+  bool _setupDone = false;
 
   @override
   void initState() {
@@ -102,16 +103,27 @@ class _SetupViewState extends State<SetupView> {
     if (widget.onUpdate != null) {
       _userUpdateStream = userService.onUserUpdated.listen((u) {
         if (userService.currentUser.currentSetupPage == null) {
-          widget.onUpdate?.call();
+          _notifySetupDone();
         }
       });
     }
   }
 
+  /// Notifies the parent exactly once. Further user updates must not trigger
+  /// another callback, otherwise a parent popping this view would pop the
+  /// route below it as well.
+  void _notifySetupDone() {
+    if (_setupDone) return;
+    _setupDone = true;
+    unawaited(_userUpdateStream?.cancel());
+    _userUpdateStream = null;
+    widget.onUpdate?.call();
+  }
+
   @override
   void dispose() {
-    super.dispose();
     _userUpdateStream?.cancel();
+    super.dispose();
   }
 
   @override
@@ -184,7 +196,7 @@ class _SetupViewState extends State<SetupView> {
                             await UserService.update(
                               (u) => u.skipSetupPages = true,
                             );
-                            widget.onUpdate?.call();
+                            _notifySetupDone();
                           },
                           variant: MyButtonVariant.text,
                           child: Text(

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT user_discovery_version FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_discovery_version",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "user_discovery_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "6668c78b62a4d359c1027219abe352fec2832bbeaa721cf29bf8961868d867dd"
+}

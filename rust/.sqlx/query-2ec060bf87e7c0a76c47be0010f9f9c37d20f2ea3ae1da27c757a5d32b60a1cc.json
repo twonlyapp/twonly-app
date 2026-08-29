@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT group_name FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "group_name",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2ec060bf87e7c0a76c47be0010f9f9c37d20f2ea3ae1da27c757a5d32b60a1cc"
+}

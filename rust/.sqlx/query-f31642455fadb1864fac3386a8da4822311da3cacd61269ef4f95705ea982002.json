@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT OR IGNORE INTO receipts(\n            receipt_id, contact_id, message, contact_will_sends_receipt\n        ) VALUES (?, ?, ?, 0)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "f31642455fadb1864fac3386a8da4822311da3cacd61269ef4f95705ea982002"
+}

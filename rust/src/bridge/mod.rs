@@ -10,7 +10,6 @@ pub mod groups;
 pub mod user_config;
 pub mod wrapper;
 
-
 use crate::context::Context;
 use crate::error::Result;
 use flutter_rust_bridge::frb;
@@ -54,4 +53,11 @@ pub async fn initialize_twonly_flutter(config: InitConfig) -> Result<()> {
 /// Background executables should call this before using `RustApi`.
 pub async fn initialize_twonly_standalone(config: InitConfig) -> Result<()> {
     Context::init_standalone(config).await
+}
+
+/// Initializes a short-lived background runtime which authenticates without
+/// replacing an active foreground session.
+#[frb(ignore)]
+pub async fn initialize_twonly_notification(config: InitConfig) -> Result<()> {
+    Context::init_notification(config).await
 }

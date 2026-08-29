@@ -321,6 +321,12 @@ pub struct UserConfig {
     pub password_less_recovery: Option<PasswordlessRecoveryConfig>,
     #[frb(non_final)]
     pub fcm_token: Option<String>,
+    /// Unix seconds of the last opaque FCM/APNs wake-up that reached the native
+    /// notification worker. Recorded in Rust because Flutter is no longer
+    /// started for background delivery on either platform.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub last_fcm_wakeup_at: Option<i64>,
     #[frb(non_final)]
     pub current_setup_page: Option<String>,
     #[serde(default)]

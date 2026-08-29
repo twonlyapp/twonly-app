@@ -1,0 +1,184 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT n.event_id, n.notification_id, n.conversation_id, n.sender_id,\n               COALESCE(c.display_name, c.username) AS \"sender_name!: String\",\n               c.avatar_svg_compressed, c.sender_profile_counter,\n               g.group_name AS conversation_name,\n               COALESCE(g.is_direct_chat, 0) AS \"is_direct_chat!: i64\",\n               n.message_id, n.kind, n.content, n.created_at,\n               target_message.type AS target_message_type,\n               target_media.type AS target_media_type\n        FROM notification_outbox n\n        JOIN contacts c ON c.user_id = n.sender_id\n        LEFT JOIN groups g ON g.group_id = n.conversation_id\n        LEFT JOIN messages target_message ON target_message.message_id = n.message_id\n        LEFT JOIN media_files target_media ON target_media.media_id = target_message.media_id\n        WHERE n.delivered_at IS NULL AND n.cleared_at IS NULL\n        ORDER BY n.created_at, n.event_id\n        LIMIT ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "event_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "event_id"
+          }
+        }
+      },
+      {
+        "name": "notification_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "notification_id"
+          }
+        }
+      },
+      {
+        "name": "conversation_id",
+        "ordinal": 2,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "conversation_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "sender_id"
+          }
+        }
+      },
+      {
+        "name": "sender_name!: String",
+        "ordinal": 4,
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "name": "avatar_svg_compressed",
+        "ordinal": 5,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "avatar_svg_compressed"
+          }
+        }
+      },
+      {
+        "name": "sender_profile_counter",
+        "ordinal": 6,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "sender_profile_counter"
+          }
+        }
+      },
+      {
+        "name": "conversation_name",
+        "ordinal": 7,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "group_name"
+          }
+        }
+      },
+      {
+        "name": "is_direct_chat!: i64",
+        "ordinal": 8,
+        "type_info": "Integer",
+        "origin": "Expression"
+      },
+      {
+        "name": "message_id",
+        "ordinal": 9,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "kind",
+        "ordinal": 10,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "name": "content",
+        "ordinal": 11,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "content"
+          }
+        }
+      },
+      {
+        "name": "created_at",
+        "ordinal": 12,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "name": "target_message_type",
+        "ordinal": 13,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "target_media_type",
+        "ordinal": 14,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "7ee254f54718b616580ea6ca979679f8ec8065490cf0ffd0a8f44818c1f57167"
+}

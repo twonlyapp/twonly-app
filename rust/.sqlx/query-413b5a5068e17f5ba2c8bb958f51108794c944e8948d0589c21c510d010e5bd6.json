@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT share FROM user_discovery_shares WHERE contact_id = ? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "share",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_shares",
+            "name": "share"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "413b5a5068e17f5ba2c8bb958f51108794c944e8948d0589c21c510d010e5bd6"
+}

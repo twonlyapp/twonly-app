@@ -100,7 +100,7 @@ impl UserDiscovery {
             if user.public_identity_key.as_deref()
                 != Some(announcement.announced_public_key.as_slice())
             {
-                tracing::error!(
+                tracing::warn!(
                     user_id = announcement.announced_user_id,
                     "server returned a different identity key for announced user"
                 );
@@ -187,13 +187,13 @@ impl UserDiscovery {
         let database = ctx.app_db.read().await.clone();
         let mut transaction = database.pool.begin().await?;
         self.initialize_or_update(
-                config.user_discovery_threshold,
-                user_id,
-                public_key,
-                config.user_discovery_share_promotion,
-                &mut transaction,
-            )
-            .await?;
+            config.user_discovery_threshold,
+            user_id,
+            public_key,
+            config.user_discovery_share_promotion,
+            &mut transaction,
+        )
+        .await?;
         transaction.commit().await?;
         database.notify_committed(["user_discovery_shares"]);
         Ok(())
@@ -459,7 +459,7 @@ impl UserDiscovery {
     ) -> Result<()> {
         for message in messages {
             let Ok(message) = UserDiscoveryMessage::decode(message.as_slice()) else {
-                tracing::error!("Could not parse the message. Continue to the next message...");
+                tracing::warn!("Could not parse the message. Continue to the next message...");
                 continue;
             };
             let Some(version) = message.version else {
@@ -524,7 +524,7 @@ impl UserDiscovery {
         let old_message = UserDiscoveryMessage::decode(current_promotion.as_slice())?;
 
         let Some(old_promotion) = old_message.user_discovery_promotion else {
-            tracing::error!("A contact should only have a promotion message...");
+            tracing::warn!("A contact should only have a promotion message...");
             return Ok(());
         };
 
@@ -682,7 +682,7 @@ impl UserDiscovery {
         tracing::info!("Got a user discovery announcement from {contact_id}.");
 
         if uda.threshold as usize != uda.verification_shares.len() + 1 {
-            tracing::error!(
+            tracing::warn!(
                 "UDA contains to few shares to verify: {} != {} + 1.",
                 uda.threshold,
                 uda.verification_shares.len(),
@@ -909,7 +909,7 @@ impl UserDiscovery {
                 let asd = AnnouncementShareDecrypted::decode(secret.as_slice())?;
                 if let Some(signed_data) = asd.signed_data {
                     if udp.public_id != signed_data.public_id {
-                        tracing::error!(
+                        tracing::warn!(
                             "Mismatch of the announced public id and the signed public id "
                         );
                         return Ok(());

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO groups(\n                group_id,\n                group_name,\n                is_group_admin,\n                state_encryption_key,\n                state_version_id,\n                my_group_private_key,\n                joined_group\n            ) VALUES (?, ?, 1, ?, 1, ?, 1)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "a54b3db0042be8b336a097a62a27ceb79c2983736ea880483b1be71ae7a2af94"
+}

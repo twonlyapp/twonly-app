@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                UPDATE groups \n                SET group_name = ?, \n                    delete_messages_after_milliseconds = COALESCE(?, delete_messages_after_milliseconds), \n                    is_group_admin = ?, \n                    joined_group = ?, \n                    left_group = ?, \n                    state_version_id = ? \n                WHERE group_id = ?\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "794e14789178809605447e9100342e824c9086817c1074503d8bf71e60828913"
+}

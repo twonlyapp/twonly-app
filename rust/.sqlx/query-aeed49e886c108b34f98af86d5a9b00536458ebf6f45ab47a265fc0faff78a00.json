@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT additional_message_data FROM messages WHERE message_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "additional_message_data",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "additional_message_data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "aeed49e886c108b34f98af86d5a9b00536458ebf6f45ab47a265fc0faff78a00"
+}

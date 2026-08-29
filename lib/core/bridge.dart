@@ -8,6 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_twonly_flutter`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AnnouncedUser`, `OtherPromotion`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `initialize_twonly_notification`
 
 Future<void> initializeTwonlyFlutter({required InitConfig config}) =>
     RustLib.instance.api.crateBridgeInitializeTwonlyFlutter(config: config);

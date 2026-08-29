@@ -8,6 +8,7 @@ use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
 use crate::context::Context;
+use crate::context::RuntimeMode;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
 use crate::services::contacts::ContactService;
@@ -51,7 +52,7 @@ impl ApiConfig {
         Ok(Self {
             websocket_url: format!("{}client", RustApi::api_base_url("wss".to_owned())),
             legacy_user_app_version: user.as_ref().map_or(0, |value| value.app_version),
-            in_background: false,
+            in_background: context.runtime_mode == RuntimeMode::Notification,
             can_use_login_token_for_auth: user
                 .as_ref()
                 .is_some_and(|value| value.can_use_login_token_for_auth),
@@ -546,7 +547,7 @@ impl RustApi {
     }
     pub async fn send_text_message(user_id: i64, body: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
-        Server::send_text_message(ctx, user_id, body)
+        Server::send_text_message(ctx, user_id, body, false)
             .await
             .and_then(api_result)
     }

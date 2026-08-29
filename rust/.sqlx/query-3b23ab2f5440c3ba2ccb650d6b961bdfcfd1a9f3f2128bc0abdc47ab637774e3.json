@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE groups SET left_group = ? WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "3b23ab2f5440c3ba2ccb650d6b961bdfcfd1a9f3f2128bc0abdc47ab637774e3"
+}

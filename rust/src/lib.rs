@@ -13,6 +13,7 @@ pub use error::TwonlyError;
 mod frb_generated;
 mod keys;
 pub mod log;
+mod native_notifications;
 pub mod sealed_sender;
 mod secure_storage;
 pub mod services;

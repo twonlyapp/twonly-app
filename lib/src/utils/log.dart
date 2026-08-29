@@ -77,6 +77,17 @@ class Log {
     final message = filterLogMessage('$messageInput');
     Logger(_getCallerSourceCodeFilename()).fine(message, error, stackTrace);
   }
+
+  /// Re-emits a record that was produced outside Dart, keeping the origin's
+  /// level and source location. Deriving either from the Dart call site would
+  /// only ever point back at the forwarding code.
+  static void forward({
+    required Level level,
+    required String source,
+    required Object? messageInput,
+  }) {
+    Logger(source).log(level, filterLogMessage('$messageInput'));
+  }
 }
 
 Future<String> loadLogFile() async {

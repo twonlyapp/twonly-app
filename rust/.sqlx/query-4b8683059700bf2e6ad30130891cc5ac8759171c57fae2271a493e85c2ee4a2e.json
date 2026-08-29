@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT announced_user_id, announced_public_key\n               FROM user_discovery_announced_users WHERE username IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "announced_user_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "announced_user_id"
+          }
+        }
+      },
+      {
+        "name": "announced_public_key",
+        "ordinal": 1,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "user_discovery_announced_users",
+            "name": "announced_public_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4b8683059700bf2e6ad30130891cc5ac8759171c57fae2271a493e85c2ee4a2e"
+}

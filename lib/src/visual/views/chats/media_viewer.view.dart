@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:screen_protector/screen_protector.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -19,7 +18,7 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
@@ -132,12 +131,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   final Mutex _messageUpdateLock = Mutex();
-
-  bool _isViewActive() {
-    if (!mounted) return false;
-    return !AppState.isAppInBackground &&
-        (ModalRoute.of(context)?.isCurrent ?? false);
-  }
 
   Future<void> listenForUnopenedMedia(bool firstRun) async {
     _subscription = twonlyDB.messagesDao
@@ -255,10 +248,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       progress.value = 0;
       showSendTextMessageInput = false;
     });
-
-    if (_isViewActive()) {
-      unawaited(flutterLocalNotificationsPlugin.cancelAll());
-    }
 
     final stream = twonlyDB.mediaFilesDao.watchMedia(
       allMediaFiles.first.mediaId!,
@@ -416,10 +405,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       markAsOpenMessageIDs = messageIds;
     }
 
-    await RustApi.notifyMessagesOpened(
-      contactId: currentMessage!.senderId!,
-      messageIds: markAsOpenMessageIDs,
-    );
+    await NativeNotificationService.cancelNotifications(markAsOpenMessageIDs);
+    try {
+      await RustApi.notifyMessagesOpened(
+        contactId: currentMessage!.senderId!,
+        messageIds: markAsOpenMessageIDs,
+      );
+    } finally {
+      await NativeNotificationService.cancelNotifications(markAsOpenMessageIDs);
+    }
   }
 
   Future<void> _setupVideoPlayer(MediaFileService mediaLocal) async {

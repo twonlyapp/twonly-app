@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO messages(\n                group_id,\n                message_id,\n                sender_id,\n                type,\n                content,\n                media_id,\n                additional_message_data,\n                quotes_message_id,\n                created_at,\n                ack_by_server\n            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            ON CONFLICT(message_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "794398164165a4a07387a201ce61b9b81b2712517abd4ae77565d7eac22bda41"
+}

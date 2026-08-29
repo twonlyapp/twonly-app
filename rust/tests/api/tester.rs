@@ -3,10 +3,11 @@ use rand::SeedableRng;
 use rust_lib_twonly::api::{ApiRuntime, Server};
 use rust_lib_twonly::bridge::api::{ApiConnectionState, ServerResult};
 use rust_lib_twonly::context::Context;
+use rust_lib_twonly::services::notifications::{self, NotificationAddition, NotificationBatch};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::TempDir;
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 pub(crate) struct Tester {
     pub context: Arc<Context>,
@@ -194,6 +195,26 @@ impl Tester {
         }
         Err(anyhow::anyhow!(
             "message {message_id} from {sender_id} did not contain {expected_text:?}"
+        ))
+    }
+
+    pub async fn wait_for_message_ack_by_server(&self, message_id: &str) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let acknowledged_at = sqlx::query_scalar::<_, Option<i64>>(
+                "SELECT ack_by_server FROM messages WHERE message_id = ?",
+            )
+            .bind(message_id)
+            .fetch_optional(&database.pool)
+            .await?
+            .flatten();
+            if acknowledged_at.is_some() {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "message {message_id} was not acknowledged by the server"
         ))
     }
 
@@ -489,6 +510,85 @@ impl Tester {
             sleep(Duration::from_millis(100)).await;
         }
         Err(anyhow::anyhow!("contact {user_id} did not receive avatar"))
+    }
+
+    /// Reads the receiver's notification outbox through the very API the iOS
+    /// Notification Service Extension and the Android worker call.
+    pub async fn notification_batch(&self, locale: &str) -> anyhow::Result<NotificationBatch> {
+        Ok(notifications::pending_batch(&self.context, locale).await?)
+    }
+
+    /// Waits until an undelivered notification of `kind` from `sender_id` is
+    /// pending, and returns it. Incoming messages are committed asynchronously,
+    /// so every notification assertion has to poll.
+    pub async fn wait_for_notification(
+        &self,
+        kind: &str,
+        sender_id: i64,
+    ) -> anyhow::Result<NotificationAddition> {
+        for _ in 0..100 {
+            let batch = self.notification_batch(&self.lang_code).await?;
+            if let Some(addition) = batch
+                .additions
+                .into_iter()
+                .find(|addition| addition.kind == kind && addition.sender_id == sender_id)
+            {
+                return Ok(addition);
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "no pending {kind} notification from {sender_id} arrived"
+        ))
+    }
+
+    /// Marks pending notifications as delivered, mirroring what the native
+    /// layer does once it has actually scheduled them.
+    pub async fn acknowledge_notifications(&self, event_ids: &[String]) -> anyhow::Result<()> {
+        Ok(notifications::acknowledge_batch(&self.context, event_ids).await?)
+    }
+
+    pub async fn clear_notification_conversation(
+        &self,
+        conversation_id: &str,
+    ) -> anyhow::Result<Vec<String>> {
+        Ok(notifications::clear_conversation(&self.context, conversation_id).await?)
+    }
+
+    /// Number of rows the outbox holds for one receipt, used to prove that a
+    /// redelivered envelope cannot notify twice.
+    pub async fn notification_rows_for_event(&self, event_id: &str) -> anyhow::Result<i64> {
+        let database = self.context.app_db.read().await.clone();
+        Ok(sqlx::query_scalar!(
+            "SELECT COUNT(*) FROM notification_outbox WHERE event_id = ?",
+            event_id
+        )
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    pub async fn notification_rows_for_message(&self, message_id: &str) -> anyhow::Result<i64> {
+        let database = self.context.app_db.read().await.clone();
+        Ok(sqlx::query_scalar!(
+            "SELECT COUNT(*) FROM notification_outbox WHERE message_id = ?",
+            message_id
+        )
+        .fetch_one(&database.pool)
+        .await?)
+    }
+
+    pub async fn set_contact_blocked(&self, user_id: i64, blocked: bool) -> anyhow::Result<()> {
+        let database = self.context.app_db.read().await.clone();
+        let blocked = i64::from(blocked);
+        sqlx::query!(
+            "UPDATE contacts SET blocked = ? WHERE user_id = ?",
+            blocked,
+            user_id
+        )
+        .execute(&database.pool)
+        .await?;
+        database.notify_committed(["contacts"]);
+        Ok(())
     }
 
     pub async fn wait_for_quoted_text_message(

@@ -54,7 +54,7 @@ pub(crate) fn get_callbacks() -> Result<FlutterCallbacks> {
     // we pick the first available callbacks from the map. This gracefully handles
     // tracing initialization which happens outside of any scoped task.
     if let Some((_, cb)) = map.iter().next() {
-        tracing::error!("FlutterCallbacks fallback used: No CURRENT_CALLBACK_ID scope was found, or the ID was missing from the map. Using an arbitrary callback. This may lead to race conditions if multiple isolates are active.");
+        tracing::warn!("FlutterCallbacks fallback used: No CURRENT_CALLBACK_ID scope was found, or the ID was missing from the map. Using an arbitrary callback. This may lead to race conditions if multiple isolates are active.");
         return Ok(cb.clone());
     }
 

@@ -21,12 +21,12 @@ class TextMessage extends $pb.GeneratedMessage {
   factory TextMessage({
     $fixnum.Int64? userId,
     $core.List<$core.int>? body,
-    $core.List<$core.int>? pushData,
+    $core.bool? wakeReceiver,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
     if (body != null) result.body = body;
-    if (pushData != null) result.pushData = pushData;
+    if (wakeReceiver != null) result.wakeReceiver = wakeReceiver;
     return result;
   }
 
@@ -46,8 +46,7 @@ class TextMessage extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
+    ..aOB(4, _omitFieldNames ? '' : 'wakeReceiver')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -87,14 +86,14 @@ class TextMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearBody() => $_clearField(2);
 
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get pushData => $_getN(2);
-  @$pb.TagNumber(3)
-  set pushData($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPushData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPushData() => $_clearField(3);
+  @$pb.TagNumber(4)
+  $core.bool get wakeReceiver => $_getBF(2);
+  @$pb.TagNumber(4)
+  set wakeReceiver($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(4)
+  $core.bool hasWakeReceiver() => $_has(2);
+  @$pb.TagNumber(4)
+  void clearWakeReceiver() => $_clearField(4);
 }
 
 class UploadRequest extends $pb.GeneratedMessage {

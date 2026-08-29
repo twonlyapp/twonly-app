@@ -52,6 +52,7 @@ rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
 uuid = { version = "1", features = ["v4"] }
 flate2 = "1"
+resvg = { version = "0.45", default-features = false, features = ["text"] }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
 ] }
@@ -74,6 +75,7 @@ apple-native-keyring-store = { version = "1", features = ["protected"] }
 [target.'cfg(target_os = "android")'.dependencies]
 # Android backend: Interfaces with the Android Keystore
 android-native-keyring-store = "1"
+jni = "0.21.1"
 
 [dev-dependencies]
 anyhow = "1.0.104"

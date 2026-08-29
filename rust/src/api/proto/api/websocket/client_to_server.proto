@@ -126,7 +126,8 @@ message ApplicationData {
   message TextMessage {
       int64 user_id = 1;
       bytes body = 3;
-      optional bytes push_data = 4;
+      reserved 4;
+      bool wake_receiver = 5;
   }
 
   message GetUserByUsername {

@@ -8,10 +8,10 @@ use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use chrono::{Duration, Utc};
 use libsignal_protocol::{
-    CiphertextMessageType, DeviceId, GenericSignedPreKey, IdentityKey, IdentityKeyPair,
-    IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle, PreKeyId, PreKeySignalMessage,
-    PreKeyStore, ProtocolAddress, PublicKey, SignalMessage, SignedPreKeyId, SignedPreKeyStore,
-    Timestamp, message_encrypt, process_prekey_bundle,
+    message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
+    IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
+    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SignalMessage,
+    SignedPreKeyId, SignedPreKeyStore, Timestamp,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -183,21 +183,33 @@ impl RustSignalEngine {
             )
             .fetch_one(&store.pool)
             .await?;
-            if id > 16_777_215 { 1 } else { id + 1 }
+            if id > 16_777_215 {
+                1
+            } else {
+                id + 1
+            }
         };
 
         let signed_pre_key_id: u32 = {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(signed_pre_key_id), 0) AS "id!: u32" FROM signal_signed_pre_keys"#,
             ).fetch_one(&store.pool).await?;
-            if id > 16_777_215 { 1 } else { id + 1 }
+            if id > 16_777_215 {
+                1
+            } else {
+                id + 1
+            }
         };
 
         let kyber_pre_key_id: u32 = {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
             ).fetch_one(&store.pool).await?;
-            if id > 16_777_215 { 1 } else { id + 1 }
+            if id > 16_777_215 {
+                1
+            } else {
+                id + 1
+            }
         };
 
         let pre_key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
@@ -325,7 +337,11 @@ impl RustSignalEngine {
                 r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
             ).fetch_one(&store.pool).await?;
 
-            if id > 16_777_215 { 1 } else { id }
+            if id > 16_777_215 {
+                1
+            } else {
+                id
+            }
         };
 
         let mut pre_key_id: u32 = {
@@ -335,7 +351,11 @@ impl RustSignalEngine {
             .fetch_one(&store.pool)
             .await?;
 
-            if id > 16_777_215 { 1 } else { id }
+            if id > 16_777_215 {
+                1
+            } else {
+                id
+            }
         };
 
         for _ in 0..30 {

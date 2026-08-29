@@ -14,7 +14,6 @@ class DeveloperInformationsView extends StatefulWidget {
 }
 
 class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
-  String? _lastFcmTimestamp;
   String? _lastServerTimestamp;
 
   @override
@@ -26,13 +25,6 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
   Future<void> _loadInformations({bool showFeedback = false}) async {
     const storage = FlutterSecureStorage();
     try {
-      final lastFcm = await storage.read(
-        key: SecureStorageKeys.lastFcmMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
       final lastServer = await storage.read(
         key: SecureStorageKeys.lastServerMessageTimestamp,
         iOptions: const IOSOptions(
@@ -42,7 +34,6 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
       );
       if (mounted) {
         setState(() {
-          _lastFcmTimestamp = lastFcm;
           _lastServerTimestamp = lastServer;
         });
         if (showFeedback) {
@@ -54,6 +45,14 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
         }
       }
     } catch (_) {}
+  }
+
+  String _formatFcmWakeup() {
+    final seconds = userService.currentUser.lastFcmWakeupAt;
+    if (seconds == null) return 'Never';
+    return DateTime.fromMillisecondsSinceEpoch(
+      seconds * 1000,
+    ).toLocal().toString();
   }
 
   String _formatTimestamp(String? timestampStr) {
@@ -94,7 +93,7 @@ class _DeveloperInformationsViewState extends State<DeveloperInformationsView> {
           const Divider(),
           ListTile(
             title: const Text('Last FCM Message'),
-            subtitle: Text(_formatTimestamp(_lastFcmTimestamp)),
+            subtitle: Text(_formatFcmWakeup()),
           ),
           ListTile(
             title: const Text('Last Server Message'),

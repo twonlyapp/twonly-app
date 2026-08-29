@@ -4,10 +4,11 @@
  */
 
 use crate::error::{Result, TwonlyError};
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions, UpdateHookResult};
 use sqlx::{AssertSqlSafe, Column, ConnectOptions, Row, SqlitePool, TypeInfo, ValueRef};
 use std::collections::BTreeSet;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::broadcast;
 
@@ -15,8 +16,12 @@ mod legacy_import;
 pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 2;
+pub const APP_SCHEMA_VERSION: i64 = 3;
 
+/// Tables imported from the legacy Drift database. Every entry must exist in
+/// Drift schema 25, because a missing table aborts the whole import. Rust-only
+/// tables such as `notification_outbox` are deliberately absent: they have no
+/// legacy counterpart, and importing stale rows would replay old notifications.
 pub const APPLICATION_TABLES: &[&str] = &[
     "contacts",
     "groups",
@@ -67,15 +72,61 @@ impl AppDatabase {
         if let Some(key) = encryption_key {
             options = options.pragma("key", format!("'{key}'"));
         }
+        let (changes, _) = broadcast::channel(256);
+
+        // SQLite itself reports which tables a statement touched, so Drift's
+        // query streams stay correct without every Rust write site having to
+        // remember an explicit `notify_committed`. Rows are collected as they
+        // are written and only published once the transaction commits, so a
+        // rollback never reaches the UI.
+        let pending: Arc<Mutex<BTreeSet<String>>> = Arc::default();
+        let hook_pending = pending.clone();
+        let hook_changes = changes.clone();
+
         let pool = SqlitePoolOptions::new()
             // The compatibility executor uses statement-based transactions.
             // Keeping one connection guarantees BEGIN, all statements, and
             // COMMIT are executed on that same native connection.
             .max_connections(1)
             .acquire_timeout(Duration::from_secs(30))
+            .after_connect(move |connection, _meta| {
+                let pending = hook_pending.clone();
+                let changes = hook_changes.clone();
+                Box::pin(async move {
+                    let mut handle = connection.lock_handle().await?;
+
+                    let updated = pending.clone();
+                    handle.set_update_hook(move |result: UpdateHookResult| {
+                        if let Ok(mut tables) = updated.lock() {
+                            tables.insert(result.table.to_owned());
+                        }
+                    });
+
+                    let committed = pending.clone();
+                    handle.set_commit_hook(move || {
+                        let tables = committed
+                            .lock()
+                            .map(|mut tables| std::mem::take(&mut *tables))
+                            .unwrap_or_default();
+                        if !tables.is_empty() {
+                            let _ = changes.send(DatabaseChange { tables });
+                        }
+                        // Never veto the commit.
+                        true
+                    });
+
+                    handle.set_rollback_hook(move || {
+                        if let Ok(mut tables) = pending.lock() {
+                            tables.clear();
+                        }
+                    });
+
+                    Ok(())
+                })
+            })
             .connect_with(options)
             .await?;
-        let (changes, _) = broadcast::channel(256);
+
         Ok(Self { pool, changes })
     }
 
@@ -103,6 +154,12 @@ impl AppDatabase {
         self.changes.subscribe()
     }
 
+    /// Publishes a change immediately, without waiting for a commit.
+    ///
+    /// The SQLite hooks installed in [`AppDatabase::new`] already cover every
+    /// ordinary write. This stays for the cases they cannot see -- most notably
+    /// `DELETE FROM <table>` with no `WHERE`, which SQLite's truncate
+    /// optimization performs without invoking the update hook.
     pub fn notify_committed<'a>(&self, tables: impl IntoIterator<Item = &'a str>) {
         let tables = tables.into_iter().map(str::to_owned).collect();
         let _ = self.changes.send(DatabaseChange { tables });
@@ -311,4 +368,90 @@ pub struct MigrationReport {
 pub struct TableMigrationCount {
     pub table: String,
     pub rows: i64,
+}
+
+#[cfg(test)]
+mod change_notification_tests {
+    use super::*;
+    use tempfile::tempdir;
+    use tokio::sync::broadcast::error::TryRecvError;
+
+    async fn open() -> (tempfile::TempDir, AppDatabase) {
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("app_db.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+        (directory, database)
+    }
+
+    fn insert(key: &str) -> String {
+        format!("INSERT INTO app_metadata(key, value) VALUES('{key}', '1')")
+    }
+
+    #[tokio::test]
+    async fn committed_writes_report_their_tables() {
+        let (_dir, database) = open().await;
+        let mut changes = database.subscribe();
+
+        database
+            .raw_execute(insert("hook"), Vec::new())
+            .await
+            .unwrap();
+
+        let change = changes.try_recv().unwrap();
+        assert!(change.tables.contains("app_metadata"));
+    }
+
+    #[tokio::test]
+    async fn rolled_back_writes_report_nothing() {
+        let (_dir, database) = open().await;
+        let mut changes = database.subscribe();
+
+        database
+            .raw_execute("BEGIN".to_owned(), Vec::new())
+            .await
+            .unwrap();
+        database
+            .raw_execute(insert("discarded"), Vec::new())
+            .await
+            .unwrap();
+        database
+            .raw_execute("ROLLBACK".to_owned(), Vec::new())
+            .await
+            .unwrap();
+
+        assert_eq!(changes.try_recv().unwrap_err(), TryRecvError::Empty);
+    }
+
+    #[tokio::test]
+    async fn a_transaction_reports_every_table_once_on_commit() {
+        let (_dir, database) = open().await;
+        let mut changes = database.subscribe();
+
+        database
+            .raw_execute("BEGIN".to_owned(), Vec::new())
+            .await
+            .unwrap();
+        database
+            .raw_execute(insert("first"), Vec::new())
+            .await
+            .unwrap();
+        database
+            .raw_execute(insert("second"), Vec::new())
+            .await
+            .unwrap();
+        // Nothing may reach the UI before the transaction commits.
+        assert_eq!(changes.try_recv().unwrap_err(), TryRecvError::Empty);
+
+        database
+            .raw_execute("COMMIT".to_owned(), Vec::new())
+            .await
+            .unwrap();
+
+        let change = changes.try_recv().unwrap();
+        assert_eq!(change.tables, BTreeSet::from(["app_metadata".to_owned()]));
+        assert_eq!(changes.try_recv().unwrap_err(), TryRecvError::Empty);
+    }
 }

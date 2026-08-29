@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT media_id, type AS media_type, download_token,\n                      encryption_key, encryption_mac, encryption_nonce\n               FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "media_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "media_id"
+          }
+        }
+      },
+      {
+        "name": "media_type",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      },
+      {
+        "name": "download_token",
+        "ordinal": 2,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_token"
+          }
+        }
+      },
+      {
+        "name": "encryption_key",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_key"
+          }
+        }
+      },
+      {
+        "name": "encryption_mac",
+        "ordinal": 4,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_mac"
+          }
+        }
+      },
+      {
+        "name": "encryption_nonce",
+        "ordinal": 5,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_nonce"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "051214ce0e6182d160aa7d3f039009d0fb62c946560da627d7de41e57a0d289d"
+}

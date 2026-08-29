@@ -136,6 +136,7 @@ impl Server {
         ctx: &Arc<Context>,
         user_id: i64,
         body: Vec<u8>,
+        wake_receiver: bool,
     ) -> Result<ServerResult<()>> {
         server_ok!(
             Self::application_for_contact(
@@ -144,7 +145,7 @@ impl Server {
                     client_to_server::application_data::TextMessage {
                         user_id,
                         body,
-                        push_data: None,
+                        wake_receiver,
                     },
                 ),
                 user_id,

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO message_histories(message_id, content, created_at)\n               SELECT message_id, content, ? FROM messages\n               WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "2fec92a566a99026de111e1b9b175719cb54932ea03bd754747407d3291f764d"
+}

@@ -28,6 +28,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/exclusive_access.utils.dart';
@@ -102,6 +103,7 @@ void main() async {
   var storageError = await twonlyMinimumInitialization();
   await FcmNotificationService.initStartup();
   await setupPushNotification();
+  NativeNotificationService.init();
 
   var userExists = false;
 

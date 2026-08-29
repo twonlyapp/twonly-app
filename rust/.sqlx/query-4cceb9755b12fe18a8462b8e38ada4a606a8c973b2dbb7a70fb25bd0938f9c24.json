@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT delete_messages_after_milliseconds FROM groups WHERE group_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "delete_messages_after_milliseconds",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "delete_messages_after_milliseconds"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4cceb9755b12fe18a8462b8e38ada4a606a8c973b2dbb7a70fb25bd0938f9c24"
+}

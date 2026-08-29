@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)\n                VALUES (?, ?, ?, 0)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "121378634faf12e63bdd7e116c8a0b24a9e20e39c41e11be8e98b32f7d0e8f61"
+}

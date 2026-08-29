@@ -7,3 +7,4 @@ pub mod contacts;
 pub mod groups;
 pub mod mediafiles;
 pub mod messages;
+pub mod notifications;

@@ -31,12 +31,12 @@ async fn test_server_account_and_user_endpoints() -> anyhow::Result<()> {
     // 2. get_user_id_from_username (handshake endpoint)
     {
         let tester_handshake = Tester::new().await?;
-        tester_handshake.wait_until(ApiConnectionState::Connected).await?;
-        let user_id = Server::get_user_id_from_username(
-            &tester_handshake.context,
-            tester_b.username.clone(),
-        )
-        .await?;
+        tester_handshake
+            .wait_until(ApiConnectionState::Connected)
+            .await?;
+        let user_id =
+            Server::get_user_id_from_username(&tester_handshake.context, tester_b.username.clone())
+                .await?;
         match user_id {
             ServerResult::Ok(id) => assert_eq!(id, tester_b.user_id),
             ServerResult::ErrorCode(code) => {

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE user_discovery_own_promotions SET promotion = X'' WHERE contact_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "c6878c3532b6555c1e1a51d6602ba74141445777e0b9cbd882a875d5c3481fca"
+}

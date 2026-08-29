@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT EXISTS(\n                SELECT 1\n                FROM key_verifications AS verification\n                WHERE verification.contact_id = ?\n                  AND (\n                    verification.type != 'contactSharedByVerified'\n                    OR EXISTS(\n                        SELECT 1 FROM key_verifications AS verifier_verification\n                        WHERE verifier_verification.contact_id = verification.verified_by\n                    )\n                  )\n            )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(\n                SELECT 1\n                FROM key_verifications AS verification\n                WHERE verification.contact_id = ?\n                  AND (\n                    verification.type != 'contactSharedByVerified'\n                    OR EXISTS(\n                        SELECT 1 FROM key_verifications AS verifier_verification\n                        WHERE verifier_verification.contact_id = verification.verified_by\n                    )\n                  )\n            )",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2f1854f10ac694a9dcabe133c32d986978bf168dccce04d461beeef220f8952c"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET content = ?, modified_at = ?\n               WHERE message_id = ? AND sender_id = ? AND content IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "0e921f020426da5e0c76cd3c555f37d2abad38c2959ea971ae3085d51ad68ccb"
+}

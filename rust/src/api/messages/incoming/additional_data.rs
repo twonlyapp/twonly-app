@@ -78,7 +78,7 @@ async fn verify_shared_contacts(
         };
 
         if stored_identity != contact.public_identity_key {
-            tracing::error!("shared contact public identity key does not match");
+            tracing::warn!("shared contact public identity key does not match");
             continue;
         }
 

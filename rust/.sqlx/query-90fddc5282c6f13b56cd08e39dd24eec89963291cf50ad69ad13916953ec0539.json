@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT type FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "type",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "type"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "90fddc5282c6f13b56cd08e39dd24eec89963291cf50ad69ad13916953ec0539"
+}

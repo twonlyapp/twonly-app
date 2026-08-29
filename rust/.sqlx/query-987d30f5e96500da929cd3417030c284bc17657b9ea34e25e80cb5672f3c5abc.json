@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE group_members SET member_state = ? WHERE group_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "987d30f5e96500da929cd3417030c284bc17657b9ea34e25e80cb5672f3c5abc"
+}

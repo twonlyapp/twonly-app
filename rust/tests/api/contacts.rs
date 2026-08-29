@@ -75,7 +75,10 @@ async fn test_unknown_sender_auto_contact_discovery() -> anyhow::Result<()> {
     )
     .fetch_one(&signal_db_b.pool)
     .await?;
-    assert_eq!(identity_exists, 1, "signal identity must be recorded for unknown sender");
+    assert_eq!(
+        identity_exists, 1,
+        "signal identity must be recorded for unknown sender"
+    );
 
     Ok(())
 }

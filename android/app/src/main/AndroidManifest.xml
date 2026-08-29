@@ -71,6 +71,25 @@
             android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
             tools:node="remove">
         </service>
+        <service
+            android:name=".notifications.TwonlyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- Twonly owns background FCM delivery natively. Keep the Flutter
+             plugin for foreground permission/token APIs, but never allow it
+             to launch a Dart background isolate. -->
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            tools:node="remove" />
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingBackgroundService"
+            tools:node="remove" />
+        <receiver
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingReceiver"
+            tools:node="remove" />
         <meta-data
             android:name="eu.twonly.service.TWONLY_LOGO"
             android:resource="@drawable/ic_launcher_foreground" />

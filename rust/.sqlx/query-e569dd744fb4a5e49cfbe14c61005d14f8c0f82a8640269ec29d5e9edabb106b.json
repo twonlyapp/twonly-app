@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_id, sender_id AS \"sender_id!: i64\" FROM messages\n               WHERE media_id = ? AND opened_at IS NULL AND sender_id IS NOT NULL",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "name": "sender_id!: i64",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "messages",
+            "name": "sender_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "e569dd744fb4a5e49cfbe14c61005d14f8c0f82a8640269ec29d5e9edabb106b"
+}

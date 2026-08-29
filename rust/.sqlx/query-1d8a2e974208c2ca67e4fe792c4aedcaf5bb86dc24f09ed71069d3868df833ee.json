@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT last_type_indicator FROM group_members WHERE group_id = ? AND contact_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "last_type_indicator",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "group_members",
+            "name": "last_type_indicator"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "1d8a2e974208c2ca67e4fe792c4aedcaf5bb86dc24f09ed71069d3868df833ee"
+}

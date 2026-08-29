@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT OR REPLACE INTO receipts(receipt_id, contact_id, message, contact_will_sends_receipt)\n        VALUES (?, ?, ?, 0)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "e512dd25f91d718843ac20f97264380991ff99c42097ac021b9db327462d7557"
+}
