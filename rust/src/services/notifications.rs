@@ -409,6 +409,11 @@ pub async fn process_wakeup(
         if !initial.additions.is_empty() {
             return Ok(initial);
         }
+        // Flutter already owns the socket. Nudge the server to redeliver in
+        // case the push raced a drain that had already finished.
+        if let Ok(client) = ApiRuntime::client(&ctx).await {
+            client.request_catch_up().await;
+        }
         let generation = ctx.incoming_generation();
         tokio::time::timeout(deadline, ctx.wait_for_incoming_after(generation))
             .await

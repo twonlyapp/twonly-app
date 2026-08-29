@@ -1,4 +1,4 @@
-use super::Tester;
+use super::{init_tracing, Tester};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::groups::GroupService;
@@ -14,14 +14,7 @@ async fn create_authenticated_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_group_membership_error_healing() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .with_ansi(true)
-        .event_format(rust_lib_twonly::log::ShortEventFormatter::ansi())
-        .try_init();
+    init_tracing();
 
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
@@ -98,6 +91,7 @@ async fn test_group_membership_error_healing() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn test_add_hidden_contact() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 
@@ -125,6 +119,7 @@ async fn test_add_hidden_contact() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
     let tester_c = create_authenticated_tester().await?;

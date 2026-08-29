@@ -1,4 +1,4 @@
-use super::Tester;
+use super::{init_tracing, Tester};
 use rust_lib_twonly::api::Server;
 use rust_lib_twonly::bridge::api::{ApiConnectionState, ServerResult};
 
@@ -12,6 +12,7 @@ async fn create_authenticated_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_server_account_and_user_endpoints() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 

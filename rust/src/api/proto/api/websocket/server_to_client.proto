@@ -21,6 +21,7 @@ message V0 {
     SealedSenderMessage sealedSenderMessage = 9;
     SealedSenderMessages sealedSenderMessages = 10;
     bool mailboxDrained = 11;
+    PendingMessagesV2 pendingMessagesV2 = 12;
   }
 }
 
@@ -31,6 +32,19 @@ message NewMessage {
 
 message NewMessages {
     repeated NewMessage newMessages = 1;
+}
+
+// Reliable mailbox delivery. `delivery_id` is a server-generated mailbox row
+// identifier used only to acknowledge delivery; it is unrelated to and reveals
+// nothing about the end-to-end encrypted message ID inside `body`.
+message PendingMessageV2 {
+  int64 delivery_id = 1;
+  int64 from_user_id = 2;
+  bytes body = 3;
+}
+
+message PendingMessagesV2 {
+  repeated PendingMessageV2 messages = 1;
 }
 
 message SealedSenderMessage {

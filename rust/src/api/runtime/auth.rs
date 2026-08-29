@@ -115,6 +115,7 @@ impl ApiAuthHandshaker {
                 app_version,
                 device_id,
                 in_background: self.in_background,
+                supports_mailbox_v2: Some(true),
             },
         );
         self.request_handshake(sender, receiver, handshake)
@@ -144,6 +145,7 @@ impl ApiAuthHandshaker {
                 app_version: Some(app_version),
                 device_id: Some(device_id),
                 in_background: Some(self.in_background),
+                supports_mailbox_v2: Some(true),
             },
         );
         match self.request_handshake(sender, receiver, handshake).await {
@@ -286,6 +288,9 @@ impl ApiAuthHandshaker {
         if let Some(client) = self.api_client.upgrade() {
             tokio::spawn(async move {
                 client.set_state(ApiConnectionState::Authenticated).await;
+                // Runs on every (re)connect, so this covers both the initial
+                // authentication and reconnection catch-up.
+                client.request_catch_up().await;
             });
         }
 

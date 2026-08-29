@@ -24,18 +24,11 @@ use rust_lib_twonly::database::app::tables::Group;
 use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::groups::GroupService;
 use rust_lib_twonly::services::messages::MessageService;
-pub(crate) use tester::Tester;
+pub(crate) use tester::{init_tracing, Tester};
 
 #[tokio::test]
 async fn test_connect_to_dev_server() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .with_ansi(true)
-        .event_format(rust_lib_twonly::log::ShortEventFormatter::ansi())
-        .try_init();
+    init_tracing();
 
     let mut tester_a = {
         let mut tester = Tester::new().await?;

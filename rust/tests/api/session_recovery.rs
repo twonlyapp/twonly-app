@@ -1,4 +1,4 @@
-use super::Tester;
+use super::{init_tracing, Tester};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::tables::Group;
 use rust_lib_twonly::services::contacts::ContactService;
@@ -14,6 +14,7 @@ async fn create_authenticated_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_signal_session_auto_recovery_on_missing_session() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 

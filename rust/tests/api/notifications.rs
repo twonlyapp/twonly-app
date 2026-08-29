@@ -7,7 +7,7 @@
 //! hand, so classification, deduplication, claiming and clearing are all
 //! exercised end to end.
 
-use crate::Tester;
+use crate::{init_tracing, Tester};
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::tables::Group;
 use rust_lib_twonly::services::contacts::ContactService;
@@ -24,14 +24,7 @@ async fn ready_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .with_ansi(true)
-        .event_format(rust_lib_twonly::log::ShortEventFormatter::ansi())
-        .try_init();
+    init_tracing();
 
     let mut tester_a = ready_tester().await?;
     let tester_b = ready_tester().await?;

@@ -83,3 +83,19 @@ impl Server {
         ApiRuntime::request_binary(ctx, Self::handshake_request(value)).await
     }
 }
+
+impl Server {
+    /// Asks the server to (re)start a mailbox drain. It answers immediately;
+    /// the messages themselves arrive as unsolicited `PendingMessagesV2`
+    /// batches, so this must not be treated as a delivery round trip.
+    pub(crate) async fn request_pending_messages(ctx: &Arc<Context>) -> Result<()> {
+        Self::application(
+            ctx,
+            client_to_server::application_data::ApplicationData::RequestPendingMessages(
+                client_to_server::application_data::RequestPendingMessages {},
+            ),
+        )
+        .await
+        .map(|_| ())
+    }
+}

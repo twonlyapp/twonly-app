@@ -75,6 +75,9 @@ message Handshake {
     optional string app_version = 3;
     optional int64 device_id = 4;
     optional bool in_background = 5;
+    // Set by clients that understand PendingMessagesV2 / RequestPendingMessages.
+    // Absent or false means the legacy NewMessage(s) mailbox protocol is used.
+    optional bool supports_mailbox_v2 = 6;
   }
 
   message AuthenticateWithLoginToken {
@@ -83,6 +86,8 @@ message Handshake {
     string app_version = 3;
     int64 device_id = 4;
     bool in_background = 5;
+    // See Authenticate.supports_mailbox_v2.
+    optional bool supports_mailbox_v2 = 6;
   }
 
   message GetServerKeyForPasswordLessRecovery {
@@ -260,6 +265,10 @@ message ApplicationData {
     repeated bytes token_requests = 1;
   }
 
+  // Asks the server to (re)start a mailbox drain for the authenticated user.
+  // The server responds immediately; messages arrive as PendingMessagesV2.
+  message RequestPendingMessages {}
+
   oneof ApplicationData {
     TextMessage textMessage = 1;
     GetUserByUsername getUserByUsername = 2;
@@ -291,6 +300,7 @@ message ApplicationData {
     UploadPqcPreKeys upload_pqc_prekeys = 40;
     GetPrivacyPassParameters get_privacy_pass_parameters = 41;
     IssuePrivacyPassTokens issue_privacy_pass_tokens = 42;
+    RequestPendingMessages request_pending_messages = 43;
   }
 }
 
@@ -309,11 +319,18 @@ message Response {
     repeated ApplicationData.PqcPreKey prekeys = 1;
   }
 
+  // Response to a PendingMessagesV2 batch. Contains only the delivery IDs the
+  // client has durably persisted; the server deletes exactly those rows.
+  message AcknowledgedPendingMessages {
+    repeated int64 delivery_ids = 1;
+  }
+
   message Ok {
     oneof Ok {
       bool None = 1;
       Prekeys prekeys = 2;
       PqcPrekeys prekeys_pqc = 3;
+      AcknowledgedPendingMessages acknowledged_pending_messages = 4;
     }
   }
 

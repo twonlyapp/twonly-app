@@ -64,6 +64,9 @@ pub(crate) async fn handle_server_message(
             }
             ok::Ok::None(true)
         }
+        Kind::PendingMessagesV2(batch) => {
+            return Ok(acknowledge_pending_messages(ctx, batch).await);
+        }
         Kind::SealedSenderMessage(message) => {
             if let Err(error) = handle_sealed_message(ctx, message.body).await {
                 tracing::warn!("failed to process sealed-sender message: {error}");
@@ -95,6 +98,66 @@ pub(crate) async fn handle_server_message(
             ok: Some(ok),
         })),
     })
+}
+
+/// Processes a reliable-mailbox batch and reports back exactly which delivery
+/// IDs are now durable locally. The server deletes only those rows, so anything
+/// left out is redelivered on the next drain.
+///
+/// Deduplication is the `received_receipts` claim inside
+/// [`handle_decoded_server_message`]: it is committed in the same transaction
+/// that persists the message, is keyed on the end-to-end receipt ID, and is
+/// never purged. A redelivered envelope is therefore recognised before it is
+/// decrypted, whichever transport carried it.
+async fn acknowledge_pending_messages(
+    ctx: &Arc<Context>,
+    batch: server_to_client::PendingMessagesV2,
+) -> client_to_server::Response {
+    let mut delivery_ids = Vec::with_capacity(batch.messages.len());
+
+    for message in batch.messages {
+        let delivery_id = message.delivery_id;
+        let result = handle_new_server_message(
+            ctx,
+            NewMessage {
+                from_user_id: message.from_user_id,
+                body: message.body,
+            },
+        )
+        .await;
+
+        match result {
+            // Committed, or recognised as a duplicate. Either way it is durable.
+            Ok(()) => delivery_ids.push(delivery_id),
+            // An envelope that cannot be decoded will never decode. Acknowledge
+            // it so one poisoned row cannot be redelivered forever.
+            Err(
+                error @ (TwonlyError::ProtobufDecode(_) | TwonlyError::UnknownProtobufEnumValue(_)),
+            ) => {
+                tracing::warn!(
+                    delivery_id,
+                    "dropping an undecodable mailbox message: {error}"
+                );
+                delivery_ids.push(delivery_id);
+            }
+            // Anything else (storage, network, Signal state) may succeed later.
+            // Leaving the ID out keeps the row on the server for a retry.
+            Err(error) => {
+                tracing::warn!(
+                    delivery_id,
+                    "mailbox message not persisted, will retry: {error}"
+                );
+            }
+        }
+    }
+
+    client_to_server::Response {
+        response: Some(Response::Ok(client_to_server::response::Ok {
+            ok: Some(ok::Ok::AcknowledgedPendingMessages(
+                client_to_server::response::AcknowledgedPendingMessages { delivery_ids },
+            )),
+        })),
+    }
 }
 
 pub(crate) async fn handle_new_server_message(

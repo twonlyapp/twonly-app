@@ -9,6 +9,39 @@ use std::sync::Arc;
 use tempfile::TempDir;
 use tokio::time::{sleep, Duration};
 
+/// Installs the tracing subscriber shared by every integration test.
+///
+/// Logging is entirely opt-in through the environment: without `RUST_LOG` no
+/// subscriber is installed at all, so a plain `cargo test` run stays quiet.
+/// `RUST_LOG` selects the filter, and `NO_COLOR` (or `TWONLY_LOG_ANSI=0`)
+/// switches the formatter from ansi to plain for CI logs.
+///
+/// Calling it more than once is a no-op, so every test can call it.
+pub(crate) fn init_tracing() {
+    let Ok(filter) = tracing_subscriber::EnvFilter::try_from_default_env() else {
+        return;
+    };
+
+    let ansi = match std::env::var("TWONLY_LOG_ANSI") {
+        Ok(value) => !matches!(value.trim(), "" | "0" | "false" | "no"),
+        Err(_) => std::env::var_os("NO_COLOR").is_none_or(|value| value.is_empty()),
+    };
+
+    let subscriber = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(ansi);
+
+    let _ = if ansi {
+        subscriber
+            .event_format(rust_lib_twonly::log::ShortEventFormatter::ansi())
+            .try_init()
+    } else {
+        subscriber
+            .event_format(rust_lib_twonly::log::ShortEventFormatter::plain())
+            .try_init()
+    };
+}
+
 pub(crate) struct Tester {
     pub context: Arc<Context>,
     pub username: String,

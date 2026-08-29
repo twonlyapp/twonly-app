@@ -5,7 +5,7 @@ use rust_lib_twonly::services::contacts::ContactService;
 use rust_lib_twonly::services::messages::MessageService;
 use tokio::time::sleep;
 
-use super::Tester;
+use super::{init_tracing, Tester};
 
 async fn create_tester() -> anyhow::Result<Tester> {
     let mut tester = Tester::new().await?;
@@ -96,6 +96,7 @@ async fn wait_for_discovery(
 
 #[tokio::test]
 async fn user_discovery_reconstructs_an_unknown_user_from_three_contacts() -> anyhow::Result<()> {
+    init_tracing();
     let observer = create_tester().await?;
     let relay_a = create_tester().await?;
     let relay_b = create_tester().await?;

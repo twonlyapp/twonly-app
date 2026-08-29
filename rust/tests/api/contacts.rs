@@ -1,4 +1,4 @@
-use super::Tester;
+use super::{init_tracing, Tester};
 use rust_lib_twonly::api::Server;
 use rust_lib_twonly::bridge::api::ApiConnectionState;
 use rust_lib_twonly::database::app::tables::Group;
@@ -15,6 +15,7 @@ async fn create_authenticated_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_contact_cross_request_auto_accept() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 
@@ -55,6 +56,7 @@ async fn test_contact_cross_request_auto_accept() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn test_unknown_sender_auto_contact_discovery() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 
@@ -85,6 +87,7 @@ async fn test_unknown_sender_auto_contact_discovery() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn test_check_for_deleted_usernames() -> anyhow::Result<()> {
+    init_tracing();
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
 

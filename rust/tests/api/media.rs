@@ -1,4 +1,4 @@
-use super::Tester;
+use super::{init_tracing, Tester};
 use prost::Message as _;
 use rust_lib_twonly::api::messages::outgoing::send_c2c_message_to_contact;
 use rust_lib_twonly::api::proto::client::{self as proto, encrypted_content};
@@ -18,14 +18,7 @@ async fn create_authenticated_tester() -> anyhow::Result<Tester> {
 
 #[tokio::test]
 async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .with_ansi(true)
-        .event_format(rust_lib_twonly::log::ShortEventFormatter::ansi())
-        .try_init();
+    init_tracing();
 
     let tester_a = create_authenticated_tester().await?;
     let tester_b = create_authenticated_tester().await?;
