@@ -6,7 +6,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
@@ -26,7 +25,7 @@ class SubscriptionView extends StatefulWidget {
 class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
   bool testerRequested = true;
-  Response_PlanBallance? ballance;
+  FrbPlanBalance? ballance;
   String? additionalOwnerName;
 
   @override
@@ -36,12 +35,13 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> initAsync() async {
-    ballance = await rustApiProtobuf(
-      RustApi.loadPlanBalance(),
-      decodePlanBalance,
-    );
-    if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
-      final ownerId = ballance!.additionalAccountOwnerId.toInt();
+    try {
+      ballance = await RustApi.loadPlanBalance();
+    } catch (_) {
+      ballance = null;
+    }
+    if (ballance != null && ballance!.additionalAccountOwnerId != null) {
+      final ownerId = ballance!.additionalAccountOwnerId!;
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(ownerId)
           .getSingleOrNull();

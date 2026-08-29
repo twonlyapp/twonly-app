@@ -140,3 +140,10 @@ pub(crate) fn decode_ok_value<T>(
         ServerResult::ErrorCode(code) => Ok(ServerResult::ErrorCode(code)),
     }
 }
+
+pub(crate) fn decode_empty_ok(bytes: Vec<u8>) -> Result<ServerResult<()>> {
+    decode_ok_value(bytes, |value| match value {
+        server_to_client::response::ok::Ok::None(_) => Some(()),
+        _ => None,
+    })
+}

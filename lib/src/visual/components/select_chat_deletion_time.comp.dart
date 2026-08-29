@@ -4,11 +4,11 @@ import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/groups/group.view.dart';
@@ -106,7 +106,10 @@ class _SelectChatDeletionTimeListTitleState
           onlySendIfNoReceiptsAreOpen: false,
         );
       } else {
-        if (!await updateChatDeletionTime(group!, selected)) {
+        if (!await rust_groups.updateChatDeletionTime(
+          groupId: group!.groupId,
+          deleteMessagesAfterMilliseconds: selected,
+        )) {
           if (mounted) {
             showNetworkIssue(context);
           }

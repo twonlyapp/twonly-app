@@ -1,0 +1,70 @@
+syntax = "proto3";
+package http_requests;
+
+message TextMessage {
+  int64 user_id = 1;
+  bytes body = 2;
+  optional bytes push_data = 3;
+}
+
+message UploadRequest {
+  bytes encrypted_data = 1;
+  repeated bytes download_tokens = 2;
+  repeated TextMessage messages_on_success = 3;
+}
+
+message SealedSenderMessageRequest {
+  reserved 4;
+  int64 recipient_user_id = 1;
+  bytes sealed_sender_message = 2;
+  bytes privacy_pass_token = 3;
+}
+
+message SealedSenderMessageResponse {
+  string message_id = 1;
+}
+
+// plaintext message send to the server
+message UpdateGroupState {
+    message UpdateTBS {
+        uint64 version_id = 1;
+        bytes encrypted_group_state = 3;
+        bytes public_key = 4;
+        // public group key
+        optional bytes remove_admin = 5;
+        optional bytes add_admin = 6;
+        bytes nonce = 7;
+    }
+    UpdateTBS update = 1;
+    bytes signature = 2;
+}
+
+message NewGroupState {
+    string group_id = 1;
+    uint64 version_id = 2;
+    bytes encrypted_group_state = 3;
+    bytes public_key = 4;
+}
+
+message AppendGroupState {
+    message AppendTBS {
+        bytes encrypted_group_state_append = 1;
+        bytes public_key = 2;
+        string group_id = 3;
+        bytes nonce = 4;
+    }
+    bytes signature = 1;
+    AppendTBS appendTBS = 2;
+    uint64 versionId = 3;
+}
+
+message GroupState {
+    uint64 version_id = 1;
+    bytes encrypted_group_state = 2;
+    repeated AppendGroupState appended_group_states = 3;
+}
+
+// this is just a database helper to store multiple appends
+message AppendGroupStateHelper {
+    repeated AppendGroupState appended_group_states = 1;
+}

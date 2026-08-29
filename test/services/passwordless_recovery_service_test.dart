@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
-import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
@@ -98,15 +97,6 @@ void main() {
       } catch (_) {}
     }
   });
-
-  Future<void> setupSignalSession(int contactId) async {
-    final bundle = await RustSignal.generateBundle();
-    await RustSignal.processPrekeyBundle(
-      name: contactId.toString(),
-      deviceId: 1,
-      bundle: bundle,
-    );
-  }
 
   group('PasswordlessRecoveryService - enablePasswordlessRecovery', () {
     test('works with SecondFactorType.none', () async {

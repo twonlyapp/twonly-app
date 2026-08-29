@@ -6,8 +6,6 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
 import 'package:twonly/src/utils/log.dart';
@@ -35,18 +33,6 @@ DateTime fromTimestamp(Int64 timeStamp) {
   return date;
 }
 
-// ignore: strict_raw_type
-Result asResult(server.ServerToClient? msg) {
-  if (msg == null) {
-    return Result.error(ErrorCode.InternalError);
-  }
-  if (msg.v0.response.hasOk()) {
-    return Result.success(msg.v0.response.ok);
-  } else {
-    return Result.error(msg.v0.response.error);
-  }
-}
-
 Future<void> handleMediaError(MediaFile media) async {
   await twonlyDB.mediaFilesDao.updateMedia(
     media.mediaId,
@@ -72,17 +58,17 @@ Future<void> handleMediaError(MediaFile media) async {
 }
 
 Future<bool> importSignalContactAndCreateRequest(
-  server.Response_UserData userdata,
+  FrbUserData userdata,
 ) async {
   try {
     await RustApi.establishSignalSession(
-      contactId: userdata.userId.toInt(),
+      contactId: userdata.userId,
       expectedPublicKey: Uint8List.fromList(userdata.publicIdentityKey),
     );
 
     // 2. Then send user request
     await RustApi.sendEncryptedContent(
-      contactId: userdata.userId.toInt(),
+      contactId: userdata.userId,
       content: EncryptedContent(
         contactRequest: EncryptedContent_ContactRequest(
           type: EncryptedContent_ContactRequest_Type.REQUEST,

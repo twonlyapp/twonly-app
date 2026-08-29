@@ -3,12 +3,10 @@
  *
  */
 
+use crate::api::messages::incoming::messages;
 use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
-use crate::api::messages::incoming::messages;
-use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
-use crate::api::runtime::helpers::decode_ok_value;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
@@ -16,7 +14,6 @@ use crate::services::contacts::ContactService;
 use crate::services::messages::MessageService;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
-use prost::Message;
 
 #[frb(ignore)]
 pub enum ServerResult<T> {
@@ -32,17 +29,7 @@ fn api_result<T>(result: ServerResult<T>) -> Result<T> {
 }
 
 fn empty_api_response(bytes: Vec<u8>) -> Result<()> {
-    api_result(decode_ok_value(bytes, |value| match value {
-        ResponseOk::None(_) => Some(()),
-        _ => None,
-    })?)
-}
-
-fn encoded_api_response<T: Message>(
-    bytes: Vec<u8>,
-    extract: impl FnOnce(ResponseOk) -> Option<T>,
-) -> Result<Vec<u8>> {
-    api_result(decode_ok_value(bytes, extract)?).map(|value| value.encode_to_vec())
+    crate::api::runtime::helpers::decode_empty_ok(bytes).and_then(api_result)
 }
 
 #[derive(Clone, Debug)]
@@ -100,6 +87,62 @@ pub enum ApiEventKind {
     AppOutdated,
     NewDeviceRegistered,
     LoginTokenMigrated,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbPasswordlessNotificationMessage {
+    pub id: i64,
+    pub encrypted_message: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbUserData {
+    pub user_id: i64,
+    pub username: Vec<u8>,
+    pub public_identity_key: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbProofOfWork {
+    pub prefix: String,
+    pub difficulty: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbMemoriesUsage {
+    pub current_bytes: i64,
+    pub count: i64,
+    pub max_bytes: i64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbAdditionalAccount {
+    pub user_id: i64,
+    pub plan_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbPlanBalance {
+    pub used_daily_media_upload_limit: i64,
+    pub used_upload_media_size_limit: i64,
+    pub payment_period_days: Option<i64>,
+    pub last_payment_done_unix_timestamp: Option<i64>,
+    pub additional_accounts: Vec<FrbAdditionalAccount>,
+    pub auto_renewal: Option<bool>,
+    pub additional_account_owner_id: Option<i64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbPresignedPost {
+    pub url: String,
+    pub fields: Vec<(String, String)>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct FrbMemoriesUploadUrls {
+    pub media_id: String,
+    pub thumbnail_upload: Option<FrbPresignedPost>,
+    pub full_upload: Option<FrbPresignedPost>,
 }
 
 /// Flutter-facing facade for the Rust-owned API runtime.
@@ -188,12 +231,16 @@ impl RustApi {
             .and_then(api_result)
     }
 
-    pub async fn get_user_by_id(user_id: i64) -> Result<Vec<u8>> {
+    pub async fn get_user_by_id(user_id: i64) -> Result<FrbUserData> {
         let ctx = Context::get_static()?;
-        Server::get_user_by_id(ctx, user_id)
+        let res = Server::get_user_by_id(ctx, user_id)
             .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+            .and_then(api_result)?;
+        Ok(FrbUserData {
+            user_id: res.user_id,
+            username: res.username.unwrap_or_default(),
+            public_identity_key: res.public_identity_key.unwrap_or_default(),
+        })
     }
     pub async fn check_for_deleted_usernames() -> Result<()> {
         let ctx = Context::get_static()?;
@@ -205,19 +252,24 @@ impl RustApi {
             .await
             .and_then(api_result)
     }
-    pub async fn get_user_data(username: String) -> Result<Vec<u8>> {
+    pub async fn get_user_data(username: String) -> Result<FrbUserData> {
         let ctx = Context::get_static()?;
-        Server::get_user_by_username(ctx, username)
+        let res = Server::get_user_by_username(ctx, username)
             .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+            .and_then(api_result)?;
+        Ok(FrbUserData {
+            user_id: res.user_id,
+            username: res.username.unwrap_or_default(),
+            public_identity_key: res.public_identity_key.unwrap_or_default(),
+        })
     }
-    pub async fn get_proof_of_work() -> Result<Vec<u8>> {
+    pub async fn get_proof_of_work() -> Result<FrbProofOfWork> {
         let ctx = Context::get_static()?;
-        Server::get_proof_of_work(ctx)
-            .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+        let res = Server::get_proof_of_work(ctx).await.and_then(api_result)?;
+        Ok(FrbProofOfWork {
+            prefix: res.prefix,
+            difficulty: res.difficulty,
+        })
     }
     pub async fn download_done(token: Vec<u8>) -> Result<()> {
         let ctx = Context::get_static()?;
@@ -250,30 +302,43 @@ impl RustApi {
             .await
             .and_then(api_result)
     }
+
     pub async fn request_memories_upload(
         size: i64,
         original_date: i64,
         media_id: String,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<FrbMemoriesUploadUrls> {
         let ctx = Context::get_static()?;
-        Server::request_memories_upload(ctx, size, original_date, media_id)
+        let res = Server::request_memories_upload(ctx, size, original_date, media_id)
             .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+            .and_then(api_result)?;
+        Ok(FrbMemoriesUploadUrls {
+            media_id: res.media_id,
+            thumbnail_upload: res.thumbnail_upload.map(|p| FrbPresignedPost {
+                url: p.url,
+                fields: p.fields.into_iter().collect(),
+            }),
+            full_upload: res.full_upload.map(|p| FrbPresignedPost {
+                url: p.url,
+                fields: p.fields.into_iter().collect(),
+            }),
+        })
     }
-    pub async fn get_memories_usage() -> Result<Vec<u8>> {
+    pub async fn get_memories_usage() -> Result<FrbMemoriesUsage> {
         let ctx = Context::get_static()?;
-        Server::get_memories_usage(ctx)
-            .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+        let res = Server::get_memories_usage(ctx).await.and_then(api_result)?;
+        Ok(FrbMemoriesUsage {
+            current_bytes: res.current_bytes,
+            count: res.count,
+            max_bytes: res.max_bytes,
+        })
     }
-    pub async fn get_memories_url(media_id: String, thumbnail: bool) -> Result<Vec<u8>> {
+    pub async fn get_memories_url(media_id: String, thumbnail: bool) -> Result<String> {
         let ctx = Context::get_static()?;
-        Server::get_memories_url(ctx, media_id, thumbnail)
+        let res = Server::get_memories_url(ctx, media_id, thumbnail)
             .await
-            .and_then(api_result)
-            .map(|value| value.encode_to_vec())
+            .and_then(api_result)?;
+        Ok(res.full_download_url)
     }
     pub async fn confirm_memories_upload(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
@@ -293,19 +358,30 @@ impl RustApi {
             .await
             .and_then(api_result)
     }
-    pub async fn get_plan_balance() -> Result<Vec<u8>> {
+    pub async fn get_plan_balance() -> Result<FrbPlanBalance> {
         let ctx = Context::get_static()?;
-        encoded_api_response(Server::get_plan_balance(ctx).await?, |value| match value {
-            ResponseOk::Planballance(balance) => Some(balance),
-            _ => None,
+        let res = Server::get_plan_balance_model(ctx)
+            .await
+            .and_then(api_result)?;
+        Ok(FrbPlanBalance {
+            used_daily_media_upload_limit: res.used_daily_media_upload_limit,
+            used_upload_media_size_limit: res.used_upload_media_size_limit,
+            payment_period_days: res.payment_period_days,
+            last_payment_done_unix_timestamp: res.last_payment_done_unix_timestamp,
+            additional_accounts: res
+                .additional_accounts
+                .into_iter()
+                .map(|a| FrbAdditionalAccount {
+                    user_id: a.user_id,
+                    plan_id: a.plan_id,
+                })
+                .collect(),
+            auto_renewal: res.auto_renewal,
+            additional_account_owner_id: res.additional_account_owner_id,
         })
     }
-    pub async fn load_plan_balance() -> Result<Vec<u8>> {
-        let ctx = Context::get_static()?;
-        encoded_api_response(Server::load_plan_balance(ctx).await?, |value| match value {
-            ResponseOk::Planballance(balance) => Some(balance),
-            _ => None,
-        })
+    pub async fn load_plan_balance() -> Result<FrbPlanBalance> {
+        Self::get_plan_balance().await
     }
     pub async fn remove_additional_user(user_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
@@ -377,22 +453,31 @@ impl RustApi {
         .await
         .and_then(api_result)
     }
+
     pub async fn check_for_passwordless_notification(
         notification_id: String,
         download_auth_token: Vec<u8>,
         already_received_message_ids: Vec<i64>,
-    ) -> Result<Vec<u8>> {
+    ) -> Result<Vec<FrbPasswordlessNotificationMessage>> {
         let ctx = Context::get_static()?;
-        Server::check_for_passwordless_notification(
+        let res = Server::check_for_passwordless_notification(
             ctx,
             notification_id,
             download_auth_token,
             already_received_message_ids,
         )
         .await
-        .and_then(api_result)
-        .map(|value| value.encode_to_vec())
+        .and_then(api_result)?;
+        Ok(res
+            .messages
+            .into_iter()
+            .map(|msg| FrbPasswordlessNotificationMessage {
+                id: msg.id,
+                encrypted_message: msg.encrypted_message,
+            })
+            .collect())
     }
+
     pub async fn report_user(user_id: i64, reason: String) -> Result<()> {
         let ctx = Context::get_static()?;
         Server::report_user(ctx, user_id, reason)

@@ -4,8 +4,8 @@
  */
 
 use super::Server;
-use crate::api::proto::client_to_server;
 use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
+use crate::api::proto::{client_to_server, server_to_client};
 use crate::api::runtime::helpers::decode_ok_value;
 use crate::api::server::server_ok;
 use crate::bridge::api::ServerResult;
@@ -22,6 +22,16 @@ impl Server {
             ),
         )
         .await
+    }
+
+    pub async fn get_plan_balance_model(
+        ctx: &Arc<Context>,
+    ) -> Result<ServerResult<server_to_client::response::PlanBallance>> {
+        let bytes = Self::get_plan_balance(ctx).await?;
+        decode_ok_value(bytes, |value| match value {
+            server_to_client::response::ok::Ok::Planballance(balance) => Some(balance),
+            _ => None,
+        })
     }
 
     pub async fn load_plan_balance(ctx: &Arc<Context>) -> Result<Vec<u8>> {

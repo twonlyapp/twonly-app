@@ -5,7 +5,6 @@ import 'package:twonly/src/services/news.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 export 'package:twonly/core/bridge/api.dart';
-export 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 export 'package:twonly/src/services/api/rust_api_result.dart';
 
 final GetIt locator = GetIt.instance;

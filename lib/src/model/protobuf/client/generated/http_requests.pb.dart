@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from api/http/http_requests.proto.
+// Generated from http_requests.proto.
 
 // @dart = 3.3
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_labels.comp.dart';
@@ -36,9 +38,11 @@ class _GroupCreateSelectGroupNameViewState
       _isLoading = true;
     });
 
-    final wasSuccess = await createNewGroup(
-      textFieldGroupName.text,
-      widget.selectedUsers,
+    final wasSuccess = await rust_groups.createNewGroup(
+      groupName: textFieldGroupName.text,
+      memberIds: Int64List.fromList(
+        widget.selectedUsers.map((contact) => contact.userId).toList(),
+      ),
     );
     if (wasSuccess) {
       // POP

@@ -2,13 +2,13 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -36,11 +36,11 @@ class GroupMemberContextMenu extends StatelessWidget {
       customOk: context.lang.makeAdminRightsOkBtn,
     );
     if (ok) {
-      if (!await manageAdminState(
-        group,
-        member.groupPublicKey!,
-        contact.userId,
-        false,
+      if (!await rust_groups.manageAdminState(
+        groupId: group.groupId,
+        groupPublicKey: member.groupPublicKey!,
+        contactId: contact.userId,
+        remove: false,
       )) {
         if (context.mounted) {
           showNetworkIssue(context);
@@ -57,11 +57,11 @@ class GroupMemberContextMenu extends StatelessWidget {
       customOk: context.lang.revokeAdminRightsOkBtn,
     );
     if (ok) {
-      if (!await manageAdminState(
-        group,
-        member.groupPublicKey!,
-        contact.userId,
-        true,
+      if (!await rust_groups.manageAdminState(
+        groupId: group.groupId,
+        groupPublicKey: member.groupPublicKey!,
+        contactId: contact.userId,
+        remove: true,
       )) {
         if (context.mounted) {
           showNetworkIssue(context);
@@ -77,10 +77,10 @@ class GroupMemberContextMenu extends StatelessWidget {
       '',
     );
     if (ok) {
-      if (!await removeMemberFromGroup(
-        group,
-        member.groupPublicKey!,
-        contact.userId,
+      if (!await rust_groups.removeMemberFromGroup(
+        groupId: group.groupId,
+        groupPublicKey: member.groupPublicKey!,
+        contactId: contact.userId,
       )) {
         if (context.mounted) {
           showNetworkIssue(context);

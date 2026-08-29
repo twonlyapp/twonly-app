@@ -12,8 +12,6 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -171,14 +169,17 @@ class MemoriesCloudService {
         return true;
       }
 
-      final urls = await rustApiProtobuf(
-        RustApi.getMemoriesUrl(mediaId: mediaId, thumbnail: isThumbnail),
-        decodeMemoriesUrl,
-      );
-      if (urls == null || !urls.hasFullDownloadUrl()) return false;
+      String? downloadUrl;
+      try {
+        downloadUrl = await RustApi.getMemoriesUrl(
+          mediaId: mediaId,
+          thumbnail: isThumbnail,
+        );
+      } catch (_) {}
+      if (downloadUrl == null || downloadUrl.isEmpty) return false;
 
       try {
-        final response = await http.get(Uri.parse(urls.fullDownloadUrl));
+        final response = await http.get(Uri.parse(downloadUrl));
 
         if (response.statusCode == 200) {
           return await _decryptFile(response.bodyBytes, targetPath);
@@ -208,17 +209,18 @@ class MemoriesCloudService {
       }
 
       final sizeBytes = ms.storedPath.lengthSync();
-      final urls = await rustApiProtobuf(
-        RustApi.requestMemoriesUpload(
+      final FrbMemoriesUploadUrls? urls;
+      try {
+        urls = await RustApi.requestMemoriesUpload(
           size: sizeBytes,
           originalDate: mediaFile.createdAt.millisecondsSinceEpoch,
           mediaId: mediaFile.mediaId,
-        ),
-        decodeMemoriesUploadUrls,
-      );
-
-      if (urls == null) {
-        Log.error('Could not get upload URLs for memory ${mediaFile.mediaId}');
+        );
+      } catch (error) {
+        Log.error(
+          'Could not get upload URLs for memory ${mediaFile.mediaId}',
+          error: error,
+        );
         return false;
       }
 
@@ -238,7 +240,8 @@ class MemoriesCloudService {
       final tempDir = await getTemporaryDirectory();
 
       // 1. Upload thumbnail if exists
-      if (ms.thumbnailPath.existsSync() && urls.hasThumbnailUpload()) {
+      final thumbUpload = urls.thumbnailUpload;
+      if (ms.thumbnailPath.existsSync() && thumbUpload != null) {
         final thumbFile = await _encryptFile(
           ms.thumbnailPath,
           mediaKey,
@@ -247,7 +250,7 @@ class MemoriesCloudService {
           'thumb_${mediaFile.mediaId}',
         );
         try {
-          await _uploadToS3(urls.thumbnailUpload, thumbFile, (_) {});
+          await _uploadToS3(thumbUpload, thumbFile, (_) {});
         } finally {
           if (thumbFile.existsSync()) {
             thumbFile.deleteSync();
@@ -256,7 +259,8 @@ class MemoriesCloudService {
       }
 
       // 2. Upload full media if exists
-      if (urls.hasFullUpload()) {
+      final fullUpload = urls.fullUpload;
+      if (fullUpload != null) {
         final fullFile = await _encryptFile(
           ms.storedPath,
           mediaKey,
@@ -265,7 +269,7 @@ class MemoriesCloudService {
           'full_${mediaFile.mediaId}',
         );
         try {
-          await _uploadToS3(urls.fullUpload, fullFile, onProgress);
+          await _uploadToS3(fullUpload, fullFile, onProgress);
         } finally {
           if (fullFile.existsSync()) {
             fullFile.deleteSync();
@@ -304,7 +308,7 @@ class MemoriesCloudService {
   }
 
   Future<void> _uploadToS3(
-    server.Response_PresignedPost presignedPost,
+    FrbPresignedPost presignedPost,
     File file,
     void Function(double progress) onProgress,
   ) async {
@@ -318,7 +322,9 @@ class MemoriesCloudService {
       },
     );
 
-    request.fields.addAll(presignedPost.fields);
+    request.fields.addAll(
+      Map.fromEntries(presignedPost.fields.map((f) => MapEntry(f.$1, f.$2))),
+    );
     request.files.add(
       await http.MultipartFile.fromPath(
         'file',

@@ -121,6 +121,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
 
   @protected
+  FrbPresignedPost dco_decode_box_autoadd_frb_presigned_post(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
@@ -146,10 +149,35 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FlutterUserDiscovery dco_decode_flutter_user_discovery(dynamic raw);
 
   @protected
+  FrbAdditionalAccount dco_decode_frb_additional_account(dynamic raw);
+
+  @protected
+  FrbMemoriesUploadUrls dco_decode_frb_memories_upload_urls(dynamic raw);
+
+  @protected
+  FrbMemoriesUsage dco_decode_frb_memories_usage(dynamic raw);
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  dco_decode_frb_passwordless_notification_message(dynamic raw);
+
+  @protected
+  FrbPlanBalance dco_decode_frb_plan_balance(dynamic raw);
+
+  @protected
   FrbPqcPreKey dco_decode_frb_pqc_pre_key(dynamic raw);
 
   @protected
   FrbPreKeyBundle dco_decode_frb_pre_key_bundle(dynamic raw);
+
+  @protected
+  FrbPresignedPost dco_decode_frb_presigned_post(dynamic raw);
+
+  @protected
+  FrbProofOfWork dco_decode_frb_proof_of_work(dynamic raw);
+
+  @protected
+  FrbUserData dco_decode_frb_user_data(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -176,6 +204,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<FrbAdditionalAccount> dco_decode_list_frb_additional_account(
+    dynamic raw,
+  );
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  dco_decode_list_frb_passwordless_notification_message(dynamic raw);
 
   @protected
   List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw);
@@ -206,6 +243,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
+
+  @protected
   List<SqlRow> dco_decode_list_sql_row(dynamic raw);
 
   @protected
@@ -232,6 +272,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FrbPresignedPost? dco_decode_opt_box_autoadd_frb_presigned_post(dynamic raw);
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
@@ -411,6 +454,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbPresignedPost sse_decode_box_autoadd_frb_presigned_post(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
@@ -442,10 +490,41 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FrbAdditionalAccount sse_decode_frb_additional_account(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbMemoriesUploadUrls sse_decode_frb_memories_upload_urls(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbMemoriesUsage sse_decode_frb_memories_usage(SseDeserializer deserializer);
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  sse_decode_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FrbPlanBalance sse_decode_frb_plan_balance(SseDeserializer deserializer);
+
+  @protected
   FrbPqcPreKey sse_decode_frb_pqc_pre_key(SseDeserializer deserializer);
 
   @protected
   FrbPreKeyBundle sse_decode_frb_pre_key_bundle(SseDeserializer deserializer);
+
+  @protected
+  FrbPresignedPost sse_decode_frb_presigned_post(SseDeserializer deserializer);
+
+  @protected
+  FrbProofOfWork sse_decode_frb_proof_of_work(SseDeserializer deserializer);
+
+  @protected
+  FrbUserData sse_decode_frb_user_data(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -476,6 +555,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<FrbAdditionalAccount> sse_decode_list_frb_additional_account(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  sse_decode_list_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FrbPqcPreKey> sse_decode_list_frb_pqc_pre_key(
@@ -512,6 +602,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<(String, String)> sse_decode_list_record_string_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<SqlRow> sse_decode_list_sql_row(SseDeserializer deserializer);
 
   @protected
@@ -538,6 +633,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FrbPresignedPost? sse_decode_opt_box_autoadd_frb_presigned_post(
+    SseDeserializer deserializer,
+  );
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
@@ -785,6 +885,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_frb_presigned_post(
+    FrbPresignedPost self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
     SseSerializer serializer,
@@ -827,6 +933,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_frb_additional_account(
+    FrbAdditionalAccount self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_memories_upload_urls(
+    FrbMemoriesUploadUrls self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_memories_usage(
+    FrbMemoriesUsage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_passwordless_notification_message(
+    FrbPasswordlessNotificationMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_plan_balance(
+    FrbPlanBalance self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_frb_pqc_pre_key(FrbPqcPreKey self, SseSerializer serializer);
 
   @protected
@@ -834,6 +970,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     FrbPreKeyBundle self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_frb_presigned_post(
+    FrbPresignedPost self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_proof_of_work(
+    FrbProofOfWork self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_frb_user_data(FrbUserData self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -867,6 +1018,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_frb_additional_account(
+    List<FrbAdditionalAccount> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_frb_passwordless_notification_message(
+    List<FrbPasswordlessNotificationMessage> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_frb_pqc_pre_key(
@@ -914,6 +1077,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_record_string_string(
+    List<(String, String)> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_sql_row(List<SqlRow> self, SseSerializer serializer);
 
   @protected
@@ -945,6 +1114,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_presigned_post(
+    FrbPresignedPost? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(

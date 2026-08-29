@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -13,8 +14,8 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
 import 'package:twonly/src/services/api/messages.api.dart';

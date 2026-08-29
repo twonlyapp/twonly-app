@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart'
+    show Int64List;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/core/bridge/groups.dart' as rust_groups;
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/group.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -78,7 +80,10 @@ class _GroupViewState extends State<GroupView> {
         newGroupName != null &&
         newGroupName != '' &&
         newGroupName != _group!.groupName) {
-      if (!await updateGroupName(_group!, newGroupName)) {
+      if (!await rust_groups.updateGroupName(
+        groupId: _group!.groupId,
+        groupName: newGroupName,
+      )) {
         if (mounted) {
           showNetworkIssue(context);
         }
@@ -98,7 +103,10 @@ class _GroupViewState extends State<GroupView> {
             )
             as List<int>?;
     if (selectedUserIds == null) return;
-    if (!await addNewGroupMembers(_group!, selectedUserIds)) {
+    if (!await rust_groups.addNewGroupMembers(
+      groupId: _group!.groupId,
+      memberIds: Int64List.fromList(selectedUserIds),
+    )) {
       if (mounted) {
         showNetworkIssue(context);
       }
@@ -134,7 +142,7 @@ class _GroupViewState extends State<GroupView> {
       }
     }
 
-    final success = await leaveGroup(_group!);
+    final success = await rust_groups.leaveGroup(groupId: _group!.groupId);
 
     if (!success) {
       if (mounted) {

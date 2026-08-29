@@ -14,7 +14,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/error_code.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -150,7 +150,6 @@ String getRandomString(int length) => String.fromCharCodes(
 );
 
 String errorCodeToText(BuildContext context, ErrorCode code) {
-  // ignore: exhaustive_cases
   switch (code) {
     case ErrorCode.InternalError:
       return context.lang.errorInternalError;
@@ -170,8 +169,10 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
       return context.lang.errorVoucherInvalid;
     case ErrorCode.PlanUpgradeNotYearly:
       return context.lang.errorPlanUpgradeNotYearly;
+    // ignore: no_default_cases
+    default:
+      return code.toString();
   }
-  return code.toString();
 }
 
 String formatDuration(BuildContext context, int seconds) {

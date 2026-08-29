@@ -78,9 +78,7 @@ class _RegisterViewState extends State<RegisterView> {
         proof = await proofOfWork!;
       } else {
         final proofResult = await rustApiResult(RustApi.getProofOfWork());
-        final pow = proofResult.value == null
-            ? null
-            : decodeProofOfWork(proofResult.value!);
+        final pow = proofResult.value;
         final registrationDisabled =
             proofResult.error == ErrorCode.RegistrationDisabled;
         if (pow == null) {
@@ -93,7 +91,7 @@ class _RegisterViewState extends State<RegisterView> {
           }
           return;
         }
-        proof = await calculatePoW(pow.prefix, pow.difficulty.toInt());
+        proof = await calculatePoW(pow.prefix, pow.difficulty);
       }
 
       Log.info('The result of the POW is $proof');

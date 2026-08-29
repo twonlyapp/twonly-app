@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:twonly/core/bridge/api.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/api/api.service.dart';
-import 'package:twonly/src/services/api/rust_api_result.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -50,19 +50,18 @@ class TestClient {
 
     await run(() async {
       Log.info('Requesting POW...');
-      final dynamic pow;
+      final FrbProofOfWork pow;
       try {
-        final raw = await RustApi.getProofOfWork();
-        pow = decodeProofOfWork(raw);
+        pow = await RustApi.getProofOfWork();
       } catch (e, st) {
-        print('POW EXCEPTION: $e\n$st');
+        if (kDebugMode) {
+          print('POW EXCEPTION: $e\n$st');
+        }
         rethrow;
       }
       Log.info('POW result: $pow');
 
-      final prefix = pow.prefix;
-      final difficulty = pow.difficulty.toInt();
-      final proof = await calculatePoW(prefix, difficulty);
+      final proof = await calculatePoW(pow.prefix, pow.difficulty);
 
       realUserId = await RustApi.register(
         username: username,

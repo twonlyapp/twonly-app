@@ -7,9 +7,9 @@ import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `encoded_api_response`, `from_rust_state`
+// These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ApiConfig`, `ServerResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 enum ApiConnectionState {
   stopped,
@@ -56,6 +56,208 @@ enum ApiEventKind {
   loginTokenMigrated,
 }
 
+class FrbAdditionalAccount {
+  final PlatformInt64 userId;
+  final String planId;
+
+  const FrbAdditionalAccount({
+    required this.userId,
+    required this.planId,
+  });
+
+  @override
+  int get hashCode => userId.hashCode ^ planId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbAdditionalAccount &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId &&
+          planId == other.planId;
+}
+
+class FrbMemoriesUploadUrls {
+  final String mediaId;
+  final FrbPresignedPost? thumbnailUpload;
+  final FrbPresignedPost? fullUpload;
+
+  const FrbMemoriesUploadUrls({
+    required this.mediaId,
+    this.thumbnailUpload,
+    this.fullUpload,
+  });
+
+  @override
+  int get hashCode =>
+      mediaId.hashCode ^ thumbnailUpload.hashCode ^ fullUpload.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbMemoriesUploadUrls &&
+          runtimeType == other.runtimeType &&
+          mediaId == other.mediaId &&
+          thumbnailUpload == other.thumbnailUpload &&
+          fullUpload == other.fullUpload;
+}
+
+class FrbMemoriesUsage {
+  final PlatformInt64 currentBytes;
+  final PlatformInt64 count;
+  final PlatformInt64 maxBytes;
+
+  const FrbMemoriesUsage({
+    required this.currentBytes,
+    required this.count,
+    required this.maxBytes,
+  });
+
+  @override
+  int get hashCode =>
+      currentBytes.hashCode ^ count.hashCode ^ maxBytes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbMemoriesUsage &&
+          runtimeType == other.runtimeType &&
+          currentBytes == other.currentBytes &&
+          count == other.count &&
+          maxBytes == other.maxBytes;
+}
+
+class FrbPasswordlessNotificationMessage {
+  final PlatformInt64 id;
+  final Uint8List encryptedMessage;
+
+  const FrbPasswordlessNotificationMessage({
+    required this.id,
+    required this.encryptedMessage,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ encryptedMessage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPasswordlessNotificationMessage &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          encryptedMessage == other.encryptedMessage;
+}
+
+class FrbPlanBalance {
+  final PlatformInt64 usedDailyMediaUploadLimit;
+  final PlatformInt64 usedUploadMediaSizeLimit;
+  final PlatformInt64? paymentPeriodDays;
+  final PlatformInt64? lastPaymentDoneUnixTimestamp;
+  final List<FrbAdditionalAccount> additionalAccounts;
+  final bool? autoRenewal;
+  final PlatformInt64? additionalAccountOwnerId;
+
+  const FrbPlanBalance({
+    required this.usedDailyMediaUploadLimit,
+    required this.usedUploadMediaSizeLimit,
+    this.paymentPeriodDays,
+    this.lastPaymentDoneUnixTimestamp,
+    required this.additionalAccounts,
+    this.autoRenewal,
+    this.additionalAccountOwnerId,
+  });
+
+  @override
+  int get hashCode =>
+      usedDailyMediaUploadLimit.hashCode ^
+      usedUploadMediaSizeLimit.hashCode ^
+      paymentPeriodDays.hashCode ^
+      lastPaymentDoneUnixTimestamp.hashCode ^
+      additionalAccounts.hashCode ^
+      autoRenewal.hashCode ^
+      additionalAccountOwnerId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPlanBalance &&
+          runtimeType == other.runtimeType &&
+          usedDailyMediaUploadLimit == other.usedDailyMediaUploadLimit &&
+          usedUploadMediaSizeLimit == other.usedUploadMediaSizeLimit &&
+          paymentPeriodDays == other.paymentPeriodDays &&
+          lastPaymentDoneUnixTimestamp == other.lastPaymentDoneUnixTimestamp &&
+          additionalAccounts == other.additionalAccounts &&
+          autoRenewal == other.autoRenewal &&
+          additionalAccountOwnerId == other.additionalAccountOwnerId;
+}
+
+class FrbPresignedPost {
+  final String url;
+  final List<(String, String)> fields;
+
+  const FrbPresignedPost({
+    required this.url,
+    required this.fields,
+  });
+
+  @override
+  int get hashCode => url.hashCode ^ fields.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbPresignedPost &&
+          runtimeType == other.runtimeType &&
+          url == other.url &&
+          fields == other.fields;
+}
+
+class FrbProofOfWork {
+  final String prefix;
+  final PlatformInt64 difficulty;
+
+  const FrbProofOfWork({
+    required this.prefix,
+    required this.difficulty,
+  });
+
+  @override
+  int get hashCode => prefix.hashCode ^ difficulty.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbProofOfWork &&
+          runtimeType == other.runtimeType &&
+          prefix == other.prefix &&
+          difficulty == other.difficulty;
+}
+
+class FrbUserData {
+  final PlatformInt64 userId;
+  final Uint8List username;
+  final Uint8List publicIdentityKey;
+
+  const FrbUserData({
+    required this.userId,
+    required this.username,
+    required this.publicIdentityKey,
+  });
+
+  @override
+  int get hashCode =>
+      userId.hashCode ^ username.hashCode ^ publicIdentityKey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FrbUserData &&
+          runtimeType == other.runtimeType &&
+          userId == other.userId &&
+          username == other.username &&
+          publicIdentityKey == other.publicIdentityKey;
+}
+
 /// Flutter-facing facade for the Rust-owned API runtime.
 class RustApi {
   const RustApi();
@@ -79,7 +281,8 @@ class RustApi {
   static Future<void> checkForDeletedUsernames() =>
       RustLib.instance.api.crateBridgeApiRustApiCheckForDeletedUsernames();
 
-  static Future<Uint8List> checkForPasswordlessNotification({
+  static Future<List<FrbPasswordlessNotificationMessage>>
+  checkForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     required Int64List alreadyReceivedMessageIds,
@@ -136,7 +339,7 @@ class RustApi {
   static Future<void> forceIpaCheck() =>
       RustLib.instance.api.crateBridgeApiRustApiForceIpaCheck();
 
-  static Future<Uint8List> getMemoriesUrl({
+  static Future<String> getMemoriesUrl({
     required String mediaId,
     required bool thumbnail,
   }) => RustLib.instance.api.crateBridgeApiRustApiGetMemoriesUrl(
@@ -144,13 +347,13 @@ class RustApi {
     thumbnail: thumbnail,
   );
 
-  static Future<Uint8List> getMemoriesUsage() =>
+  static Future<FrbMemoriesUsage> getMemoriesUsage() =>
       RustLib.instance.api.crateBridgeApiRustApiGetMemoriesUsage();
 
-  static Future<Uint8List> getPlanBalance() =>
+  static Future<FrbPlanBalance> getPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiGetPlanBalance();
 
-  static Future<Uint8List> getProofOfWork() =>
+  static Future<FrbProofOfWork> getProofOfWork() =>
       RustLib.instance.api.crateBridgeApiRustApiGetProofOfWork();
 
   static Future<Uint8List> getServerKeyForPasswordlessRecovery({
@@ -168,10 +371,10 @@ class RustApi {
         email: email,
       );
 
-  static Future<Uint8List> getUserById({required PlatformInt64 userId}) =>
+  static Future<FrbUserData> getUserById({required PlatformInt64 userId}) =>
       RustLib.instance.api.crateBridgeApiRustApiGetUserById(userId: userId);
 
-  static Future<Uint8List> getUserData({required String username}) =>
+  static Future<FrbUserData> getUserData({required String username}) =>
       RustLib.instance.api.crateBridgeApiRustApiGetUserData(username: username);
 
   static Future<PlatformInt64> getUserIdFromUsername({
@@ -226,7 +429,7 @@ class RustApi {
     verificationData: verificationData,
   );
 
-  static Future<Uint8List> loadPlanBalance() =>
+  static Future<FrbPlanBalance> loadPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiLoadPlanBalance();
 
   static Future<void> notifyMessagesOpened({
@@ -313,7 +516,7 @@ class RustApi {
       .api
       .crateBridgeApiRustApiRequestMediaReupload(mediaId: mediaId);
 
-  static Future<Uint8List> requestMemoriesUpload({
+  static Future<FrbMemoriesUploadUrls> requestMemoriesUpload({
     required PlatformInt64 size,
     required PlatformInt64 originalDate,
     required String mediaId,

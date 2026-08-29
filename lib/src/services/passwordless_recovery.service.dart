@@ -16,8 +16,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart'
     show getContactDisplayName;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
@@ -312,6 +310,7 @@ class PasswordlessRecoveryService {
     }
 
     unawaited(
+      // ignore: inference_failure_on_untyped_parameter
       RustApi.performPasswordlessRecoveryHeartbeat().catchError((e) {
         Log.warn('Failed to perform passwordless recovery heartbeat: $e');
       }),
@@ -377,15 +376,12 @@ class PasswordlessRecoveryService {
       state.receivedShares.map((share) => share.messageId).toList(),
     );
 
-    late final server.Response_PasswordlessNotificationMessages response;
+    late final List<FrbPasswordlessNotificationMessage> messages;
     try {
-      final responseBytes = await RustApi.checkForPasswordlessNotification(
+      messages = await RustApi.checkForPasswordlessNotification(
         notificationId: state.notificationId!,
         downloadAuthToken: state.downloadAuthToken!,
         alreadyReceivedMessageIds: alreadyReceivedIds,
-      );
-      response = server.Response_PasswordlessNotificationMessages.fromBuffer(
-        responseBytes,
       );
     } catch (error) {
       Log.error(
@@ -395,7 +391,7 @@ class PasswordlessRecoveryService {
       return false;
     }
 
-    if (response.messages.isEmpty) {
+    if (messages.isEmpty) {
       return false;
     }
 
@@ -403,8 +399,8 @@ class PasswordlessRecoveryService {
     final secretKey = SecretKey(state.encryptionKey!);
     var didUpdate = false;
 
-    for (final msg in response.messages) {
-      final msgId = msg.id.toInt();
+    for (final msg in messages) {
+      final msgId = msg.id;
 
       try {
         final envelope = EncryptedEnvelope.fromBuffer(msg.encryptedMessage);

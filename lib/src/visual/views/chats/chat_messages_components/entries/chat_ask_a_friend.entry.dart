@@ -88,7 +88,10 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
           _username = contact.displayName ?? contact.username;
         } else {
           // Fetch from API
-          final userdata = await rustApiProtobuf(RustApi.getUserById(userId: userId), decodeUserData);
+          FrbUserData? userdata;
+          try {
+            userdata = await RustApi.getUserById(userId: userId);
+          } catch (_) {}
           if (userdata != null) {
             _username = utf8.decode(userdata.username);
           }
@@ -122,12 +125,15 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
     });
     try {
       final userId = _data!.askAboutUserId.toInt();
-      final userdata = await rustApiProtobuf(RustApi.getUserById(userId: userId), decodeUserData);
+      FrbUserData? userdata;
+      try {
+        userdata = await RustApi.getUserById(userId: userId);
+      } catch (_) {}
       if (userdata != null) {
         await twonlyDB.contactsDao.insertOnConflictUpdate(
           ContactsCompanion(
             username: Value(utf8.decode(userdata.username)),
-            userId: Value(userdata.userId.toInt()),
+            userId: Value(userdata.userId),
             requested: const Value(false),
             blocked: const Value(false),
             deletedByUser: const Value(false),

@@ -17,11 +17,14 @@ class UserDiscoveryService {
         .getNewAnnouncementsWithoutData();
 
     for (final announcedUser in announcedUsers) {
-      final userdata = await rustApiProtobuf(
-        RustApi.getUserById(userId: announcedUser.announcedUserId),
-        decodeUserData,
-      );
-      if (userdata == null) continue;
+      final FrbUserData? userdata;
+      try {
+        userdata = await RustApi.getUserById(
+          userId: announcedUser.announcedUserId,
+        );
+      } catch (_) {
+        continue;
+      }
       if (!userdata.publicIdentityKey.equals(
         announcedUser.announcedPublicKey.toList(),
       )) {

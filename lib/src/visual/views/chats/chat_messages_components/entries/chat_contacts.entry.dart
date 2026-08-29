@@ -117,11 +117,9 @@ class _ContactRowState extends State<_ContactRow> {
     });
 
     try {
-      final userdata = await rustApiProtobuf(
-        RustApi.getUserById(userId: widget.contact.userId.toInt()),
-        decodeUserData,
+      final userdata = await RustApi.getUserById(
+        userId: widget.contact.userId.toInt(),
       );
-      if (userdata == null) return;
 
       final username = utf8.decode(userdata.username);
 
@@ -140,7 +138,7 @@ class _ContactRowState extends State<_ContactRow> {
       final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion(
           username: Value(username),
-          userId: Value(userdata.userId.toInt()),
+          userId: Value(userdata.userId),
           requested: const Value(false),
           blocked: const Value(false),
           deletedByUser: const Value(false),
@@ -150,7 +148,7 @@ class _ContactRowState extends State<_ContactRow> {
       if (added > 0) await importSignalContactAndCreateRequest(userdata);
 
       await KeyVerificationService.verifySharedContact(
-        contactId: userdata.userId.toInt(),
+        contactId: userdata.userId,
         sharedPublicIdentityKey: widget.contact.publicIdentityKey,
         senderId: widget.message.senderId!,
       );

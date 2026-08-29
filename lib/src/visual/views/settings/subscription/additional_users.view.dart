@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -17,14 +16,14 @@ import 'package:twonly/src/visual/views/settings/subscription/select_additional_
 class AdditionalUsersView extends StatefulWidget {
   const AdditionalUsersView({required this.ballance, super.key});
 
-  final Response_PlanBallance? ballance;
+  final FrbPlanBalance? ballance;
 
   @override
   State<AdditionalUsersView> createState() => _AdditionalUsersViewState();
 }
 
 class _AdditionalUsersViewState extends State<AdditionalUsersView> {
-  Response_PlanBallance? ballance;
+  FrbPlanBalance? ballance;
 
   late int _unusedAdditionalAccounts;
   int _planLimit = 0;
@@ -48,10 +47,11 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 
   Future<void> initAsync({required bool force}) async {
     if (force) {
-      ballance = await rustApiProtobuf(
-        RustApi.loadPlanBalance(),
-        decodePlanBalance,
-      );
+      try {
+        ballance = await RustApi.loadPlanBalance();
+      } catch (_) {
+        ballance = null;
+      }
       _unusedAdditionalAccounts =
           _planLimit - (ballance?.additionalAccounts.length ?? _planLimit);
     }
@@ -65,7 +65,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
                 limit: _planLimit,
                 alreadySelected:
                     ballance?.additionalAccounts
-                        .map((e) => e.userId.toInt())
+                        .map((e) => e.userId)
                         .toList() ??
                     [],
               ),
@@ -162,7 +162,7 @@ class AdditionalAccount extends StatefulWidget {
   });
 
   final void Function() refresh;
-  final Response_AdditionalAccount account;
+  final FrbAdditionalAccount account;
   @override
   State<AdditionalAccount> createState() => _AdditionalAccountState();
 }
@@ -179,7 +179,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
 
   Future<void> initAsync() async {
     final contact = await twonlyDB.contactsDao
-        .getContactByUserId(widget.account.userId.toInt())
+        .getContactByUserId(widget.account.userId)
         .getSingleOrNull();
     if (contact != null) {
       username = getContactDisplayName(contact);
@@ -225,7 +225,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                 if (remove) {
                   final res = await rustApiResult(
                     RustApi.removeAdditionalUser(
-                      userId: widget.account.userId.toInt(),
+                      userId: widget.account.userId,
                     ),
                   );
                   if (!context.mounted) return;

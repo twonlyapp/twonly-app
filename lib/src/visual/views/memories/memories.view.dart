@@ -46,7 +46,10 @@ class MemoriesViewState extends State<MemoriesView>
   }
 
   Future<void> _checkUsage() async {
-    final usage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
+    FrbMemoriesUsage? usage;
+    try {
+      usage = await RustApi.getMemoriesUsage();
+    } catch (_) {}
     if (usage != null &&
         usage.maxBytes > 0 &&
         usage.currentBytes >= usage.maxBytes) {

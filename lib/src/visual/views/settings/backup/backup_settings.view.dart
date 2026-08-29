@@ -7,8 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
@@ -33,7 +31,7 @@ class BackupView extends StatefulWidget {
 class _BackupViewState extends State<BackupView> {
   bool _isLoading = false;
   CurrentBackupStatus? _backupStatus;
-  server.Response_MemoriesUsage? _memoriesUsage;
+  FrbMemoriesUsage? _memoriesUsage;
   StreamSubscription<void>? _backupUpdateSub;
 
   @override
@@ -54,7 +52,10 @@ class _BackupViewState extends State<BackupView> {
   Future<void> _loadBackupStatus() async {
     setState(() => _isLoading = true);
     final status = await BackupService.getData();
-    final memoriesUsage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
+    FrbMemoriesUsage? memoriesUsage;
+    try {
+      memoriesUsage = await RustApi.getMemoriesUsage();
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       _backupStatus = status;
@@ -197,7 +198,7 @@ class _BackupViewState extends State<BackupView> {
                         : (!userService.currentUser.isCloudBackupEnabled
                               ? context.lang.backupMemoriesNotEnabled
                               : (_memoriesUsage != null
-                                    ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                                    ? '${formatBytes(_memoriesUsage!.currentBytes)} / ${formatBytes(_memoriesUsage!.maxBytes)}'
                                     : '-')),
                   ),
                   trailing: isFreePlan

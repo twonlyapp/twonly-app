@@ -180,7 +180,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateBridgeApiRustApiCheckForDeletedUsernames();
 
-  Future<Uint8List> crateBridgeApiRustApiCheckForPasswordlessNotification({
+  Future<List<FrbPasswordlessNotificationMessage>>
+  crateBridgeApiRustApiCheckForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     required Int64List alreadyReceivedMessageIds,
@@ -217,16 +218,16 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateBridgeApiRustApiForceIpaCheck();
 
-  Future<Uint8List> crateBridgeApiRustApiGetMemoriesUrl({
+  Future<String> crateBridgeApiRustApiGetMemoriesUrl({
     required String mediaId,
     required bool thumbnail,
   });
 
-  Future<Uint8List> crateBridgeApiRustApiGetMemoriesUsage();
+  Future<FrbMemoriesUsage> crateBridgeApiRustApiGetMemoriesUsage();
 
-  Future<Uint8List> crateBridgeApiRustApiGetPlanBalance();
+  Future<FrbPlanBalance> crateBridgeApiRustApiGetPlanBalance();
 
-  Future<Uint8List> crateBridgeApiRustApiGetProofOfWork();
+  Future<FrbProofOfWork> crateBridgeApiRustApiGetProofOfWork();
 
   Future<Uint8List> crateBridgeApiRustApiGetServerKeyForPasswordlessRecovery({
     required PlatformInt64 userId,
@@ -236,11 +237,11 @@ abstract class RustLibApi extends BaseApi {
     String? email,
   });
 
-  Future<Uint8List> crateBridgeApiRustApiGetUserById({
+  Future<FrbUserData> crateBridgeApiRustApiGetUserById({
     required PlatformInt64 userId,
   });
 
-  Future<Uint8List> crateBridgeApiRustApiGetUserData({
+  Future<FrbUserData> crateBridgeApiRustApiGetUserData({
     required String username,
   });
 
@@ -276,7 +277,7 @@ abstract class RustLibApi extends BaseApi {
     required String verificationData,
   });
 
-  Future<Uint8List> crateBridgeApiRustApiLoadPlanBalance();
+  Future<FrbPlanBalance> crateBridgeApiRustApiLoadPlanBalance();
 
   Future<void> crateBridgeApiRustApiNotifyMessagesOpened({
     required PlatformInt64 contactId,
@@ -331,7 +332,7 @@ abstract class RustLibApi extends BaseApi {
     required String mediaId,
   });
 
-  Future<Uint8List> crateBridgeApiRustApiRequestMemoriesUpload({
+  Future<FrbMemoriesUploadUrls> crateBridgeApiRustApiRequestMemoriesUpload({
     required PlatformInt64 size,
     required PlatformInt64 originalDate,
     required String mediaId,
@@ -1303,7 +1304,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiCheckForPasswordlessNotification({
+  Future<List<FrbPasswordlessNotificationMessage>>
+  crateBridgeApiRustApiCheckForPasswordlessNotification({
     required String notificationId,
     required List<int> downloadAuthToken,
     required Int64List alreadyReceivedMessageIds,
@@ -1326,7 +1328,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData:
+              sse_decode_list_frb_passwordless_notification_message,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta:
@@ -1758,7 +1761,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetMemoriesUrl({
+  Future<String> crateBridgeApiRustApiGetMemoriesUrl({
     required String mediaId,
     required bool thumbnail,
   }) {
@@ -1776,7 +1779,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_String,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetMemoriesUrlConstMeta,
@@ -1793,7 +1796,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetMemoriesUsage() {
+  Future<FrbMemoriesUsage> crateBridgeApiRustApiGetMemoriesUsage() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1806,7 +1809,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_memories_usage,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetMemoriesUsageConstMeta,
@@ -1823,7 +1826,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetPlanBalance() {
+  Future<FrbPlanBalance> crateBridgeApiRustApiGetPlanBalance() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1836,7 +1839,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_plan_balance,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetPlanBalanceConstMeta,
@@ -1853,7 +1856,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetProofOfWork() {
+  Future<FrbProofOfWork> crateBridgeApiRustApiGetProofOfWork() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1866,7 +1869,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_proof_of_work,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetProofOfWorkConstMeta,
@@ -1938,7 +1941,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetUserById({
+  Future<FrbUserData> crateBridgeApiRustApiGetUserById({
     required PlatformInt64 userId,
   }) {
     return handler.executeNormal(
@@ -1954,7 +1957,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_user_data,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetUserByIdConstMeta,
@@ -1971,7 +1974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiGetUserData({
+  Future<FrbUserData> crateBridgeApiRustApiGetUserData({
     required String username,
   }) {
     return handler.executeNormal(
@@ -1987,7 +1990,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_user_data,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiGetUserDataConstMeta,
@@ -2219,7 +2222,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiLoadPlanBalance() {
+  Future<FrbPlanBalance> crateBridgeApiRustApiLoadPlanBalance() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -2232,7 +2235,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_plan_balance,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiLoadPlanBalanceConstMeta,
@@ -2667,7 +2670,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateBridgeApiRustApiRequestMemoriesUpload({
+  Future<FrbMemoriesUploadUrls> crateBridgeApiRustApiRequestMemoriesUpload({
     required PlatformInt64 size,
     required PlatformInt64 originalDate,
     required String mediaId,
@@ -2687,7 +2690,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeSuccessData: sse_decode_frb_memories_upload_urls,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateBridgeApiRustApiRequestMemoriesUploadConstMeta,
@@ -5078,6 +5081,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPresignedPost dco_decode_box_autoadd_frb_presigned_post(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_frb_presigned_post(raw);
+  }
+
+  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_i_64(raw);
@@ -5130,6 +5139,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbAdditionalAccount dco_decode_frb_additional_account(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbAdditionalAccount(
+      userId: dco_decode_i_64(arr[0]),
+      planId: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  FrbMemoriesUploadUrls dco_decode_frb_memories_upload_urls(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbMemoriesUploadUrls(
+      mediaId: dco_decode_String(arr[0]),
+      thumbnailUpload: dco_decode_opt_box_autoadd_frb_presigned_post(arr[1]),
+      fullUpload: dco_decode_opt_box_autoadd_frb_presigned_post(arr[2]),
+    );
+  }
+
+  @protected
+  FrbMemoriesUsage dco_decode_frb_memories_usage(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbMemoriesUsage(
+      currentBytes: dco_decode_i_64(arr[0]),
+      count: dco_decode_i_64(arr[1]),
+      maxBytes: dco_decode_i_64(arr[2]),
+    );
+  }
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  dco_decode_frb_passwordless_notification_message(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbPasswordlessNotificationMessage(
+      id: dco_decode_i_64(arr[0]),
+      encryptedMessage: dco_decode_list_prim_u_8_strict(arr[1]),
+    );
+  }
+
+  @protected
+  FrbPlanBalance dco_decode_frb_plan_balance(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return FrbPlanBalance(
+      usedDailyMediaUploadLimit: dco_decode_i_64(arr[0]),
+      usedUploadMediaSizeLimit: dco_decode_i_64(arr[1]),
+      paymentPeriodDays: dco_decode_opt_box_autoadd_i_64(arr[2]),
+      lastPaymentDoneUnixTimestamp: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      additionalAccounts: dco_decode_list_frb_additional_account(arr[4]),
+      autoRenewal: dco_decode_opt_box_autoadd_bool(arr[5]),
+      additionalAccountOwnerId: dco_decode_opt_box_autoadd_i_64(arr[6]),
+    );
+  }
+
+  @protected
   FrbPqcPreKey dco_decode_frb_pqc_pre_key(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -5162,6 +5239,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kyberPreKeyPublic: dco_decode_list_prim_u_8_strict(arr[8]),
       kyberPreKeySignature: dco_decode_list_prim_u_8_strict(arr[9]),
       identityKey: dco_decode_list_prim_u_8_strict(arr[10]),
+    );
+  }
+
+  @protected
+  FrbPresignedPost dco_decode_frb_presigned_post(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbPresignedPost(
+      url: dco_decode_String(arr[0]),
+      fields: dco_decode_list_record_string_string(arr[1]),
+    );
+  }
+
+  @protected
+  FrbProofOfWork dco_decode_frb_proof_of_work(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FrbProofOfWork(
+      prefix: dco_decode_String(arr[0]),
+      difficulty: dco_decode_i_64(arr[1]),
+    );
+  }
+
+  @protected
+  FrbUserData dco_decode_frb_user_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FrbUserData(
+      userId: dco_decode_i_64(arr[0]),
+      username: dco_decode_list_prim_u_8_strict(arr[1]),
+      publicIdentityKey: dco_decode_list_prim_u_8_strict(arr[2]),
     );
   }
 
@@ -5234,6 +5348,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FrbAdditionalAccount> dco_decode_list_frb_additional_account(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_additional_account)
+        .toList();
+  }
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  dco_decode_list_frb_passwordless_notification_message(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_frb_passwordless_notification_message)
+        .toList();
+  }
+
+  @protected
   List<FrbPqcPreKey> dco_decode_list_frb_pqc_pre_key(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_frb_pqc_pre_key).toList();
@@ -5290,6 +5423,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<(String, String)> dco_decode_list_record_string_string(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_record_string_string).toList();
+  }
+
+  @protected
   List<SqlRow> dco_decode_list_sql_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_sql_row).toList();
@@ -5341,6 +5480,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_f_64(raw);
+  }
+
+  @protected
+  FrbPresignedPost? dco_decode_opt_box_autoadd_frb_presigned_post(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_frb_presigned_post(raw);
   }
 
   @protected
@@ -5863,6 +6008,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbPresignedPost sse_decode_box_autoadd_frb_presigned_post(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_frb_presigned_post(deserializer));
+  }
+
+  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_i_64(deserializer));
@@ -5918,6 +6071,89 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FrbAdditionalAccount sse_decode_frb_additional_account(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_userId = sse_decode_i_64(deserializer);
+    var var_planId = sse_decode_String(deserializer);
+    return FrbAdditionalAccount(userId: var_userId, planId: var_planId);
+  }
+
+  @protected
+  FrbMemoriesUploadUrls sse_decode_frb_memories_upload_urls(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_mediaId = sse_decode_String(deserializer);
+    var var_thumbnailUpload = sse_decode_opt_box_autoadd_frb_presigned_post(
+      deserializer,
+    );
+    var var_fullUpload = sse_decode_opt_box_autoadd_frb_presigned_post(
+      deserializer,
+    );
+    return FrbMemoriesUploadUrls(
+      mediaId: var_mediaId,
+      thumbnailUpload: var_thumbnailUpload,
+      fullUpload: var_fullUpload,
+    );
+  }
+
+  @protected
+  FrbMemoriesUsage sse_decode_frb_memories_usage(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_currentBytes = sse_decode_i_64(deserializer);
+    var var_count = sse_decode_i_64(deserializer);
+    var var_maxBytes = sse_decode_i_64(deserializer);
+    return FrbMemoriesUsage(
+      currentBytes: var_currentBytes,
+      count: var_count,
+      maxBytes: var_maxBytes,
+    );
+  }
+
+  @protected
+  FrbPasswordlessNotificationMessage
+  sse_decode_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_i_64(deserializer);
+    var var_encryptedMessage = sse_decode_list_prim_u_8_strict(deserializer);
+    return FrbPasswordlessNotificationMessage(
+      id: var_id,
+      encryptedMessage: var_encryptedMessage,
+    );
+  }
+
+  @protected
+  FrbPlanBalance sse_decode_frb_plan_balance(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_usedDailyMediaUploadLimit = sse_decode_i_64(deserializer);
+    var var_usedUploadMediaSizeLimit = sse_decode_i_64(deserializer);
+    var var_paymentPeriodDays = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_lastPaymentDoneUnixTimestamp = sse_decode_opt_box_autoadd_i_64(
+      deserializer,
+    );
+    var var_additionalAccounts = sse_decode_list_frb_additional_account(
+      deserializer,
+    );
+    var var_autoRenewal = sse_decode_opt_box_autoadd_bool(deserializer);
+    var var_additionalAccountOwnerId = sse_decode_opt_box_autoadd_i_64(
+      deserializer,
+    );
+    return FrbPlanBalance(
+      usedDailyMediaUploadLimit: var_usedDailyMediaUploadLimit,
+      usedUploadMediaSizeLimit: var_usedUploadMediaSizeLimit,
+      paymentPeriodDays: var_paymentPeriodDays,
+      lastPaymentDoneUnixTimestamp: var_lastPaymentDoneUnixTimestamp,
+      additionalAccounts: var_additionalAccounts,
+      autoRenewal: var_autoRenewal,
+      additionalAccountOwnerId: var_additionalAccountOwnerId,
+    );
+  }
+
+  @protected
   FrbPqcPreKey sse_decode_frb_pqc_pre_key(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_eccPreKeyId = sse_decode_u_32(deserializer);
@@ -5966,6 +6202,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kyberPreKeyPublic: var_kyberPreKeyPublic,
       kyberPreKeySignature: var_kyberPreKeySignature,
       identityKey: var_identityKey,
+    );
+  }
+
+  @protected
+  FrbPresignedPost sse_decode_frb_presigned_post(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_url = sse_decode_String(deserializer);
+    var var_fields = sse_decode_list_record_string_string(deserializer);
+    return FrbPresignedPost(url: var_url, fields: var_fields);
+  }
+
+  @protected
+  FrbProofOfWork sse_decode_frb_proof_of_work(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_prefix = sse_decode_String(deserializer);
+    var var_difficulty = sse_decode_i_64(deserializer);
+    return FrbProofOfWork(prefix: var_prefix, difficulty: var_difficulty);
+  }
+
+  @protected
+  FrbUserData sse_decode_frb_user_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_userId = sse_decode_i_64(deserializer);
+    var var_username = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_publicIdentityKey = sse_decode_list_prim_u_8_strict(deserializer);
+    return FrbUserData(
+      userId: var_userId,
+      username: var_username,
+      publicIdentityKey: var_publicIdentityKey,
     );
   }
 
@@ -6035,6 +6300,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbAdditionalAccount> sse_decode_list_frb_additional_account(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbAdditionalAccount>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_additional_account(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FrbPasswordlessNotificationMessage>
+  sse_decode_list_frb_passwordless_notification_message(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FrbPasswordlessNotificationMessage>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_frb_passwordless_notification_message(deserializer));
     }
     return ans_;
   }
@@ -6131,6 +6425,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<(String, String)> sse_decode_list_record_string_string(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <(String, String)>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_record_string_string(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<SqlRow> sse_decode_list_sql_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -6221,6 +6529,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_f_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  FrbPresignedPost? sse_decode_opt_box_autoadd_frb_presigned_post(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_frb_presigned_post(deserializer));
     } else {
       return null;
     }
@@ -6948,6 +7269,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_frb_presigned_post(
+    FrbPresignedPost self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_frb_presigned_post(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
     SseSerializer serializer,
@@ -7013,6 +7343,69 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_frb_additional_account(
+    FrbAdditionalAccount self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.userId, serializer);
+    sse_encode_String(self.planId, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_memories_upload_urls(
+    FrbMemoriesUploadUrls self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.mediaId, serializer);
+    sse_encode_opt_box_autoadd_frb_presigned_post(
+      self.thumbnailUpload,
+      serializer,
+    );
+    sse_encode_opt_box_autoadd_frb_presigned_post(self.fullUpload, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_memories_usage(
+    FrbMemoriesUsage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.currentBytes, serializer);
+    sse_encode_i_64(self.count, serializer);
+    sse_encode_i_64(self.maxBytes, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_passwordless_notification_message(
+    FrbPasswordlessNotificationMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.id, serializer);
+    sse_encode_list_prim_u_8_strict(self.encryptedMessage, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_plan_balance(
+    FrbPlanBalance self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.usedDailyMediaUploadLimit, serializer);
+    sse_encode_i_64(self.usedUploadMediaSizeLimit, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.paymentPeriodDays, serializer);
+    sse_encode_opt_box_autoadd_i_64(
+      self.lastPaymentDoneUnixTimestamp,
+      serializer,
+    );
+    sse_encode_list_frb_additional_account(self.additionalAccounts, serializer);
+    sse_encode_opt_box_autoadd_bool(self.autoRenewal, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.additionalAccountOwnerId, serializer);
+  }
+
+  @protected
   void sse_encode_frb_pqc_pre_key(FrbPqcPreKey self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.eccPreKeyId, serializer);
@@ -7039,6 +7432,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_prim_u_8_strict(self.kyberPreKeyPublic, serializer);
     sse_encode_list_prim_u_8_strict(self.kyberPreKeySignature, serializer);
     sse_encode_list_prim_u_8_strict(self.identityKey, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_presigned_post(
+    FrbPresignedPost self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.url, serializer);
+    sse_encode_list_record_string_string(self.fields, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_proof_of_work(
+    FrbProofOfWork self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.prefix, serializer);
+    sse_encode_i_64(self.difficulty, serializer);
+  }
+
+  @protected
+  void sse_encode_frb_user_data(FrbUserData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.userId, serializer);
+    sse_encode_list_prim_u_8_strict(self.username, serializer);
+    sse_encode_list_prim_u_8_strict(self.publicIdentityKey, serializer);
   }
 
   @protected
@@ -7101,6 +7522,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_additional_account(
+    List<FrbAdditionalAccount> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_additional_account(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_frb_passwordless_notification_message(
+    List<FrbPasswordlessNotificationMessage> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_frb_passwordless_notification_message(item, serializer);
     }
   }
 
@@ -7197,6 +7642,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_record_string_string(
+    List<(String, String)> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_record_string_string(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_sql_row(List<SqlRow> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -7283,6 +7740,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_f_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_frb_presigned_post(
+    FrbPresignedPost? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_frb_presigned_post(self, serializer);
     }
   }
 

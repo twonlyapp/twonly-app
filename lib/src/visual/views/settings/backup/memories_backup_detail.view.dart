@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -19,7 +17,7 @@ class MemoriesBackupDetailView extends StatefulWidget {
 }
 
 class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
-  server.Response_MemoriesUsage? _memoriesUsage;
+  FrbMemoriesUsage? _memoriesUsage;
   bool _isLoading = true;
 
   @override
@@ -29,7 +27,10 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
   }
 
   Future<void> _loadStats() async {
-    final memoriesUsage = await rustApiProtobuf(RustApi.getMemoriesUsage(), decodeMemoriesUsage);
+    FrbMemoriesUsage? memoriesUsage;
+    try {
+      memoriesUsage = await RustApi.getMemoriesUsage();
+    } catch (_) {}
     if (mounted) {
       setState(() {
         _memoriesUsage = memoriesUsage;
@@ -58,7 +59,7 @@ class _MemoriesBackupDetailViewState extends State<MemoriesBackupDetailView> {
               children: [
                 Text(
                   _memoriesUsage != null
-                      ? '${formatBytes(_memoriesUsage!.currentBytes.toInt())} / ${formatBytes(_memoriesUsage!.maxBytes.toInt())}'
+                      ? '${formatBytes(_memoriesUsage!.currentBytes)} / ${formatBytes(_memoriesUsage!.maxBytes)}'
                       : '-',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,

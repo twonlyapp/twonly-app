@@ -4553,6 +4553,83 @@ impl SseDecode for crate::bridge::wrapper::user_discovery::FlutterUserDiscovery 
     }
 }
 
+impl SseDecode for crate::bridge::api::FrbAdditionalAccount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_userId = <i64>::sse_decode(deserializer);
+        let mut var_planId = <String>::sse_decode(deserializer);
+        return crate::bridge::api::FrbAdditionalAccount {
+            user_id: var_userId,
+            plan_id: var_planId,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbMemoriesUploadUrls {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_mediaId = <String>::sse_decode(deserializer);
+        let mut var_thumbnailUpload =
+            <Option<crate::bridge::api::FrbPresignedPost>>::sse_decode(deserializer);
+        let mut var_fullUpload =
+            <Option<crate::bridge::api::FrbPresignedPost>>::sse_decode(deserializer);
+        return crate::bridge::api::FrbMemoriesUploadUrls {
+            media_id: var_mediaId,
+            thumbnail_upload: var_thumbnailUpload,
+            full_upload: var_fullUpload,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbMemoriesUsage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_currentBytes = <i64>::sse_decode(deserializer);
+        let mut var_count = <i64>::sse_decode(deserializer);
+        let mut var_maxBytes = <i64>::sse_decode(deserializer);
+        return crate::bridge::api::FrbMemoriesUsage {
+            current_bytes: var_currentBytes,
+            count: var_count,
+            max_bytes: var_maxBytes,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbPasswordlessNotificationMessage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <i64>::sse_decode(deserializer);
+        let mut var_encryptedMessage = <Vec<u8>>::sse_decode(deserializer);
+        return crate::bridge::api::FrbPasswordlessNotificationMessage {
+            id: var_id,
+            encrypted_message: var_encryptedMessage,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbPlanBalance {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_usedDailyMediaUploadLimit = <i64>::sse_decode(deserializer);
+        let mut var_usedUploadMediaSizeLimit = <i64>::sse_decode(deserializer);
+        let mut var_paymentPeriodDays = <Option<i64>>::sse_decode(deserializer);
+        let mut var_lastPaymentDoneUnixTimestamp = <Option<i64>>::sse_decode(deserializer);
+        let mut var_additionalAccounts =
+            <Vec<crate::bridge::api::FrbAdditionalAccount>>::sse_decode(deserializer);
+        let mut var_autoRenewal = <Option<bool>>::sse_decode(deserializer);
+        let mut var_additionalAccountOwnerId = <Option<i64>>::sse_decode(deserializer);
+        return crate::bridge::api::FrbPlanBalance {
+            used_daily_media_upload_limit: var_usedDailyMediaUploadLimit,
+            used_upload_media_size_limit: var_usedUploadMediaSizeLimit,
+            payment_period_days: var_paymentPeriodDays,
+            last_payment_done_unix_timestamp: var_lastPaymentDoneUnixTimestamp,
+            additional_accounts: var_additionalAccounts,
+            auto_renewal: var_autoRenewal,
+            additional_account_owner_id: var_additionalAccountOwnerId,
+        };
+    }
+}
+
 impl SseDecode for crate::signal::engine::FrbPqcPreKey {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4597,6 +4674,44 @@ impl SseDecode for crate::signal::engine::FrbPreKeyBundle {
             kyber_pre_key_public: var_kyberPreKeyPublic,
             kyber_pre_key_signature: var_kyberPreKeySignature,
             identity_key: var_identityKey,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbPresignedPost {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_url = <String>::sse_decode(deserializer);
+        let mut var_fields = <Vec<(String, String)>>::sse_decode(deserializer);
+        return crate::bridge::api::FrbPresignedPost {
+            url: var_url,
+            fields: var_fields,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbProofOfWork {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_prefix = <String>::sse_decode(deserializer);
+        let mut var_difficulty = <i64>::sse_decode(deserializer);
+        return crate::bridge::api::FrbProofOfWork {
+            prefix: var_prefix,
+            difficulty: var_difficulty,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::api::FrbUserData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_userId = <i64>::sse_decode(deserializer);
+        let mut var_username = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_publicIdentityKey = <Vec<u8>>::sse_decode(deserializer);
+        return crate::bridge::api::FrbUserData {
+            user_id: var_userId,
+            username: var_username,
+            public_identity_key: var_publicIdentityKey,
         };
     }
 }
@@ -4682,6 +4797,34 @@ impl SseDecode for Vec<String> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<String>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::bridge::api::FrbAdditionalAccount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bridge::api::FrbAdditionalAccount>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::bridge::api::FrbPasswordlessNotificationMessage> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(
+                <crate::bridge::api::FrbPasswordlessNotificationMessage>::sse_decode(deserializer),
+            );
         }
         return ans_;
     }
@@ -4779,6 +4922,18 @@ impl SseDecode for Vec<(String, Vec<String>)> {
     }
 }
 
+impl SseDecode for Vec<(String, String)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<(String, String)>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::database::app::SqlRow> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4867,6 +5022,19 @@ impl SseDecode for Option<f64> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<f64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::bridge::api::FrbPresignedPost> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::bridge::api::FrbPresignedPost>::sse_decode(
+                deserializer,
+            ));
         } else {
             return None;
         }
@@ -5606,6 +5774,126 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::wrapper::user_discovery::F
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbAdditionalAccount {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.user_id.into_into_dart().into_dart(),
+            self.plan_id.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbAdditionalAccount
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbAdditionalAccount>
+    for crate::bridge::api::FrbAdditionalAccount
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbAdditionalAccount {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbMemoriesUploadUrls {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.media_id.into_into_dart().into_dart(),
+            self.thumbnail_upload.into_into_dart().into_dart(),
+            self.full_upload.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbMemoriesUploadUrls
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbMemoriesUploadUrls>
+    for crate::bridge::api::FrbMemoriesUploadUrls
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbMemoriesUploadUrls {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbMemoriesUsage {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.current_bytes.into_into_dart().into_dart(),
+            self.count.into_into_dart().into_dart(),
+            self.max_bytes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbMemoriesUsage
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbMemoriesUsage>
+    for crate::bridge::api::FrbMemoriesUsage
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbMemoriesUsage {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbPasswordlessNotificationMessage {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.encrypted_message.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbPasswordlessNotificationMessage
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbPasswordlessNotificationMessage>
+    for crate::bridge::api::FrbPasswordlessNotificationMessage
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbPasswordlessNotificationMessage {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbPlanBalance {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.used_daily_media_upload_limit
+                .into_into_dart()
+                .into_dart(),
+            self.used_upload_media_size_limit
+                .into_into_dart()
+                .into_dart(),
+            self.payment_period_days.into_into_dart().into_dart(),
+            self.last_payment_done_unix_timestamp
+                .into_into_dart()
+                .into_dart(),
+            self.additional_accounts.into_into_dart().into_dart(),
+            self.auto_renewal.into_into_dart().into_dart(),
+            self.additional_account_owner_id
+                .into_into_dart()
+                .into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbPlanBalance
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbPlanBalance>
+    for crate::bridge::api::FrbPlanBalance
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbPlanBalance {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::signal::engine::FrbPqcPreKey {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5656,6 +5944,70 @@ impl flutter_rust_bridge::IntoIntoDart<crate::signal::engine::FrbPreKeyBundle>
     for crate::signal::engine::FrbPreKeyBundle
 {
     fn into_into_dart(self) -> crate::signal::engine::FrbPreKeyBundle {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbPresignedPost {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.url.into_into_dart().into_dart(),
+            self.fields.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbPresignedPost
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbPresignedPost>
+    for crate::bridge::api::FrbPresignedPost
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbPresignedPost {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbProofOfWork {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.prefix.into_into_dart().into_dart(),
+            self.difficulty.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbProofOfWork
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbProofOfWork>
+    for crate::bridge::api::FrbProofOfWork
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbProofOfWork {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::api::FrbUserData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.user_id.into_into_dart().into_dart(),
+            self.username.into_into_dart().into_dart(),
+            self.public_identity_key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::api::FrbUserData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::api::FrbUserData>
+    for crate::bridge::api::FrbUserData
+{
+    fn into_into_dart(self) -> crate::bridge::api::FrbUserData {
         self
     }
 }
@@ -6304,6 +6656,59 @@ impl SseEncode for crate::bridge::wrapper::user_discovery::FlutterUserDiscovery 
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::bridge::api::FrbAdditionalAccount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.user_id, serializer);
+        <String>::sse_encode(self.plan_id, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbMemoriesUploadUrls {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.media_id, serializer);
+        <Option<crate::bridge::api::FrbPresignedPost>>::sse_encode(
+            self.thumbnail_upload,
+            serializer,
+        );
+        <Option<crate::bridge::api::FrbPresignedPost>>::sse_encode(self.full_upload, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbMemoriesUsage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.current_bytes, serializer);
+        <i64>::sse_encode(self.count, serializer);
+        <i64>::sse_encode(self.max_bytes, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbPasswordlessNotificationMessage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.id, serializer);
+        <Vec<u8>>::sse_encode(self.encrypted_message, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbPlanBalance {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.used_daily_media_upload_limit, serializer);
+        <i64>::sse_encode(self.used_upload_media_size_limit, serializer);
+        <Option<i64>>::sse_encode(self.payment_period_days, serializer);
+        <Option<i64>>::sse_encode(self.last_payment_done_unix_timestamp, serializer);
+        <Vec<crate::bridge::api::FrbAdditionalAccount>>::sse_encode(
+            self.additional_accounts,
+            serializer,
+        );
+        <Option<bool>>::sse_encode(self.auto_renewal, serializer);
+        <Option<i64>>::sse_encode(self.additional_account_owner_id, serializer);
+    }
+}
+
 impl SseEncode for crate::signal::engine::FrbPqcPreKey {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6329,6 +6734,31 @@ impl SseEncode for crate::signal::engine::FrbPreKeyBundle {
         <Vec<u8>>::sse_encode(self.kyber_pre_key_public, serializer);
         <Vec<u8>>::sse_encode(self.kyber_pre_key_signature, serializer);
         <Vec<u8>>::sse_encode(self.identity_key, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbPresignedPost {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.url, serializer);
+        <Vec<(String, String)>>::sse_encode(self.fields, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbProofOfWork {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.prefix, serializer);
+        <i64>::sse_encode(self.difficulty, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::api::FrbUserData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.user_id, serializer);
+        <Vec<u8>>::sse_encode(self.username, serializer);
+        <Vec<u8>>::sse_encode(self.public_identity_key, serializer);
     }
 }
 
@@ -6411,6 +6841,26 @@ impl SseEncode for Vec<String> {
     }
 }
 
+impl SseEncode for Vec<crate::bridge::api::FrbAdditionalAccount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bridge::api::FrbAdditionalAccount>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::bridge::api::FrbPasswordlessNotificationMessage> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bridge::api::FrbPasswordlessNotificationMessage>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::signal::engine::FrbPqcPreKey> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6479,6 +6929,16 @@ impl SseEncode for Vec<(String, Vec<String>)> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <(String, Vec<String>)>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<(String, String)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <(String, String)>::sse_encode(item, serializer);
         }
     }
 }
@@ -6559,6 +7019,16 @@ impl SseEncode for Option<f64> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <f64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::bridge::api::FrbPresignedPost> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::bridge::api::FrbPresignedPost>::sse_encode(value, serializer);
         }
     }
 }

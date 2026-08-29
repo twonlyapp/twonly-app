@@ -117,10 +117,12 @@ class _SearchUsernameView extends State<AddNewUserView> {
       _isLoading = true;
     });
 
-    final userdata = await rustApiProtobuf(
-      RustApi.getUserData(username: username),
-      decodeUserData,
-    );
+    FrbUserData? userdata;
+    try {
+      userdata = await RustApi.getUserData(username: username);
+    } catch (_) {
+      userdata = null;
+    }
     if (!mounted) return;
 
     setState(() {
@@ -149,7 +151,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(username),
-        userId: Value(userdata.userId.toInt()),
+        userId: Value(userdata.userId),
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
@@ -167,7 +169,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       );
       if (markAsVerified) {
         await twonlyDB.keyVerificationDao.addKeyVerification(
-          userdata.userId.toInt(),
+          userdata.userId,
           VerificationType.link,
         );
       }

@@ -6,8 +6,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as server;
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -39,14 +37,10 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
     });
 
     try {
-      final userData = server.Response_UserData(
-        userId: widget.profile.userId,
-        publicIdentityKey: widget.profile.publicIdentityKey,
-        signedPrekey: widget.profile.signedPrekey,
-        signedPrekeySignature: widget.profile.signedPrekeySignature,
-        signedPrekeyId: widget.profile.signedPrekeyId,
-        username: utf8.encode(widget.profile.username),
-        registrationId: widget.profile.registrationId,
+      final userData = FrbUserData(
+        userId: widget.profile.userId.toInt(),
+        publicIdentityKey: Uint8List.fromList(widget.profile.publicIdentityKey),
+        username: Uint8List.fromList(utf8.encode(widget.profile.username)),
       );
 
       final added = await twonlyDB.contactsDao.insertOnConflictUpdate(

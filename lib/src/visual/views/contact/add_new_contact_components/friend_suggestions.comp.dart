@@ -46,7 +46,14 @@ class FriendSuggestionsComp extends StatelessWidget {
   ) async {
     Log.info('Requesting user via friend suggestions');
 
-    final userdata = await rustApiProtobuf(RustApi.getUserById(userId: user.announcedUserId), decodeUserData);
+    FrbUserData? userdata;
+    try {
+      userdata = await RustApi.getUserById(
+        userId: user.announcedUserId,
+      );
+    } catch (_) {
+      userdata = null;
+    }
 
     if (userdata == null) {
       if (context.mounted) {
@@ -58,7 +65,7 @@ class FriendSuggestionsComp extends StatelessWidget {
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(user.username!),
-        userId: Value(userdata.userId.toInt()),
+        userId: Value(userdata.userId),
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
