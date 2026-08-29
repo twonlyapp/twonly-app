@@ -4,14 +4,13 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
@@ -62,9 +61,6 @@ class KeyVerificationService {
           calculatedMac: calculatedMac,
         ),
       ).writeToBuffer(),
-      onlySendIfNoReceiptsAreOpen: false,
-      onlyReturnEncryptedData: false,
-      blocking: true,
     );
   }
 
@@ -74,7 +70,9 @@ class KeyVerificationService {
   ) async {
     Log.info('Received a verification proof. Verifying the calculated mac...');
 
-    final contactPubKey = await getPublicKeyFromContact(fromUserId);
+    final contactPubKey = await RustSignal.getContactPublicKey(
+      contactId: fromUserId,
+    );
     if (contactPubKey == null) {
       Log.error('No public key stored..');
       return;
@@ -121,7 +119,9 @@ class KeyVerificationService {
     required List<int> sharedPublicIdentityKey,
     required int senderId,
   }) async {
-    final publicIdentityKey = await getPublicKeyFromContact(contactId);
+    final publicIdentityKey = await RustSignal.getContactPublicKey(
+      contactId: contactId,
+    );
     if (publicIdentityKey == null) {
       Log.info('No public key stored for contact $contactId');
       return;
@@ -148,7 +148,7 @@ Future<List<int>> _createVerificationBytes(
 ) async {
   final bytes = <int>[];
 
-  final userPublicKey = await getUserPublicKey();
+  final userPublicKey = await RustSignal.getUserPublicKey();
 
   final ownBytes = [
     ..._userIdToLeBytes(userService.currentUser.userId),

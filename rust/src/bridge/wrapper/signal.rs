@@ -45,4 +45,16 @@ impl RustSignal {
             .decrypt_message(name.clone(), device_id, ciphertext.clone())
             .await
     }
+
+    pub async fn get_user_public_key() -> Result<Vec<u8>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine.get_identity_key().await
+    }
+
+    pub async fn get_contact_public_key(contact_id: i64) -> Result<Option<Vec<u8>>> {
+        let guard = get_twonly_flutter()?.signal_engine.lock().await;
+        let engine = guard.as_ref().ok_or(TwonlyError::Initialization)?;
+        engine.get_contact_identity_key(&contact_id.to_string()).await
+    }
 }

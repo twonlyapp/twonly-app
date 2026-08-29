@@ -10,10 +10,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/api/api.service.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/services/api/rust_api_result.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -52,19 +49,15 @@ class TestClient {
     api = ApiService();
 
     await run(() async {
-      await createIfNotExistsSignalIdentity();
-
-      Log.info('Connecting to API...');
-      final connected = await api.connect();
-      Log.info('Connected: $connected');
-      if (!connected) throw Exception('Failed to connect to API');
-
       Log.info('Requesting POW...');
-      final pow = await rustApiProtobuf(
-        RustApi.getProofOfWork(),
-        decodeProofOfWork,
-      );
-      if (pow == null) throw Exception('Failed to get POW');
+      final dynamic pow;
+      try {
+        final raw = await RustApi.getProofOfWork();
+        pow = decodeProofOfWork(raw);
+      } catch (e, st) {
+        print('POW EXCEPTION: $e\n$st');
+        rethrow;
+      }
       Log.info('POW result: $pow');
 
       final prefix = pow.prefix;
@@ -87,15 +80,12 @@ class TestClient {
         appVersion: 100,
       );
       await UserService.save(userData);
-
-      await api.authenticate();
-      await signalGetPreKeys();
     });
   }
 
   Future<void> initContact(TestClient other) async {
     await run(() async {
-      await env.db.contactsDao.insertContact(
+      await env.db.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(
           userId: Value(other.realUserId),
           username: other.username,
@@ -107,12 +97,7 @@ class TestClient {
         GroupsCompanion(groupName: Value(other.username)),
       );
 
-      final userData = await rustApiProtobuf(
-        RustApi.getUserById(userId: other.realUserId),
-        decodeUserData,
-      );
-      final sessionStarted = await processSignalUserData(userData!);
-      if (!sessionStarted) throw Exception('Failed to start session');
+      await RustApi.establishSignalSession(contactId: other.realUserId);
     });
   }
 
@@ -129,14 +114,14 @@ class TestClient {
           type: Value(MessageType.text.name),
         ),
       );
-      await sendCipherText(
-        target.realUserId,
-        pb.EncryptedContent(
+      await RustApi.sendEncryptedContent(
+        contactId: target.realUserId,
+        content: pb.EncryptedContent(
           groupId: defaultGroup!.groupId,
           textMessage: pb.EncryptedContent_TextMessage()
             ..senderMessageId = m!.messageId
             ..text = text,
-        ),
+        ).writeToBuffer(),
         messageId: m.messageId,
       );
       return m;
@@ -148,7 +133,10 @@ class TestClient {
     pb.EncryptedContent content,
   ) async {
     await run(() async {
-      await sendCipherText(target.realUserId, content);
+      await RustApi.sendEncryptedContent(
+        contactId: target.realUserId,
+        content: content.writeToBuffer(),
+      );
     });
   }
 

@@ -4,8 +4,8 @@
  */
 
 use chacha20poly1305::{
-    aead::{Aead, Payload},
     KeyInit, XChaCha20Poly1305, XNonce,
+    aead::{Aead, Payload},
 };
 use hkdf::Hkdf;
 use libsignal_protocol::{IdentityKeyPair, KeyPair, PublicKey};
@@ -319,7 +319,7 @@ fn derive_encryption_key(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{rngs::StdRng, SeedableRng};
+    use rand::{SeedableRng, rngs::StdRng};
 
     fn test_message() -> proto::Message {
         proto::Message {
@@ -360,7 +360,6 @@ mod tests {
             key_manager.signal_identity = Some(crate::keys::SignalIdentityKey {
                 identity_key_pair_structure: recipient.serialize().to_vec(),
                 registration_id: 1,
-                pre_key_store: Default::default(),
             });
         }
         let database = context.rust_db.read().await.clone();

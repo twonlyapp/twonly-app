@@ -32,4 +32,8 @@ class TwitterParser with BaseMetaInfo {
       _url.startsWith('https://x.com/') && _url.contains('/status/')
       ? Vendor.twitterPosting
       : null;
+
+  @override
+  String? get siteName =>
+      vendor == Vendor.twitterPosting ? 'X (formerly Twitter)' : null;
 }

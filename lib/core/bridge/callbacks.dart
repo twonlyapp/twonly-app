@@ -8,24 +8,12 @@ import '../user_config.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`, `LegacySignal`, `Logging`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`, `Logging`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`
 
 Future<void> initFlutterCallbacks({
   required int callbackId,
   required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
-  required FutureOr<LegacySignalDecryptResult> Function(
-    PlatformInt64,
-    Uint8List,
-    int,
-  )
-  legacySignalDecrypt,
-  required FutureOr<LegacySignalEncryptResult?> Function(
-    PlatformInt64,
-    Uint8List,
-  )
-  legacySignalEncrypt,
-  required FutureOr<void> Function(PlatformInt64) apiResyncSignalSession,
   required FutureOr<void> Function(String, String, PlatformInt64, String)
   apiMediaAction,
   required FutureOr<void> Function(PlatformInt64, Uint8List)
@@ -36,59 +24,9 @@ Future<void> initFlutterCallbacks({
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   callbackId: callbackId,
   loggingGetStreamSink: loggingGetStreamSink,
-  legacySignalDecrypt: legacySignalDecrypt,
-  legacySignalEncrypt: legacySignalEncrypt,
-  apiResyncSignalSession: apiResyncSignalSession,
   apiMediaAction: apiMediaAction,
   apiVerificationProof: apiVerificationProof,
   apiCreatePushAvatars: apiCreatePushAvatars,
   apiMediaReceived: apiMediaReceived,
   apiUserConfigChanged: apiUserConfigChanged,
 );
-
-class LegacySignalDecryptResult {
-  /// Serialized `EncryptedContent` when legacy Signal decryption succeeded.
-  final Uint8List? plaintext;
-
-  /// Serialized protobuf enum value for `DecryptionErrorMessage.Type`.
-  final int? decryptionErrorType;
-
-  const LegacySignalDecryptResult({
-    this.plaintext,
-    this.decryptionErrorType,
-  });
-
-  @override
-  int get hashCode => plaintext.hashCode ^ decryptionErrorType.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LegacySignalDecryptResult &&
-          runtimeType == other.runtimeType &&
-          plaintext == other.plaintext &&
-          decryptionErrorType == other.decryptionErrorType;
-}
-
-class LegacySignalEncryptResult {
-  final Uint8List ciphertext;
-
-  /// `Message.Type.CIPHERTEXT` or `Message.Type.PREKEY_BUNDLE`.
-  final int messageType;
-
-  const LegacySignalEncryptResult({
-    required this.ciphertext,
-    required this.messageType,
-  });
-
-  @override
-  int get hashCode => ciphertext.hashCode ^ messageType.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LegacySignalEncryptResult &&
-          runtimeType == other.runtimeType &&
-          ciphertext == other.ciphertext &&
-          messageType == other.messageType;
-}

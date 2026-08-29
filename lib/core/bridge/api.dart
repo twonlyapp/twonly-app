@@ -122,6 +122,14 @@ class RustApi {
   static Future<void> downloadPendingMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiDownloadPendingMedia();
 
+  static Future<void> establishSignalSession({
+    required PlatformInt64 contactId,
+    Uint8List? expectedPublicKey,
+  }) => RustLib.instance.api.crateBridgeApiRustApiEstablishSignalSession(
+    contactId: contactId,
+    expectedPublicKey: expectedPublicKey,
+  );
+
   static Stream<ApiEvent> events() =>
       RustLib.instance.api.crateBridgeApiRustApiEvents();
 
@@ -330,9 +338,9 @@ class RustApi {
     required PlatformInt64 contactId,
     required List<int> content,
     String? messageId,
-    required bool onlySendIfNoReceiptsAreOpen,
-    required bool onlyReturnEncryptedData,
-    required bool blocking,
+    bool? onlySendIfNoReceiptsAreOpen,
+    bool? onlyReturnEncryptedData,
+    bool? blocking,
   }) => RustLib.instance.api.crateBridgeApiRustApiSendEncryptedContent(
     contactId: contactId,
     content: content,
@@ -346,7 +354,7 @@ class RustApi {
     required String groupId,
     required List<int> content,
     String? messageId,
-    required bool onlySendIfNoReceiptsAreOpen,
+    bool? onlySendIfNoReceiptsAreOpen,
   }) => RustLib.instance.api.crateBridgeApiRustApiSendEncryptedContentToGroup(
     groupId: groupId,
     content: content,
@@ -410,6 +418,8 @@ class RustApi {
   );
 
   static Future<void> uploadPqcPreKeys({
+    required List<int> publicIdentityKey,
+    required PlatformInt64 registrationId,
     required PlatformInt64 eccSignedPrekeyId,
     required List<int> eccSignedPrekey,
     required List<int> eccSignedPrekeySignature,
@@ -418,6 +428,8 @@ class RustApi {
     required List<int> kyberSignedPrekeySignature,
     required List<PqcPreKeyInput> prekeys,
   }) => RustLib.instance.api.crateBridgeApiRustApiUploadPqcPreKeys(
+    publicIdentityKey: publicIdentityKey,
+    registrationId: registrationId,
     eccSignedPrekeyId: eccSignedPrekeyId,
     eccSignedPrekey: eccSignedPrekey,
     eccSignedPrekeySignature: eccSignedPrekeySignature,

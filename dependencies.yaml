@@ -63,25 +63,6 @@ dependencies:
         git: https://github.com/Pyozer/dots_indicator.git
         commit: 508f5883ac79bdbc10254092de3f28f571d261cd
     commit: 4a90e557630b28834479ed9c64a9d2d0185d8e48
-  libsignal_protocol_dart:
-    git: https://github.com/MixinNetwork/libsignal_protocol_dart.git
-    dependencies:
-      adaptive_number:
-        git: https://github.com/lemoony/adaptive_number_dart
-        commit: ea9178fdd4d82ac45cf0ec966ac870dae661124f
-      ed25519_edwards:
-        git: https://github.com/Tougee/ed25519.git
-        commit: 7353ba759ea9f4646cbf481c2ef949625c8ce4cf
-      optional:
-        git: https://github.com/tonio-ramirez/optional.dart.git
-        commit: 71c638891ce4f2aff35c7387727989f31f9d877d
-      pointycastle:
-        git: https://github.com/bcgit/pc-dart.git
-        commit: bbd8569f68a7fccbdf0b92d0b44a9219c126c8dd
-      x25519:
-        git: https://github.com/Tougee/curve25519.git
-        commit: ecb1d357714537bba6e276ef45f093846d4beaee
-    commit: c95a1586057022acdbb9c76b1692d94cc549bcc7
   lottie:
     git: https://github.com/xvrh/lottie-flutter.git
     commit: 127bc29f2c6bd8b32ec4064a09e54e6b31cd0a88

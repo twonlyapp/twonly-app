@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -34,57 +32,6 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('Trigger Signal Out-Of-Sync'),
-            onTap: () async {
-              final username = await showUserNameDialog(context);
-              if (username == null) return;
-              final contacts = await twonlyDB.contactsDao.getContactsByUsername(
-                username.toLowerCase(),
-              );
-              if (contacts.length != 1) {
-                Log.error('No single user fund');
-                return;
-              }
-              final userId = contacts.first.userId;
-
-              final group = await twonlyDB.groupsDao.getDirectChat(userId);
-              if (group == null) {
-                Log.error('Target user must have a group!');
-                return;
-              }
-
-              final sessionStore = await getSignalStore();
-
-              // 1. Store a valid session
-              final originalSession = await sessionStore!.loadSession(
-                getSignalAddress(userId),
-              );
-              final serializedSession = originalSession.serialize();
-
-              for (var i = 0; i < 10; i++) {
-                await RustApi.insertAndSendText(
-                  groupId: group.groupId,
-                  text: 'DesyncTest_1',
-                );
-              }
-
-              final corruptedSession = SessionRecord.fromSerialized(
-                serializedSession,
-              );
-              await sessionStore.storeSession(
-                getSignalAddress(userId),
-                corruptedSession,
-              );
-
-              await RustApi.insertAndSendText(
-                groupId: group.groupId,
-                text: 'DesyncTest_2',
-              );
-
-              // The other client should res
-            },
-          ),
           ListTile(
             title: const Text('Sending a lot of messages.'),
             subtitle: Text(lotsOfMessagesStatus),

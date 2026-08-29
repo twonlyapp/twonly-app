@@ -36,6 +36,16 @@ class RustSignal {
   static Future<List<FrbPqcPreKey>> generatePqcPrekeys() => RustLib.instance.api
       .crateBridgeWrapperSignalRustSignalGeneratePqcPrekeys();
 
+  static Future<Uint8List?> getContactPublicKey({
+    required PlatformInt64 contactId,
+  }) => RustLib.instance.api
+      .crateBridgeWrapperSignalRustSignalGetContactPublicKey(
+        contactId: contactId,
+      );
+
+  static Future<Uint8List> getUserPublicKey() =>
+      RustLib.instance.api.crateBridgeWrapperSignalRustSignalGetUserPublicKey();
+
   static Future<void> processPrekeyBundle({
     required String name,
     required int deviceId,

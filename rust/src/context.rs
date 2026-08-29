@@ -5,7 +5,7 @@
 
 use crate::api::runtime::{ApiClient, ApiRuntime};
 use crate::bridge::InitConfig;
-use crate::database::app::{AppDatabase, APP_DATABASE_FILE};
+use crate::database::app::{APP_DATABASE_FILE, AppDatabase};
 use crate::database::signal::Database;
 use crate::error::Result;
 use crate::error::TwonlyError;
@@ -111,13 +111,11 @@ impl Context {
         &self,
         identity_key_pair_structure: Vec<u8>,
         registration_id: i64,
-        pre_key_store: std::collections::HashMap<i64, Vec<u8>>,
     ) -> Result<()> {
         let mut key_manager = self.key_manager.lock().await;
         key_manager.signal_identity = Some(crate::keys::SignalIdentityKey {
             identity_key_pair_structure,
             registration_id,
-            pre_key_store,
         });
         Ok(())
     }

@@ -311,7 +311,11 @@ class PasswordlessRecoveryService {
       );
     }
 
-    unawaited(RustApi.performPasswordlessRecoveryHeartbeat());
+    unawaited(
+      RustApi.performPasswordlessRecoveryHeartbeat().catchError((e) {
+        Log.warn('Failed to perform passwordless recovery heartbeat: $e');
+      }),
+    );
 
     // The passwordless is configured successfully.
     return true;

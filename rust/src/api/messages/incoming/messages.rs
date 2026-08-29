@@ -7,10 +7,9 @@ use super::handle_encrypted;
 use crate::api::proto::client::{self as proto};
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
-use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
 use crate::database::app::tables::{Contact, MediaFile, NewReceipt, Receipt};
-use crate::error::{twonly_error, Result, TwonlyError};
+use crate::error::{Result, TwonlyError};
 use crate::services::contacts::ContactService;
 use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
@@ -31,16 +30,10 @@ pub(crate) async fn queue_encrypted_content(
     content: proto::EncryptedContent,
     contact_will_send_receipt: bool,
 ) -> Result<String> {
-    let Some(contact) = Contact::get_contact_by_id(t, target_user_id).await? else {
-        return Err(twonly_error!("missing contact"));
-    };
+    Contact::ensure_exists(t, target_user_id).await?;
 
     let message = proto::Message {
-        r#type: if contact.signal_version == "v2" {
-            proto::message::Type::CiphertextV2 as i32
-        } else {
-            proto::message::Type::Ciphertext as i32
-        },
+        r#type: proto::message::Type::CiphertextV2 as i32,
         receipt_id: String::new(),
         encrypted_content: Some(content.encode_to_vec()),
         plaintext_content: None,
@@ -97,17 +90,8 @@ pub(crate) async fn process_encrypted_or_queue_error(
                 ..Default::default()
             };
 
-            let signal_version = Contact::get_contact_by_id(t, from_user_id)
-                .await?
-                .map(|c| c.signal_version)
-                .unwrap_or_else(|| "v2".to_string());
-
             let response = proto::Message {
-                r#type: if signal_version == "v2" {
-                    proto::message::Type::CiphertextV2 as i32
-                } else {
-                    proto::message::Type::Ciphertext as i32
-                },
+                r#type: proto::message::Type::CiphertextV2 as i32,
                 receipt_id: String::new(),
                 encrypted_content: Some(response_content.encode_to_vec()),
                 plaintext_content: None,
@@ -298,13 +282,91 @@ async fn encrypt_v2_with_session_recovery(
             );
 
             ContactService::new(ctx)
-                .establish_signal_session(contact_id)
+                .establish_signal_session(contact_id, None)
                 .await?;
 
             encrypt(plaintext).await
         }
         result => result,
     }
+}
+
+pub(crate) struct PreparedQueuedReceipt {
+    pub contact_id: i64,
+    pub message_id: Option<String>,
+    pub contact_will_sends_receipt: i64,
+    pub account_deleted: i64,
+    pub payload: Vec<u8>,
+}
+
+pub(crate) async fn prepare_queued_receipt_details(
+    ctx: &Arc<Context>,
+    receipt_id: &str,
+) -> Result<Option<PreparedQueuedReceipt>> {
+    let app_db = ctx.app_db.read().await.clone();
+    let row = sqlx::query!(
+        r#"
+        SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
+               r.retry_count, c.account_deleted, c.signal_version
+        FROM receipts r
+        JOIN contacts c ON c.user_id = r.contact_id
+        WHERE r.receipt_id = ?
+        "#,
+        receipt_id,
+    )
+    .fetch_optional(&app_db.pool)
+    .await?;
+
+    let Some(row) = row else {
+        return Ok(None);
+    };
+
+    let mut message = proto::Message::decode(row.message.as_slice())
+        .map_err(|error| TwonlyError::Generic(format!("invalid queued message: {error}")))?;
+    message.receipt_id = receipt_id.to_owned();
+
+    let message_type = proto::message::Type::try_from(message.r#type)
+        .map_err(|_| TwonlyError::Generic("queued message has invalid type".into()))?;
+
+    let is_encrypted = matches!(
+        message_type,
+        proto::message::Type::Ciphertext
+            | proto::message::Type::PrekeyBundle
+            | proto::message::Type::CiphertextV2
+    );
+
+    if is_encrypted {
+        if row.signal_version != "v2" {
+            ContactService::new(ctx)
+                .establish_signal_session(row.contact_id, None)
+                .await?;
+        }
+
+        let plaintext = message.encrypted_content.take().ok_or_else(|| {
+            TwonlyError::Generic("queued encrypted message has no content".into())
+        })?;
+
+        message.encrypted_content =
+            Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);
+        message.r#type = proto::message::Type::CiphertextV2 as i32;
+    }
+
+    Ok(Some(PreparedQueuedReceipt {
+        contact_id: row.contact_id,
+        message_id: row.message_id,
+        contact_will_sends_receipt: row.contact_will_sends_receipt,
+        account_deleted: row.account_deleted,
+        payload: message.encode_to_vec(),
+    }))
+}
+
+pub(crate) async fn prepare_queued_receipt(
+    ctx: &Arc<Context>,
+    receipt_id: &str,
+) -> Result<Option<Vec<u8>>> {
+    Ok(prepare_queued_receipt_details(ctx, receipt_id)
+        .await?
+        .map(|receipt| receipt.payload))
 }
 
 pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) -> Result<()> {
@@ -324,56 +386,17 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     }
 
     let app_db = ctx.app_db.read().await.clone();
-    let row = sqlx::query!(
-        r#"
-        SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
-               r.retry_count, c.account_deleted
-        FROM receipts r
-        JOIN contacts c ON c.user_id = r.contact_id
-        WHERE r.receipt_id = ?
-        "#,
-        receipt_id,
-    )
-    .fetch_optional(&app_db.pool)
-    .await?;
-
-    let Some(row) = row else {
+    let Some(receipt) = prepare_queued_receipt_details(ctx, receipt_id).await? else {
         return Ok(());
     };
 
-    if row.account_deleted != 0 {
+    if receipt.account_deleted != 0 {
         Receipt::delete(&app_db.pool, receipt_id).await?;
         app_db.notify_committed(["receipts"]);
         return Ok(());
     }
 
-    let mut message = proto::Message::decode(row.message.as_slice())?;
-    message.receipt_id = receipt_id.to_owned();
-
-    let message_type = proto::message::Type::try_from(message.r#type)?;
-
-    match message_type {
-        proto::message::Type::Ciphertext | proto::message::Type::PrekeyBundle => {
-            let plaintext = message.encrypted_content.take().ok_or_else(|| {
-                TwonlyError::Generic("queued legacy message has no plaintext".into())
-            })?;
-            let (ciphertext, encrypted_type) =
-                encrypt_legacy_signal(row.contact_id, plaintext).await?;
-            message.encrypted_content = Some(ciphertext);
-            message.r#type = encrypted_type;
-        }
-        proto::message::Type::CiphertextV2 => {
-            let plaintext = message
-                .encrypted_content
-                .take()
-                .ok_or_else(|| TwonlyError::Generic("queued V2 message has no plaintext".into()))?;
-            message.encrypted_content =
-                Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);
-        }
-        _ => {}
-    }
-
-    match Server::send_text_message(ctx, row.contact_id, message.encode_to_vec()).await? {
+    match Server::send_text_message(ctx, receipt.contact_id, receipt.payload).await? {
         ServerResult::Ok(()) => {}
         ServerResult::ErrorCode(code) => {
             return Err(TwonlyError::Generic(format!(
@@ -384,7 +407,7 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     }
 
     let mut t = app_db.pool.begin().await?;
-    if let Some(message_id) = row.message_id {
+    if let Some(message_id) = receipt.message_id {
         sqlx::query!(
             r#"
             INSERT INTO message_actions(message_id, contact_id, type)
@@ -393,12 +416,12 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
             DO UPDATE SET action_at = CAST(strftime('%s', 'now') AS INTEGER)
             "#,
             message_id,
-            row.contact_id,
+            receipt.contact_id,
         )
         .execute(&mut *t)
         .await?;
     }
-    if row.contact_will_sends_receipt == 0 {
+    if receipt.contact_will_sends_receipt == 0 {
         Receipt::delete(&mut *t, receipt_id).await?;
     } else {
         sqlx::query!(
@@ -418,52 +441,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     t.commit().await?;
     app_db.notify_committed(["receipts", "message_actions"]);
     Ok(())
-}
-
-pub(crate) async fn prepare_queued_receipt(
-    ctx: &Arc<Context>,
-    receipt_id: &str,
-) -> Result<Option<Vec<u8>>> {
-    let database = ctx.app_db.read().await.clone();
-    let row = sqlx::query!(
-        r#"SELECT contact_id, message, message_id, retry_count
-           FROM receipts WHERE receipt_id = ?"#,
-        receipt_id,
-    )
-    .fetch_optional(&database.pool)
-    .await?;
-    let Some(row) = row else { return Ok(None) };
-    let mut message = proto::Message::decode(row.message.as_slice())
-        .map_err(|error| TwonlyError::Generic(format!("invalid queued message: {error}")))?;
-    message.receipt_id = receipt_id.to_owned();
-
-    match proto::message::Type::try_from(message.r#type)
-        .map_err(|_| TwonlyError::Generic("queued message has invalid type".into()))?
-    {
-        proto::message::Type::Ciphertext => {
-            let plaintext = message
-                .encrypted_content
-                .take()
-                .ok_or_else(|| TwonlyError::Generic("queued message has no content".into()))?;
-
-            let (ciphertext, message_type) =
-                encrypt_legacy_signal(row.contact_id, plaintext).await?;
-
-            message.encrypted_content = Some(ciphertext);
-            message.r#type = message_type;
-        }
-        proto::message::Type::CiphertextV2 => {
-            let plaintext = message
-                .encrypted_content
-                .take()
-                .ok_or_else(|| TwonlyError::Generic("queued message has no content".into()))?;
-
-            message.encrypted_content =
-                Some(encrypt_v2_with_session_recovery(ctx, row.contact_id, plaintext).await?);
-        }
-        _ => {}
-    }
-    Ok(Some(message.encode_to_vec()))
 }
 
 pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
@@ -490,27 +467,6 @@ pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn decrypt_legacy_signal_with_error(
-    from_user_id: i64,
-    ciphertext: Vec<u8>,
-    message_type: i32,
-) -> Result<core::result::Result<proto::EncryptedContent, i32>> {
-    let callbacks = get_callbacks()?;
-    let decrypted = (callbacks.legacy_signal.decrypt)(from_user_id, ciphertext, message_type).await;
-
-    let Some(plaintext) = decrypted.plaintext else {
-        return Ok(Err(decrypted.decryption_error_type.unwrap_or(0)));
-    };
-
-    proto::EncryptedContent::decode(plaintext.as_slice())
-        .map(Ok)
-        .map_err(|error| {
-            TwonlyError::Generic(format!(
-                "Flutter returned invalid legacy Signal plaintext: {error}"
-            ))
-        })
-}
-
 pub(crate) async fn queue_decryption_error(
     tr: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
@@ -534,28 +490,6 @@ pub(crate) async fn queue_decryption_error(
         .insert_or_replace(tr)
         .await?;
     Ok(())
-}
-
-pub(crate) async fn encrypt_legacy_signal(
-    target_user_id: i64,
-    plaintext: Vec<u8>,
-) -> Result<(Vec<u8>, i32)> {
-    let callbacks = get_callbacks()?;
-    let encrypted = (callbacks.legacy_signal.encrypt)(target_user_id, plaintext)
-        .await
-        .ok_or_else(|| TwonlyError::Generic("Flutter legacy Signal encryption failed".into()))?;
-    if !is_legacy_signal_type(encrypted.message_type) {
-        return Err(TwonlyError::Generic(format!(
-            "Flutter returned non-legacy Signal message type {}",
-            encrypted.message_type
-        )));
-    }
-    Ok((encrypted.ciphertext, encrypted.message_type))
-}
-
-fn is_legacy_signal_type(message_type: i32) -> bool {
-    use proto::message::Type;
-    message_type == Type::Ciphertext as i32 || message_type == Type::PrekeyBundle as i32
 }
 
 pub(crate) async fn handle_sender_delivery_receipt(

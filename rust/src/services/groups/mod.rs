@@ -469,6 +469,14 @@ impl GroupService {
 
     pub async fn leave_group(&self, group_id: String) -> Result<bool> {
         let (db, group) = self.load_group(&group_id).await?;
+        let user_id = self.ctx.user_id().await?;
+        let (_, group_state) = GroupApi::load_state(&group).await?;
+        if group_state.admin_ids.contains(&user_id) {
+            let identity = group.identity()?;
+            let public_key = identity.identity_key().serialize().to_vec();
+            return self.remove_member(group_id, public_key, user_id).await;
+        }
+
         let identity = group.identity()?;
         let public_key = identity.identity_key().serialize().to_vec();
         let append = EncryptedAppendedGroupState {

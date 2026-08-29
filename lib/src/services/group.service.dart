@@ -51,5 +51,6 @@ Future<bool> removeMemberFromGroup(Group group, Uint8List key, int contactId) =>
       groupPublicKey: key,
       contactId: contactId,
     );
-Future<bool> leaveAsNonAdminFromGroup(Group group) =>
+Future<bool> leaveGroup(Group group) =>
     rust_groups.leaveGroup(groupId: group.groupId);
+Future<bool> leaveAsNonAdminFromGroup(Group group) => leaveGroup(group);

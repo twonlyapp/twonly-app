@@ -1,24 +1,18 @@
-import 'dart:convert' show utf8;
 import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/core/bridge.dart' as bridge;
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/callbacks/callbacks.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
-    as api_pb;
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -89,8 +83,6 @@ void main() {
     );
     userService.isUserCreated = true;
     await UserService.save(userService.currentUser);
-
-    await createIfNotExistsSignalIdentity();
   });
 
   tearDown(() async {
@@ -108,36 +100,20 @@ void main() {
   });
 
   Future<void> setupSignalSession(int contactId) async {
-    final identityKeyPair = generateIdentityKeyPair();
-    final registrationId = generateRegistrationId(true);
-    final signedPreKey = generateSignedPreKey(identityKeyPair, 1);
-    final preKey = generatePreKeys(1, 1).first;
-
-    final responseUserData = api_pb.Response_UserData()
-      ..userId = Int64(contactId)
-      ..username = utf8.encode('user_$contactId')
-      ..registrationId = Int64(registrationId)
-      ..publicIdentityKey = identityKeyPair.getPublicKey().serialize()
-      ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
-      ..signedPrekeyId = Int64(signedPreKey.id)
-      ..signedPrekeySignature = signedPreKey.signature;
-
-    responseUserData.prekeys.add(
-      api_pb.Response_PreKey()
-        ..id = Int64(preKey.id)
-        ..prekey = preKey.getKeyPair().publicKey.serialize(),
+    final bundle = await RustSignal.generateBundle();
+    await RustSignal.processPrekeyBundle(
+      name: contactId.toString(),
+      deviceId: 1,
+      bundle: bundle,
     );
-
-    final success = await processSignalUserData(responseUserData);
-    expect(success, isTrue);
   }
 
   group('PasswordlessRecoveryService - enablePasswordlessRecovery', () {
     test('works with SecondFactorType.none', () async {
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
       );
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(userId: const Value(3), username: 'friend_3'),
       );
 
@@ -163,7 +139,7 @@ void main() {
     });
 
     test('works with SecondFactorType.email', () async {
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
       );
 
@@ -183,7 +159,7 @@ void main() {
     });
 
     test('works with SecondFactorType.pin', () async {
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(userId: const Value(2), username: 'friend_2'),
       );
 
@@ -203,19 +179,16 @@ void main() {
     });
 
     test('sends delete messages to old trusted friends', () async {
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(
           userId: const Value(2),
           username: 'friend_2',
           recoveryIsTrustedFriend: const Value(true),
         ),
       );
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion.insert(userId: const Value(3), username: 'friend_3'),
       );
-
-      await setupSignalSession(2);
-      await setupSignalSession(3);
 
       final success =
           await PasswordlessRecoveryService.enablePasswordlessRecovery(

@@ -10,7 +10,6 @@ use crate::api::runtime::helpers::decode_ok_value;
 use crate::bridge::api::ServerResult;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
-use libsignal_protocol::{GenericSignedPreKey, IdentityKeyPair, SignedPreKeyRecord};
 use std::sync::Arc;
 
 impl Server {
@@ -21,44 +20,69 @@ impl Server {
         lang_code: String,
         is_ios: bool,
     ) -> Result<ServerResult<i64>> {
-        let key_manager = ctx.key_manager.lock().await;
+        let mut key_manager = ctx.key_manager.lock().await;
+        if key_manager.signal_identity.is_none() {
+            let identity = crate::keys::SignalIdentityKey::generate()?;
+            key_manager.signal_identity = Some(identity);
+            key_manager.store_to_keychain(&ctx.secure_storage)?;
+        }
         let identity = key_manager
             .signal_identity
             .as_ref()
             .ok_or(TwonlyError::SignalIdentityNotFound)?;
-        let identity_pair =
-            IdentityKeyPair::try_from(identity.identity_key_pair_structure.as_slice())
-                .map_err(|error| TwonlyError::Signal(error.to_string()))?;
-        let (&signed_prekey_id, record) = identity
-            .pre_key_store
-            .iter()
-            .min_by_key(|(id, _)| *id)
-            .ok_or_else(|| {
-            TwonlyError::Generic("Signal signed-prekey store is empty".into())
-        })?;
-        let signed_prekey = SignedPreKeyRecord::deserialize(record)
-            .map_err(|error| TwonlyError::Signal(error.to_string()))?;
+
+        let identity_key_pair_structure = identity.identity_key_pair_structure.clone();
+        let registration_id = identity.registration_id;
         let login_token = key_manager.main_key.get_login_token().to_vec();
+        drop(key_manager);
+
+        let database = ctx.rust_db.read().await.clone();
+        let registration_engine = crate::signal::engine::RustSignalEngine::new_with_pool(
+            database.pool.clone(),
+            identity_key_pair_structure.clone(),
+            registration_id as u32,
+            "pending-registration".to_string(),
+        )?;
+        let bundle = registration_engine.generate_bundle().await?;
+        let prekeys = registration_engine
+            .generate_pqc_prekeys()
+            .await?
+            .into_iter()
+            .map(
+                |key| client_to_server::handshake::initial_pqc_keys::PqcPreKey {
+                    ecc_pre_key_id: i64::from(key.ecc_pre_key_id),
+                    ecc_pre_key: key.ecc_pre_key,
+                    kyber_pre_key_id: i64::from(key.kyber_pre_key_id),
+                    kyber_pre_key: key.kyber_pre_key,
+                    kyber_pre_key_signature: key.kyber_pre_key_signature,
+                },
+            )
+            .collect();
+        let initial_pqc_keys = client_to_server::handshake::InitialPqcKeys {
+            public_identity_key: bundle.identity_key,
+            registration_id: i64::from(bundle.registration_id),
+            ecc_signed_prekey_id: i64::from(bundle.signed_pre_key_id),
+            ecc_signed_prekey: bundle.signed_pre_key_public,
+            ecc_signed_prekey_signature: bundle.signed_pre_key_signature,
+            kyber_signed_prekey_id: i64::from(bundle.kyber_pre_key_id),
+            kyber_signed_prekey: bundle.kyber_pre_key_public,
+            kyber_signed_prekey_signature: bundle.kyber_pre_key_signature,
+            prekeys,
+        };
         let register = client_to_server::handshake::Register {
             username,
             invite_code: None,
-            public_identity_key: identity_pair.identity_key().serialize().to_vec(),
-            signed_prekey: signed_prekey
-                .public_key()
-                .map_err(|error| TwonlyError::Signal(error.to_string()))?
-                .serialize()
-                .to_vec(),
-            signed_prekey_signature: signed_prekey
-                .signature()
-                .map_err(|error| TwonlyError::Signal(error.to_string()))?,
-            signed_prekey_id,
-            registration_id: identity.registration_id,
+            public_identity_key: None,
+            signed_prekey: None,
+            signed_prekey_signature: None,
+            signed_prekey_id: None,
+            registration_id: None,
             is_ios,
             lang_code,
             proof_of_work,
             login_token: Some(login_token),
+            initial_pqc_keys: Some(initial_pqc_keys),
         };
-        drop(key_manager);
 
         let bytes = Self::handshake(
             ctx,
@@ -66,10 +90,43 @@ impl Server {
         )
         .await?;
 
-        decode_ok_value(bytes, |value| match value {
+        let res = decode_ok_value(bytes, |value| match value {
             ResponseOk::Userid(id) => Some(id),
             _ => None,
-        })
+        })?;
+
+        if let ServerResult::Ok(user_id) = res {
+            let mut key_manager = ctx.key_manager.lock().await;
+            key_manager.user_id = Some(user_id);
+            key_manager.store_to_keychain(&ctx.secure_storage)?;
+            let signal_identity = key_manager.signal_identity.as_ref().map(|identity| {
+                (
+                    identity.identity_key_pair_structure.clone(),
+                    identity.registration_id,
+                )
+            });
+            drop(key_manager);
+
+            if let Some((identity_key_pair_structure, registration_id)) = signal_identity {
+                let database = ctx.rust_db.read().await.clone();
+                *ctx.signal_engine.lock().await =
+                    Some(crate::signal::engine::RustSignalEngine::new_with_pool(
+                        database.pool.clone(),
+                        identity_key_pair_structure,
+                        registration_id as u32,
+                        user_id.to_string(),
+                    )?);
+            }
+
+            let now = crate::utils::current_time().with_timezone(&chrono::Utc);
+            let _ = crate::user_config::UserConfig::update(ctx, |config| {
+                config.signal_last_signed_pre_key_updated = Some(now);
+                config.signal_last_pqc_pre_keys_uploaded = Some(now);
+            });
+            let _ = crate::api::ApiRuntime::reload_configuration(ctx).await;
+        }
+
+        Ok(res)
     }
 
     pub async fn get_proof_of_work(ctx: &Arc<Context>) -> Result<ServerResult<ProofOfWork>> {

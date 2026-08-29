@@ -16,6 +16,7 @@ use std::pin::Pin;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
+use stream_tungstenite::error::SendError;
 use tokio::sync::oneshot;
 
 fn call_handle_server_message(
@@ -80,15 +81,18 @@ impl ApiClient {
     pub(crate) async fn send(self: &Arc<Self>, bytes: Vec<u8>) -> Result<()> {
         let ws_client = self.ws_client.lock().await.clone();
         if let Some(client) = ws_client {
-            client
-                .send_async(
-                    stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
-                        bytes.into(),
-                    ),
-                )
-                .await
-                .map_err(|e| TwonlyError::Generic(format!("send error: {:?}", e)))?;
-            Ok(())
+            let msg =
+                stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(bytes.into());
+            let start = tokio::time::Instant::now();
+            loop {
+                match client.send_async(msg.clone()).await {
+                    Ok(_) => return Ok(()),
+                    Err(SendError::NotConnected) if start.elapsed() < Duration::from_secs(10) => {
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+                    }
+                    Err(e) => return Err(TwonlyError::Generic(format!("send error: {:?}", e))),
+                }
+            }
         } else {
             Err(TwonlyError::Generic("Not connected".into()))
         }
@@ -147,14 +151,32 @@ impl ApiClient {
 
         let ws_client = self.ws_client.lock().await.clone();
         if let Some(client) = ws_client {
-            client
-                .send_async(
-                    stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
-                        request.encode_to_vec().into(),
-                    ),
-                )
-                .await
-                .map_err(|e| TwonlyError::Generic(format!("send error: {:?}", e)))?;
+            let msg = stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(
+                request.encode_to_vec().into(),
+            );
+            let start = tokio::time::Instant::now();
+            let mut sent = false;
+            while start.elapsed() < Duration::from_secs(10) {
+                match client.send_async(msg.clone()).await {
+                    Ok(_) => {
+                        sent = true;
+                        break;
+                    }
+                    Err(SendError::NotConnected) => {
+                        tokio::time::sleep(Duration::from_millis(50)).await;
+                    }
+                    Err(e) => {
+                        self.pending.lock().await.remove(&sequence);
+                        return Err(TwonlyError::Generic(format!("send error: {:?}", e)));
+                    }
+                }
+            }
+            if !sent {
+                self.pending.lock().await.remove(&sequence);
+                return Err(TwonlyError::Generic(
+                    "send error: NotConnected (timeout)".into(),
+                ));
+            }
         } else {
             self.pending.lock().await.remove(&sequence);
             return Err(TwonlyError::Generic("Not connected".into()));

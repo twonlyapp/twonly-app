@@ -73,6 +73,13 @@ impl Server {
         ctx: &Arc<Context>,
         value: client_to_server::handshake::Handshake,
     ) -> Result<Vec<u8>> {
+        let client = ApiRuntime::client(ctx).await?;
+        if client
+            .is_authenticated
+            .load(std::sync::atomic::Ordering::Acquire)
+        {
+            client.close().await;
+        }
         ApiRuntime::request_binary(ctx, Self::handshake_request(value)).await
     }
 }

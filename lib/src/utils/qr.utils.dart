@@ -6,41 +6,27 @@ import 'package:collection/collection.dart' show ListExtensions;
 import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
-import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class QrCodeUtils {
   static String linkPrefix = 'https://me.twonly.eu/qr/#';
 
   static Future<String> publicProfileLink() async {
-    final signalIdentity = (await getSignalIdentity())!;
-
-    final signalStore = await getSignalStoreFromIdentity(signalIdentity);
-
-    final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
-
+    final publicIdentityKey = await RustSignal.getUserPublicKey();
     final secretVerificationToken =
         await KeyVerificationService.getNewSecretVerificationToken();
 
     final publicProfile = PublicProfile(
       userId: Int64(userService.currentUser.userId),
       username: userService.currentUser.username,
-      publicIdentityKey: (await signalStore.getIdentityKeyPair())
-          .getPublicKey()
-          .serialize(),
-      registrationId: Int64(signalIdentity.registrationId),
-      signedPrekey: signedPreKey.getKeyPair().publicKey.serialize(),
-      signedPrekeySignature: signedPreKey.signature,
-      signedPrekeyId: Int64(signedPreKey.id),
+      publicIdentityKey: publicIdentityKey,
       secretVerificationToken: secretVerificationToken,
       timestamp: Int64(clock.now().millisecondsSinceEpoch),
     );
@@ -88,7 +74,9 @@ class QrCodeUtils {
       return (profile, null, false);
     }
 
-    final storedPublicKey = await getPublicKeyFromContact(contact.userId);
+    final storedPublicKey = await RustSignal.getContactPublicKey(
+      contactId: contact.userId,
+    );
     if (storedPublicKey == null) return null;
 
     final verificationOk = profile.publicIdentityKey.equals(
@@ -127,32 +115,37 @@ class QrCodeUtils {
 }
 
 Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
-  final userdata = Response_UserData(
-    userId: profile.userId,
-    publicIdentityKey: profile.publicIdentityKey,
-    signedPrekey: profile.signedPrekey,
-    signedPrekeyId: profile.signedPrekeyId,
-    signedPrekeySignature: profile.signedPrekeySignature,
-  );
+  try {
+    await RustApi.establishSignalSession(
+      contactId: profile.userId.toInt(),
+      expectedPublicKey: Uint8List.fromList(profile.publicIdentityKey),
+    );
+    await RustApi.sendEncryptedContent(
+      contactId: profile.userId.toInt(),
+      content: EncryptedContent(
+        contactRequest: EncryptedContent_ContactRequest(
+          type: EncryptedContent_ContactRequest_Type.REQUEST,
+        ),
+      ).writeToBuffer(),
+    );
 
-  final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
-    ContactsCompanion(
-      username: Value(profile.username),
-      userId: Value(profile.userId.toInt()),
-      requested: const Value(false),
-      blocked: const Value(false),
-      deletedByUser: const Value(false),
-    ),
-  );
+    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
+      ContactsCompanion(
+        username: Value(profile.username),
+        userId: Value(profile.userId.toInt()),
+        requested: const Value(false),
+        blocked: const Value(false),
+        deletedByUser: const Value(false),
+      ),
+    );
 
-  // The user was added via the profile scanned from the QR code so the scanned public key was used.
-  await twonlyDB.keyVerificationDao.addKeyVerification(
-    profile.userId.toInt(),
-    VerificationType.qrScanned,
-  );
+    if (added > 0) {
+      // The user was added via the profile scanned from the QR code so the scanned public key was used.
+      await twonlyDB.keyVerificationDao.addKeyVerification(
+        profile.userId.toInt(),
+        VerificationType.qrScanned,
+      );
 
-  if (added > 0) {
-    if (await importSignalContactAndCreateRequest(userdata)) {
       if (profile.hasSecretVerificationToken()) {
         await KeyVerificationService.handleScannedVerificationToken(
           profile.userId.toInt(),
@@ -160,10 +153,10 @@ Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
           profile.secretVerificationToken,
         );
       }
-      return true;
     }
+    return true;
+  } catch (e) {
+    Log.error('Failed to establish session and send contact request: $e');
     return false;
   }
-
-  return false;
 }

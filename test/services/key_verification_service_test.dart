@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 
 import '../mocks/user_config.dart';
@@ -19,6 +20,18 @@ void main() {
   }
 
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    final dylibPath =
+        '${Directory.current.path}/rust/target/debug/librust_lib_twonly.dylib';
+    if (File(dylibPath).existsSync()) {
+      await RustLib.init(
+        externalLibrary: ExternalLibrary.open(dylibPath),
+      );
+    } else {
+      await RustLib.init();
+    }
+  });
 
   setUp(() async {
     await locator.reset();
@@ -31,8 +44,7 @@ void main() {
           ),
         ),
       )
-      ..registerSingleton<UserService>(UserService())
-      ..registerSingleton<ApiService>(ApiService());
+      ..registerSingleton<UserService>(UserService());
 
     // isUserDiscoveryEnabled defaults to false, so no Rust bridge calls happen
     // in addKeyVerification / deleteKeyVerification.
@@ -55,7 +67,7 @@ void main() {
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   Future<void> insertContact(int userId, {String? username}) async {
-    await twonlyDB.contactsDao.insertContact(
+    await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion.insert(
         userId: Value(userId),
         username: username ?? 'user$userId',

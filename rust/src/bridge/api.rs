@@ -3,16 +3,17 @@
  *
  */
 
-use crate::api::messages::incoming::messages;
-use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
-use crate::api::runtime::helpers::decode_ok_value;
 use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
+use crate::api::messages::incoming::messages;
+use crate::api::proto::server_to_client::response::ok::Ok as ResponseOk;
+use crate::api::runtime::helpers::decode_ok_value;
 use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
 use crate::services::contacts::ContactService;
+use crate::services::messages::MessageService;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use prost::Message;
@@ -432,6 +433,8 @@ impl RustApi {
     }
     #[allow(clippy::too_many_arguments)]
     pub async fn upload_pqc_pre_keys(
+        public_identity_key: Vec<u8>,
+        registration_id: i64,
         ecc_signed_prekey_id: i64,
         ecc_signed_prekey: Vec<u8>,
         ecc_signed_prekey_signature: Vec<u8>,
@@ -443,6 +446,8 @@ impl RustApi {
         let ctx = Context::get_static()?;
         Server::upload_pqc_pre_keys(
             ctx,
+            public_identity_key,
+            registration_id,
             ecc_signed_prekey_id,
             ecc_signed_prekey,
             ecc_signed_prekey_signature,
@@ -465,9 +470,9 @@ impl RustApi {
         contact_id: i64,
         content: Vec<u8>,
         message_id: Option<String>,
-        only_send_if_no_receipts_are_open: bool,
-        only_return_encrypted_data: bool,
-        blocking: bool,
+        only_send_if_no_receipts_are_open: Option<bool>,
+        only_return_encrypted_data: Option<bool>,
+        blocking: Option<bool>,
     ) -> Result<Option<Vec<u8>>> {
         let ctx = Context::get_static()?;
         crate::api::messages::outgoing::send_c2c_message_to_contact()
@@ -475,9 +480,9 @@ impl RustApi {
             .contact_id(contact_id)
             .encrypted_content(content)
             .maybe_message_id(message_id)
-            .only_send_if_no_receipts_are_open(only_send_if_no_receipts_are_open)
-            .only_return_encrypted_data(only_return_encrypted_data)
-            .blocking(blocking)
+            .only_send_if_no_receipts_are_open(only_send_if_no_receipts_are_open.unwrap_or(false))
+            .only_return_encrypted_data(only_return_encrypted_data.unwrap_or(false))
+            .blocking(blocking.unwrap_or(false))
             .call()
             .await
             .map_err(Into::into)
@@ -487,7 +492,7 @@ impl RustApi {
         group_id: String,
         content: Vec<u8>,
         message_id: Option<String>,
-        only_send_if_no_receipts_are_open: bool,
+        only_send_if_no_receipts_are_open: Option<bool>,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
         crate::services::messages::MessageService::new(ctx)
@@ -495,7 +500,7 @@ impl RustApi {
                 group_id,
                 content,
                 message_id,
-                only_send_if_no_receipts_are_open,
+                only_send_if_no_receipts_are_open.unwrap_or(false),
             )
             .await
     }
@@ -571,15 +576,23 @@ impl RustApi {
 
     pub async fn notify_messages_opened(contact_id: i64, message_ids: Vec<String>) -> Result<()> {
         let ctx = Context::get_static()?;
-        crate::services::messages::MessageService::new(ctx)
+        MessageService::new(ctx)
             .notify_opened(contact_id, message_ids)
             .await
     }
 
     pub async fn send_contact_profile(contact_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
-        crate::services::contacts::ContactService::new(ctx)
-            .send_profile(contact_id)
+        ContactService::new(ctx).send_profile(contact_id).await
+    }
+
+    pub async fn establish_signal_session(
+        contact_id: i64,
+        expected_public_key: Option<Vec<u8>>,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        ContactService::new(ctx)
+            .establish_signal_session(contact_id, expected_public_key)
             .await
     }
 }

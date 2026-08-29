@@ -12,7 +12,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -98,8 +97,6 @@ class _RegisterViewState extends State<RegisterView> {
       }
 
       Log.info('The result of the POW is $proof');
-
-      await createIfNotExistsSignalIdentity();
 
       var userId = 0;
 

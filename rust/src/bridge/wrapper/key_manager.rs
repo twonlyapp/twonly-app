@@ -3,8 +3,6 @@
  *
  */
 
-use std::collections::HashMap;
-
 use crate::bridge::get_twonly_flutter;
 use crate::error::{Result, TwonlyError};
 use crate::keys::SignalIdentityKey;
@@ -35,7 +33,10 @@ impl RustKeyManager {
         match RustSignalEngine::new(user_id.to_string()).await {
             Ok(engine) => *guard = Some(engine),
             Err(e) => {
-                tracing::warn!("Failed to initialize Signal engine on set_user_id: {}. It will be initialized later.", e);
+                tracing::warn!(
+                    "Failed to initialize Signal engine on set_user_id: {}. It will be initialized later.",
+                    e
+                );
                 *guard = None;
             }
         }
@@ -46,7 +47,6 @@ impl RustKeyManager {
     pub async fn import_signal_identity(
         identity_key_pair_structure: Vec<u8>,
         registration_id: i64,
-        signed_pre_key_store: HashMap<i64, Vec<u8>>,
     ) -> Result<()> {
         let ctx = get_twonly_flutter()?;
         let user_id = {
@@ -54,7 +54,6 @@ impl RustKeyManager {
             key_manager.signal_identity = Some(SignalIdentityKey {
                 identity_key_pair_structure,
                 registration_id,
-                pre_key_store: signed_pre_key_store,
             });
             key_manager.store_to_keychain(&ctx.secure_storage)?;
             key_manager.user_id
@@ -90,55 +89,6 @@ impl RustKeyManager {
         }
     }
 
-    pub async fn load_signed_prekey(signed_pre_key_id: i64) -> Result<Option<Vec<u8>>> {
-        let ctx = get_twonly_flutter()?;
-        let key_manager = ctx.key_manager.lock().await;
-        if let Some(signal_identity) = &key_manager.signal_identity {
-            Ok(signal_identity
-                .pre_key_store
-                .get(&signed_pre_key_id)
-                .cloned())
-        } else {
-            Err(TwonlyError::SignalIdentityNotFound)
-        }
-    }
-
-    pub async fn store_signed_prekey(signed_pre_key_id: i64, record: Vec<u8>) -> Result<()> {
-        let ctx = get_twonly_flutter()?;
-        let mut key_manager = ctx.key_manager.lock().await;
-        if let Some(signal_identity) = &mut key_manager.signal_identity {
-            signal_identity
-                .pre_key_store
-                .insert(signed_pre_key_id, record);
-            key_manager.store_to_keychain(&ctx.secure_storage)?;
-            Ok(())
-        } else {
-            Err(TwonlyError::SignalIdentityNotFound)
-        }
-    }
-
-    pub async fn remove_signed_prekey(signed_pre_key_id: i64) -> Result<()> {
-        let ctx = get_twonly_flutter()?;
-        let mut key_manager = ctx.key_manager.lock().await;
-        if let Some(signal_identity) = &mut key_manager.signal_identity {
-            signal_identity.pre_key_store.remove(&signed_pre_key_id);
-            key_manager.store_to_keychain(&ctx.secure_storage)?;
-            Ok(())
-        } else {
-            Err(TwonlyError::SignalIdentityNotFound)
-        }
-    }
-
-    pub async fn load_signed_prekeys() -> Result<HashMap<i64, Vec<u8>>> {
-        let ctx = get_twonly_flutter()?;
-        let key_manager = ctx.key_manager.lock().await;
-        if let Some(signal_identity) = &key_manager.signal_identity {
-            Ok(signal_identity.pre_key_store.to_owned())
-        } else {
-            Err(TwonlyError::SignalIdentityNotFound)
-        }
-    }
-
     pub async fn remove_key_manager() -> Result<()> {
         let ctx = get_twonly_flutter()?;
         crate::keys::KeyManager::remove_from_keychain(&ctx.secure_storage)?;
@@ -149,13 +99,12 @@ impl RustKeyManager {
     pub async fn serialize() -> Result<Vec<u8>> {
         let ctx = get_twonly_flutter()?;
         let key_manager = ctx.key_manager.lock().await;
-        let serialized_bytes = postcard::to_allocvec(&*key_manager)?;
-        Ok(serialized_bytes)
+        key_manager.to_bytes()
     }
 
     pub async fn import_serialized(serialized_bytes: Vec<u8>) -> Result<()> {
         let ctx = get_twonly_flutter()?;
-        let key_manager: crate::keys::KeyManager = postcard::from_bytes(&serialized_bytes)?;
+        let key_manager = crate::keys::KeyManager::from_bytes(&serialized_bytes)?;
         key_manager.store_to_keychain(&ctx.secure_storage)?;
         *ctx.key_manager.lock().await = key_manager;
         Ok(())

@@ -1,4 +1,4 @@
-use libsignal_protocol::{GenericSignedPreKey, IdentityKeyPair, KeyPair, SignedPreKeyRecord};
+use libsignal_protocol::IdentityKeyPair;
 use rand::SeedableRng;
 use rust_lib_twonly::api::{ApiRuntime, Server};
 use rust_lib_twonly::bridge::api::{ApiConnectionState, ServerResult};
@@ -6,7 +6,7 @@ use rust_lib_twonly::context::Context;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tempfile::TempDir;
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 pub(crate) struct Tester {
     pub context: Arc<Context>,
@@ -378,37 +378,10 @@ impl Tester {
             let mut csprng = rand::rngs::StdRng::from_os_rng();
             let identity_pair = IdentityKeyPair::generate(&mut csprng);
             let registration_id: u32 = rand::Rng::random::<u32>(&mut csprng) & 0x7FFFFFFF;
-            let timestamp = libsignal_protocol::Timestamp::from_epoch_millis(
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as u64,
-            );
-
-            let signed_pre_key_pair = KeyPair::generate(&mut csprng);
-            let signature = identity_pair
-                .private_key()
-                .calculate_signature_for_multipart_message(
-                    &[&signed_pre_key_pair.public_key.serialize()],
-                    &mut csprng,
-                )
-                .map_err(|e| anyhow::anyhow!("Signal error: {}", e))?;
-
-            let signed_prekey =
-                SignedPreKeyRecord::new(1.into(), timestamp, &signed_pre_key_pair, &signature);
-            let mut pre_key_store = std::collections::HashMap::new();
-            pre_key_store.insert(
-                1,
-                signed_prekey
-                    .serialize()
-                    .map_err(|e| anyhow::anyhow!("Signal error: {}", e))?,
-            );
-
             context
                 .inject_test_signal_identity(
                     identity_pair.serialize().to_vec(),
                     registration_id as i64,
-                    pre_key_store,
                 )
                 .await?;
         }
@@ -592,7 +565,9 @@ impl Tester {
             }
             sleep(Duration::from_millis(100)).await;
         }
-        Err(anyhow::anyhow!("message {message_id} was not marked as opened"))
+        Err(anyhow::anyhow!(
+            "message {message_id} was not marked as opened"
+        ))
     }
 
     pub async fn wait_for_group_chat_deletion_time(

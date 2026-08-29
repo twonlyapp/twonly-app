@@ -3,8 +3,9 @@
  *
  */
 
-use std::collections::HashMap;
-
+use crate::error::Result;
+use libsignal_protocol::IdentityKeyPair;
+use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -12,19 +13,24 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 pub(crate) struct SignalIdentityKey {
     pub(crate) identity_key_pair_structure: Vec<u8>,
     pub(crate) registration_id: i64,
-    pub(crate) pre_key_store: HashMap<i64, Vec<u8>>,
 }
 
-impl SignalIdentityKey {}
+impl SignalIdentityKey {
+    pub(crate) fn generate() -> Result<Self> {
+        let mut csprng = rand::rngs::StdRng::from_os_rng();
+        let identity_key_pair = IdentityKeyPair::generate(&mut csprng);
+        let registration_id = rand::Rng::random::<u32>(&mut csprng) & 0x7fff_ffff;
+        Ok(Self {
+            identity_key_pair_structure: identity_key_pair.serialize().to_vec(),
+            registration_id: i64::from(registration_id),
+        })
+    }
+}
 
 impl Zeroize for SignalIdentityKey {
     fn zeroize(&mut self) {
         self.identity_key_pair_structure.zeroize();
         self.registration_id.zeroize();
-        for value in self.pre_key_store.values_mut() {
-            value.zeroize();
-        }
-        self.pre_key_store.clear();
     }
 }
 

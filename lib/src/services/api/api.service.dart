@@ -7,7 +7,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
-import 'package:twonly/src/services/signal/protocol_state.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// The ApiProvider is responsible for communicating with the server.
@@ -47,7 +46,6 @@ class ApiService {
       unawaited(reuploadMediaFiles());
 
       twonlyDB.markUpdated();
-      resetResyncedUsers();
       // resetUserDiscoveryRequestUpdates();
       memoriesCloudService.init();
     }

@@ -61,20 +61,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
 
   @protected
-  FutureOr<LegacySignalEncryptResult?> Function(PlatformInt64, Uint8List)
-  dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_opt_box_autoadd_legacy_signal_encrypt_result_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
   FutureOr<void> Function(PlatformInt64, Uint8List)
   dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<LegacySignalDecryptResult> Function(PlatformInt64, Uint8List, int)
-  dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_i_32_Output_legacy_signal_decrypt_result_AnyhowException(
     dynamic raw,
   );
 
@@ -87,11 +75,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
-
-  @protected
-  Map<PlatformInt64, Uint8List> dco_decode_Map_i_64_list_prim_u_8_strict_None(
-    dynamic raw,
-  );
 
   @protected
   RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
@@ -127,24 +110,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BackupPasswordKeys dco_decode_box_autoadd_backup_password_keys(dynamic raw);
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
   FrbPreKeyBundle dco_decode_box_autoadd_frb_pre_key_bundle(dynamic raw);
 
   @protected
-  int dco_decode_box_autoadd_i_32(dynamic raw);
-
-  @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
   InitConfig dco_decode_box_autoadd_init_config(dynamic raw);
-
-  @protected
-  LegacySignalEncryptResult dco_decode_box_autoadd_legacy_signal_encrypt_result(
-    dynamic raw,
-  );
 
   @protected
   PasswordlessRecoveryConfig
@@ -190,16 +168,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LegacyMigrationReport dco_decode_legacy_migration_report(dynamic raw);
 
   @protected
-  LegacySignalDecryptResult dco_decode_legacy_signal_decrypt_result(
-    dynamic raw,
-  );
-
-  @protected
-  LegacySignalEncryptResult dco_decode_legacy_signal_encrypt_result(
-    dynamic raw,
-  );
-
-  @protected
   LegacyTableMigrationCount dco_decode_legacy_table_migration_count(
     dynamic raw,
   );
@@ -231,10 +199,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
-  List<(PlatformInt64, Uint8List)>
-  dco_decode_list_record_i_64_list_prim_u_8_strict(dynamic raw);
-
-  @protected
   List<(String, List<String>)> dco_decode_list_record_string_list_string(
     dynamic raw,
   );
@@ -262,17 +226,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
-  int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
-
-  @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
-
-  @protected
-  LegacySignalEncryptResult?
-  dco_decode_opt_box_autoadd_legacy_signal_encrypt_result(dynamic raw);
 
   @protected
   PasswordlessRecoveryConfig?
@@ -300,11 +260,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PqcPreKeyInput dco_decode_pqc_pre_key_input(dynamic raw);
-
-  @protected
-  (PlatformInt64, Uint8List) dco_decode_record_i_64_list_prim_u_8_strict(
-    dynamic raw,
-  );
 
   @protected
   (Uint8List, PlatformInt64) dco_decode_record_list_prim_u_8_strict_i_64(
@@ -398,11 +353,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Map<PlatformInt64, Uint8List> sse_decode_Map_i_64_list_prim_u_8_strict_None(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<String> sse_decode_StreamSink_String_Sse(
     SseDeserializer deserializer,
   );
@@ -448,6 +398,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
@@ -456,18 +409,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
-
-  @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
   InitConfig sse_decode_box_autoadd_init_config(SseDeserializer deserializer);
-
-  @protected
-  LegacySignalEncryptResult sse_decode_box_autoadd_legacy_signal_encrypt_result(
-    SseDeserializer deserializer,
-  );
 
   @protected
   PasswordlessRecoveryConfig
@@ -523,16 +468,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  LegacySignalDecryptResult sse_decode_legacy_signal_decrypt_result(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  LegacySignalEncryptResult sse_decode_legacy_signal_encrypt_result(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   LegacyTableMigrationCount sse_decode_legacy_table_migration_count(
     SseDeserializer deserializer,
   );
@@ -570,12 +505,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<(PlatformInt64, Uint8List)>
-  sse_decode_list_record_i_64_list_prim_u_8_strict(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   List<(String, List<String>)> sse_decode_list_record_string_list_string(
     SseDeserializer deserializer,
   );
@@ -603,19 +532,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
-  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
-
-  @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
-
-  @protected
-  LegacySignalEncryptResult?
-  sse_decode_opt_box_autoadd_legacy_signal_encrypt_result(
-    SseDeserializer deserializer,
-  );
 
   @protected
   PasswordlessRecoveryConfig?
@@ -649,11 +572,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PqcPreKeyInput sse_decode_pqc_pre_key_input(SseDeserializer deserializer);
-
-  @protected
-  (PlatformInt64, Uint8List) sse_decode_record_i_64_list_prim_u_8_strict(
-    SseDeserializer deserializer,
-  );
 
   @protected
   (Uint8List, PlatformInt64) sse_decode_record_list_prim_u_8_strict_i_64(
@@ -778,24 +696,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_opt_box_autoadd_legacy_signal_encrypt_result_AnyhowException(
-    FutureOr<LegacySignalEncryptResult?> Function(PlatformInt64, Uint8List)
-    self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64, Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_i_32_Output_legacy_signal_decrypt_result_AnyhowException(
-    FutureOr<LegacySignalDecryptResult> Function(PlatformInt64, Uint8List, int)
-    self,
     SseSerializer serializer,
   );
 
@@ -811,12 +713,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_Map_String_list_String_None(
     Map<String, List<String>> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_Map_i_64_list_prim_u_8_strict_None(
-    Map<PlatformInt64, Uint8List> self,
     SseSerializer serializer,
   );
 
@@ -875,6 +771,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -882,9 +781,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     FrbPreKeyBundle self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_i_64(
@@ -895,12 +791,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_init_config(
     InitConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_legacy_signal_encrypt_result(
-    LegacySignalEncryptResult self,
     SseSerializer serializer,
   );
 
@@ -968,18 +858,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_legacy_signal_decrypt_result(
-    LegacySignalDecryptResult self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_legacy_signal_encrypt_result(
-    LegacySignalEncryptResult self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_legacy_table_migration_count(
     LegacyTableMigrationCount self,
     SseSerializer serializer,
@@ -1028,12 +906,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_record_i_64_list_prim_u_8_strict(
-    List<(PlatformInt64, Uint8List)> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_list_record_string_list_string(
     List<(String, List<String>)> self,
     SseSerializer serializer,
@@ -1067,20 +939,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_i_64(
     PlatformInt64? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_legacy_signal_encrypt_result(
-    LegacySignalEncryptResult? self,
     SseSerializer serializer,
   );
 
@@ -1123,12 +989,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_pqc_pre_key_input(
     PqcPreKeyInput self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_record_i_64_list_prim_u_8_strict(
-    (PlatformInt64, Uint8List) self,
     SseSerializer serializer,
   );
 

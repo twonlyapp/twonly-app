@@ -10,7 +10,6 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';
@@ -69,33 +68,33 @@ Future<void> handleMediaError(MediaFile media) async {
         targetMessageId: message.messageId,
       ),
     ).writeToBuffer(),
-    onlySendIfNoReceiptsAreOpen: false,
-    onlyReturnEncryptedData: false,
-    blocking: true,
   );
 }
 
 Future<bool> importSignalContactAndCreateRequest(
   server.Response_UserData userdata,
 ) async {
-  if (!await processSignalUserData(userdata)) {
+  try {
+    await RustApi.establishSignalSession(
+      contactId: userdata.userId.toInt(),
+      expectedPublicKey: Uint8List.fromList(userdata.publicIdentityKey),
+    );
+
+    // 2. Then send user request
+    await RustApi.sendEncryptedContent(
+      contactId: userdata.userId.toInt(),
+      content: EncryptedContent(
+        contactRequest: EncryptedContent_ContactRequest(
+          type: EncryptedContent_ContactRequest_Type.REQUEST,
+        ),
+      ).writeToBuffer(),
+    );
+
+    return true;
+  } catch (e) {
+    Log.error('Failed to establish session and send contact request: $e');
     return false;
   }
-
-  // 2. Then send user request
-  await RustApi.sendEncryptedContent(
-    contactId: userdata.userId.toInt(),
-    content: EncryptedContent(
-      contactRequest: EncryptedContent_ContactRequest(
-        type: EncryptedContent_ContactRequest_Type.REQUEST,
-      ),
-    ).writeToBuffer(),
-    onlySendIfNoReceiptsAreOpen: false,
-    onlyReturnEncryptedData: false,
-    blocking: true,
-  );
-
-  return true;
 }
 
 Future<Map<String, String>?> getAuthenticationHeader() async {

@@ -1,24 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
-import 'package:twonly/src/database/signal.db.dart';
-import 'package:twonly/src/database/signal/signal_signed_pre_key_store.dart'
-    show getSignalSignedPreKeyStoreOld;
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/signal_identity.model.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
-import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
 import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 Future<void> runMigrations() async {
@@ -56,53 +47,17 @@ Future<void> runMigrations() async {
     });
   }
   if (userService.currentUser.appVersion < 113) {
-    var migrationSuccess = true;
-    final signalIdentity = await SecureStorage.instance.read(
-      // ignore: deprecated_member_use_from_same_package
-      key: SecureStorageKeys.signalIdentity,
-    );
-
-    if (signalIdentity != null) {
-      try {
-        final decoded = jsonDecode(signalIdentity);
-        final identity = SignalIdentity.fromJson(
-          decoded as Map<String, dynamic>,
-        );
-
-        await RustKeyManager.importSignalIdentity(
-          identityKeyPairStructure: identity.identityKeyPairU8List,
-          registrationId: identity.registrationId,
-          signedPreKeyStore: await getSignalSignedPreKeyStoreOld(),
-        );
-        Log.info('Importing signal identify to the rust key manager');
-
-        // Clean up old keys after successful migration
-        await SecureStorage.instance.delete(
-          // ignore: deprecated_member_use_from_same_package
-          key: SecureStorageKeys.signalIdentity,
-        );
-        await SecureStorage.instance.delete(
-          // ignore: deprecated_member_use_from_same_package
-          key: SecureStorageKeys.signalSignedPreKey,
-        );
-      } catch (e) {
-        Log.error('Failed to migrate signal identity: $e');
-        migrationSuccess = false;
-      }
-    }
-
-    if (migrationSuccess) {
-      await UserService.update((u) {
-        u
-          ..appVersion = 113
-          ..canUseLoginTokenForAuth = false
-          // As usernames changes where not considered in the old version force users
-          // to reenter there passwords.
-          ..twonlySafeBackup?.encryptionKey = Uint8List(0)
-          ..twonlySafeBackup?.backupId = Uint8List(0);
-      });
-    }
+    await UserService.update((u) {
+      u
+        ..appVersion = 113
+        ..canUseLoginTokenForAuth = false
+        // As usernames changes where not considered in the old version force users
+        // to reenter there passwords.
+        ..twonlySafeBackup?.encryptionKey = Uint8List(0)
+        ..twonlySafeBackup?.backupId = Uint8List(0);
+    });
   }
+
   if (userService.currentUser.appVersion < 114) {
     final allMedia = await twonlyDB.mediaFilesDao
         .select(twonlyDB.mediaFiles)
@@ -120,29 +75,7 @@ Future<void> runMigrations() async {
   }
 
   if (userService.currentUser.appVersion < 115) {
-    var migrationSuccess = true;
-    try {
-      final rustStore = await RustKeyManager.loadSignedPrekeys();
-      for (final entry in rustStore.entries) {
-        final companion = SignalSignedPreKeyStoresCompanion(
-          signedPreKeyId: Value(entry.key),
-          signedPreKey: Value(entry.value),
-        );
-        await signalDB
-            .into(signalDB.signalSignedPreKeyStores)
-            .insert(
-              companion,
-              mode: InsertMode.insertOrReplace,
-            );
-        await RustKeyManager.removeSignedPrekey(signedPreKeyId: entry.key);
-      }
-    } catch (e) {
-      Log.error('Failed to migrate signed prekeys to Drift: $e');
-      migrationSuccess = false;
-    }
-    if (migrationSuccess) {
-      await UserService.update((u) => u.appVersion = 115);
-    }
+    await UserService.update((u) => u.appVersion = 115);
   }
 
   if (userService.currentUser.appVersion < 116) {

@@ -9,6 +9,7 @@ import 'package:twonly/core/bridge.dart' as bridge;
 import 'package:twonly/core/frb_generated.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/callbacks/callbacks.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/api.service.dart';
@@ -49,6 +50,7 @@ void main() {
       } else {
         await RustLib.init();
       }
+      await initFlutterCallbacksForRust();
       tempDir = Directory.systemTemp.createTempSync(
         'twonly_cloud_backup_test_',
       );

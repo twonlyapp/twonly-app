@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -135,21 +134,7 @@ class _GroupViewState extends State<GroupView> {
       }
     }
 
-    late bool success;
-
-    if (_group!.isGroupAdmin) {
-      // Current user is a admin, to the state can be updated by the user him self.
-      final keyPair = IdentityKeyPair.fromSerialized(
-        _group!.myGroupPrivateKey!,
-      );
-      success = !(await removeMemberFromGroup(
-        _group!,
-        keyPair.getPublicKey().serialize(),
-        userService.currentUser.userId,
-      ));
-    } else {
-      success = await leaveAsNonAdminFromGroup(_group!);
-    }
+    final success = await leaveGroup(_group!);
 
     if (!success) {
       if (mounted) {

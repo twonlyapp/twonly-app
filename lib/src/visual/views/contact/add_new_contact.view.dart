@@ -8,13 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
-import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
@@ -94,7 +94,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   Future<void> _shareProfile() async {
-    final pubKey = await getUserPublicKey();
+    final pubKey = await RustSignal.getUserPublicKey();
     final params = ShareParams(
       text:
           'https://me.twonly.eu/${userService.currentUser.username}#${base64Url.encode(pubKey)}',

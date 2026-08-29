@@ -94,7 +94,11 @@ class UserService {
   }
 
   static Future<void> handleRustUserConfigChanged(UserConfig config) async {
-    userService._applyRustUserConfig(config);
+    try {
+      userService._applyRustUserConfig(config);
+    } catch (e) {
+      Log.warn(e);
+    }
   }
 
   void _applyRustUserConfig(UserConfig config, {bool notify = true}) {

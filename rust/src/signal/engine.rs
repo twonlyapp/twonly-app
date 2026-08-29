@@ -8,10 +8,10 @@ use crate::error::{Result, TwonlyError};
 use crate::user_config::UserConfig;
 use chrono::{Duration, Utc};
 use libsignal_protocol::{
-    message_encrypt, process_prekey_bundle, CiphertextMessageType, DeviceId, GenericSignedPreKey,
-    IdentityKey, IdentityKeyPair, IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle,
-    PreKeyId, PreKeySignalMessage, PreKeyStore, ProtocolAddress, PublicKey, SignalMessage,
-    SignedPreKeyId, SignedPreKeyStore, Timestamp,
+    CiphertextMessageType, DeviceId, GenericSignedPreKey, IdentityKey, IdentityKeyPair,
+    IdentityKeyStore, KyberPreKeyId, KyberPreKeyStore, PreKeyBundle, PreKeyId, PreKeySignalMessage,
+    PreKeyStore, ProtocolAddress, PublicKey, SignalMessage, SignedPreKeyId, SignedPreKeyStore,
+    Timestamp, message_encrypt, process_prekey_bundle,
 };
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -82,6 +82,8 @@ impl RustSignalEngine {
         if refresh_pqc {
             Server::upload_pqc_pre_keys(
                 ctx,
+                bundle.identity_key,
+                i64::from(bundle.registration_id),
                 i64::from(bundle.signed_pre_key_id),
                 bundle.signed_pre_key_public,
                 bundle.signed_pre_key_signature,
@@ -141,6 +143,28 @@ impl RustSignalEngine {
         })
     }
 
+    pub async fn get_identity_key(&self) -> Result<Vec<u8>> {
+        let store = self.store.lock().await;
+        let key_pair = store
+            .identity_store
+            .get_identity_key_pair()
+            .assert_send()
+            .await
+            .map_err(|e| TwonlyError::Signal(e.to_string()))?;
+        Ok(key_pair.identity_key().serialize().to_vec())
+    }
+
+    pub async fn get_contact_identity_key(&self, name: &str) -> Result<Option<Vec<u8>>> {
+        let store = self.store.lock().await;
+        let identity = sqlx::query_scalar!(
+            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
+            name,
+        )
+        .fetch_optional(&store.pool)
+        .await?;
+        Ok(identity)
+    }
+
     #[cfg(test)]
     fn generate_identity_key_pair() -> Result<Vec<u8>> {
         let mut csprng = rand::rngs::StdRng::from_os_rng();
@@ -159,33 +183,21 @@ impl RustSignalEngine {
             )
             .fetch_one(&store.pool)
             .await?;
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
+            if id > 16_777_215 { 1 } else { id + 1 }
         };
 
         let signed_pre_key_id: u32 = {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(signed_pre_key_id), 0) AS "id!: u32" FROM signal_signed_pre_keys"#,
             ).fetch_one(&store.pool).await?;
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
+            if id > 16_777_215 { 1 } else { id + 1 }
         };
 
         let kyber_pre_key_id: u32 = {
             let id = sqlx::query_scalar!(
                 r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
             ).fetch_one(&store.pool).await?;
-            if id > 16_777_215 {
-                1
-            } else {
-                id + 1
-            }
+            if id > 16_777_215 { 1 } else { id + 1 }
         };
 
         let pre_key_pair = libsignal_protocol::KeyPair::generate(&mut csprng);
@@ -313,11 +325,7 @@ impl RustSignalEngine {
                 r#"SELECT COALESCE(MAX(kyber_pre_key_id), 0) AS "id!: u32" FROM signal_kyber_pre_keys"#,
             ).fetch_one(&store.pool).await?;
 
-            if id > 16_777_215 {
-                1
-            } else {
-                id
-            }
+            if id > 16_777_215 { 1 } else { id }
         };
 
         let mut pre_key_id: u32 = {
@@ -327,11 +335,7 @@ impl RustSignalEngine {
             .fetch_one(&store.pool)
             .await?;
 
-            if id > 16_777_215 {
-                1
-            } else {
-                id
-            }
+            if id > 16_777_215 { 1 } else { id }
         };
 
         for _ in 0..30 {

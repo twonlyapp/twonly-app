@@ -25,8 +25,6 @@ pub(crate) struct ApiAuthHandshaker {
     pub context: Arc<Context>,
     pub api_client: Weak<ApiClient>,
     pub is_authenticated: Arc<AtomicBool>,
-    pub can_use_login_token_for_auth: bool,
-    pub legacy_user_app_version: i64,
     pub in_background: bool,
     pub events: broadcast::Sender<ApiEvent>,
 }
@@ -308,13 +306,29 @@ impl Handshaker for ApiAuthHandshaker {
         receiver: &mut dyn HandshakeReceiver,
         _context: &ConnectionContext,
     ) -> std::result::Result<(), HandshakeError> {
-        let user_id = match self.context.user_id().await {
-            Ok(id) => id,
-            Err(e) => {
-                tracing::info!("ApiAuthHandshaker skipped: user_id missing ({})", e);
+        let user = match UserConfig::load_from(&self.context)
+            .map_err(|e| HandshakeError::Protocol(e.to_string()))?
+        {
+            Some(u) => u,
+            None => {
+                tracing::info!("ApiAuthHandshaker skipped: user config is not present");
                 return Ok(());
             }
         };
+
+        let user_id = self
+            .context
+            .key_manager
+            .lock()
+            .await
+            .user_id
+            .filter(|user_id| *user_id > 0);
+        let Some(user_id) = user_id else {
+            tracing::info!("ApiAuthHandshaker skipped: KeyManager has no registered user ID");
+            return Ok(());
+        };
+        let can_use_login_token = user.can_use_login_token_for_auth;
+        let app_version = user.app_version;
 
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::ConnectionStateChanged,
@@ -322,7 +336,7 @@ impl Handshaker for ApiAuthHandshaker {
             message: None,
         });
 
-        if self.can_use_login_token_for_auth {
+        if can_use_login_token {
             match self
                 .authenticate_with_login_token(sender, receiver, user_id)
                 .await
@@ -337,7 +351,7 @@ impl Handshaker for ApiAuthHandshaker {
                     return Err(HandshakeError::Protocol(error.to_string()));
                 }
             }
-        } else if self.legacy_user_app_version >= 62
+        } else if app_version >= 62
             && self
                 .authenticate_with_legacy_token(sender, receiver, user_id)
                 .await
@@ -350,10 +364,10 @@ impl Handshaker for ApiAuthHandshaker {
 
         tracing::error!(
             "ApiAuthHandshaker: no auth method succeeded. legacy_app_version={}",
-            self.legacy_user_app_version
+            app_version
         );
 
-        if self.legacy_user_app_version < 62 {
+        if app_version < 62 {
             return Err(HandshakeError::Protocol(
                 "legacy user version is too old for API authentication".into(),
             ));

@@ -26,17 +26,33 @@ impl Server {
             .ok_or(crate::error::TwonlyError::SignalIdentityNotFound)?
             .generate_bundle()
             .await?;
+        let prekeys = engine
+            .as_ref()
+            .ok_or(crate::error::TwonlyError::SignalIdentityNotFound)?
+            .generate_pqc_prekeys()
+            .await?
+            .into_iter()
+            .map(|key| PqcPreKeyInput {
+                ecc_pre_key_id: i64::from(key.ecc_pre_key_id),
+                ecc_pre_key: key.ecc_pre_key,
+                kyber_pre_key_id: i64::from(key.kyber_pre_key_id),
+                kyber_pre_key: key.kyber_pre_key,
+                kyber_pre_key_signature: key.kyber_pre_key_signature,
+            })
+            .collect();
         drop(engine);
 
         Self::upload_pqc_pre_keys(
             ctx,
+            bundle.identity_key,
+            i64::from(bundle.registration_id),
             i64::from(bundle.signed_pre_key_id),
             bundle.signed_pre_key_public,
             bundle.signed_pre_key_signature,
             i64::from(bundle.kyber_pre_key_id),
             bundle.kyber_pre_key_public,
             bundle.kyber_pre_key_signature,
-            Vec::new(),
+            prekeys,
         )
         .await
     }
@@ -63,6 +79,8 @@ impl Server {
     #[allow(clippy::too_many_arguments)]
     pub async fn upload_pqc_pre_keys(
         ctx: &Arc<Context>,
+        public_identity_key: Vec<u8>,
+        registration_id: i64,
         ecc_signed_prekey_id: i64,
         ecc_signed_prekey: Vec<u8>,
         ecc_signed_prekey_signature: Vec<u8>,
@@ -92,6 +110,8 @@ impl Server {
                     kyber_signed_prekey,
                     kyber_signed_prekey_signature,
                     prekeys,
+                    public_identity_key: Some(public_identity_key),
+                    registration_id: Some(registration_id),
                 },
             ),
         )

@@ -20,6 +20,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
+import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_success_dialog.comp.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
@@ -555,12 +556,23 @@ class MainCameraController {
                 profile.username,
               );
               if (shouldRequest == true && context.mounted) {
-                showSnackbar(
-                  context,
-                  context.lang.requestedUserToastText(profile.username),
-                  level: SnackbarLevel.success,
-                );
-                await addNewContactFromPublicProfile(profile);
+                final success = await addNewContactFromPublicProfile(profile);
+                if (context.mounted) {
+                  if (success) {
+                    showSnackbar(
+                      context,
+                      context.lang.requestedUserToastText(profile.username),
+                      level: SnackbarLevel.success,
+                    );
+                  } else {
+                    await showAlertDialog(
+                      context,
+                      context.lang.groupNetworkIssue,
+                      context.lang.recoverErrorNoInternet,
+                      customCancel: '',
+                    );
+                  }
+                }
               }
             }
             continue;

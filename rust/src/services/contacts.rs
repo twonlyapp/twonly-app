@@ -61,7 +61,11 @@ impl ContactService {
         .await
     }
 
-    pub(crate) async fn establish_signal_session(&self, user_id: i64) -> Result<()> {
+    pub(crate) async fn establish_signal_session(
+        &self,
+        user_id: i64,
+        expected_public_key: Option<Vec<u8>>,
+    ) -> Result<()> {
         let user = match Server::get_user_by_id(&self.ctx, user_id).await? {
             ServerResult::Ok(user) => user,
             ServerResult::ErrorCode(code) => {
@@ -70,7 +74,31 @@ impl ContactService {
                 )));
             }
         };
-        self.process_user_prekey_bundle(&user).await
+
+        if let Some(expected_key) = expected_public_key {
+            let server_key = user
+                .public_identity_key
+                .as_ref()
+                .ok_or(TwonlyError::ApiResponseMissingField("public_identity_key"))?;
+            if server_key != &expected_key {
+                return Err(TwonlyError::Generic(format!(
+                    "Public identity key mismatch for user {user_id}"
+                )));
+            }
+        }
+
+        self.process_user_prekey_bundle(&user).await?;
+
+        let database = self.ctx.app_db.read().await.clone();
+        sqlx::query!(
+            "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ?",
+            user_id
+        )
+        .execute(&database.pool)
+        .await?;
+        database.notify_committed(["contacts"]);
+
+        Ok(())
     }
 
     async fn process_user_prekey_bundle(

@@ -57,7 +57,7 @@ void main() {
   Future<int> getAndCreateUserId() async {
     return mutex.protect<int>(() async {
       final userId = usedUserIds += 1;
-      await twonlyDB.contactsDao.insertContact(
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
         ContactsCompanion(userId: Value(userId), username: Value('$userId')),
       );
       return userId;

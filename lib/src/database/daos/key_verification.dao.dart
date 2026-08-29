@@ -43,7 +43,42 @@ class KeyVerificationDao extends DatabaseAccessor<TwonlyDB>
 
   /// Returns a map of contactId → the verification type of the earliest
   /// [KeyVerification] row for that contact.
-Stream<List<(KeyVerification, Contact?)>> watchContactVerification(
+  Future<Map<int, VerificationType>>
+  getFirstVerificationTypeByContacts() async {
+    final rows = await (select(
+      keyVerifications,
+    )..orderBy([(kv) => OrderingTerm.asc(kv.createdAt)])).get();
+
+    final result = <int, VerificationType>{};
+    for (final row in rows) {
+      result.putIfAbsent(row.contactId, () => row.type);
+    }
+    return result;
+  }
+
+  Future<bool> isContactVerified(int contactId) async {
+    final verifierKv = alias(keyVerifications, 'verifierKv');
+    final query = select(keyVerifications).join([
+      leftOuterJoin(
+        verifierKv,
+        verifierKv.contactId.equalsExp(keyVerifications.verifiedBy),
+      ),
+    ])..where(keyVerifications.contactId.equals(contactId));
+
+    final rows = await query.get();
+    for (final row in rows) {
+      final kv = row.readTable(keyVerifications);
+      final hasVerifierKv = row.readTableOrNull(verifierKv) != null;
+      if (kv.type == VerificationType.contactSharedByVerified) {
+        if (hasVerifierKv) return true;
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Stream<List<(KeyVerification, Contact?)>> watchContactVerification(
     int contactId,
   ) {
     final verifier = alias(contacts, 'verifier');
@@ -291,7 +326,24 @@ Stream<VerificationStatus> watchAllGroupMembersVerified(String groupId) {
       Log.error(e);
     }
   }
-Future<void> deleteKeyVerificationById(
+
+  Future<void> deleteKeyVerification(int contactId) async {
+    try {
+      await (delete(
+        keyVerifications,
+      )..where((kv) => kv.contactId.equals(contactId))).go();
+      if (userService.currentUser.isUserDiscoveryEnabled) {
+        await FlutterUserDiscovery.updateVerificationStateForUser(
+          callbackId: isolateCallbackId,
+          contactId: contactId,
+        );
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
+  Future<void> deleteKeyVerificationById(
     int verificationId,
     int contactId,
   ) async {

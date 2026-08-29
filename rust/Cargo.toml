@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
 [dependencies]
 flutter_rust_bridge = { version = "=2.12.0", features = ["chrono"] }
 thiserror = "2.0.18"
@@ -49,14 +52,19 @@ rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
 uuid = { version = "1", features = ["v4"] }
 flate2 = "1"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "rustls-tls",
+] }
 async-trait = "0.1.91"
 futures-util = "0.3.31"
 tokio-tungstenite = { version = "0.28.0", default-features = false, features = [
     "connect",
     "rustls-tls-native-roots",
 ] }
-rustls = { version = "0.23.43", default-features = false, features = ["ring", "std"] }
+rustls = { version = "0.23.43", default-features = false, features = [
+    "ring",
+    "std",
+] }
 tokio-util = "0.7.16"
 bon = "3.9.3"
 stream-tungstenite = "0.6.1"

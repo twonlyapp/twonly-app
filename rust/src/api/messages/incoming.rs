@@ -18,18 +18,18 @@ mod verification;
 
 use crate::api::messages::content_type_kind;
 use crate::api::messages::incoming::messages::{
-    decrypt_legacy_signal_with_error, ensure_contact_exists, handle_plaintext_content,
-    handle_sender_delivery_receipt, process_encrypted_or_queue_error, queue_decryption_error,
-    queue_sender_delivery_receipt, retransmit_queued_receipts, spawn_receipt_delivery,
+    ensure_contact_exists, handle_plaintext_content, handle_sender_delivery_receipt,
+    process_encrypted_or_queue_error, queue_decryption_error, queue_sender_delivery_receipt,
+    retransmit_queued_receipts, spawn_receipt_delivery,
 };
 use crate::api::proto::client as proto;
 use crate::api::proto::server_to_client::NewMessage;
 use crate::api::proto::{client_to_server, server_to_client};
-use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group, Receipt};
 use crate::error::{Result, TwonlyError};
 use crate::sealed_sender::SealedSender;
+use crate::services::contacts::ContactService;
 use client_to_server::response::{ok, Response};
 use prost::Message as _;
 use proto::message::Type;
@@ -210,39 +210,44 @@ pub(crate) async fn handle_decoded_server_message(
             handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
         Type::Ciphertext | Type::PrekeyBundle => {
-            let ciphertext = message.encrypted_content.ok_or_else(|| {
-                TwonlyError::Generic("legacy encrypted client message has no ciphertext".into())
-            })?;
-            tracing::info!("Decrypting legacy signal message...");
-            match decrypt_legacy_signal_with_error(from_user_id, ciphertext, message.r#type).await?
-            {
-                Ok(content) => {
-                    tracing::info!("Decrypted successfully, processing...");
-                    sends_error_response = process_encrypted_or_queue_error(
-                        ctx,
-                        &mut t,
+            tracing::info!("Received legacy signal message; rejecting and upgrading session to v2");
+
+            let has_v2_session = {
+                let rust_database = ctx.rust_db.read().await.clone();
+                sqlx::query_scalar!(
+                    "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
+                    from_user_id.to_string(),
+                )
+                .fetch_one(&rust_database.pool)
+                .await?
+                    != 0
+            };
+
+            let is_v2_contact = {
+                let contact = Contact::get_contact_by_id(&mut t, from_user_id).await?;
+                contact.as_ref().is_some_and(|c| c.signal_version == "v2")
+            };
+
+            if !has_v2_session || !is_v2_contact {
+                if let Err(error) = ContactService::new(ctx)
+                    .establish_signal_session(from_user_id, None)
+                    .await
+                {
+                    tracing::warn!(
                         from_user_id,
-                        &message.receipt_id,
-                        content,
-                    )
-                    .await?
-                    .is_some();
+                        "failed to establish v2 signal session from server: {error}"
+                    );
                 }
-                Err(error_type) => {
-                    tracing::info!(error_type, "Decryption error");
-                    if error_type
-                        == proto::plaintext_content::decryption_error_message::Type::PrekeyUnknown
-                            as i32
-                    {
-                        if let Ok(callbacks) = get_callbacks() {
-                            (callbacks.api.resync_signal_session)(from_user_id).await;
-                        }
-                    }
-                    queue_decryption_error(&mut t, from_user_id, &message.receipt_id, error_type)
-                        .await?;
-                    sends_error_response = true;
-                }
+                sqlx::query!(
+                    "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ?",
+                    from_user_id,
+                )
+                .execute(&mut *t)
+                .await?;
             }
+
+            queue_decryption_error(&mut t, from_user_id, &message.receipt_id, 0).await?;
+            sends_error_response = true;
         }
         Type::CiphertextV2 => {
             let ciphertext = message.encrypted_content.ok_or_else(|| {

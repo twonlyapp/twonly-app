@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/api.service.dart';
 import 'package:twonly/src/services/user.service.dart';
@@ -67,15 +66,11 @@ class UserEnvironment {
     required this.username,
     required this.db,
     required this.userService,
-    required this.identityKeyPair,
-    required this.registrationId,
   });
   final int userId;
   final String username;
   final TwonlyDB db;
   final UserService userService;
-  final IdentityKeyPair identityKeyPair;
-  final int registrationId;
 
   static Future<UserEnvironment> create(
     int userId,
@@ -101,16 +96,11 @@ class UserEnvironment {
 
     us.isUserCreated = true;
 
-    final identityKeyPair = generateIdentityKeyPair();
-    final registrationId = generateRegistrationId(true);
-
     return UserEnvironment(
       userId: userId,
       username: username,
       db: db,
       userService: us,
-      identityKeyPair: identityKeyPair,
-      registrationId: registrationId,
     );
   }
 }

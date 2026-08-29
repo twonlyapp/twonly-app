@@ -123,8 +123,8 @@ void main() {
     });
 
     tearDown(() async {
-      await clientA.run(() async => clientA.api.close(null));
-      await clientB.run(() async => clientB.api.close(null));
+      await clientA.run(() async => clientA.api.dispose());
+      await clientB.run(() async => clientB.api.dispose());
       await clientA.env.db.close();
       await clientB.env.db.close();
     });

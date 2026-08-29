@@ -92,8 +92,6 @@ impl ApiClient {
             context,
             api_client: Arc::downgrade(self),
             is_authenticated: self.is_authenticated.clone(),
-            can_use_login_token_for_auth: self.config.can_use_login_token_for_auth,
-            legacy_user_app_version: self.config.legacy_user_app_version,
             in_background: self.in_background.load(Ordering::Acquire),
             events: self.events.clone(),
         };

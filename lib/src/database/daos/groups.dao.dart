@@ -49,10 +49,15 @@ Future<void> deleteGroup(String groupId) async {
       groupMembers,
     )..where((t) => t.groupId.equals(groupId))).get();
   }
-Future<Group?> createNewGroup(GroupsCompanion group) async {
+  Future<Group?> createNewGroup(GroupsCompanion group) async {
     return _insertGroup(group);
   }
-Future<void> insertGroupAction(GroupHistoriesCompanion action) async {
+
+  Future<void> insertOrUpdateGroupMember(GroupMembersCompanion members) async {
+    await into(groupMembers).insertOnConflictUpdate(members);
+  }
+
+  Future<void> insertGroupAction(GroupHistoriesCompanion action) async {
     var insertAction = action;
     if (!action.groupHistoryId.present) {
       insertAction = action.copyWith(
