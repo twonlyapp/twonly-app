@@ -26,17 +26,19 @@ fn main() -> Result<()> {
         .compile_protos(&websocket_protos, &[websocket_proto_root])?;
 
     prost_build::compile_protos(&["models/user_discovery.proto"], &["src/"])?;
+    let client_proto_root = "src/api/proto/client";
+    let client_protos = [
+        "src/api/proto/client/sealed_sender.proto",
+        "src/api/proto/client/groups.proto",
+        "src/api/proto/client/messages.proto",
+        "src/api/proto/client/data.proto",
+    ];
+    for proto in &client_protos {
+        println!("cargo:rerun-if-changed={proto}");
+    }
     prost_build::Config::new()
         .include_file("client_messages.rs")
-        .compile_protos(
-            &[
-                "../lib/src/model/protobuf/client/messages.proto",
-                "../lib/src/model/protobuf/client/data.proto",
-                "../lib/src/model/protobuf/client/push_notification.proto",
-                "../lib/src/model/protobuf/client/groups.proto",
-            ],
-            &["../lib/src/model/protobuf/client/"],
-        )?;
+        .compile_protos(&client_protos, &[client_proto_root])?;
     prost_build::compile_protos(
         &["src/api/proto/api/http/http_requests.proto"],
         &["src/api/proto/"],

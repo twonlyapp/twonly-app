@@ -6,8 +6,7 @@ import 'package:twonly/core/bridge/wrapper/key_manager.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
-    hide Message;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/secure_storage.dart';

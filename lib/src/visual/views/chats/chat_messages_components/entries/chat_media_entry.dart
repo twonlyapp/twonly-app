@@ -8,8 +8,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
-    hide Message;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/download.api.dart'
     as received;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
