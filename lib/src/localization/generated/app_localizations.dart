@@ -1832,6 +1832,30 @@ abstract class AppLocalizations {
   /// **'Waiting for internet'**
   String get waitingForInternet;
 
+  /// No description provided for @sealedSenderTransportSealed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sealed sender'**
+  String get sealedSenderTransportSealed;
+
+  /// No description provided for @sealedSenderTransportStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get sealedSenderTransportStandard;
+
+  /// No description provided for @settingsSealedSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sealed Sender'**
+  String get settingsSealedSender;
+
+  /// No description provided for @settingsSealedSenderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hides who you are from the server when sending. Both you and your contact need it turned on, so turning it off also stops your contacts from sending to you sealed.'**
+  String get settingsSealedSenderSubtitle;
+
   /// No description provided for @editHistory.
   ///
   /// In en, this message translates to:

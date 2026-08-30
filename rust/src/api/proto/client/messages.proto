@@ -9,6 +9,9 @@ message EncryptedContent {
   optional int64 sender_profile_counter        = 4;
   optional bytes sender_user_discovery_version = 21;
   optional bool  ask_for_friend_promotions     = 25;
+  /// Announces that this sender accepts sealed-sender envelopes. Peers must
+  /// keep using the named transport until they have seen this flag.
+  optional bool  sender_accepts_sealed_sender  = 28;
 
   optional MessageUpdate                 message_update                  = 5;
   optional Media                         media                           = 6;

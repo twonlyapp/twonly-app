@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT sealed_sender_enabled FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "sealed_sender_enabled",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "sealed_sender_enabled"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "407232f4e5dae0ed496d80369d0bb5f158b7fadb9b74db4fb922e26af0443a63"
+}

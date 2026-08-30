@@ -5970,8 +5970,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UserConfig dco_decode_user_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 59)
-      throw Exception('unexpected arr length: expect 59 but see ${arr.length}');
+    if (arr.length != 60)
+      throw Exception('unexpected arr length: expect 60 but see ${arr.length}');
     return UserConfig(
       userId: dco_decode_i_64(arr[0]),
       username: dco_decode_String(arr[1]),
@@ -6003,40 +6003,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       storeMediaFilesInGallery: dco_decode_bool(arr[27]),
       autoStoreAllSendUnlimitedMediaFiles: dco_decode_bool(arr[28]),
       typingIndicators: dco_decode_bool(arr[29]),
-      showRestoreFlame: dco_decode_bool(arr[30]),
-      myBestFriendGroupId: dco_decode_opt_String(arr[31]),
+      sealedSenderEnabled: dco_decode_bool(arr[30]),
+      showRestoreFlame: dco_decode_bool(arr[31]),
+      myBestFriendGroupId: dco_decode_opt_String(arr[32]),
       signalLastSignedPreKeyUpdated: dco_decode_opt_box_autoadd_Chrono_Utc(
-        arr[32],
-      ),
-      signalLastPqcPreKeysUploaded: dco_decode_opt_box_autoadd_Chrono_Utc(
         arr[33],
       ),
-      allowErrorTrackingViaSentry: dco_decode_bool(arr[34]),
-      screenLockEnabled: dco_decode_bool(arr[35]),
-      isCloudBackupEnabled: dco_decode_bool(arr[36]),
-      isUserDiscoveryEnabled: dco_decode_bool(arr[37]),
-      requiredSendImages: dco_decode_i_64(arr[38]),
-      userDiscoveryThreshold: dco_decode_u_8(arr[39]),
-      userDiscoveryRequiresManualApproval: dco_decode_bool(arr[40]),
-      userDiscoverySharePromotion: dco_decode_bool(arr[41]),
-      userDiscoveryInitializationError: dco_decode_bool(arr[42]),
-      askForFriendPromotions: dco_decode_bool(arr[43]),
-      currentPreKeyIndexStart: dco_decode_i_64(arr[44]),
-      currentSignedPreKeyIndexStart: dco_decode_i_64(arr[45]),
-      lastChangeLogHash: dco_decode_opt_list_prim_u_8_strict(arr[46]),
-      hideChangeLog: dco_decode_bool(arr[47]),
-      hideMemoriesBackupPromo: dco_decode_bool(arr[48]),
-      updateFcmToken: dco_decode_bool(arr[49]),
-      canUseLoginTokenForAuth: dco_decode_bool(arr[50]),
-      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[51]),
-      isBackupEnabled: dco_decode_bool(arr[52]),
+      signalLastPqcPreKeysUploaded: dco_decode_opt_box_autoadd_Chrono_Utc(
+        arr[34],
+      ),
+      allowErrorTrackingViaSentry: dco_decode_bool(arr[35]),
+      screenLockEnabled: dco_decode_bool(arr[36]),
+      isCloudBackupEnabled: dco_decode_bool(arr[37]),
+      isUserDiscoveryEnabled: dco_decode_bool(arr[38]),
+      requiredSendImages: dco_decode_i_64(arr[39]),
+      userDiscoveryThreshold: dco_decode_u_8(arr[40]),
+      userDiscoveryRequiresManualApproval: dco_decode_bool(arr[41]),
+      userDiscoverySharePromotion: dco_decode_bool(arr[42]),
+      userDiscoveryInitializationError: dco_decode_bool(arr[43]),
+      askForFriendPromotions: dco_decode_bool(arr[44]),
+      currentPreKeyIndexStart: dco_decode_i_64(arr[45]),
+      currentSignedPreKeyIndexStart: dco_decode_i_64(arr[46]),
+      lastChangeLogHash: dco_decode_opt_list_prim_u_8_strict(arr[47]),
+      hideChangeLog: dco_decode_bool(arr[48]),
+      hideMemoriesBackupPromo: dco_decode_bool(arr[49]),
+      updateFcmToken: dco_decode_bool(arr[50]),
+      canUseLoginTokenForAuth: dco_decode_bool(arr[51]),
+      twonlySafeBackup: dco_decode_opt_box_autoadd_twonly_safe_backup(arr[52]),
+      isBackupEnabled: dco_decode_bool(arr[53]),
       passwordLessRecovery:
-          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[53]),
-      fcmToken: dco_decode_opt_String(arr[54]),
-      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[55]),
-      currentSetupPage: dco_decode_opt_String(arr[56]),
-      skipSetupPages: dco_decode_bool(arr[57]),
-      hasZoomed: dco_decode_bool(arr[58]),
+          dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[54]),
+      fcmToken: dco_decode_opt_String(arr[55]),
+      lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[56]),
+      currentSetupPage: dco_decode_opt_String(arr[57]),
+      skipSetupPages: dco_decode_bool(arr[58]),
+      hasZoomed: dco_decode_bool(arr[59]),
     );
   }
 
@@ -7103,6 +7104,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_storeMediaFilesInGallery = sse_decode_bool(deserializer);
     var var_autoStoreAllSendUnlimitedMediaFiles = sse_decode_bool(deserializer);
     var var_typingIndicators = sse_decode_bool(deserializer);
+    var var_sealedSenderEnabled = sse_decode_bool(deserializer);
     var var_showRestoreFlame = sse_decode_bool(deserializer);
     var var_myBestFriendGroupId = sse_decode_opt_String(deserializer);
     var var_signalLastSignedPreKeyUpdated =
@@ -7172,6 +7174,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       autoStoreAllSendUnlimitedMediaFiles:
           var_autoStoreAllSendUnlimitedMediaFiles,
       typingIndicators: var_typingIndicators,
+      sealedSenderEnabled: var_sealedSenderEnabled,
       showRestoreFlame: var_showRestoreFlame,
       myBestFriendGroupId: var_myBestFriendGroupId,
       signalLastSignedPreKeyUpdated: var_signalLastSignedPreKeyUpdated,
@@ -8291,6 +8294,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.storeMediaFilesInGallery, serializer);
     sse_encode_bool(self.autoStoreAllSendUnlimitedMediaFiles, serializer);
     sse_encode_bool(self.typingIndicators, serializer);
+    sse_encode_bool(self.sealedSenderEnabled, serializer);
     sse_encode_bool(self.showRestoreFlame, serializer);
     sse_encode_opt_String(self.myBestFriendGroupId, serializer);
     sse_encode_opt_box_autoadd_Chrono_Utc(

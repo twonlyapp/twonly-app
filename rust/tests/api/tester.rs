@@ -412,13 +412,20 @@ impl Tester {
         std::fs::create_dir_all(data_dir.join("keyvalue"))?;
 
         let config = rust_lib_twonly::user_config::UserConfig {
-            app_version: 100,
+            // Must be at least the server's `sealed_sender_min_app_version`, or
+            // the server refuses to deliver sealed-sender payloads to a tester.
+            app_version: 119,
             device_id: 1,
             can_use_login_token_for_auth: true,
             is_user_discovery_enabled: true,
             user_discovery_threshold: 3,
             user_discovery_share_promotion: true,
             typing_indicators: true,
+            // Off here, on in the sealed-sender test. Minting a Privacy Pass
+            // batch is a run of P-384 scalar multiplications, and paying that
+            // in every unrelated test would slow the debug-built suite down
+            // for coverage the sealed-sender test already provides.
+            sealed_sender_enabled: false,
             ..Default::default()
         };
         std::fs::write(
@@ -453,6 +460,81 @@ impl Tester {
             user_id: 0,
             _temp_dir: temp_dir,
         })
+    }
+
+    pub fn set_sealed_sender_enabled(&self, enabled: bool) -> anyhow::Result<()> {
+        let path = self
+            ._temp_dir
+            .path()
+            .join("data")
+            .join("keyvalue")
+            .join("user.json");
+        let content = std::fs::read_to_string(&path)?;
+        let mut config: rust_lib_twonly::user_config::UserConfig = serde_json::from_str(&content)?;
+        config.sealed_sender_enabled = enabled;
+        std::fs::write(&path, serde_json::to_string(&config)?)?;
+        Ok(())
+    }
+
+    /// Waits until the contact has announced (or withdrawn) sealed-sender
+    /// support. The announcement rides along with any encrypted content, so it
+    /// only lands once the peer has actually sent something.
+    pub async fn wait_for_contact_sealed_sender(
+        &self,
+        user_id: i64,
+        expected: bool,
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let enabled = sqlx::query_scalar!(
+                "SELECT sealed_sender_enabled FROM contacts WHERE user_id = ?",
+                user_id
+            )
+            .fetch_optional(&database.pool)
+            .await?;
+            if enabled == Some(i64::from(expected)) {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "contact {user_id} did not reach sealed_sender_enabled = {expected}"
+        ))
+    }
+
+    /// Whether this message's copy for `contact_id` left as a sealed envelope.
+    pub async fn was_sent_sealed(&self, message_id: &str, contact_id: i64) -> anyhow::Result<bool> {
+        let database = self.context.app_db.read().await.clone();
+        Ok(sqlx::query_scalar!(
+            r#"SELECT EXISTS(SELECT 1 FROM message_actions
+               WHERE message_id = ? AND contact_id = ? AND type = 'sealedSenderAt')"#,
+            message_id,
+            contact_id,
+        )
+        .fetch_one(&database.pool)
+        .await?
+            != 0)
+    }
+
+    /// Waits for the token pool to fill. Minting is deliberately kept off the
+    /// send path, so it lands shortly after authentication rather than during
+    /// it.
+    ///
+    /// The wait is generous because blinding and unblinding a batch are P-384
+    /// scalar multiplications, and this suite is built without optimizations,
+    /// where each one costs orders of magnitude more than in a release build.
+    pub async fn wait_for_privacy_pass_tokens(&self) -> anyhow::Result<()> {
+        for _ in 0..600 {
+            let database = self.context.app_db.read().await.clone();
+            let count = sqlx::query_scalar!("SELECT COUNT(*) FROM privacy_pass_tokens")
+                .fetch_one(&database.pool)
+                .await?;
+            if count > 0 {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!("the Privacy Pass token pool stayed empty"))
     }
 
     pub fn update_username(&mut self, new_username: String) -> anyhow::Result<()> {

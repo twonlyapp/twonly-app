@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM privacy_pass_tokens WHERE expires_at <= ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e33bd4d14da2ab7a0b083d894f911a582bd664e168ed16e0ff6adb7532bddaec"
+}

@@ -41,17 +41,32 @@ done
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ZELLIJ_CONFIG="${ZELLIJ_CONFIG_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/zellij/config.kdl}"
 
-if zellij list-sessions -s 2>/dev/null | grep -qx "$SESSION"; then
-  if [ "$FORCE" -eq 1 ]; then
-    echo "deleting existing session '$SESSION'..."
-    zellij delete-session --force "$SESSION" >/dev/null
-  else
-    echo "zellij session '$SESSION' already exists. Attach with:" >&2
-    echo "  zellij attach $SESSION" >&2
-    echo "or re-run with -f to replace it." >&2
-    exit 1
-  fi
-fi
+# zellij keeps EXITED sessions around to be resurrected, and they still show up
+# in `list-sessions`. Only a genuinely live session should block a fresh start.
+SESSION_STATE="$(
+  zellij list-sessions -n 2>/dev/null \
+    | awk -v s="$SESSION" '$1 == s { print (index($0, "EXITED") ? "exited" : "live"); found = 1 }
+                           END { if (!found) print "none" }'
+)"
+
+case "$SESSION_STATE" in
+  exited)
+    echo "clearing exited session '$SESSION'..."
+    zellij delete-session --force "$SESSION" >/dev/null 2>&1 || true
+    ;;
+  live)
+    if [ "$FORCE" -eq 1 ]; then
+      echo "killing live session '$SESSION'..."
+      zellij kill-session "$SESSION" >/dev/null 2>&1 || true
+      zellij delete-session --force "$SESSION" >/dev/null 2>&1 || true
+    else
+      echo "zellij session '$SESSION' is already running. Attach with:" >&2
+      echo "  zellij attach $SESSION" >&2
+      echo "or re-run with -f to replace it." >&2
+      exit 1
+    fi
+    ;;
+esac
 
 echo "querying flutter devices..."
 DEVICES_JSON="$(flutter devices --machine)"

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET sealed_sender_enabled = ?\n               WHERE user_id = ? AND sealed_sender_enabled != ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "74c9a8f699b6a1c214e196824b9ac482d6f7165af2fa5a2e275facb310acdaee"
+}

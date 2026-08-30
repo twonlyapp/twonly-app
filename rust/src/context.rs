@@ -45,6 +45,11 @@ pub struct Context {
     mailbox_drained: Notify,
     incoming_generation: AtomicU64,
     incoming_committed: Notify,
+    /// Serializes Privacy Pass minting and holds the earliest time the issuer
+    /// may be asked again. It belongs to the account, not to the process: two
+    /// contexts in one process have separate quotas and must not block or back
+    /// each other off.
+    pub(crate) privacy_pass_issuance: Mutex<Option<std::time::Instant>>,
 }
 
 impl Context {
@@ -121,6 +126,7 @@ impl Context {
             mailbox_drained: Notify::new(),
             incoming_generation: AtomicU64::new(0),
             incoming_committed: Notify::new(),
+            privacy_pass_issuance: Mutex::new(None),
         });
         ApiRuntime::initialize(&ctx).await?;
         ApiRuntime::connect(&ctx).await?;
@@ -280,6 +286,7 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
+                        privacy_pass_issuance: Mutex::new(None),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -320,6 +327,7 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
+                        privacy_pass_issuance: Mutex::new(None),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");

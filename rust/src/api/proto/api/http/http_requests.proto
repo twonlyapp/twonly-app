@@ -1,6 +1,18 @@
 syntax = "proto3";
 package http_requests;
 
+message SealedSenderMessageRequest {
+  reserved 4;
+  int64 recipient_user_id = 1;
+  bytes sealed_sender_message = 2;
+  bytes privacy_pass_token = 3;
+  bool wake_receiver = 5;
+}
+
+message SealedSenderMessageResponse {
+  string message_id = 1;
+}
+
 message UpdateGroupState {
   message UpdateTBS {
     uint64 version_id = 1;

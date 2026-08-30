@@ -461,6 +461,10 @@ async fn handle_encrypted_inner(
 
     contact::check_for_profile_update(t, from_user_id, &content).await?;
 
+    if let Some(enabled) = content.sender_accepts_sealed_sender {
+        Contact::set_sealed_sender_enabled(t, from_user_id, enabled).await?;
+    }
+
     if content.ask_for_friend_promotions == Some(true) {
         Contact::update_ask_for_friend_promotions(t, from_user_id).await?;
     }

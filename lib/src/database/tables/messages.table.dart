@@ -56,6 +56,10 @@ enum MessageActionType {
   openedAt,
   ackByUserAt,
   ackByServerAt,
+
+  /// Present when this recipient's copy left as a sealed-sender envelope. The
+  /// transport is per recipient, so in a group only some members may have one.
+  sealedSenderAt,
 }
 
 @DataClassName('MessageAction')

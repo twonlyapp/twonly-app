@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND sealed_sender_enabled = 1)",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM contacts WHERE user_id = ? AND sealed_sender_enabled = 1)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0e2dcd586093544fb7c0163785648b2e2510cc8ca43f9f418e60bfc5afb40d48"
+}

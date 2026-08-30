@@ -68,6 +68,11 @@ rustls = { version = "0.23.43", default-features = false, features = [
 ] }
 tokio-util = "0.7.16"
 bon = "3.9.3"
+privacypass = "=0.2.0-pre.3"
+p384 = { version = "0.13.0", default-features = false, features = [
+    "hash2curve",
+    "voprf",
+] }
 stream-tungstenite = "0.6.1"
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain

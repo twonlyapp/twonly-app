@@ -108,9 +108,17 @@ Future<void> runMigrations() async {
     await UserService.update((u) => u.appVersion = 118);
   }
 
+  // The server only delivers sealed-sender payloads to clients reporting at
+  // least this version, so the bump is what announces support for them. The
+  // `sealedSenderEnabled` setting itself needs no migration: an existing
+  // user.json without the key falls back to the enabled default.
+  if (userService.currentUser.appVersion < 119) {
+    await UserService.update((u) => u.appVersion = 119);
+  }
+
   if (kDebugMode) {
     assert(
-      AppState.latestAppVersionId == 118,
+      AppState.latestAppVersionId == 119,
       'Forgot to update the target version in runMigrations() after incrementing AppState.latestAppVersionId.',
     );
     assert(

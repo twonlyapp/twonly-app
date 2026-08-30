@@ -5603,6 +5603,7 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_storeMediaFilesInGallery = <bool>::sse_decode(deserializer);
         let mut var_autoStoreAllSendUnlimitedMediaFiles = <bool>::sse_decode(deserializer);
         let mut var_typingIndicators = <bool>::sse_decode(deserializer);
+        let mut var_sealedSenderEnabled = <bool>::sse_decode(deserializer);
         let mut var_showRestoreFlame = <bool>::sse_decode(deserializer);
         let mut var_myBestFriendGroupId = <Option<String>>::sse_decode(deserializer);
         let mut var_signalLastSignedPreKeyUpdated =
@@ -5668,6 +5669,7 @@ impl SseDecode for crate::user_config::UserConfig {
             store_media_files_in_gallery: var_storeMediaFilesInGallery,
             auto_store_all_send_unlimited_media_files: var_autoStoreAllSendUnlimitedMediaFiles,
             typing_indicators: var_typingIndicators,
+            sealed_sender_enabled: var_sealedSenderEnabled,
             show_restore_flame: var_showRestoreFlame,
             my_best_friend_group_id: var_myBestFriendGroupId,
             signal_last_signed_pre_key_updated: var_signalLastSignedPreKeyUpdated,
@@ -6653,6 +6655,7 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
                 .into_into_dart()
                 .into_dart(),
             self.typing_indicators.into_into_dart().into_dart(),
+            self.sealed_sender_enabled.into_into_dart().into_dart(),
             self.show_restore_flame.into_into_dart().into_dart(),
             self.my_best_friend_group_id.into_into_dart().into_dart(),
             self.signal_last_signed_pre_key_updated
@@ -7562,6 +7565,7 @@ impl SseEncode for crate::user_config::UserConfig {
         <bool>::sse_encode(self.store_media_files_in_gallery, serializer);
         <bool>::sse_encode(self.auto_store_all_send_unlimited_media_files, serializer);
         <bool>::sse_encode(self.typing_indicators, serializer);
+        <bool>::sse_encode(self.sealed_sender_enabled, serializer);
         <bool>::sse_encode(self.show_restore_flame, serializer);
         <Option<String>>::sse_encode(self.my_best_friend_group_id, serializer);
         <Option<chrono::DateTime<chrono::Utc>>>::sse_encode(

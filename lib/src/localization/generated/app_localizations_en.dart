@@ -974,6 +974,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waitingForInternet => 'Waiting for internet';
 
   @override
+  String get sealedSenderTransportSealed => 'Sealed sender';
+
+  @override
+  String get sealedSenderTransportStandard => 'Standard';
+
+  @override
+  String get settingsSealedSender => 'Sealed Sender';
+
+  @override
+  String get settingsSealedSenderSubtitle =>
+      'Hides who you are from the server when sending. Both you and your contact need it turned on, so turning it off also stops your contacts from sending to you sealed.';
+
+  @override
   String get editHistory => 'Edit history';
 
   @override

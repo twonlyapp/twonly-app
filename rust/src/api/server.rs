@@ -8,6 +8,7 @@ mod contacts;
 mod memories;
 mod passwordless;
 pub mod prekeys;
+mod privacy_pass;
 mod purchases;
 mod transport;
 

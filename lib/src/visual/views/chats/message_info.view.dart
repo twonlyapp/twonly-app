@@ -113,6 +113,11 @@ class _MessageInfoViewState extends State<MessageInfoView> {
             t.$1.type == MessageActionType.openedAt &&
             t.$2.userId == groupMember.$2.userId,
       );
+      final sealedSender = messageActions.firstWhereOrNull(
+        (t) =>
+            t.$1.type == MessageActionType.sealedSenderAt &&
+            t.$2.userId == groupMember.$2.userId,
+      );
 
       var actionTypeText = context.lang.waitingForInternet;
       var actionAt = widget.message.createdAt;
@@ -158,6 +163,18 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                     style: const TextStyle(fontSize: 12),
                   ),
                   Text(actionTypeText),
+                  // The transport is decided per recipient, so it is only known
+                  // once this member's copy has actually left the device.
+                  if (ackByServer != null)
+                    Text(
+                      sealedSender != null
+                          ? context.lang.sealedSenderTransportSealed
+                          : context.lang.sealedSenderTransportStandard,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
                 ],
               ),
             ],

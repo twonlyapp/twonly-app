@@ -84,7 +84,6 @@ pub enum SealedSenderError {
 pub(crate) struct SealedSender;
 
 impl SealedSender {
-    #[allow(dead_code)]
     pub(crate) fn encrypt<R>(
         from_user_id: i64,
         recipient_user_id: i64,
@@ -107,7 +106,6 @@ impl SealedSender {
         )
     }
 
-    #[allow(dead_code)]
     fn encrypt_at<R>(
         from_user_id: i64,
         recipient_user_id: i64,

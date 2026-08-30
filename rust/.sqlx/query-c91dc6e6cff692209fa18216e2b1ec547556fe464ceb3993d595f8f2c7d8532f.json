@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT EXISTS(SELECT 1 FROM message_actions\n               WHERE message_id = ? AND contact_id = ? AND type = 'sealedSenderAt')",
+  "describe": {
+    "columns": [
+      {
+        "name": "EXISTS(SELECT 1 FROM message_actions\n               WHERE message_id = ? AND contact_id = ? AND type = 'sealedSenderAt')",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c91dc6e6cff692209fa18216e2b1ec547556fe464ceb3993d595f8f2c7d8532f"
+}

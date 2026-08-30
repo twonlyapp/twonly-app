@@ -248,6 +248,12 @@ pub struct UserConfig {
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub typing_indicators: bool,
+    /// Announces to contacts that this account accepts sealed-sender envelopes,
+    /// and lets this account send them. Both sides have to have it on before
+    /// anything travels sealed.
+    #[serde(default = "defaults::true_value")]
+    #[frb(non_final)]
+    pub sealed_sender_enabled: bool,
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub show_restore_flame: bool,

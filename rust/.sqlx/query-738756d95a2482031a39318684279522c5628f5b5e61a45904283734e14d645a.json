@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO message_actions(message_id, contact_id, type)\n                VALUES (?, ?, 'sealedSenderAt')\n                ON CONFLICT(message_id, contact_id, type)\n                DO UPDATE SET action_at = CAST(strftime('%s', 'now') AS INTEGER)\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "738756d95a2482031a39318684279522c5628f5b5e61a45904283734e14d645a"
+}

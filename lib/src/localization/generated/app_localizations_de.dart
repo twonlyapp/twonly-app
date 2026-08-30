@@ -981,6 +981,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get waitingForInternet => 'Warten auf Internet';
 
   @override
+  String get sealedSenderTransportSealed => 'Sealed Sender';
+
+  @override
+  String get sealedSenderTransportStandard => 'Standard';
+
+  @override
+  String get settingsSealedSender => 'Sealed Sender';
+
+  @override
+  String get settingsSealedSenderSubtitle =>
+      'Verbirgt beim Senden vor dem Server, wer du bist. Sowohl du als auch dein Kontakt müssen es aktiviert haben; deaktivierst du es, senden deine Kontakte auch nicht mehr versiegelt an dich.';
+
+  @override
   String get editHistory => 'Bearbeitungshistorie';
 
   @override
