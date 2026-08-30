@@ -17,6 +17,7 @@ import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
@@ -63,6 +64,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
         unawaited(
           rust_api.RustApi.setBackground(inBackground: false),
         );
+        // The notification service extension wrote to the outbox while the app
+        // was suspended, and its Rust change broadcast never reached this
+        // process, so the badge has to be re-read on the way back in.
+        unawaited(NativeNotificationService.refreshBadgeCount());
       }
     } else if (state == AppLifecycleState.paused) {
       _wasPaused = true;

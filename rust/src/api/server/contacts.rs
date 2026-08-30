@@ -15,11 +15,14 @@ use std::sync::Arc;
 
 impl Server {
     pub async fn get_user_by_id_response(ctx: &Arc<Context>, user_id: i64) -> Result<Vec<u8>> {
-        Self::application(
+        // Sent for the contact so that a `UserIdNotFound` answer marks the
+        // account as deleted instead of failing every prekey bundle fetch.
+        Self::application_for_contact(
             ctx,
             client_to_server::application_data::ApplicationData::GetUserById(
                 client_to_server::application_data::GetUserById { user_id },
             ),
+            user_id,
         )
         .await
     }

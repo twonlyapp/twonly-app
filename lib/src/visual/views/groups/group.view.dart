@@ -54,6 +54,16 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> initAsync() async {
+    // Opening the group is the user's way of retrying: ask for every member
+    // key that is still missing, ignoring the per-member request interval.
+    // Without a member's key the admin actions on them stay hidden.
+    unawaited(
+      rust_groups.fetchMissingGroupPublicKeys(
+        groupId: widget.groupId,
+        force: true,
+      ),
+    );
+
     final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
     groupSub = groupStream.listen((update) {
       if (update != null) {
@@ -67,7 +77,9 @@ class _GroupViewState extends State<GroupView> {
       setState(() {
         members = update;
         members.sort(
-          (b, a) => a.$2.memberState!.index.compareTo(b.$2.memberState!.index),
+          (b, a) => (a.$2.memberState ?? MemberState.normal).index.compareTo(
+            (b.$2.memberState ?? MemberState.normal).index,
+          ),
         );
       });
     });

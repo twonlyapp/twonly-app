@@ -588,6 +588,15 @@ impl Tester {
         Ok(notifications::clear_conversation(&self.context, conversation_id).await?)
     }
 
+    pub async fn clear_contact_request_notifications(&self) -> anyhow::Result<Vec<String>> {
+        Ok(notifications::clear_contact_requests(&self.context).await?)
+    }
+
+    /// The value the running app pushes into the iOS app icon badge.
+    pub async fn notification_badge_count(&self) -> anyhow::Result<i64> {
+        Ok(notifications::badge_count(&self.context).await?)
+    }
+
     /// Number of rows the outbox holds for one receipt, used to prove that a
     /// redelivered envelope cannot notify twice.
     pub async fn notification_rows_for_event(&self, event_id: &str) -> anyhow::Result<i64> {

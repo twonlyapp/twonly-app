@@ -90,8 +90,10 @@ impl ContactService {
         self.process_user_prekey_bundle(&user).await?;
 
         let database = self.ctx.app_db.read().await.clone();
+        // The server answered with a bundle, so a previous `UserIdNotFound`
+        // (or a manual mark) must not keep the contact blocked.
         sqlx::query!(
-            "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ?",
+            "UPDATE contacts SET signal_version = 'v2', account_deleted = 0 WHERE user_id = ?",
             user_id
         )
         .execute(&database.pool)

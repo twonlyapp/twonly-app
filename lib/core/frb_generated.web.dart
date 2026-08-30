@@ -10,6 +10,7 @@ import 'api/server/prekeys.dart';
 import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
+import 'bridge/callbacks/log.dart';
 import 'bridge/groups.dart';
 import 'bridge/user_config.dart';
 import 'bridge/wrapper.dart';

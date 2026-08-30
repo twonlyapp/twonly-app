@@ -7,6 +7,7 @@ use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::runtime::ApiRuntime;
 use crate::bridge::InitConfig;
 use crate::context::{Context, RuntimeMode};
+use crate::database::app::AppDatabase;
 use crate::error::Result;
 use crate::user_config::UserConfig;
 use crate::utils::{current_time, milliseconds_to_seconds};
@@ -273,11 +274,10 @@ pub(crate) async fn record_incoming_event(
     Ok(())
 }
 
-pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
-    let database = ctx.app_db.read().await.clone();
-    // A foreground chat can mark a message as opened before the native push
-    // worker gets around to rendering its durable outbox row. Clear those
-    // stale rows first so they neither produce an alert nor inflate the badge.
+/// A foreground chat can mark a message as opened before the native push
+/// worker gets around to rendering its durable outbox row. Clearing those
+/// stale rows keeps them from producing an alert or inflating the badge.
+async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
     let cleared = sqlx::query(
         r#"
@@ -299,6 +299,26 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     if cleared.rows_affected() != 0 {
         database.notify_committed(["notification_outbox"]);
     }
+    Ok(())
+}
+
+/// The number of events the user has not dealt with yet. iOS has no way to
+/// derive an app icon badge from the delivered alerts, so the running app has
+/// to push this value into `UNUserNotificationCenter` itself.
+pub async fn badge_count(ctx: &Arc<Context>) -> Result<i64> {
+    let database = ctx.app_db.read().await.clone();
+    clear_stale_opened(&database).await?;
+    let count = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count: i64" FROM notification_outbox WHERE cleared_at IS NULL"#
+    )
+    .fetch_one(&database.pool)
+    .await?;
+    Ok(count)
+}
+
+pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<NotificationBatch> {
+    let database = ctx.app_db.read().await.clone();
+    clear_stale_opened(&database).await?;
     let rows = sqlx::query_as!(
         PendingRow,
         r#"
@@ -484,6 +504,36 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
     .await?;
     transaction.commit().await?;
     database.notify_committed(["notification_outbox"]);
+    Ok(notification_ids)
+}
+
+/// Clears the contact-request notifications. They carry no conversation, so
+/// opening the request list is the only moment the user acknowledges them.
+pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
+    let database = ctx.app_db.read().await.clone();
+    let mut transaction = database.pool.begin().await?;
+    let notification_ids = sqlx::query_scalar!(
+        r#"
+        SELECT notification_id FROM notification_outbox
+        WHERE kind IN ('contact_request', 'accept_request') AND cleared_at IS NULL
+        "#,
+    )
+    .fetch_all(&mut *transaction)
+    .await?;
+    let cleared_at = current_time().timestamp();
+    sqlx::query!(
+        r#"
+        UPDATE notification_outbox SET cleared_at = ?
+        WHERE kind IN ('contact_request', 'accept_request') AND cleared_at IS NULL
+        "#,
+        cleared_at,
+    )
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    if !notification_ids.is_empty() {
+        database.notify_committed(["notification_outbox"]);
+    }
     Ok(notification_ids)
 }
 

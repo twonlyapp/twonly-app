@@ -298,7 +298,6 @@ pub(crate) struct PreparedQueuedReceipt {
     pub contact_id: i64,
     pub message_id: Option<String>,
     pub contact_will_sends_receipt: i64,
-    pub account_deleted: i64,
     pub payload: Vec<u8>,
     pub wake_receiver: bool,
 }
@@ -313,12 +312,11 @@ struct PreparedQueuedReceiptRow {
     signal_version: String,
 }
 
-pub(crate) async fn prepare_queued_receipt_details(
-    ctx: &Arc<Context>,
+async fn load_queued_receipt_row(
+    pool: &sqlx::SqlitePool,
     receipt_id: &str,
-) -> Result<Option<PreparedQueuedReceipt>> {
-    let app_db = ctx.app_db.read().await.clone();
-    let row = sqlx::query_as!(
+) -> Result<Option<PreparedQueuedReceiptRow>> {
+    Ok(sqlx::query_as!(
         PreparedQueuedReceiptRow,
         r#"
         SELECT r.contact_id, r.message, r.message_id, r.contact_will_sends_receipt,
@@ -329,13 +327,39 @@ pub(crate) async fn prepare_queued_receipt_details(
         "#,
         receipt_id,
     )
-    .fetch_optional(&app_db.pool)
-    .await?;
+    .fetch_optional(pool)
+    .await?)
+}
 
-    let Some(row) = row else {
+pub(crate) async fn prepare_queued_receipt_details(
+    ctx: &Arc<Context>,
+    receipt_id: &str,
+) -> Result<Option<PreparedQueuedReceipt>> {
+    let app_db = ctx.app_db.read().await.clone();
+    let Some(row) = load_queued_receipt_row(&app_db.pool, receipt_id).await? else {
         return Ok(None);
     };
 
+    if row.account_deleted != 0 {
+        return Err(TwonlyError::Generic(format!(
+            "contact {} deleted their account",
+            row.contact_id
+        )));
+    }
+
+    prepare_queued_receipt_from_row(ctx, receipt_id, row)
+        .await
+        .map(Some)
+}
+
+/// Encrypts the queued payload. Fetches a prekey bundle from the server when
+/// the contact has no v2 session yet, so the caller must have ruled out a
+/// deleted account first.
+async fn prepare_queued_receipt_from_row(
+    ctx: &Arc<Context>,
+    receipt_id: &str,
+    row: PreparedQueuedReceiptRow,
+) -> Result<PreparedQueuedReceipt> {
     let mut message = proto::Message::decode(row.message.as_slice())
         .map_err(|error| TwonlyError::Generic(format!("invalid queued message: {error}")))?;
     message.receipt_id = receipt_id.to_owned();
@@ -366,14 +390,13 @@ pub(crate) async fn prepare_queued_receipt_details(
         message.r#type = proto::message::Type::CiphertextV2 as i32;
     }
 
-    Ok(Some(PreparedQueuedReceipt {
+    Ok(PreparedQueuedReceipt {
         contact_id: row.contact_id,
         message_id: row.message_id,
         contact_will_sends_receipt: row.contact_will_sends_receipt,
-        account_deleted: row.account_deleted,
         payload: message.encode_to_vec(),
         wake_receiver: row.wake_receiver != 0,
-    }))
+    })
 }
 
 pub(crate) async fn prepare_queued_receipt(
@@ -402,15 +425,20 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     }
 
     let app_db = ctx.app_db.read().await.clone();
-    let Some(receipt) = prepare_queued_receipt_details(ctx, receipt_id).await? else {
+    let Some(row) = load_queued_receipt_row(&app_db.pool, receipt_id).await? else {
         return Ok(());
     };
 
-    if receipt.account_deleted != 0 {
+    // The server has no account for this contact any more, so preparing the
+    // payload would only fetch a prekey bundle that answers `UserIdNotFound`
+    // on every retry. Drop the receipt instead of queueing it forever.
+    if row.account_deleted != 0 {
         Receipt::delete(&app_db.pool, receipt_id).await?;
         app_db.notify_committed(["receipts"]);
         return Ok(());
     }
+
+    let receipt = prepare_queued_receipt_from_row(ctx, receipt_id, row).await?;
 
     match Server::send_text_message(
         ctx,

@@ -7,7 +7,9 @@ pub(crate) mod crypto;
 pub(crate) mod model;
 
 use crate::api::groups::GroupApi;
-use crate::api::messages::incoming::messages::queue_encrypted_content;
+use crate::api::messages::incoming::messages::{
+    queue_encrypted_content, retransmit_queued_receipts,
+};
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::encrypted_content::GroupJoin;
 use crate::api::proto::client::{
@@ -28,19 +30,75 @@ use crate::utils::{current_time, new_uuid_v4};
 use model::GroupRecord;
 use prost::Message;
 use rand::{RngCore, SeedableRng};
-use std::collections::BTreeSet;
-use std::sync::Arc;
+use std::collections::{BTreeSet, HashMap};
+use std::sync::{Arc, LazyLock, Mutex};
+use std::time::{Duration, Instant};
 
 const DEFAULT_DELETE_MS: i64 = 86_400_000;
+
+/// How long to wait before asking the same member for its group public key
+/// again. A peer that cannot answer -- an old client, a member who never comes
+/// online -- would otherwise be re-asked on every reconnect and every group
+/// update.
+const PUBLIC_KEY_REQUEST_INTERVAL: Duration = Duration::from_secs(24 * 60 * 60);
 
 pub struct GroupService {
     ctx: Arc<Context>,
 }
 
+/// Serializes group-state refreshes per group.
+///
+/// A refresh reads the server state, may repair it through `update_remote`, and
+/// only then writes it locally. Two refreshes running at once read the same
+/// `version_id`, so the second repair is rejected by the group server with 409.
+/// The single app-database connection used to serialize this by accident, back
+/// when the fetch ran inside the transaction; taking the network out of the
+/// transaction is what makes an explicit lock necessary.
+///
+/// Acquire this *before* a database connection and never while holding one:
+/// the reverse order deadlocks against the one-connection pool.
+static GROUP_STATE_LOCKS: LazyLock<Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn group_state_lock(group_id: &str) -> Arc<tokio::sync::Mutex<()>> {
+    let mut locks = match GROUP_STATE_LOCKS.lock() {
+        Ok(locks) => locks,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    locks.entry(group_id.to_owned()).or_default().clone()
+}
+
+/// When each member was last asked to resend its group public key.
+///
+/// Process-local on purpose: the point is to keep one session from re-asking a
+/// silent peer on every reconnect, not to remember the attempt across restarts.
+/// `force` bypasses it, so the user can always retry by opening the group.
+static PUBLIC_KEY_REQUESTS: LazyLock<Mutex<HashMap<(String, i64), Instant>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Records a request and reports whether it should be sent at all.
+fn claim_public_key_request(group_id: &str, contact_id: i64, force: bool) -> bool {
+    let mut requests = match PUBLIC_KEY_REQUESTS.lock() {
+        Ok(requests) => requests,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let key = (group_id.to_owned(), contact_id);
+    let now = Instant::now();
+    if !force
+        && requests
+            .get(&key)
+            .is_some_and(|sent| now.duration_since(*sent) < PUBLIC_KEY_REQUEST_INTERVAL)
+    {
+        return false;
+    }
+    requests.insert(key, now);
+    true
+}
+
 impl GroupService {
     pub async fn on_connected(&self) -> Result<()> {
         self.fetch_group_states_for_unjoined_groups().await?;
-        self.fetch_missing_group_public_keys().await?;
+        self.fetch_missing_group_public_keys(None, false).await?;
         self.sync_flame_counters().await
     }
 
@@ -101,14 +159,22 @@ impl GroupService {
         Self { ctx: ctx.clone() }
     }
 
+    /// Repairs a group after a peer reported that it does not know the group.
+    ///
+    /// Owns its transaction instead of borrowing the inbound one: the refresh
+    /// below reaches the group server, which must not happen while the single
+    /// app-database connection is held.
     pub(crate) async fn handle_membership_error(
         &self,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         from_user_id: i64,
         group_id: String,
         related_receipt_id: String,
     ) -> Result<()> {
-        let _ = self.fetch_group_state_in_transaction(t, &group_id).await;
+        let _ = self.fetch_group_state(group_id.clone()).await;
+
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        let t = &mut transaction;
 
         let group = GroupRecord::load_in_transaction(t, &group_id).await?;
         let is_still_member = sqlx::query_scalar!(
@@ -156,6 +222,9 @@ impl GroupService {
         )
         .execute(&mut **t)
         .await?;
+
+        transaction.commit().await?;
+        database.notify_committed(["receipts", "groups", "group_members"]);
         Ok(())
     }
 
@@ -229,24 +298,51 @@ impl GroupService {
         Ok(true)
     }
 
+    /// Refreshes one group from the group server.
+    ///
+    /// The round-trip happens before the transaction opens, under the group's
+    /// [`group_state_lock`]. The app database allows a single connection, so
+    /// holding it across network I/O starves every other database user until
+    /// the acquire timeout and surfaces as `pool timed out while waiting for an
+    /// open connection`.
     pub async fn fetch_group_state(&self, group_id: String) -> Result<bool> {
+        let lock = group_state_lock(&group_id);
+        let _guard = lock.lock().await;
+
+        let server = GroupApi::fetch_group_state(&group_id).await?;
+
         let database = self.ctx.app_db.read().await.clone();
         let mut t = database.pool.begin().await?;
         let updated = self
-            .fetch_group_state_in_transaction(&mut t, &group_id)
+            .apply_fetched_group_state(&mut t, &group_id, server)
             .await?;
         t.commit().await?;
-        database.notify_committed(["groups", "group_members", "contacts"]);
+        database.notify_committed(["groups", "group_members", "contacts", "receipts"]);
+
+        // `apply_state` may have queued public-key requests. Nothing else
+        // flushes them here -- this is not an inbound-message path -- and they
+        // would otherwise wait for the next reconnect.
+        let ctx = self.ctx.clone();
+        tokio::spawn(async move {
+            if let Err(error) = retransmit_queued_receipts(&ctx).await {
+                tracing::warn!("failed to flush messages queued by a group refresh: {error}");
+            }
+        });
+
         Ok(updated)
     }
 
-    async fn fetch_group_state_in_transaction(
+    /// Applies a group state that has already been fetched. Database work only,
+    /// apart from the admin-side `update_remote` repair below, which the
+    /// caller's group lock keeps free of races.
+    async fn apply_fetched_group_state(
         &self,
         t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
         group_id: &str,
+        server: Option<crate::api::proto::http_requests::GroupState>,
     ) -> Result<bool> {
         let group = GroupRecord::load_in_transaction(t, group_id).await?;
-        let Some(server) = GroupApi::fetch_group_state(&group_id).await? else {
+        let Some(server) = server else {
             UpdateGroup::builder()
                 .group_id(group_id.to_owned())
                 .left_group(true)
@@ -352,6 +448,32 @@ impl GroupService {
         self.fetch_group_state(group_id).await
     }
 
+    /// Resolves the group public key a member signs its group-state appends
+    /// with. Our own key lives in the group record; everyone else's arrives
+    /// through `group_join` and may still be missing.
+    async fn member_public_key(
+        &self,
+        db: &Arc<crate::database::app::AppDatabase>,
+        group: &GroupRecord,
+        group_id: &str,
+        contact_id: i64,
+    ) -> Result<Vec<u8>> {
+        if contact_id == self.ctx.user_id().await? {
+            return Ok(group.identity()?.identity_key().serialize().to_vec());
+        }
+        GetGroupPublicKey::builder()
+            .group_id(group_id.to_owned())
+            .contact_id(contact_id)
+            .build()
+            .fetch_pool(&db.pool)
+            .await?
+            .ok_or_else(|| {
+                TwonlyError::Generic(format!(
+                    "group public key for contact {contact_id} not found"
+                ))
+            })
+    }
+
     pub async fn manage_admin(
         &self,
         group_id: String,
@@ -361,17 +483,9 @@ impl GroupService {
         let (db, g) = self.load_group(&group_id).await?;
         let (v, mut s) = GroupApi::load_state(&g).await?;
 
-        let public_key = GetGroupPublicKey::builder()
-            .group_id(group_id.clone())
-            .contact_id(contact_id)
-            .build()
-            .fetch_pool(&db.pool)
-            .await?
-            .ok_or_else(|| {
-                TwonlyError::Generic(format!(
-                    "group public key for contact {contact_id} not found"
-                ))
-            })?;
+        let public_key = self
+            .member_public_key(&db, &g, &group_id, contact_id)
+            .await?;
 
         if remove {
             s.admin_ids.retain(|x| *x != contact_id)
@@ -436,12 +550,13 @@ impl GroupService {
         self.fetch_group_state(group_id).await
     }
 
-    pub async fn remove_member(
-        &self,
-        group_id: String,
-        public_key: Vec<u8>,
-        contact_id: i64,
-    ) -> Result<bool> {
+    /// Removes a member from the group.
+    ///
+    /// The member's group public key is only needed to revoke an admin's
+    /// signing rights, so a plain member can be removed without it. That
+    /// matters: a key that never arrived would otherwise make the member
+    /// unremovable.
+    pub async fn remove_member(&self, group_id: String, contact_id: i64) -> Result<bool> {
         let (db, g) = self.load_group(&group_id).await?;
         let (v, mut s) = GroupApi::load_state(&g).await?;
         if !s.member_ids.contains(&contact_id) {
@@ -450,7 +565,15 @@ impl GroupService {
         s.member_ids.retain(|x| *x != contact_id);
         let was_admin = s.admin_ids.contains(&contact_id);
         s.admin_ids.retain(|x| *x != contact_id);
-        GroupApi::update_remote(&g, v, &s, None, was_admin.then_some(public_key)).await?;
+        let revoked_key = if was_admin {
+            Some(
+                self.member_public_key(&db, &g, &group_id, contact_id)
+                    .await?,
+            )
+        } else {
+            None
+        };
+        GroupApi::update_remote(&g, v, &s, None, revoked_key).await?;
         self.announce(&group_id, "removedMember", Some(contact_id), None, None)
             .await?;
         let mut tr = db.pool.begin().await?;
@@ -472,9 +595,7 @@ impl GroupService {
         let user_id = self.ctx.user_id().await?;
         let (_, group_state) = GroupApi::load_state(&group).await?;
         if group_state.admin_ids.contains(&user_id) {
-            let identity = group.identity()?;
-            let public_key = identity.identity_key().serialize().to_vec();
-            return self.remove_member(group_id, public_key, user_id).await;
+            return self.remove_member(group_id, user_id).await;
         }
 
         let identity = group.identity()?;
@@ -546,20 +667,61 @@ impl GroupService {
         Ok(true)
     }
 
-    pub async fn refresh_group_state(
-        &self,
-        tr: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-        group_id: String,
-        created: bool,
-    ) {
-        if created {
-            let _ = self
-                .fetch_group_states_for_unjoined_groups_in_transaction(tr)
-                .await;
-            let _ = self.broadcast_group_public_key(tr, &group_id).await;
-        } else {
-            let _ = self.fetch_group_state_in_transaction(tr, &group_id).await;
-        }
+    /// Refreshes one group and then announces our own group public key to it.
+    ///
+    /// The order matters: `broadcast_group_public_key` resolves its recipients
+    /// from `group_members`, which holds nothing but the sender of the
+    /// `group_create` until the refresh fills in the rest of the group.
+    /// Announcing first would reach that one member and leave every other
+    /// member unable to promote or remove us. The announcement still runs when
+    /// the refresh fails, so an offline group server costs reach, not delivery.
+    pub fn spawn_state_refresh_and_announce(ctx: &Arc<Context>, group_id: String) {
+        let ctx = ctx.clone();
+        tokio::spawn(async move {
+            let service = Self::new(&ctx);
+            if let Err(error) = service.fetch_group_state(group_id.clone()).await {
+                tracing::warn!(
+                    group_id,
+                    "group state refresh before announce failed: {error}"
+                );
+            }
+            if let Err(error) = service.announce_group_public_key(&group_id).await {
+                tracing::warn!(group_id, "group public key announcement failed: {error}");
+            }
+        });
+    }
+
+    /// Sends our group public key to every current member of `group_id`.
+    async fn announce_group_public_key(&self, group_id: &str) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let mut transaction = database.pool.begin().await?;
+        self.broadcast_group_public_key(&mut transaction, group_id)
+            .await?;
+        transaction.commit().await?;
+        database.notify_committed(["receipts"]);
+        Ok(())
+    }
+
+    /// Schedules the server-side half of a group refresh.
+    ///
+    /// Callers reach this from inside the inbound transaction, and a refresh
+    /// talks to the group server, so it cannot run there: it would pin the only
+    /// app-database connection across the network and, once it takes a group
+    /// lock, invert the lock order this module depends on. Running it detached
+    /// lets the caller commit first; every call site treats the refresh as best
+    /// effort already.
+    pub fn spawn_state_refresh(ctx: &Arc<Context>, group_id: Option<String>) {
+        let ctx = ctx.clone();
+        tokio::spawn(async move {
+            let service = Self::new(&ctx);
+            let result = match group_id {
+                Some(group_id) => service.fetch_group_state(group_id).await.map(|_| ()),
+                None => service.fetch_group_states_for_unjoined_groups().await,
+            };
+            if let Err(error) = result {
+                tracing::warn!("scheduled group state refresh failed: {error}");
+            }
+        });
     }
 
     pub async fn broadcast_group_public_key(
@@ -602,38 +764,47 @@ impl GroupService {
         Ok(())
     }
 
+    /// Refreshes every group this client has not joined yet.
+    ///
+    /// The ids are read on their own connection and each group is then
+    /// refreshed by [`Self::fetch_group_state`], so no connection is held
+    /// across the per-group round-trips.
     pub async fn fetch_group_states_for_unjoined_groups(&self) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
-        let mut t = db.pool.begin().await?;
-        self.fetch_group_states_for_unjoined_groups_in_transaction(&mut t)
-            .await?;
-        t.commit().await?;
-        Ok(())
-    }
-
-    pub async fn fetch_group_states_for_unjoined_groups_in_transaction(
-        &self,
-        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
-    ) -> Result<()> {
         let ids = GetUnjoinedGroups::builder()
             .build()
-            .fetch_all(&mut **t)
+            .fetch_all(&db.pool)
             .await?;
         for id in ids {
-            if let Err(e) = self.fetch_group_state_in_transaction(t, &id).await {
+            if let Err(e) = self.fetch_group_state(id.clone()).await {
                 tracing::warn!(group_id = id, "group state refresh failed: {e}")
             }
         }
         Ok(())
     }
 
-    pub async fn fetch_missing_group_public_keys(&self) -> Result<()> {
+    /// Asks every member whose group public key is still unknown to resend it.
+    ///
+    /// Without the key an admin cannot promote or remove that member, because
+    /// the group server needs it to authorize the member's future signed
+    /// appends. Pass a `group_id` to limit the sweep to one group, and `force`
+    /// to ignore [`PUBLIC_KEY_REQUEST_INTERVAL`] -- the group view does, so the
+    /// user always has a way to retry by hand.
+    pub async fn fetch_missing_group_public_keys(
+        &self,
+        group_id: Option<String>,
+        force: bool,
+    ) -> Result<()> {
         let db = self.ctx.app_db.read().await.clone();
         let rows = GetMissingGroupPublicKeys::builder()
+            .maybe_group_id(group_id)
             .build()
             .fetch_all(&db.pool)
             .await?;
         for row in rows {
+            if !claim_public_key_request(&row.group_id, row.contact_id, force) {
+                continue;
+            }
             send_c2c_message_to_contact()
                 .ctx(&self.ctx)
                 .contact_id(row.contact_id)
@@ -647,6 +818,39 @@ impl GroupService {
                 )
                 .call()
                 .await?;
+        }
+        Ok(())
+    }
+
+    /// Same request, queued inside the caller's transaction.
+    ///
+    /// [`Self::fetch_missing_group_public_keys`] sends immediately, which needs
+    /// its own database access and so cannot run while a transaction holds the
+    /// single app-database connection.
+    async fn queue_missing_group_public_key_requests(
+        t: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+        group_id: &str,
+    ) -> Result<()> {
+        let rows = GetMissingGroupPublicKeys::builder()
+            .group_id(group_id.to_owned())
+            .build()
+            .fetch_all_in_transaction(t)
+            .await?;
+        for row in rows {
+            if !claim_public_key_request(&row.group_id, row.contact_id, false) {
+                continue;
+            }
+            queue_encrypted_content(
+                t,
+                row.contact_id,
+                EncryptedContent {
+                    group_id: Some(row.group_id),
+                    resend_group_public_key: Some(encrypted_content::ResendGroupPublicKey {}),
+                    ..Default::default()
+                },
+                true,
+            )
+            .await?;
         }
         Ok(())
     }
@@ -783,6 +987,14 @@ impl GroupService {
                 .execute(t)
                 .await?;
         }
+
+        // The server state carries member ids but no per-member keys, and a
+        // member announces its own key only once, when it first learns the
+        // group exists -- so nobody announces themselves to a member who joined
+        // later. Asking here is what closes that gap for both sides: whoever
+        // refreshes first discovers the other with an empty key and requests it.
+        Self::queue_missing_group_public_key_requests(t, group_id).await?;
+
         Ok(())
     }
 }

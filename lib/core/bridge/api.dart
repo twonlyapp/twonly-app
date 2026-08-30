@@ -293,6 +293,22 @@ class RustApi {
         alreadyReceivedMessageIds: alreadyReceivedMessageIds,
       );
 
+  /// Acknowledges the pending contact-request notifications and returns the
+  /// native notification IDs to withdraw.
+  static Future<List<String>> clearContactRequestNotifications() => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiClearContactRequestNotifications();
+
+  /// Acknowledges every pending notification of a conversation the user just
+  /// opened and returns the native notification IDs to withdraw.
+  static Future<List<String>> clearConversationNotifications({
+    required String conversationId,
+  }) =>
+      RustLib.instance.api.crateBridgeApiRustApiClearConversationNotifications(
+        conversationId: conversationId,
+      );
+
   static Future<void> close() =>
       RustLib.instance.api.crateBridgeApiRustApiClose();
 
@@ -431,6 +447,12 @@ class RustApi {
 
   static Future<FrbPlanBalance> loadPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiLoadPlanBalance();
+
+  /// The number of pending notification events. iOS cannot derive its app
+  /// icon badge from the delivered alerts, so the running app pushes this
+  /// into `UNUserNotificationCenter` whenever the outbox changes.
+  static Future<PlatformInt64> notificationBadgeCount() =>
+      RustLib.instance.api.crateBridgeApiRustApiNotificationBadgeCount();
 
   static Future<void> notifyMessagesOpened({
     required PlatformInt64 contactId,

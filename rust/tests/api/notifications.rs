@@ -441,6 +441,34 @@ async fn test_notification_outbox_end_to_end() -> anyhow::Result<()> {
     }
 
     //
+    // The badge the running app pushes into iOS is the same number the native
+    // extension renders, and contact requests are cleared by looking at the
+    // request list rather than by opening a conversation.
+    //
+    {
+        let before = tester_b.notification_batch("en").await?;
+        assert_eq!(
+            tester_b.notification_badge_count().await?,
+            before.badge_count
+        );
+
+        let removed = tester_b.clear_contact_request_notifications().await?;
+        assert!(
+            !removed.is_empty(),
+            "the pending contact request must be reported for withdrawal"
+        );
+        assert_eq!(
+            tester_b.notification_badge_count().await?,
+            before.badge_count - removed.len() as i64,
+            "acknowledging contact requests must reduce the badge"
+        );
+        assert!(tester_b
+            .clear_contact_request_notifications()
+            .await?
+            .is_empty());
+    }
+
+    //
     // A blocked contact is still decrypted and committed, but must never
     // produce a notification.
     //

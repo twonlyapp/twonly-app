@@ -25,17 +25,20 @@ Future<bool> addHiddenContact({required PlatformInt64 contactId}) => RustLib
 Future<void> fetchGroupStatesForUnjoinedGroups() =>
     RustLib.instance.api.crateBridgeGroupsFetchGroupStatesForUnjoinedGroups();
 
-Future<void> fetchMissingGroupPublicKeys() =>
-    RustLib.instance.api.crateBridgeGroupsFetchMissingGroupPublicKeys();
+Future<void> fetchMissingGroupPublicKeys({
+  String? groupId,
+  required bool force,
+}) => RustLib.instance.api.crateBridgeGroupsFetchMissingGroupPublicKeys(
+  groupId: groupId,
+  force: force,
+);
 
 Future<bool> manageAdminState({
   required String groupId,
-  required List<int> groupPublicKey,
   required PlatformInt64 contactId,
   required bool remove,
 }) => RustLib.instance.api.crateBridgeGroupsManageAdminState(
   groupId: groupId,
-  groupPublicKey: groupPublicKey,
   contactId: contactId,
   remove: remove,
 );
@@ -66,11 +69,9 @@ Future<bool> addNewGroupMembers({
 
 Future<bool> removeMemberFromGroup({
   required String groupId,
-  required List<int> groupPublicKey,
   required PlatformInt64 contactId,
 }) => RustLib.instance.api.crateBridgeGroupsRemoveMemberFromGroup(
   groupId: groupId,
-  groupPublicKey: groupPublicKey,
   contactId: contactId,
 );
 

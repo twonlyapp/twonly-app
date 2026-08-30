@@ -29,19 +29,14 @@ pub async fn fetch_group_states_for_unjoined_groups() -> Result<()> {
         .await
 }
 
-pub async fn fetch_missing_group_public_keys() -> Result<()> {
+pub async fn fetch_missing_group_public_keys(group_id: Option<String>, force: bool) -> Result<()> {
     let ctx = crate::context::Context::get_static()?;
     GroupService::new(ctx)
-        .fetch_missing_group_public_keys()
+        .fetch_missing_group_public_keys(group_id, force)
         .await
 }
 
-pub async fn manage_admin_state(
-    group_id: String,
-    _group_public_key: Vec<u8>,
-    contact_id: i64,
-    remove: bool,
-) -> Result<bool> {
+pub async fn manage_admin_state(group_id: String, contact_id: i64, remove: bool) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
     GroupService::new(ctx)
         .manage_admin(group_id, contact_id, remove)
@@ -72,14 +67,10 @@ pub async fn add_new_group_members(group_id: String, member_ids: Vec<i64>) -> Re
         .await
 }
 
-pub async fn remove_member_from_group(
-    group_id: String,
-    group_public_key: Vec<u8>,
-    contact_id: i64,
-) -> Result<bool> {
+pub async fn remove_member_from_group(group_id: String, contact_id: i64) -> Result<bool> {
     let ctx = crate::context::Context::get_static()?;
     GroupService::new(ctx)
-        .remove_member(group_id, group_public_key, contact_id)
+        .remove_member(group_id, contact_id)
         .await
 }
 

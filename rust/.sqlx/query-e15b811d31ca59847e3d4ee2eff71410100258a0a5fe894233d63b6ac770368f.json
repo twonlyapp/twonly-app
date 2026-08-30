@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT group_id, contact_id \n            FROM group_members \n            WHERE group_public_key IS NULL \n              AND last_message >= CAST(strftime('%s','now','-2 days') AS INTEGER)\n            ",
+  "query": "\n            SELECT members.group_id, members.contact_id\n            FROM group_members AS members\n            JOIN groups ON groups.group_id = members.group_id\n            WHERE members.group_public_key IS NULL\n              AND (members.member_state IS NULL OR members.member_state != 'leftGroup')\n              AND groups.is_direct_chat = 0\n              AND groups.left_group = 0\n              AND (? IS NULL OR members.group_id = ?)\n            ",
   "describe": {
     "columns": [
       {
@@ -27,12 +27,12 @@
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 2
     },
     "nullable": [
       false,
       false
     ]
   },
-  "hash": "6d6a5fb10742309ab6e4242179ef86b64ac9f751f1c6d647d4ecfa5ecac5d332"
+  "hash": "e15b811d31ca59847e3d4ee2eff71410100258a0a5fe894233d63b6ac770368f"
 }

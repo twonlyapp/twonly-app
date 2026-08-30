@@ -81,12 +81,13 @@ import workmanager_apple
 }
 
 /// Withdraws only the native notifications whose message IDs Dart reports as
-/// opened. The notification service extension's final alert keeps APNs' request
-/// identifier, so both the identifier and our `notification_id` user-info field
-/// have to be considered.
+/// opened, and keeps the app icon badge in step with them. The notification
+/// service extension's final alert keeps APNs' request identifier, so both the
+/// identifier and our `notification_id` user-info field have to be considered.
 class NativeNotificationChannel {
   private static let channelName = "eu.twonly/notificationTap"
   private static let notificationIdsKey = "notification_ids"
+  private static let badgeCountKey = "badge_count"
 
   static func register(with registry: FlutterPluginRegistry) {
     guard let registrar = registry.registrar(forPlugin: "TwonlyNativeNotifications") else {
@@ -97,23 +98,67 @@ class NativeNotificationChannel {
       binaryMessenger: registrar.messenger()
     )
     channel.setMethodCallHandler { call, result in
-      guard call.method == "cancelNotifications" else {
+      switch call.method {
+      case "cancelNotifications":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let values = arguments[notificationIdsKey] as? [String]
+        else {
+          result(
+            FlutterError(
+              code: "invalid_notification_ids",
+              message: "notification_ids must be a list of strings",
+              details: nil
+            ))
+          return
+        }
+        removeNotifications(Set(values), completion: result)
+      case "setBadgeCount":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let count = arguments[badgeCountKey] as? Int
+        else {
+          result(
+            FlutterError(
+              code: "invalid_badge_count",
+              message: "badge_count must be an integer",
+              details: nil
+            ))
+          return
+        }
+        setBadgeCount(count, completion: result)
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      guard
-        let arguments = call.arguments as? [String: Any],
-        let values = arguments[notificationIdsKey] as? [String]
-      else {
-        result(
-          FlutterError(
-            code: "invalid_notification_ids",
-            message: "notification_ids must be a list of strings",
-            details: nil
-          ))
-        return
+    }
+  }
+
+  /// iOS only takes an app icon badge from a notification payload, so a badge
+  /// set by the notification service extension survives until the app itself
+  /// overwrites it. Dart pushes the pending event count here whenever the
+  /// notification outbox changes and on every resume.
+  private static func setBadgeCount(_ count: Int, completion: @escaping FlutterResult) {
+    let badge = max(0, count)
+    guard #available(iOS 16.0, *) else {
+      DispatchQueue.main.async {
+        UIApplication.shared.applicationIconBadgeNumber = badge
+        completion(nil)
       }
-      removeNotifications(Set(values), completion: result)
+      return
+    }
+    UNUserNotificationCenter.current().setBadgeCount(badge) { error in
+      DispatchQueue.main.async {
+        if let error {
+          completion(
+            FlutterError(
+              code: "badge_count_failed",
+              message: error.localizedDescription,
+              details: nil
+            ))
+        } else {
+          completion(nil)
+        }
+      }
     }
   }
 

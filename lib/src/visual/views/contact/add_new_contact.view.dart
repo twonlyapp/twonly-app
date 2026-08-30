@@ -15,6 +15,7 @@ import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/profile_qr_code.comp.dart';
@@ -55,6 +56,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
   @override
   void initState() {
     super.initState();
+    // Contact requests belong to no conversation, so this list is the only
+    // place they can be acknowledged and taken off the app badge.
+    unawaited(NativeNotificationService.clearContactRequests());
     _contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
       (update) {
         if (mounted) {

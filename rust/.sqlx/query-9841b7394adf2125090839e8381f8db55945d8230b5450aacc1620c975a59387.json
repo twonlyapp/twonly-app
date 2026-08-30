@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT notification_id FROM notification_outbox\n        WHERE kind IN ('contact_request', 'accept_request') AND cleared_at IS NULL\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "notification_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notification_outbox",
+            "name": "notification_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9841b7394adf2125090839e8381f8db55945d8230b5450aacc1620c975a59387"
+}

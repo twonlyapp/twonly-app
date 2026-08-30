@@ -389,22 +389,22 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         tracing::info!("Group chat deletion timer updated to 1 hour");
 
         // 6. Promote tester_b to admin
-        // tester_a needs tester_b's public key to promote them. We simulate a message from tester_b
-        // so that tester_a can request the missing public key.
+        // tester_a needs tester_b's public key to promote them. tester_b
+        // announces it when it learns of the group, so this asserts the
+        // announcement arrived rather than repairing the state by hand.
         {
             let db_a = tester_a.context.app_db.read().await.clone();
-            sqlx::query!(
-                "UPDATE group_members SET last_message = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ? AND contact_id = ?",
+            let public_key = sqlx::query_scalar!(
+                "SELECT group_public_key FROM group_members WHERE group_id = ? AND contact_id = ?",
                 group_id,
                 tester_b.user_id
             )
-            .execute(&db_a.pool)
+            .fetch_one(&db_a.pool)
             .await?;
-            group_service_a.fetch_missing_group_public_keys().await?;
-
-            // Wait for tester_b to respond with the group join containing the public key
-            // (We just wait a moment to let the messages exchange)
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            assert!(
+                public_key.is_some(),
+                "tester_a should have tester_b's group public key without asking for it"
+            );
         }
 
         group_service_a
@@ -453,7 +453,7 @@ async fn test_connect_to_dev_server() -> anyhow::Result<()> {
         // Note: tester_c is not an admin, so their public key is not needed to remove them.
         // We pass an empty vec![] instead of waiting for a key exchange.
         group_service_a
-            .remove_member(group_id.clone(), vec![], tester_c.user_id)
+            .remove_member(group_id.clone(), tester_c.user_id)
             .await?;
 
         // tester_b should see tester_c removed

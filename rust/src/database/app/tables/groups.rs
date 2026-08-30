@@ -472,24 +472,64 @@ pub struct MissingGroupPublicKeyRow {
     pub contact_id: i64,
 }
 
+/// Lists the members whose group public key is still unknown.
+///
+/// Direct chats are excluded: they never carry a group identity, so the peer
+/// has no key to resend and would answer every request with an error. Left
+/// groups and members who left are excluded for the same reason -- their key
+/// is of no use any more.
 #[derive(bon::Builder)]
-pub struct GetMissingGroupPublicKeys {}
+pub struct GetMissingGroupPublicKeys {
+    group_id: Option<String>,
+}
 
 impl GetMissingGroupPublicKeys {
     pub async fn fetch_all(
         self,
         pool: &sqlx::Pool<Sqlite>,
     ) -> Result<Vec<MissingGroupPublicKeyRow>> {
+        let group_id = self.group_id.as_deref();
         let rows = sqlx::query_as!(
             MissingGroupPublicKeyRow,
             r#"
-            SELECT group_id, contact_id 
-            FROM group_members 
-            WHERE group_public_key IS NULL 
-              AND last_message >= CAST(strftime('%s','now','-2 days') AS INTEGER)
-            "#
+            SELECT members.group_id, members.contact_id
+            FROM group_members AS members
+            JOIN groups ON groups.group_id = members.group_id
+            WHERE members.group_public_key IS NULL
+              AND (members.member_state IS NULL OR members.member_state != 'leftGroup')
+              AND groups.is_direct_chat = 0
+              AND groups.left_group = 0
+              AND (? IS NULL OR members.group_id = ?)
+            "#,
+            group_id,
+            group_id,
         )
         .fetch_all(pool)
+        .await?;
+        Ok(rows)
+    }
+
+    pub async fn fetch_all_in_transaction(
+        self,
+        tr: &mut Transaction<'_, Sqlite>,
+    ) -> Result<Vec<MissingGroupPublicKeyRow>> {
+        let group_id = self.group_id.as_deref();
+        let rows = sqlx::query_as!(
+            MissingGroupPublicKeyRow,
+            r#"
+            SELECT members.group_id, members.contact_id
+            FROM group_members AS members
+            JOIN groups ON groups.group_id = members.group_id
+            WHERE members.group_public_key IS NULL
+              AND (members.member_state IS NULL OR members.member_state != 'leftGroup')
+              AND groups.is_direct_chat = 0
+              AND groups.left_group = 0
+              AND (? IS NULL OR members.group_id = ?)
+            "#,
+            group_id,
+            group_id,
+        )
+        .fetch_all(&mut **tr)
         .await?;
         Ok(rows)
     }

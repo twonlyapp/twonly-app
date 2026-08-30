@@ -667,6 +667,26 @@ impl RustApi {
             .await
     }
 
+    /// The number of pending notification events. iOS cannot derive its app
+    /// icon badge from the delivered alerts, so the running app pushes this
+    /// into `UNUserNotificationCenter` whenever the outbox changes.
+    pub async fn notification_badge_count() -> Result<i64> {
+        crate::services::notifications::badge_count(Context::get_static()?).await
+    }
+
+    /// Acknowledges every pending notification of a conversation the user just
+    /// opened and returns the native notification IDs to withdraw.
+    pub async fn clear_conversation_notifications(conversation_id: String) -> Result<Vec<String>> {
+        crate::services::notifications::clear_conversation(Context::get_static()?, &conversation_id)
+            .await
+    }
+
+    /// Acknowledges the pending contact-request notifications and returns the
+    /// native notification IDs to withdraw.
+    pub async fn clear_contact_request_notifications() -> Result<Vec<String>> {
+        crate::services::notifications::clear_contact_requests(Context::get_static()?).await
+    }
+
     pub async fn send_contact_profile(contact_id: i64) -> Result<()> {
         let ctx = Context::get_static()?;
         ContactService::new(ctx).send_profile(contact_id).await

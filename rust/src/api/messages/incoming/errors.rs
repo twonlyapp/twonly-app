@@ -46,14 +46,19 @@ pub(crate) async fn handle_error_message(
         }
         Type::GroupNotFoundOrNotAMember => {
             if let Some(group_id) = group_id {
-                GroupService::new(ctx)
-                    .handle_membership_error(
-                        t,
-                        from_user_id,
-                        group_id.to_owned(),
-                        error.related_receipt_id,
-                    )
-                    .await?;
+                // The repair refreshes the group from the server and owns its
+                // own transaction, so it has to run once this one commits.
+                let ctx = ctx.clone();
+                let group_id = group_id.to_owned();
+                let related_receipt_id = error.related_receipt_id;
+                tokio::spawn(async move {
+                    if let Err(error) = GroupService::new(&ctx)
+                        .handle_membership_error(from_user_id, group_id, related_receipt_id)
+                        .await
+                    {
+                        tracing::warn!("group membership repair failed: {error}");
+                    }
+                });
             }
         }
         Type::SessionOutOfSync | Type::UnknownMessageType => {}

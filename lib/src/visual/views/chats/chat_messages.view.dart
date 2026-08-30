@@ -118,7 +118,21 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     textFieldFocus = FocusNode();
     WidgetsBinding.instance.addObserver(this);
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
+    // Opening a conversation acknowledges everything it has pending, including
+    // the events that survive `notifyMessagesOpened` such as reactions and
+    // media status updates. Without this they keep inflating the app badge.
+    unawaited(NativeNotificationService.clearConversation(widget.groupId));
     initStreams();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state != AppLifecycleState.resumed) return;
+    if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    // Notifications that arrived while this chat sat in the background are
+    // acknowledged as soon as the user looks at it again.
+    unawaited(NativeNotificationService.clearConversation(widget.groupId));
   }
 
   @override

@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT signal_version FROM contacts WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "signal_version",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "signal_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5164aba96e6ee8f761644482263b30e96adf6a2704e98310de21fc832f7a187f"
+}

@@ -38,7 +38,6 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await rust_groups.manageAdminState(
         groupId: group.groupId,
-        groupPublicKey: member.groupPublicKey!,
         contactId: contact.userId,
         remove: false,
       )) {
@@ -59,7 +58,6 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await rust_groups.manageAdminState(
         groupId: group.groupId,
-        groupPublicKey: member.groupPublicKey!,
         contactId: contact.userId,
         remove: true,
       )) {
@@ -79,7 +77,6 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await rust_groups.removeMemberFromGroup(
         groupId: group.groupId,
-        groupPublicKey: member.groupPublicKey!,
         contactId: contact.userId,
       )) {
         if (context.mounted) {
@@ -149,7 +146,7 @@ class GroupMemberContextMenu extends StatelessWidget {
           ),
         if (member.groupPublicKey != null &&
             group.isGroupAdmin &&
-            member.memberState == MemberState.normal)
+            (member.memberState ?? MemberState.normal) == MemberState.normal)
           ContextMenuItem(
             title: context.lang.makeAdmin,
             onTap: () => _makeContactAdmin(navigator.context),
@@ -163,7 +160,7 @@ class GroupMemberContextMenu extends StatelessWidget {
             onTap: () => _removeContactAsAdmin(navigator.context),
             icon: FontAwesomeIcons.key,
           ),
-        if (group.isGroupAdmin && member.groupPublicKey != null)
+        if (group.isGroupAdmin)
           ContextMenuItem(
             title: context.lang.removeFromGroup,
             onTap: () => _removeContactFromGroup(navigator.context),

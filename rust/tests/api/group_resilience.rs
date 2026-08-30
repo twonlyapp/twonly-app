@@ -173,18 +173,11 @@ async fn test_admin_and_non_admin_leave_group() -> anyhow::Result<()> {
         .wait_for_group_exists(&group_id, group_name)
         .await?;
 
-    // Fetch missing public key for tester_b
+    // Ask for anything the announcements did not deliver. Forced, so the
+    // per-member request interval cannot skip it.
     {
-        let db_a = tester_a.context.app_db.read().await.clone();
-        sqlx::query!(
-            "UPDATE group_members SET last_message = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ? AND contact_id = ?",
-            group_id,
-            tester_b.user_id
-        )
-        .execute(&db_a.pool)
-        .await?;
         GroupService::new(&tester_a.context)
-            .fetch_missing_group_public_keys()
+            .fetch_missing_group_public_keys(Some(group_id.clone()), true)
             .await?;
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
     }

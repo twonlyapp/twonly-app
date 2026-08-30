@@ -91,9 +91,7 @@ pub(crate) async fn handle_group_create(
     .execute(&mut **t)
     .await?;
 
-    GroupService::new(ctx)
-        .refresh_group_state(t, group_id.to_owned(), true)
-        .await;
+    GroupService::spawn_state_refresh_and_announce(ctx, group_id.to_owned());
 
     Ok(())
 }
@@ -175,9 +173,7 @@ pub(crate) async fn handle_group_update(
     let is_direct = Group::is_direct_chat(t, group_id).await?;
 
     if !is_direct {
-        GroupService::new(ctx)
-            .refresh_group_state(t, group_id.to_owned(), false)
-            .await;
+        GroupService::spawn_state_refresh(ctx, Some(group_id.to_owned()));
     }
 
     if update.group_action_type == "updatedGroupName" {

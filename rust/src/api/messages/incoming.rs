@@ -203,6 +203,65 @@ pub(crate) async fn handle_request_new_pqc_prekeys(
     ))
 }
 
+/// Rebuilds a v2 Signal session for a peer that still speaks the legacy
+/// protocol, so the decryption error queued for the message can be answered
+/// with a session the peer can upgrade to.
+///
+/// Runs before the inbound transaction opens: it awaits a server round-trip and
+/// `establish_signal_session` writes through the pool, and the app database
+/// allows a single connection, so doing this under an open transaction would
+/// deadlock until the acquire timeout.
+async fn upgrade_legacy_session_to_v2(
+    ctx: &Arc<Context>,
+    database: &Arc<crate::database::app::AppDatabase>,
+    from_user_id: i64,
+) -> Result<()> {
+    tracing::info!("Received legacy signal message; rejecting and upgrading session to v2");
+
+    let has_v2_session = {
+        let rust_database = ctx.rust_db.read().await.clone();
+        sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
+            from_user_id.to_string(),
+        )
+        .fetch_one(&rust_database.pool)
+        .await?
+            != 0
+    };
+
+    let is_v2_contact = sqlx::query_scalar!(
+        "SELECT signal_version FROM contacts WHERE user_id = ?",
+        from_user_id,
+    )
+    .fetch_optional(&database.pool)
+    .await?
+    .is_some_and(|version| version == "v2");
+
+    if has_v2_session && is_v2_contact {
+        return Ok(());
+    }
+
+    if let Err(error) = ContactService::new(ctx)
+        .establish_signal_session(from_user_id, None)
+        .await
+    {
+        tracing::warn!(
+            from_user_id,
+            "failed to establish v2 signal session from server: {error}"
+        );
+    }
+
+    sqlx::query!(
+        "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ?",
+        from_user_id,
+    )
+    .execute(&database.pool)
+    .await?;
+    database.notify_committed(["contacts"]);
+
+    Ok(())
+}
+
 #[tracing::instrument(
     skip_all,
     fields(
@@ -242,6 +301,13 @@ pub(crate) async fn handle_decoded_server_message(
 
     let database = ctx.app_db.read().await.clone();
 
+    // Upgrading a legacy peer to a v2 session needs a server round-trip and
+    // writes through the pool itself, so it has to finish before the
+    // transaction below claims the single app-database connection.
+    if matches!(message_type, Type::Ciphertext | Type::PrekeyBundle) {
+        upgrade_legacy_session_to_v2(ctx, &database, from_user_id).await?;
+    }
+
     let mut t = database.pool.begin().await?;
 
     let claimed = Receipt::claim_received(&mut t, &message.receipt_id).await?;
@@ -277,42 +343,6 @@ pub(crate) async fn handle_decoded_server_message(
             handle_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
         }
         Type::Ciphertext | Type::PrekeyBundle => {
-            tracing::info!("Received legacy signal message; rejecting and upgrading session to v2");
-
-            let has_v2_session = {
-                let rust_database = ctx.rust_db.read().await.clone();
-                sqlx::query_scalar!(
-                    "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
-                    from_user_id.to_string(),
-                )
-                .fetch_one(&rust_database.pool)
-                .await?
-                    != 0
-            };
-
-            let is_v2_contact = {
-                let contact = Contact::get_contact_by_id(&mut t, from_user_id).await?;
-                contact.as_ref().is_some_and(|c| c.signal_version == "v2")
-            };
-
-            if !has_v2_session || !is_v2_contact {
-                if let Err(error) = ContactService::new(ctx)
-                    .establish_signal_session(from_user_id, None)
-                    .await
-                {
-                    tracing::warn!(
-                        from_user_id,
-                        "failed to establish v2 signal session from server: {error}"
-                    );
-                }
-                sqlx::query!(
-                    "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ?",
-                    from_user_id,
-                )
-                .execute(&mut *t)
-                .await?;
-            }
-
             queue_decryption_error(&mut t, from_user_id, &message.receipt_id, 0).await?;
             sends_error_response = true;
         }
