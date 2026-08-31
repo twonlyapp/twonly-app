@@ -10,14 +10,15 @@ import 'package:twonly/src/utils/log.dart';
 /// through a platform channel instead of the Firebase Messaging plugin, which
 /// no longer owns background delivery.
 ///
-/// Only the opaque conversation identifier crosses the channel; the Flutter
-/// route is built here so the native layer stays free of routing knowledge.
+/// Only opaque notification metadata crosses the channel; Flutter owns the
+/// routing decision.
 class NativeNotificationService {
   static const MethodChannel _channel = MethodChannel(
     'eu.twonly/notificationTap',
   );
 
   static const String _conversationIdKey = 'conversation_id';
+  static const String _notificationKindKey = 'notification_kind';
   static const String _notificationIdsKey = 'notification_ids';
   static const String _badgeCountKey = 'badge_count';
 
@@ -25,25 +26,28 @@ class NativeNotificationService {
   /// delivered or cleared.
   static const String _outboxTable = 'notification_outbox';
 
-  static final StreamController<String?> _taps =
-      StreamController<String?>.broadcast();
+  static final StreamController<NativeNotificationTap> _taps =
+      StreamController<NativeNotificationTap>.broadcast();
 
   /// Lives for the whole process: the badge has to follow the outbox for as
   /// long as the app runs.
   // ignore: cancel_subscriptions
   static StreamSubscription<List<String>>? _outboxChanges;
 
-  /// Emits the conversation id of every notification tapped while the app is
-  /// running. A `null` value means the notification had no specific
-  /// conversation and should only open the chats tab.
-  static Stream<String?> get taps => _taps.stream;
+  /// Emits metadata for every native notification tapped while the app runs.
+  static Stream<NativeNotificationTap> get taps => _taps.stream;
+
+  /// Text messages (including quoted replies) open their conversation. Media
+  /// and every other notification kind stay on the chat overview.
+  static bool opensConversation(String? kind) =>
+      kind == 'text' || kind == 'response';
 
   static void init() {
     _startBadgeSync();
     if (!Platform.isAndroid) return;
     _channel.setMethodCallHandler((call) async {
       if (call.method != 'onNotificationTapped') return;
-      _taps.add(_conversationIdOf(call.arguments));
+      _taps.add(_tapOf(call.arguments));
     });
   }
 
@@ -112,14 +116,14 @@ class NativeNotificationService {
 
   /// Returns the tap that launched the app, or `null` when the app was not
   /// started from a native notification. The result is consumed once.
-  static Future<({String? conversationId})?> consumeInitialTap() async {
+  static Future<NativeNotificationTap?> consumeInitialTap() async {
     if (!Platform.isAndroid) return null;
     try {
       final result = await _channel.invokeMapMethod<String, dynamic>(
         'consumeInitialNotification',
       );
       if (result == null) return null;
-      return (conversationId: _conversationIdOf(result));
+      return _tapOf(result);
     } catch (e) {
       Log.error('Could not read the initial native notification: $e');
       return null;
@@ -150,4 +154,18 @@ class NativeNotificationService {
     if (conversationId is! String || conversationId.isEmpty) return null;
     return conversationId;
   }
+
+  static String? _notificationKindOf(Object? arguments) {
+    if (arguments is! Map) return null;
+    final notificationKind = arguments[_notificationKindKey];
+    if (notificationKind is! String || notificationKind.isEmpty) return null;
+    return notificationKind;
+  }
+
+  static NativeNotificationTap _tapOf(Object? arguments) => (
+    conversationId: _conversationIdOf(arguments),
+    kind: _notificationKindOf(arguments),
+  );
 }
+
+typedef NativeNotificationTap = ({String? conversationId, String? kind});

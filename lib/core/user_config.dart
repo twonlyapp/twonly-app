@@ -163,6 +163,11 @@ class UserConfig {
   /// notification worker. Recorded in Rust because Flutter is no longer
   /// started for background delivery on either platform.
   PlatformInt64? lastFcmWakeupAt;
+
+  /// Unix seconds of the last server message that was committed locally.
+  /// Kept next to the FCM wake-up timestamp so notification health can be
+  /// evaluated without a second secure-storage implementation in Dart.
+  PlatformInt64? lastServerMessageAt;
   String? currentSetupPage;
   bool skipSetupPages;
   bool hasZoomed;
@@ -224,6 +229,7 @@ class UserConfig {
     this.passwordLessRecovery,
     this.fcmToken,
     this.lastFcmWakeupAt,
+    this.lastServerMessageAt,
     this.currentSetupPage,
     required this.skipSetupPages,
     required this.hasZoomed,
@@ -287,6 +293,7 @@ class UserConfig {
       passwordLessRecovery.hashCode ^
       fcmToken.hashCode ^
       lastFcmWakeupAt.hashCode ^
+      lastServerMessageAt.hashCode ^
       currentSetupPage.hashCode ^
       skipSetupPages.hashCode ^
       hasZoomed.hashCode;
@@ -359,6 +366,7 @@ class UserConfig {
           passwordLessRecovery == other.passwordLessRecovery &&
           fcmToken == other.fcmToken &&
           lastFcmWakeupAt == other.lastFcmWakeupAt &&
+          lastServerMessageAt == other.lastServerMessageAt &&
           currentSetupPage == other.currentSetupPage &&
           skipSetupPages == other.skipSetupPages &&
           hasZoomed == other.hasZoomed;

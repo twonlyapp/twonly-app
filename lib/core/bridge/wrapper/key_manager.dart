@@ -50,8 +50,8 @@ class RustKeyManager {
         registrationId: registrationId,
       );
 
-  static Future<void> removeKeyManager() => RustLib.instance.api
-      .crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager();
+  static Future<void> removeLocalCredentials() => RustLib.instance.api
+      .crateBridgeWrapperKeyManagerRustKeyManagerRemoveLocalCredentials();
 
   /// Serialize the key_manager. Needed for the passwordless_recovery feature.
   static Future<Uint8List> serialize() => RustLib.instance.api

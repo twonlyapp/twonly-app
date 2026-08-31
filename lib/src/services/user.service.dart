@@ -5,7 +5,6 @@ import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/core/user_config.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/secure_storage.dart';
 
 class UserService {
   late UserConfig currentUser;
@@ -20,39 +19,6 @@ class UserService {
     if (config == null) return false;
     _applyRustUserConfig(config, notify: false);
     return isUserCreated;
-  }
-
-  static Future<UserConfig?> getUser() async {
-    try {
-      final config = await UserConfigApi.load();
-      if (config != null) return config;
-
-      // One-time migration from the pre-user.json secure-storage format.
-      final userDataJson = await SecureStorage.instance.read(
-        key: 'userData',
-      );
-
-      if (userDataJson != null) {
-        final migrated = await UserConfigApi.importJson(json: userDataJson);
-        await _removeLegacySecureStorageUser();
-        return migrated;
-      }
-
-      return null;
-    } catch (e) {
-      Log.error('could not load user: $e');
-      rethrow;
-    }
-  }
-
-  static Future<void> _removeLegacySecureStorageUser() async {
-    try {
-      await SecureStorage.instance.delete(key: 'userData');
-    } catch (e) {
-      Log.error('Could not delete user data from SecureStorage: $e');
-    }
-
-    Log.info('Migrated user data from SecureStorage to KeyValueStore');
   }
 
   static Future<void> update(

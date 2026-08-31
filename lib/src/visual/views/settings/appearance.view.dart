@@ -190,21 +190,23 @@ class _AppearanceViewState extends State<AppearanceView> {
     );
   }
 
-  Future<void> toggleShowNewsIcon() async {
+  Future<void> updateHideNewsIcon(bool hideNewsIcon) async {
     await UserService.update((u) {
-      u.showNewsShortcut = !u.showNewsShortcut;
+      u.showNewsShortcut = !hideNewsIcon;
     });
   }
 
-  Future<void> toggleStartWithCameraOpen() async {
+  Future<void> updateStartWithCameraOpen(bool startWithCameraOpen) async {
     await UserService.update((u) {
-      u.startWithCameraOpen = !u.startWithCameraOpen;
+      u.startWithCameraOpen = startWithCameraOpen;
     });
   }
 
-  Future<void> toggleShowImagePreviewWhenSending() async {
+  Future<void> updateShowImagePreviewWhenSending(
+    bool showImagePreviewWhenSending,
+  ) async {
     await UserService.update((u) {
-      u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
+      u.showShowImagePreviewWhenSending = showImagePreviewWhenSending;
     });
   }
 
@@ -231,6 +233,12 @@ class _AppearanceViewState extends State<AppearanceView> {
       body: StreamBuilder<void>(
         stream: userService.onUserUpdated,
         builder: (context, snapshot) {
+          final hideNewsIcon = !userService.currentUser.showNewsShortcut;
+          final startWithCameraOpen =
+              userService.currentUser.startWithCameraOpen;
+          final showImagePreviewWhenSending =
+              userService.currentUser.showShowImagePreviewWhenSending;
+
           return ListView(
             children: [
               ListTile(
@@ -260,27 +268,34 @@ class _AppearanceViewState extends State<AppearanceView> {
               ),
               ListTile(
                 title: Text(context.lang.hideNewsIcon),
-                onTap: toggleShowNewsIcon,
+                onTap: () async {
+                  await updateHideNewsIcon(!hideNewsIcon);
+                },
                 trailing: Switch.adaptive(
-                  value: !userService.currentUser.showNewsShortcut,
-                  onChanged: (a) => toggleShowNewsIcon(),
+                  value: hideNewsIcon,
+                  onChanged: updateHideNewsIcon,
                 ),
               ),
               ListTile(
                 title: Text(context.lang.startWithCameraOpen),
-                onTap: toggleStartWithCameraOpen,
+                onTap: () async {
+                  await updateStartWithCameraOpen(!startWithCameraOpen);
+                },
                 trailing: Switch.adaptive(
-                  value: userService.currentUser.startWithCameraOpen,
-                  onChanged: (a) => toggleStartWithCameraOpen(),
+                  value: startWithCameraOpen,
+                  onChanged: updateStartWithCameraOpen,
                 ),
               ),
               ListTile(
                 title: Text(context.lang.showImagePreviewWhenSending),
-                onTap: toggleShowImagePreviewWhenSending,
+                onTap: () async {
+                  await updateShowImagePreviewWhenSending(
+                    !showImagePreviewWhenSending,
+                  );
+                },
                 trailing: Switch.adaptive(
-                  value:
-                      userService.currentUser.showShowImagePreviewWhenSending,
-                  onChanged: (a) => toggleShowImagePreviewWhenSending(),
+                  value: showImagePreviewWhenSending,
+                  onChanged: updateShowImagePreviewWhenSending,
                 ),
               ),
             ],

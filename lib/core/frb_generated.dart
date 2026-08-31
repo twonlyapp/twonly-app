@@ -86,7 +86,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 174490644;
+  int get rustContentHash => -1370816897;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -579,7 +579,8 @@ abstract class RustLibApi extends BaseApi {
     required PlatformInt64 registrationId,
   });
 
-  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager();
+  Future<void>
+  crateBridgeWrapperKeyManagerRustKeyManagerRemoveLocalCredentials();
 
   Future<Uint8List> crateBridgeWrapperKeyManagerRustKeyManagerSerialize();
 
@@ -4961,7 +4962,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManager() {
+  Future<void>
+  crateBridgeWrapperKeyManagerRustKeyManagerRemoveLocalCredentials() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -4978,7 +4980,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta:
-            kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta,
+            kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveLocalCredentialsConstMeta,
         argValues: [],
         apiImpl: this,
       ),
@@ -4986,9 +4988,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveKeyManagerConstMeta =>
+  get kCrateBridgeWrapperKeyManagerRustKeyManagerRemoveLocalCredentialsConstMeta =>
       const TaskConstMeta(
-        debugName: "rust_key_manager_remove_key_manager",
+        debugName: "rust_key_manager_remove_local_credentials",
         argNames: [],
       );
 
@@ -6642,8 +6644,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UserConfig dco_decode_user_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 59)
-      throw Exception('unexpected arr length: expect 59 but see ${arr.length}');
+    if (arr.length != 60)
+      throw Exception('unexpected arr length: expect 60 but see ${arr.length}');
     return UserConfig(
       userId: dco_decode_i_64(arr[0]),
       username: dco_decode_String(arr[1]),
@@ -6706,9 +6708,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           dco_decode_opt_box_autoadd_passwordless_recovery_config(arr[53]),
       fcmToken: dco_decode_opt_String(arr[54]),
       lastFcmWakeupAt: dco_decode_opt_box_autoadd_i_64(arr[55]),
-      currentSetupPage: dco_decode_opt_String(arr[56]),
-      skipSetupPages: dco_decode_bool(arr[57]),
-      hasZoomed: dco_decode_bool(arr[58]),
+      lastServerMessageAt: dco_decode_opt_box_autoadd_i_64(arr[56]),
+      currentSetupPage: dco_decode_opt_String(arr[57]),
+      skipSetupPages: dco_decode_bool(arr[58]),
+      hasZoomed: dco_decode_bool(arr[59]),
     );
   }
 
@@ -7827,6 +7830,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_decode_opt_box_autoadd_passwordless_recovery_config(deserializer);
     var var_fcmToken = sse_decode_opt_String(deserializer);
     var var_lastFcmWakeupAt = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_lastServerMessageAt = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_currentSetupPage = sse_decode_opt_String(deserializer);
     var var_skipSetupPages = sse_decode_bool(deserializer);
     var var_hasZoomed = sse_decode_bool(deserializer);
@@ -7890,6 +7894,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       passwordLessRecovery: var_passwordLessRecovery,
       fcmToken: var_fcmToken,
       lastFcmWakeupAt: var_lastFcmWakeupAt,
+      lastServerMessageAt: var_lastServerMessageAt,
       currentSetupPage: var_currentSetupPage,
       skipSetupPages: var_skipSetupPages,
       hasZoomed: var_hasZoomed,
@@ -8977,6 +8982,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
     sse_encode_opt_String(self.fcmToken, serializer);
     sse_encode_opt_box_autoadd_i_64(self.lastFcmWakeupAt, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.lastServerMessageAt, serializer);
     sse_encode_opt_String(self.currentSetupPage, serializer);
     sse_encode_bool(self.skipSetupPages, serializer);
     sse_encode_bool(self.hasZoomed, serializer);

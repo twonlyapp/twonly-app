@@ -279,26 +279,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Systemeinstellungen öffnen, um Push-Benachrichtigungen zu erlauben.';
 
   @override
-  String get settingsNotifyTroubleshooting => 'Fehlersuche';
-
-  @override
-  String get settingsNotifyTroubleshootingDesc =>
-      'Hier klicken, wenn Probleme beim Empfang von Push-Benachrichtigungen auftreten.';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblem =>
-      'Kein Problem festgestellt';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Um eine Testbenachrichtigung zu erhalten, klicke auf OK. Falls du die Testbenachrichtigung nicht erhältst, klicke bitte auf den neuen Menüpunkt, der nach dem Klicken auf „OK“ angezeigt wird.';
-
-  @override
-  String get settingsNotifyResetTitle => 'Keine Testbenachrichtigung erhalten?';
+  String get settingsNotifyResetTitle => 'Benachrichtigungstoken zurücksetzen';
 
   @override
   String get settingsNotifyResetTitleSubtitle =>
-      'Falls du keine Testbenachrichtigungen erhalten hast, klicke hier, um deine Benachrichtigungstoken zurückzusetzen.';
+      'Setze deine Benachrichtigungstoken zurück, wenn du Probleme beim Empfang von Push-Benachrichtigungen hast.';
 
   @override
   String get settingsNotifyResetTitleReset =>

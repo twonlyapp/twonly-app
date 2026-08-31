@@ -327,6 +327,12 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub last_fcm_wakeup_at: Option<i64>,
+    /// Unix seconds of the last server message that was committed locally.
+    /// Kept next to the FCM wake-up timestamp so notification health can be
+    /// evaluated without a second secure-storage implementation in Dart.
+    #[serde(default)]
+    #[frb(non_final)]
+    pub last_server_message_at: Option<i64>,
     #[frb(non_final)]
     pub current_setup_page: Option<String>,
     #[serde(default)]
@@ -460,6 +466,7 @@ mod tests {
 
         assert!(config.can_use_login_token_for_auth);
         assert!(!config.is_user_discovery_enabled);
+        assert_eq!(config.last_server_message_at, None);
     }
 
     #[test]

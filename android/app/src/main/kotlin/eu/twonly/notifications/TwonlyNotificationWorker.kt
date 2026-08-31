@@ -10,8 +10,6 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.Person
-import androidx.core.graphics.drawable.IconCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.MainActivity
@@ -73,15 +71,6 @@ class TwonlyNotificationWorker(
         addition: NativeNotificationAddition,
     ): Boolean {
         val avatarBitmap = addition.avatarPath?.let(BitmapFactory::decodeFile)
-        val avatar = avatarBitmap?.let(IconCompat::createWithBitmap)
-        val sender = Person.Builder()
-            .setName(addition.senderName)
-            .setKey(addition.senderId.toString())
-            .setIcon(avatar)
-            .build()
-        val user = Person.Builder().setName(applicationLabel()).setKey("twonly-user").build()
-        val style = NotificationCompat.MessagingStyle(user)
-            .addMessage(addition.body, addition.createdAt * 1_000, sender)
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             // Only opaque identifiers cross into the activity; Dart owns routing.
@@ -89,6 +78,7 @@ class TwonlyNotificationWorker(
                 NotificationTapChannel.EXTRA_CONVERSATION_ID,
                 addition.conversationId.orEmpty(),
             )
+            putExtra(NotificationTapChannel.EXTRA_NOTIFICATION_KIND, addition.kind)
         }
         val pendingIntent = PendingIntent.getActivity(
             applicationContext,
@@ -100,16 +90,11 @@ class TwonlyNotificationWorker(
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(addition.title)
             .setContentText(addition.body)
-            .setStyle(style)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setGroup(addition.conversationId ?: addition.senderId.toString())
-            // Android only draws the MessagingStyle person icon for conversation
-            // notifications, which require a long-lived shortcut. Without one the
-            // standard template is used, where the large icon is the only place
-            // the sender's avatar can appear.
             .apply { avatarBitmap?.let(::setLargeIcon) }
             .build()
         return try {

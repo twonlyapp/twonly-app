@@ -168,6 +168,7 @@ final class NotificationService: UNNotificationServiceExtension {
     if let conversationId = addition.conversationId {
       userInfo["conversation_id"] = conversationId
     }
+    userInfo["notification_kind"] = addition.kind
     userInfo["notification_id"] = addition.notificationId
     mutable.userInfo = userInfo
 

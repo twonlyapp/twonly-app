@@ -608,40 +608,16 @@ abstract class AppLocalizations {
   /// **'Open system settings to allow push notifications.'**
   String get settingsNotifyPermissionDesc;
 
-  /// No description provided for @settingsNotifyTroubleshooting.
-  ///
-  /// In en, this message translates to:
-  /// **'Troubleshooting'**
-  String get settingsNotifyTroubleshooting;
-
-  /// No description provided for @settingsNotifyTroubleshootingDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Click here if you have problems receiving push notifications.'**
-  String get settingsNotifyTroubleshootingDesc;
-
-  /// No description provided for @settingsNotifyTroubleshootingNoProblem.
-  ///
-  /// In en, this message translates to:
-  /// **'No problem detected'**
-  String get settingsNotifyTroubleshootingNoProblem;
-
-  /// No description provided for @settingsNotifyTroubleshootingNoProblemDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.'**
-  String get settingsNotifyTroubleshootingNoProblemDesc;
-
   /// No description provided for @settingsNotifyResetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Didn\'t receive a test notification?'**
+  /// **'Reset notification tokens'**
   String get settingsNotifyResetTitle;
 
   /// No description provided for @settingsNotifyResetTitleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'If you haven\'t received any test notifications, click here to reset your notification tokens.'**
+  /// **'Reset your notification tokens if you have problems receiving push notifications.'**
   String get settingsNotifyResetTitleSubtitle;
 
   /// No description provided for @settingsNotifyResetTitleReset.

@@ -2,12 +2,13 @@ package eu.twonly.media
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaCodecInfo
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.OverlaySettings
@@ -19,6 +20,7 @@ import androidx.media3.effect.OverlayEffect
 import androidx.media3.effect.Presentation
 import androidx.media3.effect.StaticOverlaySettings
 import androidx.media3.effect.TextureOverlay
+import androidx.media3.transformer.AudioEncoderSettings
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
 import androidx.media3.transformer.EditedMediaItem
@@ -57,20 +59,23 @@ object NativeVideoCodec {
     private const val MAX_FRAME_RATE = 30.0
 
     /**
-     * Bits per pixel per frame asked of the encoder. HEVC stays close to the
-     * source at roughly this rate; below it motion smears into blocks, and above
-     * it the extra bits go to detail a phone camera never recorded. The bitrate
-     * is derived from the output size and frame rate rather than fixed, so a
-     * clip that is downscaled hard is not given the same budget as one that is
-     * already 720p. Kept in sync with the same constants in the iOS renderer so
-     * the same clip looks the same whichever platform sent it.
+     * Bits per pixel per frame asked of the encoder. The previous 0.12 budget
+     * reproduced the deliberately generous bitrate of a real-time camera
+     * encode. Twonly is encoding an already captured clip and can use VBR plus
+     * frame reordering, so 0.08 retains the useful detail without spending bits
+     * on camera noise. The bitrate is derived from the output size and frame
+     * rate rather than fixed, so smaller clips do not inherit a 720p budget.
+     * Kept in sync with iOS so a clip has comparable size on either platform.
      */
-    private const val BITS_PER_PIXEL_PER_FRAME = 0.12
-    private const val MIN_BITRATE = 1_500_000
-    private const val MAX_BITRATE = 4_000_000
+    private const val BITS_PER_PIXEL_PER_FRAME = 0.08
+    private const val MIN_BITRATE = 600_000
+    private const val MAX_BITRATE = 2_500_000
     /** 720p30 at the rate above, used when the source cannot be probed. */
-    private const val DEFAULT_BITRATE = 3_300_000
+    private const val DEFAULT_BITRATE = 2_200_000
     private const val DEFAULT_FRAME_RATE = 30.0
+    private const val AUDIO_BITRATE = 96_000
+    private const val I_FRAME_INTERVAL_SECONDS = 2.0f
+    private const val MAX_B_FRAMES = 2
     private const val PROGRESS_INTERVAL_MS = 500L
     /** No send should hold a background worker hostage indefinitely. */
     private const val RENDER_TIMEOUT_MINUTES = 30L
@@ -121,7 +126,27 @@ object NativeVideoCodec {
                     .setEncoderFactory(
                         DefaultEncoderFactory.Builder(context)
                             .setRequestedVideoEncoderSettings(
-                                VideoEncoderSettings.Builder().setBitrate(bitrate).build(),
+                                VideoEncoderSettings.Builder()
+                                    .setBitrate(bitrate)
+                                    // Let quiet sections use fewer bits than the
+                                    // average instead of padding every second to
+                                    // the requested rate.
+                                    .setBitrateMode(
+                                        MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR,
+                                    )
+                                    // Two seconds keeps seeking responsive without
+                                    // paying the size penalty of an I-frame every
+                                    // second. B-frames improve HEVC efficiency when
+                                    // the device encoder supports them; fallback
+                                    // below drops unsupported settings safely.
+                                    .setiFrameIntervalSeconds(I_FRAME_INTERVAL_SECONDS)
+                                    .setMaxBFrames(MAX_B_FRAMES)
+                                    .build(),
+                            )
+                            .setRequestedAudioEncoderSettings(
+                                AudioEncoderSettings.Builder()
+                                    .setBitrate(AUDIO_BITRATE)
+                                    .build(),
                             )
                             // Falling back lets a device without an HEVC encoder
                             // still produce a file rather than failing the send.

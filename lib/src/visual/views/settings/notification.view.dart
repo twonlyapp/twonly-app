@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:twonly/locator.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -15,9 +12,7 @@ class NotificationView extends StatefulWidget {
 }
 
 class _NotificationViewState extends State<NotificationView> {
-  bool _isLoadingTroubleshooting = false;
   bool _isLoadingReset = false;
-  bool _troubleshootingDidRun = false;
   bool? _hasNotificationPermission;
 
   @override
@@ -35,39 +30,7 @@ class _NotificationViewState extends State<NotificationView> {
     }
   }
 
-  Future<void> _troubleshooting() async {
-    setState(() {
-      _isLoadingTroubleshooting = true;
-    });
-
-    await FcmNotificationService.initFCMAfterAuthenticated(force: true);
-
-    if (!mounted) return;
-
-    if (userService.currentUser.fcmToken == null) {
-      final platform = Platform.isAndroid ? "Google's" : "Apple's";
-      await showAlertDialog(
-        context,
-        'Problem detected',
-        'twonly is not able to register your app to $platform push server infrastructure. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.',
-      );
-    } else {
-      final run = await showAlertDialog(
-        context,
-        context.lang.settingsNotifyTroubleshootingNoProblem,
-        context.lang.settingsNotifyTroubleshootingNoProblemDesc,
-      );
-
-      if (run) {
-        _troubleshootingDidRun = true;
-      }
-    }
-    setState(() {
-      _isLoadingTroubleshooting = false;
-    });
-  }
-
-  Future<void> resetTokens() async {
+  Future<void> _resetTokens() async {
     setState(() {
       _isLoadingReset = true;
     });
@@ -97,21 +60,7 @@ class _NotificationViewState extends State<NotificationView> {
               subtitle: Text(context.lang.settingsNotifyPermissionDesc),
               onTap: openAppSettings,
             ),
-          ListTile(
-            title: Text(context.lang.settingsNotifyTroubleshooting),
-            subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
-            trailing: _isLoadingTroubleshooting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator.adaptive(
-                      strokeWidth: 2,
-                    ),
-                  )
-                : null,
-            onTap: _isLoadingTroubleshooting ? null : _troubleshooting,
-          ),
-          if (_troubleshootingDidRun)
+          if (_hasNotificationPermission == true)
             ListTile(
               title: Text(context.lang.settingsNotifyResetTitle),
               subtitle: Text(context.lang.settingsNotifyResetTitleSubtitle),
@@ -124,7 +73,7 @@ class _NotificationViewState extends State<NotificationView> {
                       ),
                     )
                   : null,
-              onTap: _isLoadingReset ? null : resetTokens,
+              onTap: _isLoadingReset ? null : _resetTokens,
             ),
         ],
       ),

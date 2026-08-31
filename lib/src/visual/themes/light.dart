@@ -9,7 +9,9 @@ ThemeData getLightTheme([Color primary = defaultPrimaryColor]) {
     colorScheme: ColorScheme.fromSeed(
       seedColor: primary,
       primary: primary,
+      surface: Colors.white,
     ),
+    scaffoldBackgroundColor: Colors.white,
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
     ),

@@ -50,7 +50,7 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
   StreamSubscription<int>? _homeViewPageIndexSub;
   StreamSubscription<NotificationResponse>? _selectNotificationSub;
-  StreamSubscription<String?>? _nativeNotificationSub;
+  StreamSubscription<NativeNotificationTap>? _nativeNotificationSub;
   StreamSubscription<(String, MediaType)>? _sharedMediaSub;
 
   static Uri? pendingSharedLink;
@@ -111,7 +111,10 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       message,
     ) {
       Log.info('Opened app from iOS/Remote push notification tap.');
-      streamHomeViewPageIndex.add(0);
+      _openNotification(
+        conversationId: _notificationDataValue(message, 'conversation_id'),
+        kind: _notificationDataValue(message, 'notification_kind'),
+      );
     });
 
     _nativeNotificationSub = NativeNotificationService.taps.listen(
@@ -199,19 +202,29 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
   }
 
-  void _openNativeNotification(String? conversationId) {
+  void _openNativeNotification(NativeNotificationTap tap) {
     Log.info('Opened app from a native push notification tap.');
-    if (conversationId != null) {
+    _openNotification(conversationId: tap.conversationId, kind: tap.kind);
+  }
+
+  void _openNotification({String? conversationId, String? kind}) {
+    if (conversationId != null &&
+        NativeNotificationService.opensConversation(kind)) {
       routerProvider.go(Routes.chatsMessages(conversationId));
     }
     streamHomeViewPageIndex.add(0);
+  }
+
+  String? _notificationDataValue(RemoteMessage message, String key) {
+    final value = message.data[key];
+    return value is String && value.isNotEmpty ? value : null;
   }
 
   Future<void> _initAsync() async {
     final initialNativeTap =
         await NativeNotificationService.consumeInitialTap();
     if (initialNativeTap != null) {
-      _openNativeNotification(initialNativeTap.conversationId);
+      _openNativeNotification(initialNativeTap);
     }
 
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin
@@ -231,7 +244,16 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             notificationAppLaunchDetails.didNotificationLaunchApp)) {
       if (initialRemoteMessage != null) {
         Log.info('App launched from iOS/Remote push notification tap.');
-        streamHomeViewPageIndex.add(0);
+        _openNotification(
+          conversationId: _notificationDataValue(
+            initialRemoteMessage,
+            'conversation_id',
+          ),
+          kind: _notificationDataValue(
+            initialRemoteMessage,
+            'notification_kind',
+          ),
+        );
       } else if (notificationAppLaunchDetails?.didNotificationLaunchApp ??
           false) {
         final payload =

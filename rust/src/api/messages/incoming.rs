@@ -249,9 +249,6 @@ pub(crate) async fn handle_decoded_server_message(
     message: proto::Message,
 ) -> Result<()> {
     tracing::Span::current().record("receipt_id", &message.receipt_id);
-    if let Ok(user) = ctx.user_id().await {
-        tracing::Span::current().record("user", user);
-    }
 
     if message.receipt_id.is_empty() {
         return Err(TwonlyError::Generic(
@@ -430,8 +427,14 @@ pub(crate) async fn handle_decoded_server_message(
     Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
 
     t.commit().await?;
-    ctx.mark_incoming_committed();
 
+    if let Err(error) = crate::user_config::UserConfig::update(ctx, |user| {
+        user.last_server_message_at = Some(crate::utils::current_time().timestamp());
+    }) {
+        tracing::warn!(%error, "could not record the last server-message timestamp");
+    }
+
+    ctx.mark_incoming_committed();
 
     let ctx = ctx.clone();
     tokio::spawn(async move {

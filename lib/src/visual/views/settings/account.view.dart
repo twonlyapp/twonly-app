@@ -65,7 +65,7 @@ class AccountView extends StatelessWidget {
                   );
                   return;
                 }
-                await deleteLocalUserData();
+                await deleteLocalUserData(removeCredentials: true);
                 await Restart.restartApp(
                   notificationTitle: 'Account successfully deleted',
                   notificationBody: 'Click here to open the app again',

@@ -276,25 +276,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open system settings to allow push notifications.';
 
   @override
-  String get settingsNotifyTroubleshooting => 'Troubleshooting';
-
-  @override
-  String get settingsNotifyTroubleshootingDesc =>
-      'Click here if you have problems receiving push notifications.';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblem => 'No problem detected';
-
-  @override
-  String get settingsNotifyTroubleshootingNoProblemDesc =>
-      'Press OK to receive a test notification. If you do not receive the test notification, please click on the new menu item that appears after you click “OK”.';
-
-  @override
-  String get settingsNotifyResetTitle => 'Didn\'t receive a test notification?';
+  String get settingsNotifyResetTitle => 'Reset notification tokens';
 
   @override
   String get settingsNotifyResetTitleSubtitle =>
-      'If you haven\'t received any test notifications, click here to reset your notification tokens.';
+      'Reset your notification tokens if you have problems receiving push notifications.';
 
   @override
   String get settingsNotifyResetTitleReset =>

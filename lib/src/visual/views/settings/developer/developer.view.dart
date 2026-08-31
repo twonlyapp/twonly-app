@@ -530,7 +530,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                     'If you do not have a backup, you have to register with a new account.',
                   );
                   if (ok) {
-                    await deleteLocalUserData();
+                    await deleteLocalUserData(removeCredentials: true);
                     await Restart.restartApp(
                       notificationTitle: 'Account successfully deleted',
                       notificationBody: 'Click here to open the app again',

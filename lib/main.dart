@@ -133,7 +133,6 @@ void main() async {
 
   final settingsController = SettingsChangeProvider()..loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  unawaited(BackupService.initFileDownloader());
 
   if (userExists) {
     unawaited(FcmNotificationService.initAfterUserLoaded());

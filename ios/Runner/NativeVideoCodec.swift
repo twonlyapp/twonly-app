@@ -2,6 +2,7 @@ import AVFoundation
 import CoreImage
 import Foundation
 import ImageIO
+import VideoToolbox
 
 /// Burns the editor's overlay into the video and transcodes it in one pass:
 /// Core Image composites each frame on the GPU and VideoToolbox encodes it.
@@ -18,21 +19,22 @@ enum NativeVideoCodec {
   private static let maxShortSide: CGFloat = 720
   private static let maxFrameRate: Double = 30
 
-  /// Bits per pixel per frame asked of VideoToolbox. HEVC stays close to the
-  /// source at roughly this rate; below it motion smears into blocks, and above
-  /// it the extra bits go to detail a phone camera never recorded. The bitrate
-  /// is derived from the output size and frame rate rather than fixed, so a clip
-  /// that is downscaled hard is not given the same budget as one that is already
-  /// 720p. Kept in sync with the same constants in the Android renderer so the
-  /// same clip looks the same whichever platform sent it.
+  /// Bits per pixel per frame asked of VideoToolbox. The previous 0.12 budget
+  /// reproduced the deliberately generous bitrate of a real-time camera encode.
+  /// Twonly is encoding an already captured clip and can use VBR plus frame
+  /// reordering, so 0.08 retains the useful detail without spending bits on
+  /// camera noise. The bitrate is derived from the output size and frame rate
+  /// rather than fixed, so smaller clips do not inherit a 720p budget. Kept in
+  /// sync with Android so a clip has comparable size on either platform.
   ///
   /// `AVAssetExportSession` presets cannot express any of this, which is why
   /// the reader/writer pair is driven by hand.
-  private static let bitsPerPixelPerFrame: Double = 0.12
-  private static let minBitrate = 1_500_000
-  private static let maxBitrate = 4_000_000
+  private static let bitsPerPixelPerFrame: Double = 0.08
+  private static let minBitrate = 600_000
+  private static let maxBitrate = 2_500_000
   private static let defaultFrameRate: Double = 30
-  private static let audioBitrate = 128_000
+  private static let audioBitrate = 96_000
+  private static let keyFrameInterval: Double = 2
 
   static func render(
     inputPath: String,
@@ -101,6 +103,12 @@ enum NativeVideoCodec {
           AVVideoCompressionPropertiesKey: [
             AVVideoAverageBitRateKey: videoBitrate,
             AVVideoExpectedSourceFrameRateKey: Int(frameRate.rounded()),
+            AVVideoProfileLevelKey: kVTProfileLevel_HEVC_Main_AutoLevel,
+            // A two-second GOP still seeks accurately while spending less on
+            // intra frames than the previous one-second default. VideoToolbox
+            // can reorder frames here because this is an offline export.
+            AVVideoMaxKeyFrameIntervalDurationKey: keyFrameInterval,
+            AVVideoAllowFrameReorderingKey: true,
           ],
         ]
       )
@@ -115,6 +123,7 @@ enum NativeVideoCodec {
       var audioOutput: AVAssetReaderTrackOutput?
       var audioInput: AVAssetWriterInput?
       if !removeAudio, let audioTrack = asset.tracks(withMediaType: .audio).first {
+        let audioChannels = channelCount(for: audioTrack)
         let output = AVAssetReaderTrackOutput(
           track: audioTrack,
           outputSettings: [AVFormatIDKey: kAudioFormatLinearPCM]
@@ -123,7 +132,10 @@ enum NativeVideoCodec {
           mediaType: .audio,
           outputSettings: [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVNumberOfChannelsKey: 2,
+            // Do not turn the common mono camera track into stereo. It carries
+            // no additional information and makes the AAC encoder less
+            // efficient at the same total bitrate.
+            AVNumberOfChannelsKey: audioChannels,
             AVSampleRateKey: 44100,
             AVEncoderBitRateKey: audioBitrate,
           ]
@@ -223,6 +235,19 @@ enum NativeVideoCodec {
   private static func bitrate(for size: CGSize, frameRate: Double) -> Int {
     let bits = Double(size.width) * Double(size.height) * frameRate * bitsPerPixelPerFrame
     return min(maxBitrate, max(minBitrate, Int(bits.rounded())))
+  }
+
+  /// Keeps mono sources mono and limits unusual multichannel camera input to
+  /// stereo, which is the most widely supported AAC layout on mobile players.
+  private static func channelCount(for track: AVAssetTrack) -> Int {
+    guard let rawDescription = track.formatDescriptions.first else { return 2 }
+    // The track is an audio track, so its descriptions use the corresponding
+    // Core Media alias. AVFoundation exposes the collection as `[Any]`.
+    let description = rawDescription as! CMAudioFormatDescription
+    guard let format = CMAudioFormatDescriptionGetStreamBasicDescription(description) else {
+      return 2
+    }
+    return min(2, max(1, Int(format.pointee.mChannelsPerFrame)))
   }
 
   /// Caps the long and short side the way the previous exporter did, and never

@@ -4,9 +4,8 @@ import 'dart:io' show Platform;
 import 'package:firebase_app_installations/firebase_app_installations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:twonly/core/bridge/user_config.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/constants/secure_storage.keys.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -139,45 +138,24 @@ class FcmNotificationService {
     }
   }
 
-  static Future<void> updateLastServerMessageTimestamp() async {
-    const storage = FlutterSecureStorage();
-    final nowMs = DateTime.now().millisecondsSinceEpoch.toString();
-    try {
-      await storage.write(
-        key: SecureStorageKeys.lastServerMessageTimestamp,
-        value: nowMs,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
-      Log.info('Updated last server message timestamp to $nowMs');
-    } catch (e) {
-      Log.error('Could not write last server message timestamp: $e');
-    }
-  }
-
   static Future<void> _checkFcmHealthAndResetIfNeeded() async {
     if (!userService.isUserCreated) {
       Log.info('FCM health check skipped: user is not yet created.');
       return;
     }
-    const storage = FlutterSecureStorage();
     try {
-      final lastServerStr = await storage.read(
-        key: SecureStorageKeys.lastServerMessageTimestamp,
-        iOptions: const IOSOptions(
-          groupId: 'CN332ZUGRP.eu.twonly.shared',
-          accessibility: KeychainAccessibility.first_unlock,
-        ),
-      );
+      final config = await UserConfigApi.load();
+      if (config == null) {
+        Log.warn('FCM health check skipped: user configuration is missing.');
+        return;
+      }
 
       final now = DateTime.now();
       final threeDaysAgo = now.subtract(const Duration(days: 3));
 
       // Recorded by the Rust notification worker, because neither platform
       // starts Flutter for a background wake-up any more.
-      final lastFcmWakeup = userService.currentUser.lastFcmWakeupAt;
+      final lastFcmWakeup = config.lastFcmWakeupAt;
       final lastFcmTime = lastFcmWakeup == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastFcmWakeup * 1000);
@@ -190,13 +168,10 @@ class FcmNotificationService {
         Log.info('No record of a message received via FCM messaging system.');
       }
 
-      DateTime? lastServerTime;
-      if (lastServerStr != null) {
-        final ms = int.tryParse(lastServerStr);
-        if (ms != null) {
-          lastServerTime = DateTime.fromMillisecondsSinceEpoch(ms);
-        }
-      }
+      final lastServerMessage = config.lastServerMessageAt;
+      final lastServerTime = lastServerMessage == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastServerMessage * 1000);
 
       final fcmInactive =
           lastFcmTime == null || lastFcmTime.isBefore(threeDaysAgo);

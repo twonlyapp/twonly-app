@@ -11,15 +11,17 @@ internal fun nativeNotificationId(value: String): Int = value.hashCode() and Int
 /**
  * Forwards taps on natively rendered notifications into Flutter.
  *
- * Only the opaque conversation identifier travels across this channel; the
- * route itself is built in Dart so Kotlin never duplicates Flutter routing.
+ * Only opaque notification metadata travels across this channel; the route
+ * itself is built in Dart so Kotlin never duplicates Flutter routing.
  */
 object NotificationTapChannel {
     private const val CHANNEL = "eu.twonly/notificationTap"
     const val EXTRA_CONVERSATION_ID = "conversation_id"
+    const val EXTRA_NOTIFICATION_KIND = "notification_kind"
 
     private var channel: MethodChannel? = null
     private var pendingConversationId: String? = null
+    private var pendingNotificationKind: String? = null
     private var pendingLaunch = false
 
     fun configure(flutterEngine: FlutterEngine, context: Context) {
@@ -29,11 +31,16 @@ object NotificationTapChannel {
                 "consumeInitialNotification" -> {
                     val launched = pendingLaunch
                     val conversationId = pendingConversationId
+                    val notificationKind = pendingNotificationKind
                     pendingLaunch = false
                     pendingConversationId = null
+                    pendingNotificationKind = null
                     result.success(
                         if (launched) {
-                            mapOf(EXTRA_CONVERSATION_ID to conversationId)
+                            mapOf(
+                                EXTRA_CONVERSATION_ID to conversationId,
+                                EXTRA_NOTIFICATION_KIND to notificationKind,
+                            )
                         } else {
                             null
                         },
@@ -65,19 +72,26 @@ object NotificationTapChannel {
         if (intent?.hasExtra(EXTRA_CONVERSATION_ID) != true) return
         val conversationId =
             intent.getStringExtra(EXTRA_CONVERSATION_ID)?.takeIf(String::isNotEmpty)
+        val notificationKind =
+            intent.getStringExtra(EXTRA_NOTIFICATION_KIND)?.takeIf(String::isNotEmpty)
         // A tap must only route once, even if the activity is recreated with
         // the same intent after a configuration change.
         intent.removeExtra(EXTRA_CONVERSATION_ID)
+        intent.removeExtra(EXTRA_NOTIFICATION_KIND)
 
         val channel = this.channel
         if (channel == null) {
             pendingLaunch = true
             pendingConversationId = conversationId
+            pendingNotificationKind = notificationKind
             return
         }
         channel.invokeMethod(
             "onNotificationTapped",
-            mapOf(EXTRA_CONVERSATION_ID to conversationId),
+            mapOf(
+                EXTRA_CONVERSATION_ID to conversationId,
+                EXTRA_NOTIFICATION_KIND to notificationKind,
+            ),
         )
     }
 }

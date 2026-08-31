@@ -84,9 +84,10 @@ impl RustKeyManager {
         }
     }
 
-    pub async fn remove_key_manager() -> Result<()> {
+    pub async fn remove_local_credentials() -> Result<()> {
         let ctx = get_twonly_flutter()?;
         crate::keys::KeyManager::remove_from_keychain(&ctx.secure_storage)?;
+        ctx.secure_storage.delete("api_auth_token")?;
         Ok(())
     }
 
