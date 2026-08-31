@@ -407,12 +407,10 @@ packages:
   emoji_picker_flutter:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "23a0595f7dde50728afce917c1c58f284ccbb495"
-      resolved-ref: "23a0595f7dde50728afce917c1c58f284ccbb495"
-      url: "https://github.com/otsmr/emoji_picker_flutter.git"
-    source: git
-    version: "4.4.0"
+      path: "dependencies/emoji_picker_flutter"
+      relative: true
+    source: path
+    version: "4.5.3"
   exif:
     dependency: "direct main"
     description:

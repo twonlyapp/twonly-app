@@ -12,6 +12,9 @@ dependencies:
   blurhash_dart:
     git: https://github.com/justacid/blurhash-dart.git
     tag: v1.2.1
+  emoji_picker_flutter:
+    git: https://github.com/otsmr/emoji_picker_flutter.git
+    commit: 47ddf705fb4840d6fbe305b79e896666dda7b0d5
   exif:
     git: https://github.com/bigflood/dartexif.git
     dependencies:
@@ -72,9 +75,6 @@ dependencies:
   photo_view:
     git: https://github.com/bluefireteam/photo_view.git
     commit: a13ca2fc387a3fb1276126959e092c44d0029987
-  pro_video_editor:
-    git: https://github.com/hm21/pro_video_editor.git
-    tag: v2.11.3
   qr_flutter:
     git: https://github.com/theyakka/qr.flutter.git
     dependencies:

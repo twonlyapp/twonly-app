@@ -66,10 +66,6 @@ dependencies:
   flutter_local_notifications: ^19.1.0
   sentry_flutter: ^9.14.0
 
-
-  # Overwritten by self-controlled repository
-  emoji_picker_flutter: ^4.3.0
-
   # With high download. (But should be checked nonetheless.)
   app_links: ^7.0.0 # 1.6 mio
   flutter_secure_storage: ^10.3.1 # 1.85 mio
@@ -92,6 +88,7 @@ dependencies:
   audio_waveforms: ^2.0.2
   avatar_maker: ^1.5.0
   blurhash_dart: ^1.2.1
+  emoji_picker_flutter: ^4.5.3
   exif: ^3.3.0
   sprintf: ^7.0.0
   flutter_blurhash: ^0.9.1
@@ -118,12 +115,6 @@ dependencies:
 
 
 dependency_overrides:
-  emoji_picker_flutter:
-    # Fixes the issue with recent emojis (solved by https://github.com/Fintasys/emoji_picker_flutter/pull/238)
-    # Using override until this gets merged.
-    git:
-      url: https://github.com/otsmr/emoji_picker_flutter.git
-      ref: 23a0595f7dde50728afce917c1c58f284ccbb495
   flutter_android_volume_keydown:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git
@@ -136,6 +127,8 @@ dependency_overrides:
     path: ./dependencies/avatar_maker
   blurhash_dart:
     path: ./dependencies/blurhash_dart
+  emoji_picker_flutter:
+    path: ./dependencies/emoji_picker_flutter
   exif:
     path: ./dependencies/exif
   sprintf:
