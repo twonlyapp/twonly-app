@@ -71,7 +71,6 @@ impl Tester {
             .execute(&database.pool)
             .await?;
         }
-        database.notify_committed(["key_verifications"]);
         Ok(())
     }
 
@@ -629,7 +628,6 @@ impl Tester {
         )
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["contacts"]);
         Ok(())
     }
 

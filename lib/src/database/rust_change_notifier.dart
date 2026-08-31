@@ -12,8 +12,8 @@ import 'package:twonly/src/utils/log.dart';
 /// learns about it, so `watch()` keeps serving stale rows and the UI does not
 /// update until something else happens to touch the same table.
 ///
-/// Rust already broadcasts the tables it commits to (`notify_committed`); this
-/// forwards those batches into [GeneratedDatabase.notifyUpdates].
+/// SQLite's own commit hook broadcasts the tables each committed transaction
+/// touched; this forwards those batches into [GeneratedDatabase.notifyUpdates].
 StreamSubscription<List<String>> listenToRustDatabaseChanges(
   GeneratedDatabase db,
 ) {

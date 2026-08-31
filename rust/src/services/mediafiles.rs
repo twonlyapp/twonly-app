@@ -88,7 +88,6 @@ impl MediaFileService {
             )
             .execute(&database.pool)
             .await?;
-            database.notify_committed(["media_files"]);
         }
         result
     }
@@ -139,7 +138,6 @@ impl MediaFileService {
             if let Some(media_type) = media_type {
                 self.remove_files(media_id, &media_type)?;
             }
-            database.notify_committed(["media_files"]);
             return Ok(());
         }
         if messages.len() != 1 {
@@ -171,7 +169,6 @@ impl MediaFileService {
             if let Some(media_type) = media_type {
                 self.remove_files(media_id, &media_type)?;
             }
-            database.notify_committed(["messages", "media_files"]);
             return Ok(());
         }
 
@@ -226,7 +223,6 @@ impl MediaFileService {
             self.request_reupload(media_id).await?;
             return Ok(());
         }
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -301,7 +297,6 @@ impl MediaFileService {
         .fetch_all(&database.pool)
         .await?;
 
-        database.notify_committed(["media_files"]);
         drop(database);
 
         for target in targets {

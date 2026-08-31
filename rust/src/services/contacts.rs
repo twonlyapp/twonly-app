@@ -52,7 +52,6 @@ impl ContactService {
             .insert_on_conflict_update(&mut transaction)
             .await?;
         transaction.commit().await?;
-        database.notify_committed(["contacts"]);
 
         self.send_contact_request(
             user.user_id,
@@ -115,7 +114,6 @@ impl ContactService {
         .execute(&database.pool)
         .await?;
         release_deferred_receipts(&database, user_id).await?;
-        database.notify_committed(["contacts", "receipts"]);
 
         Ok(())
     }
@@ -223,7 +221,6 @@ impl ContactService {
 
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
         transaction.commit().await?;
-        database.notify_committed(["contacts", "groups"]);
 
         self.send_contact_request(
             contact_id,
@@ -258,7 +255,6 @@ impl ContactService {
             .await?;
 
         t.commit().await?;
-        db_app.notify_committed(["contacts"]);
 
         self.send_contact_request(
             contact_id,

@@ -129,7 +129,6 @@ pub async fn send_c2c_message_to_contact(
     .await?;
 
     t.commit().await?;
-    db_app.notify_committed(["receipts"]);
 
     if only_return_encrypted_data {
         return messages::prepare_queued_receipt(ctx, &receipt_id).await;

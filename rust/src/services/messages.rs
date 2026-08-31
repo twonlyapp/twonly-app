@@ -41,7 +41,6 @@ impl MessageService {
         {
             sqlx::query!("UPDATE groups SET last_message_exchange = CAST(strftime('%s','now') AS INTEGER) WHERE group_id = ?", group_id)
                 .execute(&database.pool).await?;
-            database.notify_committed(["groups"]);
         }
         let members = sqlx::query_scalar!(
             r#"SELECT contact_id FROM group_members
@@ -168,6 +167,16 @@ impl MessageService {
         Ok(())
     }
 
+    /// Persists an outgoing text message and hands the delivery off.
+    ///
+    /// The composer is blocked on this call, and the chat list can only render
+    /// the new bubble once its own `SELECT` gets the single SQLite connection
+    /// back. Everything the send needs -- decorating the payload, queueing a
+    /// receipt per member, establishing a session, the server round trip --
+    /// competes for exactly that connection, which is how a message could reach
+    /// the other side before showing up here. So the row the UI renders from is
+    /// committed and published on its own, in one transaction, and the send
+    /// runs on a separate task.
     pub async fn insert_and_send_text(
         &self,
         group_id: String,
@@ -177,13 +186,14 @@ impl MessageService {
         let database = self.ctx.app_db.read().await.clone();
         let message_id = uuid::Uuid::new_v4().to_string();
         let timestamp = chrono::Utc::now().timestamp_millis();
+
+        let mut t = database.pool.begin().await?;
         sqlx::query!(
             "UPDATE groups SET draft_message = NULL WHERE group_id = ?",
             group_id
         )
-        .execute(&database.pool)
+        .execute(&mut *t)
         .await?;
-        database.notify_committed(["groups"]);
         sqlx::query!(
             r#"INSERT INTO messages(group_id, message_id, type, content, quotes_message_id, created_at)
                VALUES (?, ?, 'text', ?, ?, ?)"#,
@@ -193,25 +203,41 @@ impl MessageService {
             quote_message_id,
             timestamp / 1000,
         )
-        .execute(&database.pool)
+        .execute(&mut *t)
         .await?;
-        database.notify_committed(["messages"]);
-        self.send_to_group(
-            group_id,
-            proto::EncryptedContent {
-                text_message: Some(encrypted_content::TextMessage {
-                    sender_message_id: message_id.clone(),
-                    text,
-                    timestamp,
-                    quote_message_id,
-                }),
-                ..Default::default()
+        // The commit hook installed on the connection publishes `groups` and
+        // `messages` on its own, so the chat list is already on its way.
+        t.commit().await?;
+
+        let content = proto::EncryptedContent {
+            text_message: Some(encrypted_content::TextMessage {
+                sender_message_id: message_id.clone(),
+                text,
+                timestamp,
+                quote_message_id,
+            }),
+            ..Default::default()
+        }
+        .encode_to_vec();
+
+        // The message row already carries the "not acknowledged yet" state the
+        // bubble shows, so a failure here is reported the same way a failed
+        // network send is: the bubble stays unacknowledged until a retry sweep
+        // gets it through.
+        let ctx = self.ctx.clone();
+        let sent_message_id = message_id.clone();
+        tokio::spawn(async move {
+            if let Err(error) = Self::new(&ctx)
+                .send_to_group(group_id, content, Some(sent_message_id.clone()), false)
+                .await
+            {
+                tracing::warn!(
+                    message_id = sent_message_id,
+                    "sending the text message failed: {error}"
+                );
             }
-            .encode_to_vec(),
-            Some(message_id.clone()),
-            false,
-        )
-        .await?;
+        });
+
         Ok(message_id)
     }
 
@@ -235,7 +261,6 @@ impl MessageService {
         )
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["messages"]);
         self.send_to_group(
             group_id,
             proto::EncryptedContent {
@@ -330,7 +355,6 @@ impl MessageService {
             .ok_or_else(|| TwonlyError::Generic("contact does not exist".into()))?;
         Group::create_direct_chat(&self.ctx, &mut transaction, contact).await?;
         transaction.commit().await?;
-        database.notify_committed(["groups", "group_members"]);
         let data = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::AskAboutUser as i32,
             link: None,
@@ -472,7 +496,6 @@ impl MessageService {
         )
         .await?;
         transaction.commit().await?;
-        database.notify_committed(["messages", "notification_outbox"]);
         Ok(())
     }
 

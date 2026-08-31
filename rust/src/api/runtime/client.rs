@@ -7,7 +7,7 @@ use crate::bridge::api::{ApiConfig, ApiConnectionState, ApiEvent, ApiEventKind};
 use crate::context::Context;
 use crate::error::Result;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, LazyLock, Weak};
 use std::time::Duration;
 use stream_tungstenite::{ClientConfig, WebSocketClient};
@@ -29,6 +29,14 @@ const CATCH_UP_JITTER: Duration = Duration::from_secs(15);
 /// messages.
 const RECONNECT_INITIAL_DELAY: Duration = Duration::from_millis(250);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(20);
+/// A socket whose transport has died does not reconnect by itself: a failed
+/// handshake makes the supervisor give up for good, and it leaves the send
+/// channel behind so every later send reports a closed channel. These bound
+/// the redial we drive ourselves, backing off so a handshake that keeps
+/// failing (a rejected token, say) does not turn into a dial loop.
+const FORCED_RECONNECT_INITIAL_DELAY: Duration = Duration::from_secs(1);
+const FORCED_RECONNECT_MAX_DELAY: Duration = Duration::from_secs(60);
+
 const RECEIVE_TIMEOUT: Duration = Duration::from_secs(45);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const HANDSHAKE_RETRY_DELAY: Duration = Duration::from_secs(1);
@@ -53,6 +61,12 @@ pub(crate) struct ApiClient {
     /// `try_send`, so repeated triggers collapse into a single pull instead of
     /// queueing one request each.
     catch_up_tx: Mutex<Option<mpsc::Sender<()>>>,
+    /// Set while a forced redial is pending, so the many sends that fail
+    /// against one dead socket schedule a single reconnect between them.
+    forced_reconnect_in_flight: AtomicBool,
+    /// Counts forced redials since the last authenticated session; feeds the
+    /// backoff in [`ApiClient::schedule_reconnect`].
+    forced_reconnect_attempts: AtomicU32,
 }
 
 impl ApiClient {
@@ -71,6 +85,8 @@ impl ApiClient {
             network_available: AtomicBool::new(true),
             is_authenticated: Arc::new(AtomicBool::new(false)),
             catch_up_tx: Mutex::const_new(None),
+            forced_reconnect_in_flight: AtomicBool::new(false),
+            forced_reconnect_attempts: AtomicU32::new(0),
         })
     }
 
@@ -141,6 +157,101 @@ impl ApiClient {
                 }
             }
         });
+    }
+
+    /// Discards a socket the transport has declared dead and dials a fresh one.
+    ///
+    /// The supervisor cannot do this itself: it treats every failure our
+    /// handshaker reports as permanent, so it stops reconnecting, and because
+    /// that path skips its session cleanup it leaves the send channel in place
+    /// with no reader behind it. `ws_client` therefore still holds a client
+    /// that looks alive while every send fails with `ChannelClosed`, and
+    /// `connect` returns early on it. Only replacing it recovers.
+    ///
+    /// `stale` is the connection the caller failed on; if the slot already
+    /// holds a different one, someone reconnected in the meantime and this is
+    /// a no-op. The redial runs detached so the caller can return its own
+    /// error right away — whatever failed to send is retried by the
+    /// post-authentication receipt sweep once the new socket is up.
+    pub(crate) fn schedule_reconnect(self: &Arc<Self>, stale: &Arc<WebSocketClient>, reason: &str) {
+        if self.deliberately_closed.load(Ordering::Acquire)
+            || API_PERMANENTLY_REJECTED.load(Ordering::Acquire)
+        {
+            return;
+        }
+        // Every send against the dead socket lands here; only the first one
+        // gets to schedule the redial.
+        if self.forced_reconnect_in_flight.swap(true, Ordering::AcqRel) {
+            return;
+        }
+
+        let client = self.clone();
+        let stale = stale.clone();
+        let reason = reason.to_owned();
+        tokio::spawn(async move {
+            let result = client.reconnect(&stale, &reason).await;
+            client
+                .forced_reconnect_in_flight
+                .store(false, Ordering::Release);
+            if let Err(error) = result {
+                tracing::warn!("reconnect after a dead API WebSocket failed: {error}");
+            }
+        });
+    }
+
+    async fn reconnect(self: &Arc<Self>, stale: &Arc<WebSocketClient>, reason: &str) -> Result<()> {
+        {
+            let mut guard = self.ws_client.lock().await;
+            if !guard
+                .as_ref()
+                .is_some_and(|current| Arc::ptr_eq(current, stale))
+            {
+                return Ok(());
+            }
+            guard.take();
+        }
+
+        // Counted only for a socket that was still the live one, so a stale
+        // report cannot inflate the backoff.
+        let attempt = self
+            .forced_reconnect_attempts
+            .fetch_add(1, Ordering::AcqRel);
+        let delay = FORCED_RECONNECT_INITIAL_DELAY
+            .saturating_mul(1_u32 << attempt.min(6))
+            .min(FORCED_RECONNECT_MAX_DELAY);
+        tracing::warn!(
+            reason,
+            attempt,
+            ?delay,
+            "API WebSocket is dead, reconnecting"
+        );
+
+        self.is_authenticated.store(false, Ordering::Release);
+        // Dropping the sender ends the catch-up loop bound to the dead socket.
+        *self.catch_up_tx.lock().await = None;
+        if let Err(error) = stale.shutdown_graceful(Duration::from_secs(5)).await {
+            tracing::warn!("dead WebSocket did not shut down cleanly: {error}");
+        }
+        self.fail_pending().await;
+        self.set_state(ApiConnectionState::Stopped).await;
+
+        tokio::time::sleep(delay).await;
+
+        // Closing the client or losing the network during the delay means the
+        // redial is no longer wanted.
+        if self.deliberately_closed.load(Ordering::Acquire)
+            || !self.network_available.load(Ordering::Acquire)
+        {
+            return Ok(());
+        }
+        self.connect().await
+    }
+
+    /// Restarts the forced-reconnect backoff. A session that got all the way to
+    /// an authenticated handshake proves the credentials and the server are
+    /// fine, so the next dead socket starts over at the short delay.
+    pub(crate) fn note_authenticated(&self) {
+        self.forced_reconnect_attempts.store(0, Ordering::Release);
     }
 
     pub(crate) async fn set_state(&self, state: ApiConnectionState) {
@@ -221,6 +332,7 @@ impl ApiClient {
         });
 
         let self_clone = self.clone();
+        let connection = Arc::downgrade(&ws_arc);
         tokio::spawn(async move {
             loop {
                 tokio::select! {
@@ -257,6 +369,20 @@ impl ApiClient {
                             }
                             Ok(ConnectionEvent::Connecting { .. }) => {
                                 self_clone.set_state(ApiConnectionState::Connecting).await;
+                            }
+                            // The supervisor has stopped reconnecting: it
+                            // treats every handshake failure as permanent, and
+                            // that path leaves the send channel behind with no
+                            // reader, so this socket can neither reconnect nor
+                            // send. Replace it instead of sitting on it.
+                            Ok(ConnectionEvent::FatalError { .. } | ConnectionEvent::Shutdown) => {
+                                self_clone.is_authenticated.store(false, Ordering::Release);
+                                if let Some(connection) = connection.upgrade() {
+                                    self_clone.schedule_reconnect(
+                                        &connection,
+                                        "supervisor stopped reconnecting",
+                                    );
+                                }
                             }
                             Ok(_) => {}
                             Err(_) => break,

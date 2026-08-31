@@ -5,6 +5,7 @@
 
 use super::client::ApiClient;
 use super::helpers::{decode_ok, schedule_post_authentication};
+use super::request::permanent_rejection_kind;
 use crate::api::proto::{client_to_server, server_to_client};
 use crate::bridge::api::{ApiConnectionState, ApiEvent, ApiEventKind, ServerResult};
 use crate::context::Context;
@@ -21,6 +22,14 @@ use stream_tungstenite::handshake::{HandshakeReceiver, HandshakeSender, Handshak
 use stream_tungstenite::tokio_tungstenite::tungstenite;
 use tokio::sync::broadcast;
 
+/// The app version from `pubspec.yaml` without the build number, baked in by
+/// `build.rs`. This is what the handshake reports to the server, which compares
+/// it against its configured minimum version.
+///
+/// Not to be confused with `UserConfig::app_version`, which is the local
+/// migration id and stays a purely client side concern.
+pub(crate) const APP_VERSION: &str = env!("TWONLY_APP_VERSION");
+
 pub(crate) struct ApiAuthHandshaker {
     pub context: Arc<Context>,
     pub api_client: Weak<ApiClient>,
@@ -34,8 +43,7 @@ impl ApiAuthHandshaker {
         let user = UserConfig::load_from(&self.context)?
             .ok_or_else(|| TwonlyError::Generic("User configuration not found".into()))?;
         let device_id = user.device_id;
-        let app_version = user.app_version.to_string();
-        Ok((Some(user.user_id), device_id, app_version))
+        Ok((Some(user.user_id), device_id, APP_VERSION.to_string()))
     }
 
     async fn request_handshake(
@@ -76,6 +84,17 @@ impl ApiAuthHandshaker {
         let ok = match ok_res {
             ServerResult::Ok(val) => val,
             ServerResult::ErrorCode(code) => {
+                // The handshake never reaches `handle_api_error`, so a rejection
+                // that no reconnect can fix has to be published here — otherwise
+                // the app just keeps failing to connect without telling the user
+                // that it is outdated or was logged out.
+                if let Some(kind) = permanent_rejection_kind(code) {
+                    if let Some(client) = self.api_client.upgrade() {
+                        // Closing the socket has to wait for this handshake to
+                        // return, so it cannot be awaited from inside it.
+                        tokio::spawn(async move { client.reject_permanently(kind).await });
+                    }
+                }
                 return Err(HandshakeError::Protocol(format!(
                     "Server returned error code: {}",
                     code
@@ -286,6 +305,7 @@ impl ApiAuthHandshaker {
         self.is_authenticated.store(true, Ordering::Release);
 
         if let Some(client) = self.api_client.upgrade() {
+            client.note_authenticated();
             tokio::spawn(async move {
                 client.set_state(ApiConnectionState::Authenticated).await;
                 // Runs on every (re)connect, so this covers both the initial
@@ -418,5 +438,44 @@ impl ApiClient {
             message: Some(plan),
         });
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::APP_VERSION;
+
+    /// The server splits the reported version on '.' and parses every segment
+    /// as a number, so a suffix like "0.5.2-beta" would silently be read as
+    /// 0.5.0 and could fall below the configured minimum version.
+    #[test]
+    fn app_version_is_a_plain_dotted_version() {
+        let segments: Vec<&str> = APP_VERSION.split('.').collect();
+
+        assert!(
+            !segments.is_empty() && segments.len() <= 3,
+            "unexpected app version {APP_VERSION}"
+        );
+        for segment in segments {
+            assert!(
+                segment.parse::<u32>().is_ok(),
+                "app version {APP_VERSION} has a non numeric segment {segment}"
+            );
+        }
+    }
+
+    /// Guards the `pubspec.yaml` parsing in `build.rs`.
+    #[test]
+    fn app_version_matches_the_pubspec() {
+        let pubspec = std::fs::read_to_string("../pubspec.yaml").expect("read ../pubspec.yaml");
+        let version = pubspec
+            .lines()
+            .find_map(|line| line.strip_prefix("version: "))
+            .expect("no `version:` entry in ../pubspec.yaml");
+
+        assert_eq!(
+            APP_VERSION,
+            version.split('+').next().unwrap_or(version).trim()
+        );
     }
 }

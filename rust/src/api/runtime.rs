@@ -145,7 +145,6 @@ impl ApiRuntime {
                 }
             }
         }
-        database.notify_committed(["api_outbox"]);
         Ok(())
     }
 

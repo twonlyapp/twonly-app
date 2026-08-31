@@ -78,6 +78,13 @@ pub enum TwonlyError {
     #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
     MediaTooLarge { bytes: i64, limit: i64 },
 
+    /// Content that will never be processable: it is malformed, or it uses a
+    /// feature this client does not implement. Callers must not retry it —
+    /// a reliable-mailbox row carrying such a message is acknowledged so the
+    /// server stops redelivering it forever.
+    #[error("unprocessable content: {0}")]
+    UnprocessableContent(String),
+
     #[error("{0}")]
     Generic(String),
 

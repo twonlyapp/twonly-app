@@ -90,10 +90,12 @@ pub(crate) async fn handle_server_message(
 /// left out is redelivered on the next drain.
 ///
 /// Deduplication is the `received_receipts` claim inside
-/// [`handle_decoded_server_message`]: it is committed in the same transaction
-/// that persists the message, is keyed on the end-to-end receipt ID, and is
-/// never purged. A redelivered envelope is therefore recognised before it is
-/// decrypted, whichever transport carried it.
+/// [`handle_decoded_server_message`]: it is keyed on the end-to-end receipt ID
+/// and is never purged, so a redelivered envelope is recognised before it is
+/// decrypted, whichever transport carried it. An encrypted message commits its
+/// claim together with its plaintext one step ahead of the message itself,
+/// because the ratchet step decryption spends cannot be rolled back; a retry
+/// that finds that plaintext resumes from it instead of decrypting again.
 async fn acknowledge_pending_messages(
     ctx: &Arc<Context>,
     batch: server_to_client::PendingMessagesV2,
@@ -114,14 +116,18 @@ async fn acknowledge_pending_messages(
         match result {
             // Committed, or recognised as a duplicate. Either way it is durable.
             Ok(()) => delivery_ids.push(delivery_id),
-            // An envelope that cannot be decoded will never decode. Acknowledge
-            // it so one poisoned row cannot be redelivered forever.
+            // An envelope that cannot be decoded, or content this client will
+            // never be able to act on, stays broken however often it is
+            // redelivered. Acknowledge it so one poisoned row cannot be
+            // redelivered forever.
             Err(
-                error @ (TwonlyError::ProtobufDecode(_) | TwonlyError::UnknownProtobufEnumValue(_)),
+                error @ (TwonlyError::ProtobufDecode(_)
+                | TwonlyError::UnknownProtobufEnumValue(_)
+                | TwonlyError::UnprocessableContent(_)),
             ) => {
                 tracing::warn!(
                     delivery_id,
-                    "dropping an undecodable mailbox message: {error}"
+                    "dropping an unprocessable mailbox message: {error}"
                 );
                 delivery_ids.push(delivery_id);
             }
@@ -225,7 +231,6 @@ async fn upgrade_legacy_session_to_v2(
     )
     .execute(&database.pool)
     .await?;
-    database.notify_committed(["contacts"]);
 
     Ok(())
 }
@@ -247,7 +252,6 @@ pub(crate) async fn handle_decoded_server_message(
     if let Ok(user) = ctx.user_id().await {
         tracing::Span::current().record("user", user);
     }
-    tracing::info!("Started processing incoming message");
 
     if message.receipt_id.is_empty() {
         return Err(TwonlyError::Generic(
@@ -260,10 +264,14 @@ pub(crate) async fn handle_decoded_server_message(
         message_type,
         Type::Ciphertext | Type::PrekeyBundle | Type::CiphertextV2
     );
-    tracing::info!(is_encrypted_message, ?message_type, "Parsed message type");
+
+    tracing::info!(
+        is_encrypted_message,
+        ?message_type,
+        "Parsed incoming message type"
+    );
 
     if is_encrypted_message {
-        tracing::info!("Ensuring contact exists...");
         ensure_contact_exists(ctx, from_user_id).await?;
     }
 
@@ -280,7 +288,20 @@ pub(crate) async fn handle_decoded_server_message(
 
     let claimed = Receipt::claim_received(&mut t, &message.receipt_id).await?;
 
-    if !claimed {
+    // A claim that was committed with a plaintext still parked on it belongs to
+    // a message whose handling did not commit. Its ratchet step is spent, so the
+    // redelivery has to resume from that plaintext instead of decrypting again.
+    let resumed_plaintext = if claimed || message_type != Type::CiphertextV2 {
+        None
+    } else {
+        Receipt::pending_plaintext(&mut t, &message.receipt_id).await?
+    };
+
+    if resumed_plaintext.is_some() {
+        tracing::info!("Resuming a redelivered message from its parked plaintext");
+    }
+
+    if !claimed && resumed_plaintext.is_none() {
         // Delivery receipts are terminal messages and must never themselves be
         // acknowledged. For regular messages Dart retries the delivery receipt
         // after ten days, atomically claiming the retry by moving created_at.
@@ -315,19 +336,34 @@ pub(crate) async fn handle_decoded_server_message(
             sends_error_response = true;
         }
         Type::CiphertextV2 => {
-            let ciphertext = message.encrypted_content.ok_or_else(|| {
-                TwonlyError::Generic("V2 encrypted client message has no ciphertext".into())
-            })?;
-            let decrypted = {
-                let engine = ctx.signal_engine.lock().await;
-                engine
-                    .as_ref()
-                    .ok_or(TwonlyError::SignalIdentityNotFound)?
-                    .decrypt_message(from_user_id.to_string(), 1, ciphertext)
-                    .await
+            let decrypted = match resumed_plaintext {
+                Some(plaintext) => Ok(plaintext),
+                None => {
+                    let ciphertext = message.encrypted_content.ok_or_else(|| {
+                        TwonlyError::UnprocessableContent(
+                            "V2 encrypted client message has no ciphertext".into(),
+                        )
+                    })?;
+                    let engine = ctx.signal_engine.lock().await;
+                    engine
+                        .as_ref()
+                        .ok_or(TwonlyError::SignalIdentityNotFound)?
+                        .decrypt_message(from_user_id.to_string(), 1, ciphertext)
+                        .await
+                }
             };
             match decrypted {
                 Ok(plaintext) => {
+                    // Decryption consumed a ratchet step in the signal database,
+                    // which this transaction cannot roll back. Commit the
+                    // plaintext with the claim first, so a rollback further down
+                    // leaves a redelivery something to resume from instead of a
+                    // session that can no longer decrypt the message.
+                    Receipt::store_pending_plaintext(&mut t, &message.receipt_id, &plaintext)
+                        .await?;
+                    t.commit().await?;
+                    t = database.pool.begin().await?;
+
                     // Decrypting proves the peer speaks v2, so drop any 'v1'
                     // marking left by a contact lookup that ran before the peer
                     // published a prekey bundle. Otherwise every receipt back to
@@ -350,7 +386,7 @@ pub(crate) async fn handle_decoded_server_message(
 
                     let content =
                         proto::EncryptedContent::decode(plaintext.as_slice()).map_err(|error| {
-                            TwonlyError::Generic(format!(
+                            TwonlyError::UnprocessableContent(format!(
                                 "invalid decrypted client content: {error}"
                             ))
                         })?;
@@ -389,19 +425,13 @@ pub(crate) async fn handle_decoded_server_message(
         queue_sender_delivery_receipt(&mut t, from_user_id, &message.receipt_id).await?;
     }
 
+    // The message is about to become durable, so the plaintext parked for a
+    // retry that is no longer needed can go.
+    Receipt::clear_pending_plaintext(&mut t, &message.receipt_id).await?;
+
     t.commit().await?;
     ctx.mark_incoming_committed();
 
-    database.notify_committed([
-        "received_receipts",
-        "receipts",
-        "messages",
-        "groups",
-        "contacts",
-        "key_verifications",
-        "user_discovery_own_promotions",
-        "notification_outbox",
-    ]);
 
     let ctx = ctx.clone();
     tokio::spawn(async move {
@@ -512,9 +542,15 @@ async fn handle_encrypted_inner(
         return recovery::handle_passwordless_recovery_heartbeat(t, from_user_id, heartbeat).await;
     }
 
-    let group_id = content
-        .group_id
-        .ok_or_else(|| TwonlyError::Generic("group-scoped message has no group ID".into()))?;
+    let Some(group_id) = content.group_id else {
+        // Everything below is group-scoped. Reaching here without a group ID is
+        // normal for a content that only carries sender metadata (a profile
+        // counter, a user-discovery version, a friend-promotion request), all of
+        // which has already been applied above. Failing it would only make the
+        // server redeliver a message there is nothing left to do with.
+        tracing::info!("Incoming message carried sender metadata only");
+        return Ok(());
+    };
 
     if let Some(create) = content.group_create {
         return groups::handle_group_create(ctx, t, from_user_id, &group_id, create).await;
@@ -610,7 +646,7 @@ async fn handle_encrypted_inner(
             .await;
     }
 
-    Err(TwonlyError::Generic(format!(
+    Err(TwonlyError::UnprocessableContent(format!(
         "client2client content in receipt {receipt_id} is not implemented in Rust"
     )))
 }

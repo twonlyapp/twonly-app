@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM user_discovery_shares WHERE 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "1e99ff0bf394ff271be3173e86c86f164ec766a30c36bcc3984164005786e095"
+}

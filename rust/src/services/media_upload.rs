@@ -138,7 +138,6 @@ impl MediaUploadService {
         .execute(&mut *transaction)
         .await?;
         transaction.commit().await?;
-        database.notify_committed(["media_files"]);
         Ok(media_id)
     }
 
@@ -199,7 +198,6 @@ impl MediaUploadService {
             Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
         }
         transaction.commit().await?;
-        database.notify_committed(["messages", "media_files", "groups", "contacts"]);
         drop(database);
 
         // Preparation compresses and encrypts, which is far too slow to keep the
@@ -375,7 +373,6 @@ impl MediaUploadService {
         .bind(media_id)
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["media_files", "receipts"]);
         drop(database);
 
         // The legacy pre-built upload request would pin the old recipient set.
@@ -501,7 +498,6 @@ impl MediaUploadService {
                 .bind(&receipt.receipt_id)
                 .execute(&database.pool)
                 .await?;
-            database.notify_committed(["messages", "receipts"]);
             return Ok(());
         };
         drop(database);
@@ -573,7 +569,6 @@ impl MediaUploadService {
         .bind(media_id)
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -669,7 +664,6 @@ impl MediaUploadService {
             .bind(media_id)
             .execute(&database.pool)
             .await?;
-        database.notify_committed(["media_files", "messages"]);
         Ok(())
     }
 
@@ -689,7 +683,6 @@ impl MediaUploadService {
             .bind(media_id)
             .execute(&database.pool)
             .await?;
-        database.notify_committed(["media_files", "messages"]);
         MediaFileService::new(&self.ctx).remove_files(media_id, &media.media_type)?;
         tracing::warn!(
             media_id,
@@ -865,7 +858,6 @@ impl MediaUploadService {
                 .execute(&database.pool)
                 .await?;
         }
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -877,7 +869,6 @@ impl MediaUploadService {
         .bind(media_id)
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -891,7 +882,6 @@ impl MediaUploadService {
             .bind(media_id)
             .execute(&database.pool)
             .await?;
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -920,7 +910,6 @@ impl MediaUploadService {
             .bind(media_id)
             .execute(&database.pool)
             .await?;
-            database.notify_committed(["media_files"]);
             return Ok(());
         }
 
@@ -935,7 +924,6 @@ impl MediaUploadService {
                 .bind(media_id)
                 .execute(&database.pool)
                 .await?;
-            database.notify_committed(["media_files"]);
             return Ok(());
         }
 
@@ -950,7 +938,6 @@ impl MediaUploadService {
             .bind(media_id)
             .execute(&database.pool)
             .await?;
-        database.notify_committed(["media_files"]);
         Ok(())
     }
 
@@ -961,7 +948,6 @@ impl MediaUploadService {
         let mut transaction = database.pool.begin().await?;
         MediaFile::mark_uploaded(&mut transaction, media_id).await?;
         transaction.commit().await?;
-        database.notify_committed(["media_files", "messages", "receipts"]);
         Ok(())
     }
 

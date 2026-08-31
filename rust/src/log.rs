@@ -110,6 +110,115 @@ impl<'a> MakeWriter<'a> for AppLogWriter {
     }
 }
 
+/// Android sends a native library's stdout to `/dev/null`; only `liblog`
+/// reaches logcat, so the console layer has to go through it there.
+#[cfg(target_os = "android")]
+mod logcat {
+    use std::ffi::CString;
+    use std::os::raw::{c_char, c_int};
+    use tracing::Metadata;
+    use tracing_subscriber::fmt::MakeWriter;
+
+    #[link(name = "log")]
+    extern "C" {
+        fn __android_log_write(prio: c_int, tag: *const c_char, text: *const c_char) -> c_int;
+    }
+
+    const TAG: &[u8] = b"twonly\0";
+    /// logcat truncates a record at ~4 KiB, so split before it does.
+    const MAX_PAYLOAD: usize = 3800;
+
+    const PRIO_VERBOSE: c_int = 2;
+    const PRIO_DEBUG: c_int = 3;
+    const PRIO_INFO: c_int = 4;
+    const PRIO_WARN: c_int = 5;
+    const PRIO_ERROR: c_int = 6;
+
+    #[derive(Clone, Copy)]
+    pub(super) struct LogcatWriter;
+
+    pub(super) struct LogcatBuffer {
+        priority: c_int,
+        buffer: Vec<u8>,
+    }
+
+    impl LogcatBuffer {
+        const fn new(priority: c_int) -> Self {
+            Self {
+                priority,
+                buffer: Vec::new(),
+            }
+        }
+
+        fn emit(&self, message: &str) {
+            let Ok(text) = CString::new(message) else {
+                return;
+            };
+            // SAFETY: both pointers are NUL-terminated and outlive the call.
+            unsafe {
+                __android_log_write(self.priority, TAG.as_ptr().cast::<c_char>(), text.as_ptr());
+            }
+        }
+    }
+
+    impl std::io::Write for LogcatBuffer {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.buffer.extend_from_slice(buf);
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl Drop for LogcatBuffer {
+        fn drop(&mut self) {
+            if self.buffer.is_empty() {
+                return;
+            }
+            let text = String::from_utf8_lossy(&self.buffer);
+            for line in text.lines() {
+                // An interior NUL would silently cut the record short.
+                let line = line.replace('\0', "");
+                let mut rest = line.as_str();
+                while !rest.is_empty() {
+                    let split = if rest.len() <= MAX_PAYLOAD {
+                        rest.len()
+                    } else {
+                        let mut index = MAX_PAYLOAD;
+                        while index > 0 && !rest.is_char_boundary(index) {
+                            index -= 1;
+                        }
+                        index.max(1)
+                    };
+                    let (chunk, remainder) = rest.split_at(split);
+                    self.emit(chunk);
+                    rest = remainder;
+                }
+            }
+        }
+    }
+
+    impl<'a> MakeWriter<'a> for LogcatWriter {
+        type Writer = LogcatBuffer;
+
+        fn make_writer(&'a self) -> Self::Writer {
+            LogcatBuffer::new(PRIO_INFO)
+        }
+
+        fn make_writer_for(&'a self, meta: &Metadata<'_>) -> Self::Writer {
+            LogcatBuffer::new(match *meta.level() {
+                tracing::Level::TRACE => PRIO_VERBOSE,
+                tracing::Level::DEBUG => PRIO_DEBUG,
+                tracing::Level::INFO => PRIO_INFO,
+                tracing::Level::WARN => PRIO_WARN,
+                tracing::Level::ERROR => PRIO_ERROR,
+            })
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct PlainFields;
 
@@ -300,10 +409,18 @@ pub(crate) fn init_tracing(data_dir: &Path, in_background: bool) {
     }
 
     TRACING_INIT.get_or_init(|| {
-        let stdout_layer = Layer::new()
+        #[cfg(not(target_os = "android"))]
+        let console_layer = Layer::new()
             .with_writer(std::io::stdout)
             .with_ansi(false)
             .event_format(ShortEventFormatter::ansi());
+
+        #[cfg(target_os = "android")]
+        let console_layer = Layer::new()
+            .with_writer(logcat::LogcatWriter)
+            .with_ansi(false)
+            .fmt_fields(PlainFields)
+            .event_format(ShortEventFormatter::plain());
 
         let default_filter = if std::env::var("FLUTTER_TEST").is_ok() {
             "info,refinery_core=warn,refinery=warn"
@@ -322,7 +439,7 @@ pub(crate) fn init_tracing(data_dir: &Path, in_background: bool) {
                 EnvFilter::try_from_default_env()
                     .unwrap_or_else(|_| EnvFilter::new(default_filter)),
             )
-            .with(stdout_layer)
+            .with(console_layer)
             .with(file_layer)
             .try_init();
     });

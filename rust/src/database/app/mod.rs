@@ -75,10 +75,15 @@ impl AppDatabase {
         let (changes, _) = broadcast::channel(256);
 
         // SQLite itself reports which tables a statement touched, so Drift's
-        // query streams stay correct without every Rust write site having to
-        // remember an explicit `notify_committed`. Rows are collected as they
-        // are written and only published once the transaction commits, so a
-        // rollback never reaches the UI.
+        // query streams stay correct without any write site having to announce
+        // what it changed. Rows are collected as they are written and only
+        // published once the transaction commits, so a rollback never reaches
+        // the UI.
+        //
+        // The one write this cannot see is `DELETE FROM <table>` with no
+        // `WHERE`: SQLite's truncate optimization drops the rows without
+        // invoking the update hook. Give such a delete a `WHERE 1` so it takes
+        // the ordinary path.
         let pending: Arc<Mutex<BTreeSet<String>>> = Arc::default();
         let hook_pending = pending.clone();
         let hook_changes = changes.clone();
@@ -152,17 +157,6 @@ impl AppDatabase {
 
     pub fn subscribe(&self) -> broadcast::Receiver<DatabaseChange> {
         self.changes.subscribe()
-    }
-
-    /// Publishes a change immediately, without waiting for a commit.
-    ///
-    /// The SQLite hooks installed in [`AppDatabase::new`] already cover every
-    /// ordinary write. This stays for the cases they cannot see -- most notably
-    /// `DELETE FROM <table>` with no `WHERE`, which SQLite's truncate
-    /// optimization performs without invoking the update hook.
-    pub fn notify_committed<'a>(&self, tables: impl IntoIterator<Item = &'a str>) {
-        let tables = tables.into_iter().map(str::to_owned).collect();
-        let _ = self.changes.send(DatabaseChange { tables });
     }
 
     pub async fn raw_select(&self, statement: String, arguments: Vec<SqlValue>) -> Result<SqlRows> {

@@ -66,7 +66,6 @@ impl AppDatabase {
             .execute(&mut *connection)
             .await;
         let report = import_result?;
-        self.notify_committed(APPLICATION_TABLES.iter().copied());
         Ok(report)
     }
 

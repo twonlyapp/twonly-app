@@ -71,18 +71,26 @@ class _MessageInputState extends State<MessageInput> {
   Timer? _recordingTimer;
   DateTime? _recordingStartTime;
 
-  Future<void> _sendMessage() async {
-    if (_textFieldController.text == '') return;
+  void _sendMessage() {
+    final text = _textFieldController.text;
+    if (text == '') return;
+    final quoteMessageId = widget.quotesMessage?.messageId;
 
-    await RustApi.insertAndSendText(
-      groupId: widget.group.groupId,
-      text: _textFieldController.text,
-      quoteMessageId: widget.quotesMessage?.messageId,
-    );
-
+    // Emptying the composer is not allowed to wait on the bridge: Rust commits
+    // the message row before it starts delivering, so the bubble is already on
+    // its way into the chat list while this call is still running.
     _textFieldController.clear();
     widget.onMessageSend();
     setState(() {});
+
+    unawaitedRustCall(
+      RustApi.insertAndSendText(
+        groupId: widget.group.groupId,
+        text: text,
+        quoteMessageId: quoteMessageId,
+      ),
+      'insertAndSendText',
+    );
   }
 
   @override

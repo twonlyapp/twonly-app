@@ -94,6 +94,71 @@ impl Receipt {
         Ok(claimed)
     }
 
+    /// Parks the plaintext of an already-decrypted message on its receipt
+    /// claim. Signal decryption is a one-shot operation — it advances the
+    /// double ratchet in the signal database, outside this transaction — so the
+    /// plaintext has to be committed together with the claim. A redelivery that
+    /// finds it here resumes handling instead of decrypting again, which would
+    /// fail with an old-counter error.
+    pub async fn store_pending_plaintext(
+        transaction: &mut Transaction<'_, Sqlite>,
+        receipt_id: &str,
+        plaintext: &[u8],
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE received_receipts
+            SET pending_plaintext = ?
+            WHERE receipt_id = ?
+            "#,
+            plaintext,
+            receipt_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Returns the parked plaintext of a receipt whose handling did not commit.
+    pub async fn pending_plaintext(
+        transaction: &mut Transaction<'_, Sqlite>,
+        receipt_id: &str,
+    ) -> Result<Option<Vec<u8>>> {
+        let plaintext = sqlx::query_scalar!(
+            r#"
+            SELECT pending_plaintext
+            FROM received_receipts
+            WHERE receipt_id = ?
+            "#,
+            receipt_id,
+        )
+        .fetch_optional(&mut **transaction)
+        .await?
+        .flatten();
+
+        Ok(plaintext)
+    }
+
+    /// Drops a parked plaintext once its message no longer needs it.
+    pub async fn clear_pending_plaintext(
+        transaction: &mut Transaction<'_, Sqlite>,
+        receipt_id: &str,
+    ) -> Result<()> {
+        sqlx::query!(
+            r#"
+            UPDATE received_receipts
+            SET pending_plaintext = NULL
+            WHERE receipt_id = ? AND pending_plaintext IS NOT NULL
+            "#,
+            receipt_id,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn claim_received_retry(
         transaction: &mut Transaction<'_, Sqlite>,
         receipt_id: &str,
@@ -199,5 +264,60 @@ impl<'a> NewReceipt<'a> {
         .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::database::app::AppDatabase;
+
+    #[tokio::test]
+    async fn a_parked_plaintext_survives_a_rolled_back_handling() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+
+        // Phase one: the claim and the plaintext of a message whose ratchet step
+        // is already spent are committed together.
+        let mut t = database.pool.begin().await.unwrap();
+        assert!(Receipt::claim_received(&mut t, "receipt").await.unwrap());
+        Receipt::store_pending_plaintext(&mut t, "receipt", b"decrypted")
+            .await
+            .unwrap();
+        t.commit().await.unwrap();
+
+        // Phase two fails, so nothing it wrote survives.
+        let mut t = database.pool.begin().await.unwrap();
+        Receipt::clear_pending_plaintext(&mut t, "receipt")
+            .await
+            .unwrap();
+        t.rollback().await.unwrap();
+
+        // The redelivery is not a fresh claim, but it can resume without
+        // decrypting the message a second time.
+        let mut t = database.pool.begin().await.unwrap();
+        assert!(!Receipt::claim_received(&mut t, "receipt").await.unwrap());
+        assert_eq!(
+            Receipt::pending_plaintext(&mut t, "receipt").await.unwrap(),
+            Some(b"decrypted".to_vec())
+        );
+
+        // Once handling commits, the plaintext is gone and a later redelivery is
+        // recognised as the plain duplicate it is.
+        Receipt::clear_pending_plaintext(&mut t, "receipt")
+            .await
+            .unwrap();
+        t.commit().await.unwrap();
+
+        let mut t = database.pool.begin().await.unwrap();
+        assert!(!Receipt::claim_received(&mut t, "receipt").await.unwrap());
+        assert_eq!(
+            Receipt::pending_plaintext(&mut t, "receipt").await.unwrap(),
+            None
+        );
     }
 }

@@ -61,7 +61,6 @@ fn report_progress(media_id: &str, percent: i64) {
                 .bind(&media_id)
                 .execute(&database.pool)
                 .await;
-        database.notify_committed(["media_files"]);
     });
 }
 

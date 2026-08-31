@@ -216,7 +216,6 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
         .await?;
     }
 
-    db_app.notify_committed(["contacts"]);
     Ok(())
 }
 
@@ -448,7 +447,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     // on every retry. Drop the receipt instead of queueing it forever.
     if row.account_deleted != 0 {
         Receipt::delete(&app_db.pool, receipt_id).await?;
-        app_db.notify_committed(["receipts"]);
         return Ok(());
     }
 
@@ -528,7 +526,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         .await?;
     }
     t.commit().await?;
-    app_db.notify_committed(["receipts", "message_actions", "messages"]);
     Ok(())
 }
 
@@ -552,7 +549,6 @@ async fn defer_receipt_until_session(
     )
     .execute(&database.pool)
     .await?;
-    database.notify_committed(["receipts"]);
     Ok(())
 }
 

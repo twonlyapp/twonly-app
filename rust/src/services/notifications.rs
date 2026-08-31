@@ -279,7 +279,7 @@ pub(crate) async fn record_incoming_event(
 /// stale rows keeps them from producing an alert or inflating the badge.
 async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
     let cleared_at = current_time().timestamp();
-    let cleared = sqlx::query(
+    sqlx::query(
         r#"
         UPDATE notification_outbox
         SET cleared_at = ?
@@ -296,9 +296,6 @@ async fn clear_stale_opened(database: &Arc<AppDatabase>) -> Result<()> {
     .bind(cleared_at)
     .execute(&database.pool)
     .await?;
-    if cleared.rows_affected() != 0 {
-        database.notify_committed(["notification_outbox"]);
-    }
     Ok(())
 }
 
@@ -481,7 +478,6 @@ pub async fn acknowledge_batch(ctx: &Arc<Context>, event_ids: &[String]) -> Resu
         .await?;
     }
     transaction.commit().await?;
-    database.notify_committed(["notification_outbox"]);
     Ok(())
 }
 
@@ -503,7 +499,6 @@ pub async fn clear_conversation(ctx: &Arc<Context>, conversation_id: &str) -> Re
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    database.notify_committed(["notification_outbox"]);
     Ok(notification_ids)
 }
 
@@ -531,9 +526,6 @@ pub async fn clear_contact_requests(ctx: &Arc<Context>) -> Result<Vec<String>> {
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    if !notification_ids.is_empty() {
-        database.notify_committed(["notification_outbox"]);
-    }
     Ok(notification_ids)
 }
 

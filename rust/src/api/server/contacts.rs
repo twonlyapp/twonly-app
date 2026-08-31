@@ -61,7 +61,6 @@ impl Server {
                 .await?;
             }
         }
-        database.notify_committed(["contacts"]);
         Ok(())
     }
 

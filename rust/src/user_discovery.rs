@@ -119,7 +119,6 @@ impl UserDiscovery {
             .execute(&database.pool)
             .await?;
         }
-        database.notify_committed(["user_discovery_announced_users"]);
         Ok(())
     }
     pub fn new(
@@ -195,7 +194,6 @@ impl UserDiscovery {
         )
         .await?;
         transaction.commit().await?;
-        database.notify_committed(["user_discovery_shares"]);
         Ok(())
     }
 
@@ -620,7 +618,11 @@ impl UserDiscovery {
         let split_index = shares.len() - (config.threshold - 1) as usize;
         verification_shares.extend(shares.drain(split_index..));
 
-        sqlx::query!("DELETE FROM user_discovery_shares")
+        // `WHERE 1` is load-bearing: without a WHERE clause SQLite takes the
+        // truncate optimization, which drops every row without ever invoking
+        // the update hook the change stream is built on, so the UI would never
+        // learn the shares were replaced.
+        sqlx::query!("DELETE FROM user_discovery_shares WHERE 1")
             .execute(&mut **t)
             .await
             .map_err(|error| TwonlyError::UserDiscoveryStore(error.to_string()))?;

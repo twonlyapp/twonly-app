@@ -76,7 +76,6 @@ impl FlutterUserDiscovery {
                 .execute(&mut *transaction)
                 .await?;
                 transaction.commit().await?;
-                database.notify_committed(["user_discovery_own_promotions", "contacts"]);
                 Ok(())
             })
             .await

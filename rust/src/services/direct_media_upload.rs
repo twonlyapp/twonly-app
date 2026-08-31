@@ -416,7 +416,6 @@ impl DirectMediaUploadService {
                 .await?;
             }
         }
-        database.notify_committed(["media_files", "messages", "receipts"]);
         Ok(())
     }
 

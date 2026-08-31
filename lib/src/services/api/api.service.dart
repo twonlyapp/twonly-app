@@ -29,9 +29,19 @@ class ApiService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   late final StreamSubscription<ApiEvent> _apiEventSubscription;
 
+  /// The server rejects an outdated app or a superseded device during the
+  /// handshake, which usually happens before the widget showing that banner is
+  /// mounted. [events] is a broadcast stream, so late listeners would miss it —
+  /// they read the last rejection from here instead.
+  ApiEventKind? permanentRejection;
+
   Future<void> _handleApiEvent(ApiEvent event) async {
     if (event.kind == ApiEventKind.authenticated) {
       await onAuthenticated();
+    }
+    if (event.kind == ApiEventKind.appOutdated ||
+        event.kind == ApiEventKind.newDeviceRegistered) {
+      permanentRejection = event.kind;
     }
   }
 

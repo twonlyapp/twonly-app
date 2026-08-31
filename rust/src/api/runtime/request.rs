@@ -30,6 +30,29 @@ fn call_handle_server_message(
     })
 }
 
+/// Maps the error codes that make further connection attempts pointless onto
+/// the event the UI shows for them. Everything else is a per-request error.
+pub(crate) fn permanent_rejection_kind(code: i32) -> Option<ApiEventKind> {
+    use crate::api::proto::error::ErrorCode;
+    if code == ErrorCode::AppVersionOutdated as i32 {
+        Some(ApiEventKind::AppOutdated)
+    } else if code == ErrorCode::NewDeviceRegistered as i32 {
+        Some(ApiEventKind::NewDeviceRegistered)
+    } else {
+        None
+    }
+}
+
+/// Whether a send failure means the socket can never carry another frame.
+/// `ChannelClosed` is the signature of a connection the supervisor abandoned
+/// mid-handshake: it left the send channel in place but dropped the reader, so
+/// every further send fails the same way until the client is replaced. The
+/// other variants describe a single message or a connection that is still
+/// coming up, and are left to the caller to retry.
+fn is_dead_transport(error: &SendError) -> bool {
+    matches!(error, SendError::ChannelClosed)
+}
+
 impl ApiClient {
     pub(crate) async fn handle_incoming(self: &Arc<Self>, bytes: &[u8]) {
         let Ok(message) = server_to_client::ServerToClient::decode(bytes) else {
@@ -90,7 +113,12 @@ impl ApiClient {
                     Err(SendError::NotConnected) if start.elapsed() < Duration::from_secs(10) => {
                         tokio::time::sleep(Duration::from_millis(50)).await;
                     }
-                    Err(e) => return Err(TwonlyError::Generic(format!("send error: {:?}", e))),
+                    Err(e) => {
+                        if is_dead_transport(&e) {
+                            self.schedule_reconnect(&client, "send failed");
+                        }
+                        return Err(TwonlyError::Generic(format!("send error: {:?}", e)));
+                    }
                 }
             }
         } else {
@@ -103,7 +131,7 @@ impl ApiClient {
     }
 
     pub(crate) async fn request_durable(
-        &self,
+        self: &Arc<Self>,
         bytes: Vec<u8>,
         operation_kind: &str,
     ) -> Result<Vec<u8>> {
@@ -129,13 +157,12 @@ impl ApiClient {
             )
             .execute(&database.pool)
             .await?;
-            database.notify_committed(["api_outbox"]);
         }
         response
     }
 
     pub(crate) async fn request_internal(
-        &self,
+        self: &Arc<Self>,
         bytes: Vec<u8>,
         timeout: Duration,
     ) -> Result<Vec<u8>> {
@@ -167,6 +194,9 @@ impl ApiClient {
                     }
                     Err(e) => {
                         self.pending.lock().await.remove(&sequence);
+                        if is_dead_transport(&e) {
+                            self.schedule_reconnect(&client, "request send failed");
+                        }
                         return Err(TwonlyError::Generic(format!("send error: {:?}", e)));
                     }
                 }
@@ -218,30 +248,30 @@ impl ApiClient {
         Ok(())
     }
 
+    /// Rejections the server will keep returning for as long as this
+    /// installation stays as it is: the socket is closed for good and the UI is
+    /// told why, instead of the client reconnecting into the same error.
+    pub(crate) async fn reject_permanently(&self, kind: ApiEventKind) {
+        self.set_state(ApiConnectionState::PermanentlyRejected)
+            .await;
+        API_PERMANENTLY_REJECTED.store(true, Ordering::Release);
+        self.deliberately_closed.store(true, Ordering::Release);
+        let _ = self.events.send(ApiEvent {
+            kind,
+            state: Some(ApiConnectionState::PermanentlyRejected),
+            message: None,
+        });
+        if let Some(client) = self.ws_client.lock().await.take() {
+            if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
+                tracing::warn!(%error, "permanently rejected WebSocket did not shut down cleanly");
+            }
+        }
+    }
+
     pub(crate) async fn handle_api_error(&self, code: i32, contact_id: Option<i64>) -> Result<()> {
         use crate::api::proto::error::ErrorCode;
-        if code == ErrorCode::AppVersionOutdated as i32
-            || code == ErrorCode::NewDeviceRegistered as i32
-        {
-            self.set_state(ApiConnectionState::PermanentlyRejected)
-                .await;
-            API_PERMANENTLY_REJECTED.store(true, Ordering::Release);
-            self.deliberately_closed.store(true, Ordering::Release);
-            let kind = if code == ErrorCode::AppVersionOutdated as i32 {
-                ApiEventKind::AppOutdated
-            } else {
-                ApiEventKind::NewDeviceRegistered
-            };
-            let _ = self.events.send(ApiEvent {
-                kind,
-                state: Some(ApiConnectionState::PermanentlyRejected),
-                message: None,
-            });
-            if let Some(client) = self.ws_client.lock().await.take() {
-                if let Err(error) = client.shutdown_graceful(Duration::from_secs(5)).await {
-                    tracing::warn!(%error, "permanently rejected WebSocket did not shut down cleanly");
-                }
-            }
+        if let Some(kind) = permanent_rejection_kind(code) {
+            self.reject_permanently(kind).await;
         }
         if code == ErrorCode::UserIdNotFound as i32 {
             if let Some(contact_id) = contact_id {
@@ -258,7 +288,6 @@ impl ApiClient {
                     .execute(&mut *transaction)
                     .await?;
                 transaction.commit().await?;
-                database.notify_committed(["contacts", "receipts"]);
             }
         }
         Ok(())

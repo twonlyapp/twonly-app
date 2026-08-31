@@ -1,17 +1,17 @@
 use std::io::Result;
 fn main() -> Result<()> {
+    // The version the server compares against its minimum version setting.
+    // A build that cannot determine it has to fail here rather than ship a
+    // placeholder, which the server would read as an ancient client.
     println!("cargo:rerun-if-changed=../pubspec.yaml");
-    if let Ok(pubspec) = std::fs::read_to_string("../pubspec.yaml") {
-        if let Some(version) = pubspec
-            .lines()
-            .find_map(|line| line.strip_prefix("version: "))
-        {
-            println!(
-                "cargo:rustc-env=TWONLY_APP_VERSION={}",
-                version.split('+').next().unwrap_or(version)
-            );
-        }
-    }
+    let pubspec =
+        std::fs::read_to_string("../pubspec.yaml").expect("could not read ../pubspec.yaml");
+    let version = pubspec
+        .lines()
+        .find_map(|line| line.strip_prefix("version: "))
+        .map(|version| version.split('+').next().unwrap_or(version).trim())
+        .expect("no `version:` entry in ../pubspec.yaml");
+    println!("cargo:rustc-env=TWONLY_APP_VERSION={version}");
     let websocket_proto_root = "src/api/proto";
     let websocket_protos = [
         "src/api/proto/api/websocket/client_to_server.proto",

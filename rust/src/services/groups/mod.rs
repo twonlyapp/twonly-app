@@ -151,7 +151,6 @@ impl GroupService {
 
             Group::set_last_flame_sync(&db.pool, &group.group_id, now).await?;
         }
-        db.notify_committed(["groups"]);
         Ok(())
     }
 
@@ -224,7 +223,6 @@ impl GroupService {
         .await?;
 
         transaction.commit().await?;
-        database.notify_committed(["receipts", "groups", "group_members"]);
         Ok(())
     }
 
@@ -278,7 +276,6 @@ impl GroupService {
         }
         Self::history(&mut tr, &group_id, "createdGroup", None, None, None).await?;
         tr.commit().await?;
-        db.notify_committed(["groups", "group_members", "group_histories"]);
         MessageService::new(&self.ctx)
             .send_to_group(
                 group_id.clone(),
@@ -317,7 +314,6 @@ impl GroupService {
             .apply_fetched_group_state(&mut t, &group_id, server)
             .await?;
         t.commit().await?;
-        database.notify_committed(["groups", "group_members", "contacts", "receipts"]);
 
         // `apply_state` may have queued public-key requests. Nothing else
         // flushes them here -- this is not an inbound-message path -- and they
@@ -659,7 +655,6 @@ impl GroupService {
             .execute(&mut tr)
             .await?;
         tr.commit().await?;
-        db.notify_committed(["groups", "group_histories"]);
         Ok(true)
     }
 
@@ -687,7 +682,6 @@ impl GroupService {
             .insert_on_conflict_update(&mut tr)
             .await?;
         tr.commit().await?;
-        database.notify_committed(["contacts"]);
         Ok(true)
     }
 
@@ -722,7 +716,6 @@ impl GroupService {
         self.broadcast_group_public_key(&mut transaction, group_id)
             .await?;
         transaction.commit().await?;
-        database.notify_committed(["receipts"]);
         Ok(())
     }
 

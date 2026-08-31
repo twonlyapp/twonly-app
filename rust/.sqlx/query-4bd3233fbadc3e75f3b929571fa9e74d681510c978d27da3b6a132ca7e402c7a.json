@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO contacts(user_id, username) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "4bd3233fbadc3e75f3b929571fa9e74d681510c978d27da3b6a132ca7e402c7a"
+}

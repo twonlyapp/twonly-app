@@ -30,17 +30,23 @@ class _AppOutdatedCompState extends State<AppOutdatedComp> {
   @override
   void initState() {
     super.initState();
+    // The rejection is sent during the API handshake, which regularly completes
+    // before this widget is mounted, so start from the last one the service saw.
+    _showRejection(apiService.permanentRejection);
     _apiEventSubscription = apiService.events.listen((event) async {
       if (!mounted) return;
       if (event.kind == ApiEventKind.appOutdated ||
           event.kind == ApiEventKind.newDeviceRegistered) {
         await context.read<CustomChangeProvider>().updateConnectionState(false);
-        setState(() {
-          appIsOutdated = event.kind == ApiEventKind.appOutdated;
-          newDeviceRegistered = event.kind == ApiEventKind.newDeviceRegistered;
-        });
+        if (!mounted) return;
+        setState(() => _showRejection(event.kind));
       }
     });
+  }
+
+  void _showRejection(ApiEventKind? kind) {
+    appIsOutdated = kind == ApiEventKind.appOutdated;
+    newDeviceRegistered = kind == ApiEventKind.newDeviceRegistered;
   }
 
   @override

@@ -35,6 +35,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_in
 
 class _MessageAnimationState {
   bool hasReceivedFirstBatch = false;
+  DateTime? newestKnownAt;
   final HashSet<String> knownMessageIds = HashSet<String>();
   final HashSet<String> animateMessageIds = HashSet<String>();
   final HashSet<String> reportedOpenedMessageIds = HashSet<String>();
@@ -379,13 +380,22 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     List<GroupHistory> groupActions, {
     bool reportOpened = false,
   }) async {
+    final newestKnownAt = _animationState.newestKnownAt;
     for (final msg in newMessages) {
+      // Only messages appended after the newest one already loaded are new to
+      // the user. Messages fetched by scrolling up are older and must not
+      // animate, no matter who sent them.
       if (_animationState.hasReceivedFirstBatch &&
-          !_animationState.knownMessageIds.contains(msg.messageId) &&
-          msg.senderId == null) {
+          newestKnownAt != null &&
+          msg.createdAt.isAfter(newestKnownAt) &&
+          !_animationState.knownMessageIds.contains(msg.messageId)) {
         _animationState.animateMessageIds.add(msg.messageId);
       }
       _animationState.knownMessageIds.add(msg.messageId);
+      final currentNewest = _animationState.newestKnownAt;
+      if (currentNewest == null || msg.createdAt.isAfter(currentNewest)) {
+        _animationState.newestKnownAt = msg.createdAt;
+      }
     }
 
     final chatItems = <ChatItem>[];
@@ -680,6 +690,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                                 key: Key('anim_${chatMessage.messageId}'),
                                 messageId: chatMessage.messageId,
                                 animateIds: _animationState.animateMessageIds,
+                                isOwnMessage: chatMessage.senderId == null,
                                 child: ChatListEntry(
                                   key: Key(chatMessage.messageId),
                                   message: _data.chatItems[i].message!,
