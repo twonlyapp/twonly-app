@@ -23,10 +23,6 @@ pub(crate) async fn decorate_content(
     };
 
     content.sender_profile_counter = Some(config.avatar_counter);
-    // Announced on every content, including when it is off: a contact that
-    // switches the feature off has to stop receiving sealed envelopes.
-    content.sender_accepts_sealed_sender = Some(config.sealed_sender_enabled);
-
     if config.ask_for_friend_promotions {
         let database = ctx.app_db.read().await.clone();
         let accepted = sqlx::query_scalar!("SELECT COUNT(*) FROM contacts WHERE accepted = 1")

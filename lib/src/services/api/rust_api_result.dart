@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:twonly/src/model/error_code.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -26,4 +28,19 @@ Future<Result<T, ErrorCode>> rustApiResult<T>(Future<T> request) async {
     Log.error('Rust API call failed', error: error);
     return Result.error(ErrorCode.InternalError);
   }
+}
+
+/// Starts a Rust API call that nothing waits on.
+///
+/// Anything crossing the bridge can fail on transport alone — the WebSocket is
+/// still connecting at startup, or it drops mid-request — and a rejected future
+/// with no listener surfaces as an unhandled exception in the root zone. These
+/// calls are all retried by Rust or repeated by the next tick, so the failure
+/// only has to be logged.
+void unawaitedRustCall(Future<void> request, String description) {
+  unawaited(
+    request.catchError((Object error) {
+      Log.warn('$description failed', error);
+    }),
+  );
 }

@@ -28,7 +28,6 @@ use crate::api::proto::{client_to_server, server_to_client};
 use crate::context::Context;
 use crate::database::app::tables::{Contact, Group, Receipt};
 use crate::error::{Result, TwonlyError};
-use crate::sealed_sender::SealedSender;
 use crate::services::contacts::ContactService;
 use client_to_server::response::{ok, Response};
 use prost::Message as _;
@@ -66,20 +65,6 @@ pub(crate) async fn handle_server_message(
         }
         Kind::PendingMessagesV2(batch) => {
             return Ok(acknowledge_pending_messages(ctx, batch).await);
-        }
-        Kind::SealedSenderMessage(message) => {
-            if let Err(error) = handle_sealed_message(ctx, message.body).await {
-                tracing::warn!("failed to process sealed-sender message: {error}");
-            }
-            ok::Ok::None(true)
-        }
-        Kind::SealedSenderMessages(messages) => {
-            for message in messages.messages {
-                if let Err(error) = handle_sealed_message(ctx, message.body).await {
-                    tracing::warn!("failed to process sealed-sender message in batch: {error}");
-                }
-            }
-            ok::Ok::None(true)
         }
         Kind::MailboxDrained(_) => {
             ctx.mark_mailbox_drained();
@@ -166,16 +151,6 @@ pub(crate) async fn handle_new_server_message(
 ) -> Result<()> {
     let message = proto::Message::decode(server_message.body.as_slice())?;
     handle_decoded_server_message(ctx, server_message.from_user_id, message).await
-}
-
-pub(crate) async fn handle_sealed_message(ctx: &Arc<Context>, bytes: Vec<u8>) -> Result<()> {
-    let payload = SealedSender::decrypt(&bytes, ctx.as_ref()).await?;
-
-    let message = payload
-        .message
-        .ok_or_else(|| TwonlyError::Generic("sealed message contains no client message".into()))?;
-
-    handle_decoded_server_message(ctx, payload.from_user_id, message).await
 }
 
 pub(crate) async fn handle_request_new_pqc_prekeys(
@@ -473,10 +448,6 @@ async fn handle_encrypted_inner(
     }
 
     contact::check_for_profile_update(t, from_user_id, &content).await?;
-
-    if let Some(enabled) = content.sender_accepts_sealed_sender {
-        Contact::set_sealed_sender_enabled(t, from_user_id, enabled).await?;
-    }
 
     if content.ask_for_friend_promotions == Some(true) {
         Contact::update_ask_for_friend_promotions(t, from_user_id).await?;

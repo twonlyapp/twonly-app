@@ -1832,35 +1832,17 @@ abstract class AppLocalizations {
   /// **'Waiting for internet'**
   String get waitingForInternet;
 
-  /// No description provided for @sealedSenderTransportSealed.
-  ///
-  /// In en, this message translates to:
-  /// **'Sealed sender'**
-  String get sealedSenderTransportSealed;
-
-  /// No description provided for @sealedSenderTransportStandard.
-  ///
-  /// In en, this message translates to:
-  /// **'Standard'**
-  String get sealedSenderTransportStandard;
-
-  /// No description provided for @settingsSealedSender.
-  ///
-  /// In en, this message translates to:
-  /// **'Sealed Sender'**
-  String get settingsSealedSender;
-
-  /// No description provided for @settingsSealedSenderSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Hides who you are from the server when sending. Both you and your contact need it turned on, so turning it off also stops your contacts from sending to you sealed.'**
-  String get settingsSealedSenderSubtitle;
-
   /// No description provided for @editHistory.
   ///
   /// In en, this message translates to:
   /// **'Edit history'**
   String get editHistory;
+
+  /// No description provided for @fileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get fileSize;
 
   /// No description provided for @archivedChats.
   ///
@@ -2251,6 +2233,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages from other users.'**
   String get notificationCategoryMessageDesc;
+
+  /// No description provided for @notificationConnectionFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'You may have new messages.'**
+  String get notificationConnectionFallback;
 
   /// No description provided for @groupContextMenuDeleteGroup.
   ///

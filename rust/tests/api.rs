@@ -10,8 +10,6 @@ mod media;
 mod notifications;
 #[path = "api/recovery.rs"]
 mod recovery;
-#[path = "api/sealed_sender.rs"]
-mod sealed_sender;
 #[path = "api/server_api.rs"]
 mod server_api;
 #[path = "api/session_recovery.rs"]

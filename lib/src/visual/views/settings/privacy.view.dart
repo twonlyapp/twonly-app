@@ -40,13 +40,6 @@ class _PrivacyViewState extends State<PrivacyView> {
     setState(() {});
   }
 
-  Future<void> toggleSealedSender() async {
-    await UserService.update((u) {
-      u.sealedSenderEnabled = !u.sealedSenderEnabled;
-    });
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,16 +90,6 @@ class _PrivacyViewState extends State<PrivacyView> {
             trailing: Switch.adaptive(
               value: userService.currentUser.typingIndicators,
               onChanged: (a) => toggleTypingIndicators(),
-            ),
-          ),
-          const Divider(),
-          ListTile(
-            title: Text(context.lang.settingsSealedSender),
-            subtitle: Text(context.lang.settingsSealedSenderSubtitle),
-            onTap: toggleSealedSender,
-            trailing: Switch.adaptive(
-              value: userService.currentUser.sealedSenderEnabled,
-              onChanged: (a) => toggleSealedSender(),
             ),
           ),
           const Divider(),

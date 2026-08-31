@@ -263,14 +263,17 @@ impl MediaFileService {
         std::fs::write(&temp_path, &bytes)?;
 
         let hash = Sha256::digest(&bytes).to_vec();
+        let size = bytes.len() as i64;
 
         // Keep the file update and state transition ordered: ready is only
         // visible after the plaintext has been written successfully.
         let database = self.ctx.app_db.read().await.clone();
         sqlx::query!(
-            r#"UPDATE media_files SET download_state = 'ready', stored_file_hash = ?
+            r#"UPDATE media_files SET download_state = 'ready', stored_file_hash = ?,
+                      size_in_bytes = ?
                WHERE media_id = ?"#,
             hash,
+            size,
             media.media_id,
         )
         .execute(&database.pool)

@@ -38,7 +38,6 @@ pub struct Contact {
     pub ask_for_friend_promotions: Option<i64>,
     pub media_send_counter: i64,
     pub media_received_counter: i64,
-    pub sealed_sender_enabled: i64,
 }
 
 #[derive(bon::Builder)]
@@ -177,27 +176,6 @@ impl Contact {
             WHERE user_id = ?
             "#,
             user_id,
-        )
-        .execute(&mut **t)
-        .await?;
-        Ok(())
-    }
-
-    /// Records whether a contact announced that it accepts sealed-sender
-    /// envelopes. A peer that stops announcing it goes back to named sends.
-    pub async fn set_sealed_sender_enabled(
-        t: &mut Transaction<'_, Sqlite>,
-        user_id: i64,
-        enabled: bool,
-    ) -> Result<()> {
-        // Announced on every encrypted content, so the write is skipped unless
-        // the value actually changes.
-        sqlx::query!(
-            r#"UPDATE contacts SET sealed_sender_enabled = ?
-               WHERE user_id = ? AND sealed_sender_enabled != ?"#,
-            enabled,
-            user_id,
-            enabled,
         )
         .execute(&mut **t)
         .await?;

@@ -981,20 +981,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get waitingForInternet => 'Warten auf Internet';
 
   @override
-  String get sealedSenderTransportSealed => 'Sealed Sender';
-
-  @override
-  String get sealedSenderTransportStandard => 'Standard';
-
-  @override
-  String get settingsSealedSender => 'Sealed Sender';
-
-  @override
-  String get settingsSealedSenderSubtitle =>
-      'Verbirgt beim Senden vor dem Server, wer du bist. Sowohl du als auch dein Kontakt müssen es aktiviert haben; deaktivierst du es, senden deine Kontakte auch nicht mehr versiegelt an dich.';
-
-  @override
   String get editHistory => 'Bearbeitungshistorie';
+
+  @override
+  String get fileSize => 'Dateigröße';
 
   @override
   String get archivedChats => 'Archivierte Chats';
@@ -1253,6 +1243,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationCategoryMessageDesc =>
       'Nachrichten von anderen Benutzern.';
+
+  @override
+  String get notificationConnectionFallback =>
+      'Du könntest neue Nachrichten haben.';
 
   @override
   String get groupContextMenuDeleteGroup =>

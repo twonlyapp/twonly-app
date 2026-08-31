@@ -133,11 +133,6 @@ class UserConfig {
   bool storeMediaFilesInGallery;
   bool autoStoreAllSendUnlimitedMediaFiles;
   bool typingIndicators;
-
-  /// Announces to contacts that this account accepts sealed-sender envelopes,
-  /// and lets this account send them. Both sides have to have it on before
-  /// anything travels sealed.
-  bool sealedSenderEnabled;
   bool showRestoreFlame;
   String? myBestFriendGroupId;
   DateTime? signalLastSignedPreKeyUpdated;
@@ -203,7 +198,6 @@ class UserConfig {
     required this.storeMediaFilesInGallery,
     required this.autoStoreAllSendUnlimitedMediaFiles,
     required this.typingIndicators,
-    required this.sealedSenderEnabled,
     required this.showRestoreFlame,
     this.myBestFriendGroupId,
     this.signalLastSignedPreKeyUpdated,
@@ -267,7 +261,6 @@ class UserConfig {
       storeMediaFilesInGallery.hashCode ^
       autoStoreAllSendUnlimitedMediaFiles.hashCode ^
       typingIndicators.hashCode ^
-      sealedSenderEnabled.hashCode ^
       showRestoreFlame.hashCode ^
       myBestFriendGroupId.hashCode ^
       signalLastSignedPreKeyUpdated.hashCode ^
@@ -336,7 +329,6 @@ class UserConfig {
           autoStoreAllSendUnlimitedMediaFiles ==
               other.autoStoreAllSendUnlimitedMediaFiles &&
           typingIndicators == other.typingIndicators &&
-          sealedSenderEnabled == other.sealedSenderEnabled &&
           showRestoreFlame == other.showRestoreFlame &&
           myBestFriendGroupId == other.myBestFriendGroupId &&
           signalLastSignedPreKeyUpdated ==

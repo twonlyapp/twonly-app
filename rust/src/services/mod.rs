@@ -13,5 +13,3 @@ pub mod media_upload;
 pub mod mediafiles;
 pub mod messages;
 pub mod notifications;
-pub mod privacy_pass;
-pub mod sealed_sender;

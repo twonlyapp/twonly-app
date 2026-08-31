@@ -11,7 +11,6 @@ use crate::context::Context;
 use crate::database::app::tables::{Contact, MediaFile, NewReceipt, Receipt};
 use crate::error::{Result, TwonlyError};
 use crate::services::contacts::ContactService;
-use crate::services::sealed_sender::SealedSenderService;
 use crate::utils::new_uuid_v4;
 use prost::Message as ProstMessage;
 use proto::encrypted_content::error_messages::Type;
@@ -296,12 +295,9 @@ async fn encrypt_v2_with_session_recovery(
 }
 
 pub(crate) struct PreparedQueuedReceipt {
-    pub receipt_id: String,
     pub contact_id: i64,
     pub message_id: Option<String>,
     pub contact_will_sends_receipt: i64,
-    /// The fully prepared client message. A sealed-sender envelope wraps this
-    /// value, while the named transport sends its encoding.
     pub message: proto::Message,
     pub wake_receiver: bool,
 }
@@ -409,7 +405,6 @@ async fn prepare_queued_receipt_from_row(
     }
 
     Ok(PreparedQueuedReceipt {
-        receipt_id: receipt_id.to_owned(),
         contact_id: row.contact_id,
         message_id: row.message_id,
         contact_will_sends_receipt: row.contact_will_sends_receipt,
@@ -474,24 +469,20 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         Err(error) => return Err(error),
     };
 
-    let sent_sealed = SealedSenderService::try_send(ctx, &receipt).await?;
-
-    if !sent_sealed {
-        match Server::send_text_message(
-            ctx,
-            receipt.contact_id,
-            receipt.message.encode_to_vec(),
-            receipt.wake_receiver,
-        )
-        .await?
-        {
-            ServerResult::Ok(()) => {}
-            ServerResult::ErrorCode(code) => {
-                return Err(TwonlyError::Generic(format!(
-                    "server rejected sender delivery receipt with code: {}",
-                    code
-                )));
-            }
+    match Server::send_text_message(
+        ctx,
+        receipt.contact_id,
+        receipt.message.encode_to_vec(),
+        receipt.wake_receiver,
+    )
+    .await?
+    {
+        ServerResult::Ok(()) => {}
+        ServerResult::ErrorCode(code) => {
+            return Err(TwonlyError::Generic(format!(
+                "server rejected sender delivery receipt with code: {}",
+                code
+            )));
         }
     }
 
@@ -509,33 +500,6 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         )
         .execute(&mut *t)
         .await?;
-
-        // The transport is per recipient: in a group one member may accept
-        // sealed envelopes while another still needs the named send. Recording
-        // it as an action keeps that distinction visible per member.
-        if sent_sealed {
-            sqlx::query!(
-                r#"
-                INSERT INTO message_actions(message_id, contact_id, type)
-                VALUES (?, ?, 'sealedSenderAt')
-                ON CONFLICT(message_id, contact_id, type)
-                DO UPDATE SET action_at = CAST(strftime('%s', 'now') AS INTEGER)
-                "#,
-                message_id,
-                receipt.contact_id,
-            )
-            .execute(&mut *t)
-            .await?;
-        } else {
-            sqlx::query!(
-                "DELETE FROM message_actions
-                 WHERE message_id = ? AND contact_id = ? AND type = 'sealedSenderAt'",
-                message_id,
-                receipt.contact_id,
-            )
-            .execute(&mut *t)
-            .await?;
-        }
 
         // `message_actions` keeps the per-recipient acknowledgement used by
         // group chats. The message row also carries the aggregate value used

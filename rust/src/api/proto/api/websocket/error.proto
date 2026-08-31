@@ -45,5 +45,5 @@ enum ErrorCode {
     ForegroundSessionConnected = 1036;
     NoRecoveryData = 1037;
     InvalidRecoveryData = 1038;
-    PrivacyPassQuotaExhausted = 1039;
+    reserved 1039;
 }

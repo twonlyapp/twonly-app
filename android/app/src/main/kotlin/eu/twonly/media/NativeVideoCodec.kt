@@ -10,11 +10,14 @@ import android.os.Handler
 import android.os.Looper
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.OverlaySettings
+import androidx.media3.common.util.Size
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.BitmapOverlay
 import androidx.media3.effect.FrameDropEffect
 import androidx.media3.effect.OverlayEffect
 import androidx.media3.effect.Presentation
+import androidx.media3.effect.StaticOverlaySettings
 import androidx.media3.effect.TextureOverlay
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
@@ -299,11 +302,46 @@ object NativeVideoCodec {
             val bitmap = BitmapFactory.decodeFile(overlayPath)
             if (bitmap != null) {
                 val overlays: ImmutableList<TextureOverlay> =
-                    ImmutableList.of(BitmapOverlay.createStaticBitmapOverlay(bitmap))
+                    ImmutableList.of(FullFrameBitmapOverlay(bitmap))
                 videoEffects.add(OverlayEffect(overlays))
             }
         }
         return Effects(ImmutableList.of(), ImmutableList.copyOf(videoEffects))
+    }
+
+    /**
+     * Stretches the editor's overlay across the whole frame.
+     *
+     * Media3 draws a [BitmapOverlay] at the bitmap's own pixel size, centred:
+     * the default settings only normalise the bitmap against the frame, they do
+     * not fit it to one. The overlay is captured at the phone's device pixel
+     * ratio over the video's on-screen rectangle, so it is comfortably larger
+     * than the 720p a send is normalised to, and drawn as-is it would appear
+     * enlarged with whatever the user put near an edge cut off. It shares the
+     * video's aspect ratio, having been drawn over it, so filling the frame
+     * does not distort it. The iOS renderer scales its overlay onto the render
+     * size the same way.
+     *
+     * The frame size is only settled once every resolution-changing effect
+     * ahead of this one has run, which is what [configure] reports, so the
+     * scale is taken from there rather than from the probed source.
+     */
+    private class FullFrameBitmapOverlay(private val bitmap: Bitmap) : BitmapOverlay() {
+        private var settings: OverlaySettings = StaticOverlaySettings.Builder().build()
+
+        override fun getBitmap(presentationTimeUs: Long): Bitmap = bitmap
+
+        override fun configure(videoSize: Size) {
+            if (bitmap.width <= 0 || bitmap.height <= 0) return
+            settings = StaticOverlaySettings.Builder()
+                .setScale(
+                    videoSize.width.toFloat() / bitmap.width,
+                    videoSize.height.toFloat() / bitmap.height,
+                )
+                .build()
+        }
+
+        override fun getOverlaySettings(presentationTimeUs: Long): OverlaySettings = settings
     }
 
     private fun pollProgress(

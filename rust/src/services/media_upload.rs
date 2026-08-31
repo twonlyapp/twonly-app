@@ -249,6 +249,12 @@ impl MediaUploadService {
         if !temp_path.exists() {
             return self.retire_media(&media).await;
         }
+        // What the recipient ends up with is this plaintext, so its size is
+        // recorded while the file is still here: the temporary copy is dropped
+        // once the upload is scheduled, and the message info still shows it.
+        if let Err(error) = self.record_plaintext_size(media_id, &temp_path).await {
+            tracing::warn!(media_id, %error, "could not record the media size");
+        }
 
         // Auto-storing has to happen before the plaintext is consumed, and only
         // for media the recipient could have kept anyway.
@@ -569,6 +575,19 @@ impl MediaUploadService {
         .await?;
         database.notify_committed(["media_files"]);
         Ok(())
+    }
+
+    /// The size the user is shown for a media file is the plaintext one, not
+    /// what the encrypted upload weighs, and it is kept even after the file
+    /// itself is gone.
+    async fn record_plaintext_size(&self, media_id: &str, path: &Path) -> Result<()> {
+        let size = std::fs::metadata(path)?.len() as i64;
+        self.update_media(
+            "UPDATE media_files SET size_in_bytes = ? WHERE media_id = ?",
+            size,
+            media_id,
+        )
+        .await
     }
 
     /// Called by Flutter after a plugin step rewrote a media file on disk, so

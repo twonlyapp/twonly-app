@@ -72,9 +72,8 @@ class TwonlyNotificationWorker(
         manager: NotificationManagerCompat,
         addition: NativeNotificationAddition,
     ): Boolean {
-        val avatar = addition.avatarPath
-            ?.let(BitmapFactory::decodeFile)
-            ?.let(IconCompat::createWithBitmap)
+        val avatarBitmap = addition.avatarPath?.let(BitmapFactory::decodeFile)
+        val avatar = avatarBitmap?.let(IconCompat::createWithBitmap)
         val sender = Person.Builder()
             .setName(addition.senderName)
             .setKey(addition.senderId.toString())
@@ -107,6 +106,11 @@ class TwonlyNotificationWorker(
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setGroup(addition.conversationId ?: addition.senderId.toString())
+            // Android only draws the MessagingStyle person icon for conversation
+            // notifications, which require a long-lived shortcut. Without one the
+            // standard template is used, where the large icon is the only place
+            // the sender's avatar can appear.
+            .apply { avatarBitmap?.let(::setLargeIcon) }
             .build()
         return try {
             manager.notify(nativeNotificationId(addition.notificationId), notification)

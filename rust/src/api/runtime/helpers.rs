@@ -14,7 +14,6 @@ use crate::error::{Result, TwonlyError};
 use crate::services::direct_media_upload::DirectMediaUploadService;
 use crate::services::groups::GroupService;
 use crate::services::mediafiles::MediaFileService;
-use crate::services::privacy_pass::PrivacyPassTokens;
 use prost::Message as ProstMessage;
 use std::future::Future;
 use std::pin::Pin;
@@ -60,12 +59,6 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
 
         if let Err(error) = ApiRuntime::replay_legacy_raw_outbox(&ctx).await {
             tracing::warn!("failed to replay legacy raw-byte outbox: {error}");
-        }
-
-        // Minting has to happen on an authenticated socket, so the pool is
-        // topped up while one is available rather than when a message needs it.
-        if let Err(error) = PrivacyPassTokens::refill_if_needed(&ctx).await {
-            tracing::warn!("failed to refill the Privacy Pass token pool: {error}");
         }
 
         // Runs before the receipt sweep below: without a bundle on the server

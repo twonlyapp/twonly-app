@@ -309,7 +309,7 @@ class _ShareImageView extends State<ShareImageView> {
                               });
 
                               // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
-                              unawaited(
+                              unawaitedRustCall(
                                 RustApi.sendMediaToGroups(
                                   mediaId:
                                       widget.mediaFileService.mediaFile.mediaId,
@@ -317,6 +317,7 @@ class _ShareImageView extends State<ShareImageView> {
                                   additionalMessageData: widget.additionalData
                                       ?.writeToBuffer(),
                                 ),
+                                'sendMediaToGroups',
                               );
 
                               if (context.mounted) {

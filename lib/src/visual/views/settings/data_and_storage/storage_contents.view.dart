@@ -335,7 +335,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
     try {
       if (deleteCompletely) {
         await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-        unawaited(RustApi.deleteMemory(mediaId: file.mediaId));
+        unawaitedRustCall(
+          RustApi.deleteMemory(mediaId: file.mediaId),
+          'deleteMemory',
+        );
         await MediaFileService(file).fullMediaRemoval();
       } else {
         MediaFileService(file).storedPath.deleteSync();
@@ -384,7 +387,10 @@ class _StorageContentsViewState extends State<StorageContentsView> {
       for (final file in selectedFiles) {
         if (deleteCompletely) {
           await twonlyDB.mediaFilesDao.deleteMediaFile(file.mediaId);
-          unawaited(RustApi.deleteMemory(mediaId: file.mediaId));
+          unawaitedRustCall(
+            RustApi.deleteMemory(mediaId: file.mediaId),
+            'deleteMemory',
+          );
           await MediaFileService(file).fullMediaRemoval();
         } else {
           MediaFileService(file).storedPath.deleteSync();

@@ -249,8 +249,20 @@ class MainCameraController {
         }
 
         if (userService.currentUser.videoStabilizationEnabled && !kDebugMode) {
+          // Stabilization buys its steadiness with a margin of sensor pixels to
+          // warp against, so it always narrows the field of view. On Android
+          // level2 maps to Camera2's PREVIEW_STABILIZATION, which narrows the
+          // preview by the same amount as the recording, so the viewfinder
+          // shows what gets sent; level1 is plain VIDEO_STABILIZATION_MODE_ON,
+          // which crops the recording alone and leaves the preview wider than
+          // the result. On iOS level2 is AVFoundation's `.cinematic`, which
+          // crops harder than the `.standard` level1 maps to without matching
+          // the preview any better, so iOS stays where it was. Both fall back
+          // down the levels, and finally to off, on a camera without the mode.
           await controller.setVideoStabilizationMode(
-            VideoStabilizationMode.level1,
+            Platform.isAndroid
+                ? VideoStabilizationMode.level2
+                : VideoStabilizationMode.level1,
           );
           if (sessionId != _cameraSessionId) {
             unawaited(controller.dispose());

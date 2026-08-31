@@ -42,7 +42,10 @@ class ApiService {
     if (AppState.isInBackgroundTask) {
       await rust_api.RustApi.reuploadPendingMedia();
     } else if (!AppState.isAppInBackground) {
-      unawaited(rust_api.RustApi.reuploadPendingMedia());
+      unawaitedRustCall(
+        rust_api.RustApi.reuploadPendingMedia(),
+        'reuploadPendingMedia',
+      );
 
       twonlyDB.markUpdated();
       // resetUserDiscoveryRequestUpdates();

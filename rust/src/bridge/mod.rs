@@ -7,6 +7,7 @@
 pub mod api;
 pub mod callbacks;
 pub mod groups;
+pub mod logging;
 pub mod user_config;
 pub mod wrapper;
 

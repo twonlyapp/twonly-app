@@ -1,22 +1,29 @@
-import 'dart:async';
 import 'dart:io';
-import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
-import 'package:mutex/mutex.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:twonly/core/bridge/logging.dart' as rust_logging;
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/utils/exclusive_access.utils.dart';
 
 class Log {
   static bool _isInitialized = false;
+  static bool _rustSinkReady = false;
+  static const int _maxBufferedRecords = 1000;
+  static final List<LogRecord> _bufferedRecords = [];
 
   static void init() {
     if (_isInitialized) return;
     _isInitialized = true;
     Logger.root.level = Level.ALL;
-    Logger.root.onRecord.listen((record) async {
-      unawaited(_writeLogToFile(record));
+    Logger.root.onRecord.listen((record) {
+      if (_rustSinkReady) {
+        if (!_writeLogToRust(record)) {
+          _rustSinkReady = false;
+          _buffer(record);
+        }
+      } else {
+        _buffer(record);
+      }
       if (!kReleaseMode) {
         if (!Platform.environment.containsKey('FLUTTER_TEST') ||
             record.level >= Level.WARNING) {
@@ -27,6 +34,54 @@ class Log {
         }
       }
     });
+  }
+
+  /// Enables the Rust-owned app.log and flushes records emitted before Rust
+  /// initialization completed.
+  static void enableRustSink() {
+    if (_rustSinkReady) return;
+    _rustSinkReady = true;
+    final pending = List<LogRecord>.of(_bufferedRecords);
+    _bufferedRecords.clear();
+    for (var i = 0; i < pending.length; i++) {
+      if (_writeLogToRust(pending[i])) continue;
+      _rustSinkReady = false;
+      for (var j = i; j < pending.length; j++) {
+        _buffer(pending[j]);
+      }
+      break;
+    }
+  }
+
+  static void _buffer(LogRecord record) {
+    if (_bufferedRecords.length == _maxBufferedRecords) {
+      _bufferedRecords.removeAt(0);
+    }
+    _bufferedRecords.add(record);
+  }
+
+  static bool _writeLogToRust(LogRecord record) {
+    try {
+      rust_logging.writeLog(
+        level: switch (record.level) {
+          >= Level.SHOUT => rust_logging.LogLevel.shout,
+          >= Level.WARNING => rust_logging.LogLevel.warning,
+          >= Level.INFO => rust_logging.LogLevel.info,
+          >= Level.FINE => rust_logging.LogLevel.fine,
+          _ => rust_logging.LogLevel.finest,
+        },
+        source: record.loggerName,
+        message: record.message,
+        inBackground: AppState.isInBackgroundTask,
+      );
+      return true;
+    } catch (error) {
+      if (!kReleaseMode) {
+        // ignore: avoid_print
+        print('Could not forward log record to Rust: $error');
+      }
+      return false;
+    }
   }
 
   static String filterLogMessage(String msg) {
@@ -77,119 +132,22 @@ class Log {
     final message = filterLogMessage('$messageInput');
     Logger(_getCallerSourceCodeFilename()).fine(message, error, stackTrace);
   }
-
-  /// Re-emits a record that was produced outside Dart, keeping the origin's
-  /// level and source location. Deriving either from the Dart call site would
-  /// only ever point back at the forwarding code.
-  static void forward({
-    required Level level,
-    required String source,
-    required Object? messageInput,
-  }) {
-    Logger(source).log(level, filterLogMessage('$messageInput'));
-  }
 }
 
 Future<String> loadLogFile() async {
-  return _protectFileAccess(() async {
-    final logFile = File('${AppEnvironment.supportDir}/app.log');
-
-    if (logFile.existsSync()) {
-      return logFile.readAsString();
-    } else {
-      return 'Log file does not exist.';
-    }
-  });
+  return rust_logging.loadLogFile();
 }
 
 Future<String> readLast1000Lines() async {
-  return _protectFileAccess(() async {
-    final file = File('${AppEnvironment.supportDir}/app.log');
-    if (!file.existsSync()) return '';
-    final all = await file.readAsLines();
-    final start = all.length > 1000 ? all.length - 1000 : 0;
-    return all.sublist(start).join('\n');
-  });
-}
-
-final Mutex _logMutex = Mutex();
-
-Future<T> _protectFileAccess<T>(Future<T> Function() action) async {
-  return exclusiveAccess(
-    lockName: 'app.log',
-    action: action,
-    mutex: _logMutex,
-  );
-}
-
-Future<void> _writeLogToFile(LogRecord record) async {
-  final logFile = File('${AppEnvironment.supportDir}/app.log');
-
-  final logMessage =
-      '${clock.now()} ${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}\n';
-
-  return _protectFileAccess(() async {
-    if (!logFile.existsSync()) {
-      logFile.createSync(recursive: true);
-    }
-    final raf = await logFile.open(mode: FileMode.writeOnlyAppend);
-    try {
-      await raf.writeString(logMessage);
-      await raf.flush();
-    } catch (e) {
-      // ignore: avoid_print
-      print('Error during file access: $e');
-    } finally {
-      await raf.close();
-    }
-  });
+  return rust_logging.readLastLogLines(lineCount: 1000);
 }
 
 Future<void> cleanLogFile() async {
-  return _protectFileAccess(() async {
-    final logFile = File('${AppEnvironment.supportDir}/app.log');
-
-    if (!logFile.existsSync()) {
-      return;
-    }
-    final lines = await logFile.readAsLines();
-
-    final twoWeekAgo = clock.now().subtract(const Duration(days: 3));
-    var keepStartIndex = -1;
-
-    for (var i = 0; i < lines.length; i += 100) {
-      if (lines[i].length >= 19) {
-        final date = DateTime.tryParse(lines[i].substring(0, 19));
-        if (date != null && date.isAfter(twoWeekAgo)) {
-          keepStartIndex = i;
-          break;
-        }
-      }
-    }
-
-    if (keepStartIndex == 0) return;
-
-    if (keepStartIndex == -1) {
-      await logFile.writeAsString('');
-      return;
-    }
-
-    final remaining = lines.sublist(keepStartIndex);
-    final sink = logFile.openWrite()..writeAll(remaining, '\n');
-    await sink.close();
-  });
+  return rust_logging.cleanLogFile();
 }
 
 Future<bool> deleteLogFile() async {
-  return _protectFileAccess(() async {
-    final logFile = File('${AppEnvironment.supportDir}/app.log');
-
-    if (logFile.existsSync()) {
-      await logFile.delete();
-      return true;
-    }
-    return false;
-  });
+  return rust_logging.clearLogFile();
 }
 
 String _getCallerSourceCodeFilename() {

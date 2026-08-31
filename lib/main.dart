@@ -55,6 +55,7 @@ Future<bool> twonlyMinimumInitialization() async {
             dataDir: AppEnvironment.supportDir,
           ),
         );
+        Log.enableRustSink();
         if (!await RustAppDatabase.legacyImportComplete()) {
           final legacyFile = File(
             '${AppEnvironment.supportDir}/twonly.sqlite',
@@ -71,6 +72,9 @@ Future<bool> twonlyMinimumInitialization() async {
           await RustAppDatabase.migrateLegacyDatabase();
         }
       } catch (e) {
+        // Tracing is initialized before the rest of the Rust context, so even
+        // failed initialization can persist the buffered startup diagnostics.
+        Log.enableRustSink();
         Log.error(e);
         return true;
       }
@@ -188,7 +192,10 @@ Future<void> postStartupTasks() async {
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
-  unawaited(RustApi.finishStartedMediaUploads());
+  unawaitedRustCall(
+    RustApi.finishStartedMediaUploads(),
+    'finishStartedMediaUploads',
+  );
   unawaited(
     newsService.init().then((_) {
       final lastDownload = newsService.lastDownloadedAt;

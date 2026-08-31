@@ -7,7 +7,6 @@ pub(crate) mod groups;
 pub mod messages;
 pub mod proto;
 pub(super) mod runtime;
-pub(crate) mod sealed_sender;
 pub(super) mod server;
 
 #[doc(hidden)]

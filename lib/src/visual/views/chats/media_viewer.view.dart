@@ -357,8 +357,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     Log.info(
       'Calling downloadDone for media ID: ${currentMediaLocal.mediaFile.mediaId}',
     );
-    unawaited(
+    unawaitedRustCall(
       RustApi.downloadDone(token: currentMediaLocal.mediaFile.downloadToken!),
+      'downloadDone',
     );
 
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
@@ -614,12 +615,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   void _sendTextMessage() {
     if (textMessageController.text.isNotEmpty) {
-      unawaited(
+      unawaitedRustCall(
         RustApi.insertAndSendText(
           groupId: widget.group.groupId,
           text: textMessageController.text,
           quoteMessageId: currentMessage!.messageId,
         ),
+        'insertAndSendText',
       );
       textMessageController.clear();
     }

@@ -196,13 +196,19 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     }
 
     if (userService.currentUser.typingIndicators) {
-      unawaited(RustApi.sendTyping(groupId: widget.groupId, isTyping: false));
-      _nextTypingIndicator = Timer.periodic(chatOpenPingInterval, (_) async {
+      unawaitedRustCall(
+        RustApi.sendTyping(groupId: widget.groupId, isTyping: false),
+        'sendTyping',
+      );
+      _nextTypingIndicator = Timer.periodic(chatOpenPingInterval, (_) {
         // A typing announcement refreshes the contact's chat-open state as
         // well, so pinging while the composer is active would spend a second
         // message only to clear the typing flag that composer just set.
         if (_isViewActive() && !_composing.value) {
-          await RustApi.sendTyping(groupId: widget.groupId, isTyping: false);
+          unawaitedRustCall(
+            RustApi.sendTyping(groupId: widget.groupId, isTyping: false),
+            'sendTyping',
+          );
         }
       });
     }

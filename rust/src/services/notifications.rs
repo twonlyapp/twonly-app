@@ -95,7 +95,7 @@ pub struct NotificationPresentation {
 pub fn fallback_presentation(locale: &str) -> NotificationPresentation {
     NotificationPresentation {
         title: translation(locale, "notificationCategoryMessageTitle").to_owned(),
-        body: translation(locale, "notificationCategoryMessageDesc").to_owned(),
+        body: translation(locale, "notificationConnectionFallback").to_owned(),
     }
 }
 
@@ -690,6 +690,18 @@ mod tests {
             "möchte sich mit dir vernetzen."
         );
         assert_eq!(localized_body("fr-FR", &row), "wants to connect with you.");
+    }
+
+    #[test]
+    fn localizes_connection_fallback_notification() {
+        assert_eq!(
+            fallback_presentation("en-US").body,
+            "You may have new messages."
+        );
+        assert_eq!(
+            fallback_presentation("de-DE").body,
+            "Du könntest neue Nachrichten haben."
+        );
     }
 
     #[test]

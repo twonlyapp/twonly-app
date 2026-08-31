@@ -16,9 +16,11 @@ use crate::secure_storage::SecureStorage;
 use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
-use libsignal_protocol::IdentityKey;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::sync::{Mutex, Notify, OnceCell, RwLock};
 use zeroize::Zeroize;
 
@@ -45,11 +47,6 @@ pub struct Context {
     mailbox_drained: Notify,
     incoming_generation: AtomicU64,
     incoming_committed: Notify,
-    /// Serializes Privacy Pass minting and holds the earliest time the issuer
-    /// may be asked again. It belongs to the account, not to the process: two
-    /// contexts in one process have separate quotas and must not block or back
-    /// each other off.
-    pub(crate) privacy_pass_issuance: Mutex<Option<std::time::Instant>>,
     /// Set once this connection has confirmed the account has a PQC prekey
     /// bundle on the server (or has just published one). Per context rather
     /// than process-wide so two accounts in one process check independently.
@@ -130,7 +127,6 @@ impl Context {
             mailbox_drained: Notify::new(),
             incoming_generation: AtomicU64::new(0),
             incoming_committed: Notify::new(),
-            privacy_pass_issuance: Mutex::new(None),
             pqc_bundle_verified: AtomicBool::new(false),
         });
         ApiRuntime::initialize(&ctx).await?;
@@ -192,11 +188,13 @@ impl Context {
         std::fs::create_dir_all(&config.database_dir)?;
         std::fs::create_dir_all(&config.data_dir)?;
 
-        // Ahead of the already-initialized check: the context is a process-wide
-        // OnceCell, but the calling isolate may be a new one that has to hand
-        // tracing a live log sink.
-        let log_dir = PathBuf::from(&config.data_dir).join("log");
-        init_tracing(&log_dir, runtime_mode == RuntimeMode::Flutter).await;
+        // Logging is process-wide and owns app.log directly. Initialize it
+        // before the context check so notification and Flutter runtimes both
+        // have a sink even when the main context already exists.
+        init_tracing(
+            Path::new(&config.data_dir),
+            runtime_mode != RuntimeMode::Flutter,
+        );
 
         if GLOBAL_CONTEXT.initialized() {
             tracing::info!("twonly already initialized. Ensuring storage directories exist.");
@@ -291,7 +289,6 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
-                        privacy_pass_issuance: Mutex::new(None),
             pqc_bundle_verified: AtomicBool::new(false),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
@@ -333,7 +330,6 @@ impl Context {
                         mailbox_drained: Notify::new(),
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
-                        privacy_pass_issuance: Mutex::new(None),
             pqc_bundle_verified: AtomicBool::new(false),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
@@ -399,23 +395,6 @@ impl Context {
             .await
             .user_id
             .ok_or_else(|| TwonlyError::Generic("local user ID is missing".into()))
-    }
-
-    pub(crate) async fn get_identity(&self, user_id: i64) -> Result<Option<IdentityKey>> {
-        let database = self.rust_db.read().await.clone();
-        let user_id = user_id.to_string();
-        let identity_key = sqlx::query_scalar!(
-            r#"SELECT identity_key FROM signal_identities WHERE name = ?"#,
-            user_id,
-        )
-        .fetch_optional(&database.pool)
-        .await?;
-
-        identity_key
-            .map(|bytes| {
-                IdentityKey::decode(&bytes).map_err(|error| TwonlyError::Signal(error.to_string()))
-            })
-            .transpose()
     }
 
     pub(crate) async fn replace_rust_database(

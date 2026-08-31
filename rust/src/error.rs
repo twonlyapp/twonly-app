@@ -123,9 +123,6 @@ pub enum TwonlyError {
     #[error("Unknown protobuf enum value: {0}")]
     UnknownProtobufEnumValue(#[from] prost::UnknownEnumValue),
 
-    #[error(transparent)]
-    SealedSender(#[from] crate::sealed_sender::SealedSenderError),
-
     #[error("{0}")]
     HexError(#[from] FromHexError),
 

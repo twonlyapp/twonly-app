@@ -10,8 +10,8 @@ import 'api/server/prekeys.dart';
 import 'bridge.dart';
 import 'bridge/api.dart';
 import 'bridge/callbacks.dart';
-import 'bridge/callbacks/log.dart';
 import 'bridge/groups.dart';
+import 'bridge/logging.dart';
 import 'bridge/user_config.dart';
 import 'bridge/wrapper.dart';
 import 'bridge/wrapper/app_database.dart';
@@ -45,12 +45,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DateTime dco_decode_Chrono_Utc(dynamic raw);
 
   @protected
-  FutureOr<RustStreamSink<String>> Function()
-  dco_decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
   FutureOr<void> Function(PlatformInt64)
   dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
 
@@ -66,9 +60,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
-
-  @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
 
   @protected
   RustStreamSink<ApiEvent> dco_decode_StreamSink_api_event_Sse(dynamic raw);
@@ -246,6 +237,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> dco_decode_list_sql_value(dynamic raw);
 
   @protected
+  LogLevel dco_decode_log_level(dynamic raw);
+
+  @protected
   MediaSizeReport dco_decode_media_size_report(dynamic raw);
 
   @protected
@@ -396,11 +390,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Map<String, List<String>> sse_decode_Map_String_list_String_None(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
     SseDeserializer deserializer,
   );
 
@@ -620,6 +609,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
 
   @protected
+  LogLevel sse_decode_log_level(SseDeserializer deserializer);
+
+  @protected
   MediaSizeReport sse_decode_media_size_report(SseDeserializer deserializer);
 
   @protected
@@ -782,12 +774,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_Chrono_Utc(DateTime self, SseSerializer serializer);
 
   @protected
-  void sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
-    FutureOr<RustStreamSink<String>> Function() self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs_i_64_Output_unit_AnyhowException(
     FutureOr<void> Function(PlatformInt64) self,
     SseSerializer serializer,
@@ -811,12 +797,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_Map_String_list_String_None(
     Map<String, List<String>> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
     SseSerializer serializer,
   );
 
@@ -1089,6 +1069,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_log_level(LogLevel self, SseSerializer serializer);
 
   @protected
   void sse_encode_media_size_report(

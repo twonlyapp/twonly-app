@@ -259,16 +259,11 @@ message ApplicationData {
 
   message DisableMemoriesBackup {}
 
-  message GetPrivacyPassParameters {}
-
-  message IssuePrivacyPassTokens {
-    repeated bytes token_requests = 1;
-  }
-
   // Asks the server to (re)start a mailbox drain for the authenticated user.
   // The server responds immediately; messages arrive as PendingMessagesV2.
   message RequestPendingMessages {}
 
+  reserved 41, 42;
   oneof ApplicationData {
     TextMessage textMessage = 1;
     GetUserByUsername getUserByUsername = 2;
@@ -298,8 +293,6 @@ message ApplicationData {
     DeleteMemory delete_memory = 38;
     DisableMemoriesBackup disable_memories_backup = 39;
     UploadPqcPreKeys upload_pqc_prekeys = 40;
-    GetPrivacyPassParameters get_privacy_pass_parameters = 41;
-    IssuePrivacyPassTokens issue_privacy_pass_tokens = 42;
     RequestPendingMessages request_pending_messages = 43;
   }
 }

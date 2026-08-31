@@ -8,7 +8,13 @@ private let runtimeAppGroup = "group.eu.twonly.runtime"
 private struct NativeNotificationResponse: Decodable {
   let ok: Bool
   let batch: NativeNotificationBatch?
+  let fallback: NativeNotificationPresentation?
   let error: String?
+}
+
+private struct NativeNotificationPresentation: Decodable {
+  let title: String
+  let body: String
 }
 
 private struct NativeNotificationBatch: Decodable {
@@ -58,28 +64,34 @@ final class NotificationService: UNNotificationServiceExtension {
   private let finishLock = NSLock()
   private var hasFinished = false
   private var contentHandler: ((UNNotificationContent) -> Void)?
+  private var fallbackContent: UNNotificationContent?
 
   override func didReceive(
     _ request: UNNotificationRequest,
     withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
   ) {
     self.contentHandler = contentHandler
+    fallbackContent = request.content
 
     guard let runtimeDirectory = Self.runtimeDirectory() else {
-      suppress(reason: "shared runtime directory is unavailable")
+      deliverFallback(reason: "shared runtime directory is unavailable")
       return
     }
 
     DispatchQueue.global(qos: .userInitiated).async {
       guard let response = Self.processWakeup(runtimeDirectory: runtimeDirectory) else {
-        self.suppress(reason: "notification worker returned no response")
+        self.deliverFallback(reason: "notification worker returned no response")
         return
       }
-      guard response.ok,
-        let batch = response.batch,
-        !batch.additions.isEmpty
-      else {
-        self.suppress(reason: response.error ?? "notification worker returned no messages")
+      guard response.ok else {
+        self.deliverFallback(
+          reason: response.error ?? "notification worker failed",
+          presentation: response.fallback
+        )
+        return
+      }
+      guard let batch = response.batch, !batch.additions.isEmpty else {
+        self.deliverFallback(reason: "notification worker returned no messages")
         return
       }
       self.render(batch: batch, original: request.content)
@@ -87,7 +99,7 @@ final class NotificationService: UNNotificationServiceExtension {
   }
 
   override func serviceExtensionTimeWillExpire() {
-    suppress(reason: "notification service extension timed out")
+    deliverFallback(reason: "notification service extension timed out")
   }
 
   private func render(batch: NativeNotificationBatch, original: UNNotificationContent) {
@@ -208,14 +220,26 @@ final class NotificationService: UNNotificationServiceExtension {
     }
     hasFinished = true
     let handler = contentHandler
+    fallbackContent = nil
     contentHandler = nil
     finishLock.unlock()
     handler?(content)
   }
 
-  private func suppress(reason: String) {
-    NSLog("Suppressing Twonly wake-up notification: \(reason)")
-    finish(with: UNNotificationContent())
+  private func deliverFallback(
+    reason: String,
+    presentation: NativeNotificationPresentation? = nil
+  ) {
+    NSLog("Delivering Twonly wake-up fallback notification: \(reason)")
+    guard let presentation else {
+      finish(with: fallbackContent ?? UNMutableNotificationContent())
+      return
+    }
+    let content = (fallbackContent?.mutableCopy() as? UNMutableNotificationContent)
+      ?? UNMutableNotificationContent()
+    content.title = presentation.title
+    content.body = presentation.body
+    finish(with: content)
   }
 
   private static func runtimeDirectory() -> String? {

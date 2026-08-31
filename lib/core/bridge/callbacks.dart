@@ -8,17 +8,15 @@ import '../user_config.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_callbacks`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`, `Logging`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Api`, `FlutterCallbacks`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`
 
 Future<void> initFlutterCallbacks({
   required int callbackId,
-  required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
   required FutureOr<void> Function(PlatformInt64) apiVerificationSucceeded,
   required FutureOr<void> Function(UserConfig) apiUserConfigChanged,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   callbackId: callbackId,
-  loggingGetStreamSink: loggingGetStreamSink,
   apiVerificationSucceeded: apiVerificationSucceeded,
   apiUserConfigChanged: apiUserConfigChanged,
 );

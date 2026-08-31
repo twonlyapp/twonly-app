@@ -14,7 +14,6 @@ mod frb_generated;
 mod keys;
 pub mod log;
 mod native;
-pub mod sealed_sender;
 mod secure_storage;
 pub mod services;
 pub mod signal;

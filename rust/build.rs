@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     prost_build::compile_protos(&["models/user_discovery.proto"], &["src/"])?;
     let client_proto_root = "src/api/proto/client";
     let client_protos = [
-        "src/api/proto/client/sealed_sender.proto",
+        "src/api/proto/client/transport.proto",
         "src/api/proto/client/groups.proto",
         "src/api/proto/client/messages.proto",
         "src/api/proto/client/data.proto",

@@ -11,10 +11,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
 /// How often a composing user re-announces that it is typing.
 ///
-/// Every announcement is a message, and a message sent sealed costs a Privacy
-/// Pass token out of a daily quota. At the one-second cadence this used to run
-/// at, a few minutes of typing spent a whole day's worth, after which every
-/// later message — real ones included — fell back to the named transport.
+/// Keep presence traffic modest while still making the indicator feel live.
 const typingIndicatorInterval = Duration(seconds: 4);
 
 /// How long a received typing announcement counts for. Comfortably longer than

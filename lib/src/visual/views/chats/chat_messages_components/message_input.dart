@@ -96,13 +96,16 @@ class _MessageInputState extends State<MessageInput> {
     }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     if (userService.currentUser.typingIndicators) {
-      _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) async {
+      _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) {
         final composing = _isComposing;
         widget.composing.value = composing;
         if (composing) {
-          await RustApi.sendTyping(
-            groupId: widget.group.groupId,
-            isTyping: true,
+          unawaitedRustCall(
+            RustApi.sendTyping(
+              groupId: widget.group.groupId,
+              isTyping: true,
+            ),
+            'sendTyping',
           );
         }
       });
@@ -161,8 +164,9 @@ class _MessageInputState extends State<MessageInput> {
         userService.currentUser.typingIndicators &&
         widget.textFieldFocus.hasFocus) {
       widget.composing.value = true;
-      unawaited(
+      unawaitedRustCall(
         RustApi.sendTyping(groupId: widget.group.groupId, isTyping: true),
+        'sendTyping',
       );
     }
   }

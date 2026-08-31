@@ -45,7 +45,6 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - Importing memories from Snapchat
 - For Android: Support for [UnifiedPush] (https://unifiedpush.org/)
 - For Android: Reproducible builds
-- Implementation of [Sealed Sender](https://signal.org/blog/sealed-sender/) (or a similar protocol) to minimize metadata
 - Decentralize the server so that anyone can run their own server
 
 ## Security Issues

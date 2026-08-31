@@ -11,6 +11,7 @@ message ServerToClient {
 
 message V0 {
   uint64 seq = 1;
+  reserved 9, 10;
   oneof Kind {
     Response response = 2;
     NewMessage newMessage = 3;
@@ -18,8 +19,6 @@ message V0 {
     bool RequestNewPreKeys = 4;
     bool RequestNewPqcPreKeys = 8;
     error.ErrorCode error = 6;
-    SealedSenderMessage sealedSenderMessage = 9;
-    SealedSenderMessages sealedSenderMessages = 10;
     bool mailboxDrained = 11;
     PendingMessagesV2 pendingMessagesV2 = 12;
   }
@@ -45,15 +44,6 @@ message PendingMessageV2 {
 
 message PendingMessagesV2 {
   repeated PendingMessageV2 messages = 1;
-}
-
-message SealedSenderMessage {
-  string message_id = 1;
-  bytes body = 2;
-}
-
-message SealedSenderMessages {
-  repeated SealedSenderMessage messages = 1;
 }
 
 message Response {
@@ -200,21 +190,8 @@ message Response {
     int64 count = 3;
   }
 
-  message PrivacyPassParameters {
-    bytes token_challenge = 1;
-    bytes public_key = 2;
-    uint32 max_batch_size = 3;
-    uint32 max_age_seconds = 4;
-    uint32 daily_token_limit = 5;
-    uint32 issuance_cooldown_seconds = 6;
-  }
-
-  message PrivacyPassTokenResponses {
-    repeated bytes token_responses = 1;
-  }
-
   message Ok {
-    reserved 7, 11;
+    reserved 7, 11, 22, 23;
     oneof Ok {
       bool None = 1;
       int64 userid = 2;
@@ -235,8 +212,6 @@ message Response {
       MemoriesList memories_list = 19;
       MemoriesUrl memories_url = 20;
       MemoriesUsage memories_usage = 21;
-      PrivacyPassParameters privacy_pass_parameters = 22;
-      PrivacyPassTokenResponses privacy_pass_token_responses = 23;
     }
   }
 

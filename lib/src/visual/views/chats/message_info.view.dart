@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
@@ -35,10 +37,13 @@ class _MessageInfoViewState extends State<MessageInfoView> {
   StreamSubscription<List<(MessageAction, Contact)>>? actionsStream;
   StreamSubscription<List<MessageHistory>>? historyStream;
   StreamSubscription<List<(GroupMember, Contact)>>? groupMemberStream;
+  StreamSubscription<MediaFile?>? mediaFileStream;
 
   List<(MessageAction, Contact)> messageActions = [];
   List<MessageHistory> messageHistory = [];
   List<(GroupMember, Contact)> groupMembers = [];
+  MediaFile? mediaFile;
+  int? mediaSizeInBytes;
 
   @override
   void initState() {
@@ -51,6 +56,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
     actionsStream?.cancel();
     historyStream?.cancel();
     groupMemberStream?.cancel();
+    mediaFileStream?.cancel();
     super.dispose();
   }
 
@@ -84,6 +90,35 @@ class _MessageInfoViewState extends State<MessageInfoView> {
         messageHistory = update;
       });
     });
+
+    final mediaId = widget.message.mediaId;
+    if (mediaId != null) {
+      final streamMedia = twonlyDB.mediaFilesDao.watchMedia(mediaId);
+      mediaFileStream = streamMedia.listen((update) {
+        if (!mounted) return;
+        setState(() {
+          mediaFile = update;
+          mediaSizeInBytes = update == null ? null : mediaSize(update);
+        });
+      });
+    }
+  }
+
+  /// Rust records the size when it writes the plaintext, but media that was
+  /// sent or received before it did so only carries a size once it was stored,
+  /// so a copy that is still on disk is measured directly.
+  int? mediaSize(MediaFile media) {
+    if (media.sizeInBytes != null) return media.sizeInBytes;
+    final service = MediaFileService(media);
+    for (final file in [
+      service.storedPath,
+      service.tempPath,
+      service.originalPath,
+    ]) {
+      final stat = file.statSync();
+      if (stat.type == FileSystemEntityType.file) return stat.size;
+    }
+    return null;
   }
 
   List<Widget> getReceivedColumns(BuildContext context) {
@@ -113,12 +148,6 @@ class _MessageInfoViewState extends State<MessageInfoView> {
             t.$1.type == MessageActionType.openedAt &&
             t.$2.userId == groupMember.$2.userId,
       );
-      final sealedSender = messageActions.firstWhereOrNull(
-        (t) =>
-            t.$1.type == MessageActionType.sealedSenderAt &&
-            t.$2.userId == groupMember.$2.userId,
-      );
-
       var actionTypeText = context.lang.waitingForInternet;
       var actionAt = widget.message.createdAt;
       if (ackByServer != null) {
@@ -165,23 +194,6 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                   Text(actionTypeText),
                 ],
               ),
-              // The transport is decided per recipient, so it is only known
-              // once this member's copy has actually left the device.
-              if (ackByServer != null) ...[
-                const SizedBox(width: 10),
-                Tooltip(
-                  message: sealedSender != null
-                      ? context.lang.sealedSenderTransportSealed
-                      : context.lang.sealedSenderTransportStandard,
-                  child: FaIcon(
-                    sealedSender != null
-                        ? FontAwesomeIcons.solidEnvelope
-                        : FontAwesomeIcons.envelope,
-                    size: 13,
-                    color: Theme.of(context).hintColor,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -227,6 +239,10 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                 widget.message.ackByServer != null)
               Text(
                 '${context.lang.received}: ${friendlyDateTime(context, widget.message.ackByServer!)}',
+              ),
+            if (mediaSizeInBytes != null)
+              Text(
+                '${context.lang.fileSize}: ${formatBytes(mediaSizeInBytes!)}',
               ),
             if (userService.currentUser.isDeveloper)
               GestureDetector(
