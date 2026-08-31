@@ -53,7 +53,8 @@ BubbleInfo getBubbleInfo(
     }
   }
 
-  info.spacerWidth = minWidth - measureTextWidth(info.text) - 53;
+  final textWidth = measureTextWidth(info.text);
+  info.spacerWidth = minWidth - textWidth - 53;
   if (info.spacerWidth < 0) info.spacerWidth = 0;
 
   info
@@ -65,7 +66,7 @@ BubbleInfo getBubbleInfo(
     info
       ..color = context.color.surfaceBright
       ..displayTime = false;
-  } else if (measureTextWidth(info.text) > 270) {
+  } else if (textWidth > 270) {
     info.expanded = true;
   }
 
@@ -80,15 +81,32 @@ BubbleInfo getBubbleInfo(
   return info;
 }
 
+/// Laying text out is expensive and `getBubbleInfo` runs for every visible
+/// bubble on every rebuild, while the same message content is measured over and
+/// over. Keep the last few hundred results around, in insertion order, so the
+/// cache stays bounded as the user scrolls through a long conversation.
+const _measuredTextCacheLimit = 500;
+final Map<String, double> _measuredTextCache = <String, double>{};
+
 double measureTextWidth(
   String text,
 ) {
+  final cached = _measuredTextCache[text];
+  if (cached != null) return cached;
+
   final tp = TextPainter(
     text: TextSpan(text: text, style: const TextStyle(fontSize: 17)),
     textDirection: TextDirection.ltr,
     maxLines: 1,
   )..layout();
-  return tp.size.width;
+  final width = tp.size.width;
+  tp.dispose();
+
+  if (_measuredTextCache.length >= _measuredTextCacheLimit) {
+    _measuredTextCache.remove(_measuredTextCache.keys.first);
+  }
+  _measuredTextCache[text] = width;
+  return width;
 }
 
 bool combineTextMessageWithNext(Message message, Message? nextMessage) {

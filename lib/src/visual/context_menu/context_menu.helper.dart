@@ -13,7 +13,10 @@ class ContextMenu extends StatefulWidget {
     super.key,
   });
 
-  final List<ContextMenuItem> items;
+  /// Built on long press rather than eagerly: a context menu exists for every
+  /// row in a list, and assembling the items can be costly (localized titles,
+  /// closures, and in the message menu a filesystem probe).
+  final List<ContextMenuItem> Function() items;
   final Widget child;
   final double? minWidth;
 
@@ -29,15 +32,12 @@ class _ContextMenuState extends State<ContextMenu>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(
-          vsync: this,
-          lowerBound: double.negativeInfinity,
-          upperBound: double.infinity,
-          value: 0,
-        )..addListener(() {
-          setState(() {});
-        });
+    _controller = AnimationController(
+      vsync: this,
+      lowerBound: double.negativeInfinity,
+      upperBound: double.infinity,
+      value: 0,
+    );
   }
 
   @override
@@ -117,7 +117,7 @@ class _ContextMenuState extends State<ContextMenu>
         curve: Curves.fastOutSlowIn,
       ),
       items: <PopupMenuEntry<int>>[
-        ...widget.items.map(
+        ...widget.items().map(
           (item) {
             Widget child = ListTile(
               title: Text(item.title),
@@ -149,15 +149,20 @@ class _ContextMenuState extends State<ContextMenu>
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1.0 - (_controller.value * 0.02);
     return GestureDetector(
       onLongPress: _showCustomMenu,
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: Transform.scale(
-        scale: scale,
+      // AnimatedBuilder keeps the press animation from rebuilding the wrapped
+      // row; only the Transform is re-evaluated per tick.
+      child: AnimatedBuilder(
+        animation: _controller,
         child: widget.child,
+        builder: (context, child) => Transform.scale(
+          scale: 1.0 - (_controller.value * 0.02),
+          child: child,
+        ),
       ),
     );
   }

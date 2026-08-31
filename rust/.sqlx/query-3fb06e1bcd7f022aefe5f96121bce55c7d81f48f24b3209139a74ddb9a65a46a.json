@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO media_files(media_id, type, upload_state) VALUES (?, 'image', 'backgroundUploadTaskStarted')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "3fb06e1bcd7f022aefe5f96121bce55c7d81f48f24b3209139a74ddb9a65a46a"
+}

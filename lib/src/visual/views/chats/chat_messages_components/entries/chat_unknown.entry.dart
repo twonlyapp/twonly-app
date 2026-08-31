@@ -11,7 +11,7 @@ class ChatUnknownEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
       ),
       padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
       decoration: BoxDecoration(

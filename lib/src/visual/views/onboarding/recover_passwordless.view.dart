@@ -18,7 +18,6 @@ import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/passwordless_recovery.pb.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -496,7 +495,9 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
             children: [
               AvatarIcon(
                 svg: first.myAvatarSvg != null
-                    ? getAvatarSvg(Uint8List.fromList(first.myAvatarSvg!))
+                    ? RustApi.decodeAvatarSvg(
+                        avatarSvgCompressed: first.myAvatarSvg!,
+                      )
                     : null,
                 fontSize: 60,
               ),

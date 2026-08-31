@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO media_files\n               (media_id, type, download_state, upload_state, encryption_key, encryption_nonce)\n               VALUES (?, 'image', 'ready', 'uploaded', ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "4b435d279b535dd175cda868bc0c6f5e54ef1be1b13433d3226bf5b3459f2119"
+}

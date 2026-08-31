@@ -89,7 +89,7 @@ Future<bool> promptAndDisableMemoriesBackup(BuildContext context) async {
       for (final media in allMedias) {
         final ms = MediaFileService(media);
         if (!ms.storedPath.existsSync()) {
-          ms.fullMediaRemoval();
+          await ms.fullMediaRemoval();
           await twonlyDB.mediaFilesDao.deleteMediaFile(media.mediaId);
         }
       }

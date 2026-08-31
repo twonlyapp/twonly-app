@@ -1,5 +1,7 @@
 #[path = "api/contacts.rs"]
 mod contacts;
+#[path = "api/direct_media_upload.rs"]
+mod direct_media_upload;
 #[path = "api/group_resilience.rs"]
 mod group_resilience;
 #[path = "api/media.rs"]

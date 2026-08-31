@@ -3,6 +3,7 @@
  *
  */
 
+use chrono::{Local, TimeZone};
 use sqlx::{Sqlite, Transaction};
 
 use crate::context::Context;
@@ -38,6 +39,146 @@ impl Group {
         )
         .execute(pool)
         .await?;
+        Ok(())
+    }
+
+    /// Records one successfully created media message and updates the flame
+    /// state in the same transaction. This used to round-trip through Dart,
+    /// which made the counters non-atomic and unavailable to headless Rust
+    /// runtimes.
+    pub async fn record_media_exchange(
+        tr: &mut Transaction<'_, Sqlite>,
+        group_id: &str,
+        received: bool,
+        timestamp: i64,
+    ) -> Result<()> {
+        let Some(group) = sqlx::query!(
+            r#"SELECT last_message_send, last_message_received,
+                      last_flame_counter_change, flame_counter,
+                      max_flame_counter, max_flame_counter_from
+               FROM groups WHERE group_id = ?"#,
+            group_id,
+        )
+        .fetch_optional(&mut **tr)
+        .await?
+        else {
+            return Ok(());
+        };
+
+        if received {
+            sqlx::query!(
+                r#"UPDATE contacts
+                   SET media_received_counter = media_received_counter + 1
+                   WHERE user_id IN (
+                       SELECT contact_id FROM group_members WHERE group_id = ?
+                   )"#,
+                group_id,
+            )
+            .execute(&mut **tr)
+            .await?;
+        } else {
+            sqlx::query!(
+                r#"UPDATE contacts
+                   SET media_send_counter = media_send_counter + 1
+                   WHERE user_id IN (
+                       SELECT contact_id FROM group_members WHERE group_id = ?
+                   )"#,
+                group_id,
+            )
+            .execute(&mut **tr)
+            .await?;
+        }
+
+        let now = Local::now();
+        let start_of_today = Local
+            .from_local_datetime(
+                &now.date_naive()
+                    .and_hms_opt(0, 0, 0)
+                    .ok_or_else(|| TwonlyError::Generic("invalid local date".into()))?,
+            )
+            .earliest()
+            .ok_or_else(|| TwonlyError::Generic("local day has no midnight".into()))?
+            .timestamp();
+        let two_days_ago = start_of_today - 2 * 24 * 60 * 60;
+
+        let mut flame_counter = group.flame_counter;
+        let mut max_flame_counter = group.max_flame_counter;
+        let mut max_flame_counter_from = group.max_flame_counter_from;
+        let mut last_flame_counter_change = group.last_flame_counter_change;
+
+        if group
+            .last_message_send
+            .zip(group.last_message_received)
+            .is_some_and(|(sent, received)| sent < two_days_ago || received < two_days_ago)
+        {
+            flame_counter = 0;
+        }
+
+        if last_flame_counter_change.is_none_or(|changed| changed < start_of_today) {
+            let completes_today = if received {
+                group
+                    .last_message_send
+                    .is_some_and(|sent| sent > start_of_today)
+            } else {
+                group
+                    .last_message_received
+                    .is_some_and(|received| received > start_of_today)
+            };
+            if completes_today {
+                flame_counter += 1;
+                if last_flame_counter_change.is_none_or(|changed| changed < timestamp) {
+                    last_flame_counter_change = Some(timestamp);
+                }
+                if flame_counter >= max_flame_counter
+                    || max_flame_counter_from
+                        .is_none_or(|from| from < now.timestamp() - 5 * 24 * 60 * 60)
+                {
+                    max_flame_counter = flame_counter;
+                    max_flame_counter_from = Some(now.timestamp());
+                }
+            }
+        }
+
+        let last_message_send = if !received
+            && group
+                .last_message_send
+                .is_none_or(|previous| previous < timestamp)
+        {
+            Some(timestamp)
+        } else {
+            group.last_message_send
+        };
+        let last_message_received = if received
+            && group
+                .last_message_received
+                .is_none_or(|previous| previous < timestamp)
+        {
+            Some(timestamp)
+        } else {
+            group.last_message_received
+        };
+
+        sqlx::query!(
+            r#"UPDATE groups SET
+                   total_media_counter = total_media_counter + 1,
+                   last_flame_counter_change = ?,
+                   last_message_received = ?,
+                   last_message_send = ?,
+                   flame_counter = ?,
+                   max_flame_counter = ?,
+                   max_flame_counter_from = ?
+               WHERE group_id = ?"#,
+            last_flame_counter_change,
+            last_message_received,
+            last_message_send,
+            flame_counter,
+            max_flame_counter,
+            max_flame_counter_from,
+            group_id,
+        )
+        .execute(&mut **tr)
+        .await?;
+
         Ok(())
     }
 
@@ -537,4 +678,73 @@ impl GetMissingGroupPublicKeys {
 
 fn current_unix_timestamp() -> Result<i64> {
     Ok(crate::utils::current_time().timestamp())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::database::app::AppDatabase;
+
+    #[tokio::test]
+    async fn media_exchange_updates_contact_and_flame_counters_atomically() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+
+        sqlx::query("INSERT INTO contacts(user_id, username) VALUES (7, 'alice')")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO groups(group_id, group_name) VALUES ('group', 'Group')")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        sqlx::query("INSERT INTO group_members(group_id, contact_id) VALUES ('group', 7)")
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let now = Local::now();
+        let start_of_today = Local
+            .from_local_datetime(&now.date_naive().and_hms_opt(0, 0, 0).unwrap())
+            .earliest()
+            .unwrap()
+            .timestamp();
+        let mut transaction = database.pool.begin().await.unwrap();
+        Group::record_media_exchange(&mut transaction, "group", true, start_of_today + 60)
+            .await
+            .unwrap();
+        Group::record_media_exchange(&mut transaction, "group", false, start_of_today + 120)
+            .await
+            .unwrap();
+        transaction.commit().await.unwrap();
+
+        let contact = sqlx::query!(
+            "SELECT media_send_counter, media_received_counter FROM contacts WHERE user_id = 7"
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(contact.media_send_counter, 1);
+        assert_eq!(contact.media_received_counter, 1);
+
+        let group = sqlx::query!(
+            r#"SELECT total_media_counter, flame_counter, max_flame_counter,
+                      last_message_send, last_message_received,
+                      last_flame_counter_change
+               FROM groups WHERE group_id = 'group'"#
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(group.total_media_counter, 2);
+        assert_eq!(group.flame_counter, 1);
+        assert_eq!(group.max_flame_counter, 1);
+        assert_eq!(group.last_message_send, Some(start_of_today + 120));
+        assert_eq!(group.last_message_received, Some(start_of_today + 60));
+        assert_eq!(group.last_flame_counter_change, Some(start_of_today + 120));
+    }
 }

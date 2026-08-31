@@ -27,10 +27,7 @@ callback_generator! {
             get_stream_sink: () => StreamSink<String>
         },
         Api api {
-            media_action: (String, String, i64, String) => (),
-            verification_proof: (i64, Vec<u8>) => (),
-            create_push_avatars: (i64) => (),
-            media_received: (String, i64) => (),
+            verification_succeeded: (i64) => (),
             user_config_changed: (crate::user_config::UserConfig) => ()
         }
     }

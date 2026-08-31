@@ -12,6 +12,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/animate_icon.comp.dart';
 import 'package:twonly/src/visual/themes/colors.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/file_limit_reached.dialog.dart';
 
 enum MessageSendState {
   received,
@@ -225,6 +226,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             context.lang.fileLimitReached,
             style: const TextStyle(fontSize: 9),
           );
+          // The warning has no room for the sizes that explain it, so they are
+          // one tap away instead.
+          final mediaId = mediaFile.mediaId;
+          onTap = () => showFileLimitReachedDialog(context, mediaId);
         }
       }
 

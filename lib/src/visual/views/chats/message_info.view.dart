@@ -163,20 +163,25 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                     style: const TextStyle(fontSize: 12),
                   ),
                   Text(actionTypeText),
-                  // The transport is decided per recipient, so it is only known
-                  // once this member's copy has actually left the device.
-                  if (ackByServer != null)
-                    Text(
-                      sealedSender != null
-                          ? context.lang.sealedSenderTransportSealed
-                          : context.lang.sealedSenderTransportStandard,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).hintColor,
-                      ),
-                    ),
                 ],
               ),
+              // The transport is decided per recipient, so it is only known
+              // once this member's copy has actually left the device.
+              if (ackByServer != null) ...[
+                const SizedBox(width: 10),
+                Tooltip(
+                  message: sealedSender != null
+                      ? context.lang.sealedSenderTransportSealed
+                      : context.lang.sealedSenderTransportStandard,
+                  child: FaIcon(
+                    sealedSender != null
+                        ? FontAwesomeIcons.solidEnvelope
+                        : FontAwesomeIcons.envelope,
+                    size: 13,
+                    color: Theme.of(context).hintColor,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

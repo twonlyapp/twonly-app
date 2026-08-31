@@ -26,6 +26,16 @@ impl MediaFile {
             return Ok(());
         };
 
+        Self::mark_uploaded(transaction, &media_id).await
+    }
+
+    /// Single owner of the "media reached the server" transition. The state
+    /// change, the per-recipient message actions, and the receipt bookkeeping
+    /// have to become visible together, so they share one transaction.
+    pub async fn mark_uploaded(
+        transaction: &mut Transaction<'_, Sqlite>,
+        media_id: &str,
+    ) -> Result<()> {
         let updated = sqlx::query!(
             "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ? AND upload_state IS NOT 'uploaded'",
             media_id,

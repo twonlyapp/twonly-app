@@ -5,6 +5,7 @@
 
 import '../api/server/prekeys.dart';
 import '../frb_generated.dart';
+import '../services/media_upload.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `api_result`, `empty_api_response`, `from_rust_state`
@@ -262,6 +263,11 @@ class FrbUserData {
 class RustApi {
   const RustApi();
 
+  /// Gives up on a media file whose source could not be produced, marking
+  /// its messages as deleted by the sender instead of retrying forever.
+  static Future<void> abandonMedia({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiAbandonMedia(mediaId: mediaId);
+
   static Future<void> addAdditionalUser({required PlatformInt64 userId}) =>
       RustLib.instance.api.crateBridgeApiRustApiAddAdditionalUser(
         userId: userId,
@@ -272,6 +278,17 @@ class RustApi {
 
   static String apiBaseUrl({required String protocol}) =>
       RustLib.instance.api.crateBridgeApiRustApiApiBaseUrl(protocol: protocol);
+
+  static Future<Map<String, String>> authenticationHeaders() =>
+      RustLib.instance.api.crateBridgeApiRustApiAuthenticationHeaders();
+
+  static String avatarPngPath({
+    required PlatformInt64 contactId,
+    required PlatformInt64 profileCounter,
+  }) => RustLib.instance.api.crateBridgeApiRustApiAvatarPngPath(
+    contactId: contactId,
+    profileCounter: profileCounter,
+  );
 
   static Future<void> changeUsername({required String username}) => RustLib
       .instance
@@ -323,6 +340,21 @@ class RustApi {
   static Future<ApiConnectionState> connectionState() =>
       RustLib.instance.api.crateBridgeApiRustApiConnectionState();
 
+  /// Trims fully transparent borders an editor left around a stored image and
+  /// refreshes the preview and content hash derived from it.
+  static Future<void> cropMediaTransparentBorders({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiCropMediaTransparentBorders(
+        mediaId: mediaId,
+      );
+
+  static Future<String?> currentUserAvatarPath() =>
+      RustLib.instance.api.crateBridgeApiRustApiCurrentUserAvatarPath();
+
+  static String decodeAvatarSvg({required List<int> avatarSvgCompressed}) =>
+      RustLib.instance.api.crateBridgeApiRustApiDecodeAvatarSvg(
+        avatarSvgCompressed: avatarSvgCompressed,
+      );
+
   static Future<void> deleteAccount() =>
       RustLib.instance.api.crateBridgeApiRustApiDeleteAccount();
 
@@ -341,6 +373,13 @@ class RustApi {
   static Future<void> downloadPendingMedia() =>
       RustLib.instance.api.crateBridgeApiRustApiDownloadPendingMedia();
 
+  /// Path to a contact's avatar PNG, rendered from the stored SVG if it is
+  /// missing. Returns `None` when the contact has no avatar at all.
+  static Future<String?> ensureAvatarPng({required PlatformInt64 contactId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiEnsureAvatarPng(
+        contactId: contactId,
+      );
+
   static Future<void> establishSignalSession({
     required PlatformInt64 contactId,
     Uint8List? expectedPublicKey,
@@ -351,6 +390,11 @@ class RustApi {
 
   static Stream<ApiEvent> events() =>
       RustLib.instance.api.crateBridgeApiRustApiEvents();
+
+  /// Settles every background transfer this device believes is still in
+  /// flight and resumes any upload a terminated process left behind.
+  static Future<void> finishStartedMediaUploads() =>
+      RustLib.instance.api.crateBridgeApiRustApiFinishStartedMediaUploads();
 
   static Future<void> forceIpaCheck() =>
       RustLib.instance.api.crateBridgeApiRustApiForceIpaCheck();
@@ -397,6 +441,18 @@ class RustApi {
     required String username,
   }) => RustLib.instance.api.crateBridgeApiRustApiGetUserIdFromUsername(
     username: username,
+  );
+
+  /// Creates the media row and its content-encryption material and returns
+  /// the media id the UI addresses every later step by.
+  static Future<String> initializeMediaUpload({
+    required String mediaType,
+    PlatformInt64? displayLimitInMilliseconds,
+    required bool isDraftMedia,
+  }) => RustLib.instance.api.crateBridgeApiRustApiInitializeMediaUpload(
+    mediaType: mediaType,
+    displayLimitInMilliseconds: displayLimitInMilliseconds,
+    isDraftMedia: isDraftMedia,
   );
 
   static Future<String> insertAndSendAdditionalData({
@@ -448,6 +504,24 @@ class RustApi {
   static Future<FrbPlanBalance> loadPlanBalance() =>
       RustLib.instance.api.crateBridgeApiRustApiLoadPlanBalance();
 
+  /// Explains a send that stopped because the media was too large: the size
+  /// it reached and the largest single object the plan accepts.
+  static Future<MediaSizeReport> mediaSizeLimitReport({
+    required String mediaId,
+  }) => RustLib.instance.api.crateBridgeApiRustApiMediaSizeLimitReport(
+    mediaId: mediaId,
+  );
+
+  /// Reports that a Flutter plugin step finished so Rust can record the
+  /// derived state (thumbnail present, crop analyzed, new size and hash).
+  static Future<void> mediaStepFinished({
+    required String mediaId,
+    required String kind,
+  }) => RustLib.instance.api.crateBridgeApiRustApiMediaStepFinished(
+    mediaId: mediaId,
+    kind: kind,
+  );
+
   /// The number of pending notification events. iOS cannot derive its app
   /// icon badge from the delivered alerts, so the running app pushes this
   /// into `UNUserNotificationCenter` whenever the outbox changes.
@@ -467,10 +541,9 @@ class RustApi {
       .api
       .crateBridgeApiRustApiPerformPasswordlessRecoveryHeartbeat();
 
-  static Future<Uint8List?> prepareQueuedMessage({required String receiptId}) =>
-      RustLib.instance.api.crateBridgeApiRustApiPrepareQueuedMessage(
-        receiptId: receiptId,
-      );
+  /// Deletes temporary media whose messages are finished with it.
+  static Future<void> purgeMediaTempFolder() =>
+      RustLib.instance.api.crateBridgeApiRustApiPurgeMediaTempFolder();
 
   static Future<PlatformInt64> register({
     required String username,
@@ -515,6 +588,12 @@ class RustApi {
         userId: userId,
       );
 
+  /// Deletes every file of a media item while keeping its row.
+  static Future<void> removeMediaFiles({required String mediaId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiRemoveMediaFiles(mediaId: mediaId);
+
   static Future<void> reportUser({
     required PlatformInt64 userId,
     required String reason,
@@ -550,6 +629,19 @@ class RustApi {
 
   static Future<void> retransmitAllMessages() =>
       RustLib.instance.api.crateBridgeApiRustApiRetransmitAllMessages();
+
+  static Future<void> retryPendingMediaReuploads() =>
+      RustLib.instance.api.crateBridgeApiRustApiRetryPendingMediaReuploads();
+
+  /// Retries the media sends whose receipts are still marked for retry.
+  static Future<void> reuploadPendingMedia() =>
+      RustLib.instance.api.crateBridgeApiRustApiReuploadPendingMedia();
+
+  /// Exports a stored media file to the user's photo library.
+  static Future<void> saveMediaToGallery({required String mediaId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiSaveMediaToGallery(mediaId: mediaId);
 
   static Future<void> sendBinary({required List<int> bytes}) =>
       RustLib.instance.api.crateBridgeApiRustApiSendBinary(bytes: bytes);
@@ -587,6 +679,17 @@ class RustApi {
     onlySendIfNoReceiptsAreOpen: onlySendIfNoReceiptsAreOpen,
   );
 
+  /// Creates one outgoing message per selected group and starts the upload.
+  static Future<void> sendMediaToGroups({
+    required String mediaId,
+    required List<String> groupIds,
+    Uint8List? additionalMessageData,
+  }) => RustLib.instance.api.crateBridgeApiRustApiSendMediaToGroups(
+    mediaId: mediaId,
+    groupIds: groupIds,
+    additionalMessageData: additionalMessageData,
+  );
+
   static Future<void> sendQueuedMessage({required String receiptId}) => RustLib
       .instance
       .api
@@ -616,10 +719,30 @@ class RustApi {
   static Future<void> setLoginToken({required List<int> token}) =>
       RustLib.instance.api.crateBridgeApiRustApiSetLoginToken(token: token);
 
+  static Future<void> setMediaDisplayLimit({
+    required String mediaId,
+    PlatformInt64? displayLimitInMilliseconds,
+  }) => RustLib.instance.api.crateBridgeApiRustApiSetMediaDisplayLimit(
+    mediaId: mediaId,
+    displayLimitInMilliseconds: displayLimitInMilliseconds,
+  );
+
+  static Future<void> setMediaRequiresAuthentication({
+    required String mediaId,
+    required bool requiresAuthentication,
+  }) =>
+      RustLib.instance.api.crateBridgeApiRustApiSetMediaRequiresAuthentication(
+        mediaId: mediaId,
+        requiresAuthentication: requiresAuthentication,
+      );
+
   static Future<void> setNetworkAvailable({required bool available}) => RustLib
       .instance
       .api
       .crateBridgeApiRustApiSetNetworkAvailable(available: available);
+
+  static Future<void> storeMedia({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiStoreMedia(mediaId: mediaId);
 
   static Future<void> submitRecoveryShare({
     required String notificationId,
@@ -627,6 +750,19 @@ class RustApi {
   }) => RustLib.instance.api.crateBridgeApiRustApiSubmitRecoveryShare(
     notificationId: notificationId,
     encryptedMessage: encryptedMessage,
+  );
+
+  static Future<void> toggleMediaRemoveAudio({required String mediaId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiToggleMediaRemoveAudio(
+        mediaId: mediaId,
+      );
+
+  static Future<bool> tryRequestContactById({
+    required PlatformInt64 contactId,
+    required List<int> expectedPublicKey,
+  }) => RustLib.instance.api.crateBridgeApiRustApiTryRequestContactById(
+    contactId: contactId,
+    expectedPublicKey: expectedPublicKey,
   );
 
   static Future<void> updateFcmToken({required String token}) =>

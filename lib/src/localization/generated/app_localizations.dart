@@ -4561,6 +4561,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exporting memories...'**
   String get memoriesExportingProgress;
+
+  /// No description provided for @fileLimitReachedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large to send'**
+  String get fileLimitReachedTitle;
+
+  /// No description provided for @fileLimitReachedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}, but your plan allows at most {limit} per send.'**
+  String fileLimitReachedDetail(String size, String limit);
+
+  /// No description provided for @fileLimitReachedDetailNoSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan allows at most {limit} per send.'**
+  String fileLimitReachedDetailNoSize(String limit);
+
+  /// No description provided for @fileLimitReachedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a shorter video and send it again.'**
+  String get fileLimitReachedHint;
+
+  /// No description provided for @fileLimitReachedHintFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a shorter video, or upgrade your plan to send larger files.'**
+  String get fileLimitReachedHintFree;
+
+  /// No description provided for @fileLimitReachedUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade plan'**
+  String get fileLimitReachedUpgrade;
 }
 
 class _AppLocalizationsDelegate

@@ -49,7 +49,7 @@ class ResponseContainer extends StatelessWidget {
           : () => scrollToMessage!(msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
         ),
         decoration: BoxDecoration(
           color: getMessageColor(msg.senderId != null),
@@ -258,7 +258,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
       ),
       constraints: BoxConstraints(
         minWidth: 60,
-        maxWidth: MediaQuery.of(context).size.width * 0.7,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.7,
       ),
       decoration: widget.showLeftBorder
           ? BoxDecoration(

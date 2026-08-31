@@ -8,7 +8,6 @@ use crate::api::proto::client::encrypted_content;
 use crate::api::proto::client::EncryptedContent;
 use crate::api::Server;
 use crate::bridge::api::ServerResult;
-use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
 use crate::database::app::tables::{
     Contact, Group, GroupHistoryType, InsertGroupHistories, UpdateContact,
@@ -227,6 +226,8 @@ pub(crate) async fn handle_contact_update(
         return Err(TwonlyError::Generic("invalid contact update".into()));
     }
 
+    let avatar_svg_compressed = update.avatar_svg_compressed.clone();
+
     let previous = sqlx::query!(
         "SELECT username, display_name FROM contacts WHERE user_id = ?",
         from_user_id,
@@ -275,10 +276,18 @@ pub(crate) async fn handle_contact_update(
         .update(tr)
         .await?;
 
-    if let Ok(callbacks) = get_callbacks() {
-        tokio::spawn(async move {
-            (callbacks.api.create_push_avatars)(from_user_id).await;
-        });
+    if let (Some(profile_counter), Some(avatar)) =
+        (sender_profile_counter, avatar_svg_compressed.as_deref())
+    {
+        if let Err(error) = crate::services::notifications::notification_avatar_path(
+            ctx,
+            from_user_id,
+            profile_counter,
+            Some(avatar),
+        ) {
+            tracing::warn!(from_user_id, %error, "failed to render updated contact avatar");
+        }
     }
+
     Ok(())
 }

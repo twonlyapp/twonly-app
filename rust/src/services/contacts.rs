@@ -3,6 +3,7 @@
  *
  */
 
+use crate::api::messages::incoming::messages::release_deferred_receipts;
 use crate::api::messages::outgoing::send_c2c_message_to_contact;
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::proto::server_to_client;
@@ -61,6 +62,21 @@ impl ContactService {
         .await
     }
 
+    /// Whether a v2 Signal session for this peer already exists locally.
+    ///
+    /// A session built from an inbound prekey message is enough to encrypt for
+    /// the peer, even when the server holds no prekey bundle for them.
+    pub(crate) async fn has_v2_session(&self, user_id: i64) -> Result<bool> {
+        let rust_database = self.ctx.rust_db.read().await.clone();
+        Ok(sqlx::query_scalar!(
+            "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
+            user_id.to_string(),
+        )
+        .fetch_one(&rust_database.pool)
+        .await?
+            != 0)
+    }
+
     pub(crate) async fn establish_signal_session(
         &self,
         user_id: i64,
@@ -98,9 +114,26 @@ impl ContactService {
         )
         .execute(&database.pool)
         .await?;
-        database.notify_committed(["contacts"]);
+        release_deferred_receipts(&database, user_id).await?;
+        database.notify_committed(["contacts", "receipts"]);
 
         Ok(())
+    }
+
+    pub(crate) async fn request_by_id(
+        &self,
+        user_id: i64,
+        expected_public_key: Vec<u8>,
+        blocking: bool,
+    ) -> Result<()> {
+        self.establish_signal_session(user_id, Some(expected_public_key))
+            .await?;
+        self.send_contact_request(
+            user_id,
+            encrypted_content::contact_request::Type::Request,
+            blocking,
+        )
+        .await
     }
 
     async fn process_user_prekey_bundle(
@@ -108,7 +141,10 @@ impl ContactService {
         user: &server_to_client::response::UserData,
     ) -> Result<()> {
         let missing = TwonlyError::ApiResponseMissingField;
-        let pqc_bundle = user.pqc_bundle.as_ref().ok_or(missing("pqc_bundle"))?;
+        let pqc_bundle = user
+            .pqc_bundle
+            .as_ref()
+            .ok_or(TwonlyError::PeerHasNoPrekeyBundle(user.user_id))?;
         let identity_key = user
             .public_identity_key
             .clone()

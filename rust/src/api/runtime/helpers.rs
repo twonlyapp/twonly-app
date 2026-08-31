@@ -11,6 +11,7 @@ use crate::api::Server;
 use crate::bridge::api::ServerResult;
 use crate::context::{Context, RuntimeMode};
 use crate::error::{Result, TwonlyError};
+use crate::services::direct_media_upload::DirectMediaUploadService;
 use crate::services::groups::GroupService;
 use crate::services::mediafiles::MediaFileService;
 use crate::services::privacy_pass::PrivacyPassTokens;
@@ -65,6 +66,19 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
         // topped up while one is available rather than when a message needs it.
         if let Err(error) = PrivacyPassTokens::refill_if_needed(&ctx).await {
             tracing::warn!("failed to refill the Privacy Pass token pool: {error}");
+        }
+
+        // Runs before the receipt sweep below: without a bundle on the server
+        // no peer can open a session with this account, so anything they have
+        // queued for us stays stuck.
+        if let Err(error) = Server::ensure_pqc_bundle_published(&ctx).await {
+            tracing::warn!("failed to verify this account's PQC prekey bundle: {error}");
+        }
+
+        // Direct-media uploads consume Rust-owned slots, so keep their cache
+        // warm whenever an authenticated connection becomes available.
+        if let Err(error) = DirectMediaUploadService::new(&ctx).preload_slots().await {
+            tracing::warn!("failed to preload direct-media upload slots: {error}");
         }
 
         if let Err(error) = messages::retransmit_queued_receipts(&ctx).await {

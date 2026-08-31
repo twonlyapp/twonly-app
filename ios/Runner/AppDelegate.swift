@@ -4,7 +4,6 @@ import Foundation
 import UIKit
 import UserNotifications
 import flutter_sharing_intent
-import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -14,29 +13,25 @@ import workmanager_apple
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
 
-    if let registrar = self.registrar(forPlugin: "VideoCompressionChannel") {
-      VideoCompressionChannel.register(with: registrar.messenger())
-    }
-
-    WorkmanagerDebug.setCurrent(LoggingDebugHandler())
-
-    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
-      GeneratedPluginRegistrant.register(with: registry)
-      // Background tasks call AppEnvironment.init() too, so this engine needs
-      // the runtime storage channel just as much as the implicit one.
-      RuntimeStorageChannel.register(with: registry)
-    }
-
-    WorkmanagerPlugin.registerPeriodicTask(
-      withIdentifier: "eu.twonly.periodic_task",
-      frequency: NSNumber(value: 20 * 60)
-    )
-
-    WorkmanagerPlugin.registerBGProcessingTask(
-      withIdentifier: "eu.twonly.processing_task"
-    )
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    handleEventsForBackgroundURLSession identifier: String,
+    completionHandler: @escaping () -> Void
+  ) {
+    if DirectMediaTransfer.shared.handleEvents(
+      identifier: identifier,
+      completion: completionHandler
+    ) {
+      return
+    }
+    super.application(
+      application,
+      handleEventsForBackgroundURLSession: identifier,
+      completionHandler: completionHandler
+    )
   }
 
   override func application(

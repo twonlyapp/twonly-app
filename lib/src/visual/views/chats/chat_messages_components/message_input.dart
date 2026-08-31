@@ -13,7 +13,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
@@ -21,6 +21,7 @@ import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/c
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/ask_for_friend_promotions.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/sparks.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_input_components/user_discovery_manual_approval.comp.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/typing_indicator.dart';
 import 'package:twonly/src/visual/views/contact/contact_components/restore_flame.comp.dart';
 
 class MessageInput extends StatefulWidget {
@@ -29,6 +30,7 @@ class MessageInput extends StatefulWidget {
     required this.quotesMessage,
     required this.textFieldFocus,
     required this.onMessageSend,
+    required this.composing,
     super.key,
   });
 
@@ -37,9 +39,18 @@ class MessageInput extends StatefulWidget {
   final Message? quotesMessage;
   final VoidCallback onMessageSend;
 
+  /// Published so the chat-open heartbeat can stay quiet while the typing
+  /// announcement is already covering this conversation.
+  final ValueNotifier<bool> composing;
+
   @override
   State<MessageInput> createState() => _MessageInputState();
 }
+
+/// How long after the last keystroke the composer still counts as being typed
+/// in. Longer than [typingIndicatorInterval] so the indicator survives the gap
+/// between two announcements.
+const _composingIdleTimeout = Duration(seconds: 6);
 
 enum RecordingState { none, recording, finished }
 
@@ -85,14 +96,14 @@ class _MessageInputState extends State<MessageInput> {
     }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     if (userService.currentUser.typingIndicators) {
-      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 1), (
-        _,
-      ) async {
-        if (widget.textFieldFocus.hasFocus &&
-            _lastTextChangeTime != null &&
-            DateTime.now().difference(_lastTextChangeTime!) <=
-                const Duration(seconds: 6)) {
-          await RustApi.sendTyping(groupId: widget.group.groupId, isTyping: true);
+      _nextTypingIndicator = Timer.periodic(typingIndicatorInterval, (_) async {
+        final composing = _isComposing;
+        widget.composing.value = composing;
+        if (composing) {
+          await RustApi.sendTyping(
+            groupId: widget.group.groupId,
+            isTyping: true,
+          );
         }
       });
     }
@@ -108,6 +119,7 @@ class _MessageInputState extends State<MessageInput> {
     _recordingTimer?.cancel();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
+    widget.composing.value = false;
 
     // Persist draft message on close
     final draftText = _textFieldController.text;
@@ -128,8 +140,31 @@ class _MessageInputState extends State<MessageInput> {
     recorderController = RecorderController();
   }
 
+  /// Whether the composer counts as being typed in right now.
+  ///
+  /// The idle window outlives one announcement interval, so a pause to think
+  /// mid-sentence does not drop the indicator on the other side.
+  bool get _isComposing =>
+      widget.textFieldFocus.hasFocus &&
+      _lastTextChangeTime != null &&
+      clock.now().difference(_lastTextChangeTime!) <= _composingIdleTimeout;
+
   void _handleTextChange() {
-    _lastTextChangeTime = clock.now();
+    final now = clock.now();
+    // The periodic announcement is what keeps the indicator alive, but at its
+    // cadence the first keystroke would take seconds to reach the other side.
+    // That one is announced directly and the timer carries it from there.
+    final wasIdle = _lastTextChangeTime == null ||
+        now.difference(_lastTextChangeTime!) > typingIndicatorInterval;
+    _lastTextChangeTime = now;
+    if (wasIdle &&
+        userService.currentUser.typingIndicators &&
+        widget.textFieldFocus.hasFocus) {
+      widget.composing.value = true;
+      unawaited(
+        RustApi.sendTyping(groupId: widget.group.groupId, isTyping: true),
+      );
+    }
   }
 
   void _handleTextFocusChange() {
@@ -195,10 +230,11 @@ class _MessageInputState extends State<MessageInput> {
 
     if (audioTmpPath == null) return;
 
-    final mediaFileService = await initializeMediaUpload(
-      MediaType.audio,
-      null,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: MediaType.audio.name,
+      isDraftMedia: false,
     );
+    final mediaFileService = await MediaFileService.fromMediaId(mediaId);
 
     if (mediaFileService == null) return;
 
@@ -206,9 +242,9 @@ class _MessageInputState extends State<MessageInput> {
       ..copySync(mediaFileService.originalPath.path)
       ..deleteSync();
 
-    await insertMediaFileInMessagesTable(
-      mediaFileService,
-      [widget.group.groupId],
+    await RustApi.sendMediaToGroups(
+      mediaId: mediaFileService.mediaFile.mediaId,
+      groupIds: [widget.group.groupId],
     );
   }
 

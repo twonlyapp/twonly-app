@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT total_media_counter, flame_counter, max_flame_counter,\n                      last_message_send, last_message_received,\n                      last_flame_counter_change\n               FROM groups WHERE group_id = 'group'",
+  "describe": {
+    "columns": [
+      {
+        "name": "total_media_counter",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "total_media_counter"
+          }
+        }
+      },
+      {
+        "name": "flame_counter",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "flame_counter"
+          }
+        }
+      },
+      {
+        "name": "max_flame_counter",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "max_flame_counter"
+          }
+        }
+      },
+      {
+        "name": "last_message_send",
+        "ordinal": 3,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_send"
+          }
+        }
+      },
+      {
+        "name": "last_message_received",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_message_received"
+          }
+        }
+      },
+      {
+        "name": "last_flame_counter_change",
+        "ordinal": 5,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "last_flame_counter_change"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "aeb01be35d655b1c6f0675dcd3b9cade39a69b4b7882fe6949f90029d15993ee"
+}

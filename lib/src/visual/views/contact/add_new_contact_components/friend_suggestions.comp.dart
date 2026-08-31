@@ -5,7 +5,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -72,7 +71,12 @@ class FriendSuggestionsComp extends StatelessWidget {
       ),
     );
 
-    if (added > 0) await importSignalContactAndCreateRequest(userdata);
+    if (added > 0) {
+      await RustApi.tryRequestContactById(
+        contactId: userdata.userId,
+        expectedPublicKey: userdata.publicIdentityKey,
+      );
+    }
   }
 
   Future<void> _hideAnnouncedUser(int userId) async {

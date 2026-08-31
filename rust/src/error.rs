@@ -75,6 +75,9 @@ pub enum TwonlyError {
     #[error("{0}")]
     SqliteError(#[from] sqlx::Error),
 
+    #[error("encrypted media is {bytes} bytes but the plan allows {limit}")]
+    MediaTooLarge { bytes: i64, limit: i64 },
+
     #[error("{0}")]
     Generic(String),
 
@@ -90,6 +93,14 @@ pub enum TwonlyError {
 
     #[error("API user response is missing required field: {0}")]
     ApiResponseMissingField(&'static str),
+
+    /// The server answered with the account but holds no PQC prekey bundle for
+    /// it, so no new Signal session can be opened with that peer. Distinct from
+    /// `ApiResponseMissingField` because callers defer work instead of failing:
+    /// the peer publishes a bundle only when their client next registers or
+    /// republishes, and an inbound message from them still opens a session.
+    #[error("peer {0} has published no prekey bundle")]
+    PeerHasNoPrekeyBundle(i64),
 
     #[error("{0}")]
     IoError(#[from] std::io::Error),

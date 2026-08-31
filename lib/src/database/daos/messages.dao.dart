@@ -350,7 +350,7 @@ Future<void> purgeMessageTable() async {
 
         final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
         if (mediaService != null) {
-          mediaService.fullMediaRemoval();
+          await mediaService.fullMediaRemoval();
         }
       } else {
         Log.info(

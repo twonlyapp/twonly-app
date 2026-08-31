@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 

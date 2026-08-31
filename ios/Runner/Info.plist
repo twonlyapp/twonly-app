@@ -59,6 +59,8 @@
 	<string>Use your microphone to enable audio when making videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>twonly will save photos or videos to your library.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>twonly will save photos or videos to your library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app does not use or store your location information.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -89,11 +91,6 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 		<string>processing</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>eu.twonly.periodic_task</string>
-		<string>eu.twonly.processing_task</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

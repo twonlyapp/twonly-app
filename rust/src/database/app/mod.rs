@@ -16,7 +16,7 @@ mod legacy_import;
 pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 3;
+pub const APP_SCHEMA_VERSION: i64 = 5;
 
 /// Tables imported from the legacy Drift database. Every entry must exist in
 /// Drift schema 25, because a missing table aborts the whole import. Rust-only

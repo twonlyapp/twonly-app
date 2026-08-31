@@ -7,7 +7,6 @@ import 'package:hashlib/random.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/messages.api.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 
@@ -199,9 +198,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                           ackByServerAt: const Value(null),
                         ),
                       );
-                      await tryToSendCompleteMessage(
-                        receiptId: newReceiptId,
-                      );
+                      await RustApi.sendQueuedMessage(receiptId: newReceiptId);
                     },
                     label: const FaIcon(FontAwesomeIcons.arrowRotateRight),
                   ),

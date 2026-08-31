@@ -20,9 +20,11 @@ class GroupContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navigator = Navigator.of(context);
+    // `late` so the ancestor lookup only runs if the menu is actually
+    // opened, rather than once per row on every rebuild.
+    late final navigator = Navigator.of(context);
     return ContextMenu(
-      items: [
+      items: () => [
         if (!group.archived)
           ContextMenuItem(
             title: context.lang.contextMenuArchiveUser,

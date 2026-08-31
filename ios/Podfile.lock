@@ -4,11 +4,6 @@ PODS:
   - cryptography_flutter_plus (0.2.0):
     - Flutter
   - Flutter (1.0.0)
-  - flutter_image_compress_common (1.0.0):
-    - Flutter
-    - Mantle
-    - SDWebImage
-    - SDWebImageWebPCoder
   - flutter_sharing_intent (1.0.1):
     - Flutter
   - flutter_volume_controller (0.0.1):
@@ -50,21 +45,6 @@ PODS:
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
   - GTMSessionFetcher/Core (3.5.0)
-  - libwebp (1.5.0):
-    - libwebp/demux (= 1.5.0)
-    - libwebp/mux (= 1.5.0)
-    - libwebp/sharpyuv (= 1.5.0)
-    - libwebp/webp (= 1.5.0)
-  - libwebp/demux (1.5.0):
-    - libwebp/webp
-  - libwebp/mux (1.5.0):
-    - libwebp/demux
-  - libwebp/sharpyuv (1.5.0)
-  - libwebp/webp (1.5.0):
-    - libwebp/sharpyuv
-  - Mantle (2.2.0):
-    - Mantle/extobjc (= 2.2.0)
-  - Mantle/extobjc (2.2.0)
   - MLImage (1.0.0-beta8)
   - MLKitBarcodeScanning (8.0.0):
     - MLKitCommon (~> 14.0)
@@ -98,21 +78,12 @@ PODS:
     - Flutter
     - ScreenProtectorKit (= 1.5.1)
   - ScreenProtectorKit (1.5.1)
-  - SDWebImage (5.21.7):
-    - SDWebImage/Core (= 5.21.7)
-  - SDWebImage/Core (5.21.7)
-  - SDWebImageWebPCoder (0.15.0):
-    - libwebp (~> 1.0)
-    - SDWebImage/Core (~> 5.17)
   - SwiftProtobuf (1.38.0)
-  - workmanager_apple (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - audio_waveforms (from `.symlinks/plugins/audio_waveforms/ios`)
   - cryptography_flutter_plus (from `.symlinks/plugins/cryptography_flutter_plus/ios`)
   - Flutter (from `Flutter`)
-  - flutter_image_compress_common (from `.symlinks/plugins/flutter_image_compress_common/ios`)
   - flutter_sharing_intent (from `.symlinks/plugins/flutter_sharing_intent/ios`)
   - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - google_mlkit_barcode_scanning (from `.symlinks/plugins/google_mlkit_barcode_scanning/ios`)
@@ -122,7 +93,6 @@ DEPENDENCIES:
   - rust_lib_twonly (from `.symlinks/plugins/rust_lib_twonly/ios`)
   - screen_protector (from `.symlinks/plugins/screen_protector/ios`)
   - SwiftProtobuf
-  - workmanager_apple (from `.symlinks/plugins/workmanager_apple/ios`)
 
 SPEC REPOS:
   trunk:
@@ -131,8 +101,6 @@ SPEC REPOS:
     - GoogleToolboxForMac
     - GoogleUtilities
     - GTMSessionFetcher
-    - libwebp
-    - Mantle
     - MLImage
     - MLKitBarcodeScanning
     - MLKitCommon
@@ -141,8 +109,6 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - ScreenProtectorKit
-    - SDWebImage
-    - SDWebImageWebPCoder
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
@@ -152,8 +118,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cryptography_flutter_plus/ios"
   Flutter:
     :path: Flutter
-  flutter_image_compress_common:
-    :path: ".symlinks/plugins/flutter_image_compress_common/ios"
   flutter_sharing_intent:
     :path: ".symlinks/plugins/flutter_sharing_intent/ios"
   flutter_volume_controller:
@@ -170,14 +134,11 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/rust_lib_twonly/ios"
   screen_protector:
     :path: ".symlinks/plugins/screen_protector/ios"
-  workmanager_apple:
-    :path: ".symlinks/plugins/workmanager_apple/ios"
 
 SPEC CHECKSUMS:
   audio_waveforms: a6dde7fe7c0ea05f06ffbdb0f7c1b2b2ba6cedcf
   cryptography_flutter_plus: 44f4e9e4079395fcbb3e7809c0ac2c6ae2d9576f
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
-  flutter_image_compress_common: 1697a328fd72bfb335507c6bca1a65fa5ad87df1
   flutter_sharing_intent: 0c1e53949f09fa8df8ac2268505687bde8ff264c
   flutter_volume_controller: c2be490cb0487e8b88d0d9fc2b7e1c139a4ebccb
   google_mlkit_barcode_scanning: 12d8422d8f7b00726dedf9cac00188a2b98750c2
@@ -188,8 +149,6 @@ SPEC CHECKSUMS:
   GoogleToolboxForMac: d1a2cbf009c453f4d6ded37c105e2f67a32206d8
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
-  Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   MLImage: 0de5c6c2bf9e93b80ef752e2797f0836f03b58c0
   MLKitBarcodeScanning: 39de223e7b1b8a8fbf10816a536dd292d8a39343
   MLKitCommon: 47d47b50a031d00db62f1b0efe5a1d8b09a3b2e6
@@ -201,10 +160,7 @@ SPEC CHECKSUMS:
   rust_lib_twonly: 6586fdf02e31cd8a3ad9f1ee84796da6bbf289bb
   screen_protector: 18c6aca2dc5d2a832f6787a5318f97f03e9d3150
   ScreenProtectorKit: 6ceb3e0808341a9bc15d175bff40dfdd4b32da71
-  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
-  SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   SwiftProtobuf: d724b5145bfc609d9a49c1e3e3a3dabb07273ffb
-  workmanager_apple: 904529ae31e97fc5be632cf628507652294a0778
 
 PODFILE CHECKSUM: f83bbaaed0b8c29b006472e50864d40e54617e24
 

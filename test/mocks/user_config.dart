@@ -34,6 +34,7 @@ UserConfig testUserConfig({
   screenLockEnabled: false,
   isCloudBackupEnabled: false,
   isUserDiscoveryEnabled: false,
+  sealedSenderEnabled: true,
   requiredSendImages: 4,
   userDiscoveryThreshold: 3,
   userDiscoveryRequiresManualApproval: false,

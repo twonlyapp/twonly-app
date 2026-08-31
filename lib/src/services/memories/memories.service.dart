@@ -279,7 +279,7 @@ class MemoriesService {
         final mediaService = MediaFileService(mediaFile);
 
         if (mediaService.mediaFile.storedFileHash == null) {
-          await mediaService.hashMediaFile();
+          await mediaService.refreshStoredMetadata();
         }
 
         if (!mediaService.mediaFile.hasCropAnalyzed) {
@@ -287,7 +287,7 @@ class MemoriesService {
         }
 
         if (mediaService.mediaFile.sizeInBytes == null) {
-          await mediaService.calculateAndSaveSize();
+          await mediaService.refreshStoredMetadata();
         }
 
         if (mediaService.mediaFile.blurhash == null) {

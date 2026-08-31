@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT upload_state, display_limit_in_milliseconds, encryption_key,\n                  encryption_nonce, is_draft_media\n           FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "upload_state",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "upload_state"
+          }
+        }
+      },
+      {
+        "name": "display_limit_in_milliseconds",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "display_limit_in_milliseconds"
+          }
+        }
+      },
+      {
+        "name": "encryption_key",
+        "ordinal": 2,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_key"
+          }
+        }
+      },
+      {
+        "name": "encryption_nonce",
+        "ordinal": 3,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "encryption_nonce"
+          }
+        }
+      },
+      {
+        "name": "is_draft_media",
+        "ordinal": 4,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_draft_media"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "691fd5c99b857c046398f68bb59884c9dedb86737e0e9e57100d00ae0fcc9df9"
+}

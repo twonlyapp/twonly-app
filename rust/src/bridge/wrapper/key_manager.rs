@@ -11,11 +11,6 @@ use crate::signal::engine::RustSignalEngine;
 pub struct RustKeyManager {}
 
 impl RustKeyManager {
-    pub async fn get_login_token() -> Result<Vec<u8>> {
-        let key_manager = get_twonly_flutter()?.key_manager.lock().await;
-        Ok(key_manager.main_key.get_login_token().to_vec())
-    }
-
     pub async fn get_user_id() -> Result<Option<i64>> {
         let key_manager = get_twonly_flutter()?.key_manager.lock().await;
         Ok(key_manager.user_id)

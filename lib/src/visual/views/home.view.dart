@@ -12,7 +12,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
@@ -134,10 +133,12 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       final type = media.$2;
       final filePath = media.$1;
 
-      final newMediaService = await initializeMediaUpload(
-        type,
-        userService.currentUser.defaultShowTime,
+      final mediaId = await RustApi.initializeMediaUpload(
+        mediaType: type.name,
+        displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
+        isDraftMedia: false,
       );
+      final newMediaService = await MediaFileService.fromMediaId(mediaId);
       if (newMediaService == null) {
         Log.error('Could not create new media file for intent shared file');
         return;
@@ -207,7 +208,8 @@ class HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   }
 
   Future<void> _initAsync() async {
-    final initialNativeTap = await NativeNotificationService.consumeInitialTap();
+    final initialNativeTap =
+        await NativeNotificationService.consumeInitialTap();
     if (initialNativeTap != null) {
       _openNativeNotification(initialNativeTap.conversationId);
     }

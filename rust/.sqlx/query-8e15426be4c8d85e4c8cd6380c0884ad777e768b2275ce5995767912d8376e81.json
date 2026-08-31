@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts\n                   SET media_received_counter = media_received_counter + 1\n                   WHERE user_id IN (\n                       SELECT contact_id FROM group_members WHERE group_id = ?\n                   )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "8e15426be4c8d85e4c8cd6380c0884ad777e768b2275ce5995767912d8376e81"
+}

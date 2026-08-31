@@ -41,6 +41,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
   ImageStream? _imageStream;
   ImageInfo? _imageInfo;
   int _retries = 0;
+  bool _hasStoredFile = false;
   late final ImageStreamListener _listener;
 
   @override
@@ -76,6 +77,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
         media.thumbnailPath.lengthSync() > 0;
     final hasStored =
         media.storedPath.existsSync() && media.storedPath.lengthSync() > 0;
+    _hasStoredFile = hasStored;
     final isImageOrGif =
         media.mediaFile.type == MediaType.image ||
         media.mediaFile.type == MediaType.gif;
@@ -263,9 +265,7 @@ class _MemoriesThumbnailCompState extends State<MemoriesThumbnailComp> {
                 ),
               Builder(
                 builder: (context) {
-                  final hasStored =
-                      media.storedPath.existsSync() &&
-                      media.storedPath.lengthSync() > 0;
+                  final hasStored = _hasStoredFile;
                   final IconData iconData;
                   final Color color;
 

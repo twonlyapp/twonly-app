@@ -9,7 +9,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/download.api.dart'
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart'
     as received;
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -47,10 +47,34 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   GlobalKey reopenMediaFile = GlobalKey();
   bool _canBeReopened = false;
 
+  /// Decoded once per message instead of on every rebuild; the buffer only
+  /// changes when the message itself does.
+  String? _link;
+
   @override
   void initState() {
     super.initState();
+    _decodeAdditionalData();
     unawaited(initAsync());
+  }
+
+  @override
+  void didUpdateWidget(ChatMediaEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.additionalMessageData !=
+        widget.message.additionalMessageData) {
+      _decodeAdditionalData();
+    }
+  }
+
+  void _decodeAdditionalData() {
+    final addData = widget.message.additionalMessageData;
+    if (addData == null) {
+      _link = null;
+      return;
+    }
+    final data = AdditionalMessageData.fromBuffer(addData);
+    _link = data.hasLink() ? data.link : null;
   }
 
   Future<void> initAsync() async {
@@ -120,34 +144,31 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
 
     Widget additionalMessageData = Container();
 
-    final addData = widget.message.additionalMessageData;
-    if (addData != null) {
-      final data = AdditionalMessageData.fromBuffer(addData);
-      if (data.hasLink() && widget.message.mediaStored) {
-        imageBorderRadius = widget.borderRadius.copyWith(
-          bottomLeft: const Radius.circular(5),
-          bottomRight: const Radius.circular(5),
-        );
+    final link = _link;
+    if (link != null && widget.message.mediaStored) {
+      imageBorderRadius = widget.borderRadius.copyWith(
+        bottomLeft: const Radius.circular(5),
+        bottomRight: const Radius.circular(5),
+      );
 
-        additionalMessageData = Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
+      additionalMessageData = Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+        ),
+        padding: widget.info.padding,
+        decoration: BoxDecoration(
+          color: widget.info.color,
+          borderRadius: widget.borderRadius.copyWith(
+            topLeft: const Radius.circular(5),
           ),
-          padding: widget.info.padding,
-          decoration: BoxDecoration(
-            color: widget.info.color,
-            borderRadius: widget.borderRadius.copyWith(
-              topLeft: const Radius.circular(5),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BetterText(text: data.link, textColor: widget.info.textColor),
-            ],
-          ),
-        );
-      }
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BetterText(text: link, textColor: widget.info.textColor),
+          ],
+        ),
+      );
     }
 
     return Column(

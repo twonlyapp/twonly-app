@@ -380,9 +380,23 @@ async fn prepare_queued_receipt_from_row(
 
     if is_encrypted {
         if row.signal_version != "v2" {
-            ContactService::new(ctx)
+            let contacts = ContactService::new(ctx);
+            if let Err(error) = contacts
                 .establish_signal_session(row.contact_id, None)
-                .await?;
+                .await
+            {
+                // The peer may have published no prekey bundle yet, for example
+                // when their account predates the PQC keys. An existing session
+                // still encrypts for them, so only a peer we cannot talk to at
+                // all keeps the payload queued.
+                if !contacts.has_v2_session(row.contact_id).await? {
+                    return Err(error);
+                }
+                tracing::warn!(
+                    contact_id = row.contact_id,
+                    "prekey bundle unavailable; encrypting with the existing v2 session: {error}"
+                );
+            }
         }
 
         let plaintext = message.encrypted_content.take().ok_or_else(|| {
@@ -443,7 +457,22 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
         return Ok(());
     }
 
-    let receipt = prepare_queued_receipt_from_row(ctx, receipt_id, row).await?;
+    let receipt = match prepare_queued_receipt_from_row(ctx, receipt_id, row).await {
+        Ok(receipt) => receipt,
+        // `prepare_queued_receipt_from_row` only lets this through when there
+        // is no usable session either, so there is nothing to retry against
+        // until the peer reappears.
+        Err(TwonlyError::PeerHasNoPrekeyBundle(contact_id)) => {
+            tracing::info!(
+                receipt_id,
+                contact_id,
+                "peer has no prekey bundle and no session; deferring the receipt until one exists"
+            );
+            defer_receipt_until_session(&app_db, receipt_id).await?;
+            return Ok(());
+        }
+        Err(error) => return Err(error),
+    };
 
     let sent_sealed = SealedSenderService::try_send(ctx, &receipt).await?;
 
@@ -539,12 +568,54 @@ pub(crate) async fn send_queued_receipt(ctx: &Arc<Context>, receipt_id: &str) ->
     Ok(())
 }
 
+/// Parks a receipt that cannot be encrypted until the peer becomes reachable.
+///
+/// The peer has published no prekey bundle and we hold no session with them, so
+/// every sweep would repeat the same failing server round-trip. The receipt is
+/// kept, not dropped: `release_deferred_receipts` puts it back in the queue as
+/// soon as a session exists.
+async fn defer_receipt_until_session(
+    database: &Arc<crate::database::app::AppDatabase>,
+    receipt_id: &str,
+) -> Result<()> {
+    sqlx::query!(
+        r#"
+        UPDATE receipts
+        SET deferred_until_session = CAST(strftime('%s', 'now') AS INTEGER)
+        WHERE receipt_id = ?
+        "#,
+        receipt_id,
+    )
+    .execute(&database.pool)
+    .await?;
+    database.notify_committed(["receipts"]);
+    Ok(())
+}
+
+/// Requeues everything parked for a peer we can now encrypt for.
+///
+/// Called wherever a v2 session appears: a prekey bundle fetch that succeeded,
+/// or an inbound message from the peer that opened a session on our side.
+pub(crate) async fn release_deferred_receipts(
+    database: &Arc<crate::database::app::AppDatabase>,
+    contact_id: i64,
+) -> Result<()> {
+    sqlx::query!(
+        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? AND deferred_until_session IS NOT NULL",
+        contact_id,
+    )
+    .execute(&database.pool)
+    .await?;
+    Ok(())
+}
+
 pub async fn retransmit_queued_receipts(ctx: &Arc<Context>) -> Result<()> {
     let database = ctx.app_db.read().await.clone();
     let receipt_ids = sqlx::query_scalar!(
         r#"
         SELECT receipt_id FROM receipts
         WHERE will_be_retried_by_media_upload = 0
+          AND deferred_until_session IS NULL
           AND (ack_by_server_at IS NULL OR mark_for_retry IS NOT NULL)
           AND (mark_for_retry_after_accepted IS NULL OR EXISTS(
               SELECT 1 FROM contacts

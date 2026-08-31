@@ -64,54 +64,20 @@ class KeyVerificationService {
     );
   }
 
-  static Future<void> handleVerificationProof(
-    int fromUserId,
-    List<int> receivedMac,
-  ) async {
-    Log.info('Received a verification proof. Verifying the calculated mac...');
-
-    final contactPubKey = await RustSignal.getContactPublicKey(
-      contactId: fromUserId,
-    );
-    if (contactPubKey == null) {
-      Log.error('No public key stored..');
-      return;
-    }
-
-    final secretTokens = await twonlyDB.keyVerificationDao
-        .getRecentVerificationTokens();
-    for (final secretToken in secretTokens) {
-      final recalculatedMac = await _createVerificationBytes(
-        fromUserId,
-        contactPubKey,
-        secretToken.token,
-        true,
+  static Future<void> handleVerificationSucceeded(int fromUserId) async {
+    final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
+    final context = rootNavigatorKey.currentContext;
+    if (context != null && context.mounted && contact != null) {
+      unawaited(
+        VerificationSuccessDialog.show(
+          context,
+          contact,
+          message: context.lang.secretQrTokenVerifiedSnackbar(
+            getContactDisplayName(contact),
+          ),
+        ),
       );
-      if (recalculatedMac.equals(receivedMac)) {
-        await twonlyDB.keyVerificationDao.addKeyVerification(
-          fromUserId,
-          VerificationType.secretQrToken,
-        );
-        Log.info('Contact was verified via secretQrToken');
-
-        final contact = await twonlyDB.contactsDao.getContactById(fromUserId);
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && context.mounted && contact != null) {
-          unawaited(
-            VerificationSuccessDialog.show(
-              context,
-              contact,
-              message: context.lang.secretQrTokenVerifiedSnackbar(
-                getContactDisplayName(contact),
-              ),
-            ),
-          );
-        }
-        return;
-      }
     }
-
-    Log.error('No valid secret token could be found...');
   }
 
   static Future<void> verifySharedContact({
@@ -119,6 +85,10 @@ class KeyVerificationService {
     required List<int> sharedPublicIdentityKey,
     required int senderId,
   }) async {
+    if (sharedPublicIdentityKey.isEmpty) {
+      Log.info('Shared contact $contactId carries no public key');
+      return;
+    }
     final publicIdentityKey = await RustSignal.getContactPublicKey(
       contactId: contactId,
     );

@@ -8,7 +8,6 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
@@ -139,7 +138,10 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
             deletedByUser: const Value(false),
           ),
         );
-        await importSignalContactAndCreateRequest(userdata);
+        await RustApi.tryRequestContactById(
+          contactId: userdata.userId,
+          expectedPublicKey: userdata.publicIdentityKey,
+        );
       }
     } catch (e) {
       Log.error(e);
@@ -162,7 +164,7 @@ class _ChatAskAFriendEntryState extends State<ChatAskAFriendEntry> {
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(

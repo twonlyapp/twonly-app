@@ -322,7 +322,7 @@ class MemoriesViewState extends State<MemoriesView>
               .firstOrNull;
           if (item != null) {
             if (isCompletely) {
-              item.mediaService.fullMediaRemoval();
+              await item.mediaService.fullMediaRemoval();
               await RustApi.deleteMemory(mediaId: mediaId);
               await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
             } else {
@@ -361,21 +361,7 @@ class MemoriesViewState extends State<MemoriesView>
                 .where((e) => e.mediaService.mediaFile.mediaId == mediaId)
                 .firstOrNull;
             if (item != null) {
-              final media = item.mediaService;
-              if (media.mediaFile.type == MediaType.video) {
-                await saveVideoToGallery(
-                  media.storedPath.path,
-                  name: media.mediaFile.mediaId,
-                );
-              } else if (media.mediaFile.type == MediaType.image ||
-                  media.mediaFile.type == MediaType.gif) {
-                final imageBytes = await media.storedPath.readAsBytes();
-                await saveImageToGallery(
-                  imageBytes,
-                  createdAt: media.mediaFile.createdAt,
-                  name: media.mediaFile.mediaId,
-                );
-              }
+              await item.mediaService.saveToGallery();
             }
             setProgress((i + 1) / selectedList.length);
           }

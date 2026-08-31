@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE receipts\n        SET deferred_until_session = CAST(strftime('%s', 'now') AS INTEGER)\n        WHERE receipt_id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "1838231f7a50c805bea5bea556ddc7f58bc3147ddfa96a0e1067a5302694f1e0"
+}

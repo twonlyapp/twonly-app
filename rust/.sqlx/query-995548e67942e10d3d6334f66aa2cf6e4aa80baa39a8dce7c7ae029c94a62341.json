@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO direct_media_upload_jobs\n               (attachment_id, media_id, multipart_path, manifest_path,\n                complete_body_path, native_descriptor_json, state, expires_at)\n               SELECT ?, ?, ?, ?, ?, '{}', 'scheduled', expires_at\n               FROM direct_media_upload_slots WHERE attachment_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "995548e67942e10d3d6334f66aa2cf6e4aa80baa39a8dce7c7ae029c94a62341"
+}

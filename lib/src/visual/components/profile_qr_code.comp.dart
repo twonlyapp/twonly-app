@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
 
@@ -114,7 +114,7 @@ class _ProfileQrCodeCompState extends State<ProfileQrCodeComp> {
     final qr = await QrCodeUtils.publicProfileLink();
     Uint8List? avatarBytes;
     if (widget.showAvatar) {
-      final avatarPath = await getUserAvatar();
+      final avatarPath = await RustApi.currentUserAvatarPath();
       if (avatarPath != null) {
         avatarBytes = await File(avatarPath).readAsBytes();
       } else {

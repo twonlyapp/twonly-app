@@ -15,8 +15,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart'
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -194,7 +193,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       if (currentMedia != null) {
         if (!imageSaved &&
             currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
-          currentMedia!.fullMediaRemoval();
+          await currentMedia!.fullMediaRemoval();
         }
       }
 
@@ -348,7 +347,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       Log.warn(
         'Temp media file not found for media ID: ${currentMediaLocal.mediaFile.mediaId}',
       );
-      await handleMediaError(currentMediaLocal.mediaFile);
+      await RustApi.requestMediaReupload(
+        mediaId: currentMediaLocal.mediaFile.mediaId,
+      );
       return advanceToNextMediaOrExit();
     }
 

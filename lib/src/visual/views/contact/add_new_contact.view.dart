@@ -14,7 +14,6 @@ import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
@@ -179,7 +178,12 @@ class _SearchUsernameView extends State<AddNewUserView> {
       }
     }
 
-    if (added > 0) await importSignalContactAndCreateRequest(userdata);
+    if (added > 0) {
+      await RustApi.tryRequestContactById(
+        contactId: userdata.userId,
+        expectedPublicKey: userdata.publicIdentityKey,
+      );
+    }
   }
 
   @override

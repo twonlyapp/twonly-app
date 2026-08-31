@@ -143,15 +143,16 @@ String friendlyTime(BuildContext context, DateTime dt) {
   }
 
   // Determine 24h vs 12h from system/local settings
-  final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
+  final use24Hour = MediaQuery.alwaysUse24HourFormatOf(context);
 
-  if (!use24Hour) {
-    // 12-hour format with locale-aware AM/PM
-    final format = DateFormat.jm(Localizations.localeOf(context).toString());
-    return format.format(dt);
-  } else {
-    // 24-hour HH:mm, locale-aware
-    final format = DateFormat.Hm(Localizations.localeOf(context).toString());
-    return format.format(dt);
-  }
+  final locale = Localizations.localeOf(context).toString();
+  // Building a DateFormat parses a pattern and looks up locale data, which is
+  // wasted work when every visible message asks for the same two formats.
+  final format = _timeFormats.putIfAbsent(
+    '$locale|$use24Hour',
+    () => use24Hour ? DateFormat.Hm(locale) : DateFormat.jm(locale),
+  );
+  return format.format(dt);
 }
+
+final Map<String, DateFormat> _timeFormats = {};

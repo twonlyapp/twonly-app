@@ -276,13 +276,27 @@ impl MessageService {
             )
             .fetch_optional(&signal.pool)
             .await?;
-            if let (Some(contact), Some(public_identity_key)) = (contact, identity) {
-                contacts.push(proto::SharedContact {
-                    user_id: contact_id,
-                    public_identity_key,
-                    display_name: contact.display_name.unwrap_or(contact.username),
-                });
+            let Some(contact) = contact else {
+                tracing::warn!("skipping unknown contact {contact_id} in contact share");
+                continue;
+            };
+            // A contact without a locally known identity key is still worth
+            // sharing: the recipient only needs the user id to add them. The
+            // key is what lets the recipient inherit the trust edge, so an
+            // empty one simply means they cannot, not that the share fails.
+            if identity.is_none() {
+                tracing::info!("sharing contact {contact_id} without an identity key");
             }
+            contacts.push(proto::SharedContact {
+                user_id: contact_id,
+                public_identity_key: identity.unwrap_or_default(),
+                display_name: contact.display_name.unwrap_or(contact.username),
+            });
+        }
+        if contacts.is_empty() {
+            return Err(TwonlyError::Generic(
+                "none of the selected contacts could be shared".into(),
+            ));
         }
         let data = proto::AdditionalMessageData {
             r#type: proto::additional_message_data::Type::Contacts as i32,

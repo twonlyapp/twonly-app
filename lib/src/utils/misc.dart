@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:clock/clock.dart';
@@ -7,11 +6,8 @@ import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:gal/gal.dart';
-import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/error_code.dart';
@@ -32,99 +28,6 @@ extension ShortCutsExtension on BuildContext {
         },
       ),
     );
-  }
-}
-
-Future<String?> saveImageToGallery(
-  Uint8List imageBytes, {
-  DateTime? createdAt,
-  String? name,
-}) async {
-  var bytesToProcess = imageBytes;
-
-  if (createdAt != null) {
-    try {
-      bytesToProcess = await Isolate.run(() {
-        final image = img.decodeImage(imageBytes);
-        if (image != null) {
-          final formattedDate = DateFormat(
-            'yyyy:MM:dd HH:mm:ss',
-          ).format(createdAt);
-          image.exif.imageIfd[0x0132] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTime
-          image.exif.exifIfd[0x9003] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTimeOriginal
-          image.exif.exifIfd[0x9004] = img.IfdValueAscii(
-            formattedDate,
-          ); // DateTimeDigitized
-
-          return img.encodeJpg(image);
-        }
-        return imageBytes;
-      });
-    } catch (e) {
-      Log.error(e);
-    }
-  }
-
-  final hasAccess = await Gal.hasAccess(toAlbum: true);
-  if (!hasAccess) {
-    await Gal.requestAccess(toAlbum: true);
-  }
-  try {
-    await Gal.putImageBytes(
-      bytesToProcess,
-      album: 'twonly',
-      name: name ?? 'image',
-    );
-    return null;
-  } on GalException catch (e) {
-    Log.error(e);
-    return e.type.message;
-  }
-}
-
-Future<String?> saveVideoToGallery(
-  String videoPath, {
-  String? name,
-}) async {
-  final hasAccess = await Gal.hasAccess(toAlbum: true);
-  if (!hasAccess) {
-    await Gal.requestAccess(toAlbum: true);
-  }
-
-  var pathToSave = videoPath;
-  File? tempFile;
-
-  try {
-    if (name != null) {
-      final file = File(videoPath);
-      final extension = file.path.split('.').last;
-      final tempDir = Directory.systemTemp;
-      tempFile = File(join(tempDir.path, '$name.$extension'));
-      if (tempFile.existsSync()) {
-        try {
-          tempFile.deleteSync();
-        } catch (_) {}
-      }
-      file.copySync(tempFile.path);
-      pathToSave = tempFile.path;
-    }
-    await Gal.putVideo(pathToSave, album: 'twonly');
-    return null;
-  } on GalException catch (e) {
-    Log.error(e);
-    return e.type.message;
-  } finally {
-    if (tempFile != null && tempFile.existsSync()) {
-      try {
-        tempFile.deleteSync();
-      } catch (e) {
-        Log.error('Failed to delete temp video file: $e');
-      }
-    }
   }
 }
 

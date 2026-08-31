@@ -39,7 +39,7 @@ class ChatTextEntry extends StatelessWidget {
     return IntrinsicWidth(
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
           minWidth: info.minWidth,
         ),
         padding: info.padding,

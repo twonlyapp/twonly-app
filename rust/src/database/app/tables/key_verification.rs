@@ -10,12 +10,14 @@ use crate::error::Result;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum KeyVerificationType {
     ContactSharedByVerified,
+    SecretQrToken,
 }
 
 impl KeyVerificationType {
     fn as_str(self) -> &'static str {
         match self {
             Self::ContactSharedByVerified => "contactSharedByVerified",
+            Self::SecretQrToken => "secretQrToken",
         }
     }
 }

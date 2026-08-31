@@ -39,6 +39,7 @@ fn main() -> Result<()> {
     prost_build::Config::new()
         .include_file("client_messages.rs")
         .compile_protos(&client_protos, &[client_proto_root])?;
+    println!("cargo:rerun-if-changed=src/api/proto/api/http/http_requests.proto");
     prost_build::compile_protos(
         &["src/api/proto/api/http/http_requests.proto"],
         &["src/api/proto/"],

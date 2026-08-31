@@ -79,7 +79,7 @@ class _ChatAudioEntryState extends State<ChatAudioEntry> {
     return IntrinsicWidth(
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
           minWidth: 280,
         ),
         padding: info.padding,

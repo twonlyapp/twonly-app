@@ -27,17 +27,29 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Refill once the pool can no longer cover a short burst of messages.
-const REFILL_THRESHOLD: i64 = 5;
+///
+/// The issuer only lets a session mint every few seconds, so this has to leave
+/// room for a whole cooldown's worth of sends: a threshold that trips only once
+/// the pool is nearly empty guarantees a stretch of named messages while the
+/// refill waits its turn.
+const REFILL_THRESHOLD: i64 = 10;
 /// Never ask for more than this, however large the server's batch limit is.
 /// Every token in a batch costs a blind and an unblind, both P-384 scalar
 /// multiplications, so the batch size is what bounds the CPU spike a refill
 /// puts on the device.
-const MAX_TOKENS_PER_REFILL: usize = 10;
+const MAX_TOKENS_PER_REFILL: usize = 20;
 /// Stop using a token slightly before the server would reject it, so a message
 /// in flight around midnight UTC is not refused.
 const EXPIRY_SAFETY_MARGIN_SECONDS: i64 = 5 * 60;
-/// Back off this long after the server refused to issue tokens.
-const REFUSED_ISSUANCE_BACKOFF: Duration = Duration::from_secs(15 * 60);
+/// Back off this long when the issuer refuses for a reason we cannot classify.
+const UNKNOWN_REFUSAL_BACKOFF: Duration = Duration::from_secs(15 * 60);
+/// Assumed issuance cooldown while the server's own value is unknown, which is
+/// the case only when the parameter request itself failed.
+const ASSUMED_ISSUANCE_COOLDOWN: Duration = Duration::from_secs(5);
+/// A refill waits out a backoff no longer than this and gives up on anything
+/// beyond it. The issuance cooldown is seconds long and worth waiting for; an
+/// exhausted daily quota lasts until midnight and is not.
+const MAX_BACKOFF_WAIT: Duration = Duration::from_secs(30);
 
 pub(crate) struct PrivacyPassTokens;
 
@@ -123,8 +135,18 @@ impl PrivacyPassTokens {
         let Ok(mut issuance) = ctx.privacy_pass_issuance.try_lock() else {
             return Ok(());
         };
-        if issuance.is_some_and(|next| Instant::now() < next) {
-            return Ok(());
+        // A backoff short enough to be the issuer's cooldown is waited out
+        // rather than skipped: returning here would leave the pool empty with
+        // nothing scheduled to fill it, so every message until the next send
+        // would go named. Longer backoffs are not worth holding a task for.
+        if let Some(next) = *issuance {
+            let wait = next.saturating_duration_since(Instant::now());
+            if wait > MAX_BACKOFF_WAIT {
+                return Ok(());
+            }
+            if !wait.is_zero() {
+                tokio::time::sleep(wait).await;
+            }
         }
         // Another caller may have filled the pool while this one waited.
         if Self::count(ctx).await? >= REFILL_THRESHOLD {
@@ -134,7 +156,7 @@ impl PrivacyPassTokens {
         let parameters = match Server::get_privacy_pass_parameters(ctx).await? {
             ServerResult::Ok(parameters) => parameters,
             ServerResult::ErrorCode(code) => {
-                *issuance = Some(Instant::now() + REFUSED_ISSUANCE_BACKOFF);
+                *issuance = Some(Instant::now() + backoff_for(code, ASSUMED_ISSUANCE_COOLDOWN));
                 return Err(TwonlyError::Generic(format!(
                     "server rejected the Privacy Pass parameter request with code {code}"
                 )));
@@ -180,10 +202,18 @@ impl PrivacyPassTokens {
         .await
         .map_err(|error| TwonlyError::Generic(format!("token blinding panicked: {error}")))??;
 
+        let cooldown = Duration::from_secs(u64::from(parameters.issuance_cooldown_seconds));
         let responses = match Server::issue_privacy_pass_tokens(ctx, requests).await? {
-            ServerResult::Ok(responses) => responses,
+            ServerResult::Ok(responses) => {
+                // The issuer refuses a session that mints again inside its
+                // cooldown, and that refusal is indistinguishable from real
+                // trouble. Pacing the next refill here keeps the client from
+                // provoking one.
+                *issuance = Some(Instant::now() + cooldown);
+                responses
+            }
             ServerResult::ErrorCode(code) => {
-                *issuance = Some(Instant::now() + REFUSED_ISSUANCE_BACKOFF);
+                *issuance = Some(Instant::now() + backoff_for(code, cooldown));
                 return Err(TwonlyError::Generic(format!(
                     "server rejected the Privacy Pass issuance with code {code}"
                 )));
@@ -248,6 +278,35 @@ fn now_seconds() -> i64 {
     chrono::Utc::now().timestamp()
 }
 
+/// How long to leave the issuer alone after it refused to mint.
+///
+/// The two refusals the server sends routinely are minutes apart in cost, and
+/// treating them alike is what took sealed sender down for a quarter of an hour
+/// over a burst the client only had to pace.
+fn backoff_for(code: i32, cooldown: Duration) -> Duration {
+    use crate::api::proto::error::ErrorCode;
+
+    if code == ErrorCode::TooManyRequests as i32 {
+        // The per-session issuance cooldown. It clears in seconds.
+        cooldown
+    } else if code == ErrorCode::PrivacyPassQuotaExhausted as i32 {
+        // The daily counter is keyed on the server's calendar date, so nothing
+        // this account does before midnight earns another token.
+        duration_until_next_utc_day()
+    } else {
+        UNKNOWN_REFUSAL_BACKOFF
+    }
+}
+
+/// Time left in the current UTC day, which is when the issuer's daily counter
+/// rolls over. Never zero, so a refusal always costs at least one wait.
+fn duration_until_next_utc_day() -> Duration {
+    const SECONDS_PER_DAY: i64 = 24 * 60 * 60;
+    let now = now_seconds();
+    let remaining = SECONDS_PER_DAY - now.rem_euclid(SECONDS_PER_DAY);
+    Duration::from_secs(remaining.max(1) as u64)
+}
+
 /// The server derives its challenge from the current UTC day and accepts a
 /// token for `max_age_seconds` counted from the start of that day, not from the
 /// moment it was issued.
@@ -272,5 +331,34 @@ mod tests {
             start_of_day + 7 * SECONDS_PER_DAY - EXPIRY_SAFETY_MARGIN_SECONDS
         );
         assert!(expiry > now_seconds());
+    }
+
+    #[test]
+    fn the_issuance_cooldown_does_not_cost_a_quarter_of_an_hour() {
+        use crate::api::proto::error::ErrorCode;
+
+        let cooldown = Duration::from_secs(5);
+        assert_eq!(
+            backoff_for(ErrorCode::TooManyRequests as i32, cooldown),
+            cooldown
+        );
+        assert_eq!(
+            backoff_for(ErrorCode::InternalError as i32, cooldown),
+            UNKNOWN_REFUSAL_BACKOFF
+        );
+        // Nothing earns a token before the daily counter rolls over, so this
+        // one must not come back after a mere cooldown.
+        assert!(
+            backoff_for(ErrorCode::PrivacyPassQuotaExhausted as i32, cooldown)
+                == duration_until_next_utc_day()
+        );
+    }
+
+    #[test]
+    fn the_daily_quota_backoff_ends_within_the_day() {
+        const SECONDS_PER_DAY: u64 = 24 * 60 * 60;
+        let remaining = duration_until_next_utc_day();
+        assert!(!remaining.is_zero());
+        assert!(remaining <= Duration::from_secs(SECONDS_PER_DAY));
     }
 }

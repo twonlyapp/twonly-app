@@ -27,9 +27,6 @@ class RustKeyManager {
         addition: addition,
       );
 
-  static Future<Uint8List> getLoginToken() => RustLib.instance.api
-      .crateBridgeWrapperKeyManagerRustKeyManagerGetLoginToken();
-
   static Future<(Uint8List, PlatformInt64)> getSignalIdentity() => RustLib
       .instance
       .api

@@ -902,6 +902,102 @@ impl Tester {
         ))
     }
 
+    /// Every direct-media preparation either scheduled a transfer or released
+    /// everything it took, so nothing may be left half-built.
+    pub async fn wait_for_no_pending_upload_jobs(&self) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let jobs = sqlx::query_scalar!("SELECT COUNT(*) FROM direct_media_upload_jobs")
+                .fetch_one(&database.pool)
+                .await?;
+            let reserved = sqlx::query_scalar!(
+                "SELECT COUNT(*) FROM direct_media_upload_slots WHERE state = 'reserved'"
+            )
+            .fetch_one(&database.pool)
+            .await?;
+            if jobs == 0 && reserved == 0 {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "a failed upload preparation kept its job or slot"
+        ))
+    }
+
+    /// Proves that upload preparation ran: the authentication tag only exists
+    /// once Rust has encrypted the plaintext for this send.
+    pub async fn wait_for_media_encryption_mac(&self, media_id: &str) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let mac = sqlx::query_scalar!(
+                "SELECT encryption_mac FROM media_files WHERE media_id = ?",
+                media_id
+            )
+            .fetch_optional(&database.pool)
+            .await?
+            .flatten();
+            if mac.is_some_and(|mac| mac.len() == 16) {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "media {media_id} was never encrypted for upload"
+        ))
+    }
+
+    /// The download state cycles quickly once Rust starts a real transfer, so
+    /// assert on the capability the message actually delivered.
+    pub async fn wait_for_media_download_token(
+        &self,
+        media_id: &str,
+        expected: &[u8],
+    ) -> anyhow::Result<()> {
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let token = sqlx::query_scalar!(
+                "SELECT download_token FROM media_files WHERE media_id = ?",
+                media_id
+            )
+            .fetch_optional(&database.pool)
+            .await?
+            .flatten();
+            if token.as_deref() == Some(expected) {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "media {media_id} did not receive the expected download token"
+        ))
+    }
+
+    pub async fn wait_for_media_reupload_requested(
+        &self,
+        media_id: &str,
+        contact_id: i64,
+    ) -> anyhow::Result<()> {
+        let expected = format!("[{contact_id}]");
+        for _ in 0..100 {
+            let database = self.context.app_db.read().await.clone();
+            let requested_by = sqlx::query_scalar!(
+                "SELECT reupload_requested_by FROM media_files WHERE media_id = ?",
+                media_id
+            )
+            .fetch_optional(&database.pool)
+            .await?
+            .flatten();
+            if requested_by.as_deref() == Some(expected.as_str()) {
+                return Ok(());
+            }
+            sleep(Duration::from_millis(100)).await;
+        }
+        Err(anyhow::anyhow!(
+            "media {media_id} was not marked as reupload-requested by {contact_id}"
+        ))
+    }
+
     pub async fn wait_for_media_download_state(
         &self,
         media_id: &str,

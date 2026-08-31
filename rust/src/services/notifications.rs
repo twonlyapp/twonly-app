@@ -14,7 +14,7 @@ use crate::utils::{current_time, milliseconds_to_seconds};
 use serde::{Deserialize, Serialize};
 use sqlx::{Sqlite, Transaction};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, LazyLock};
 
 const MAX_BATCH_SIZE: i64 = 100;
@@ -649,45 +649,13 @@ fn localized_body(locale: &str, row: &PendingRow) -> String {
         .replace("{reaction}", row.content.as_deref().unwrap_or_default())
 }
 
-fn notification_avatar_path(
+pub(crate) fn notification_avatar_path(
     ctx: &Context,
     sender_id: i64,
     profile_counter: i64,
     svg: Option<&[u8]>,
 ) -> Result<Option<PathBuf>> {
-    let Some(svg) = svg else {
-        return Ok(None);
-    };
-    let directory = Path::new(&ctx.config.data_dir).join("notification_avatars");
-    std::fs::create_dir_all(&directory)?;
-    let output = directory.join(format!("{sender_id}-{profile_counter}.png"));
-    if output.exists() {
-        return Ok(Some(output));
-    }
-
-    let options = resvg::usvg::Options::default();
-    let tree = resvg::usvg::Tree::from_data(svg, &options).map_err(|error| {
-        crate::error::TwonlyError::Generic(format!("invalid avatar SVG: {error}"))
-    })?;
-    let original = tree.size();
-    let max_dimension = original.width().max(original.height());
-    let scale = (256.0 / max_dimension).min(1.0);
-    let width = (original.width() * scale).round().max(1.0) as u32;
-    let height = (original.height() * scale).round().max(1.0) as u32;
-    let mut pixmap = resvg::tiny_skia::Pixmap::new(width, height)
-        .ok_or_else(|| crate::error::TwonlyError::Generic("invalid avatar dimensions".into()))?;
-    resvg::render(
-        &tree,
-        resvg::tiny_skia::Transform::from_scale(scale, scale),
-        &mut pixmap.as_mut(),
-    );
-    let png = pixmap.encode_png().map_err(|error| {
-        crate::error::TwonlyError::Generic(format!("avatar PNG encoding failed: {error}"))
-    })?;
-    let temporary = directory.join(format!(".{sender_id}-{profile_counter}.tmp"));
-    std::fs::write(&temporary, png)?;
-    std::fs::rename(&temporary, &output)?;
-    Ok(Some(output))
+    crate::services::avatars::notification_avatar_path(ctx, sender_id, profile_counter, svg)
 }
 
 #[cfg(test)]

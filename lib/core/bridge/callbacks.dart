@@ -14,19 +14,11 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<void> initFlutterCallbacks({
   required int callbackId,
   required FutureOr<RustStreamSink<String>> Function() loggingGetStreamSink,
-  required FutureOr<void> Function(String, String, PlatformInt64, String)
-  apiMediaAction,
-  required FutureOr<void> Function(PlatformInt64, Uint8List)
-  apiVerificationProof,
-  required FutureOr<void> Function(PlatformInt64) apiCreatePushAvatars,
-  required FutureOr<void> Function(String, PlatformInt64) apiMediaReceived,
+  required FutureOr<void> Function(PlatformInt64) apiVerificationSucceeded,
   required FutureOr<void> Function(UserConfig) apiUserConfigChanged,
 }) => RustLib.instance.api.crateBridgeCallbacksInitFlutterCallbacks(
   callbackId: callbackId,
   loggingGetStreamSink: loggingGetStreamSink,
-  apiMediaAction: apiMediaAction,
-  apiVerificationProof: apiVerificationProof,
-  apiCreatePushAvatars: apiCreatePushAvatars,
-  apiMediaReceived: apiMediaReceived,
+  apiVerificationSucceeded: apiVerificationSucceeded,
   apiUserConfigChanged: apiUserConfigChanged,
 );

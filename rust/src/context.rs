@@ -17,7 +17,7 @@ use crate::signal::engine::RustSignalEngine;
 use crate::user_discovery::UserDiscovery;
 use crate::utils::Shared;
 use libsignal_protocol::IdentityKey;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::{path::PathBuf, sync::Arc};
 use tokio::sync::{Mutex, Notify, OnceCell, RwLock};
 use zeroize::Zeroize;
@@ -50,6 +50,10 @@ pub struct Context {
     /// contexts in one process have separate quotas and must not block or back
     /// each other off.
     pub(crate) privacy_pass_issuance: Mutex<Option<std::time::Instant>>,
+    /// Set once this connection has confirmed the account has a PQC prekey
+    /// bundle on the server (or has just published one). Per context rather
+    /// than process-wide so two accounts in one process check independently.
+    pub(crate) pqc_bundle_verified: AtomicBool,
 }
 
 impl Context {
@@ -127,6 +131,7 @@ impl Context {
             incoming_generation: AtomicU64::new(0),
             incoming_committed: Notify::new(),
             privacy_pass_issuance: Mutex::new(None),
+            pqc_bundle_verified: AtomicBool::new(false),
         });
         ApiRuntime::initialize(&ctx).await?;
         ApiRuntime::connect(&ctx).await?;
@@ -287,6 +292,7 @@ impl Context {
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
                         privacy_pass_issuance: Mutex::new(None),
+            pqc_bundle_verified: AtomicBool::new(false),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");
@@ -328,6 +334,7 @@ impl Context {
                         incoming_generation: AtomicU64::new(0),
                         incoming_committed: Notify::new(),
                         privacy_pass_issuance: Mutex::new(None),
+            pqc_bundle_verified: AtomicBool::new(false),
                     });
                     if let Err(error) = ctx.initialize_user_discovery_from_config().await {
                         tracing::warn!("failed to initialize user discovery: {error}");

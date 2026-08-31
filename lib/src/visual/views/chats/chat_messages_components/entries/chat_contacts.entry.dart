@@ -8,11 +8,11 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/components/add_contact_dialog.comp.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
+import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/chat_unknown.entry.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 
 class ChatContactsEntry extends StatefulWidget {
@@ -34,27 +34,52 @@ class ChatContactsEntry extends StatefulWidget {
 }
 
 class _ChatContactsEntryState extends State<ChatContactsEntry> {
+  /// Decoded once per message rather than on every rebuild.
+  AdditionalMessageData? _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _decode();
+  }
+
+  @override
+  void didUpdateWidget(ChatContactsEntry oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.additionalMessageData !=
+        widget.message.additionalMessageData) {
+      _decode();
+    }
+  }
+
+  void _decode() {
+    if (widget.message.additionalMessageData == null) {
+      _data = null;
+      return;
+    }
+    try {
+      _data = AdditionalMessageData.fromBuffer(
+        widget.message.additionalMessageData!,
+      );
+    } catch (e) {
+      _data = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    AdditionalMessageData? data;
+    final data = _data;
 
-    if (widget.message.additionalMessageData != null) {
-      try {
-        data = AdditionalMessageData.fromBuffer(
-          widget.message.additionalMessageData!,
-        );
-      } catch (e) {
-        data = null;
-      }
-    }
-
+    // Never collapse to nothing: a message row exists either way, so an
+    // unreadable payload has to stay visible instead of leaving a phantom
+    // bubble in the chat.
     if (data == null || data.contacts.isEmpty) {
-      return const SizedBox.shrink();
+      return const ChatUnknownEntry();
     }
 
     return Container(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
+        maxWidth: MediaQuery.sizeOf(context).width * 0.8,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -145,7 +170,12 @@ class _ContactRowState extends State<_ContactRow> {
         ),
       );
 
-      if (added > 0) await importSignalContactAndCreateRequest(userdata);
+      if (added > 0) {
+        await RustApi.tryRequestContactById(
+          contactId: userdata.userId,
+          expectedPublicKey: userdata.publicIdentityKey,
+        );
+      }
 
       await KeyVerificationService.verifySharedContact(
         contactId: userdata.userId,

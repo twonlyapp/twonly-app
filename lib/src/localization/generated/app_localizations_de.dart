@@ -2635,4 +2635,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get memoriesExportingProgress => 'Erinnerungen werden exportiert...';
+
+  @override
+  String get fileLimitReachedTitle => 'Datei zu groß zum Senden';
+
+  @override
+  String fileLimitReachedDetail(String size, String limit) {
+    return 'Diese Datei ist $size groß, dein Tarif erlaubt aber höchstens $limit pro Sendung.';
+  }
+
+  @override
+  String fileLimitReachedDetailNoSize(String limit) {
+    return 'Dein Tarif erlaubt höchstens $limit pro Sendung.';
+  }
+
+  @override
+  String get fileLimitReachedHint =>
+      'Nimm ein kürzeres Video auf und sende es erneut.';
+
+  @override
+  String get fileLimitReachedHintFree =>
+      'Nimm ein kürzeres Video auf oder wechsle den Tarif, um größere Dateien zu senden.';
+
+  @override
+  String get fileLimitReachedUpgrade => 'Tarif wechseln';
 }

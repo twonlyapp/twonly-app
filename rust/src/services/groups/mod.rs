@@ -351,32 +351,25 @@ impl GroupService {
                 .await?;
             return Ok(false);
         };
-        let raw = crypto::decrypt(group.state_key()?, &server.encrypted_group_state)?;
+        let state_key = group.state_key()?;
+        let raw = crypto::decrypt(state_key, &server.encrypted_group_state)?;
         let mut group_state = EncryptedGroupState::decode(raw.as_slice())
             .map_err(|error| TwonlyError::Generic(error.to_string()))?;
+        let local_user_id = self.ctx.user_id().await?;
+        let local_public_key = group.identity()?.identity_key().serialize();
         let mut appended_changes = false;
+        // Every step below that touches `appended` skips the entry instead of
+        // returning. The group server accepts appends without checking group
+        // membership, and it stores them forever, so one malformed entry would
+        // otherwise break this group's state sync on every later refresh.
         for appended in &server.appended_group_states {
             let Some(tbs) = &appended.append_tbs else {
                 continue;
             };
-            let public_key = libsignal_protocol::PublicKey::try_from(tbs.public_key.as_slice())
-                .map_err(|error| TwonlyError::Signal(error.to_string()))?;
-            if !public_key.verify_signature(&tbs.encode_to_vec(), &appended.signature) {
-                tracing::warn!(
-                    group_id,
-                    "ignored group-state append with invalid signature"
-                );
-                continue;
-            }
-            let raw = crypto::decrypt(group.state_key()?, &tbs.encrypted_group_state_append)?;
-            let append = EncryptedAppendedGroupState::decode(raw.as_slice())
-                .map_err(|error| TwonlyError::Generic(error.to_string()))?;
-            if append.r#type != encrypted_appended_group_state::Type::LeftGroup as i32 {
-                continue;
-            }
-            let local_public_key = group.identity()?.identity_key().serialize();
+            // Resolve the author first: an append signed by a key that is not a
+            // member of this group is dropped before any of its bytes are parsed.
             let leaving_id = if tbs.public_key.as_slice() == local_public_key.as_ref() {
-                Some(self.ctx.user_id().await?)
+                Some(local_user_id)
             } else {
                 sqlx::query_scalar!(
                     "SELECT contact_id FROM group_members WHERE group_id = ? AND group_public_key = ?",
@@ -386,13 +379,44 @@ impl GroupService {
                 .fetch_optional(&mut **t)
                 .await?
             };
-            if let Some(leaving_id) = leaving_id {
-                group_state.member_ids.retain(|id| *id != leaving_id);
-                group_state.admin_ids.retain(|id| *id != leaving_id);
-                appended_changes = true;
+            let Some(leaving_id) = leaving_id else {
+                tracing::warn!(group_id, "ignored group-state append from a non-member");
+                continue;
+            };
+            let Ok(public_key) = libsignal_protocol::PublicKey::try_from(tbs.public_key.as_slice())
+            else {
+                tracing::warn!(group_id, "ignored group-state append with an unusable key");
+                continue;
+            };
+            if !public_key.verify_signature(&tbs.encode_to_vec(), &appended.signature) {
+                tracing::warn!(
+                    group_id,
+                    "ignored group-state append with invalid signature"
+                );
+                continue;
             }
+            let raw = match crypto::decrypt(state_key, &tbs.encrypted_group_state_append) {
+                Ok(raw) => raw,
+                Err(error) => {
+                    tracing::warn!(group_id, %error, "ignored undecryptable group-state append");
+                    continue;
+                }
+            };
+            let Ok(append) = EncryptedAppendedGroupState::decode(raw.as_slice()) else {
+                tracing::warn!(
+                    group_id,
+                    "ignored group-state append with an invalid payload"
+                );
+                continue;
+            };
+            if append.r#type != encrypted_appended_group_state::Type::LeftGroup as i32 {
+                continue;
+            }
+            group_state.member_ids.retain(|id| *id != leaving_id);
+            group_state.admin_ids.retain(|id| *id != leaving_id);
+            appended_changes = true;
         }
-        if appended_changes & group_state.admin_ids.contains(&self.ctx.user_id().await?) {
+        if appended_changes & group_state.admin_ids.contains(&local_user_id) {
             GroupApi::update_remote(&group, server.version_id, &group_state, None, None).await?;
         }
         self.apply_state(t, group_id, server.version_id as i64, &group_state)

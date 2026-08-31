@@ -30,7 +30,7 @@ prost = "0.14.1"
 blahaj = "0.6.0"
 serde_json = "1.0"
 base64 = "0.22.1"
-hmac = "0.13.0"
+hmac = "0.12.1"
 hkdf = "0.12.4"
 sha2 = "0.10.8"
 aes-gcm = "0.10.3"
@@ -50,7 +50,7 @@ walkdir = "2.5.0"
 libsignal-protocol = { git = "https://github.com/signalapp/libsignal", version = "0.1.0", rev = "44a6dd8fc9f9d6903b32842b80b3894a75678418" }
 rand08 = { version = "0.8.5", package = "rand" }
 rand = "0.9.4"
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "v7"] }
 flate2 = "1"
 resvg = { version = "0.45", default-features = false, features = ["text"] }
 reqwest = { version = "0.12", default-features = false, features = [
@@ -74,9 +74,12 @@ p384 = { version = "0.13.0", default-features = false, features = [
     "voprf",
 ] }
 stream-tungstenite = "0.6.1"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "bmp", "webp"] }
+webp = "0.3.1"
 [target.'cfg(target_os = "ios")'.dependencies]
 # iOS backend: Requires the 'protected' feature for Data Protection Keychain
 apple-native-keyring-store = { version = "1", features = ["protected"] }
+libc = "0.2"
 [target.'cfg(target_os = "android")'.dependencies]
 # Android backend: Interfaces with the Android Keystore
 android-native-keyring-store = "1"

@@ -68,7 +68,6 @@ class MainActivity : FlutterFragmentActivity() {
 
         Keyring.initializeNdkContext(applicationContext)
 
-        VideoCompressionChannel.configure(flutterEngine, applicationContext)
 
         NotificationTapChannel.configure(flutterEngine, applicationContext)
 

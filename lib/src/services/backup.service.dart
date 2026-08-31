@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:clock/clock.dart' as clock;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:twonly/core/bridge/wrapper/backup.dart';
@@ -12,7 +12,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/model/json/backup.model.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -30,6 +29,42 @@ class BackupService {
 
   static final _backupUpdateController = StreamController<void>.broadcast();
   static Stream<void> get onBackupUpdated => _backupUpdateController.stream;
+
+  static Future<void> initFileDownloader() async {
+    FileDownloader().updates.listen((update) async {
+      switch (update) {
+        case TaskStatusUpdate():
+          if (update.task.taskId.contains('backup_')) {
+            await handleBackupStatusUpdate(update.task.taskId, update);
+          }
+        case TaskProgressUpdate():
+          Log.info(
+            'Progress update for ${update.task} with progress ${update.progress}',
+          );
+      }
+    });
+
+    await FileDownloader().start();
+    try {
+      var androidConfig = [];
+      if (!kReleaseMode) {
+        androidConfig = [(Config.bypassTLSCertificateValidation, true)];
+      }
+      await FileDownloader().configure(androidConfig: androidConfig);
+    } catch (error) {
+      Log.error(error);
+    }
+
+    if (!kReleaseMode) {
+      FileDownloader().configureNotification(
+        running: const TaskNotification(
+          'Uploading/Downloading',
+          '{filename} ({progress}).',
+        ),
+        progressBar: true,
+      );
+    }
+  }
 
   static Future<CurrentBackupStatus> getData() async {
     return CurrentBackupStatus.fromJson(
@@ -170,9 +205,11 @@ class BackupService {
           'Archive backup has a size of ${File(backupArchive).statSync().size}.',
         );
 
-        final headers = await getAuthenticationHeader();
-        if (headers == null) {
-          Log.error('Auth headers are empty. Returning');
+        late final Map<String, String> headers;
+        try {
+          headers = await RustApi.authenticationHeaders();
+        } catch (error) {
+          Log.error('Could not load authentication headers', error: error);
           return;
         }
 

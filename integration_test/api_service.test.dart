@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:twonly/core/frb_generated.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
+import 'package:twonly/main.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(() async => RustLib.init());
 
   test('Can initialize twonlyDB and connect to api server', () async {
-    // Initialize global variables
-    await initBackgroundExecution();
+    await AppEnvironment.init();
+    expect(await twonlyMinimumInitialization(), isFalse);
+    await userService.tryInit();
 
     // Check the API connection state
     final state = await RustApi.connectionState();

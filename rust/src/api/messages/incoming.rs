@@ -218,16 +218,9 @@ async fn upgrade_legacy_session_to_v2(
 ) -> Result<()> {
     tracing::info!("Received legacy signal message; rejecting and upgrading session to v2");
 
-    let has_v2_session = {
-        let rust_database = ctx.rust_db.read().await.clone();
-        sqlx::query_scalar!(
-            "SELECT EXISTS(SELECT 1 FROM signal_sessions WHERE name = ? AND device_id = 1)",
-            from_user_id.to_string(),
-        )
-        .fetch_one(&rust_database.pool)
-        .await?
-            != 0
-    };
+    let has_v2_session = ContactService::new(ctx)
+        .has_v2_session(from_user_id)
+        .await?;
 
     let is_v2_contact = sqlx::query_scalar!(
         "SELECT signal_version FROM contacts WHERE user_id = ?",
@@ -360,6 +353,26 @@ pub(crate) async fn handle_decoded_server_message(
             };
             match decrypted {
                 Ok(plaintext) => {
+                    // Decrypting proves the peer speaks v2, so drop any 'v1'
+                    // marking left by a contact lookup that ran before the peer
+                    // published a prekey bundle. Otherwise every receipt back to
+                    // them would keep fetching a bundle the server does not have.
+                    sqlx::query!(
+                        "UPDATE contacts SET signal_version = 'v2' WHERE user_id = ? AND signal_version != 'v2'",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
+                    // Decrypting means a session now exists, so anything parked
+                    // for want of one can go out again.
+                    sqlx::query!(
+                        "UPDATE receipts SET deferred_until_session = NULL WHERE contact_id = ? AND deferred_until_session IS NOT NULL",
+                        from_user_id,
+                    )
+                    .execute(&mut *t)
+                    .await?;
+
                     let content =
                         proto::EncryptedContent::decode(plaintext.as_slice()).map_err(|error| {
                             TwonlyError::Generic(format!(
@@ -494,7 +507,7 @@ async fn handle_encrypted_inner(
     }
 
     if let Some(update) = content.media_update {
-        return media::handle_media_update(t, from_user_id, update).await;
+        return media::handle_media_update(ctx, t, from_user_id, update).await;
     }
 
     if let Some(error) = content.error_messages {
@@ -517,7 +530,7 @@ async fn handle_encrypted_inner(
     }
 
     if let Some(proof) = content.key_verification_proof {
-        return verification::handle_key_verification_proof(t, from_user_id, proof).await;
+        return verification::handle_key_verification_proof(ctx, t, from_user_id, proof).await;
     }
 
     if let Some(recovery) = content.passwordless_recovery {
@@ -614,7 +627,7 @@ async fn handle_encrypted_inner(
     }
 
     if let Some(media) = content.media {
-        return media::handle_media(t, from_user_id, &group_id, media).await;
+        return media::handle_media(ctx, t, from_user_id, &group_id, media).await;
     }
 
     if let Some(reaction) = content.reaction {

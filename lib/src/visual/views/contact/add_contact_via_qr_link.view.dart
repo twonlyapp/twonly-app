@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.utils.dart';
@@ -54,7 +53,10 @@ class _AddContactViaQrLinkViewState extends State<AddContactViaQrLinkView> {
       );
 
       if (added > 0) {
-        await importSignalContactAndCreateRequest(userData);
+        await RustApi.tryRequestContactById(
+          contactId: userData.userId,
+          expectedPublicKey: userData.publicIdentityKey,
+        );
         if (widget.qrCodeLink != null) {
           // As the user does now exist he can now be marked as verified
           await QrCodeUtils.handleQrCodeLink(widget.qrCodeLink!);

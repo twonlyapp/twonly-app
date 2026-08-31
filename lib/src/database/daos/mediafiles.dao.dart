@@ -188,19 +188,6 @@ Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
     );
   }
 
-  Future<void> updateAllRetransmissionUploadingState() async {
-    await (update(mediaFiles)..where(
-          (t) =>
-              t.uploadState.equals(UploadState.uploading.name) &
-              t.reuploadRequestedBy.isNotNull(),
-        ))
-        .write(
-          const MediaFilesCompanion(
-            uploadState: Value(UploadState.preprocessing),
-          ),
-        );
-  }
-
   Future<List<String>> getMessageIdsByMediaHash(
     Uint8List hash,
     int senderId,

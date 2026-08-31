@@ -6,7 +6,7 @@ import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/delete_memories_dialog.comp.dart';
@@ -176,7 +176,7 @@ class _SynchronizedImageViewerScreenState
     if (deleteCompletely == null) return;
 
     if (deleteCompletely) {
-      item.mediaService.fullMediaRemoval();
+      await item.mediaService.fullMediaRemoval();
       await RustApi.deleteMemory(mediaId: mediaId);
       await twonlyDB.mediaFilesDao.deleteMediaFile(mediaId);
 
@@ -221,20 +221,7 @@ class _SynchronizedImageViewerScreenState
     }
 
     try {
-      if (item.mediaFile.type == MediaType.video) {
-        await saveVideoToGallery(
-          item.storedPath.path,
-          name: item.mediaFile.mediaId,
-        );
-      } else if (item.mediaFile.type == MediaType.image ||
-          item.mediaFile.type == MediaType.gif) {
-        final imageBytes = await item.storedPath.readAsBytes();
-        await saveImageToGallery(
-          imageBytes,
-          createdAt: item.mediaFile.createdAt,
-          name: item.mediaFile.mediaId,
-        );
-      }
+      await item.saveToGallery();
       if (!mounted) return;
       showSnackbar(
         context,
@@ -254,10 +241,12 @@ class _SynchronizedImageViewerScreenState
   Future<void> _shareMediaFile() async {
     final orgMediaService = widget.galleryItems[_currentIndex].mediaService;
 
-    final newMediaService = await initializeMediaUpload(
-      orgMediaService.mediaFile.type,
-      userService.currentUser.defaultShowTime,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: orgMediaService.mediaFile.type.name,
+      displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
+      isDraftMedia: false,
     );
+    final newMediaService = await MediaFileService.fromMediaId(mediaId);
     if (newMediaService == null) {
       Log.error('Could not create new mediaFile');
       return;

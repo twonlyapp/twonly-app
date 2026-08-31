@@ -49,9 +49,16 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
     let local_media_id = uuid::Uuid::new_v4().to_string();
     {
         let db_a = tester_a.context.app_db.read().await.clone();
+        // Give the media real key material and a plaintext file so the reupload
+        // below exercises encryption and envelope creation rather than the
+        // "source is gone" shortcut.
         sqlx::query!(
-            "INSERT INTO media_files(media_id, type, download_state, upload_state) VALUES (?, 'image', 'ready', 'uploaded')",
+            r#"INSERT INTO media_files
+               (media_id, type, download_state, upload_state, encryption_key, encryption_nonce)
+               VALUES (?, 'image', 'ready', 'uploaded', ?, ?)"#,
             local_media_id,
+            encryption_key,
+            encryption_nonce,
         )
         .execute(&db_a.pool)
         .await?;
@@ -64,6 +71,14 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .execute(&db_a.pool)
         .await?;
     }
+
+    // Keep the plaintext on disk for the whole test: the sender needs it to
+    // re-encrypt when a recipient later reports a decryption error.
+    let plaintext_path = std::path::PathBuf::from(&tester_a.context.config.data_dir)
+        .join("mediafiles/tmp")
+        .join(format!("{local_media_id}.webp"));
+    std::fs::create_dir_all(plaintext_path.parent().expect("tmp directory"))?;
+    std::fs::write(&plaintext_path, b"plaintext media bytes")?;
 
     let media_content = proto::EncryptedContent {
         group_id: Some(group_id.clone()),
@@ -113,7 +128,7 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         "media_id must be generated on receiver"
     );
     tester_b
-        .wait_for_media_download_state(&media_id_on_b, "pending")
+        .wait_for_media_download_token(&media_id_on_b, &download_token)
         .await?;
 
     // 2. Tester B marks media as stored
@@ -155,9 +170,25 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .request_reupload(&media_id_on_b)
         .await?;
 
+    // Rust owns the reupload: it records who asked, re-encrypts, and reserves a
+    // direct-media slot. Scheduling the transfer needs a mobile background
+    // uploader, so on this host preparation stops there and the media stays
+    // queued instead of being lost.
     tester_a
-        .wait_for_media_upload_state(&local_media_id, "reuploadRequested")
+        .wait_for_media_reupload_requested(&local_media_id, tester_b.user_id)
         .await?;
+    tester_a
+        .wait_for_media_upload_state(&local_media_id, "preprocessing")
+        .await?;
+
+    tester_a
+        .wait_for_media_encryption_mac(&local_media_id)
+        .await?;
+
+    // The slot was reserved but never handed to a native uploader, so no job may
+    // be left behind and the slot has to become reusable again. A recipient can
+    // ask more than once, so wait for preparation to quiesce first.
+    tester_a.wait_for_no_pending_upload_jobs().await?;
 
     // 5. Tester A responds with MediaType::Reupload
     let reupload_content = proto::EncryptedContent {
@@ -184,8 +215,9 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
         .call()
         .await?;
 
+    // The reupload replaces the capability B holds for this attachment.
     tester_b
-        .wait_for_media_download_state(&media_id_on_b, "pending")
+        .wait_for_media_download_token(&media_id_on_b, &[9u8; 32])
         .await?;
 
     // 6. Tester A deletes the message

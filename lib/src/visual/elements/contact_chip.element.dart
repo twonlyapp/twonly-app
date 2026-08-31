@@ -1,10 +1,8 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -49,7 +47,7 @@ class ContactChip extends StatelessWidget {
           contactId: contact?.userId,
           fontSize: 10,
           svg: avatarSvg != null
-              ? getAvatarSvg(Uint8List.fromList(avatarSvg!))
+              ? RustApi.decodeAvatarSvg(avatarSvgCompressed: avatarSvg!)
               : null,
         ),
         label: Row(

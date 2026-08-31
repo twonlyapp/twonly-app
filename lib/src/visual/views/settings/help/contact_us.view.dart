@@ -11,7 +11,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/protobuf/client/generated/http_requests.pb.dart';
-import 'package:twonly/src/services/api/utils.api.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
@@ -72,9 +71,11 @@ class _ContactUsState extends State<ContactUsView> {
 
     final requestMultipart = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
-    final headers = await getAuthenticationHeader();
-    if (headers == null) {
-      Log.error('Auth headers are empty. Returning');
+    late final Map<String, String> headers;
+    try {
+      headers = await RustApi.authenticationHeaders();
+    } catch (error) {
+      Log.error('Could not load authentication headers', error: error);
       return null;
     }
 

@@ -76,6 +76,11 @@ dependencies {
   implementation platform('com.google.firebase:firebase-bom:34.9.0')
   implementation 'com.google.firebase:firebase-messaging'
   implementation 'androidx.work:work-runtime:2.10.2'
-  implementation 'com.otaliastudios:transcoder:0.11.0'
+  // Hardware video composition and transcoding: MediaCodec for decode/encode,
+  // OpenGL for the overlay. Replaces both the software Flutter editor pass and
+  // the previous third-party transcoder.
+  implementation 'androidx.media3:media3-transformer:1.11.0'
+  implementation 'androidx.media3:media3-effect:1.11.0'
+  implementation 'androidx.media3:media3-common:1.11.0'
   implementation 'androidx.core:core-splashscreen:1.0.1'
 }

@@ -4,7 +4,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:twonly/core/bridge/api.dart' as rust_api;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -41,9 +40,9 @@ class ApiService {
     await FcmNotificationService.initFCMAfterAuthenticated();
 
     if (AppState.isInBackgroundTask) {
-      await reuploadMediaFiles();
+      await rust_api.RustApi.reuploadPendingMedia();
     } else if (!AppState.isAppInBackground) {
-      unawaited(reuploadMediaFiles());
+      unawaited(rust_api.RustApi.reuploadPendingMedia());
 
       twonlyDB.markUpdated();
       // resetUserDiscoveryRequestUpdates();

@@ -64,13 +64,6 @@ void setupPlatformChannelMocks() {
       );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-        const MethodChannel(
-          'be.tramesch.workmanager/foreground_channel_workmanager',
-        ),
-        (call) async => true,
-      );
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
         const MethodChannel('com.bbflight.background_downloader'),
         (call) async {
           if (call.method == 'enqueue') {

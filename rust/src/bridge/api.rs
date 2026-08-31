@@ -3,7 +3,6 @@
  *
  */
 
-use crate::api::messages::incoming::messages;
 use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
@@ -11,10 +10,13 @@ use crate::context::Context;
 use crate::context::RuntimeMode;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
+use crate::services::avatars;
 use crate::services::contacts::ContactService;
+use crate::services::media_upload::{MediaSizeReport, MediaUploadService};
 use crate::services::messages::MessageService;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
+use std::collections::HashMap;
 
 #[frb(ignore)]
 pub enum ServerResult<T> {
@@ -150,11 +152,209 @@ pub struct FrbMemoriesUploadUrls {
 pub struct RustApi {}
 
 impl RustApi {
+    #[frb(sync)]
+    pub fn decode_avatar_svg(avatar_svg_compressed: Vec<u8>) -> String {
+        avatars::decode_avatar_svg(avatar_svg_compressed)
+    }
+
+    #[frb(sync)]
+    pub fn avatar_png_path(contact_id: i64, profile_counter: i64) -> Result<String> {
+        let ctx = Context::get_static()?;
+        Ok(
+            avatars::contact_avatar_path(ctx, contact_id, profile_counter)
+                .display()
+                .to_string(),
+        )
+    }
+
+    /// Path to a contact's avatar PNG, rendered from the stored SVG if it is
+    /// missing. Returns `None` when the contact has no avatar at all.
+    pub async fn ensure_avatar_png(contact_id: i64) -> Result<Option<String>> {
+        let ctx = Context::get_static()?;
+        let path = avatars::ensure_contact_avatar_png(ctx, contact_id).await?;
+        Ok(path.map(|path| path.display().to_string()))
+    }
+
+    pub async fn current_user_avatar_path() -> Result<Option<String>> {
+        let ctx = Context::get_static()?.clone();
+        let path = tokio::task::spawn_blocking(move || avatars::current_user_avatar_path(&ctx))
+            .await
+            .map_err(|error| {
+                TwonlyError::Generic(format!("avatar render task failed: {error}"))
+            })??;
+        Ok(path.map(|path| path.display().to_string()))
+    }
+
+    /// Settles every background transfer this device believes is still in
+    /// flight and resumes any upload a terminated process left behind.
+    pub async fn finish_started_media_uploads() -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).finish_started_uploads().await
+    }
+
+    /// Creates the media row and its content-encryption material and returns
+    /// the media id the UI addresses every later step by.
+    pub async fn initialize_media_upload(
+        media_type: String,
+        display_limit_in_milliseconds: Option<i64>,
+        is_draft_media: bool,
+    ) -> Result<String> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .initialize(media_type, display_limit_in_milliseconds, is_draft_media)
+            .await
+    }
+
+    /// Creates one outgoing message per selected group and starts the upload.
+    pub async fn send_media_to_groups(
+        media_id: String,
+        group_ids: Vec<String>,
+        additional_message_data: Option<Vec<u8>>,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .insert_into_messages(media_id, group_ids, additional_message_data)
+            .await
+    }
+
+    /// Retries the media sends whose receipts are still marked for retry.
+    pub async fn reupload_pending_media() -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).reupload_pending().await
+    }
+
+    pub async fn store_media(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).store(&media_id).await
+    }
+
+    /// Reports that a Flutter plugin step finished so Rust can record the
+    /// derived state (thumbnail present, crop analyzed, new size and hash).
+    pub async fn media_step_finished(media_id: String, kind: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .media_step_finished(&media_id, &kind)
+            .await
+    }
+
+    /// Exports a stored media file to the user's photo library.
+    pub async fn save_media_to_gallery(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .save_to_gallery(&media_id)
+            .await
+    }
+
+    /// Trims fully transparent borders an editor left around a stored image and
+    /// refreshes the preview and content hash derived from it.
+    pub async fn crop_media_transparent_borders(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .crop_transparent_borders(&media_id)
+            .await
+    }
+
+    /// Deletes every file of a media item while keeping its row.
+    pub async fn remove_media_files(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).remove_files(&media_id).await
+    }
+
+    /// Gives up on a media file whose source could not be produced, marking
+    /// its messages as deleted by the sender instead of retrying forever.
+    pub async fn abandon_media(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).abandon(&media_id).await
+    }
+
+    /// Explains a send that stopped because the media was too large: the size
+    /// it reached and the largest single object the plan accepts.
+    pub async fn media_size_limit_report(media_id: String) -> Result<MediaSizeReport> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .size_limit_report(&media_id)
+            .await
+    }
+
+    /// Deletes temporary media whose messages are finished with it.
+    pub async fn purge_media_temp_folder() -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).purge_temp_folder().await
+    }
+
+    pub async fn set_media_display_limit(
+        media_id: String,
+        display_limit_in_milliseconds: Option<i64>,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .set_display_limit(&media_id, display_limit_in_milliseconds)
+            .await
+    }
+
+    pub async fn set_media_requires_authentication(
+        media_id: String,
+        requires_authentication: bool,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .set_requires_authentication(&media_id, requires_authentication)
+            .await
+    }
+
+    pub async fn toggle_media_remove_audio(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .toggle_remove_audio(&media_id)
+            .await
+    }
+
     pub async fn request_contact_by_username(username: String) -> Result<()> {
         let ctx = Context::get_static()?;
         ContactService::new(ctx)
             .request_by_username(username, false)
             .await
+    }
+
+    pub async fn try_request_contact_by_id(contact_id: i64, expected_public_key: Vec<u8>) -> bool {
+        let result = match Context::get_static() {
+            Ok(ctx) => {
+                ContactService::new(ctx)
+                    .request_by_id(contact_id, expected_public_key, false)
+                    .await
+            }
+            Err(error) => Err(error),
+        };
+        if let Err(error) = result {
+            tracing::error!(contact_id, %error, "failed to establish session and send contact request");
+            return false;
+        }
+        true
+    }
+
+    pub async fn authentication_headers() -> Result<HashMap<String, String>> {
+        use base64::Engine as _;
+
+        let ctx = Context::get_static()?;
+        let user = UserConfig::load_required_from(ctx)?;
+        let mut headers = HashMap::new();
+        if user.can_use_login_token_for_auth {
+            let login_token = ctx.key_manager.lock().await.main_key.get_login_token();
+            headers.insert("x-twonly-user-id".into(), format!("{:016X}", user.user_id));
+            headers.insert("x-twonly-login-token".into(), hex::encode(login_token));
+        } else {
+            let encoded = ctx
+                .secure_storage
+                .read("api_auth_token")?
+                .ok_or_else(|| TwonlyError::Generic("API auth token is not defined".into()))?;
+            let auth_token = base64::engine::general_purpose::STANDARD
+                .decode(encoded)
+                .map_err(|error| {
+                    TwonlyError::Generic(format!("invalid stored API auth token: {error}"))
+                })?;
+            headers.insert("x-twonly-auth-token".into(), hex::encode(auth_token));
+        }
+        Ok(headers)
     }
 
     #[frb(sync)]
@@ -190,6 +390,11 @@ impl RustApi {
 
     pub async fn set_background(in_background: bool) -> Result<()> {
         let ctx = Context::get_static()?;
+        if !in_background {
+            // Coming back to the foreground is the first chance to notice that
+            // the OS finished a media transfer while this process was idle.
+            crate::services::direct_media_upload::watch_pending_uploads(ctx);
+        }
         ApiRuntime::set_background(ctx, in_background).await
     }
 
@@ -295,6 +500,13 @@ impl RustApi {
         let ctx = Context::get_static()?;
         crate::services::mediafiles::MediaFileService::new(ctx)
             .request_reupload(&media_id)
+            .await
+    }
+
+    pub async fn retry_pending_media_reuploads() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::mediafiles::MediaFileService::new(ctx)
+            .retry_pending_reuploads()
             .await
     }
     pub async fn set_login_token(token: Vec<u8>) -> Result<()> {
@@ -652,12 +864,6 @@ impl RustApi {
         crate::services::messages::MessageService::new(ctx)
             .send_receipt(receipt_id)
             .await
-    }
-
-    pub async fn prepare_queued_message(receipt_id: String) -> Result<Option<Vec<u8>>> {
-        messages::prepare_queued_receipt(Context::get_static()?, &receipt_id)
-            .await
-            .map_err(Into::into)
     }
 
     pub async fn notify_messages_opened(contact_id: i64, message_ids: Vec<String>) -> Result<()> {

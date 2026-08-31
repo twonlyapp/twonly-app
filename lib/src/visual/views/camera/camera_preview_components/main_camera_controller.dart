@@ -567,8 +567,8 @@ class MainCameraController {
                   } else {
                     await showAlertDialog(
                       context,
-                      context.lang.groupNetworkIssue,
-                      context.lang.recoverErrorNoInternet,
+                      context.lang.addFriendTitle,
+                      context.lang.additionalUserAddError(profile.username),
                       customCancel: '',
                     );
                   }

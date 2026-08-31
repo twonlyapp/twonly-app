@@ -87,9 +87,18 @@ class _ChatListEntryState extends State<ChatListEntry> {
   void _applySharedData() {
     if (!widget.useSharedData) return;
     reactions = widget.reactions ?? const [];
-    mediaService = widget.mediaFile == null
-        ? null
-        : MediaFileService(widget.mediaFile!);
+    final mediaFile = widget.mediaFile;
+    if (mediaFile == null) {
+      mediaService = null;
+      return;
+    }
+    // Reuse the existing service when the row is unchanged: it memoises the
+    // media paths, and a fresh instance would also force the thumbnail below to
+    // re-resolve its image.
+    final current = mediaService;
+    if (current == null || current.mediaFile != mediaFile) {
+      mediaService = MediaFileService(mediaFile);
+    }
   }
 
   @override

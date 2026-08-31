@@ -13,6 +13,56 @@ message SealedSenderMessageResponse {
   string message_id = 1;
 }
 
+message RequestUploadSlots {
+  repeated string locally_known_slot_ids = 1;
+}
+
+message PresignedPostV2 {
+  string url = 1;
+  map<string, string> fields = 2;
+}
+
+message UploadSlot {
+  string attachment_id = 1;
+  int64 expires_at_unix_seconds = 2;
+  int64 maximum_object_bytes = 3;
+  PresignedPostV2 media_upload = 4;
+  bytes background_capability = 5;
+}
+
+message UploadSlots {
+  repeated UploadSlot slots = 1;
+  int32 maximum_active_slots = 2;
+  int32 refill_threshold = 3;
+}
+
+message AttachmentDispatch {
+  int64 recipient_user_id = 1;
+  bytes encrypted_body = 2;
+  optional bytes push_data = 3;
+  bytes download_token = 4;
+}
+
+message AttachmentManifest {
+  int64 encrypted_object_size = 1;
+  repeated AttachmentDispatch dispatches = 2;
+}
+
+enum AttachmentState {
+  ATTACHMENT_STATE_UNKNOWN = 0;
+  ATTACHMENT_STATE_RESERVED = 1;
+  ATTACHMENT_STATE_UPLOADING = 2;
+  ATTACHMENT_STATE_READY = 3;
+  ATTACHMENT_STATE_REJECTED = 4;
+  ATTACHMENT_STATE_EXPIRED = 5;
+  ATTACHMENT_STATE_ABANDONED = 6;
+}
+
+message AttachmentStatus {
+  AttachmentState state = 1;
+  string rejection_reason = 2;
+}
+
 message UpdateGroupState {
   message UpdateTBS {
     uint64 version_id = 1;

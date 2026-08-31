@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT download_token FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "download_token",
+        "ordinal": 0,
+        "type_info": "Blob",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "download_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "89e33f7bbef216fbb377471cf8d05c5f030a15a0ac5d4177ae2385a8f4ad4c2d"
+}

@@ -26,6 +26,7 @@ import 'frb_generated.dart';
 import 'keys/backup_password_keys.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'services/media_upload.dart';
 import 'signal/engine.dart';
 import 'user_config.dart';
 
@@ -44,16 +45,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DateTime dco_decode_Chrono_Utc(dynamic raw);
 
   @protected
-  FutureOr<void> Function(String, String, PlatformInt64, String)
-  dco_decode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<void> Function(String, PlatformInt64)
-  dco_decode_DartFn_Inputs_String_i_64_Output_unit_AnyhowException(dynamic raw);
-
-  @protected
   FutureOr<RustStreamSink<String>> Function()
   dco_decode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
     dynamic raw,
@@ -64,17 +55,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_i_64_Output_unit_AnyhowException(dynamic raw);
 
   @protected
-  FutureOr<void> Function(PlatformInt64, Uint8List)
-  dco_decode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(
-    dynamic raw,
-  );
-
-  @protected
   FutureOr<void> Function(UserConfig)
   dco_decode_DartFn_Inputs_user_config_Output_unit_AnyhowException(dynamic raw);
 
   @protected
   Object dco_decode_DartOpaque(dynamic raw);
+
+  @protected
+  Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
 
   @protected
   Map<String, List<String>> dco_decode_Map_String_list_String_None(dynamic raw);
@@ -258,6 +246,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> dco_decode_list_sql_value(dynamic raw);
 
   @protected
+  MediaSizeReport dco_decode_media_size_report(dynamic raw);
+
+  @protected
   Map<String, List<String>>? dco_decode_opt_Map_String_list_String_None(
     dynamic raw,
   );
@@ -397,6 +388,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Object sse_decode_DartOpaque(SseDeserializer deserializer);
+
+  @protected
+  Map<String, String> sse_decode_Map_String_String_None(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Map<String, List<String>> sse_decode_Map_String_list_String_None(
@@ -624,6 +620,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SqlValue> sse_decode_list_sql_value(SseDeserializer deserializer);
 
   @protected
+  MediaSizeReport sse_decode_media_size_report(SseDeserializer deserializer);
+
+  @protected
   Map<String, List<String>>? sse_decode_opt_Map_String_list_String_None(
     SseDeserializer deserializer,
   );
@@ -783,19 +782,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_Chrono_Utc(DateTime self, SseSerializer serializer);
 
   @protected
-  void
-  sse_encode_DartFn_Inputs_String_String_i_64_String_Output_unit_AnyhowException(
-    FutureOr<void> Function(String, String, PlatformInt64, String) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_DartFn_Inputs_String_i_64_Output_unit_AnyhowException(
-    FutureOr<void> Function(String, PlatformInt64) self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs__Output_StreamSink_String_Sse_AnyhowException(
     FutureOr<RustStreamSink<String>> Function() self,
     SseSerializer serializer,
@@ -808,13 +794,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void
-  sse_encode_DartFn_Inputs_i_64_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(PlatformInt64, Uint8List) self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_DartFn_Inputs_user_config_Output_unit_AnyhowException(
     FutureOr<void> Function(UserConfig) self,
     SseSerializer serializer,
@@ -822,6 +801,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_Map_String_String_None(
+    Map<String, String> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_Map_String_list_String_None(
@@ -1104,6 +1089,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_sql_value(List<SqlValue> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_media_size_report(
+    MediaSizeReport self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_Map_String_list_String_None(

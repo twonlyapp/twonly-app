@@ -26,6 +26,12 @@ pub(crate) fn new_uuid_v4() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
+/// Media and message identifiers are time-ordered so that inserting them keeps
+/// the primary-key index append-only, matching what Drift generated before.
+pub(crate) fn new_uuid_v7() -> String {
+    uuid::Uuid::now_v7().to_string()
+}
+
 #[derive(Default, Clone)]
 pub(crate) struct Shared<T>(Arc<RwLock<T>>);
 impl<T> Shared<T> {

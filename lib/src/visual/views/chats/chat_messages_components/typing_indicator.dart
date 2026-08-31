@@ -9,26 +9,36 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages.view.dart';
 
+/// How often a composing user re-announces that it is typing.
+///
+/// Every announcement is a message, and a message sent sealed costs a Privacy
+/// Pass token out of a daily quota. At the one-second cadence this used to run
+/// at, a few minutes of typing spent a whole day's worth, after which every
+/// later message — real ones included — fell back to the named transport.
+const typingIndicatorInterval = Duration(seconds: 4);
+
+/// How long a received typing announcement counts for. Comfortably longer than
+/// the send cadence so a single delayed message does not blink the indicator
+/// off between announcements.
+const typingIndicatorLifetime = Duration(seconds: 9);
+
+/// How often an open chat announces itself. This heartbeat runs for as long as
+/// the conversation is on screen rather than only while someone types, so it is
+/// the heavier of the two.
+const chatOpenPingInterval = Duration(seconds: 6);
+
+/// How long a received chat-open announcement counts for.
+const chatOpenLifetime = Duration(seconds: 14);
+
 bool isTyping(GroupMember member) {
   return member.lastTypeIndicator != null &&
-      clock
-              .now()
-              .difference(
-                member.lastTypeIndicator!,
-              )
-              .inSeconds <=
-          2;
+      clock.now().difference(member.lastTypeIndicator!) <=
+          typingIndicatorLifetime;
 }
 
 bool hasChatOpen(GroupMember member) {
   return member.lastChatOpened != null &&
-      clock
-              .now()
-              .difference(
-                member.lastChatOpened!,
-              )
-              .inSeconds <=
-          3;
+      clock.now().difference(member.lastChatOpened!) <= chatOpenLifetime;
 }
 
 class TypingIndicator extends StatefulWidget {

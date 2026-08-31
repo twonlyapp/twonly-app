@@ -112,6 +112,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   Timer? _nextTypingIndicator;
 
+  /// Set by the composer while it is announcing that the user is typing.
+  final ValueNotifier<bool> _composing = ValueNotifier(false);
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +144,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     _messageDataVersion.dispose();
     itemPositionsListener.itemPositions.removeListener(_loadOlderWhenNeeded);
     _nextTypingIndicator?.cancel();
+    _composing.dispose();
     try {
       textFieldFocus?.dispose();
       // ignore: empty_catches
@@ -193,10 +197,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
     if (userService.currentUser.typingIndicators) {
       unawaited(RustApi.sendTyping(groupId: widget.groupId, isTyping: false));
-      _nextTypingIndicator = Timer.periodic(const Duration(seconds: 2), (
-        _,
-      ) async {
-        if (_isViewActive()) {
+      _nextTypingIndicator = Timer.periodic(chatOpenPingInterval, (_) async {
+        // A typing announcement refreshes the contact's chat-open state as
+        // well, so pinging while the composer is active would spend a second
+        // message only to clear the typing flag that composer just set.
+        if (_isViewActive() && !_composing.value) {
           await RustApi.sendTyping(groupId: widget.groupId, isTyping: false);
         }
       });
@@ -746,6 +751,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                   group: group,
                   quotesMessage: quotesMessage,
                   textFieldFocus: textFieldFocus!,
+                  composing: _composing,
                   onMessageSend: () {
                     setState(() {
                       quotesMessage = null;

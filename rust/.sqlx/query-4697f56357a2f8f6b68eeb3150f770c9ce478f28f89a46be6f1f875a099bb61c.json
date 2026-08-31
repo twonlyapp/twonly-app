@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT is_draft_media FROM media_files WHERE media_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "is_draft_media",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "media_files",
+            "name": "is_draft_media"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4697f56357a2f8f6b68eeb3150f770c9ce478f28f89a46be6f1f875a099bb61c"
+}

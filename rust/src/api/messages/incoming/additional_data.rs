@@ -65,6 +65,11 @@ async fn verify_shared_contacts(
     let signal_database = ctx.rust_db.read().await.clone();
 
     for contact in data.contacts {
+        if contact.public_identity_key.is_empty() {
+            tracing::info!("shared contact carries no public key, skipping verification");
+            continue;
+        }
+
         let stored_identity = sqlx::query_scalar!(
             "SELECT identity_key FROM signal_identities WHERE name = ?",
             contact.user_id.to_string(),

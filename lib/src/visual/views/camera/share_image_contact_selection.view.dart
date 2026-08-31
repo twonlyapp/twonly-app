@@ -8,7 +8,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -311,10 +310,12 @@ class _ShareImageView extends State<ShareImageView> {
 
                               // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
                               unawaited(
-                                insertMediaFileInMessagesTable(
-                                  widget.mediaFileService,
-                                  widget.selectedGroupIds.toList(),
-                                  additionalData: widget.additionalData,
+                                RustApi.sendMediaToGroups(
+                                  mediaId:
+                                      widget.mediaFileService.mediaFile.mediaId,
+                                  groupIds: widget.selectedGroupIds.toList(),
+                                  additionalMessageData: widget.additionalData
+                                      ?.writeToBuffer(),
                                 ),
                               );
 

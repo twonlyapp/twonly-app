@@ -114,7 +114,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           await mediaService.storedPath.parent.create(recursive: true);
           await File(mediaService.storedPath.path).writeAsBytes(bytes);
 
-          await mediaService.calculateAndSaveSize();
+          await mediaService.refreshStoredMetadata();
           await mediaService.createThumbnail();
           unawaited(mediaService.cropTransparentBorders());
 
@@ -425,7 +425,7 @@ class _ImportFromGalleryViewState extends State<ImportFromGalleryView> {
           await mediaService.storedPath.parent.create(recursive: true);
           await file.copy(mediaService.storedPath.path);
 
-          await mediaService.calculateAndSaveSize();
+          await mediaService.refreshStoredMetadata();
           await mediaService.createThumbnail();
           unawaited(mediaService.cropTransparentBorders());
 

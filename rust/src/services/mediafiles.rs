@@ -320,6 +320,21 @@ impl MediaFileService {
         Ok(())
     }
 
+    pub async fn retry_pending_reuploads(&self) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        let media_ids = sqlx::query_scalar!(
+            "SELECT media_id FROM media_files WHERE download_state = 'reuploadRequested'"
+        )
+        .fetch_all(&database.pool)
+        .await?;
+        drop(database);
+
+        for media_id in media_ids {
+            self.request_reupload(&media_id).await?;
+        }
+        Ok(())
+    }
+
     pub fn remove_files(&self, media_id: &str, media_type: &str) -> Result<()> {
         for path in self.paths(media_id, media_type) {
             match std::fs::remove_file(path) {
@@ -371,13 +386,49 @@ impl MediaFileService {
         ]
     }
 
-    fn temp_path(&self, media_id: &str, media_type: &str) -> PathBuf {
+    /// Media lives under one directory per lifecycle stage. Both Rust and the
+    /// Flutter view layer derive these names from the media id, so they must
+    /// stay in sync with `MediaFileService` on the Dart side.
+    fn media_path(
+        &self,
+        directory: &str,
+        media_id: &str,
+        suffix: &str,
+        extension: &str,
+    ) -> PathBuf {
+        PathBuf::from(&self.ctx.config.data_dir)
+            .join("mediafiles")
+            .join(directory)
+            .join(format!("{media_id}{suffix}.{extension}"))
+    }
+
+    pub(crate) fn stored_path(&self, media_id: &str, media_type: &str) -> PathBuf {
+        self.media_path("stored", media_id, "", Self::extension(media_type))
+    }
+
+    pub(crate) fn thumbnail_path(&self, media_id: &str) -> PathBuf {
+        self.media_path("stored", media_id, ".thumbnail", "webp")
+    }
+
+    pub(crate) fn original_path(&self, media_id: &str, media_type: &str) -> PathBuf {
+        self.media_path("tmp", media_id, ".original", Self::extension(media_type))
+    }
+
+    pub(crate) fn overlay_image_path(&self, media_id: &str) -> PathBuf {
+        self.media_path("tmp", media_id, ".overlay", "png")
+    }
+
+    pub(crate) fn upload_request_path(&self, media_id: &str, media_type: &str) -> PathBuf {
+        self.media_path("tmp", media_id, ".upload", Self::extension(media_type))
+    }
+
+    pub(crate) fn temp_path(&self, media_id: &str, media_type: &str) -> PathBuf {
         PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
             .join(format!("{media_id}.{}", Self::extension(media_type)))
     }
 
-    fn encrypted_path(&self, media_id: &str, media_type: &str) -> PathBuf {
+    pub(crate) fn encrypted_path(&self, media_id: &str, media_type: &str) -> PathBuf {
         PathBuf::from(&self.ctx.config.data_dir)
             .join("mediafiles/tmp")
             .join(format!(
@@ -386,7 +437,7 @@ impl MediaFileService {
             ))
     }
 
-    fn extension(media_type: &str) -> &'static str {
+    pub(crate) fn extension(media_type: &str) -> &'static str {
         match media_type {
             "video" => "mp4",
             "gif" => "gif",
@@ -395,7 +446,7 @@ impl MediaFileService {
         }
     }
 
-    fn ensure_parent(path: &Path) -> Result<()> {
+    pub(crate) fn ensure_parent(path: &Path) -> Result<()> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }

@@ -15,7 +15,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -393,11 +393,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     final type =
         mediaType ??
         ((videoFilePath != null) ? MediaType.video : MediaType.image);
-    final mediaFileService = await initializeMediaUpload(
-      type,
-      userService.currentUser.defaultShowTime,
+    final mediaId = await RustApi.initializeMediaUpload(
+      mediaType: type.name,
+      displayLimitInMilliseconds: userService.currentUser.defaultShowTime,
       isDraftMedia: true,
     );
+    final mediaFileService = await MediaFileService.fromMediaId(mediaId);
     if (!mounted) return true;
 
     if (mediaFileService == null) {

@@ -20,9 +20,6 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/api/mediafiles/media_background.api.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
-import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/backup.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
@@ -30,7 +27,6 @@ import 'package:twonly/src/services/migrations.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
-import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/exclusive_access.utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/startup_guard.dart';
@@ -133,7 +129,7 @@ void main() async {
 
   final settingsController = SettingsChangeProvider()..loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  unawaited(initFileDownloader());
+  unawaited(BackupService.initFileDownloader());
 
   if (userExists) {
     unawaited(FcmNotificationService.initAfterUserLoaded());
@@ -192,8 +188,7 @@ Future<void> postStartupTasks() async {
   unawaited(MediaFileService.purgeTempFolder());
 
   // 2. Service initializations
-  unawaited(finishStartedPreprocessing());
-  unawaited(createPushAvatars());
+  unawaited(RustApi.finishStartedMediaUploads());
   unawaited(
     newsService.init().then((_) {
       final lastDownload = newsService.lastDownloadedAt;
@@ -204,8 +199,6 @@ Future<void> postStartupTasks() async {
     }),
   );
 
-  await Future.delayed(const Duration(seconds: 10));
-  unawaited(initializeBackgroundTaskManager());
   // 3. Delayed tasks (Wait for app to settle)
   await Future.delayed(const Duration(minutes: 2));
   unawaited(BackupService.makeBackup());

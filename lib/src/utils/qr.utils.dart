@@ -10,7 +10,6 @@ import 'package:twonly/core/bridge/wrapper/signal.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/key_verification.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -116,19 +115,11 @@ class QrCodeUtils {
 
 Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
   try {
-    await RustApi.establishSignalSession(
-      contactId: profile.userId.toInt(),
-      expectedPublicKey: Uint8List.fromList(profile.publicIdentityKey),
-    );
-    await RustApi.sendEncryptedContent(
-      contactId: profile.userId.toInt(),
-      content: EncryptedContent(
-        contactRequest: EncryptedContent_ContactRequest(
-          type: EncryptedContent_ContactRequest_Type.REQUEST,
-        ),
-      ).writeToBuffer(),
-    );
-
+    // The contact row has to exist before the session is established: Rust
+    // marks the contact as `v2` while processing the prekey bundle, and the
+    // contact request is queued against this row. Adding the contact
+    // afterwards would leave it on the `v1` default, which makes every
+    // message to it refetch a prekey bundle first.
     final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(profile.username),
@@ -138,6 +129,13 @@ Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
         deletedByUser: const Value(false),
       ),
     );
+
+    if (!await RustApi.tryRequestContactById(
+      contactId: profile.userId.toInt(),
+      expectedPublicKey: Uint8List.fromList(profile.publicIdentityKey),
+    )) {
+      return false;
+    }
 
     if (added > 0) {
       // The user was added via the profile scanned from the QR code so the scanned public key was used.

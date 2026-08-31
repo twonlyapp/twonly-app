@@ -4,21 +4,18 @@
  */
 
 use crate::api::proto::client::encrypted_content;
-use crate::bridge::callbacks::get_callbacks;
 use crate::context::Context;
 use crate::database::app::tables::Group;
 use crate::error::{Result, TwonlyError};
+use crate::services::media_upload::MediaUploadService;
 use crate::services::mediafiles::MediaFileService;
 use crate::utils::{milliseconds_to_seconds, new_uuid_v4};
 use encrypted_content::media::Type as MediaType;
 use encrypted_content::media_update::Type as MediaUpdateType;
 use sqlx::{Sqlite, Transaction};
+use std::sync::Arc;
 
-fn spawn_media_download(media_id: String) {
-    let Ok(ctx) = Context::get_static() else {
-        tracing::warn!(media_id, "could not start media download without context");
-        return;
-    };
+fn spawn_media_download(ctx: &Arc<Context>, media_id: String) {
     let ctx = ctx.clone();
     tokio::spawn(async move {
         if let Err(error) = MediaFileService::new(&ctx)
@@ -30,15 +27,32 @@ fn spawn_media_download(media_id: String) {
     });
 }
 
-fn spawn_media_action(kind: &'static str, media_id: String, contact_id: i64, message_id: String) {
-    if let Ok(callbacks) = get_callbacks() {
-        tokio::spawn(async move {
-            (callbacks.api.media_action)(kind.to_owned(), media_id, contact_id, message_id).await;
-        });
-    }
+/// The receiver kept the media, so the sender keeps its own copy too.
+fn spawn_media_store(ctx: &Arc<Context>, media_id: String) {
+    let ctx = ctx.clone();
+    tokio::spawn(async move {
+        if let Err(error) = MediaUploadService::new(&ctx).store(&media_id).await {
+            tracing::warn!(media_id, %error, "storing media after a receiver response failed");
+        }
+    });
+}
+
+/// The receiver could not decrypt the media, so it has to be re-encrypted and
+/// uploaded again for that contact.
+fn spawn_media_reupload(ctx: &Arc<Context>, media_id: String, contact_id: i64, message_id: String) {
+    let ctx = ctx.clone();
+    tokio::spawn(async move {
+        if let Err(error) = MediaUploadService::new(&ctx)
+            .reupload(contact_id, &media_id, &message_id)
+            .await
+        {
+            tracing::warn!(media_id, %error, "media reupload failed");
+        }
+    });
 }
 
 pub(crate) async fn handle_media(
+    ctx: &Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     group_id: &str,
@@ -83,7 +97,7 @@ pub(crate) async fn handle_media(
         .execute(&mut **t)
         .await?;
 
-        spawn_media_download(media_id);
+        spawn_media_download(ctx, media_id);
 
         return Ok(());
     }
@@ -140,7 +154,7 @@ pub(crate) async fn handle_media(
         .execute(&mut **t)
         .await?;
 
-        spawn_media_download(media_id);
+        spawn_media_download(ctx, media_id);
 
         return Ok(());
     }
@@ -198,21 +212,15 @@ pub(crate) async fn handle_media(
     .await?;
 
     Group::increase_last_message_exchange(t, group_id, timestamp).await?;
+    Group::record_media_exchange(t, group_id, true, timestamp).await?;
 
-    if let Ok(callbacks) = get_callbacks() {
-        let group_id = group_id.to_owned();
-        let timestamp = media.timestamp;
-        tokio::spawn(async move {
-            (callbacks.api.media_received)(group_id, timestamp).await;
-        });
-    }
-
-    spawn_media_download(media_id);
+    spawn_media_download(ctx, media_id);
 
     Ok(())
 }
 
 pub(crate) async fn handle_media_update(
+    ctx: &Arc<Context>,
     t: &mut Transaction<'_, Sqlite>,
     from_user_id: i64,
     update: encrypted_content::MediaUpdate,
@@ -257,29 +265,13 @@ pub(crate) async fn handle_media_update(
             .execute(&mut **t)
             .await?;
 
-            spawn_media_action(
-                "stored",
-                media_id.clone(),
-                from_user_id,
-                update.target_message_id.clone(),
-            );
+            spawn_media_store(ctx, media_id.clone());
         }
         MediaUpdateType::DecryptionError => {
-            let requested_by = from_user_id.to_string();
-            sqlx::query!(
-                r#"
-                UPDATE media_files
-                SET upload_state = 'reuploadRequested',
-                    reupload_requested_by = ?
-                WHERE media_id = ?
-                "#,
-                requested_by,
-                media_id,
-            )
-            .execute(&mut **t)
-            .await?;
-
-            spawn_media_action("reupload", media_id, from_user_id, update.target_message_id);
+            // The upload state and the requester list are owned by the reupload
+            // path itself, which appends this contact instead of replacing
+            // whoever else is still waiting for the same media.
+            spawn_media_reupload(ctx, media_id, from_user_id, update.target_message_id);
         }
     }
     Ok(())

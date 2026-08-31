@@ -6,7 +6,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
 import 'package:twonly/src/services/passwordless_recovery.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/services/user_discovery.service.dart';
@@ -14,14 +13,15 @@ import 'package:twonly/src/visual/views/onboarding/setup.view.dart';
 
 Future<void> runMigrations() async {
   if (userService.currentUser.appVersion < 90) {
-    // BUG: Requested media files for reupload where not reuploaded because the wrong state...
-    await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
+    // BUG: Requested media files for reupload where not reuploaded because the
+    // wrong state. The Rust upload loop now treats `uploading` as resumable and
+    // recovers these on its own, so this migration only records the version.
     await UserService.update((u) => u.appVersion = 90);
   }
 
   if (userService.currentUser.appVersion < 91) {
     // BUG: Requested media files for reupload where not reuploaded because the wrong state...
-    await makeMigrationToVersion91();
+    await RustApi.retryPendingMediaReuploads();
     await UserService.update((u) => u.appVersion = 91);
   }
 

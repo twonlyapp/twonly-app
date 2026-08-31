@@ -12,7 +12,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.api.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -655,10 +654,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     await storeImageAsOriginal();
 
     // Insert media file into the messages database and start uploading process in the background
-    await insertMediaFileInMessagesTable(
-      mediaService,
-      [widget.sendToGroup!.groupId],
-      additionalData: getAdditionalData(),
+    await RustApi.sendMediaToGroups(
+      mediaId: mediaService.mediaFile.mediaId,
+      groupIds: [widget.sendToGroup!.groupId],
+      additionalMessageData: getAdditionalData()?.writeToBuffer(),
     );
 
     if (mounted) {

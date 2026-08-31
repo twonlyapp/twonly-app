@@ -10,7 +10,7 @@ import 'package:twonly/src/database/daos/key_verification.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/mediafiles/download.api.dart';
+import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_labels.comp.dart';
