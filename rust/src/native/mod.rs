@@ -10,8 +10,10 @@
 //! decoder, durable background transfer, the photo library and notifications.
 //! None of them require the Flutter engine to be running.
 
+pub(crate) mod background;
 pub(crate) mod gallery;
 pub(crate) mod image;
 pub(crate) mod notifications;
+pub(crate) mod prepare;
 pub(crate) mod transfer;
 pub(crate) mod video;

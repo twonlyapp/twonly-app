@@ -7,13 +7,13 @@ use crate::api::ApiRuntime;
 pub use crate::api::PqcPreKeyInput;
 use crate::api::Server;
 use crate::context::Context;
-use crate::context::RuntimeMode;
 use crate::error::{Result, TwonlyError};
 use crate::frb_generated::StreamSink;
 use crate::services::avatars;
 use crate::services::contacts::ContactService;
 use crate::services::media_upload::{MediaSizeReport, MediaUploadService};
 use crate::services::messages::MessageService;
+use crate::services::outbox_dispatch::OutboxDispatchService;
 use crate::user_config::UserConfig;
 use flutter_rust_bridge::frb;
 use std::collections::HashMap;
@@ -54,7 +54,7 @@ impl ApiConfig {
         Ok(Self {
             websocket_url: format!("{}client", RustApi::api_base_url("wss".to_owned())),
             legacy_user_app_version: user.as_ref().map_or(0, |value| value.app_version),
-            in_background: context.runtime_mode == RuntimeMode::Notification,
+            in_background: context.is_notification_runtime(),
             can_use_login_token_for_auth: user
                 .as_ref()
                 .is_some_and(|value| value.can_use_login_token_for_auth),
@@ -302,6 +302,19 @@ impl RustApi {
             .await
     }
 
+    /// Stores the cut the editor's video trimmer asked for. Both bounds are
+    /// milliseconds into the recording, `None` keeps that end of the clip.
+    pub async fn set_media_trim(
+        media_id: String,
+        trim_start_ms: Option<i64>,
+        trim_end_ms: Option<i64>,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx)
+            .set_trim(&media_id, trim_start_ms, trim_end_ms)
+            .await
+    }
+
     pub async fn toggle_media_remove_audio(media_id: String) -> Result<()> {
         let ctx = Context::get_static()?;
         MediaUploadService::new(ctx)
@@ -390,12 +403,45 @@ impl RustApi {
 
     pub async fn set_background(in_background: bool) -> Result<()> {
         let ctx = Context::get_static()?;
-        if !in_background {
+        if in_background {
+            // The socket is about to stop being an option, so anything still
+            // waiting on it is handed to the OS, which delivers it whether or
+            // not this process survives.
+            let ctx = ctx.clone();
+            tokio::spawn(async move {
+                if let Err(error) = OutboxDispatchService::new(&ctx).hand_pending_to_os().await {
+                    tracing::warn!(%error, "could not hand queued envelopes to the OS");
+                }
+            });
+        } else {
             // Coming back to the foreground is the first chance to notice that
             // the OS finished a media transfer while this process was idle.
             crate::services::direct_media_upload::watch_pending_uploads(ctx);
+            let ctx = ctx.clone();
+            tokio::spawn(async move {
+                // Envelopes the OS has been carrying are cleaned up here; the
+                // socket takes over for anything still unacknowledged.
+                if let Err(error) = OutboxDispatchService::new(&ctx).purge_expired().await {
+                    tracing::warn!(%error, "could not purge finished outbox dispatches");
+                }
+            });
         }
         ApiRuntime::set_background(ctx, in_background).await
+    }
+
+    /// Transcodes a captured video while the user is still editing it, so the
+    /// send itself only has to encrypt and hand over.
+    pub async fn prerender_media(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        MediaUploadService::new(ctx).prerender(&media_id).await
+    }
+
+    /// Hands every queued envelope to an OS-owned transfer. Used when the app
+    /// is being torn down while messages are still unsent.
+    pub async fn hand_outbox_to_os() -> Result<()> {
+        let ctx = Context::get_static()?;
+        OutboxDispatchService::new(ctx).hand_pending_to_os().await?;
+        Ok(())
     }
 
     pub async fn set_network_available(available: bool) -> Result<()> {

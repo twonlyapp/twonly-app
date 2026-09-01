@@ -12,8 +12,18 @@ import flutter_sharing_intent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
+    // Must happen before launching finishes: BGTaskScheduler refuses an
+    // identifier registered any later.
+    BackgroundWork.register()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func applicationDidEnterBackground(_ application: UIApplication) {
+    // The app is about to be suspended, and the socket with it. Reserve a later
+    // slot so anything still queued is sent without the user coming back.
+    BackgroundWork.scheduleFlush()
+    super.applicationDidEnterBackground(application)
   }
 
   override func application(

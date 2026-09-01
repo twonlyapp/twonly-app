@@ -90,7 +90,6 @@ class AppEnvironment {
 
 class AppState {
   static bool isAppInBackground = true;
-  static bool isInBackgroundTask = false;
   static bool allowErrorTrackingViaSentry = false;
   static bool gotMessageFromServer = false;
   static int latestAppVersionId = 119;

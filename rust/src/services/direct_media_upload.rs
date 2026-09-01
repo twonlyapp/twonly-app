@@ -18,38 +18,75 @@ use sqlx::FromRow;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
 const REFRESH_BEFORE_SECONDS: i64 = 24 * 60 * 60;
-/// How long a running app keeps asking the server about transfers the OS is
-/// carrying for it. Anything still unfinished after this is picked up by the
-/// reconciliation pass on the next launch.
-const WATCH_BUDGET: Duration = Duration::from_secs(10 * 60);
+/// When to top the slot cache up, until the server has said otherwise.
+///
+/// A slot is the one part of preparing a send that needs the network, so the
+/// cache decides whether a message composed offline can still be handed to the
+/// OS — which then waits for connectivity by itself — or has to sit in the
+/// database until the app is opened again. The server caps how many a client
+/// may hold and advertises where it refills; this is only the value used before
+/// the first answer has arrived.
+const DEFAULT_SLOT_REFILL_THRESHOLD: i64 = 5;
+/// Where the server's advertised refill threshold is remembered between runs.
+const REFILL_THRESHOLD_KEY: &str = "direct_media_refill_threshold";
 const WATCH_FIRST_DELAY: Duration = Duration::from_secs(2);
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
 
 static WATCHING: AtomicBool = AtomicBool::new(false);
+
+/// Bumped every time something asks to be watched. A watcher already in flight
+/// reads this as "new work arrived" and drops back to the short poll interval.
+/// Without it a send made while an earlier watch had already backed off would
+/// wait out that watch's two-minute cadence before its first look, long after
+/// the recipient has the file.
+static WATCH_REQUESTS: AtomicU64 = AtomicU64::new(0);
+
+/// Clears the process-wide watcher claim even when the runtime carrying the
+/// task is shut down. Background platform entry points own short-lived Tokio
+/// runtimes, so ordinary code after an `.await` is not guaranteed to run.
+struct WatchingGuard;
+
+impl Drop for WatchingGuard {
+    fn drop(&mut self) {
+        WATCHING.store(false, Ordering::SeqCst);
+    }
+}
 
 /// The OS finishes a transfer without telling this process, so a send would keep
 /// showing as "sending" until the app is restarted. While the app is alive, poll
 /// the server for the attachments it is still waiting on, backing off as the
 /// wait grows, and stop as soon as everything has settled.
 pub fn watch_pending_uploads(ctx: &Arc<Context>) {
+    let Some(runtime) = ctx.foreground_runtime() else {
+        // A killed-app worker has no long-lived runtime. Its native scheduler
+        // uses the `pending_uploads` result from background::run instead.
+        return;
+    };
+    let requested = WATCH_REQUESTS.fetch_add(1, Ordering::SeqCst) + 1;
     if WATCHING.swap(true, Ordering::SeqCst) {
+        // A watcher is already running and will pick the request up on its next
+        // pass, so this does not start a second poller against the same jobs.
         return;
     }
     let ctx = ctx.clone();
-    tokio::spawn(async move {
+    runtime.spawn(async move {
+        let guard = WatchingGuard;
         let service = DirectMediaUploadService::new(&ctx);
-        let deadline = tokio::time::Instant::now() + WATCH_BUDGET;
+        let mut seen = requested;
         let mut delay = WATCH_FIRST_DELAY;
-        while tokio::time::Instant::now() < deadline {
+        loop {
             tokio::time::sleep(delay).await;
             if let Err(error) = service.reconcile().await {
                 tracing::warn!(%error, "could not reconcile direct-media uploads");
             }
+            // The jobs themselves bound this loop: `reconcile` settles one whose
+            // slot has expired, so a server that never answers still ends the
+            // watch rather than leaving it running for the life of the app.
             match service.pending_job_count().await {
                 Ok(0) => break,
                 Ok(_) => {}
@@ -58,9 +95,26 @@ pub fn watch_pending_uploads(ctx: &Arc<Context>) {
                     break;
                 }
             }
-            delay = (delay * 2).min(WATCH_MAX_DELAY);
+            let requests = WATCH_REQUESTS.load(Ordering::SeqCst);
+            if requests == seen {
+                delay = (delay * 2).min(WATCH_MAX_DELAY);
+            } else {
+                // Something was handed to the OS since the last pass, so look
+                // again soon instead of on the interval an older wait grew to.
+                seen = requests;
+                delay = WATCH_FIRST_DELAY;
+            }
         }
-        WATCHING.store(false, Ordering::SeqCst);
+        // Release the claim before checking for a request that raced the last
+        // pass. `WatchingGuard` also performs this release if this future is
+        // cancelled because its runtime is being destroyed.
+        drop(guard);
+        // A request that arrived between the loop stopping and the flag being
+        // cleared found `WATCHING` still set and returned without starting a
+        // watcher. Nothing else would poll for it, so pick it up here.
+        if WATCH_REQUESTS.load(Ordering::SeqCst) != seen {
+            watch_pending_uploads(&ctx);
+        }
     });
 }
 
@@ -157,6 +211,24 @@ impl DirectMediaUploadService {
             .header("x-twonly-login-token", hex::encode(login_token)))
     }
 
+    /// Tops the slot cache up without blocking the caller. Failures are
+    /// expected — this runs exactly when the network may be gone — and the next
+    /// reconnect preloads again.
+    fn spawn_slot_refill(&self) {
+        let ctx = self.ctx.clone();
+        tokio::spawn(async move {
+            let service = DirectMediaUploadService::new(&ctx);
+            if let Ok(usable) = service.usable_slot_count().await {
+                if usable > service.refill_threshold().await {
+                    return;
+                }
+            }
+            if let Err(error) = service.preload_slots().await {
+                tracing::info!(%error, "could not top up the direct-media slot cache");
+            }
+        });
+    }
+
     pub async fn preload_slots(&self) -> Result<usize> {
         let database = self.ctx.app_db.read().await.clone();
         let known = sqlx::query_scalar::<_, String>(
@@ -197,6 +269,18 @@ impl DirectMediaUploadService {
         )?;
         let count = slots.slots.len();
         let mut transaction = database.pool.begin().await?;
+        // The server decides how deep this cache may be. Remembering the number
+        // keeps an offline launch from refilling against a stale guess.
+        if slots.refill_threshold > 0 {
+            sqlx::query(
+                r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
+                   ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+            )
+            .bind(REFILL_THRESHOLD_KEY)
+            .bind(slots.refill_threshold.to_string())
+            .execute(&mut *transaction)
+            .await?;
+        }
         for slot in slots.slots {
             let upload = slot.media_upload.ok_or_else(|| {
                 TwonlyError::Generic("server returned an upload slot without a POST".into())
@@ -232,9 +316,24 @@ impl DirectMediaUploadService {
         .await?)
     }
 
+    /// The refill point the server last advertised. Asking for slots the server
+    /// will not issue costs a request per send, so its number wins over ours.
+    async fn refill_threshold(&self) -> i64 {
+        let database = self.ctx.app_db.read().await.clone();
+        sqlx::query_scalar::<_, String>("SELECT value FROM app_metadata WHERE key = ?")
+            .bind(REFILL_THRESHOLD_KEY)
+            .fetch_optional(&database.pool)
+            .await
+            .ok()
+            .flatten()
+            .and_then(|value| value.parse::<i64>().ok())
+            .filter(|threshold| *threshold > 0)
+            .unwrap_or(DEFAULT_SLOT_REFILL_THRESHOLD)
+    }
+
     async fn ensure_slots(&self) -> Result<()> {
         let usable = self.usable_slot_count().await?;
-        if usable > 5 {
+        if usable > self.refill_threshold().await {
             return Ok(());
         }
         match self.preload_slots().await {
@@ -279,9 +378,18 @@ impl DirectMediaUploadService {
         .await?)
     }
 
-    /// Native background transfers cannot report back into a process that may
-    /// not be running, so the server's attachment state is the authority. Every
-    /// launch settles the jobs the device believes are still in flight.
+    /// The server's attachment state is the authority on what happened to a
+    /// transfer the OS carried.
+    ///
+    /// Not because the native side cannot say - both uploaders finish in this
+    /// process holding the HTTP status - but because that word can be lost: iOS
+    /// does not relaunch after a force quit, `WorkManager` records its `Result`
+    /// nowhere durable, and either can complete while this library is loaded
+    /// but uninitialised. A status the server still holds survives all three.
+    ///
+    /// A 2xx would not settle it anyway: the upload is accepted with a 202
+    /// while the manifest is still being reconciled, so only the attachment's
+    /// own state says whether the recipients were dispatched.
     pub async fn reconcile(&self) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
         let jobs = sqlx::query_as::<_, PendingJob>(
@@ -310,6 +418,12 @@ impl DirectMediaUploadService {
                     continue;
                 }
             };
+            tracing::info!(
+                attachment_id = job.attachment_id,
+                media_id = job.media_id,
+                ?state,
+                "read direct-media attachment status"
+            );
             match state {
                 AttachmentState::Ready => self.settle(&job, Outcome::Uploaded).await?,
                 AttachmentState::Rejected => self.settle(&job, Outcome::Rejected).await?,
@@ -383,6 +497,9 @@ impl DirectMediaUploadService {
         } else {
             "abandoned"
         };
+        // The cache has just lost one; refill in the background so the next
+        // send does not have to be online to reserve one.
+        self.spawn_slot_refill();
         sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
             .bind(slot_state)
             .bind(&job.attachment_id)
@@ -561,6 +678,9 @@ impl DirectMediaUploadService {
         .bind(&slot.attachment_id)
         .execute(&database.pool)
         .await?;
+        // If Flutter is alive this lands on its long-lived Rust runtime even
+        // when preparation itself was called by WorkManager. Otherwise it is a
+        // no-op and the durable native retry owns reconciliation.
         watch_pending_uploads(&self.ctx);
         Ok(())
     }
@@ -745,6 +865,13 @@ fn write_multipart_body(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cancelled_watcher_releases_process_claim() {
+        WATCHING.store(true, Ordering::SeqCst);
+        drop(WatchingGuard);
+        assert!(!WATCHING.load(Ordering::SeqCst));
+    }
 
     #[test]
     fn multipart_body_is_deterministic_and_keeps_exact_media_bytes() {

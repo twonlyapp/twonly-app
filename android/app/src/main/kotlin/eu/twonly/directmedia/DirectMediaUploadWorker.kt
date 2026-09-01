@@ -35,9 +35,11 @@ class DirectMediaUploadWorker(
             val request = descriptor.getJSONObject(role)
             val status = upload(request)
             if (status in 200..299) {
-                if (role == "media") {
-                    // Best effort only. A 202 is success because server reconciliation
-                    // owns completion when the manifest has not arrived yet.
+                // Best effort only. A 202 is success because server reconciliation
+                // owns completion when the manifest has not arrived yet. A
+                // descriptor with no completion step — a queued message envelope —
+                // is finished as soon as its POST is accepted.
+                if (role == "media" && descriptor.has("complete")) {
                     upload(descriptor.getJSONObject("complete"))
                 }
                 Result.success()

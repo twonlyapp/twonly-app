@@ -29,7 +29,7 @@ class Log {
             record.level >= Level.WARNING) {
           // ignore: avoid_print
           print(
-            '${record.level.name} [${AppState.isInBackgroundTask ? 'b' : 'f'}] [twonly] ${record.loggerName} > ${record.message}',
+            '${record.level.name} [f] [twonly] ${record.loggerName} > ${record.message}',
           );
         }
       }
@@ -72,7 +72,9 @@ class Log {
         },
         source: record.loggerName,
         message: record.message,
-        inBackground: AppState.isInBackgroundTask,
+        // Background work runs natively now; anything logged from Dart is by
+        // definition the foreground runtime.
+        inBackground: false,
       );
       return true;
     } catch (error) {

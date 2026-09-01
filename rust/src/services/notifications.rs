@@ -6,7 +6,7 @@
 use crate::api::proto::client::{self as proto, encrypted_content};
 use crate::api::runtime::ApiRuntime;
 use crate::bridge::InitConfig;
-use crate::context::{Context, RuntimeMode};
+use crate::context::Context;
 use crate::database::app::AppDatabase;
 use crate::error::Result;
 use crate::user_config::UserConfig;
@@ -415,7 +415,8 @@ pub async fn process_wakeup(
 
     let deadline = std::time::Duration::from_millis(deadline_ms.clamp(1_000, 28_000));
 
-    let completed = if ctx.runtime_mode == RuntimeMode::Notification {
+    let owns_connection = ctx.is_notification_runtime();
+    let completed = if owns_connection {
         let generation = ctx.mailbox_generation();
         ApiRuntime::connect(&ctx).await?;
         tokio::time::timeout(deadline, ctx.wait_for_mailbox_after(generation))
@@ -443,7 +444,7 @@ pub async fn process_wakeup(
     let mut batch = pending_batch(&ctx, locale).await?;
     batch.completed = completed;
 
-    if ctx.runtime_mode == RuntimeMode::Notification {
+    if owns_connection && ctx.is_notification_runtime() {
         ApiRuntime::close(&ctx).await?;
     }
     Ok(batch)

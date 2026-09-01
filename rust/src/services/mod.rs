@@ -4,6 +4,7 @@
  */
 
 pub mod avatars;
+pub mod background;
 pub mod contacts;
 pub mod direct_media_upload;
 pub mod groups;
@@ -13,3 +14,4 @@ pub mod media_upload;
 pub mod mediafiles;
 pub mod messages;
 pub mod notifications;
+pub mod outbox_dispatch;

@@ -50,6 +50,10 @@ pub(crate) struct ApiClient {
     pub(crate) config: ApiConfig,
     pub(crate) state: RwLock<ApiConnectionState>,
     pub(crate) ws_client: Mutex<Option<Arc<WebSocketClient>>>,
+    /// Serializes replacing/closing the client slot. The WebSocket runner emits
+    /// events asynchronously, so overlapping replacements must not clear each
+    /// other's pending requests or publish stale state.
+    connection_change: Mutex<()>,
     pub(crate) pending: PendingRequests,
     pub(crate) next_sequence: Mutex<u64>,
     pub(crate) events: broadcast::Sender<ApiEvent>,
@@ -77,6 +81,7 @@ impl ApiClient {
             config,
             state: RwLock::const_new(ApiConnectionState::Stopped),
             ws_client: Mutex::const_new(None),
+            connection_change: Mutex::const_new(()),
             pending: Arc::new(Mutex::const_new(HashMap::new())),
             next_sequence: Mutex::const_new(1),
             events: API_EVENTS.clone(),
@@ -200,15 +205,15 @@ impl ApiClient {
     }
 
     async fn reconnect(self: &Arc<Self>, stale: &Arc<WebSocketClient>, reason: &str) -> Result<()> {
+        let connection_change = self.connection_change.lock().await;
         {
-            let mut guard = self.ws_client.lock().await;
+            let guard = self.ws_client.lock().await;
             if !guard
                 .as_ref()
                 .is_some_and(|current| Arc::ptr_eq(current, stale))
             {
                 return Ok(());
             }
-            guard.take();
         }
 
         // Counted only for a socket that was still the live one, so a stale
@@ -226,14 +231,8 @@ impl ApiClient {
             "API WebSocket is dead, reconnecting"
         );
 
-        self.is_authenticated.store(false, Ordering::Release);
-        // Dropping the sender ends the catch-up loop bound to the dead socket.
-        *self.catch_up_tx.lock().await = None;
-        if let Err(error) = stale.shutdown_graceful(Duration::from_secs(5)).await {
-            tracing::warn!("dead WebSocket did not shut down cleanly: {error}");
-        }
-        self.fail_pending().await;
-        self.set_state(ApiConnectionState::Stopped).await;
+        self.discard_current_connection(reason).await;
+        drop(connection_change);
 
         tokio::time::sleep(delay).await;
 
@@ -259,6 +258,7 @@ impl ApiClient {
         if *guard != state {
             *guard = state;
             drop(guard);
+            tracing::info!(?state, "API connection state changed");
             let _ = self.events.send(ApiEvent {
                 kind: ApiEventKind::ConnectionStateChanged,
                 state: Some(state),
@@ -267,7 +267,60 @@ impl ApiClient {
         }
     }
 
+    /// Returns whether `connection` still owns the live client slot.
+    ///
+    /// A replaced socket can emit its final disconnect/shutdown events after
+    /// the new socket has started. Those events must not overwrite the new
+    /// connection's state or schedule another reconnect.
+    async fn is_current_connection(&self, connection: &Arc<WebSocketClient>) -> bool {
+        self.ws_client
+            .lock()
+            .await
+            .as_ref()
+            .is_some_and(|current| Arc::ptr_eq(current, connection))
+    }
+
+    /// Drops the current transport without waiting for its graceful-shutdown
+    /// timeout. Used for external reachability changes, where waiting would
+    /// defeat the purpose of an immediate reconnect.
+    async fn discard_current_connection(&self, reason: &str) {
+        let current = self.ws_client.lock().await.take();
+        self.is_authenticated.store(false, Ordering::Release);
+        // Dropping the sender ends the catch-up loop bound to the old socket.
+        *self.catch_up_tx.lock().await = None;
+
+        if let Some(current) = current {
+            tracing::info!(reason, "discarding API WebSocket");
+            current.shutdown();
+        }
+
+        self.fail_pending().await;
+        self.set_state(ApiConnectionState::Stopped).await;
+    }
+
+    /// Starts a fresh connection immediately, bypassing any retry sleep owned
+    /// by the previous transport. The replacement client still uses the normal
+    /// exponential backoff if this first attempt fails.
+    async fn reconnect_now(self: &Arc<Self>, reason: &str) -> Result<()> {
+        let _connection_change = self.connection_change.lock().await;
+        if API_PERMANENTLY_REJECTED.load(Ordering::Acquire)
+            || self.deliberately_closed.load(Ordering::Acquire)
+            || self.in_background.load(Ordering::Acquire)
+            || !self.network_available.load(Ordering::Acquire)
+        {
+            return Ok(());
+        }
+
+        self.discard_current_connection(reason).await;
+        self.connect_inner().await
+    }
+
     pub async fn connect(self: &Arc<Self>) -> Result<()> {
+        let _connection_change = self.connection_change.lock().await;
+        self.connect_inner().await
+    }
+
+    async fn connect_inner(self: &Arc<Self>) -> Result<()> {
         if API_PERMANENTLY_REJECTED.load(Ordering::Acquire) {
             self.set_state(ApiConnectionState::PermanentlyRejected)
                 .await;
@@ -339,6 +392,12 @@ impl ApiClient {
                     msg = receiver.recv() => {
                         match msg {
                             Ok(msg) => {
+                                let Some(connection) = connection.upgrade() else {
+                                    break;
+                                };
+                                if !self_clone.is_current_connection(&connection).await {
+                                    break;
+                                }
                                 // Tungstenite message
                                 if let stream_tungstenite::tokio_tungstenite::tungstenite::Message::Binary(bytes) = &*msg {
                                     self_clone.handle_incoming(bytes).await;
@@ -349,6 +408,12 @@ impl ApiClient {
                     }
                     ev = events.recv() => {
                         use stream_tungstenite::ConnectionEvent;
+                        let Some(connection) = connection.upgrade() else {
+                            break;
+                        };
+                        if !self_clone.is_current_connection(&connection).await {
+                            break;
+                        }
                         match ev {
                             Ok(ConnectionEvent::Connected { .. }) => {
                                 let is_auth = self_clone.is_authenticated.load(Ordering::Acquire);
@@ -377,12 +442,10 @@ impl ApiClient {
                             // send. Replace it instead of sitting on it.
                             Ok(ConnectionEvent::FatalError { .. } | ConnectionEvent::Shutdown) => {
                                 self_clone.is_authenticated.store(false, Ordering::Release);
-                                if let Some(connection) = connection.upgrade() {
-                                    self_clone.schedule_reconnect(
-                                        &connection,
-                                        "supervisor stopped reconnecting",
-                                    );
-                                }
+                                self_clone.schedule_reconnect(
+                                    &connection,
+                                    "supervisor stopped reconnecting",
+                                );
                             }
                             Ok(_) => {}
                             Err(_) => break,
@@ -397,6 +460,7 @@ impl ApiClient {
 
     pub async fn close(&self) {
         self.deliberately_closed.store(true, Ordering::Release);
+        let _connection_change = self.connection_change.lock().await;
         self.is_authenticated.store(false, Ordering::Release);
         // Dropping the sender ends the catch-up loop for this connection.
         *self.catch_up_tx.lock().await = None;
@@ -422,24 +486,31 @@ impl ApiClient {
         self.in_background.store(in_background, Ordering::Release);
         if in_background {
             self.set_state(ApiConnectionState::Suspended).await;
-        } else if self.ws_client.lock().await.is_some() {
-            self.set_state(ApiConnectionState::Authenticated).await;
-            // Returning to the foreground: pick up whatever arrived while the
-            // socket was suspended.
-            self.request_catch_up().await;
-        } else if self.network_available.load(Ordering::Acquire) {
-            self.connect().await?;
+        } else {
+            // Mobile platforms can freeze the process while keeping the socket
+            // object alive. Its TCP connection may be dead even though neither
+            // the OS nor tungstenite has reported that yet, so foregrounding
+            // always starts a fresh attempt instead of waiting for a timeout.
+            self.reconnect_now("application entered the foreground")
+                .await?;
         }
         Ok(())
     }
 
     pub(crate) async fn set_network_available(self: &Arc<Self>, available: bool) -> Result<()> {
         self.network_available.store(available, Ordering::Release);
-        if available
-            & !self.in_background.load(Ordering::Acquire)
-            & self.ws_client.lock().await.is_none()
-        {
-            self.connect().await?;
+        if available {
+            // A Wi-Fi/mobile/route change can leave an apparently connected
+            // socket bound to the old network. Replace it now, including when
+            // its own supervisor is currently sleeping in reconnect backoff.
+            self.reconnect_now("network became available or changed")
+                .await?;
+        } else {
+            // Reflect loss of reachability immediately instead of showing an
+            // authenticated state until the receive timeout expires.
+            let _connection_change = self.connection_change.lock().await;
+            self.discard_current_connection("network became unavailable")
+                .await;
         }
         Ok(())
     }

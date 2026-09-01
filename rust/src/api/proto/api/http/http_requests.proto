@@ -31,6 +31,29 @@ message AttachmentDispatch {
   bytes download_token = 4;
 }
 
+// A message envelope handed to a background transfer instead of the websocket.
+//
+// The socket only exists while the app runs, so an envelope queued offline
+// would otherwise wait for the next app launch rather than the next network.
+message OutboxDispatch {
+  string dispatch_id = 1;
+  int64 recipient_user_id = 2;
+  bytes encrypted_body = 3;
+  bool wake_receiver = 4;
+}
+
+message OutboxDispatchBatch {
+  repeated OutboxDispatch dispatches = 1;
+}
+
+message OutboxDispatchResult {
+  // Envelopes the server has accepted, whether just now or on an earlier
+  // delivery of the same request.
+  int32 accepted = 1;
+  // Envelopes it will never accept, so the transfer must not be retried.
+  int32 rejected = 2;
+}
+
 message AttachmentManifest {
   int64 encrypted_object_size = 1;
   repeated AttachmentDispatch dispatches = 2;

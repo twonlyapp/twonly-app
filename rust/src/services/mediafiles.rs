@@ -378,6 +378,9 @@ impl MediaFileService {
             base.join("tmp")
                 .join(format!("{media_id}.ffmpeg.{extension}")),
             base.join("tmp").join(format!("{media_id}.overlay.png")),
+            base.join("tmp").join(format!("{media_id}.prerendered.mp4")),
+            base.join("tmp")
+                .join(format!("{media_id}.prerendered.json")),
             base.join("stored").join(format!("{media_id}.{extension}")),
             base.join("stored")
                 .join(format!("{media_id}.thumbnail.webp")),
@@ -418,6 +421,42 @@ impl MediaFileService {
 
     pub(crate) fn upload_request_path(&self, media_id: &str, media_type: &str) -> PathBuf {
         self.media_path("tmp", media_id, ".upload", Self::extension(media_type))
+    }
+
+    /// The transcode produced before the user picked recipients. It is only a
+    /// candidate: `prerender_matches` decides whether the editor's final
+    /// settings are still the ones it was produced with.
+    pub(crate) fn prerendered_path(&self, media_id: &str) -> PathBuf {
+        self.media_path("tmp", media_id, ".prerendered", "mp4")
+    }
+
+    fn prerender_marker_path(&self, media_id: &str) -> PathBuf {
+        self.media_path("tmp", media_id, ".prerendered", "json")
+    }
+
+    /// Records the render inputs the pre-rendered clip was produced with.
+    /// Written only after the render finished, so a marker on disk also proves
+    /// the clip is whole.
+    pub(crate) fn write_prerender_marker(&self, media_id: &str, fingerprint: &str) -> Result<()> {
+        let marker = self.prerender_marker_path(media_id);
+        Self::ensure_parent(&marker)?;
+        std::fs::write(&marker, fingerprint.as_bytes())?;
+        Ok(())
+    }
+
+    /// Whether the pre-rendered clip can be sent as it stands, which is true
+    /// only while the editor still asks for exactly what it was produced with.
+    pub(crate) fn prerender_matches(&self, media_id: &str, fingerprint: &str) -> bool {
+        if !self.prerendered_path(media_id).exists() {
+            return false;
+        }
+        std::fs::read_to_string(self.prerender_marker_path(media_id))
+            .is_ok_and(|marker| marker == fingerprint)
+    }
+
+    pub(crate) fn discard_prerender(&self, media_id: &str) {
+        let _ = std::fs::remove_file(self.prerendered_path(media_id));
+        let _ = std::fs::remove_file(self.prerender_marker_path(media_id));
     }
 
     pub(crate) fn temp_path(&self, media_id: &str, media_type: &str) -> PathBuf {

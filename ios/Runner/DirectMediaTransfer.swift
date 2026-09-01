@@ -8,12 +8,14 @@ private struct DirectMediaRequest: Codable {
   let bodyPath: String
 }
 
+/// A media upload names all three requests. A queued message envelope is the
+/// single-request form: there is nothing to describe beyond the POST itself.
 private struct DirectMediaDescriptor: Codable {
   let attachmentId: String
   let expiresAt: Int64
   let media: DirectMediaRequest
-  let manifest: DirectMediaRequest
-  let complete: DirectMediaRequest
+  let manifest: DirectMediaRequest?
+  let complete: DirectMediaRequest?
 }
 
 /// Thin transport-only adapter. Rust supplies immutable request files and all
@@ -52,19 +54,29 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
       let data = json.data(using: .utf8),
       let descriptor = try? decoder.decode(DirectMediaDescriptor.self, from: data),
       descriptor.expiresAt > Int64(Date().timeIntervalSince1970),
-      FileManager.default.fileExists(atPath: descriptor.media.bodyPath),
-      FileManager.default.fileExists(atPath: descriptor.manifest.bodyPath)
+      FileManager.default.fileExists(atPath: descriptor.media.bodyPath)
     else { return false }
+    if let manifest = descriptor.manifest,
+      !FileManager.default.fileExists(atPath: manifest.bodyPath)
+    {
+      return false
+    }
 
     defaults.set(data, forKey: descriptorPrefix + descriptor.attachmentId)
-    // Both durable transfers are created before either is resumed, so process
-    // death cannot leave a media object with no corresponding manifest task.
-    guard
-      let mediaTask = makeTask(descriptor.media, attachmentId: descriptor.attachmentId),
-      let manifestTask = makeTask(descriptor.manifest, attachmentId: descriptor.attachmentId)
+    // Every durable transfer is created before any of them is resumed, so
+    // process death cannot leave a media object with no corresponding manifest
+    // task.
+    guard let mediaTask = makeTask(descriptor.media, attachmentId: descriptor.attachmentId)
     else { return false }
+    var manifestTask: URLSessionUploadTask?
+    if let manifest = descriptor.manifest {
+      guard let task = makeTask(manifest, attachmentId: descriptor.attachmentId) else {
+        return false
+      }
+      manifestTask = task
+    }
     mediaTask.resume()
-    manifestTask.resume()
+    manifestTask?.resume()
     return true
   }
 
@@ -121,7 +133,11 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
     let success = error == nil && (200...299).contains(status)
 
     if success && role == "media" {
-      makeTask(descriptor.complete, attachmentId: attachmentId)?.resume()
+      // A descriptor with no completion step — a queued message envelope — is
+      // finished as soon as its POST is accepted.
+      if let complete = descriptor.complete {
+        makeTask(complete, attachmentId: attachmentId)?.resume()
+      }
       return
     }
     if success {
@@ -138,6 +154,10 @@ final class DirectMediaTransfer: NSObject, URLSessionTaskDelegate, URLSessionDel
   }
 
   func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+    // The HTTP tasks can finish while Rust is not loaded. Ask the OS for a
+    // durable reconciliation opportunity rather than relying on an in-process
+    // callback or websocket receipt.
+    BackgroundWork.scheduleFlush()
     DispatchQueue.main.async { [weak self] in
       let completion = self?.backgroundCompletion
       self?.backgroundCompletion = nil

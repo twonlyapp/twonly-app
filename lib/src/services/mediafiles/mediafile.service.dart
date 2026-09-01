@@ -59,6 +59,27 @@ class MediaFileService {
 
   bool get removeAudio => mediaFile.removeAudio ?? false;
 
+  /// Where the editor's cutter placed the two ends of a video. Null on either
+  /// side means the clip keeps that end.
+  Duration? get trimStart => mediaFile.trimStartMs == null
+      ? null
+      : Duration(milliseconds: mediaFile.trimStartMs!);
+  Duration? get trimEnd => mediaFile.trimEndMs == null
+      ? null
+      : Duration(milliseconds: mediaFile.trimEndMs!);
+
+  /// Rust stores the bounds and applies them in the transcode every send
+  /// performs, so the recording itself is never rewritten and the cut stays
+  /// reversible for as long as the editor is open.
+  Future<void> setTrim(Duration? start, Duration? end) async {
+    await RustApi.setMediaTrim(
+      mediaId: mediaFile.mediaId,
+      trimStartMs: start?.inMilliseconds,
+      trimEndMs: end?.inMilliseconds,
+    );
+    await updateFromDB();
+  }
+
   Future<void> toggleRemoveAudio() async {
     await RustApi.toggleMediaRemoveAudio(mediaId: mediaFile.mediaId);
     await updateFromDB();

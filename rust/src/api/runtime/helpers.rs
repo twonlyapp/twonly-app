@@ -9,10 +9,11 @@ use crate::api::runtime::ApiRuntime;
 use crate::api::Server;
 
 use crate::bridge::api::ServerResult;
-use crate::context::{Context, RuntimeMode};
+use crate::context::Context;
 use crate::error::{Result, TwonlyError};
 use crate::services::direct_media_upload::DirectMediaUploadService;
 use crate::services::groups::GroupService;
+use crate::services::media_upload::MediaUploadService;
 use crate::services::mediafiles::MediaFileService;
 use prost::Message as ProstMessage;
 use std::future::Future;
@@ -43,7 +44,7 @@ pub(crate) fn response_error_code(bytes: &[u8]) -> Result<Option<i32>> {
 pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bool) {
     // Notification workers only drain and commit the mailbox. Media downloads,
     // maintenance, and outbox replay belong to the main application runtime.
-    if ctx.runtime_mode == RuntimeMode::Notification {
+    if ctx.is_notification_runtime() {
         return;
     }
     let ctx = ctx.clone();
@@ -76,6 +77,12 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
 
         if let Err(error) = messages::retransmit_queued_receipts(&ctx).await {
             tracing::warn!("failed to retransmit queued receipts: {error}");
+        }
+        // A preparation that a terminated process left half-finished is only
+        // resumed by a sweep like this one; a mid-session reconnect is just as
+        // good a moment for it as a cold start, and far more frequent.
+        if let Err(error) = MediaUploadService::new(&ctx).finish_started_uploads().await {
+            tracing::warn!("failed to finish started media uploads: {error}");
         }
         if let Err(error) = MediaFileService::new(&ctx).download_pending().await {
             tracing::warn!("failed to download pending media: {error}");

@@ -89,6 +89,8 @@ object NativeVideoCodec {
         overlayPath: String?,
         outputPath: String,
         removeAudio: Boolean,
+        trimStartMs: Long,
+        trimEndMs: Long,
         mediaId: String,
     ): Boolean {
         val context = MyApplication.instance
@@ -110,7 +112,14 @@ object NativeVideoCodec {
         handler.post {
             try {
                 val effects = buildEffects(overlayPath, source)
-                val editedItem = EditedMediaItem.Builder(MediaItem.fromUri(File(inputPath).toURI().toString()))
+                val mediaItem = MediaItem.Builder()
+                    .setUri(File(inputPath).toURI().toString())
+                    // Transformer applies the cut while it decodes, so trimming
+                    // costs nothing on top of the render that was happening
+                    // anyway, and the recording on disk is left alone.
+                    .setClippingConfiguration(clipping(trimStartMs, trimEndMs))
+                    .build()
+                val editedItem = EditedMediaItem.Builder(mediaItem)
                     .setRemoveAudio(removeAudio)
                     .setEffects(effects)
                     .build()
@@ -232,6 +241,28 @@ object NativeVideoCodec {
      * settings, so a source that refuses to be probed still renders — it just
      * falls back to the 1080p30 defaults.
      */
+    /**
+     * The slice of the recording the editor's cutter selected.
+     *
+     * Bounds arrive as milliseconds, with a negative value meaning the clip
+     * keeps that end. A pair that does not describe a real slice is dropped
+     * altogether: sending the untrimmed moment beats sending an empty file.
+     */
+    private fun clipping(trimStartMs: Long, trimEndMs: Long): MediaItem.ClippingConfiguration {
+        if (trimStartMs <= 0L && trimEndMs <= 0L) {
+            return MediaItem.ClippingConfiguration.UNSET
+        }
+        val start = trimStartMs.coerceAtLeast(0L)
+        if (trimEndMs > 0L && trimEndMs <= start) {
+            return MediaItem.ClippingConfiguration.UNSET
+        }
+        val builder = MediaItem.ClippingConfiguration.Builder().setStartPositionMs(start)
+        if (trimEndMs > 0L) {
+            builder.setEndPositionMs(trimEndMs)
+        }
+        return builder.build()
+    }
+
     private fun probe(inputPath: String): SourceVideo? {
         val retriever = MediaMetadataRetriever()
         return try {

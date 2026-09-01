@@ -19,7 +19,7 @@ use crate::utils::Shared;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::{
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, OnceLock as StdOnceLock},
 };
 use tokio::sync::{Mutex, Notify, OnceCell, RwLock};
 use zeroize::Zeroize;
@@ -36,6 +36,14 @@ pub enum RuntimeMode {
 pub struct Context {
     pub config: InitConfig,
     pub(crate) runtime_mode: RuntimeMode,
+    /// A native worker can initialize this process before Flutter does. Once
+    /// Flutter claims it, background jobs must neither open nor close a second
+    /// API connection through the shared client.
+    flutter_claimed: AtomicBool,
+    /// Runtime owned by flutter_rust_bridge. Native workers may call into the
+    /// same library from a temporary runtime; UI-facing pollers must be spawned
+    /// here so they survive that native call returning.
+    foreground_runtime: StdOnceLock<tokio::runtime::Handle>,
     pub rust_db: Arc<RwLock<Arc<Database>>>,
     pub app_db: Arc<RwLock<Arc<AppDatabase>>>,
     pub(crate) secure_storage: SecureStorage,
@@ -116,6 +124,8 @@ impl Context {
         let ctx = Arc::new(Context {
             config,
             runtime_mode: RuntimeMode::Standalone,
+            flutter_claimed: AtomicBool::new(false),
+            foreground_runtime: StdOnceLock::new(),
             rust_db,
             app_db,
             secure_storage,
@@ -191,13 +201,20 @@ impl Context {
         // Logging is process-wide and owns app.log directly. Initialize it
         // before the context check so notification and Flutter runtimes both
         // have a sink even when the main context already exists.
+        let foreground_already_owns_process = GLOBAL_CONTEXT
+            .get()
+            .is_some_and(|context| context.is_flutter_runtime());
         init_tracing(
             Path::new(&config.data_dir),
-            runtime_mode != RuntimeMode::Flutter,
+            runtime_mode != RuntimeMode::Flutter && !foreground_already_owns_process,
         );
 
         if GLOBAL_CONTEXT.initialized() {
             tracing::info!("twonly already initialized. Ensuring storage directories exist.");
+            if runtime_mode == RuntimeMode::Flutter {
+                let context = GLOBAL_CONTEXT.get().ok_or(TwonlyError::Initialization)?;
+                Self::claim_for_flutter(context).await?;
+            }
             return Ok(());
         }
 
@@ -278,6 +295,8 @@ impl Context {
                     let ctx = Arc::new(Context {
                         config,
                         runtime_mode,
+                        flutter_claimed: AtomicBool::new(true),
+                        foreground_runtime: StdOnceLock::new(),
                         secure_storage,
                         rust_db: rust_db_handle,
                         app_db,
@@ -319,6 +338,8 @@ impl Context {
                     let ctx = Arc::new(Context {
                         config,
                         runtime_mode,
+                        flutter_claimed: AtomicBool::new(false),
+                        foreground_runtime: StdOnceLock::new(),
                         rust_db: rust_db_handle,
                         app_db,
                         key_manager,
@@ -341,10 +362,43 @@ impl Context {
             })
             .await;
         let ctx = res?;
-        if runtime_mode != RuntimeMode::Notification {
+        if runtime_mode == RuntimeMode::Flutter {
+            Self::claim_for_flutter(ctx).await?;
+        } else if runtime_mode != RuntimeMode::Notification {
             ApiRuntime::connect(ctx).await?;
         }
         Ok(())
+    }
+
+    async fn claim_for_flutter(context: &Arc<Context>) -> Result<()> {
+        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+            let _ = context.foreground_runtime.set(runtime);
+        }
+        let newly_claimed = !context.flutter_claimed.swap(true, Ordering::AcqRel);
+        if newly_claimed && context.runtime_mode != RuntimeMode::Flutter {
+            tracing::info!("promoting native background runtime to Flutter ownership");
+            // Rebuild the client so the next authentication is explicitly
+            // foreground. The old background client is closed before Flutter
+            // starts observing connection state.
+            ApiRuntime::reload_configuration(context).await
+        } else {
+            ApiRuntime::connect(context).await
+        }
+    }
+
+    pub(crate) fn is_flutter_runtime(&self) -> bool {
+        self.runtime_mode == RuntimeMode::Flutter || self.flutter_claimed.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn is_notification_runtime(&self) -> bool {
+        self.runtime_mode == RuntimeMode::Notification
+            && !self.flutter_claimed.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn foreground_runtime(&self) -> Option<tokio::runtime::Handle> {
+        self.is_flutter_runtime()
+            .then(|| self.foreground_runtime.get().cloned())
+            .flatten()
     }
 
     pub(super) fn get_static() -> Result<&'static Arc<Context>> {

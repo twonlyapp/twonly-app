@@ -11,8 +11,9 @@
 //! background or was relaunched without its UI.
 
 use crate::error::{Result, TwonlyError};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{LazyLock, Mutex};
 
 /// One render request. The overlay is a pre-rasterised PNG the size of the
 /// video frame; the editor draws it once when the user hits send. Owned so the
@@ -25,20 +26,60 @@ pub(crate) struct RenderRequest {
     pub overlay: Option<PathBuf>,
     pub output: PathBuf,
     pub remove_audio: bool,
+    /// Where the editor's cutter placed the two ends, in milliseconds into the
+    /// recording. `None` keeps that end. Both platforms take the cut as part of
+    /// the same pass that composites and encodes, so trimming costs nothing on
+    /// top of a render that was going to happen anyway.
+    pub trim_start_ms: Option<i64>,
+    pub trim_end_ms: Option<i64>,
+}
+
+/// The bounds as the platform entry points take them: milliseconds, with a
+/// negative value standing for "not cut on this end". Keeping the C and JNI
+/// signatures to plain integers avoids an optional across either boundary.
+#[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
+impl RenderRequest {
+    fn trim_start_or_negative(&self) -> i64 {
+        self.trim_start_ms.unwrap_or(-1)
+    }
+
+    fn trim_end_or_negative(&self) -> i64 {
+        self.trim_end_ms.unwrap_or(-1)
+    }
 }
 
 /// The platform reports progress from its own thread — Android's main looper,
-/// a GCD timer on iOS — which is not inside the async runtime. Spawning from
-/// there would panic, and a panic unwinding back through the C ABI aborts the
-/// process, so the runtime is captured while still on a Rust thread.
+/// a GCD timer on iOS — which is not inside the async runtime. Keep the runtime
+/// for each active render only. A process-wide `OnceLock<Handle>` used to retain
+/// the first WorkManager runtime forever, even after that runtime was destroyed.
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-static RUNTIME: OnceLock<tokio::runtime::Handle> = OnceLock::new();
+static PROGRESS_RUNTIMES: LazyLock<Mutex<HashMap<String, tokio::runtime::Handle>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
-fn remember_runtime() {
-    if let Ok(handle) = tokio::runtime::Handle::try_current() {
-        let _ = RUNTIME.set(handle);
+struct ProgressRuntimeGuard {
+    media_id: String,
+}
+
+#[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
+impl Drop for ProgressRuntimeGuard {
+    fn drop(&mut self) {
+        if let Ok(mut runtimes) = PROGRESS_RUNTIMES.lock() {
+            runtimes.remove(&self.media_id);
+        }
     }
+}
+
+#[cfg_attr(not(any(target_os = "android", target_os = "ios")), allow(dead_code))]
+fn remember_runtime(media_id: &str) -> Option<ProgressRuntimeGuard> {
+    let handle = tokio::runtime::Handle::try_current().ok()?;
+    PROGRESS_RUNTIMES
+        .lock()
+        .ok()?
+        .insert(media_id.to_owned(), handle);
+    Some(ProgressRuntimeGuard {
+        media_id: media_id.to_owned(),
+    })
 }
 
 /// Reports transcoding progress back into the media row so the send state in
@@ -48,25 +89,32 @@ fn report_progress(media_id: &str, percent: i64) {
     let Ok(ctx) = crate::context::Context::get_static() else {
         return;
     };
-    let Some(runtime) = RUNTIME.get() else {
+    let Some(runtime) = PROGRESS_RUNTIMES
+        .lock()
+        .ok()
+        .and_then(|runtimes| runtimes.get(media_id).cloned())
+    else {
         return;
     };
     let ctx = ctx.clone();
     let media_id = media_id.to_owned();
     runtime.spawn(async move {
         let database = ctx.app_db.read().await.clone();
-        let _ =
+        if let Err(error) =
             sqlx::query("UPDATE media_files SET pre_progressing_process = ? WHERE media_id = ?")
                 .bind(percent.clamp(0, 100))
                 .bind(&media_id)
                 .execute(&database.pool)
-                .await;
+                .await
+        {
+            tracing::warn!(media_id, %error, "could not store video render progress");
+        }
     });
 }
 
 #[cfg(target_os = "ios")]
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
-    remember_runtime();
+    let _progress_runtime = remember_runtime(&request.media_id);
     use std::ffi::{CStr, CString};
     use std::os::raw::{c_char, c_int};
 
@@ -76,6 +124,8 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
         *const c_char,
         *const c_char,
         bool,
+        i64,
+        i64,
         *const c_char,
         ProgressCallback,
     ) -> bool;
@@ -126,6 +176,8 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
                 .map_or(std::ptr::null(), |path| path.as_ptr()),
             output.as_ptr(),
             request.remove_audio,
+            request.trim_start_or_negative(),
+            request.trim_end_or_negative(),
             media_id.as_ptr(),
             progress,
         )
@@ -141,7 +193,7 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
 
 #[cfg(target_os = "android")]
 pub(crate) fn render(request: &RenderRequest) -> Result<()> {
-    remember_runtime();
+    let _progress_runtime = remember_runtime(&request.media_id);
     use crate::native::transfer::android::{jni_env, video_codec_class};
     use jni::objects::{JObject, JValue};
 
@@ -163,12 +215,14 @@ pub(crate) fn render(request: &RenderRequest) -> Result<()> {
         .call_static_method(
             class,
             "render",
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;)Z",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZJJLjava/lang/String;)Z",
             &[
                 JValue::Object(&input),
                 JValue::Object(&overlay),
                 JValue::Object(&output),
                 JValue::Bool(u8::from(request.remove_audio)),
+                JValue::Long(request.trim_start_or_negative()),
+                JValue::Long(request.trim_end_or_negative()),
                 JValue::Object(&media_id),
             ],
         )

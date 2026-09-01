@@ -45,8 +45,6 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> with WidgetsBindingObserver {
-  bool _wasPaused = false;
-
   @override
   void initState() {
     super.initState();
@@ -58,22 +56,30 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      if (_wasPaused) {
-        AppState.isAppInBackground = false;
-        twonlyDB.markUpdated();
-        unawaited(
-          rust_api.RustApi.setBackground(inBackground: false),
-        );
-        // The notification service extension wrote to the outbox while the app
-        // was suspended, and its Rust change broadcast never reached this
-        // process, so the badge has to be re-read on the way back in.
-        unawaited(NativeNotificationService.refreshBadgeCount());
-      }
+      AppState.isAppInBackground = false;
+      twonlyDB.markUpdated();
+      // Resuming can follow `inactive` without a `paused` event. Always notify
+      // Rust so every transition back to a focused app gets an immediate
+      // WebSocket attempt.
+      unawaited(
+        rust_api.RustApi.setBackground(inBackground: false),
+      );
+      // The notification service extension wrote to the outbox while the app
+      // was suspended, and its Rust change broadcast never reached this
+      // process, so the badge has to be re-read on the way back in.
+      unawaited(NativeNotificationService.refreshBadgeCount());
     } else if (state == AppLifecycleState.paused) {
-      _wasPaused = true;
       AppState.isAppInBackground = true;
       unawaited(
         rust_api.RustApi.setBackground(inBackground: true),
+      );
+    } else if (state == AppLifecycleState.detached) {
+      // Last chance before the engine goes away: hand anything still unsent to
+      // the OS, which delivers it once there is a network again whether or not
+      // this process is ever started back up. A no-op when `paused` already
+      // did it.
+      unawaited(
+        rust_api.RustApi.handOutboxToOs(),
       );
     }
   }

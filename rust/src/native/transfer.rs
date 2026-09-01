@@ -40,12 +40,14 @@ pub(crate) mod android {
     use std::sync::OnceLock;
 
     const TRANSFER_CLASS: &str = "eu/twonly/directmedia/DirectMediaTransfer";
+    const PREPARE_CLASS: &str = "eu/twonly/directmedia/DirectMediaPrepare";
     const MEDIA_CODEC_CLASS: &str = "eu/twonly/media/NativeImageCodec";
     const VIDEO_CODEC_CLASS: &str = "eu/twonly/media/NativeVideoCodec";
     const GALLERY_CLASS: &str = "eu/twonly/media/NativeGallery";
 
     static JAVA_VM: OnceLock<JavaVM> = OnceLock::new();
     static TRANSFER: OnceLock<GlobalRef> = OnceLock::new();
+    static PREPARE: OnceLock<GlobalRef> = OnceLock::new();
     static MEDIA_CODEC: OnceLock<GlobalRef> = OnceLock::new();
     static VIDEO_CODEC: OnceLock<GlobalRef> = OnceLock::new();
     static GALLERY: OnceLock<GlobalRef> = OnceLock::new();
@@ -65,6 +67,7 @@ pub(crate) mod android {
             Ok(mut env) => {
                 for (name, cache) in [
                     (TRANSFER_CLASS, &TRANSFER),
+                    (PREPARE_CLASS, &PREPARE),
                     (MEDIA_CODEC_CLASS, &MEDIA_CODEC),
                     (VIDEO_CODEC_CLASS, &VIDEO_CODEC),
                     (GALLERY_CLASS, &GALLERY),
@@ -102,6 +105,10 @@ pub(crate) mod android {
                     .map_or("JNI_OnLoad never ran", String::as_str)
             ))
         })
+    }
+
+    pub(crate) fn prepare_class() -> Result<&'static GlobalRef> {
+        cached_class(&PREPARE, PREPARE_CLASS)
     }
 
     pub(crate) fn media_codec_class() -> Result<&'static GlobalRef> {

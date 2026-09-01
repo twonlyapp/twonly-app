@@ -56,9 +56,12 @@ android {
             applicationIdSuffix ".testing"
             manifestPlaceholders = [appName: "twonly [dev]"]
         }
-        // profile {
-        //     applicationIdSuffix ".STOP"
-        // }
+        profile {
+            // Profile builds are installed while profiling production-like
+            // performance. They must never replace the store app.
+            applicationIdSuffix ".testing"
+            manifestPlaceholders = [appName: "twonly [profile]"]
+        }
         release {
             shrinkResources false
             minifyEnabled false

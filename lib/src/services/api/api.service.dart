@@ -49,9 +49,7 @@ class ApiService {
   Future<void> onAuthenticated() async {
     await FcmNotificationService.initFCMAfterAuthenticated();
 
-    if (AppState.isInBackgroundTask) {
-      await rust_api.RustApi.reuploadPendingMedia();
-    } else if (!AppState.isAppInBackground) {
+    if (!AppState.isAppInBackground) {
       unawaitedRustCall(
         rust_api.RustApi.reuploadPendingMedia(),
         'reuploadPendingMedia',

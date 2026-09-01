@@ -41,6 +41,8 @@ enum NativeVideoCodec {
     overlayPath: String?,
     outputPath: String,
     removeAudio: Bool,
+    trimStartMs: Int64,
+    trimEndMs: Int64,
     onProgress: @escaping (Int) -> Void
   ) -> Bool {
     let asset = AVURLAsset(url: URL(fileURLWithPath: inputPath))
@@ -79,7 +81,11 @@ enum NativeVideoCodec {
     )
 
     do {
+      let trim = trimRange(for: asset, startMs: trimStartMs, endMs: trimEndMs)
       let reader = try AVAssetReader(asset: asset)
+      // Every output of a reader is bounded by this, so the cut costs nothing
+      // beyond the samples it stops the decoder from reading.
+      reader.timeRange = trim
       let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
       writer.shouldOptimizeForNetworkUse = true
 
@@ -150,15 +156,20 @@ enum NativeVideoCodec {
       }
 
       guard reader.startReading(), writer.startWriting() else { return false }
-      writer.startSession(atSourceTime: .zero)
+      // Samples keep the timestamps they had in the recording, so the session
+      // has to start where the cut does. Starting it at zero would prepend the
+      // trimmed-off head as an empty edit instead of removing it.
+      writer.startSession(atSourceTime: trim.start)
 
-      let duration = CMTimeGetSeconds(asset.duration)
+      let startSeconds = CMTimeGetSeconds(trim.start)
+      let duration = CMTimeGetSeconds(trim.duration)
       let group = DispatchGroup()
       pump(
         input: videoInput,
         output: videoOutput,
         label: "video",
         group: group,
+        startSeconds: startSeconds,
         duration: duration,
         onProgress: onProgress
       )
@@ -168,6 +179,7 @@ enum NativeVideoCodec {
           output: audioOutput,
           label: "audio",
           group: group,
+          startSeconds: 0,
           duration: nil,
           onProgress: nil
         )
@@ -267,11 +279,36 @@ enum NativeVideoCodec {
     )
   }
 
+  /// The slice of the recording the editor's cutter selected.
+  ///
+  /// Bounds arrive as milliseconds, with a negative value meaning the clip
+  /// keeps that end. Anything that does not describe a real slice - a start
+  /// past the end of the clip, an inverted pair, a zero-length result - falls
+  /// back to the whole asset: sending the untrimmed moment beats sending an
+  /// empty file.
+  private static func trimRange(for asset: AVAsset, startMs: Int64, endMs: Int64) -> CMTimeRange {
+    let whole = CMTimeRange(start: .zero, duration: asset.duration)
+    guard startMs > 0 || endMs > 0 else { return whole }
+
+    let milliseconds: CMTimeScale = 1000
+    let requestedStart =
+      startMs > 0 ? CMTime(value: CMTimeValue(startMs), timescale: milliseconds) : .zero
+    let requestedEnd =
+      endMs > 0 ? CMTime(value: CMTimeValue(endMs), timescale: milliseconds) : asset.duration
+
+    let start = CMTimeMaximum(.zero, CMTimeMinimum(requestedStart, asset.duration))
+    let end = CMTimeMinimum(requestedEnd, asset.duration)
+    let duration = CMTimeSubtract(end, start)
+    guard duration.isValid, CMTimeGetSeconds(duration) > 0 else { return whole }
+    return CMTimeRange(start: start, duration: duration)
+  }
+
   private static func pump(
     input: AVAssetWriterInput,
     output: AVAssetReaderOutput,
     label: String,
     group: DispatchGroup,
+    startSeconds: Double,
     duration: Double?,
     onProgress: ((Int) -> Void)?
   ) {
@@ -285,8 +322,11 @@ enum NativeVideoCodec {
           return
         }
         if let duration, duration > 0, let onProgress {
+          // Timestamps are still the recording's, so the trimmed-off head has
+          // to come off before this is a fraction of the work being done.
           let seconds = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sample))
-          onProgress(Int((seconds / duration * 100).rounded()))
+          let done = (seconds - startSeconds) / duration
+          onProgress(Int((min(max(done, 0), 1) * 100).rounded()))
         }
         input.append(sample)
       }
@@ -301,6 +341,8 @@ func twonlyRenderVideo(
   _ overlay: UnsafePointer<CChar>?,
   _ output: UnsafePointer<CChar>?,
   _ removeAudio: Bool,
+  _ trimStartMs: Int64,
+  _ trimEndMs: Int64,
   _ mediaId: UnsafePointer<CChar>?,
   _ progress: @convention(c) (UnsafePointer<CChar>?, Int32) -> Void
 ) -> Bool {
@@ -311,6 +353,8 @@ func twonlyRenderVideo(
     overlayPath: overlay.map { String(cString: $0) },
     outputPath: String(cString: output),
     removeAudio: removeAudio,
+    trimStartMs: trimStartMs,
+    trimEndMs: trimEndMs,
     onProgress: { percent in
       mediaIdString.withCString { progress($0, Int32(percent)) }
     }

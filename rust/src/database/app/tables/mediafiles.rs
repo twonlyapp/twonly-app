@@ -32,20 +32,24 @@ impl MediaFile {
     /// Single owner of the "media reached the server" transition. The state
     /// change, the per-recipient message actions, and the receipt bookkeeping
     /// have to become visible together, so they share one transaction.
+    ///
+    /// Every statement below is written to touch only the rows that still need
+    /// it, because this runs more than once for the same media: the upload
+    /// settles it, and a receiver's response or reaction can arrive later and
+    /// settle it again. It must not short-circuit on the media row already
+    /// being `uploaded` - a message added to a media that was uploaded earlier
+    /// would then never leave the "sending" state, however long ago the
+    /// recipient received it.
     pub async fn mark_uploaded(
         transaction: &mut Transaction<'_, Sqlite>,
         media_id: &str,
     ) -> Result<()> {
-        let updated = sqlx::query!(
+        sqlx::query!(
             "UPDATE media_files SET upload_state = 'uploaded' WHERE media_id = ? AND upload_state IS NOT 'uploaded'",
             media_id,
         )
         .execute(&mut **transaction)
-        .await?
-        .rows_affected();
-        if updated == 0 {
-            return Ok(());
-        }
+        .await?;
 
         let now = chrono::Utc::now().timestamp();
         sqlx::query!(
@@ -56,8 +60,10 @@ impl MediaFile {
             JOIN group_members ON group_members.group_id = messages.group_id
             WHERE messages.media_id = ?
               AND (group_members.member_state IS NULL OR group_members.member_state != 'leftGroup')
+            -- The first acknowledgement is the true one; a later settle of the
+            -- same media must not move a timestamp that already stands.
             ON CONFLICT(message_id, contact_id, type)
-            DO UPDATE SET action_at = excluded.action_at
+            DO NOTHING
             "#,
             now,
             media_id,
@@ -65,19 +71,21 @@ impl MediaFile {
         .execute(&mut **transaction)
         .await?;
 
-        sqlx::query!(
-            "UPDATE messages SET ack_by_server = ? WHERE media_id = ?",
+        let acknowledged = sqlx::query!(
+            "UPDATE messages SET ack_by_server = ? WHERE media_id = ? AND ack_by_server IS NULL",
             now,
             media_id,
         )
         .execute(&mut **transaction)
-        .await?;
+        .await?
+        .rows_affected();
 
         sqlx::query!(
             r#"
             UPDATE receipts
             SET ack_by_server_at = ?, retry_count = 1, last_retry = ?, mark_for_retry = NULL
-            WHERE EXISTS(
+            WHERE ack_by_server_at IS NULL
+              AND EXISTS(
                 SELECT 1
                 FROM messages
                 JOIN group_members ON group_members.group_id = messages.group_id
@@ -94,10 +102,13 @@ impl MediaFile {
         .execute(&mut **transaction)
         .await?;
 
-        tracing::info!(
-            media_id,
-            "marked media upload as successful after receiver response"
-        );
+        if acknowledged > 0 {
+            tracing::info!(
+                media_id,
+                acknowledged,
+                "marked media upload as successful after receiver response"
+            );
+        }
         Ok(())
     }
 }

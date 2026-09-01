@@ -15,6 +15,7 @@ use crate::context::Context;
 use crate::database::app::tables::{Group, MediaFile};
 use crate::error::{Result, TwonlyError};
 use crate::native::gallery;
+use crate::native::prepare;
 use crate::native::video;
 use crate::services::direct_media_upload::DirectMediaUploadService;
 use crate::services::media_codec;
@@ -66,6 +67,8 @@ struct MediaRow {
     display_limit_in_milliseconds: Option<i64>,
     reupload_requested_by: Option<String>,
     remove_audio: Option<i64>,
+    trim_start_ms: Option<i64>,
+    trim_end_ms: Option<i64>,
     created_at: i64,
 }
 
@@ -202,12 +205,100 @@ impl MediaUploadService {
 
         // Preparation compresses and encrypts, which is far too slow to keep the
         // send button blocked; the media row is already durable at this point.
-        let ctx = self.ctx.clone();
-        tokio::spawn(async move {
-            if let Err(error) = MediaUploadService::new(&ctx).start_upload(&media_id).await {
-                tracing::warn!(media_id, %error, "starting the media upload failed");
+        // It is also the only part of a send that no OS transfer is carrying
+        // yet, so it is handed to the platform rather than left in a bare task
+        // that dies with the process.
+        self.spawn_preparation(media_id);
+        Ok(())
+    }
+
+    /// Runs `start_upload` under whatever protection the platform offers. On
+    /// Android the work itself moves into a `WorkManager` job and nothing is
+    /// started here.
+    fn spawn_preparation(&self, media_id: String) {
+        match prepare::begin(&media_id) {
+            prepare::Preparation::Scheduled => {
+                tracing::info!(media_id, "handed media preparation to the OS");
             }
-        });
+            prepare::Preparation::InProcess(guard) => {
+                let ctx = self.ctx.clone();
+                tokio::spawn(async move {
+                    // Held for the whole preparation: dropping it tells the
+                    // platform this process no longer needs to keep running.
+                    let _guard = guard;
+                    match MediaUploadService::new(&ctx).start_upload(&media_id).await {
+                        Ok(()) => {
+                            // This branch runs on the application's long-lived
+                            // runtime (iOS and desktop). Android preparation is
+                            // scheduled through WorkManager and reconciles
+                            // durably there instead.
+                            crate::services::direct_media_upload::watch_pending_uploads(&ctx);
+                        }
+                        Err(error) => {
+                            tracing::warn!(media_id, %error, "starting the media upload failed");
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /// Transcodes a captured video before the user has chosen recipients.
+    ///
+    /// A hardware transcode is by far the longest thing between the send button
+    /// and the point where the OS owns the transfer, and it does not depend on
+    /// anything the editor produces. Doing it up front leaves the send with
+    /// nothing but an encryption pass, which is short enough to finish inside
+    /// the grace period a closing app gets.
+    ///
+    /// The result is only used when the editor's final state agrees with it,
+    /// so a user who does draw on the clip pays for a wasted render rather than
+    /// getting a second encoding pass over an already encoded file.
+    pub async fn prerender(&self, media_id: &str) -> Result<()> {
+        let lock = media_lock(media_id);
+        let _guard = lock.lock().await;
+
+        let Some(media) = self.load(media_id).await? else {
+            return Ok(());
+        };
+        // Anything past `initialized` is either being sent or already sent, and
+        // a pre-render would race the send for the same output file.
+        if media.media_type != "video" || media.upload_state.as_deref() != Some("initialized") {
+            return Ok(());
+        }
+        let files = MediaFileService::new(&self.ctx);
+        let fingerprint = render_fingerprint(&media);
+        if files.prerender_matches(media_id, &fingerprint) {
+            return Ok(());
+        }
+        let original = files.original_path(media_id, &media.media_type);
+        if !original.exists() {
+            return Ok(());
+        }
+        // A marker from earlier settings would otherwise outlive its clip.
+        files.discard_prerender(media_id);
+
+        let output = files.prerendered_path(media_id);
+        MediaFileService::ensure_parent(&output)?;
+        let (trim_start_ms, trim_end_ms) = trim_bounds(&media);
+        let request = video::RenderRequest {
+            media_id: media_id.to_owned(),
+            input: original,
+            overlay: None,
+            output: output.clone(),
+            remove_audio: media.remove_audio.unwrap_or(0) != 0,
+            trim_start_ms,
+            trim_end_ms,
+        };
+        if let Err(error) = blocking(move || video::render(&request)).await {
+            // The send path renders from the original, so this costs nothing
+            // beyond the time already spent.
+            tracing::info!(media_id, %error, "pre-rendering the video failed");
+            remove_file(&output);
+            return Ok(());
+        }
+        files.write_prerender_marker(media_id, &fingerprint)?;
+        tracing::info!(media_id, "pre-rendered the captured video");
         Ok(())
     }
 
@@ -318,7 +409,7 @@ impl MediaUploadService {
         let pending = sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
                       is_draft_media, display_limit_in_milliseconds, reupload_requested_by,
-                      remove_audio, created_at
+                      remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files
                WHERE upload_state IN
                      ('initialized', 'preprocessing', 'uploading', 'uploadLimitReached')"#,
@@ -861,6 +952,28 @@ impl MediaUploadService {
         Ok(())
     }
 
+    /// Stores where the editor's cutter placed the two ends of a video.
+    ///
+    /// Both bounds are milliseconds into the recording; `None` means the clip
+    /// keeps that end. The recording itself is never rewritten - the transcode
+    /// every send performs applies the cut - so this stays reversible for as
+    /// long as the editor is open.
+    pub async fn set_trim(
+        &self,
+        media_id: &str,
+        trim_start_ms: Option<i64>,
+        trim_end_ms: Option<i64>,
+    ) -> Result<()> {
+        let database = self.ctx.app_db.read().await.clone();
+        sqlx::query("UPDATE media_files SET trim_start_ms = ?, trim_end_ms = ? WHERE media_id = ?")
+            .bind(trim_start_ms)
+            .bind(trim_end_ms)
+            .bind(media_id)
+            .execute(&database.pool)
+            .await?;
+        Ok(())
+    }
+
     pub async fn toggle_remove_audio(&self, media_id: &str) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
         sqlx::query(
@@ -869,6 +982,11 @@ impl MediaUploadService {
         .bind(media_id)
         .execute(&database.pool)
         .await?;
+        drop(database);
+        // The pre-rendered clip carries the old audio decision, and
+        // `prerender_matches` would reject it anyway; dropping it now frees the
+        // space and lets a fresh pre-render start.
+        MediaFileService::new(&self.ctx).discard_prerender(media_id);
         Ok(())
     }
 
@@ -956,7 +1074,7 @@ impl MediaUploadService {
         Ok(sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
                       is_draft_media, display_limit_in_milliseconds, reupload_requested_by,
-                      remove_audio, created_at
+                      remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files WHERE media_id = ?"#,
         )
         .bind(media_id)
@@ -989,15 +1107,28 @@ impl MediaUploadService {
             "video" => self.render_video(media, &original, &temp).await,
             "image" => {
                 let (source, destination) = (original.clone(), temp.clone());
-                if let Err(error) =
-                    blocking(move || media_codec::compress_for_send(&source, &destination)).await
+                let started = std::time::Instant::now();
+                let mut used_uncompressed_fallback = false;
+                match blocking(move || media_codec::compress_for_send(&source, &destination)).await
                 {
-                    // Sending the original beats not sending at all, which is
-                    // what the Flutter implementation did on a codec failure.
-                    tracing::warn!(media_id = media.media_id, %error, "sending the uncompressed image");
-                    MediaFileService::ensure_parent(&temp)?;
-                    std::fs::copy(&original, &temp)?;
+                    Ok(()) => {}
+                    Err(error) => {
+                        // Sending the original beats not sending at all, which is
+                        // what the Flutter implementation did on a codec failure.
+                        tracing::warn!(media_id = media.media_id, %error, "sending the uncompressed image");
+                        MediaFileService::ensure_parent(&temp)?;
+                        std::fs::copy(&original, &temp)?;
+                        used_uncompressed_fallback = true;
+                    }
                 }
+                tracing::info!(
+                    media_id = media.media_id,
+                    source_bytes = file_size_or_zero(&original),
+                    output_bytes = file_size_or_zero(&temp),
+                    used_uncompressed_fallback,
+                    total_ms = started.elapsed().as_millis() as u64,
+                    "image compression phase finished"
+                );
                 Ok(())
             }
             // GIF keeps its animation and audio is already in its delivery
@@ -1016,16 +1147,54 @@ impl MediaUploadService {
     async fn render_video(&self, media: &MediaRow, original: &Path, temp: &Path) -> Result<()> {
         let files = MediaFileService::new(&self.ctx);
         let overlay = files.overlay_image_path(&media.media_id);
-        let overlay = overlay.exists().then_some(overlay);
+        // The editor writes an overlay for every video, including one nobody
+        // drew on. Compositing a fully transparent layer produces the same
+        // frames, and recognising that is what lets a pre-rendered clip be sent
+        // without touching an encoder. A file that cannot be read is treated as
+        // meaningful, so an unreadable overlay never silently drops artwork.
+        let overlay = if overlay.exists() {
+            let path = overlay.clone();
+            let visible = blocking(move || media_codec::has_visible_content(&path))
+                .await
+                .unwrap_or_else(|error| {
+                    tracing::warn!(media_id = media.media_id, %error, "could not inspect the overlay");
+                    true
+                });
+            visible.then_some(overlay)
+        } else {
+            None
+        };
+
+        let remove_audio = media.remove_audio.unwrap_or(0) != 0;
+        if overlay.is_none() && files.prerender_matches(&media.media_id, &render_fingerprint(media))
+        {
+            // The clip the editor was opened on is the clip that gets sent.
+            MediaFileService::ensure_parent(temp)?;
+            match std::fs::rename(files.prerendered_path(&media.media_id), temp) {
+                Ok(()) => {
+                    tracing::info!(media_id = media.media_id, "sending the pre-rendered video");
+                    files.discard_prerender(&media.media_id);
+                    return Ok(());
+                }
+                Err(error) => {
+                    tracing::warn!(media_id = media.media_id, %error, "could not use the pre-rendered video");
+                }
+            }
+        }
+        files.discard_prerender(&media.media_id);
+
         // Every clip is rendered, including small ones with no overlay. What a
         // camera produces varies by device and is not guaranteed to play on the
         // other platform; the render is what makes the output predictable.
+        let (trim_start_ms, trim_end_ms) = trim_bounds(media);
         let request = video::RenderRequest {
             media_id: media.media_id.clone(),
             input: original.to_path_buf(),
             overlay,
             output: temp.to_path_buf(),
-            remove_audio: media.remove_audio.unwrap_or(0) != 0,
+            remove_audio,
+            trim_start_ms,
+            trim_end_ms,
         };
         let media_id = media.media_id.clone();
         if let Err(error) = blocking(move || video::render(&request)).await {
@@ -1141,6 +1310,39 @@ impl MediaUploadService {
     }
 }
 
+/// Everything the video transcode reads off the media row.
+///
+/// A clip pre-rendered while the user was still editing may only be sent when
+/// the editor's final state asks for exactly the same render, so this is the
+/// one description both sides compare. **Any new input the render starts to
+/// honour — a trim, a speed change, a filter — has to be added here in the same
+/// change, or a pre-rendered clip will be sent ignoring it.**
+fn render_fingerprint(media: &MediaRow) -> String {
+    // A plain string rather than a struct: it is only ever compared, never
+    // read back, and a stable textual form makes a stale marker obvious in a
+    // temp directory listing.
+    let (start, end) = trim_bounds(media);
+    format!(
+        "v2;remove_audio={};trim={}..{}",
+        media.remove_audio.unwrap_or(0) != 0,
+        start.map_or_else(|| "-".to_owned(), |value| value.to_string()),
+        end.map_or_else(|| "-".to_owned(), |value| value.to_string()),
+    )
+}
+
+/// The cut the editor asked for, as milliseconds into the recording.
+///
+/// A bound is dropped when it cannot describe a cut: a negative offset, or an
+/// end at or before the start. The renderers are handed the raw numbers, so a
+/// nonsensical pair here would produce an empty clip rather than a whole one.
+fn trim_bounds(media: &MediaRow) -> (Option<i64>, Option<i64>) {
+    let start = media.trim_start_ms.filter(|value| *value > 0);
+    let end = media
+        .trim_end_ms
+        .filter(|value| *value > start.unwrap_or(0));
+    (start, end)
+}
+
 /// Image codecs are CPU-bound: a full-resolution photo takes long enough to
 /// encode that it must not run on an async worker.
 async fn blocking<F, T>(task: F) -> Result<T>
@@ -1159,6 +1361,12 @@ fn remove_file(path: &Path) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
         Err(error) => tracing::warn!(path = %path.display(), %error, "could not remove file"),
     }
+}
+
+fn file_size_or_zero(path: &Path) -> u64 {
+    std::fs::metadata(path)
+        .map(|metadata| metadata.len())
+        .unwrap_or(0)
 }
 
 /// Drift persists this column as a JSON array of contact ids. Tolerate the

@@ -283,9 +283,13 @@ where
                 tracing::Level::WARN => "\x1b[33m",
                 tracing::Level::ERROR => "\x1b[31m",
             };
-            write!(writer, "{level_color}{:<5}\x1b[0m ", metadata.level())?;
+            write!(
+                writer,
+                "{level_color}{:<5}\x1b[0m [twonly] ",
+                metadata.level()
+            )?;
         } else {
-            write!(writer, "{time} {:<5} ", metadata.level())?;
+            write!(writer, "{time} {:<5} [twonly] ", metadata.level())?;
         }
 
         if ansi {

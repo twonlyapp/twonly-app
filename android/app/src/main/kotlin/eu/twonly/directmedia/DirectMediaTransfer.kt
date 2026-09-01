@@ -13,7 +13,12 @@ import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 
 /** Called directly from Rust/JNI. It persists the descriptor in app-private
- * storage and enqueues both OS-owned transfers before reporting success. */
+ * storage and enqueues every OS-owned transfer it names before reporting
+ * success.
+ *
+ * A descriptor carries a `media` request and, for a media upload, a `manifest`
+ * alongside it. A queued message envelope is the single-request form: there is
+ * nothing to describe beyond the POST itself. */
 object DirectMediaTransfer {
     @JvmStatic
     fun schedule(descriptorJson: String): Boolean = try {
@@ -28,13 +33,15 @@ object DirectMediaTransfer {
 
         val manager = WorkManager.getInstance(MyApplication.instance)
         val media = request(attachmentId, "media", descriptorFile, expiresAt)
-        val manifest = request(attachmentId, "manifest", descriptorFile, expiresAt)
         manager.enqueueUniqueWork("direct-media-$attachmentId-media", ExistingWorkPolicy.KEEP, media)
-        manager.enqueueUniqueWork(
-            "direct-media-$attachmentId-manifest",
-            ExistingWorkPolicy.KEEP,
-            manifest,
-        )
+        if (descriptor.has("manifest")) {
+            val manifest = request(attachmentId, "manifest", descriptorFile, expiresAt)
+            manager.enqueueUniqueWork(
+                "direct-media-$attachmentId-manifest",
+                ExistingWorkPolicy.KEEP,
+                manifest,
+            )
+        }
         true
     } catch (_: Throwable) {
         false

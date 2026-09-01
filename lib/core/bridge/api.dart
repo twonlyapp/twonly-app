@@ -443,6 +443,11 @@ class RustApi {
     username: username,
   );
 
+  /// Hands every queued envelope to an OS-owned transfer. Used when the app
+  /// is being torn down while messages are still unsent.
+  static Future<void> handOutboxToOs() =>
+      RustLib.instance.api.crateBridgeApiRustApiHandOutboxToOs();
+
   /// Creates the media row and its content-encryption material and returns
   /// the media id the UI addresses every later step by.
   static Future<String> initializeMediaUpload({
@@ -540,6 +545,13 @@ class RustApi {
       .instance
       .api
       .crateBridgeApiRustApiPerformPasswordlessRecoveryHeartbeat();
+
+  /// Transcodes a captured video while the user is still editing it, so the
+  /// send itself only has to encrypt and hand over.
+  static Future<void> prerenderMedia({required String mediaId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiPrerenderMedia(mediaId: mediaId);
 
   /// Deletes temporary media whose messages are finished with it.
   static Future<void> purgeMediaTempFolder() =>
@@ -735,6 +747,18 @@ class RustApi {
         mediaId: mediaId,
         requiresAuthentication: requiresAuthentication,
       );
+
+  /// Stores the cut the editor's video trimmer asked for. Both bounds are
+  /// milliseconds into the recording, `None` keeps that end of the clip.
+  static Future<void> setMediaTrim({
+    required String mediaId,
+    PlatformInt64? trimStartMs,
+    PlatformInt64? trimEndMs,
+  }) => RustLib.instance.api.crateBridgeApiRustApiSetMediaTrim(
+    mediaId: mediaId,
+    trimStartMs: trimStartMs,
+    trimEndMs: trimEndMs,
+  );
 
   static Future<void> setNetworkAvailable({required bool available}) => RustLib
       .instance
