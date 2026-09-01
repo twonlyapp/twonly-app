@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
@@ -35,7 +34,6 @@ import 'package:twonly/src/visual/views/camera/camera_preview_components/send_to
 import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_budget.dart';
 import 'package:twonly/src/visual/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor.view.dart';
-import 'package:twonly/src/visual/views/camera/share_image_editor_components/action_button.dart';
 import 'package:twonly/src/visual/views/home.view.dart';
 
 class SelectedCameraDetails {
@@ -764,10 +762,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     return StreamBuilder(
       stream: userService.onUserUpdated,
       builder: (context, asyncSnapshot) {
-        return MediaViewSizingHelper(
-          requiredHeight: 0,
-          additionalPadding: 59,
-          bottomNavigation: Container(),
+        return MediaViewSizingHelper.cameraEditor(
+          bottomNavigation: const SizedBox.shrink(),
           child: GestureDetector(
             onPanStart: (details) async {
               setState(() {
@@ -891,19 +887,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   currentTime: _currentTime,
                   maxRecordingTime: _currentMaxRecordingTime,
                 ),
-                if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
-                    widget.hideControllers)
-                  Positioned(
-                    left: 5,
-                    top: 10,
-                    child: ActionButton(
-                      FontAwesomeIcons.xmark,
-                      tooltipText: context.lang.close,
-                      onPressed: () async {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
                 if (_showSelfieFlash) const CameraSelfieFlash(),
                 CameraScannedOverlay(mainController: mc),
               ],

@@ -11427,488 +11427,12 @@ class UserDiscoverySharesCompanion extends UpdateCompanion<UserDiscoveryShare> {
   }
 }
 
-class $ShortcutsTable extends Shortcuts
-    with TableInfo<$ShortcutsTable, Shortcut> {
+class $ContactGroupsTable extends ContactGroups
+    with TableInfo<$ContactGroupsTable, ContactGroup> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ShortcutsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
-  @override
-  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
-    'emoji',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
-  );
-  static const VerificationMeta _usageCounterMeta = const VerificationMeta(
-    'usageCounter',
-  );
-  @override
-  late final GeneratedColumn<int> usageCounter = GeneratedColumn<int>(
-    'usage_counter',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, emoji, usageCounter];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'shortcuts';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Shortcut> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('emoji')) {
-      context.handle(
-        _emojiMeta,
-        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_emojiMeta);
-    }
-    if (data.containsKey('usage_counter')) {
-      context.handle(
-        _usageCounterMeta,
-        usageCounter.isAcceptableOrUnknown(
-          data['usage_counter']!,
-          _usageCounterMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Shortcut map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Shortcut(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      emoji: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}emoji'],
-      )!,
-      usageCounter: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}usage_counter'],
-      )!,
-    );
-  }
-
-  @override
-  $ShortcutsTable createAlias(String alias) {
-    return $ShortcutsTable(attachedDatabase, alias);
-  }
-}
-
-class Shortcut extends DataClass implements Insertable<Shortcut> {
-  final int id;
-  final String emoji;
-  final int usageCounter;
-  const Shortcut({
-    required this.id,
-    required this.emoji,
-    required this.usageCounter,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['emoji'] = Variable<String>(emoji);
-    map['usage_counter'] = Variable<int>(usageCounter);
-    return map;
-  }
-
-  ShortcutsCompanion toCompanion(bool nullToAbsent) {
-    return ShortcutsCompanion(
-      id: Value(id),
-      emoji: Value(emoji),
-      usageCounter: Value(usageCounter),
-    );
-  }
-
-  factory Shortcut.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Shortcut(
-      id: serializer.fromJson<int>(json['id']),
-      emoji: serializer.fromJson<String>(json['emoji']),
-      usageCounter: serializer.fromJson<int>(json['usageCounter']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'emoji': serializer.toJson<String>(emoji),
-      'usageCounter': serializer.toJson<int>(usageCounter),
-    };
-  }
-
-  Shortcut copyWith({int? id, String? emoji, int? usageCounter}) => Shortcut(
-    id: id ?? this.id,
-    emoji: emoji ?? this.emoji,
-    usageCounter: usageCounter ?? this.usageCounter,
-  );
-  Shortcut copyWithCompanion(ShortcutsCompanion data) {
-    return Shortcut(
-      id: data.id.present ? data.id.value : this.id,
-      emoji: data.emoji.present ? data.emoji.value : this.emoji,
-      usageCounter: data.usageCounter.present
-          ? data.usageCounter.value
-          : this.usageCounter,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Shortcut(')
-          ..write('id: $id, ')
-          ..write('emoji: $emoji, ')
-          ..write('usageCounter: $usageCounter')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, emoji, usageCounter);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Shortcut &&
-          other.id == this.id &&
-          other.emoji == this.emoji &&
-          other.usageCounter == this.usageCounter);
-}
-
-class ShortcutsCompanion extends UpdateCompanion<Shortcut> {
-  final Value<int> id;
-  final Value<String> emoji;
-  final Value<int> usageCounter;
-  const ShortcutsCompanion({
-    this.id = const Value.absent(),
-    this.emoji = const Value.absent(),
-    this.usageCounter = const Value.absent(),
-  });
-  ShortcutsCompanion.insert({
-    this.id = const Value.absent(),
-    required String emoji,
-    this.usageCounter = const Value.absent(),
-  }) : emoji = Value(emoji);
-  static Insertable<Shortcut> custom({
-    Expression<int>? id,
-    Expression<String>? emoji,
-    Expression<int>? usageCounter,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (emoji != null) 'emoji': emoji,
-      if (usageCounter != null) 'usage_counter': usageCounter,
-    });
-  }
-
-  ShortcutsCompanion copyWith({
-    Value<int>? id,
-    Value<String>? emoji,
-    Value<int>? usageCounter,
-  }) {
-    return ShortcutsCompanion(
-      id: id ?? this.id,
-      emoji: emoji ?? this.emoji,
-      usageCounter: usageCounter ?? this.usageCounter,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (emoji.present) {
-      map['emoji'] = Variable<String>(emoji.value);
-    }
-    if (usageCounter.present) {
-      map['usage_counter'] = Variable<int>(usageCounter.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutsCompanion(')
-          ..write('id: $id, ')
-          ..write('emoji: $emoji, ')
-          ..write('usageCounter: $usageCounter')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ShortcutMembersTable extends ShortcutMembers
-    with TableInfo<$ShortcutMembersTable, ShortcutMember> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ShortcutMembersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _shortcutIdMeta = const VerificationMeta(
-    'shortcutId',
-  );
-  @override
-  late final GeneratedColumn<int> shortcutId = GeneratedColumn<int>(
-    'shortcut_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES shortcuts (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _groupIdMeta = const VerificationMeta(
-    'groupId',
-  );
-  @override
-  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-    'group_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
-    ),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [shortcutId, groupId];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'shortcut_members';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<ShortcutMember> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('shortcut_id')) {
-      context.handle(
-        _shortcutIdMeta,
-        shortcutId.isAcceptableOrUnknown(data['shortcut_id']!, _shortcutIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_shortcutIdMeta);
-    }
-    if (data.containsKey('group_id')) {
-      context.handle(
-        _groupIdMeta,
-        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_groupIdMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {shortcutId, groupId};
-  @override
-  ShortcutMember map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ShortcutMember(
-      shortcutId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}shortcut_id'],
-      )!,
-      groupId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}group_id'],
-      )!,
-    );
-  }
-
-  @override
-  $ShortcutMembersTable createAlias(String alias) {
-    return $ShortcutMembersTable(attachedDatabase, alias);
-  }
-}
-
-class ShortcutMember extends DataClass implements Insertable<ShortcutMember> {
-  final int shortcutId;
-  final String groupId;
-  const ShortcutMember({required this.shortcutId, required this.groupId});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['shortcut_id'] = Variable<int>(shortcutId);
-    map['group_id'] = Variable<String>(groupId);
-    return map;
-  }
-
-  ShortcutMembersCompanion toCompanion(bool nullToAbsent) {
-    return ShortcutMembersCompanion(
-      shortcutId: Value(shortcutId),
-      groupId: Value(groupId),
-    );
-  }
-
-  factory ShortcutMember.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ShortcutMember(
-      shortcutId: serializer.fromJson<int>(json['shortcutId']),
-      groupId: serializer.fromJson<String>(json['groupId']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'shortcutId': serializer.toJson<int>(shortcutId),
-      'groupId': serializer.toJson<String>(groupId),
-    };
-  }
-
-  ShortcutMember copyWith({int? shortcutId, String? groupId}) => ShortcutMember(
-    shortcutId: shortcutId ?? this.shortcutId,
-    groupId: groupId ?? this.groupId,
-  );
-  ShortcutMember copyWithCompanion(ShortcutMembersCompanion data) {
-    return ShortcutMember(
-      shortcutId: data.shortcutId.present
-          ? data.shortcutId.value
-          : this.shortcutId,
-      groupId: data.groupId.present ? data.groupId.value : this.groupId,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutMember(')
-          ..write('shortcutId: $shortcutId, ')
-          ..write('groupId: $groupId')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(shortcutId, groupId);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ShortcutMember &&
-          other.shortcutId == this.shortcutId &&
-          other.groupId == this.groupId);
-}
-
-class ShortcutMembersCompanion extends UpdateCompanion<ShortcutMember> {
-  final Value<int> shortcutId;
-  final Value<String> groupId;
-  final Value<int> rowid;
-  const ShortcutMembersCompanion({
-    this.shortcutId = const Value.absent(),
-    this.groupId = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  ShortcutMembersCompanion.insert({
-    required int shortcutId,
-    required String groupId,
-    this.rowid = const Value.absent(),
-  }) : shortcutId = Value(shortcutId),
-       groupId = Value(groupId);
-  static Insertable<ShortcutMember> custom({
-    Expression<int>? shortcutId,
-    Expression<String>? groupId,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (shortcutId != null) 'shortcut_id': shortcutId,
-      if (groupId != null) 'group_id': groupId,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  ShortcutMembersCompanion copyWith({
-    Value<int>? shortcutId,
-    Value<String>? groupId,
-    Value<int>? rowid,
-  }) {
-    return ShortcutMembersCompanion(
-      shortcutId: shortcutId ?? this.shortcutId,
-      groupId: groupId ?? this.groupId,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (shortcutId.present) {
-      map['shortcut_id'] = Variable<int>(shortcutId.value);
-    }
-    if (groupId.present) {
-      map['group_id'] = Variable<String>(groupId.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ShortcutMembersCompanion(')
-          ..write('shortcutId: $shortcutId, ')
-          ..write('groupId: $groupId, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $LabelsTable(this.attachedDatabase, [this._alias]);
+  $ContactGroupsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -11930,6 +11454,15 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _textColorMeta = const VerificationMeta(
     'textColor',
@@ -11953,6 +11486,48 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _showAsShortcutMeta = const VerificationMeta(
+    'showAsShortcut',
+  );
+  @override
+  late final GeneratedColumn<bool> showAsShortcut = GeneratedColumn<bool>(
+    'show_as_shortcut',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_as_shortcut" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _showAsLabelMeta = const VerificationMeta(
+    'showAsLabel',
+  );
+  @override
+  late final GeneratedColumn<bool> showAsLabel = GeneratedColumn<bool>(
+    'show_as_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_as_label" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _usageCounterMeta = const VerificationMeta(
+    'usageCounter',
+  );
+  @override
+  late final GeneratedColumn<int> usageCounter = GeneratedColumn<int>(
+    'usage_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -11969,18 +11544,22 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   List<GeneratedColumn> get $columns => [
     id,
     name,
+    emoji,
     textColor,
     backgroundColor,
+    showAsShortcut,
+    showAsLabel,
+    usageCounter,
     createdAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'labels';
+  static const String $name = 'contact_groups';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Label> instance, {
+    Insertable<ContactGroup> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -11995,6 +11574,12 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
     }
     if (data.containsKey('text_color')) {
       context.handle(
@@ -12015,6 +11600,33 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
     } else if (isInserting) {
       context.missing(_backgroundColorMeta);
     }
+    if (data.containsKey('show_as_shortcut')) {
+      context.handle(
+        _showAsShortcutMeta,
+        showAsShortcut.isAcceptableOrUnknown(
+          data['show_as_shortcut']!,
+          _showAsShortcutMeta,
+        ),
+      );
+    }
+    if (data.containsKey('show_as_label')) {
+      context.handle(
+        _showAsLabelMeta,
+        showAsLabel.isAcceptableOrUnknown(
+          data['show_as_label']!,
+          _showAsLabelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('usage_counter')) {
+      context.handle(
+        _usageCounterMeta,
+        usageCounter.isAcceptableOrUnknown(
+          data['usage_counter']!,
+          _usageCounterMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -12027,9 +11639,9 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Label map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ContactGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Label(
+    return ContactGroup(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -12038,6 +11650,10 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      ),
       textColor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}text_color'],
@@ -12045,6 +11661,18 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
       backgroundColor: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}background_color'],
+      )!,
+      showAsShortcut: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_as_shortcut'],
+      )!,
+      showAsLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_as_label'],
+      )!,
+      usageCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}usage_counter'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -12054,22 +11682,30 @@ class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
   }
 
   @override
-  $LabelsTable createAlias(String alias) {
-    return $LabelsTable(attachedDatabase, alias);
+  $ContactGroupsTable createAlias(String alias) {
+    return $ContactGroupsTable(attachedDatabase, alias);
   }
 }
 
-class Label extends DataClass implements Insertable<Label> {
+class ContactGroup extends DataClass implements Insertable<ContactGroup> {
   final int id;
   final String name;
+  final String? emoji;
   final int textColor;
   final int backgroundColor;
+  final bool showAsShortcut;
+  final bool showAsLabel;
+  final int usageCounter;
   final DateTime createdAt;
-  const Label({
+  const ContactGroup({
     required this.id,
     required this.name,
+    this.emoji,
     required this.textColor,
     required this.backgroundColor,
+    required this.showAsShortcut,
+    required this.showAsLabel,
+    required this.usageCounter,
     required this.createdAt,
   });
   @override
@@ -12077,32 +11713,48 @@ class Label extends DataClass implements Insertable<Label> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || emoji != null) {
+      map['emoji'] = Variable<String>(emoji);
+    }
     map['text_color'] = Variable<int>(textColor);
     map['background_color'] = Variable<int>(backgroundColor);
+    map['show_as_shortcut'] = Variable<bool>(showAsShortcut);
+    map['show_as_label'] = Variable<bool>(showAsLabel);
+    map['usage_counter'] = Variable<int>(usageCounter);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
-  LabelsCompanion toCompanion(bool nullToAbsent) {
-    return LabelsCompanion(
+  ContactGroupsCompanion toCompanion(bool nullToAbsent) {
+    return ContactGroupsCompanion(
       id: Value(id),
       name: Value(name),
+      emoji: emoji == null && nullToAbsent
+          ? const Value.absent()
+          : Value(emoji),
       textColor: Value(textColor),
       backgroundColor: Value(backgroundColor),
+      showAsShortcut: Value(showAsShortcut),
+      showAsLabel: Value(showAsLabel),
+      usageCounter: Value(usageCounter),
       createdAt: Value(createdAt),
     );
   }
 
-  factory Label.fromJson(
+  factory ContactGroup.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Label(
+    return ContactGroup(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      emoji: serializer.fromJson<String?>(json['emoji']),
       textColor: serializer.fromJson<int>(json['textColor']),
       backgroundColor: serializer.fromJson<int>(json['backgroundColor']),
+      showAsShortcut: serializer.fromJson<bool>(json['showAsShortcut']),
+      showAsLabel: serializer.fromJson<bool>(json['showAsLabel']),
+      usageCounter: serializer.fromJson<int>(json['usageCounter']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -12112,113 +11764,180 @@ class Label extends DataClass implements Insertable<Label> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'emoji': serializer.toJson<String?>(emoji),
       'textColor': serializer.toJson<int>(textColor),
       'backgroundColor': serializer.toJson<int>(backgroundColor),
+      'showAsShortcut': serializer.toJson<bool>(showAsShortcut),
+      'showAsLabel': serializer.toJson<bool>(showAsLabel),
+      'usageCounter': serializer.toJson<int>(usageCounter),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  Label copyWith({
+  ContactGroup copyWith({
     int? id,
     String? name,
+    Value<String?> emoji = const Value.absent(),
     int? textColor,
     int? backgroundColor,
+    bool? showAsShortcut,
+    bool? showAsLabel,
+    int? usageCounter,
     DateTime? createdAt,
-  }) => Label(
+  }) => ContactGroup(
     id: id ?? this.id,
     name: name ?? this.name,
+    emoji: emoji.present ? emoji.value : this.emoji,
     textColor: textColor ?? this.textColor,
     backgroundColor: backgroundColor ?? this.backgroundColor,
+    showAsShortcut: showAsShortcut ?? this.showAsShortcut,
+    showAsLabel: showAsLabel ?? this.showAsLabel,
+    usageCounter: usageCounter ?? this.usageCounter,
     createdAt: createdAt ?? this.createdAt,
   );
-  Label copyWithCompanion(LabelsCompanion data) {
-    return Label(
+  ContactGroup copyWithCompanion(ContactGroupsCompanion data) {
+    return ContactGroup(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
       textColor: data.textColor.present ? data.textColor.value : this.textColor,
       backgroundColor: data.backgroundColor.present
           ? data.backgroundColor.value
           : this.backgroundColor,
+      showAsShortcut: data.showAsShortcut.present
+          ? data.showAsShortcut.value
+          : this.showAsShortcut,
+      showAsLabel: data.showAsLabel.present
+          ? data.showAsLabel.value
+          : this.showAsLabel,
+      usageCounter: data.usageCounter.present
+          ? data.usageCounter.value
+          : this.usageCounter,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Label(')
+    return (StringBuffer('ContactGroup(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('emoji: $emoji, ')
           ..write('textColor: $textColor, ')
           ..write('backgroundColor: $backgroundColor, ')
+          ..write('showAsShortcut: $showAsShortcut, ')
+          ..write('showAsLabel: $showAsLabel, ')
+          ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, textColor, backgroundColor, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    emoji,
+    textColor,
+    backgroundColor,
+    showAsShortcut,
+    showAsLabel,
+    usageCounter,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Label &&
+      (other is ContactGroup &&
           other.id == this.id &&
           other.name == this.name &&
+          other.emoji == this.emoji &&
           other.textColor == this.textColor &&
           other.backgroundColor == this.backgroundColor &&
+          other.showAsShortcut == this.showAsShortcut &&
+          other.showAsLabel == this.showAsLabel &&
+          other.usageCounter == this.usageCounter &&
           other.createdAt == this.createdAt);
 }
 
-class LabelsCompanion extends UpdateCompanion<Label> {
+class ContactGroupsCompanion extends UpdateCompanion<ContactGroup> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String?> emoji;
   final Value<int> textColor;
   final Value<int> backgroundColor;
+  final Value<bool> showAsShortcut;
+  final Value<bool> showAsLabel;
+  final Value<int> usageCounter;
   final Value<DateTime> createdAt;
-  const LabelsCompanion({
+  const ContactGroupsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.emoji = const Value.absent(),
     this.textColor = const Value.absent(),
     this.backgroundColor = const Value.absent(),
+    this.showAsShortcut = const Value.absent(),
+    this.showAsLabel = const Value.absent(),
+    this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
-  LabelsCompanion.insert({
+  ContactGroupsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.emoji = const Value.absent(),
     required int textColor,
     required int backgroundColor,
+    this.showAsShortcut = const Value.absent(),
+    this.showAsLabel = const Value.absent(),
+    this.usageCounter = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name),
        textColor = Value(textColor),
        backgroundColor = Value(backgroundColor);
-  static Insertable<Label> custom({
+  static Insertable<ContactGroup> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? emoji,
     Expression<int>? textColor,
     Expression<int>? backgroundColor,
+    Expression<bool>? showAsShortcut,
+    Expression<bool>? showAsLabel,
+    Expression<int>? usageCounter,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (emoji != null) 'emoji': emoji,
       if (textColor != null) 'text_color': textColor,
       if (backgroundColor != null) 'background_color': backgroundColor,
+      if (showAsShortcut != null) 'show_as_shortcut': showAsShortcut,
+      if (showAsLabel != null) 'show_as_label': showAsLabel,
+      if (usageCounter != null) 'usage_counter': usageCounter,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
 
-  LabelsCompanion copyWith({
+  ContactGroupsCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String?>? emoji,
     Value<int>? textColor,
     Value<int>? backgroundColor,
+    Value<bool>? showAsShortcut,
+    Value<bool>? showAsLabel,
+    Value<int>? usageCounter,
     Value<DateTime>? createdAt,
   }) {
-    return LabelsCompanion(
+    return ContactGroupsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      emoji: emoji ?? this.emoji,
       textColor: textColor ?? this.textColor,
       backgroundColor: backgroundColor ?? this.backgroundColor,
+      showAsShortcut: showAsShortcut ?? this.showAsShortcut,
+      showAsLabel: showAsLabel ?? this.showAsLabel,
+      usageCounter: usageCounter ?? this.usageCounter,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -12232,11 +11951,23 @@ class LabelsCompanion extends UpdateCompanion<Label> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
     if (textColor.present) {
       map['text_color'] = Variable<int>(textColor.value);
     }
     if (backgroundColor.present) {
       map['background_color'] = Variable<int>(backgroundColor.value);
+    }
+    if (showAsShortcut.present) {
+      map['show_as_shortcut'] = Variable<bool>(showAsShortcut.value);
+    }
+    if (showAsLabel.present) {
+      map['show_as_label'] = Variable<bool>(showAsLabel.value);
+    }
+    if (usageCounter.present) {
+      map['usage_counter'] = Variable<int>(usageCounter.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -12246,235 +11977,336 @@ class LabelsCompanion extends UpdateCompanion<Label> {
 
   @override
   String toString() {
-    return (StringBuffer('LabelsCompanion(')
+    return (StringBuffer('ContactGroupsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('emoji: $emoji, ')
           ..write('textColor: $textColor, ')
           ..write('backgroundColor: $backgroundColor, ')
+          ..write('showAsShortcut: $showAsShortcut, ')
+          ..write('showAsLabel: $showAsLabel, ')
+          ..write('usageCounter: $usageCounter, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 }
 
-class $ContactLabelsTable extends ContactLabels
-    with TableInfo<$ContactLabelsTable, ContactLabel> {
+class $ContactGroupMembersTable extends ContactGroupMembers
+    with TableInfo<$ContactGroupMembersTable, ContactGroupMember> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $ContactLabelsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _contactIdMeta = const VerificationMeta(
-    'contactId',
+  $ContactGroupMembersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _contactGroupIdMeta = const VerificationMeta(
+    'contactGroupId',
   );
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-    'contact_id',
+  late final GeneratedColumn<int> contactGroupId = GeneratedColumn<int>(
+    'contact_group_id',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contact_groups (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<int> userId = GeneratedColumn<int>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES contacts (user_id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _labelIdMeta = const VerificationMeta(
-    'labelId',
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
   );
   @override
-  late final GeneratedColumn<int> labelId = GeneratedColumn<int>(
-    'label_id',
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
     aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES labels (id) ON DELETE CASCADE',
+      'REFERENCES "groups" (group_id) ON DELETE CASCADE',
     ),
   );
   @override
-  List<GeneratedColumn> get $columns => [contactId, labelId];
+  List<GeneratedColumn> get $columns => [id, contactGroupId, userId, groupId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'contact_labels';
+  static const String $name = 'contact_group_members';
   @override
   VerificationContext validateIntegrity(
-    Insertable<ContactLabel> instance, {
+    Insertable<ContactGroupMember> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('contact_id')) {
-      context.handle(
-        _contactIdMeta,
-        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_contactIdMeta);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('label_id')) {
+    if (data.containsKey('contact_group_id')) {
       context.handle(
-        _labelIdMeta,
-        labelId.isAcceptableOrUnknown(data['label_id']!, _labelIdMeta),
+        _contactGroupIdMeta,
+        contactGroupId.isAcceptableOrUnknown(
+          data['contact_group_id']!,
+          _contactGroupIdMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_labelIdMeta);
+      context.missing(_contactGroupIdMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {contactId, labelId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ContactLabel map(Map<String, dynamic> data, {String? tablePrefix}) {
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {contactGroupId, userId},
+    {contactGroupId, groupId},
+  ];
+  @override
+  ContactGroupMember map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ContactLabel(
-      contactId: attachedDatabase.typeMapping.read(
+    return ContactGroupMember(
+      id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}contact_id'],
+        data['${effectivePrefix}id'],
       )!,
-      labelId: attachedDatabase.typeMapping.read(
+      contactGroupId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}label_id'],
+        data['${effectivePrefix}contact_group_id'],
       )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      ),
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      ),
     );
   }
 
   @override
-  $ContactLabelsTable createAlias(String alias) {
-    return $ContactLabelsTable(attachedDatabase, alias);
+  $ContactGroupMembersTable createAlias(String alias) {
+    return $ContactGroupMembersTable(attachedDatabase, alias);
   }
 }
 
-class ContactLabel extends DataClass implements Insertable<ContactLabel> {
-  final int contactId;
-  final int labelId;
-  const ContactLabel({required this.contactId, required this.labelId});
+class ContactGroupMember extends DataClass
+    implements Insertable<ContactGroupMember> {
+  final int id;
+  final int contactGroupId;
+  final int? userId;
+  final String? groupId;
+  const ContactGroupMember({
+    required this.id,
+    required this.contactGroupId,
+    this.userId,
+    this.groupId,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['contact_id'] = Variable<int>(contactId);
-    map['label_id'] = Variable<int>(labelId);
+    map['id'] = Variable<int>(id);
+    map['contact_group_id'] = Variable<int>(contactGroupId);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<int>(userId);
+    }
+    if (!nullToAbsent || groupId != null) {
+      map['group_id'] = Variable<String>(groupId);
+    }
     return map;
   }
 
-  ContactLabelsCompanion toCompanion(bool nullToAbsent) {
-    return ContactLabelsCompanion(
-      contactId: Value(contactId),
-      labelId: Value(labelId),
+  ContactGroupMembersCompanion toCompanion(bool nullToAbsent) {
+    return ContactGroupMembersCompanion(
+      id: Value(id),
+      contactGroupId: Value(contactGroupId),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      groupId: groupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupId),
     );
   }
 
-  factory ContactLabel.fromJson(
+  factory ContactGroupMember.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ContactLabel(
-      contactId: serializer.fromJson<int>(json['contactId']),
-      labelId: serializer.fromJson<int>(json['labelId']),
+    return ContactGroupMember(
+      id: serializer.fromJson<int>(json['id']),
+      contactGroupId: serializer.fromJson<int>(json['contactGroupId']),
+      userId: serializer.fromJson<int?>(json['userId']),
+      groupId: serializer.fromJson<String?>(json['groupId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'contactId': serializer.toJson<int>(contactId),
-      'labelId': serializer.toJson<int>(labelId),
+      'id': serializer.toJson<int>(id),
+      'contactGroupId': serializer.toJson<int>(contactGroupId),
+      'userId': serializer.toJson<int?>(userId),
+      'groupId': serializer.toJson<String?>(groupId),
     };
   }
 
-  ContactLabel copyWith({int? contactId, int? labelId}) => ContactLabel(
-    contactId: contactId ?? this.contactId,
-    labelId: labelId ?? this.labelId,
+  ContactGroupMember copyWith({
+    int? id,
+    int? contactGroupId,
+    Value<int?> userId = const Value.absent(),
+    Value<String?> groupId = const Value.absent(),
+  }) => ContactGroupMember(
+    id: id ?? this.id,
+    contactGroupId: contactGroupId ?? this.contactGroupId,
+    userId: userId.present ? userId.value : this.userId,
+    groupId: groupId.present ? groupId.value : this.groupId,
   );
-  ContactLabel copyWithCompanion(ContactLabelsCompanion data) {
-    return ContactLabel(
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      labelId: data.labelId.present ? data.labelId.value : this.labelId,
+  ContactGroupMember copyWithCompanion(ContactGroupMembersCompanion data) {
+    return ContactGroupMember(
+      id: data.id.present ? data.id.value : this.id,
+      contactGroupId: data.contactGroupId.present
+          ? data.contactGroupId.value
+          : this.contactGroupId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('ContactLabel(')
-          ..write('contactId: $contactId, ')
-          ..write('labelId: $labelId')
+    return (StringBuffer('ContactGroupMember(')
+          ..write('id: $id, ')
+          ..write('contactGroupId: $contactGroupId, ')
+          ..write('userId: $userId, ')
+          ..write('groupId: $groupId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(contactId, labelId);
+  int get hashCode => Object.hash(id, contactGroupId, userId, groupId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ContactLabel &&
-          other.contactId == this.contactId &&
-          other.labelId == this.labelId);
+      (other is ContactGroupMember &&
+          other.id == this.id &&
+          other.contactGroupId == this.contactGroupId &&
+          other.userId == this.userId &&
+          other.groupId == this.groupId);
 }
 
-class ContactLabelsCompanion extends UpdateCompanion<ContactLabel> {
-  final Value<int> contactId;
-  final Value<int> labelId;
-  final Value<int> rowid;
-  const ContactLabelsCompanion({
-    this.contactId = const Value.absent(),
-    this.labelId = const Value.absent(),
-    this.rowid = const Value.absent(),
+class ContactGroupMembersCompanion extends UpdateCompanion<ContactGroupMember> {
+  final Value<int> id;
+  final Value<int> contactGroupId;
+  final Value<int?> userId;
+  final Value<String?> groupId;
+  const ContactGroupMembersCompanion({
+    this.id = const Value.absent(),
+    this.contactGroupId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.groupId = const Value.absent(),
   });
-  ContactLabelsCompanion.insert({
-    required int contactId,
-    required int labelId,
-    this.rowid = const Value.absent(),
-  }) : contactId = Value(contactId),
-       labelId = Value(labelId);
-  static Insertable<ContactLabel> custom({
-    Expression<int>? contactId,
-    Expression<int>? labelId,
-    Expression<int>? rowid,
+  ContactGroupMembersCompanion.insert({
+    this.id = const Value.absent(),
+    required int contactGroupId,
+    this.userId = const Value.absent(),
+    this.groupId = const Value.absent(),
+  }) : contactGroupId = Value(contactGroupId);
+  static Insertable<ContactGroupMember> custom({
+    Expression<int>? id,
+    Expression<int>? contactGroupId,
+    Expression<int>? userId,
+    Expression<String>? groupId,
   }) {
     return RawValuesInsertable({
-      if (contactId != null) 'contact_id': contactId,
-      if (labelId != null) 'label_id': labelId,
-      if (rowid != null) 'rowid': rowid,
+      if (id != null) 'id': id,
+      if (contactGroupId != null) 'contact_group_id': contactGroupId,
+      if (userId != null) 'user_id': userId,
+      if (groupId != null) 'group_id': groupId,
     });
   }
 
-  ContactLabelsCompanion copyWith({
-    Value<int>? contactId,
-    Value<int>? labelId,
-    Value<int>? rowid,
+  ContactGroupMembersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? contactGroupId,
+    Value<int?>? userId,
+    Value<String?>? groupId,
   }) {
-    return ContactLabelsCompanion(
-      contactId: contactId ?? this.contactId,
-      labelId: labelId ?? this.labelId,
-      rowid: rowid ?? this.rowid,
+    return ContactGroupMembersCompanion(
+      id: id ?? this.id,
+      contactGroupId: contactGroupId ?? this.contactGroupId,
+      userId: userId ?? this.userId,
+      groupId: groupId ?? this.groupId,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
     }
-    if (labelId.present) {
-      map['label_id'] = Variable<int>(labelId.value);
+    if (contactGroupId.present) {
+      map['contact_group_id'] = Variable<int>(contactGroupId.value);
     }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
     }
     return map;
   }
 
   @override
   String toString() {
-    return (StringBuffer('ContactLabelsCompanion(')
-          ..write('contactId: $contactId, ')
-          ..write('labelId: $labelId, ')
-          ..write('rowid: $rowid')
+    return (StringBuffer('ContactGroupMembersCompanion(')
+          ..write('id: $id, ')
+          ..write('contactGroupId: $contactGroupId, ')
+          ..write('userId: $userId, ')
+          ..write('groupId: $groupId')
           ..write(')'))
         .toString();
   }
@@ -12513,12 +12345,9 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $UserDiscoveryOwnPromotionsTable(this);
   late final $UserDiscoverySharesTable userDiscoveryShares =
       $UserDiscoverySharesTable(this);
-  late final $ShortcutsTable shortcuts = $ShortcutsTable(this);
-  late final $ShortcutMembersTable shortcutMembers = $ShortcutMembersTable(
-    this,
-  );
-  late final $LabelsTable labels = $LabelsTable(this);
-  late final $ContactLabelsTable contactLabels = $ContactLabelsTable(this);
+  late final $ContactGroupsTable contactGroups = $ContactGroupsTable(this);
+  late final $ContactGroupMembersTable contactGroupMembers =
+      $ContactGroupMembersTable(this);
   late final Index idxMessagesGroupIdCreatedAt = Index(
     'idx_messages_group_id_created_at',
     'CREATE INDEX idx_messages_group_id_created_at ON messages (group_id, created_at)',
@@ -12539,8 +12368,9 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final KeyVerificationDao keyVerificationDao = KeyVerificationDao(
     this as TwonlyDB,
   );
-  late final ShortcutsDao shortcutsDao = ShortcutsDao(this as TwonlyDB);
-  late final LabelsDao labelsDao = LabelsDao(this as TwonlyDB);
+  late final ContactGroupsDao contactGroupsDao = ContactGroupsDao(
+    this as TwonlyDB,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -12564,10 +12394,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     userDiscoveryOtherPromotions,
     userDiscoveryOwnPromotions,
     userDiscoveryShares,
-    shortcuts,
-    shortcutMembers,
-    labels,
-    contactLabels,
+    contactGroups,
+    contactGroupMembers,
     idxMessagesGroupIdCreatedAt,
     idxReceiptsMessageId,
   ];
@@ -12716,31 +12544,24 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'shortcuts',
+        'contact_groups',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'groups',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('shortcut_members', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'contacts',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'labels',
+        'groups',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('contact_labels', kind: UpdateKind.delete)],
+      result: [TableUpdate('contact_group_members', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -13053,19 +12874,24 @@ final class $$ContactsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
-  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.contactLabels,
-    aliasName: 'contacts__user_id__contact_labels__contact_id',
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'contacts__user_id__contact_group_members__user_id',
   );
 
-  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
-    final manager = $$ContactLabelsTableTableManager($_db, $_db.contactLabels)
-        .filter(
-          (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!),
-        );
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
+    final manager = $$ContactGroupMembersTableTableManager(
+      $_db,
+      $_db.contactGroupMembers,
+    ).filter((f) => f.userId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
-    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
+    final cache = $_typedResult.readTableOrNull(
+      _contactGroupMembersRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -13497,22 +13323,22 @@ class $$ContactsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> contactLabelsRefs(
-    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.contactId,
+      referencedTable: $db.contactGroupMembers,
+      getReferencedColumn: (t) => t.userId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.contactLabels,
+            $table: $db.contactGroupMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -14079,28 +13905,29 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> contactLabelsRefs<T extends Object>(
-    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.userId,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.userId,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.userId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -14130,7 +13957,7 @@ class $$ContactsTableTableManager
             bool userDiscoveryOtherPromotionsRefs,
             bool userDiscoveryOwnPromotionsRefs,
             bool userDiscoverySharesRefs,
-            bool contactLabelsRefs,
+            bool contactGroupMembersRefs,
           })
         > {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
@@ -14281,7 +14108,7 @@ class $$ContactsTableTableManager
                 userDiscoveryOtherPromotionsRefs = false,
                 userDiscoveryOwnPromotionsRefs = false,
                 userDiscoverySharesRefs = false,
-                contactLabelsRefs = false,
+                contactGroupMembersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -14300,7 +14127,7 @@ class $$ContactsTableTableManager
                     if (userDiscoveryOwnPromotionsRefs)
                       db.userDiscoveryOwnPromotions,
                     if (userDiscoverySharesRefs) db.userDiscoveryShares,
-                    if (contactLabelsRefs) db.contactLabels,
+                    if (contactGroupMembersRefs) db.contactGroupMembers,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -14536,24 +14363,24 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (contactLabelsRefs)
+                      if (contactGroupMembersRefs)
                         await $_getPrefetchedData<
                           Contact,
                           $ContactsTable,
-                          ContactLabel
+                          ContactGroupMember
                         >(
                           currentTable: table,
                           referencedTable: $$ContactsTableReferences
-                              ._contactLabelsRefsTable(db),
+                              ._contactGroupMembersRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$ContactsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).contactLabelsRefs,
+                              ).contactGroupMembersRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.userId,
+                                (e) => e.userId == item.userId,
                               ),
                           typedResults: items,
                         ),
@@ -14589,7 +14416,7 @@ typedef $$ContactsTableProcessedTableManager =
         bool userDiscoveryOtherPromotionsRefs,
         bool userDiscoveryOwnPromotionsRefs,
         bool userDiscoverySharesRefs,
-        bool contactLabelsRefs,
+        bool contactGroupMembersRefs,
       })
     >;
 typedef $$GroupsTableCreateCompanionBuilder =
@@ -14709,20 +14536,26 @@ final class $$GroupsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
-  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.shortcutMembers,
-    aliasName: 'groups__group_id__shortcut_members__group_id',
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'groups__group_id__contact_group_members__group_id',
   );
 
-  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
     final manager =
-        $$ShortcutMembersTableTableManager($_db, $_db.shortcutMembers).filter(
+        $$ContactGroupMembersTableTableManager(
+          $_db,
+          $_db.contactGroupMembers,
+        ).filter(
           (f) => f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!),
         );
 
     final cache = $_typedResult.readTableOrNull(
-      _shortcutMembersRefsTable($_db),
+      _contactGroupMembersRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -14938,22 +14771,22 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
     return f(composer);
   }
 
-  Expression<bool> shortcutMembersRefs(
-    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.groupId,
-      referencedTable: $db.shortcutMembers,
+      referencedTable: $db.contactGroupMembers,
       getReferencedColumn: (t) => t.groupId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.shortcutMembers,
+            $table: $db.contactGroupMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -15297,28 +15130,29 @@ class $$GroupsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> shortcutMembersRefs<T extends Object>(
-    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.groupId,
-      referencedTable: $db.shortcutMembers,
-      getReferencedColumn: (t) => t.groupId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.shortcutMembers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.groupId,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.groupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -15340,7 +15174,7 @@ class $$GroupsTableTableManager
             bool messagesRefs,
             bool groupMembersRefs,
             bool groupHistoriesRefs,
-            bool shortcutMembersRefs,
+            bool contactGroupMembersRefs,
           })
         > {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
@@ -15481,7 +15315,7 @@ class $$GroupsTableTableManager
                 messagesRefs = false,
                 groupMembersRefs = false,
                 groupHistoriesRefs = false,
-                shortcutMembersRefs = false,
+                contactGroupMembersRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -15489,7 +15323,7 @@ class $$GroupsTableTableManager
                     if (messagesRefs) db.messages,
                     if (groupMembersRefs) db.groupMembers,
                     if (groupHistoriesRefs) db.groupHistories,
-                    if (shortcutMembersRefs) db.shortcutMembers,
+                    if (contactGroupMembersRefs) db.contactGroupMembers,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -15553,21 +15387,21 @@ class $$GroupsTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (shortcutMembersRefs)
+                      if (contactGroupMembersRefs)
                         await $_getPrefetchedData<
                           Group,
                           $GroupsTable,
-                          ShortcutMember
+                          ContactGroupMember
                         >(
                           currentTable: table,
                           referencedTable: $$GroupsTableReferences
-                              ._shortcutMembersRefsTable(db),
+                              ._contactGroupMembersRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$GroupsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).shortcutMembersRefs,
+                              ).contactGroupMembersRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.groupId == item.groupId,
@@ -15598,7 +15432,7 @@ typedef $$GroupsTableProcessedTableManager =
         bool messagesRefs,
         bool groupMembersRefs,
         bool groupHistoriesRefs,
-        bool shortcutMembersRefs,
+        bool contactGroupMembersRefs,
       })
     >;
 typedef $$MediaFilesTableCreateCompanionBuilder =
@@ -22695,37 +22529,56 @@ typedef $$UserDiscoverySharesTableProcessedTableManager =
       UserDiscoveryShare,
       PrefetchHooks Function({bool contactId})
     >;
-typedef $$ShortcutsTableCreateCompanionBuilder =
-    ShortcutsCompanion Function({
+typedef $$ContactGroupsTableCreateCompanionBuilder =
+    ContactGroupsCompanion Function({
       Value<int> id,
-      required String emoji,
+      required String name,
+      Value<String?> emoji,
+      required int textColor,
+      required int backgroundColor,
+      Value<bool> showAsShortcut,
+      Value<bool> showAsLabel,
       Value<int> usageCounter,
+      Value<DateTime> createdAt,
     });
-typedef $$ShortcutsTableUpdateCompanionBuilder =
-    ShortcutsCompanion Function({
+typedef $$ContactGroupsTableUpdateCompanionBuilder =
+    ContactGroupsCompanion Function({
       Value<int> id,
-      Value<String> emoji,
+      Value<String> name,
+      Value<String?> emoji,
+      Value<int> textColor,
+      Value<int> backgroundColor,
+      Value<bool> showAsShortcut,
+      Value<bool> showAsLabel,
       Value<int> usageCounter,
+      Value<DateTime> createdAt,
     });
 
-final class $$ShortcutsTableReferences
-    extends BaseReferences<_$TwonlyDB, $ShortcutsTable, Shortcut> {
-  $$ShortcutsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$ShortcutMembersTable, List<ShortcutMember>>
-  _shortcutMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.shortcutMembers,
-    aliasName: 'shortcuts__id__shortcut_members__shortcut_id',
+final class $$ContactGroupsTableReferences
+    extends BaseReferences<_$TwonlyDB, $ContactGroupsTable, ContactGroup> {
+  $$ContactGroupsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
   );
 
-  $$ShortcutMembersTableProcessedTableManager get shortcutMembersRefs {
-    final manager = $$ShortcutMembersTableTableManager(
+  static MultiTypedResultKey<
+    $ContactGroupMembersTable,
+    List<ContactGroupMember>
+  >
+  _contactGroupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+    db.contactGroupMembers,
+    aliasName: 'contact_groups__id__contact_group_members__contact_group_id',
+  );
+
+  $$ContactGroupMembersTableProcessedTableManager get contactGroupMembersRefs {
+    final manager = $$ContactGroupMembersTableTableManager(
       $_db,
-      $_db.shortcutMembers,
-    ).filter((f) => f.shortcutId.id.sqlEquals($_itemColumn<int>('id')!));
+      $_db.contactGroupMembers,
+    ).filter((f) => f.contactGroupId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(
-      _shortcutMembersRefsTable($_db),
+      _contactGroupMembersRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -22733,9 +22586,9 @@ final class $$ShortcutsTableReferences
   }
 }
 
-class $$ShortcutsTableFilterComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableFilterComposer({
+class $$ContactGroupsTableFilterComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -22747,8 +22600,33 @@ class $$ShortcutsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get emoji => $composableBuilder(
     column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22757,22 +22635,27 @@ class $$ShortcutsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> shortcutMembersRefs(
-    Expression<bool> Function($$ShortcutMembersTableFilterComposer f) f,
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> contactGroupMembersRefs(
+    Expression<bool> Function($$ContactGroupMembersTableFilterComposer f) f,
   ) {
-    final $$ShortcutMembersTableFilterComposer composer = $composerBuilder(
+    final $$ContactGroupMembersTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shortcutMembers,
-      getReferencedColumn: (t) => t.shortcutId,
+      referencedTable: $db.contactGroupMembers,
+      getReferencedColumn: (t) => t.contactGroupId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableFilterComposer(
+          }) => $$ContactGroupMembersTableFilterComposer(
             $db: $db,
-            $table: $db.shortcutMembers,
+            $table: $db.contactGroupMembers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -22783,9 +22666,9 @@ class $$ShortcutsTableFilterComposer
   }
 }
 
-class $$ShortcutsTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableOrderingComposer({
+class $$ContactGroupsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -22797,8 +22680,33 @@ class $$ShortcutsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get emoji => $composableBuilder(
     column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get textColor => $composableBuilder(
+    column: $table.textColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -22806,11 +22714,16 @@ class $$ShortcutsTableOrderingComposer
     column: $table.usageCounter,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
-class $$ShortcutsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ShortcutsTable> {
-  $$ShortcutsTableAnnotationComposer({
+class $$ContactGroupsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ContactGroupsTable> {
+  $$ContactGroupsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -22820,120 +22733,171 @@ class $$ShortcutsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
   GeneratedColumn<String> get emoji =>
       $composableBuilder(column: $table.emoji, builder: (column) => column);
+
+  GeneratedColumn<int> get textColor =>
+      $composableBuilder(column: $table.textColor, builder: (column) => column);
+
+  GeneratedColumn<int> get backgroundColor => $composableBuilder(
+    column: $table.backgroundColor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAsShortcut => $composableBuilder(
+    column: $table.showAsShortcut,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get showAsLabel => $composableBuilder(
+    column: $table.showAsLabel,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get usageCounter => $composableBuilder(
     column: $table.usageCounter,
     builder: (column) => column,
   );
 
-  Expression<T> shortcutMembersRefs<T extends Object>(
-    Expression<T> Function($$ShortcutMembersTableAnnotationComposer a) f,
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> contactGroupMembersRefs<T extends Object>(
+    Expression<T> Function($$ContactGroupMembersTableAnnotationComposer a) f,
   ) {
-    final $$ShortcutMembersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.shortcutMembers,
-      getReferencedColumn: (t) => t.shortcutId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutMembersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.shortcutMembers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
+    final $$ContactGroupMembersTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.contactGroupMembers,
+          getReferencedColumn: (t) => t.contactGroupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer,
-          ),
-    );
+              }) => $$ContactGroupMembersTableAnnotationComposer(
+                $db: $db,
+                $table: $db.contactGroupMembers,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
 
-class $$ShortcutsTableTableManager
+class $$ContactGroupsTableTableManager
     extends
         RootTableManager<
           _$TwonlyDB,
-          $ShortcutsTable,
-          Shortcut,
-          $$ShortcutsTableFilterComposer,
-          $$ShortcutsTableOrderingComposer,
-          $$ShortcutsTableAnnotationComposer,
-          $$ShortcutsTableCreateCompanionBuilder,
-          $$ShortcutsTableUpdateCompanionBuilder,
-          (Shortcut, $$ShortcutsTableReferences),
-          Shortcut,
-          PrefetchHooks Function({bool shortcutMembersRefs})
+          $ContactGroupsTable,
+          ContactGroup,
+          $$ContactGroupsTableFilterComposer,
+          $$ContactGroupsTableOrderingComposer,
+          $$ContactGroupsTableAnnotationComposer,
+          $$ContactGroupsTableCreateCompanionBuilder,
+          $$ContactGroupsTableUpdateCompanionBuilder,
+          (ContactGroup, $$ContactGroupsTableReferences),
+          ContactGroup,
+          PrefetchHooks Function({bool contactGroupMembersRefs})
         > {
-  $$ShortcutsTableTableManager(_$TwonlyDB db, $ShortcutsTable table)
+  $$ContactGroupsTableTableManager(_$TwonlyDB db, $ContactGroupsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ShortcutsTableFilterComposer($db: db, $table: table),
+              $$ContactGroupsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ShortcutsTableOrderingComposer($db: db, $table: table),
+              $$ContactGroupsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ShortcutsTableAnnotationComposer($db: db, $table: table),
+              $$ContactGroupsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> emoji = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> emoji = const Value.absent(),
+                Value<int> textColor = const Value.absent(),
+                Value<int> backgroundColor = const Value.absent(),
+                Value<bool> showAsShortcut = const Value.absent(),
+                Value<bool> showAsLabel = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
-              }) => ShortcutsCompanion(
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactGroupsCompanion(
                 id: id,
+                name: name,
                 emoji: emoji,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                showAsShortcut: showAsShortcut,
+                showAsLabel: showAsLabel,
                 usageCounter: usageCounter,
+                createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String emoji,
+                required String name,
+                Value<String?> emoji = const Value.absent(),
+                required int textColor,
+                required int backgroundColor,
+                Value<bool> showAsShortcut = const Value.absent(),
+                Value<bool> showAsLabel = const Value.absent(),
                 Value<int> usageCounter = const Value.absent(),
-              }) => ShortcutsCompanion.insert(
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => ContactGroupsCompanion.insert(
                 id: id,
+                name: name,
                 emoji: emoji,
+                textColor: textColor,
+                backgroundColor: backgroundColor,
+                showAsShortcut: showAsShortcut,
+                showAsLabel: showAsLabel,
                 usageCounter: usageCounter,
+                createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$ShortcutsTableReferences(db, table, e),
+                  $$ContactGroupsTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({shortcutMembersRefs = false}) {
+          prefetchHooksCallback: ({contactGroupMembersRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (shortcutMembersRefs) db.shortcutMembers,
+                if (contactGroupMembersRefs) db.contactGroupMembers,
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (shortcutMembersRefs)
+                  if (contactGroupMembersRefs)
                     await $_getPrefetchedData<
-                      Shortcut,
-                      $ShortcutsTable,
-                      ShortcutMember
+                      ContactGroup,
+                      $ContactGroupsTable,
+                      ContactGroupMember
                     >(
                       currentTable: table,
-                      referencedTable: $$ShortcutsTableReferences
-                          ._shortcutMembersRefsTable(db),
+                      referencedTable: $$ContactGroupsTableReferences
+                          ._contactGroupMembersRefsTable(db),
                       managerFromTypedResult: (p0) =>
-                          $$ShortcutsTableReferences(
+                          $$ContactGroupsTableReferences(
                             db,
                             table,
                             p0,
-                          ).shortcutMembersRefs,
+                          ).contactGroupMembersRefs,
                       referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.shortcutId == item.id),
+                          referencedItems.where(
+                            (e) => e.contactGroupId == item.id,
+                          ),
                       typedResults: items,
                     ),
                 ];
@@ -22944,64 +22908,92 @@ class $$ShortcutsTableTableManager
       );
 }
 
-typedef $$ShortcutsTableProcessedTableManager =
+typedef $$ContactGroupsTableProcessedTableManager =
     ProcessedTableManager<
       _$TwonlyDB,
-      $ShortcutsTable,
-      Shortcut,
-      $$ShortcutsTableFilterComposer,
-      $$ShortcutsTableOrderingComposer,
-      $$ShortcutsTableAnnotationComposer,
-      $$ShortcutsTableCreateCompanionBuilder,
-      $$ShortcutsTableUpdateCompanionBuilder,
-      (Shortcut, $$ShortcutsTableReferences),
-      Shortcut,
-      PrefetchHooks Function({bool shortcutMembersRefs})
+      $ContactGroupsTable,
+      ContactGroup,
+      $$ContactGroupsTableFilterComposer,
+      $$ContactGroupsTableOrderingComposer,
+      $$ContactGroupsTableAnnotationComposer,
+      $$ContactGroupsTableCreateCompanionBuilder,
+      $$ContactGroupsTableUpdateCompanionBuilder,
+      (ContactGroup, $$ContactGroupsTableReferences),
+      ContactGroup,
+      PrefetchHooks Function({bool contactGroupMembersRefs})
     >;
-typedef $$ShortcutMembersTableCreateCompanionBuilder =
-    ShortcutMembersCompanion Function({
-      required int shortcutId,
-      required String groupId,
-      Value<int> rowid,
+typedef $$ContactGroupMembersTableCreateCompanionBuilder =
+    ContactGroupMembersCompanion Function({
+      Value<int> id,
+      required int contactGroupId,
+      Value<int?> userId,
+      Value<String?> groupId,
     });
-typedef $$ShortcutMembersTableUpdateCompanionBuilder =
-    ShortcutMembersCompanion Function({
-      Value<int> shortcutId,
-      Value<String> groupId,
-      Value<int> rowid,
+typedef $$ContactGroupMembersTableUpdateCompanionBuilder =
+    ContactGroupMembersCompanion Function({
+      Value<int> id,
+      Value<int> contactGroupId,
+      Value<int?> userId,
+      Value<String?> groupId,
     });
 
-final class $$ShortcutMembersTableReferences
-    extends BaseReferences<_$TwonlyDB, $ShortcutMembersTable, ShortcutMember> {
-  $$ShortcutMembersTableReferences(
+final class $$ContactGroupMembersTableReferences
+    extends
+        BaseReferences<
+          _$TwonlyDB,
+          $ContactGroupMembersTable,
+          ContactGroupMember
+        > {
+  $$ContactGroupMembersTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $ShortcutsTable _shortcutIdTable(_$TwonlyDB db) =>
-      db.shortcuts.createAlias('shortcut_members__shortcut_id__shortcuts__id');
+  static $ContactGroupsTable _contactGroupIdTable(_$TwonlyDB db) =>
+      db.contactGroups.createAlias(
+        'contact_group_members__contact_group_id__contact_groups__id',
+      );
 
-  $$ShortcutsTableProcessedTableManager get shortcutId {
-    final $_column = $_itemColumn<int>('shortcut_id')!;
+  $$ContactGroupsTableProcessedTableManager get contactGroupId {
+    final $_column = $_itemColumn<int>('contact_group_id')!;
 
-    final manager = $$ShortcutsTableTableManager(
+    final manager = $$ContactGroupsTableTableManager(
       $_db,
-      $_db.shortcuts,
+      $_db.contactGroups,
     ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_shortcutIdTable($_db));
+    final item = $_typedResult.readTableOrNull(_contactGroupIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
 
-  static $GroupsTable _groupIdTable(_$TwonlyDB db) =>
-      db.groups.createAlias('shortcut_members__group_id__groups__group_id');
+  static $ContactsTable _userIdTable(_$TwonlyDB db) => db.contacts.createAlias(
+    'contact_group_members__user_id__contacts__user_id',
+  );
 
-  $$GroupsTableProcessedTableManager get groupId {
-    final $_column = $_itemColumn<String>('group_id')!;
+  $$ContactsTableProcessedTableManager? get userId {
+    final $_column = $_itemColumn<int>('user_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
+    'contact_group_members__group_id__groups__group_id',
+  );
+
+  $$GroupsTableProcessedTableManager? get groupId {
+    final $_column = $_itemColumn<String>('group_id');
+    if ($_column == null) return null;
     final manager = $$GroupsTableTableManager(
       $_db,
       $_db.groups,
@@ -23014,29 +23006,57 @@ final class $$ShortcutMembersTableReferences
   }
 }
 
-class $$ShortcutMembersTableFilterComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableFilterComposer({
+class $$ContactGroupMembersTableFilterComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableFilterComposer get shortcutId {
-    final $$ShortcutsTableFilterComposer composer = $composerBuilder(
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactGroupsTableFilterComposer get contactGroupId {
+    final $$ContactGroupsTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableFilterComposer(
+          }) => $$ContactGroupsTableFilterComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get userId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -23070,29 +23090,57 @@ class $$ShortcutMembersTableFilterComposer
   }
 }
 
-class $$ShortcutMembersTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableOrderingComposer({
+class $$ContactGroupMembersTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableOrderingComposer get shortcutId {
-    final $$ShortcutsTableOrderingComposer composer = $composerBuilder(
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactGroupsTableOrderingComposer get contactGroupId {
+    final $$ContactGroupsTableOrderingComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableOrderingComposer(
+          }) => $$ContactGroupsTableOrderingComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get userId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -23126,29 +23174,55 @@ class $$ShortcutMembersTableOrderingComposer
   }
 }
 
-class $$ShortcutMembersTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ShortcutMembersTable> {
-  $$ShortcutMembersTableAnnotationComposer({
+class $$ContactGroupMembersTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ContactGroupMembersTable> {
+  $$ContactGroupMembersTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  $$ShortcutsTableAnnotationComposer get shortcutId {
-    final $$ShortcutsTableAnnotationComposer composer = $composerBuilder(
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  $$ContactGroupsTableAnnotationComposer get contactGroupId {
+    final $$ContactGroupsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.shortcutId,
-      referencedTable: $db.shortcuts,
+      getCurrentColumn: (t) => t.contactGroupId,
+      referencedTable: $db.contactGroups,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$ShortcutsTableAnnotationComposer(
+          }) => $$ContactGroupsTableAnnotationComposer(
             $db: $db,
-            $table: $db.shortcuts,
+            $table: $db.contactGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ContactsTableAnnotationComposer get userId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -23182,779 +23256,167 @@ class $$ShortcutMembersTableAnnotationComposer
   }
 }
 
-class $$ShortcutMembersTableTableManager
+class $$ContactGroupMembersTableTableManager
     extends
         RootTableManager<
           _$TwonlyDB,
-          $ShortcutMembersTable,
-          ShortcutMember,
-          $$ShortcutMembersTableFilterComposer,
-          $$ShortcutMembersTableOrderingComposer,
-          $$ShortcutMembersTableAnnotationComposer,
-          $$ShortcutMembersTableCreateCompanionBuilder,
-          $$ShortcutMembersTableUpdateCompanionBuilder,
-          (ShortcutMember, $$ShortcutMembersTableReferences),
-          ShortcutMember,
-          PrefetchHooks Function({bool shortcutId, bool groupId})
+          $ContactGroupMembersTable,
+          ContactGroupMember,
+          $$ContactGroupMembersTableFilterComposer,
+          $$ContactGroupMembersTableOrderingComposer,
+          $$ContactGroupMembersTableAnnotationComposer,
+          $$ContactGroupMembersTableCreateCompanionBuilder,
+          $$ContactGroupMembersTableUpdateCompanionBuilder,
+          (ContactGroupMember, $$ContactGroupMembersTableReferences),
+          ContactGroupMember,
+          PrefetchHooks Function({
+            bool contactGroupId,
+            bool userId,
+            bool groupId,
+          })
         > {
-  $$ShortcutMembersTableTableManager(_$TwonlyDB db, $ShortcutMembersTable table)
-    : super(
+  $$ContactGroupMembersTableTableManager(
+    _$TwonlyDB db,
+    $ContactGroupMembersTable table,
+  ) : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$ShortcutMembersTableFilterComposer($db: db, $table: table),
+              $$ContactGroupMembersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$ShortcutMembersTableOrderingComposer($db: db, $table: table),
+              $$ContactGroupMembersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
-              $$ShortcutMembersTableAnnotationComposer($db: db, $table: table),
+              $$ContactGroupMembersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
           updateCompanionCallback:
               ({
-                Value<int> shortcutId = const Value.absent(),
-                Value<String> groupId = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ShortcutMembersCompanion(
-                shortcutId: shortcutId,
+                Value<int> id = const Value.absent(),
+                Value<int> contactGroupId = const Value.absent(),
+                Value<int?> userId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+              }) => ContactGroupMembersCompanion(
+                id: id,
+                contactGroupId: contactGroupId,
+                userId: userId,
                 groupId: groupId,
-                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required int shortcutId,
-                required String groupId,
-                Value<int> rowid = const Value.absent(),
-              }) => ShortcutMembersCompanion.insert(
-                shortcutId: shortcutId,
+                Value<int> id = const Value.absent(),
+                required int contactGroupId,
+                Value<int?> userId = const Value.absent(),
+                Value<String?> groupId = const Value.absent(),
+              }) => ContactGroupMembersCompanion.insert(
+                id: id,
+                contactGroupId: contactGroupId,
+                userId: userId,
                 groupId: groupId,
-                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable(table),
-                  $$ShortcutMembersTableReferences(db, table, e),
+                  $$ContactGroupMembersTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({shortcutId = false, groupId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (shortcutId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.shortcutId,
-                                referencedTable:
-                                    $$ShortcutMembersTableReferences
-                                        ._shortcutIdTable(db),
-                                referencedColumn:
-                                    $$ShortcutMembersTableReferences
-                                        ._shortcutIdTable(db)
-                                        .id,
-                              )
-                              as T;
-                    }
-                    if (groupId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.groupId,
-                                referencedTable:
-                                    $$ShortcutMembersTableReferences
-                                        ._groupIdTable(db),
-                                referencedColumn:
-                                    $$ShortcutMembersTableReferences
-                                        ._groupIdTable(db)
-                                        .groupId,
-                              )
-                              as T;
-                    }
+          prefetchHooksCallback:
+              ({contactGroupId = false, userId = false, groupId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (contactGroupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.contactGroupId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._contactGroupIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._contactGroupIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (userId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.userId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._userIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._userIdTable(db)
+                                            .userId,
+                                  )
+                                  as T;
+                        }
+                        if (groupId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.groupId,
+                                    referencedTable:
+                                        $$ContactGroupMembersTableReferences
+                                            ._groupIdTable(db),
+                                    referencedColumn:
+                                        $$ContactGroupMembersTableReferences
+                                            ._groupIdTable(db)
+                                            .groupId,
+                                  )
+                                  as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
 
-typedef $$ShortcutMembersTableProcessedTableManager =
+typedef $$ContactGroupMembersTableProcessedTableManager =
     ProcessedTableManager<
       _$TwonlyDB,
-      $ShortcutMembersTable,
-      ShortcutMember,
-      $$ShortcutMembersTableFilterComposer,
-      $$ShortcutMembersTableOrderingComposer,
-      $$ShortcutMembersTableAnnotationComposer,
-      $$ShortcutMembersTableCreateCompanionBuilder,
-      $$ShortcutMembersTableUpdateCompanionBuilder,
-      (ShortcutMember, $$ShortcutMembersTableReferences),
-      ShortcutMember,
-      PrefetchHooks Function({bool shortcutId, bool groupId})
-    >;
-typedef $$LabelsTableCreateCompanionBuilder =
-    LabelsCompanion Function({
-      Value<int> id,
-      required String name,
-      required int textColor,
-      required int backgroundColor,
-      Value<DateTime> createdAt,
-    });
-typedef $$LabelsTableUpdateCompanionBuilder =
-    LabelsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<int> textColor,
-      Value<int> backgroundColor,
-      Value<DateTime> createdAt,
-    });
-
-final class $$LabelsTableReferences
-    extends BaseReferences<_$TwonlyDB, $LabelsTable, Label> {
-  $$LabelsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$ContactLabelsTable, List<ContactLabel>>
-  _contactLabelsRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
-    db.contactLabels,
-    aliasName: 'labels__id__contact_labels__label_id',
-  );
-
-  $$ContactLabelsTableProcessedTableManager get contactLabelsRefs {
-    final manager = $$ContactLabelsTableTableManager(
-      $_db,
-      $_db.contactLabels,
-    ).filter((f) => f.labelId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_contactLabelsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
-class $$LabelsTableFilterComposer extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get textColor => $composableBuilder(
-    column: $table.textColor,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  Expression<bool> contactLabelsRefs(
-    Expression<bool> Function($$ContactLabelsTableFilterComposer f) f,
-  ) {
-    final $$ContactLabelsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.labelId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableFilterComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $$LabelsTableOrderingComposer extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get textColor => $composableBuilder(
-    column: $table.textColor,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$LabelsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $LabelsTable> {
-  $$LabelsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<int> get textColor =>
-      $composableBuilder(column: $table.textColor, builder: (column) => column);
-
-  GeneratedColumn<int> get backgroundColor => $composableBuilder(
-    column: $table.backgroundColor,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  Expression<T> contactLabelsRefs<T extends Object>(
-    Expression<T> Function($$ContactLabelsTableAnnotationComposer a) f,
-  ) {
-    final $$ContactLabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.contactLabels,
-      getReferencedColumn: (t) => t.labelId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactLabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contactLabels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-}
-
-class $$LabelsTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $LabelsTable,
-          Label,
-          $$LabelsTableFilterComposer,
-          $$LabelsTableOrderingComposer,
-          $$LabelsTableAnnotationComposer,
-          $$LabelsTableCreateCompanionBuilder,
-          $$LabelsTableUpdateCompanionBuilder,
-          (Label, $$LabelsTableReferences),
-          Label,
-          PrefetchHooks Function({bool contactLabelsRefs})
-        > {
-  $$LabelsTableTableManager(_$TwonlyDB db, $LabelsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$LabelsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$LabelsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$LabelsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> textColor = const Value.absent(),
-                Value<int> backgroundColor = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => LabelsCompanion(
-                id: id,
-                name: name,
-                textColor: textColor,
-                backgroundColor: backgroundColor,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required int textColor,
-                required int backgroundColor,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => LabelsCompanion.insert(
-                id: id,
-                name: name,
-                textColor: textColor,
-                backgroundColor: backgroundColor,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$LabelsTableReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({contactLabelsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (contactLabelsRefs) db.contactLabels,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (contactLabelsRefs)
-                    await $_getPrefetchedData<
-                      Label,
-                      $LabelsTable,
-                      ContactLabel
-                    >(
-                      currentTable: table,
-                      referencedTable: $$LabelsTableReferences
-                          ._contactLabelsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$LabelsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).contactLabelsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.labelId == item.id),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$LabelsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $LabelsTable,
-      Label,
-      $$LabelsTableFilterComposer,
-      $$LabelsTableOrderingComposer,
-      $$LabelsTableAnnotationComposer,
-      $$LabelsTableCreateCompanionBuilder,
-      $$LabelsTableUpdateCompanionBuilder,
-      (Label, $$LabelsTableReferences),
-      Label,
-      PrefetchHooks Function({bool contactLabelsRefs})
-    >;
-typedef $$ContactLabelsTableCreateCompanionBuilder =
-    ContactLabelsCompanion Function({
-      required int contactId,
-      required int labelId,
-      Value<int> rowid,
-    });
-typedef $$ContactLabelsTableUpdateCompanionBuilder =
-    ContactLabelsCompanion Function({
-      Value<int> contactId,
-      Value<int> labelId,
-      Value<int> rowid,
-    });
-
-final class $$ContactLabelsTableReferences
-    extends BaseReferences<_$TwonlyDB, $ContactLabelsTable, ContactLabel> {
-  $$ContactLabelsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias('contact_labels__contact_id__contacts__user_id');
-
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
-
-    final manager = $$ContactsTableTableManager(
-      $_db,
-      $_db.contacts,
-    ).filter((f) => f.userId.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $LabelsTable _labelIdTable(_$TwonlyDB db) =>
-      db.labels.createAlias('contact_labels__label_id__labels__id');
-
-  $$LabelsTableProcessedTableManager get labelId {
-    final $_column = $_itemColumn<int>('label_id')!;
-
-    final manager = $$LabelsTableTableManager(
-      $_db,
-      $_db.labels,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_labelIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$ContactLabelsTableFilterComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableFilterComposer get contactId {
-    final $$ContactsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableFilterComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableFilterComposer get labelId {
-    final $$LabelsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableFilterComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableOrderingComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableOrderingComposer get contactId {
-    final $$ContactsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableOrderingComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableOrderingComposer get labelId {
-    final $$LabelsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableOrderingComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableAnnotationComposer
-    extends Composer<_$TwonlyDB, $ContactLabelsTable> {
-  $$ContactLabelsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  $$ContactsTableAnnotationComposer get contactId {
-    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.contactId,
-      referencedTable: $db.contacts,
-      getReferencedColumn: (t) => t.userId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.contacts,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$LabelsTableAnnotationComposer get labelId {
-    final $$LabelsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.labelId,
-      referencedTable: $db.labels,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$LabelsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.labels,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$ContactLabelsTableTableManager
-    extends
-        RootTableManager<
-          _$TwonlyDB,
-          $ContactLabelsTable,
-          ContactLabel,
-          $$ContactLabelsTableFilterComposer,
-          $$ContactLabelsTableOrderingComposer,
-          $$ContactLabelsTableAnnotationComposer,
-          $$ContactLabelsTableCreateCompanionBuilder,
-          $$ContactLabelsTableUpdateCompanionBuilder,
-          (ContactLabel, $$ContactLabelsTableReferences),
-          ContactLabel,
-          PrefetchHooks Function({bool contactId, bool labelId})
-        > {
-  $$ContactLabelsTableTableManager(_$TwonlyDB db, $ContactLabelsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ContactLabelsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ContactLabelsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ContactLabelsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> contactId = const Value.absent(),
-                Value<int> labelId = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => ContactLabelsCompanion(
-                contactId: contactId,
-                labelId: labelId,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required int contactId,
-                required int labelId,
-                Value<int> rowid = const Value.absent(),
-              }) => ContactLabelsCompanion.insert(
-                contactId: contactId,
-                labelId: labelId,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ContactLabelsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({contactId = false, labelId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (contactId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.contactId,
-                                referencedTable: $$ContactLabelsTableReferences
-                                    ._contactIdTable(db),
-                                referencedColumn: $$ContactLabelsTableReferences
-                                    ._contactIdTable(db)
-                                    .userId,
-                              )
-                              as T;
-                    }
-                    if (labelId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.labelId,
-                                referencedTable: $$ContactLabelsTableReferences
-                                    ._labelIdTable(db),
-                                referencedColumn: $$ContactLabelsTableReferences
-                                    ._labelIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$ContactLabelsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$TwonlyDB,
-      $ContactLabelsTable,
-      ContactLabel,
-      $$ContactLabelsTableFilterComposer,
-      $$ContactLabelsTableOrderingComposer,
-      $$ContactLabelsTableAnnotationComposer,
-      $$ContactLabelsTableCreateCompanionBuilder,
-      $$ContactLabelsTableUpdateCompanionBuilder,
-      (ContactLabel, $$ContactLabelsTableReferences),
-      ContactLabel,
-      PrefetchHooks Function({bool contactId, bool labelId})
+      $ContactGroupMembersTable,
+      ContactGroupMember,
+      $$ContactGroupMembersTableFilterComposer,
+      $$ContactGroupMembersTableOrderingComposer,
+      $$ContactGroupMembersTableAnnotationComposer,
+      $$ContactGroupMembersTableCreateCompanionBuilder,
+      $$ContactGroupMembersTableUpdateCompanionBuilder,
+      (ContactGroupMember, $$ContactGroupMembersTableReferences),
+      ContactGroupMember,
+      PrefetchHooks Function({bool contactGroupId, bool userId, bool groupId})
     >;
 
 class $TwonlyDBManager {
@@ -24012,12 +23474,8 @@ class $TwonlyDBManager {
       );
   $$UserDiscoverySharesTableTableManager get userDiscoveryShares =>
       $$UserDiscoverySharesTableTableManager(_db, _db.userDiscoveryShares);
-  $$ShortcutsTableTableManager get shortcuts =>
-      $$ShortcutsTableTableManager(_db, _db.shortcuts);
-  $$ShortcutMembersTableTableManager get shortcutMembers =>
-      $$ShortcutMembersTableTableManager(_db, _db.shortcutMembers);
-  $$LabelsTableTableManager get labels =>
-      $$LabelsTableTableManager(_db, _db.labels);
-  $$ContactLabelsTableTableManager get contactLabels =>
-      $$ContactLabelsTableTableManager(_db, _db.contactLabels);
+  $$ContactGroupsTableTableManager get contactGroups =>
+      $$ContactGroupsTableTableManager(_db, _db.contactGroups);
+  $$ContactGroupMembersTableTableManager get contactGroupMembers =>
+      $$ContactGroupMembersTableTableManager(_db, _db.contactGroupMembers);
 }

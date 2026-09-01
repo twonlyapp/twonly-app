@@ -10,7 +10,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
@@ -219,8 +219,8 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: user.userId,
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: user.userId,
                           additionalSubtitle:
                               alreadyInGroup.contains(user.userId)
                               ? Text(context.lang.alreadyInGroup)

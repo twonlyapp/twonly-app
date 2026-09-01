@@ -44,7 +44,8 @@ class _ChatListViewState extends State<ChatListView>
   StreamSubscription<List<Message>>? _latestMessagesSub;
   StreamSubscription<List<MediaFile>>? _chatListMediaSub;
   StreamSubscription<Map<String, VerificationStatus>>? _verificationSub;
-  StreamSubscription<List<(int, Label)>>? _contactLabelsSub;
+  StreamSubscription<List<(int, ContactGroup)>>? _contactGroupsSub;
+  StreamSubscription<List<(String, ContactGroup)>>? _chatContactGroupsSub;
   Timer? _typingUpdateTimer;
   final Set<String> _precachedMediaIds = {};
   List<Group> _groupsNotPinned = [];
@@ -58,7 +59,8 @@ class _ChatListViewState extends State<ChatListView>
   Map<String, Message> _lastMessageByGroup = {};
   Map<String, MediaFile> _chatListMediaById = {};
   Map<String, VerificationStatus> _verificationByGroup = {};
-  Map<int, List<Label>> _labelsByContact = {};
+  Map<int, List<ContactGroup>> _contactGroupsByUser = {};
+  Map<String, List<ContactGroup>> _contactGroupsByGroup = {};
 
   final ValueNotifier<bool> _hasContacts = ValueNotifier(false);
   bool _loading = true;
@@ -207,16 +209,39 @@ class _ChatListViewState extends State<ChatListView>
           if (!mounted) return;
           setState(() => _verificationByGroup = statuses);
         });
-    _contactLabelsSub = twonlyDB.labelsDao.watchAllContactLabels().listen((
-      rows,
-    ) {
-      if (!mounted) return;
-      final labels = <int, List<Label>>{};
-      for (final row in rows) {
-        labels.putIfAbsent(row.$1, () => []).add(row.$2);
-      }
-      setState(() => _labelsByContact = labels);
-    });
+    _contactGroupsSub = twonlyDB.contactGroupsDao
+        .watchAllVisibleUserGroups()
+        .listen((
+          rows,
+        ) {
+          if (!mounted) return;
+          final contactGroups = <int, List<ContactGroup>>{};
+          for (final row in rows) {
+            contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
+          }
+          setState(() => _contactGroupsByUser = contactGroups);
+        });
+    _chatContactGroupsSub = twonlyDB.contactGroupsDao
+        .watchAllVisibleChatGroups()
+        .listen((rows) {
+          if (!mounted) return;
+          final contactGroups = <String, List<ContactGroup>>{};
+          for (final row in rows) {
+            contactGroups.putIfAbsent(row.$1, () => []).add(row.$2);
+          }
+          setState(() => _contactGroupsByGroup = contactGroups);
+        });
+  }
+
+  /// Labels of a chat: those of the contact for direct chats, those of the
+  /// group itself otherwise.
+  List<ContactGroup> _contactGroupsFor(Group group) {
+    if (!group.isDirectChat) {
+      return _contactGroupsByGroup[group.groupId] ?? const [];
+    }
+    final contacts = _contactsByGroup[group.groupId];
+    if (contacts == null || contacts.isEmpty) return const [];
+    return _contactGroupsByUser[contacts.first.userId] ?? const [];
   }
 
   @override
@@ -238,7 +263,8 @@ class _ChatListViewState extends State<ChatListView>
     _latestMessagesSub?.cancel();
     _chatListMediaSub?.cancel();
     _verificationSub?.cancel();
-    _contactLabelsSub?.cancel();
+    _contactGroupsSub?.cancel();
+    _chatContactGroupsSub?.cancel();
     super.dispose();
   }
 
@@ -419,13 +445,7 @@ class _ChatListViewState extends State<ChatListView>
                         mediaFiles: _mediaForGroup(group.groupId),
                         useSharedSummary: true,
                         verificationStatus: _verificationByGroup[group.groupId],
-                        contactLabels:
-                            _contactsByGroup[group.groupId]?.isNotEmpty == true
-                            ? _labelsByContact[_contactsByGroup[group.groupId]!
-                                      .first
-                                      .userId] ??
-                                  const []
-                            : const [],
+                        contactGroups: _contactGroupsFor(group),
                       );
                     }
 
@@ -454,13 +474,7 @@ class _ChatListViewState extends State<ChatListView>
                       mediaFiles: _mediaForGroup(group.groupId),
                       useSharedSummary: true,
                       verificationStatus: _verificationByGroup[group.groupId],
-                      contactLabels:
-                          _contactsByGroup[group.groupId]?.isNotEmpty == true
-                          ? _labelsByContact[_contactsByGroup[group.groupId]!
-                                    .first
-                                    .userId] ??
-                                const []
-                          : const [],
+                      contactGroups: _contactGroupsFor(group),
                     );
                   },
                 ),

@@ -19,7 +19,7 @@ import 'package:twonly/src/visual/elements/headline.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
 import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/best_friends_selector.dart';
-import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/shortcut_row.comp.dart';
+import 'package:twonly/src/visual/views/camera/share_image_contact_selection_components/contact_group_shortcut_row.comp.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/layers/background.layer.dart';
 import 'package:twonly/src/visual/views/chats/chat_list_components/empty_chat_list.comp.dart';
 
@@ -188,7 +188,7 @@ class _ShareImageView extends State<ShareImageView> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                ShortcutRowComp(
+                ContactGroupShortcutRow(
                   selectedGroupIds: widget.selectedGroupIds,
                   updateSelectedGroupIds: updateSelectedGroupIds,
                 ),

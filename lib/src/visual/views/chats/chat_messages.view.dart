@@ -18,7 +18,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/themes/colors.dart';
@@ -626,9 +626,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                             FlameCounterWidget(group: group),
                           ],
                         ),
-                        if (group.isDirectChat && _groupContacts.isNotEmpty)
-                          ContactLabels(
-                            contactId: _groupContacts.first.userId,
+                        if (!group.isDirectChat)
+                          ContactGroupBadges(groupId: group.groupId)
+                        else if (_groupContacts.isNotEmpty)
+                          ContactGroupBadges(
+                            userId: _groupContacts.first.userId,
                           ),
                       ],
                     ),

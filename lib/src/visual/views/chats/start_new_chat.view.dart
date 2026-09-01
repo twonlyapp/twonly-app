@@ -12,7 +12,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
@@ -221,8 +221,8 @@ class _StartNewChatView extends State<StartNewChatView> {
                       return UserContextMenu(
                         key: ValueKey(contact.userId),
                         contact: contact,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: contact.userId,
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: contact.userId,
                           builder: (context, subtitleWidget) {
                             return ListTile(
                               title: Row(

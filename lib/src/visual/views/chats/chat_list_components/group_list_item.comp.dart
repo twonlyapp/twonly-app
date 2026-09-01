@@ -13,7 +13,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/media_download_policy.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/group.context_menu.dart';
@@ -32,7 +32,7 @@ class GroupListItemComp extends StatefulWidget {
     this.mediaFiles,
     this.useSharedSummary = false,
     this.verificationStatus,
-    this.contactLabels = const [],
+    this.contactGroups = const [],
     super.key,
   });
   final Group group;
@@ -44,7 +44,7 @@ class GroupListItemComp extends StatefulWidget {
   final Map<String, MediaFile>? mediaFiles;
   final bool useSharedSummary;
   final VerificationStatus? verificationStatus;
-  final List<Label> contactLabels;
+  final List<ContactGroup> contactGroups;
 
   @override
   State<GroupListItemComp> createState() => _UserListItem();
@@ -324,38 +324,49 @@ class _UserListItem extends State<GroupListItemComp> {
         return GroupContextMenu(
           group: widget.group,
           child: ListTile(
-            title: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    widget.group.groupName,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-                const SizedBox(width: 3),
-                VerificationBadgeComp(
-                  group: widget.group,
-                  verificationStatus: widget.verificationStatus,
-                  useProvidedStatus: widget.useSharedSummary,
-                  showOnlyIfVerified: true,
-                  clickable: false,
-                  size: 12,
-                ),
-                if (widget.group.isDirectChat && _directContact != null) ...[
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: ContactLabels(
-                        contactId: _directContact!.userId,
-                        labels: widget.contactLabels,
+            title: LayoutBuilder(
+              builder: (context, constraints) {
+                // Without labels the name may use the whole row.
+                final showBadges = widget.contactGroups.isNotEmpty;
+                // The name is capped instead of flexible so the badges get all
+                // of the space it does not use, rather than only half the row.
+                final nameMaxWidth = showBadges
+                    ? constraints.maxWidth * 0.6
+                    : constraints.maxWidth;
+                return Row(
+                  children: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: nameMaxWidth),
+                      child: Text(
+                        widget.group.groupName,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
-                  ),
-                ],
-              ],
+                    const SizedBox(width: 3),
+                    VerificationBadgeComp(
+                      group: widget.group,
+                      verificationStatus: widget.verificationStatus,
+                      useProvidedStatus: widget.useSharedSummary,
+                      showOnlyIfVerified: true,
+                      clickable: false,
+                      size: 12,
+                    ),
+                    if (showBadges) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: ContactGroupBadges(
+                          userId: _directContact?.userId,
+                          groupId: widget.group.isDirectChat
+                              ? null
+                              : widget.group.groupId,
+                          contactGroups: widget.contactGroups,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
             subtitle: _receiverDeletedAccount
                 ? Text(context.lang.userDeletedAccount)

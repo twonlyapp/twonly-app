@@ -492,7 +492,24 @@ mod tests {
             crate::database::app::AppDatabase::new(&legacy_path.display().to_string(), None, false)
                 .await
                 .unwrap();
-        legacy.run_migrations().await.unwrap();
+        for migration in [
+            include_str!("../database/app/migrations/0001_initial.sql"),
+            include_str!("../database/app/migrations/0002_api_outbox.sql"),
+            include_str!("../database/app/migrations/0003_notification_outbox.sql"),
+            include_str!("../database/app/migrations/0004_sealed_sender.sql"),
+            include_str!("../database/app/migrations/0005_direct_media_upload.sql"),
+            include_str!("../database/app/migrations/0006_defer_receipts_missing_bundle.sql"),
+            include_str!("../database/app/migrations/0007_remove_experimental_transport.sql"),
+            include_str!("../database/app/migrations/0008_pending_plaintext.sql"),
+            include_str!("../database/app/migrations/0009_outbox_dispatch.sql"),
+            include_str!("../database/app/migrations/0010_media_trim.sql"),
+            include_str!("../database/app/migrations/0011_outgoing_contact_request.sql"),
+        ] {
+            sqlx::raw_sql(migration)
+                .execute(&legacy.pool)
+                .await
+                .unwrap();
+        }
         sqlx::query!(r#"PRAGMA user_version = 25"#)
             .execute(&legacy.pool)
             .await

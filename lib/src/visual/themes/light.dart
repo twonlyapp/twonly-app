@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-const defaultPrimaryColor = Color(0xFF57CC99);
+const defaultPrimaryColor = Color(0xFF32be80);
 
 ThemeData getLightTheme([Color primary = defaultPrimaryColor]) {
   final base = ThemeData(

@@ -47,7 +47,7 @@ class AppEnvironment {
   ) async {
     await destination.create(recursive: true);
     final marker = File('${destination.path}/.runtime_storage_migrated_v1');
-    if (await marker.exists() || !await source.exists()) return;
+    if (marker.existsSync() || !source.existsSync()) return;
 
     await for (final entity in source.list(followLinks: false)) {
       await _copyEntity(entity, destination.path);
@@ -62,7 +62,9 @@ class AppEnvironment {
     FileSystemEntity entity,
     String destinationDirectory,
   ) async {
-    final name = entity.uri.pathSegments.where((value) => value.isNotEmpty).last;
+    final name = entity.uri.pathSegments
+        .where((value) => value.isNotEmpty)
+        .last;
     final destinationPath = '$destinationDirectory/$name';
     if (entity is Directory) {
       final destination = Directory(destinationPath);
@@ -75,7 +77,7 @@ class AppEnvironment {
     if (entity is! File) return;
 
     final destination = File(destinationPath);
-    if (await destination.exists()) return;
+    if (destination.existsSync()) return;
     final temporary = File('$destinationPath.migrating');
     await entity.copy(temporary.path);
     await temporary.rename(destination.path);

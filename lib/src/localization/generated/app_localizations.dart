@@ -3362,47 +3362,11 @@ abstract class AppLocalizations {
   /// **'Registering new account'**
   String get registeringNewAccount;
 
-  /// No description provided for @createShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Create shortcut'**
-  String get createShortcut;
-
-  /// No description provided for @editShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit shortcut'**
-  String get editShortcut;
-
-  /// No description provided for @deleteShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete shortcut'**
-  String get deleteShortcut;
-
-  /// No description provided for @deleteShortcutBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this shortcut?'**
-  String get deleteShortcutBody;
-
-  /// No description provided for @updateShortcut.
-  ///
-  /// In en, this message translates to:
-  /// **'Update shortcut'**
-  String get updateShortcut;
-
   /// No description provided for @selectEmoji.
   ///
   /// In en, this message translates to:
   /// **'Select Emoji'**
   String get selectEmoji;
-
-  /// No description provided for @errorEmojiUsedOrInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Emoji already used or invalid'**
-  String get errorEmojiUsedOrInvalid;
 
   /// No description provided for @subscriptionPledgeSecureTitle.
   ///
@@ -4322,65 +4286,125 @@ abstract class AppLocalizations {
   /// **'Show flame restore warning'**
   String get settingsShowRestoreFlameTitle;
 
-  /// No description provided for @contactLabelsTitle.
+  /// No description provided for @contactGroupsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Contact Labels'**
-  String get contactLabelsTitle;
+  /// **'Contact Groups'**
+  String get contactGroupsTitle;
 
-  /// No description provided for @contactLabelsSubtitleEmpty.
+  /// No description provided for @contactGroupsSubtitleEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No labels selected'**
-  String get contactLabelsSubtitleEmpty;
+  /// **'No visible contact groups selected'**
+  String get contactGroupsSubtitleEmpty;
 
-  /// No description provided for @contactLabelsMaxLimit.
+  /// No description provided for @createContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Maximum 3 labels per contact'**
-  String get contactLabelsMaxLimit;
+  /// **'Create contact group'**
+  String get createContactGroup;
 
-  /// No description provided for @createLabel.
+  /// No description provided for @editContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Create new label'**
-  String get createLabel;
+  /// **'Edit contact group'**
+  String get editContactGroup;
 
-  /// No description provided for @editLabel.
+  /// No description provided for @deleteContactGroup.
   ///
   /// In en, this message translates to:
-  /// **'Edit label'**
-  String get editLabel;
+  /// **'Delete contact group'**
+  String get deleteContactGroup;
 
-  /// No description provided for @deleteLabel.
+  /// No description provided for @deleteContactGroupConfirmation.
   ///
   /// In en, this message translates to:
-  /// **'Delete label'**
-  String get deleteLabel;
+  /// **'Are you sure you want to delete this contact group? It will be removed from all contacts and groups.'**
+  String get deleteContactGroupConfirmation;
 
-  /// No description provided for @deleteLabelConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this label? It will be removed from all contacts.'**
-  String get deleteLabelConfirmation;
-
-  /// No description provided for @labelNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Label name'**
-  String get labelNameHint;
-
-  /// No description provided for @labelTextColor.
+  /// No description provided for @contactGroupTextColor.
   ///
   /// In en, this message translates to:
   /// **'Text color'**
-  String get labelTextColor;
+  String get contactGroupTextColor;
 
-  /// No description provided for @labelBackgroundColor.
+  /// No description provided for @contactGroupBackgroundColor.
   ///
   /// In en, this message translates to:
   /// **'Background color'**
-  String get labelBackgroundColor;
+  String get contactGroupBackgroundColor;
+
+  /// No description provided for @contactGroupNoBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'No background'**
+  String get contactGroupNoBackground;
+
+  /// No description provided for @contactGroupFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get contactGroupFeatures;
+
+  /// No description provided for @contactGroupShowAsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as visible label'**
+  String get contactGroupShowAsLabel;
+
+  /// No description provided for @contactGroupShowAsLabelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Display this contact group next to its contacts.'**
+  String get contactGroupShowAsLabelSubtitle;
+
+  /// No description provided for @contactGroupShowAsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Show as shortcut'**
+  String get contactGroupShowAsShortcut;
+
+  /// No description provided for @contactGroupShowAsShortcutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use its emoji to select all members when sharing.'**
+  String get contactGroupShowAsShortcutSubtitle;
+
+  /// No description provided for @contactGroupShortcutNeedsEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an emoji before enabling the shortcut.'**
+  String get contactGroupShortcutNeedsEmoji;
+
+  /// No description provided for @contactGroupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get contactGroupMembers;
+
+  /// No description provided for @contactGroupLabelFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible label'**
+  String get contactGroupLabelFeature;
+
+  /// No description provided for @contactGroupShortcutFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut'**
+  String get contactGroupShortcutFeature;
+
+  /// No description provided for @contactGroupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact group'**
+  String get contactGroupSettings;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
 
   /// No description provided for @customColor.
   ///

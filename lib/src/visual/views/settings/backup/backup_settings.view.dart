@@ -15,6 +15,7 @@ import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
+import 'package:twonly/src/visual/themes/light.dart';
 import 'package:twonly/src/visual/views/settings/backup/backup_utils.dart';
 import 'package:twonly/src/visual/views/settings/backup/components/recovery_card.comp.dart';
 import 'package:twonly/src/visual/views/settings/backup/memories_backup_detail.view.dart';
@@ -185,7 +186,10 @@ class _BackupViewState extends State<BackupView> {
                       _backupStatus?.archiveSize,
                     ),
                   ),
-                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  trailing: const Icon(
+                    Icons.check_circle,
+                    color: defaultPrimaryColor,
+                  ),
                 ),
 
                 // Bilder & Medien

@@ -3,7 +3,9 @@
  *
  */
 
-use super::{AppDatabase, MigrationReport, TableMigrationCount, APPLICATION_TABLES};
+use super::{
+    AppDatabase, MigrationReport, TableMigrationCount, APPLICATION_TABLES, LEGACY_COPY_TABLES,
+};
 use crate::error::{Result, TwonlyError};
 use sqlx::{Acquire, AssertSqlSafe, Row};
 use std::collections::BTreeSet;
@@ -114,7 +116,7 @@ async fn import(
         .execute(&mut *tx)
         .await?;
     let mut counts = Vec::with_capacity(APPLICATION_TABLES.len());
-    for table in APPLICATION_TABLES {
+    for table in LEGACY_COPY_TABLES {
         let columns = common_columns(&mut tx, table).await?;
         if columns.is_empty() {
             return Err(TwonlyError::Generic(format!(
@@ -166,6 +168,7 @@ async fn import(
             rows: source_count,
         });
     }
+    migrate_legacy_contact_groups(&mut tx, &mut counts).await?;
     copy_sequences(&mut tx).await?;
     let foreign_key_errors =
         sqlx::query_scalar!(r#"SELECT COUNT(*) FROM pragma_foreign_key_check"#)
@@ -200,6 +203,80 @@ async fn import(
         legacy_version,
         tables: counts,
     })
+}
+
+async fn migrate_legacy_contact_groups(
+    connection: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    counts: &mut Vec<TableMigrationCount>,
+) -> Result<()> {
+    sqlx::query(
+        r#"INSERT INTO main.contact_groups (
+               id, name, emoji, text_color, background_color,
+               show_as_shortcut, show_as_label, usage_counter, created_at
+           )
+           SELECT id, name, NULL, text_color, background_color,
+                  0, 1, 0, created_at
+           FROM legacy.labels"#,
+    )
+    .execute(&mut **connection)
+    .await?;
+    sqlx::query(
+        r#"INSERT OR IGNORE INTO main.contact_group_members
+               (contact_group_id, user_id, group_id)
+           SELECT label_id, contact_id, NULL
+           FROM legacy.contact_labels"#,
+    )
+    .execute(&mut **connection)
+    .await?;
+    sqlx::query(
+        r#"INSERT INTO main.contact_groups (
+               id, name, emoji, text_color, background_color,
+               show_as_shortcut, show_as_label, usage_counter, created_at
+           )
+           SELECT COALESCE((SELECT MAX(id) FROM legacy.labels), 0) + id,
+                  emoji, emoji, 4278190080, 0,
+                  1, 0, usage_counter,
+                  CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)
+           FROM legacy.shortcuts"#,
+    )
+    .execute(&mut **connection)
+    .await?;
+    sqlx::query(
+        r#"INSERT OR IGNORE INTO main.contact_group_members
+               (contact_group_id, user_id, group_id)
+           SELECT COALESCE((SELECT MAX(id) FROM legacy.labels), 0) + sm.shortcut_id,
+                  gm.contact_id, NULL
+           FROM legacy.shortcut_members sm
+           INNER JOIN legacy.groups g ON g.group_id = sm.group_id
+           INNER JOIN legacy.group_members gm ON gm.group_id = g.group_id
+           WHERE g.is_direct_chat = 1"#,
+    )
+    .execute(&mut **connection)
+    .await?;
+    sqlx::query(
+        r#"INSERT OR IGNORE INTO main.contact_group_members
+               (contact_group_id, user_id, group_id)
+           SELECT COALESCE((SELECT MAX(id) FROM legacy.labels), 0) + sm.shortcut_id,
+                  NULL, sm.group_id
+           FROM legacy.shortcut_members sm
+           INNER JOIN legacy.groups g ON g.group_id = sm.group_id
+           WHERE g.is_direct_chat = 0"#,
+    )
+    .execute(&mut **connection)
+    .await?;
+
+    for table in ["contact_groups", "contact_group_members"] {
+        let rows = sqlx::query_scalar::<_, i64>(AssertSqlSafe(format!(
+            r#"SELECT COUNT(*) FROM main."{table}""#
+        )))
+        .fetch_one(&mut **connection)
+        .await?;
+        counts.push(TableMigrationCount {
+            table: table.to_owned(),
+            rows,
+        });
+    }
+    Ok(())
 }
 
 async fn common_columns(
@@ -239,8 +316,7 @@ async fn copy_sequences(connection: &mut sqlx::Transaction<'_, sqlx::Sqlite>) ->
         "verification_tokens",
         "user_discovery_own_promotions",
         "user_discovery_shares",
-        "shortcuts",
-        "labels",
+        "contact_groups",
     ] {
         let source_sequence: Option<i64> =
             sqlx::query_scalar(r#"SELECT seq FROM legacy.sqlite_sequence WHERE name = ?"#)
@@ -279,7 +355,7 @@ mod tests {
         let legacy = AppDatabase::new(legacy_path.to_str().unwrap(), None, false)
             .await
             .unwrap();
-        legacy.run_migrations().await.unwrap();
+        create_legacy_schema(&legacy.pool).await;
         sqlx::query!(r#"PRAGMA user_version = 25"#)
             .execute(&legacy.pool)
             .await
@@ -294,10 +370,50 @@ mod tests {
         target.run_migrations().await.unwrap();
         let first = target.import_legacy(&legacy_path).await.unwrap();
         assert_eq!(first.tables.len(), APPLICATION_TABLES.len());
-        assert!(first.tables.iter().all(|entry| entry.rows == 1));
+        assert!(first
+            .tables
+            .iter()
+            .filter(|entry| !entry.table.starts_with("contact_group"))
+            .all(|entry| entry.rows == 1));
+        assert_eq!(
+            first
+                .tables
+                .iter()
+                .find(|entry| entry.table == "contact_groups")
+                .unwrap()
+                .rows,
+            2
+        );
+        assert_eq!(
+            first
+                .tables
+                .iter()
+                .find(|entry| entry.table == "contact_group_members")
+                .unwrap()
+                .rows,
+            2
+        );
         let second = target.import_legacy(&legacy_path).await.unwrap();
         assert_eq!(first, second);
         assert!(target.is_legacy_import_complete().await.unwrap());
+
+        let migrated_shortcut = sqlx::query_as::<_, (String, String, i64, i64)>(
+            r#"SELECT name, emoji, background_color, show_as_shortcut
+               FROM contact_groups WHERE emoji = '🔥'"#,
+        )
+        .fetch_one(&target.pool)
+        .await
+        .unwrap();
+        assert_eq!(migrated_shortcut, ("🔥".into(), "🔥".into(), 0, 1));
+        let migrated_group_target: String = sqlx::query_scalar(
+            r#"SELECT group_id
+               FROM contact_group_members
+               WHERE group_id IS NOT NULL"#,
+        )
+        .fetch_one(&target.pool)
+        .await
+        .unwrap();
+        assert_eq!(migrated_group_target, "group-1");
 
         let selected = target
             .raw_select(
@@ -367,6 +483,87 @@ mod tests {
             .unwrap();
             assert_eq!(actual, expected, "Signal data changed in {table}");
         }
+    }
+
+    async fn create_legacy_schema(pool: &SqlitePool) {
+        for migration in [
+            include_str!("migrations/0001_initial.sql"),
+            include_str!("migrations/0002_api_outbox.sql"),
+            include_str!("migrations/0003_notification_outbox.sql"),
+            include_str!("migrations/0004_sealed_sender.sql"),
+            include_str!("migrations/0005_direct_media_upload.sql"),
+            include_str!("migrations/0006_defer_receipts_missing_bundle.sql"),
+            include_str!("migrations/0007_remove_experimental_transport.sql"),
+            include_str!("migrations/0008_pending_plaintext.sql"),
+            include_str!("migrations/0009_outbox_dispatch.sql"),
+            include_str!("migrations/0010_media_trim.sql"),
+            include_str!("migrations/0011_outgoing_contact_request.sql"),
+        ] {
+            sqlx::raw_sql(migration).execute(pool).await.unwrap();
+        }
+    }
+
+    #[tokio::test]
+    async fn rust_migration_converts_direct_users_and_actual_groups() {
+        let directory = tempdir().unwrap();
+        let path = directory.path().join("pre-contact-groups.sqlite");
+        let database = AppDatabase::new(path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        create_legacy_schema(&database.pool).await;
+        for statement in [
+            "INSERT INTO contacts(user_id, username) VALUES(7, 'alice')",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES('direct-1', 'Alice', 1)",
+            "INSERT INTO groups(group_id, group_name, is_direct_chat) VALUES('group-1', 'Friends', 0)",
+            "INSERT INTO group_members(group_id, contact_id) VALUES('direct-1', 7)",
+            "INSERT INTO shortcuts(id, emoji, usage_counter) VALUES(3, '🔥', 5)",
+            "INSERT INTO shortcut_members(shortcut_id, group_id) VALUES(3, 'direct-1')",
+            "INSERT INTO shortcut_members(shortcut_id, group_id) VALUES(3, 'group-1')",
+            "INSERT INTO labels(id, name, text_color, background_color) VALUES(5, 'Family', 1, 2)",
+            "INSERT INTO contact_labels(contact_id, label_id) VALUES(7, 5)",
+        ] {
+            sqlx::query(statement)
+                .execute(&database.pool)
+                .await
+                .unwrap();
+        }
+
+        sqlx::raw_sql(include_str!("migrations/0012_contact_groups.sql"))
+            .execute(&database.pool)
+            .await
+            .unwrap();
+
+        let shortcut = sqlx::query_as::<_, (i64, String, String, i64, i64, i64)>(
+            r#"SELECT id, name, emoji, background_color, show_as_shortcut, usage_counter
+               FROM contact_groups WHERE emoji = '🔥'"#,
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(shortcut, (8, "🔥".into(), "🔥".into(), 0, 1, 5));
+
+        let members = sqlx::query_as::<_, (Option<i64>, Option<String>)>(
+            r#"SELECT user_id, group_id
+               FROM contact_group_members
+               WHERE contact_group_id = 8
+               ORDER BY group_id"#,
+        )
+        .fetch_all(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(
+            members,
+            vec![(Some(7), None), (None, Some("group-1".into()))]
+        );
+        let old_table_count: i64 = sqlx::query_scalar(
+            r#"SELECT COUNT(*) FROM sqlite_master
+               WHERE type = 'table'
+                 AND name IN ('shortcuts', 'shortcut_members', 'labels', 'contact_labels')"#,
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(old_table_count, 0);
     }
 
     async fn populate_every_table(pool: &SqlitePool) {

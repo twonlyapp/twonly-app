@@ -7,7 +7,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/context_menu/user.context_menu.dart';
@@ -126,8 +126,8 @@ class _GroupCreateSelectGroupNameViewState
                       return UserContextMenu(
                         key: ValueKey(user.userId),
                         contact: user,
-                        child: ContactLabelsSubtitleBuilder(
-                          contactId: user.userId,
+                        child: ContactGroupsSubtitleBuilder(
+                          userId: user.userId,
                           builder: (context, subtitleWidget) {
                             return ListTile(
                               title: Row(

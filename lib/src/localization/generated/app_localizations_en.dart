@@ -1923,26 +1923,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registeringNewAccount => 'Registering new account';
 
   @override
-  String get createShortcut => 'Create shortcut';
-
-  @override
-  String get editShortcut => 'Edit shortcut';
-
-  @override
-  String get deleteShortcut => 'Delete shortcut';
-
-  @override
-  String get deleteShortcutBody =>
-      'Are you sure you want to delete this shortcut?';
-
-  @override
-  String get updateShortcut => 'Update shortcut';
-
-  @override
   String get selectEmoji => 'Select Emoji';
-
-  @override
-  String get errorEmojiUsedOrInvalid => 'Emoji already used or invalid';
 
   @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
@@ -2481,35 +2462,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsShowRestoreFlameTitle => 'Show flame restore warning';
 
   @override
-  String get contactLabelsTitle => 'Contact Labels';
+  String get contactGroupsTitle => 'Contact Groups';
 
   @override
-  String get contactLabelsSubtitleEmpty => 'No labels selected';
+  String get contactGroupsSubtitleEmpty => 'No visible contact groups selected';
 
   @override
-  String get contactLabelsMaxLimit => 'Maximum 3 labels per contact';
+  String get createContactGroup => 'Create contact group';
 
   @override
-  String get createLabel => 'Create new label';
+  String get editContactGroup => 'Edit contact group';
 
   @override
-  String get editLabel => 'Edit label';
+  String get deleteContactGroup => 'Delete contact group';
 
   @override
-  String get deleteLabel => 'Delete label';
+  String get deleteContactGroupConfirmation =>
+      'Are you sure you want to delete this contact group? It will be removed from all contacts and groups.';
 
   @override
-  String get deleteLabelConfirmation =>
-      'Are you sure you want to delete this label? It will be removed from all contacts.';
+  String get contactGroupTextColor => 'Text color';
 
   @override
-  String get labelNameHint => 'Label name';
+  String get contactGroupBackgroundColor => 'Background color';
 
   @override
-  String get labelTextColor => 'Text color';
+  String get contactGroupNoBackground => 'No background';
 
   @override
-  String get labelBackgroundColor => 'Background color';
+  String get contactGroupFeatures => 'Features';
+
+  @override
+  String get contactGroupShowAsLabel => 'Show as visible label';
+
+  @override
+  String get contactGroupShowAsLabelSubtitle =>
+      'Display this contact group next to its contacts.';
+
+  @override
+  String get contactGroupShowAsShortcut => 'Show as shortcut';
+
+  @override
+  String get contactGroupShowAsShortcutSubtitle =>
+      'Use its emoji to select all members when sharing.';
+
+  @override
+  String get contactGroupShortcutNeedsEmoji =>
+      'Select an emoji before enabling the shortcut.';
+
+  @override
+  String get contactGroupMembers => 'Members';
+
+  @override
+  String get contactGroupLabelFeature => 'Visible label';
+
+  @override
+  String get contactGroupShortcutFeature => 'Shortcut';
+
+  @override
+  String get contactGroupSettings => 'Edit contact group';
+
+  @override
+  String get save => 'Save';
 
   @override
   String get customColor => 'Custom Color';

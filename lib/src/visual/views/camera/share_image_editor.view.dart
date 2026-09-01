@@ -433,8 +433,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 }
               },
               onTap: _onCanvasTap,
-              child: MediaViewSizingHelper(
-                requiredHeight: 59,
+              child: MediaViewSizingHelper.cameraEditor(
                 bottomNavigation: EditorBottomBar(
                   mediaService: mediaService,
                   sendToGroup: widget.sendToGroup,

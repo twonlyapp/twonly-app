@@ -6,7 +6,7 @@ use crate::api::proto::http_requests::{
 };
 use crate::bridge::api::RustApi;
 use crate::context::Context;
-use crate::database::app::tables::MediaFile;
+use crate::database::app::{tables::MediaFile, AppDatabase};
 use crate::error::{Result, TwonlyError};
 use crate::native::transfer;
 use chacha20poly1305::aead::{AeadInPlace, KeyInit};
@@ -34,10 +34,16 @@ const REFRESH_BEFORE_SECONDS: i64 = 24 * 60 * 60;
 const DEFAULT_SLOT_REFILL_THRESHOLD: i64 = 5;
 /// Where the server's advertised refill threshold is remembered between runs.
 const REFILL_THRESHOLD_KEY: &str = "direct_media_refill_threshold";
+/// Upload slots and attachment capabilities belong to exactly one API
+/// deployment. Debug and profile builds share the `.testing` application data,
+/// so this marker prevents a build switch from reusing the other server's
+/// durable jobs.
+const API_NAMESPACE_KEY: &str = "direct_media_api_namespace";
 const WATCH_FIRST_DELAY: Duration = Duration::from_secs(2);
 const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
 
 static WATCHING: AtomicBool = AtomicBool::new(false);
+static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Bumped every time something asks to be watched. A watcher already in flight
 /// reads this as "new work arrived" and drops back to the short poll interval.
@@ -180,6 +186,68 @@ struct NativeUploadDescriptor {
     complete: NativeRequest,
 }
 
+async fn reset_upload_namespace(
+    database: &AppDatabase,
+    data_dir: &Path,
+    namespace: &str,
+) -> Result<(Option<String>, usize)> {
+    let stored = sqlx::query_scalar::<_, String>("SELECT value FROM app_metadata WHERE key = ?")
+        .bind(API_NAMESPACE_KEY)
+        .fetch_optional(&database.pool)
+        .await?;
+    if stored.as_deref() == Some(namespace) {
+        return Ok((stored, 0));
+    }
+
+    let stale_files = sqlx::query_as::<_, (String, String, String, String)>(
+        r#"SELECT attachment_id, multipart_path, manifest_path, complete_body_path
+           FROM direct_media_upload_jobs"#,
+    )
+    .fetch_all(&database.pool)
+    .await?;
+
+    let mut transaction = database.pool.begin().await?;
+    sqlx::query(
+        r#"UPDATE media_files
+           SET upload_state = 'preprocessing', pre_progressing_process = NULL
+           WHERE upload_state != 'uploaded'
+             AND media_id IN (SELECT media_id FROM direct_media_upload_jobs)"#,
+    )
+    .execute(&mut *transaction)
+    .await?;
+    sqlx::query("DELETE FROM direct_media_upload_jobs WHERE 1")
+        .execute(&mut *transaction)
+        .await?;
+    sqlx::query("DELETE FROM direct_media_upload_slots WHERE 1")
+        .execute(&mut *transaction)
+        .await?;
+    sqlx::query(
+        r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
+           ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+    )
+    .bind(API_NAMESPACE_KEY)
+    .bind(namespace)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+
+    for (attachment_id, multipart, manifest, complete) in &stale_files {
+        for path in [multipart, manifest, complete] {
+            match std::fs::remove_file(path) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => {
+                    tracing::warn!(path, %error, "could not remove stale upload request file");
+                }
+            }
+        }
+        let job_dir = data_dir.join("direct-media-upload").join(attachment_id);
+        let _ = std::fs::remove_dir(job_dir);
+    }
+
+    Ok((stored, stale_files.len()))
+}
+
 #[derive(Clone, Copy)]
 enum Outcome {
     Uploaded,
@@ -198,6 +266,34 @@ impl DirectMediaUploadService {
 
     fn api_url(path: &str) -> String {
         format!("{}{}", RustApi::api_base_url("https".into()), path)
+    }
+
+    /// Invalidates durable upload state created for another API deployment.
+    ///
+    /// Attachment ids, capabilities, pre-signed object-store requests, and the
+    /// manifest/complete URLs are all server-specific. Keeping them when a
+    /// profile build (production API) is replaced by a debug build (development
+    /// API), or vice versa, leaves the media in `backgroundUploadTaskStarted`
+    /// until the old slot expires. Returning the media to `preprocessing` lets
+    /// the ordinary startup sweep reserve a fresh slot and really retry it.
+    async fn ensure_api_namespace(&self) -> Result<()> {
+        let _guard = API_NAMESPACE_LOCK.lock().await;
+        let namespace = RustApi::api_base_url("https".into());
+        let database = self.ctx.app_db.read().await.clone();
+        let (stored, restarted) =
+            reset_upload_namespace(&database, Path::new(&self.ctx.config.data_dir), &namespace)
+                .await?;
+        if stored.as_deref() == Some(namespace.as_str()) {
+            return Ok(());
+        }
+
+        tracing::info!(
+            previous = stored.as_deref().unwrap_or("unset"),
+            current = namespace,
+            restarted,
+            "reset direct-media uploads after API deployment changed"
+        );
+        Ok(())
     }
 
     async fn authenticated_request(
@@ -230,6 +326,7 @@ impl DirectMediaUploadService {
     }
 
     pub async fn preload_slots(&self) -> Result<usize> {
+        self.ensure_api_namespace().await?;
         let database = self.ctx.app_db.read().await.clone();
         let known = sqlx::query_scalar::<_, String>(
             "SELECT attachment_id FROM direct_media_upload_slots WHERE state IN ('cached', 'reserved') AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
@@ -332,6 +429,7 @@ impl DirectMediaUploadService {
     }
 
     async fn ensure_slots(&self) -> Result<()> {
+        self.ensure_api_namespace().await?;
         let usable = self.usable_slot_count().await?;
         if usable > self.refill_threshold().await {
             return Ok(());
@@ -391,6 +489,7 @@ impl DirectMediaUploadService {
     /// while the manifest is still being reconciled, so only the attachment's
     /// own state says whether the recipients were dispatched.
     pub async fn reconcile(&self) -> Result<()> {
+        self.ensure_api_namespace().await?;
         let database = self.ctx.app_db.read().await.clone();
         let jobs = sqlx::query_as::<_, PendingJob>(
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
@@ -871,6 +970,91 @@ mod tests {
         WATCHING.store(true, Ordering::SeqCst);
         drop(WatchingGuard);
         assert!(!WATCHING.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn api_namespace_change_restarts_durable_uploads() {
+        let directory = tempfile::tempdir().unwrap();
+        let database_path = directory.path().join("app.sqlite");
+        let database = AppDatabase::new(database_path.to_str().unwrap(), None, false)
+            .await
+            .unwrap();
+        database.run_migrations().await.unwrap();
+
+        let job_dir = directory.path().join("direct-media-upload/attachment-1");
+        std::fs::create_dir_all(&job_dir).unwrap();
+        let multipart = job_dir.join("media.multipart");
+        let manifest = job_dir.join("manifest.pb");
+        let complete = job_dir.join("complete.pb");
+        for path in [&multipart, &manifest, &complete] {
+            std::fs::write(path, b"request").unwrap();
+        }
+
+        sqlx::query("INSERT INTO app_metadata(key, value) VALUES(?, 'https://api.example/api/')")
+            .bind(API_NAMESPACE_KEY)
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        sqlx::query(
+            "INSERT INTO media_files(media_id, type, upload_state, pre_progressing_process) VALUES('media-1', 'image', 'backgroundUploadTaskStarted', 73)",
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_slots
+               (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                upload_fields_json, capability, state)
+               VALUES('attachment-1', 9999999999, 1000000, 'https://objects.example',
+                      '{}', x'01', 'reserved')"#,
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_jobs
+               (attachment_id, media_id, multipart_path, manifest_path,
+                complete_body_path, native_descriptor_json, state, expires_at)
+               VALUES('attachment-1', 'media-1', ?, ?, ?, '{}', 'scheduled', 9999999999)"#,
+        )
+        .bind(multipart.to_string_lossy().as_ref())
+        .bind(manifest.to_string_lossy().as_ref())
+        .bind(complete.to_string_lossy().as_ref())
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        let (previous, restarted) =
+            reset_upload_namespace(&database, directory.path(), "https://dev-api.example/api/")
+                .await
+                .unwrap();
+
+        assert_eq!(previous.as_deref(), Some("https://api.example/api/"));
+        assert_eq!(restarted, 1);
+        let state = sqlx::query_as::<_, (Option<String>, Option<i64>)>(
+            "SELECT upload_state, pre_progressing_process FROM media_files WHERE media_id = 'media-1'",
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(state, (Some("preprocessing".into()), None));
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM direct_media_upload_jobs")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap(),
+            0
+        );
+        assert_eq!(
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM direct_media_upload_slots")
+                .fetch_one(&database.pool)
+                .await
+                .unwrap(),
+            0
+        );
+        assert!(!multipart.exists());
+        assert!(!manifest.exists());
+        assert!(!complete.exists());
     }
 
     #[test]

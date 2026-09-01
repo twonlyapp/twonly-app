@@ -16,12 +16,10 @@ mod legacy_import;
 pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 6;
+pub const APP_SCHEMA_VERSION: i64 = 7;
 
-/// Tables imported from the legacy Drift database. Every entry must exist in
-/// Drift schema 25, because a missing table aborts the whole import. Rust-only
-/// tables such as `notification_outbox` are deliberately absent: they have no
-/// legacy counterpart, and importing stale rows would replay old notifications.
+/// User-owned application tables in the current Rust schema. Rust-only outbox
+/// tables are deliberately absent because they are reconstructed locally.
 pub const APPLICATION_TABLES: &[&str] = &[
     "contacts",
     "groups",
@@ -41,10 +39,31 @@ pub const APPLICATION_TABLES: &[&str] = &[
     "user_discovery_other_promotions",
     "user_discovery_own_promotions",
     "user_discovery_shares",
-    "shortcuts",
-    "shortcut_members",
-    "labels",
-    "contact_labels",
+    "contact_groups",
+    "contact_group_members",
+];
+
+/// Tables copied one-to-one from the legacy Drift schema. Contact labels and
+/// shortcuts need a typed transformation into the unified contact-group tables.
+pub const LEGACY_COPY_TABLES: &[&str] = &[
+    "contacts",
+    "groups",
+    "media_files",
+    "messages",
+    "message_histories",
+    "reactions",
+    "group_members",
+    "receipts",
+    "received_receipts",
+    "message_actions",
+    "group_histories",
+    "key_verifications",
+    "verification_tokens",
+    "user_discovery_announced_users",
+    "user_discovery_user_relations",
+    "user_discovery_other_promotions",
+    "user_discovery_own_promotions",
+    "user_discovery_shares",
 ];
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -662,7 +662,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         });
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: SafeArea(
+          maintainBottomViewPadding: true,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -738,6 +740,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               if (showSendTextMessageInput)
                 MediaViewerMessageInput(
                   controller: textMessageController,
+                  safeAreaBottomPadding: MediaQuery.viewPaddingOf(
+                    context,
+                  ).bottom,
                   onSubmitted: (value) => _sendTextMessage(),
                   onSendPressed: _sendTextMessage,
                 ),

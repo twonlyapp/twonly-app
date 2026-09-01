@@ -12,13 +12,14 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
-import 'package:twonly/src/visual/components/contact_labels.comp.dart';
+import 'package:twonly/src/visual/components/contact_groups.comp.dart';
 import 'package:twonly/src/visual/components/flame_counter.comp.dart';
 import 'package:twonly/src/visual/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/components/verification_badge.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/views/contact/contact.view.dart';
+import 'package:twonly/src/visual/views/contact/select_contact_groups.view.dart';
 import 'package:twonly/src/visual/views/groups/group_create_select_members.view.dart';
 import 'package:twonly/src/visual/views/groups/group_member.context.dart';
 import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
@@ -212,6 +213,21 @@ class _GroupViewState extends State<GroupView> {
             groupId: widget.groupId,
             disabled: !_group!.isGroupAdmin,
           ),
+          ContactGroupsSubtitleBuilder(
+            groupId: widget.groupId,
+            builder: (context, subtitleWidget) {
+              return BetterListTile(
+                icon: FontAwesomeIcons.tag,
+                text: context.lang.contactGroupsTitle,
+                subtitle: subtitleWidget,
+                onTap: () {
+                  context.navPush(
+                    SelectContactGroupsView(groupId: widget.groupId),
+                  );
+                },
+              );
+            },
+          ),
           const Divider(),
           ListTile(
             title: Padding(
@@ -254,8 +270,8 @@ class _GroupViewState extends State<GroupView> {
               group: _group!,
               contact: member.$1,
               member: member.$2,
-              child: ContactLabelsSubtitleBuilder(
-                contactId: member.$1.userId,
+              child: ContactGroupsSubtitleBuilder(
+                userId: member.$1.userId,
                 builder: (context, subtitleWidget) {
                   return BetterListTile(
                     padding: const EdgeInsets.only(left: 13),

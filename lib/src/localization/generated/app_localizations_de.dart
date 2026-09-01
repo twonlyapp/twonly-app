@@ -1937,27 +1937,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get registeringNewAccount => 'Neues Konto wird registriert';
 
   @override
-  String get createShortcut => 'Shortcut erstellen';
-
-  @override
-  String get editShortcut => 'Shortcut bearbeiten';
-
-  @override
-  String get deleteShortcut => 'Shortcut löschen';
-
-  @override
-  String get deleteShortcutBody =>
-      'Bist du sicher, dass du diesen Shortcut löschen möchtest?';
-
-  @override
-  String get updateShortcut => 'Shortcut aktualisieren';
-
-  @override
   String get selectEmoji => 'Emoji auswählen';
-
-  @override
-  String get errorEmojiUsedOrInvalid =>
-      'Emoji wird bereits verwendet oder ist ungültig';
 
   @override
   String get subscriptionPledgeSecureTitle => 'Secure by Design';
@@ -2506,35 +2486,69 @@ class AppLocalizationsDe extends AppLocalizations {
       'Hinweis zur Flammen-Wiederherstellung anzeigen';
 
   @override
-  String get contactLabelsTitle => 'Kontaktlabels';
+  String get contactGroupsTitle => 'Kontaktgruppen';
 
   @override
-  String get contactLabelsSubtitleEmpty => 'Keine Labels ausgewählt';
+  String get contactGroupsSubtitleEmpty =>
+      'Keine sichtbaren Kontaktgruppen ausgewählt';
 
   @override
-  String get contactLabelsMaxLimit => 'Maximal 3 Labels pro Kontakt';
+  String get createContactGroup => 'Kontaktgruppe erstellen';
 
   @override
-  String get createLabel => 'Neues Label erstellen';
+  String get editContactGroup => 'Kontaktgruppe anpassen';
 
   @override
-  String get editLabel => 'Label bearbeiten';
+  String get deleteContactGroup => 'Kontaktgruppe löschen';
 
   @override
-  String get deleteLabel => 'Label löschen';
+  String get deleteContactGroupConfirmation =>
+      'Möchtest du diese Kontaktgruppe wirklich löschen? Sie wird von allen Kontakten und Gruppen entfernt.';
 
   @override
-  String get deleteLabelConfirmation =>
-      'Möchtest du dieses Label wirklich löschen? Es wird von allen Kontakten entfernt.';
+  String get contactGroupTextColor => 'Textfarbe';
 
   @override
-  String get labelNameHint => 'Label-Name';
+  String get contactGroupBackgroundColor => 'Hintergrundfarbe';
 
   @override
-  String get labelTextColor => 'Textfarbe';
+  String get contactGroupNoBackground => 'Kein Hintergrund';
 
   @override
-  String get labelBackgroundColor => 'Hintergrundfarbe';
+  String get contactGroupFeatures => 'Funktionen';
+
+  @override
+  String get contactGroupShowAsLabel => 'Als sichtbares Label anzeigen';
+
+  @override
+  String get contactGroupShowAsLabelSubtitle =>
+      'Zeigt diese Kontaktgruppe neben den zugehörigen Kontakten an.';
+
+  @override
+  String get contactGroupShowAsShortcut => 'Als Shortcut anzeigen';
+
+  @override
+  String get contactGroupShowAsShortcutSubtitle =>
+      'Wählt beim Teilen über das Emoji alle Mitglieder aus.';
+
+  @override
+  String get contactGroupShortcutNeedsEmoji =>
+      'Wähle ein Emoji aus, bevor du den Shortcut aktivierst.';
+
+  @override
+  String get contactGroupMembers => 'Mitglieder';
+
+  @override
+  String get contactGroupLabelFeature => 'Sichtbares Label';
+
+  @override
+  String get contactGroupShortcutFeature => 'Shortcut';
+
+  @override
+  String get contactGroupSettings => 'Kontaktgruppe anpassen';
+
+  @override
+  String get save => 'Speichern';
 
   @override
   String get customColor => 'Eigene Farbe';

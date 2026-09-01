@@ -68,7 +68,14 @@ class MainCameraController {
   GlobalKey cameraPreviewKey = GlobalKey();
 
   bool isSelectingFaceFilters = false;
-  bool isSharePreviewIsShown = false;
+  bool _isSharePreviewIsShown = false;
+  bool get isSharePreviewIsShown => _isSharePreviewIsShown;
+  set isSharePreviewIsShown(bool value) {
+    if (_isSharePreviewIsShown == value) return;
+    _isSharePreviewIsShown = value;
+    setState?.call();
+  }
+
   bool isVideoRecording = false;
   DateTime? timeSharedLinkWasSetWithQr;
 

@@ -1,26 +1,24 @@
 import 'dart:async';
 
 import 'package:drift/drift.dart';
+import 'package:twonly/src/database/daos/contact_groups.dao.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/daos/key_verification.dao.dart';
-import 'package:twonly/src/database/daos/labels.dao.dart';
 import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
-import 'package:twonly/src/database/daos/shortcuts.dao.dart';
 import 'package:twonly/src/database/daos/user_discovery.dao.dart';
 import 'package:twonly/src/database/rust_change_notifier.dart';
 import 'package:twonly/src/database/rust_query_executor.dart';
+import 'package:twonly/src/database/tables/contact_groups.table.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
-import 'package:twonly/src/database/tables/labels.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
-import 'package:twonly/src/database/tables/shortcuts.table.dart';
 import 'package:twonly/src/database/tables/user_discovery.table.dart';
 import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -48,10 +46,8 @@ part 'twonly.db.g.dart';
     UserDiscoveryOtherPromotions,
     UserDiscoveryOwnPromotions,
     UserDiscoveryShares,
-    Shortcuts,
-    ShortcutMembers,
-    Labels,
-    ContactLabels,
+    ContactGroups,
+    ContactGroupMembers,
   ],
   daos: [
     MessagesDao,
@@ -62,8 +58,7 @@ part 'twonly.db.g.dart';
     MediaFilesDao,
     UserDiscoveryDao,
     KeyVerificationDao,
-    ShortcutsDao,
-    LabelsDao,
+    ContactGroupsDao,
   ],
 )
 class TwonlyDB extends _$TwonlyDB {
@@ -93,6 +88,8 @@ class TwonlyDB extends _$TwonlyDB {
 
   @override
   MigrationStrategy get migration {
+    // Frozen legacy-Drift upgrade chain used only before Rust imports schema
+    // v25. All current application schema migrations are owned by Rust.
     return MigrationStrategy(
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');

@@ -19,10 +19,8 @@ class MainCameraPreview extends StatelessWidget {
       return Container();
     }
     return Positioned.fill(
-      child: MediaViewSizingHelper(
-        requiredHeight: 0,
-        additionalPadding: 59,
-        bottomNavigation: Container(),
+      child: MediaViewSizingHelper.cameraEditor(
+        bottomNavigation: const SizedBox.shrink(),
         child: Stack(
           children: [
             Screenshot(
