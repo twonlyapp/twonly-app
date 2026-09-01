@@ -70,7 +70,10 @@ impl AppDatabase {
             .log_statements(tracing::log::LevelFilter::Off)
             .log_slow_statements(tracing::log::LevelFilter::Warn, Duration::from_millis(500));
         if let Some(key) = encryption_key {
-            options = options.pragma("key", format!("'{key}'"));
+            // Migrates a database still encrypted with the old passphrase-derived
+            // key before the pool opens it. See `database::cipher`.
+            let key_pragma = crate::database::cipher::key_pragma(db_path, key, read_only).await?;
+            options = options.pragma("key", key_pragma);
         }
         let (changes, _) = broadcast::channel(256);
 

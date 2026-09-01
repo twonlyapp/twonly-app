@@ -218,6 +218,10 @@ impl Context {
             return Ok(());
         }
 
+        // Only the foreground app re-encrypts a database still on the old
+        // SQLCipher key; see `database::cipher`.
+        crate::database::cipher::set_migration_enabled(runtime_mode == RuntimeMode::Flutter);
+
         SecureStorage::init()?;
         let secure_storage = SecureStorage::new("eu.twonly");
 
@@ -244,25 +248,34 @@ impl Context {
                 };
 
                 let mut rust_db_key = key_manager.main_key.get_database_key(DatabaseKey::RustDb);
-
-                let rust_db = Database::new(
-                    &rust_db_path.display().to_string(),
-                    Some(rust_db_key.as_str()),
-                    false,
-                )
-                .await?;
-                rust_db.run_migrations().await?;
-                let rust_db = Arc::new(rust_db);
-                let rust_db_handle = Arc::new(RwLock::new(rust_db));
-
                 let mut app_db_key = key_manager.main_key.get_database_key(DatabaseKey::AppDb);
-                let app_db = AppDatabase::new(
-                    &app_db_path.display().to_string(),
-                    Some(app_db_key.as_str()),
-                    false,
-                )
-                .await?;
-                app_db.run_migrations().await?;
+
+                // The two files are independent, and opening one is mostly
+                // waiting on the filesystem, so they are opened concurrently
+                // rather than one after the other.
+                let (rust_db, app_db) = tokio::try_join!(
+                    async {
+                        let database = Database::new(
+                            &rust_db_path.display().to_string(),
+                            Some(rust_db_key.as_str()),
+                            false,
+                        )
+                        .await?;
+                        database.run_migrations().await?;
+                        Ok::<_, TwonlyError>(database)
+                    },
+                    async {
+                        let database = AppDatabase::new(
+                            &app_db_path.display().to_string(),
+                            Some(app_db_key.as_str()),
+                            false,
+                        )
+                        .await?;
+                        database.run_migrations().await?;
+                        Ok::<_, TwonlyError>(database)
+                    },
+                )?;
+                let rust_db_handle = Arc::new(RwLock::new(Arc::new(rust_db)));
                 let app_db = Arc::new(RwLock::new(Arc::new(app_db)));
                 app_db_key.zeroize();
                 rust_db_key.zeroize();

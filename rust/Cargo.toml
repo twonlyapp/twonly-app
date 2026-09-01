@@ -9,6 +9,14 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
+[features]
+default = []
+# Points every API URL at the development server. Flutter profile builds
+# compile with `--release`, so `debug_assertions` cannot distinguish them from
+# a production release; cargokit enables this feature for the profile
+# configuration instead (see `cargokit.yaml`).
+dev-api = []
+
 [dependencies]
 flutter_rust_bridge = { version = "=2.12.0", features = ["chrono"] }
 thiserror = "2.0.18"
@@ -87,3 +95,12 @@ tempfile = "3.27.0"
 
 [build-dependencies]
 prost-build = "0.14.1"
+
+[profile.release]
+# The default release profile leaves LTO off, which for a crate this size means
+# a bigger `.so` for the dynamic linker to map and relocate before the first
+# Rust call. `thin` keeps build times reasonable; `panic = "abort"` is
+# deliberately absent because flutter_rust_bridge turns Rust panics into Dart
+# exceptions by unwinding, and stripping is left to the platform builds so
+# native crash reports keep their symbols.
+lto = "thin"

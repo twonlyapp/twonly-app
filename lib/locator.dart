@@ -10,6 +10,10 @@ export 'package:twonly/src/services/api/rust_api_result.dart';
 final GetIt locator = GetIt.instance;
 
 void setupLocator() {
+  // Called both from `main` (before the first frame, so the theme can be read)
+  // and from `twonlyMinimumInitialization`, which background entry points use
+  // on their own. Registering twice throws, so the second call is a no-op.
+  if (locator.isRegistered<UserService>()) return;
   locator
     ..registerLazySingleton<UserService>(UserService.new)
     ..registerLazySingleton<ApiService>(ApiService.new)

@@ -38,7 +38,11 @@ impl Database {
             .log_slow_statements(tracing::log::LevelFilter::Warn, Duration::from_millis(500));
 
         if let Some(encryption_key) = encryption_key {
-            connect_options = connect_options.pragma("key", format!("'{}'", encryption_key));
+            // Migrates a database still encrypted with the old passphrase-derived
+            // key before the pool opens it. See `database::cipher`.
+            let key_pragma =
+                crate::database::cipher::key_pragma(db_path, encryption_key, read_only).await?;
+            connect_options = connect_options.pragma("key", key_pragma);
         }
 
         let pool = SqlitePoolOptions::new()

@@ -4,4 +4,5 @@
  */
 
 pub mod app;
+pub(crate) mod cipher;
 pub mod signal;

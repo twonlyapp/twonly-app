@@ -372,7 +372,12 @@ impl RustApi {
 
     #[frb(sync)]
     pub fn api_base_url(protocol: String) -> String {
-        if cfg!(debug_assertions) {
+        // Every non-production build talks to the development server. A Flutter
+        // profile build compiles Rust with `--release`, so `debug_assertions`
+        // is off and cannot tell it apart from a store build; cargokit enables
+        // the `dev-api` feature for that configuration instead (see
+        // `rust/cargokit.yaml`).
+        if cfg!(debug_assertions) || cfg!(feature = "dev-api") {
             format!("{}://dev-api.twonly.eu/api/", protocol)
         } else {
             format!("{}://api.twonly.eu/api/", protocol)
