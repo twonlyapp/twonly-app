@@ -1,0 +1,1002 @@
+{
+  "@@locale": "en",
+  "registerSlogan": "Stay in touch privately.",
+  "onboardingWelcomeTitle": "Welcome to twonly!",
+  "onboardingWelcomeBody": "Experience a private and secure way to stay in touch with friends by sharing instant pictures.",
+  "onboardingE2eTitle": "Carefree sharing",
+  "onboardingE2eBody": "With end-to-end encryption, enjoy the peace of mind that only you and your friends can see the moments you share.",
+  "onboardingFocusTitle": "Focus on sharing moments",
+  "onboardingFocusBody": "Say goodbye to addictive features! twonly was created for sharing moments, free from useless distractions or ads.",
+  "onboardingNotProductTitle": "You are not the product!",
+  "onboardingNotProductBody": "twonly is financed by an optional subscription. Your data will never be sold.",
+  "registerUsernameSlogan": "Create your account",
+  "registerUsernameDecoration": "Username",
+  "registerUsernameLimits": "At least 3 characters.",
+  "registerProofOfWorkFailed": "There was an issue with the captcha test. Please try again.",
+  "registerSubmitButton": "Register now!",
+  "chatsTapToSend": "Click to send your first image",
+  "cameraPreviewSendTo": "Send to",
+  "shareImageTitle": "Share with",
+  "shareImageBestFriends": "Best friends",
+  "shareImagePinnedContacts": "Pinnded",
+  "shareImagedEditorSendImage": "Send",
+  "shareImagedEditorShareWith": "Share with",
+  "shareImagedEditorSaveImage": "Save",
+  "shareImagedEditorSavedImage": "Saved",
+  "shareImageSearchAllContacts": "Search all contacts",
+  "startNewChatSearchHint": "Name, username or groupname",
+  "shareImagedSelectAll": "Select all",
+  "startNewChatTitle": "Select Contact",
+  "startNewChatNewContact": "New Contact",
+  "shareImageAllUsers": "All contacts",
+  "shareImageShowArchived": "Show archived users",
+  "searchUsernameInput": "Username",
+  "addFriendTitle": "Add friends",
+  "searchUserNamePending": "Request pending",
+  "searchUsernameNotFound": "Username not found",
+  "searchUsernameNewFollowerTitle": "Open requests",
+  "chatListDetailInput": "Type a message",
+  "userDeletedAccount": "The user has deleted their account.",
+  "contextMenuUserProfile": "User profile",
+  "contextMenuArchiveUser": "Archive",
+  "contextMenuUndoArchiveUser": "Undo archiving",
+  "contextMenuOpenChat": "Open chat",
+  "contextMenuPin": "Pin",
+  "contextMenuUnpin": "Unpin",
+  "contextMenuViewAgain": "View again",
+  "mediaViewerAuthReason": "Please authenticate to see this twonly!",
+  "mediaViewerTwonlyTapToOpen": "Tap to open your twonly!",
+  "messageSendState_Received": "Received",
+  "messageSendState_Opened": "Opened",
+  "messageSendState_Send": "Sent",
+  "messageSendState_Sending": "Sending",
+  "messageSendState_TapToLoad": "Tap to load",
+  "messageSendState_Loading": "Downloading",
+  "messageStoredInGallery": "Stored in gallery",
+  "messageReopened": "Re-opened",
+  "imageEditorDrawOk": "Take drawing",
+  "settingsTitle": "Settings",
+  "settingsChats": "Chats",
+  "settingsPreSelectedReactions": "Preselected reaction emojis",
+  "settingsAutomaticallyMarkEqualMediaFilesAsOpenedTitle": "Mark duplicates as opened",
+  "settingsAutomaticallyMarkEqualMediaFilesAsOpenedSubtitle": "If you receive the same media in multiple chats, opening one marks all others as opened.",
+  "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
+  "settingsProfile": "Profile",
+  "settingsStorageData": "Data and storage",
+  "settingsStorageDataStoreInGTitle": "Store in Gallery",
+  "settingsStorageDataMediaAutoDownload": "Media auto-download",
+  "settingsStorageDataAutoDownMobile": "When using mobile data",
+  "settingsStorageDataAutoDownWifi": "When using WI-FI",
+  "settingsStorageManageTitle": "Manage storage",
+  "settingsStorageUsed": "Storage used",
+  "settingsStorageImages": "Images",
+  "settingsStorageVideos": "Videos",
+  "settingsStorageGifs": "GIFs",
+  "settingsProfileCustomizeAvatar": "Customize your avatar",
+  "settingsProfileEditDisplayName": "Displayname",
+  "settingsProfileEditDisplayNameNew": "New Displayname",
+  "settingsAccount": "Account",
+  "settingsSubscription": "Subscription",
+  "settingsAppearance": "Appearance",
+  "settingsPrivacy": "Privacy & Security",
+  "settingsPrivacyBlockUsers": "Block contacts",
+  "settingsPrivacyBlockUsersDesc": "Blocked contacts will not be able to communicate with you. You can unblock a blocked contact at any time.",
+  "settingsPrivacyBlockUsersCount": "{len} contact(s)",
+  "@settingsPrivacyBlockUsersCount": {
+    "placeholders": {
+      "len": {}
+    }
+  },
+  "settingsNotification": "Notification",
+  "settingsNotifyPermission": "Notification permissions",
+  "settingsNotifyPermissionDesc": "Open system settings to allow push notifications.",
+  "settingsNotifyResetTitle": "Reset notification tokens",
+  "settingsNotifyResetTitleSubtitle": "Reset your notification tokens if you have problems receiving push notifications.",
+  "settingsNotifyResetTitleReset": "Your notification tokens have been reset.",
+  "settingsNotifyResetTitleResetDesc": "If the problem persists, please send us your debug log via Settings > Help so we can investigate the issue.",
+  "settingsHelp": "Help",
+  "settingsHelpDiagnostics": "Diagnostic protocol",
+  "settingsHelpFAQ": "FAQ",
+  "feedbackTooltip": "Give Feedback to improve twonly.",
+  "settingsHelpContactUs": "Contact us",
+  "settingsHelpVersion": "Version",
+  "settingsHelpLicenses": "Licenses (Source-Code)",
+  "settingsHelpCredits": "Licenses (Images)",
+  "settingsHelpImprint": "Imprint & Privacy Policy",
+  "contactUsFaq": "Have you read our FAQ yet?",
+  "contactUsEmojis": "How do you feel? (optional)",
+  "contactUsSelectOption": "Please select an option",
+  "contactUsReason": "Tell us why you're reaching out",
+  "contactUsMessage": "If you want to receive an answer, please add your e-mail address so we can contact you.",
+  "contactUsYourMessage": "Your message",
+  "contactUsMessageTitle": "Tell us what's going on",
+  "contactUsReasonNotWorking": "Something's not working",
+  "contactUsReasonFeatureRequest": "Feature request",
+  "contactUsReasonQuestion": "Question",
+  "contactUsReasonFeedback": "Feedback",
+  "contactUsReasonOther": "Other",
+  "contactUsIncludeLog": "Include debug log",
+  "contactUsWhatsThat": "What's that?",
+  "contactUsLastWarning": "This are the information's which will be send to us. Please verify them and then press submit.",
+  "contactUsSuccess": "Feedback submitted successfully!",
+  "hideNewsIcon": "Hide News Icon",
+  "settingsHelpTerms": "Terms of Service",
+  "settingsAppearanceTheme": "Theme",
+  "settingsAccountDeleteAccount": "Delete account",
+  "settingsAccountDeleteAccountNoBallance": "Once you delete your account, there is no going back.",
+  "settingsAccountDeleteModalTitle": "Are you sure?",
+  "settingsAccountDeleteModalBody": "Your account will be deleted. There is no change to restore it.",
+  "contactVerifyNumberTitle": "Verify contacts",
+  "verifyUserIdentity": "Verify {username}'s identity",
+  "@verifyUserIdentity": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "contactVerifyNumberSubtitle": "Verify the identity of your contacts to make sure you are texting the right person.",
+  "inChatContactNotVerified": "Contact not verified.",
+  "groupMembersNotVerified": "{count} members are not verified.",
+  "@groupMembersNotVerified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "userVerifiedTitle": "Contact verified",
+  "scanUserQrCode": "Scan {username}'s QR code",
+  "@scanUserQrCode": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "openOwnQrCode": "Open your own QR code",
+  "contactVerifiedBy": "Verified by {username}",
+  "contactSharedByUnknown": "Shared by a verified contact (username not available)",
+  "verificationTypeQrScanned": "You scanned their QR code.",
+  "verificationTypeSecretQrToken": "{username} has scanned your QR code.",
+  "@verificationTypeSecretQrToken": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "verificationTypeLink": "Verified via link.",
+  "verificationTypeMigratedFromOldVersion": "Migrated from old version.",
+  "contactViewMessage": "Message",
+  "contactNickname": "Nickname",
+  "contactNicknameNew": "New nickname",
+  "contactBlock": "Block",
+  "contactBlockTitle": "Block {username}",
+  "@contactBlockTitle": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "contactBlockBody": "A blocked contact will no longer be able to send you messages and their profile will be hidden from view. To unblock a contact, simply navigate to Settings > Privacy > Blocked Contacts.",
+  "contactRemove": "Remove contact",
+  "contactRemoveTitle": "Remove {username}",
+  "contactRemoveBody": "Permanently remove the contact. If the contact tries to send you a new message, you will have to accept the contact again first.",
+  "undo": "Undo",
+  "redo": "Redo",
+  "next": "Next",
+  "finishSetup": "Complete setup",
+  "submit": "Submit",
+  "close": "Close",
+  "disable": "Disable",
+  "enable": "Enable",
+  "cancel": "Cancel",
+  "now": "Now",
+  "you": "You",
+  "minutesShort": "min.",
+  "image": "Image",
+  "video": "Video",
+  "react": "React",
+  "reply": "Reply",
+  "copy": "Copy",
+  "edit": "Edit",
+  "delete": "Delete",
+  "info": "Info",
+  "ok": "Ok",
+  "switchFrontAndBackCamera": "Switch between front and back camera.",
+  "addTextItem": "Text",
+  "protectAsARealTwonly": "Send as real twonly!",
+  "addDrawing": "Drawing",
+  "addEmoji": "Emoji",
+  "toggleFlashLight": "Toggle the flash light",
+  "userFound": "{username} found",
+  "userFoundBody": "Do you want to connect with {username}?",
+  "@userFoundBody": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "errorInternalError": "The server is currently not available. Please try again later.",
+  "errorInvalidInvitationCode": "The invitation code you provided is invalid. Please check the code and try again.",
+  "errorUsernameAlreadyTaken": "The username is already taken.",
+  "errorUsernameNotValid": "The username you provided does not meet the required criteria. Please choose a valid username.",
+  "errorNotEnoughCredit": "You do not have enough twonly-credit.",
+  "errorVoucherInvalid": "The voucher code you entered is not valid.",
+  "errorPlanLimitReached": "You have reached your plans limit. Please upgrade your plan.",
+  "errorPlanNotAllowed": "This feature is not available in your current plan.",
+  "errorPlanUpgradeNotYearly": "The plan upgrade must be paid for annually, as the current plan is also billed annually.",
+  "upgradeToPaidPlanButton": "Upgrade to {planId}{sufix}",
+  "partOfPaidPlanFrom": "Part of the paid plan of",
+  "subscriptionCurrentPlanBadge": "Current",
+  "year": "year",
+  "yearly": "Yearly",
+  "month": "month",
+  "monthly": "Monthly",
+  "proFeature1": "Unlimited media file uploads",
+  "proFeature2": "1 additional Plus user",
+  "proFeature3": "25GB Memories storage",
+  "proFeature4": "Restore flames",
+  "familyFeature1": "Unlimited media file uploads",
+  "familyFeature2": "4 additional Plus user",
+  "familyFeature3": "50GB Memories storage",
+  "familyFeature4": "Restore flames",
+  "freeFeature1": "10 Media file uploads per day",
+  "plusFeature1": "Unlimited media file uploads",
+  "plusFeature2": "Additional features (coming-soon)",
+  "manageAdditionalUsers": "Manage additional users",
+  "open": "Open",
+  "buy": "Buy",
+  "autoRenewal": "Auto renewal",
+  "additionalUsersList": "Your additional users",
+  "galleryDelete": "Delete file",
+  "galleryExport": "Export to gallery",
+  "galleryExportSuccess": "Successfully saved in the Gallery.",
+  "gallerySelectAll": "Select all",
+  "galleryDeselectAll": "Deselect all",
+  "galleryFavorite": "Favorite",
+  "galleryUnfavorite": "Unfavorite",
+  "galleryCancel": "Cancel",
+  "memoriesEmpty": "As soon as you save pictures or videos, they end up here in your memories.",
+  "deleteTitle": "Are you sure?",
+  "deleteOkBtnForAll": "Delete for all",
+  "memoriesDeleteSnackbarSuccess": "{count, plural, =1 {Deleted 1 item successfully} other {Deleted {count} items successfully}}",
+  "deleteOkBtnForMe": "Delete for me",
+  "deleteOnlyForMe": "Delete only for me",
+  "deleteImageTitle": "Are you sure?",
+  "deleteImageBody": "The image will be irrevocably deleted.",
+  "deleteMemoriesBody": "{count, plural, =1 {The image will be irrevocably deleted.} other {The {count} images will be irrevocably deleted.}}",
+  "@deleteMemoriesBody": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "deleteMemoriesLocalOnly": "Local Only",
+  "deleteMemoriesCompletely": "Completely",
+  "memoriesSelectedCount": "{count, plural, =1 {1 Element} other {{count} Elements}}",
+  "@memoriesSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "memoriesMenuSelectAll": "Select all",
+  "memoriesMenuDeselectAll": "Deselect all",
+  "memoriesMenuExport": "Export to gallery",
+  "memoriesMenuFavorite": "Favorite",
+  "memoriesMenuDelete": "Delete completely",
+  "memoriesMenuDeleteLocal": "Delete locally",
+  "settingsBackup": "Backup",
+  "backupPending": "Pending",
+  "backupFailed": "Failed",
+  "backupSuccess": "Success",
+  "backupTwonlySafeDesc": "Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.",
+  "backupNoPasswordRecovery": "Due to twonly's security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.",
+  "backupIdentityHeader": "Identity",
+  "backupArchiveHeader": "Contacts & Messages",
+  "backupLastBackupDate": "Last backup",
+  "backupLastBackupSize": "Backup size",
+  "backupLastBackupResult": "Result",
+  "backupInsecurePassword": "Insecure password",
+  "backupInsecurePasswordDesc": "The chosen password is very insecure and can therefore easily be guessed by attackers. Please choose a secure password.",
+  "backupInsecurePasswordOk": "Continue anyway",
+  "backupInsecurePasswordCancel": "Try again",
+  "backupTwonlySafeLongDesc": "twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Backup regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.",
+  "backupSelectStrongPassword": "Select a secure password. It is recommended to generate and store it via your password manager of choice.",
+  "password": "Password",
+  "passwordRepeated": "Repeat password",
+  "passwordRepeatedNotEqual": "Passwords do not match.",
+  "backupPasswordRequirement": "Password must be at least 10 characters long.",
+  "backupEnableBackup": "Enable Password Backup",
+  "backupTwonlySaveNow": "Save now",
+  "backupChangePassword": "Change password",
+  "backupChangePasswordAuthReason": "Changing backup password",
+  "backupChangePasswordAuthFailed": "You can only change your password after you have authenticated!",
+  "backupFreeSpaceWithCloud": "Free Space with Cloud Backup",
+  "backupMemoriesNotEnabled": "Not enabled",
+  "backupMemoriesUpgradeRequired": "Upgrade required",
+  "todayAt": "Today at {time}",
+  "@todayAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "yesterdayAt": "Yesterday at {time}",
+  "@yesterdayAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "twonlySafeRecoverTitle": "Restore backup",
+  "twonlySafeRecoverBtn": "Restore backup",
+  "inviteFriends": "Invite your friends",
+  "inviteFriendsShareBtn": "Share",
+  "inviteFriendsShareText": "Let's switch to twonly: {url}",
+  "appOutdated": "Your version of twonly is out of date.",
+  "appOutdatedBtn": "Update Now",
+  "doubleClickToReopen": "Double-click\nto open again",
+  "uploadLimitReached": "The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.",
+  "fileLimitReached": "Maximum file size\nexceeded",
+  "retransmissionRequested": "Retransmission requested",
+  "reportUserTitle": "Report {username}",
+  "reportUserReason": "Reporting reason",
+  "reportUser": "Report contact",
+  "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here.",
+  "tabToRemoveEmoji": "Tab to remove",
+  "quotedMessageWasDeleted": "The quoted message has been deleted.",
+  "messageWasDeleted": "Message has been deleted.",
+  "messageWasDeletedShort": "Deleted",
+  "sent": "Delivered",
+  "sentTo": "Delivered to",
+  "received": "Received",
+  "opened": "Opened",
+  "waitingForInternet": "Waiting for internet",
+  "editHistory": "Edit history",
+  "fileSize": "File size",
+  "archivedChats": "Archived chats",
+  "durationShortSecond": "Sec.",
+  "durationShortMinute": "Min.",
+  "durationShortHour": "Hrs.",
+  "durationShortDays": "{count, plural, =1{1 Day} other{{count} Days}}",
+  "contacts": "Contacts",
+  "groups": "Groups",
+  "newGroup": "New group",
+  "selectMembers": "Select members",
+  "selectGroupName": "Select group name",
+  "groupNameInput": "Group name",
+  "groupMembers": "Members",
+  "addMember": "Add member",
+  "createGroup": "Create group",
+  "leaveGroup": "Leave group",
+  "createContactRequest": "Create contact request",
+  "contactRequestSend": "Contact request send",
+  "makeAdmin": "Make admin",
+  "removeAdmin": "Remove as admin",
+  "removeFromGroup": "Remove from group",
+  "admin": "Admin",
+  "revokeAdminRightsTitle": "Revoke {username}'s admin rights?",
+  "revokeAdminRightsOkBtn": "Remove as admin",
+  "makeAdminRightsTitle": "Make {username} an admin?",
+  "makeAdminRightsBody": "{username} will be able to edit this group and its members.",
+  "makeAdminRightsOkBtn": "Make admin",
+  "updateGroup": "Update group",
+  "alreadyInGroup": "Already in Group",
+  "contactNotVerified": "Not verified",
+  "removeContactFromGroupTitle": "Remove {username} from this group?",
+  "youChangedGroupName": "You have changed the group name to \"{newGroupName}\".",
+  "makerChangedGroupName": "{maker} has changed the group name to \"{newGroupName}\".",
+  "youCreatedGroup": "You have created the group.",
+  "makerCreatedGroup": "{maker} has created the group.",
+  "youRemovedMember": "You have removed {affected} from the group.",
+  "makerRemovedMember": "{maker} has removed {affected} from the group.",
+  "youAddedMember": "You have added {affected} to the group.",
+  "makerAddedMember": "{maker} has added {affected} to the group.",
+  "youMadeAdmin": "You made {affected} an admin.",
+  "makerMadeAdmin": "{maker} made {affected} an admin.",
+  "youRevokedAdminRights": "You revoked {affectedR}'s admin rights.",
+  "makerRevokedAdminRights": "{maker} revoked {affectedR}'s admin rights.",
+  "youLeftGroup": "You have left the group.",
+  "makerLeftGroup": "{maker} has left the group.",
+  "groupActionYou": "you",
+  "groupActionYour": "your",
+  "notificationFillerIn": "in",
+  "notificationText": "sent a message{inGroup}.",
+  "notificationTwonly": "sent a twonly{inGroup}.",
+  "notificationVideo": "sent a video{inGroup}.",
+  "notificationImage": "sent an image{inGroup}.",
+  "notificationAudio": "sent a voice message{inGroup}.",
+  "notificationAddedToGroup": "has added you to \"{groupname}\"",
+  "notificationContactRequest": "wants to connect with you.",
+  "notificationAcceptRequest": "is now connected with you.",
+  "notificationStoredMediaFile": "has stored your image.",
+  "notificationReaction": "has reacted to your image.",
+  "notificationReopenedMedia": "has reopened your image.",
+  "notificationReactionToVideo": "has reacted with {reaction} to your video.",
+  "notificationReactionToText": "has reacted with {reaction} to your message.",
+  "notificationReactionToImage": "has reacted with {reaction} to your image.",
+  "notificationReactionToAudio": "has reacted with {reaction} to your audio message.",
+  "notificationResponse": "has responded{inGroup}.",
+  "notificationCategoryMessageTitle": "Messages",
+  "notificationCategoryMessageDesc": "Messages from other users.",
+  "notificationConnectionFallback": "You may have new messages.",
+  "groupContextMenuDeleteGroup": "This will permanently delete all messages in this chat.",
+  "groupYouAreNowLongerAMember": "You are no longer part of this group.",
+  "groupNetworkIssue": "Network issue. Try again later.",
+  "leaveGroupSelectOtherAdminTitle": "Select another admin",
+  "leaveGroupSelectOtherAdminBody": "To leave the group, you must first select a new administrator.",
+  "leaveGroupSureTitle": "Leave group",
+  "leaveGroupSureBody": "Do you really want to leave the group?",
+  "leaveGroupSureOkBtn": "Leave group",
+  "changeDisplayMaxTime": "Chats will now be deleted after {time} ({username}).",
+  "youChangedDisplayMaxTime": "Chats will now be deleted after {time}.",
+  "userGotReported": "User has been reported.",
+  "deleteChatAfter": "Delete chat after...",
+  "deleteChatAfterAnHour": "one hour.",
+  "deleteChatAfterADay": "one day.",
+  "deleteChatAfterAWeek": "one week.",
+  "deleteChatAfterAMonth": "one month.",
+  "deleteChatAfterAYear": "one year.",
+  "yourTwonlyScore": "Your twonly-Score",
+  "registrationClosed": "Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.",
+  "dialogAskDeleteMediaFilePopTitle": "Are you sure you want to delete your masterpiece?",
+  "dialogAskDeleteMediaFilePopDelete": "Delete",
+  "allowErrorTracking": "Share errors and crashes with us",
+  "allowErrorTrackingSubtitle": "If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.",
+  "avatarSaveChanges": "Would you like to save the changes?",
+  "avatarSaveChangesStore": "Save",
+  "avatarSaveChangesDiscard": "Discard",
+  "inProcess": "In process",
+  "draftMessage": "Draft",
+  "voiceMessageSlideToCancel": "Slide to cancel",
+  "voiceMessageCancel": "Cancel",
+  "shareYourProfile": "Share your profile",
+  "scanOtherProfile": "Scan other profile",
+  "openYourOwnQRcode": "Open your own QR code",
+  "addContactQrSheetSubtext": "Let a friend scan this QR code to add you",
+  "letUserScanQrCode": "Let {username} scan this QR code",
+  "@letUserScanQrCode": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "finishSetupCardTitle": "Complete your profile",
+  "finishSetupCardDesc": "You are almost there! Finish setting up your account to get the most out of twonly.",
+  "finishSetupCardAction": "Resume Setup",
+  "missingBackupCardTitle": "Setup backup",
+  "missingBackupCardDesc": "We have improved the backup mechanism, which requires you to set it up again.",
+  "missingBackupCardAction": "Set up now",
+  "onboardingFinishLater": "Finish later",
+  "onboardingProfileTitle": "Choose your look",
+  "onboardingProfileBody": "Select an avatar and a display name that friends will see.",
+  "onboardingBackupBody": "Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.",
+  "onboardingUserDiscoveryShareFriends": "Share your friends",
+  "onboardingUserDiscoveryShareFriendsDesc": "Share with your friends who you know and who you have verified. Friends can *only see mutual friends* from your friend list. You can change your mind at *any time* or *hide specific people*.",
+  "onboardingUserDiscoveryContactsVerifiedBadge": "Contacts verified by your friends get a badge",
+  "onboardingUserDiscoveryWhoIsRequesting": "Be informed about who is requesting",
+  "userDiscoverySettingsManualApproval": "Ask every time before sharing",
+  "userDiscoverySettingsManualApprovalDesc": "Before one of your friends is shared, you will be asked every time.",
+  "onboardingUserDiscoveryLetFriendsFindYou": "Let your friends find you",
+  "onboardingUserDiscoveryBeRecommended": "Be recommended to others",
+  "onboardingUserDiscoveryWhatOthersSee": "What others will see",
+  "onboardingUserDiscoveryWhatYouSee": "If requested, that's what you will see",
+  "onboardingAddContactsTitle": "Add new contacts",
+  "onboardingAddContactsAcceptDesc": "In twonly, every contact must first be accepted before you can communicate.",
+  "onboardingAddContactsMethodHeading": "Add contacts",
+  "onboardingAddContactsMethodScan": "Scan the contact's QR code.",
+  "onboardingAddContactsMethodSearch": "Search for the username.",
+  "onboardingAddContactsMethodShare": "Share a contact in chats.",
+  "linkFromUsername": "Is the link from {username}?",
+  "linkFromUsernameLong": "If you received the link from your friend, you can mark the user as verified, as the public key in the link matches the public key already stored for that user?",
+  "gotLinkFromFriend": "Yes, I got the link from my friend!",
+  "couldNotVerifyUsername": "Could not verify {username}",
+  "linkPubkeyDoesNotMatch": "The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!",
+  "startWithCameraOpen": "Start with camera open",
+  "showImagePreviewWhenSending": "Display image preview when selecting recipients",
+  "verifiedPublicKey": "The identity of {username} has been successfully verified.",
+  "memoriesAYearAgo": "One year ago",
+  "memoriesXYearsAgo": "{years} years ago",
+  "migrationOfMemories": "Migration of media files: {open} still to be processed.",
+  "autoStoreAllSendUnlimitedMediaFiles": "Save all sent media",
+  "autoStoreAllSendUnlimitedMediaFilesSubtitle": "If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.",
+  "termsOfService": "Terms of service",
+  "privacyPolicy": "Privacy policy",
+  "additionalUserAddError": "{username} could not be added, please try again later.",
+  "additionalUserAddErrorNotInFreePlan": "{username} is already on a paid plan and therefore could not be added.",
+  "additionalUserAddButton": "Add additional user ({used}/{limit})",
+  "additionalUserRemoveTitle": "Remove this additional user",
+  "additionalUserRemoveDesc": "After removal, the additional user will automatically be downgraded to the free plan, and you can add another person.",
+  "additionalUserSelectTitle": "Select additional users",
+  "additionalUserSelectButton": "Select users ({used}/{limit})",
+  "storeAsDefault": "Store as default",
+  "deleteUserErrorMessage": "You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.",
+  "groupSizeLimitError": "Currently, group size is limited to {size} people!",
+  "authRequestReopenImage": "You must authenticate to reopen the image.",
+  "shareContactsMenu": "Contact",
+  "shareContactsTitle": "Select contacts",
+  "shareContactsSubmit": "Share now",
+  "updateTwonlyMessage": "To see this message, you need to update twonly.",
+  "verificationBadgeNote": "You can verify your friends by scanning their public QR code. Click to learn more.",
+  "verificationBadgeTitle": "Verification",
+  "verificationBadgeGeneralDesc": "The badge gives you the peace of mind that you are messaging the *right person* and your *messages remain confidential*.",
+  "verificationBadgeGreenDesc": "A contact you have *personally verified* using the QR code.",
+  "verificationBadgeYellowDesc": "A contact who has been verified by at least one of *your contacts*.",
+  "verificationBadgeRedDesc": "A contact whose identity has *not* yet been verified.",
+  "scanNow": "Scan now",
+  "qrScannerVerifyHint": "To verify, the other person must open their QR code (Chat Lists > QR code button at the bottom right)",
+  "qrScannerVerifyUserHint": "To verify, {username} must open their QR code (Chat Lists > QR code button at the bottom right)",
+  "@qrScannerVerifyUserHint": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "openQrCode": "Open QR code",
+  "letFriendScanQrToVerify": "Let a friend scan this QR code to verify you",
+  "deleteVerificationTitle": "Delete verification?",
+  "deleteVerificationBody": "Are you sure you want to delete this verification?",
+  "secretQrTokenVerifiedSnackbar": "{username} has scanned your QR code and is now verified.",
+  "@secretQrTokenVerifiedSnackbar": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "askForFriendPromotionsPrompt": "Help {username} find familiar faces on twonly by sharing mutual friends.",
+  "@askForFriendPromotionsPrompt": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "mutualGroupsTitle": "{count, plural, =1{1 mutual group} other{{count} mutual groups}}",
+  "@mutualGroupsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "chatEntryFlameRestored": "{count} flames restored",
+  "requestedUserToastText": "{username} was successfully requested.",
+  "profileYourQrCode": "Your QR code",
+  "settingsScreenLock": "Screen lock",
+  "settingsScreenLockSubtitle": "To open twonly, you'll need to use your smartphone's unlock feature.",
+  "settingsScreenLockAuthMessageEnable": "Use the screen lock from twonly.",
+  "settingsScreenLockAuthMessageDisable": "Disable the screen lock from twonly.",
+  "unlockTwonly": "Unlock twonly",
+  "unlockTwonlyTryAgain": "Try again",
+  "unlockTwonlyDesc": "Use your phone's unlock settings to unlock twonly",
+  "settingsTypingIndication": "Typing Indicators",
+  "settingsTypingIndicationSubtitle": "When the typing indicator is turned off, you can't see when others are typing a message.",
+  "contactActionBlock": "Block",
+  "contactActionAccept": "Accept",
+  "userDiscoverySettingsMutualFriends": "Choose how many mutual friends a person must have for you to be suggested to them.",
+  "userDiscoverySettingsApply": "Apply changes",
+  "userDiscoveryEnabledDisableWarning": "If you disable the \"Mutual Friends\" feature, you will no longer see suggestions. You will also stop sharing your friends with new contacts.",
+  "userDiscoveryEnabledChangeSettings": "Change settings",
+  "userDiscoveryEnabledFaq": "In our FAQ we explain how the \"Mutual Friends\" feature works.",
+  "userDiscoveryDisabledIntro": "twonly does *not* collect your phone number or needs access to your contacts. Instead, twonly can *find your friends through mutual friends*.",
+  "userDiscoverySettingsTitle": "Mutual Friends",
+  "userDiscoveryFeatureOffers": "Your benefits at a glance",
+  "userDiscoveryDisabledLearnMore": "Learn more",
+  "userDiscoveryEnabledDialogTitle": "Really disable?",
+  "userDiscoveryEnabledFriendsShared": "Friends you share",
+  "userDiscoveryEnabledFriendsSharedDesc": "You only share friends who have also activated this feature and who have reached the threshold you set.",
+  "userDiscoverySettingsCurrentlyDisabled": "The feature \"Mutual Friends\" is currently disabled.",
+  "userDiscoveryEnabledNoFriendsShared": "You are not sharing anyone yet.",
+  "userDiscoveryActionDisable": "Disable",
+  "friendSuggestionsTitle": "Friend suggestions",
+  "andWord": "and",
+  "friendSuggestionsFriendsWith": "Friends with {friends}.",
+  "@friendSuggestionsFriendsWith": {
+    "placeholders": {
+      "friends": {}
+    }
+  },
+  "friendSuggestionsGroupMemberIn": " Group member in {groups}.",
+  "@friendSuggestionsGroupMemberIn": {
+    "placeholders": {
+      "groups": {}
+    }
+  },
+  "friendSuggestionsRequest": "Request",
+  "friendSuggestionsAskFriend": "Ask your friends",
+  "askFriendsDialogTitle": "Ask about {username}",
+  "@askFriendsDialogTitle": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "askFriendsDialogDescription": "Select the friends you want to ask about this user:",
+  "askFriendsDialogConfirm": "Ask",
+  "askFriendsDialogCancel": "Cancel",
+  "chatAskAFriendReceivedDescription": "Your friend just got this as a suggestion and wants to know if he knows this person.",
+  "chatAskAFriendAddedDescription": "You have added this user to your contacts.",
+  "chatAskAFriendHide": "Hide",
+  "chatAskAFriendRequest": "Request",
+  "chatAskAFriendUnknownUser": "User {userId}",
+  "@chatAskAFriendUnknownUser": {
+    "placeholders": {
+      "userId": {}
+    }
+  },
+  "contactUserDiscoveryImagesLeft": "{imagesLeft} more images are needed until your friends are shared with {username}.",
+  "@contactUserDiscoveryImagesLeft": {
+    "placeholders": {
+      "imagesLeft": {},
+      "username": {}
+    }
+  },
+  "userDiscoveryEnabledVersion": "Version: {version}",
+  "@userDiscoveryEnabledVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "userDiscoveryEnabledYourVersion": "Your version: {version}",
+  "@userDiscoveryEnabledYourVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "userDiscoveryEnabledStopSharing": "Stop sharing",
+  "userDiscoveryManualApprovalReachedThreshold": "Would you like to share {username} with your friends?",
+  "@userDiscoveryManualApprovalReachedThreshold": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "userDiscoveryManualApprovalHideContact": "Hide contact",
+  "userDiscoveryManualApprovalShareContact": "Share contact",
+  "onboardingSetupCompleteTitle": "You're all set, {username}!",
+  "@onboardingSetupCompleteTitle": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "onboardingSetupCompleteDesc": "You can now share your moments with your friends securely without distractions like ads.",
+  "contactUserDiscoveryManualApprovalPending": "Contact was not yet manually approved.",
+  "contactUserDiscoveryManualApprovalApprove": "Approve",
+  "exampleUserName1": "james",
+  "exampleUserName2": "mary",
+  "exampleUserName3": "john",
+  "exampleUserName4": "patricia",
+  "exampleUserName5": "robert",
+  "exampleUserName6": "jennifer",
+  "exampleUserName7": "michael",
+  "exampleUserName8": "linda",
+  "exampleUserName9": "william",
+  "exampleUserName10": "lena",
+  "exampleUserName11": "david",
+  "exampleJane": "jane",
+  "back": "Back",
+  "makerChangedUsername": "{maker} changed their username from {oldName} to {newName}.",
+  "@makerChangedUsername": {
+    "placeholders": {
+      "maker": {},
+      "oldName": {},
+      "newName": {}
+    }
+  },
+  "makerChangedDisplayName": "{maker} changed their display name from {oldName} to {newName}.",
+  "@makerChangedDisplayName": {
+    "placeholders": {
+      "maker": {},
+      "oldName": {},
+      "newName": {}
+    }
+  },
+  "recoverErrorNoInternet": "No internet connection. Please check your network and try again.",
+  "recoverErrorUsernameNotValid": "The username provided is not valid or does not exist.",
+  "recoverErrorPasswordInvalid": "The password provided is incorrect.",
+  "recoverErrorTryAgainLater": "The server is currently unavailable. Please try again later.",
+  "recoverErrorUnknown": "An unknown error occurred. Please try again.",
+  "recoverSuccessTitle": "Backup successfully recovered.",
+  "recoverSuccessBody": "Click here to open the app again",
+  "iosRecoveryWelcomeBack": "Welcome Back",
+  "iosRecoveryPrompt": "We detected a previously secured twonly identity on this device. Would you like to automatically download and restore your contacts, messages, and settings from your cloud archive?",
+  "iosRecoveryNoBackupFound": "No backup archive could be retrieved from the server for this device.\n\nError: {error}\n\nPlease proceed to register a new twonly account.",
+  "@iosRecoveryNoBackupFound": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "registerNewAccount": "Register New Account",
+  "tryRestoreAgain": "Try Restore Again",
+  "registeringNewAccount": "Registering new account",
+  "createShortcut": "Create shortcut",
+  "editShortcut": "Edit shortcut",
+  "deleteShortcut": "Delete shortcut",
+  "deleteShortcutBody": "Are you sure you want to delete this shortcut?",
+  "updateShortcut": "Update shortcut",
+  "selectEmoji": "Select Emoji",
+  "errorEmojiUsedOrInvalid": "Emoji already used or invalid",
+  "subscriptionPledgeSecureTitle": "Secure by Design",
+  "subscriptionPledgeSecureDesc": "Your messages and shared moments are fully end-to-end encrypted.",
+  "subscriptionPledgeNoAdsTitle": "No Ads or Data selling",
+  "subscriptionPledgeNoAdsDesc": "twonly will never show advertisements or sell your private data.",
+  "subscriptionPledgeSubtitle": "Zero ads. Total privacy.",
+  "subscriptionManage": "Manage subscription",
+  "dragToZoom": "Drag to Zoom",
+  "onboardingProfileSelectionTitle": "Choose your setup path",
+  "onboardingProfileSelectionSubtitle": "Choose how you want to configure your security and privacy settings.",
+  "onboardingProfileSelectionDefaultTitle": "Default",
+  "onboardingProfileSelectionDefaultDesc": "Instantly applies recommended settings so you can start using the app.",
+  "onboardingProfileSelectionDefaultBadge": "Fast Setup",
+  "onboardingProfileSelectionCustomizeTitle": "Customize",
+  "onboardingProfileSelectionCustomizeDesc": "Step-by-step setup so you can decide for yourself.",
+  "replyFlameRestored": "Flames restored",
+  "replyAskAFriend": "Ask a friend",
+  "unverifiedWarningButton": "Verify now",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "galleryDisableWarningTitle": "Disable gallery saving?",
+  "galleryDisableWarningBody": "If you disable this, your media files will not be saved to your gallery and could be permanently lost if twonly is removed or has an issue, as media files are not yet backed up.",
+  "galleryDisableWarningConfirm": "Disable",
+  "settingsStorageScanGalleryTitle": "Import from Gallery",
+  "importGalleryDeselectAll": "Deselect all",
+  "importGallerySelectAll": "Select all",
+  "importGalleryPermissionRequired": "Permission to access your gallery is required to import previous twonly media files.",
+  "importGalleryPermissionError": "An error occurred while requesting permission: {error}",
+  "@importGalleryPermissionError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "importGalleryLoadError": "Failed to load assets: {error}",
+  "@importGalleryLoadError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "importGalleryImportingOf": "Importing {current} of {total}...",
+  "@importGalleryImportingOf": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
+  "importGalleryStarting": "Starting import...",
+  "importGalleryComplete": "Import complete: {imported} successfully imported and {failed} failed.",
+  "@importGalleryComplete": {
+    "placeholders": {
+      "imported": {},
+      "failed": {}
+    }
+  },
+  "importGalleryGrantAccess": "Grant Access",
+  "importGalleryOpenSettings": "Open Settings",
+  "importGalleryPermissionDenied": "Permission to access gallery denied.",
+  "importGalleryTryAgain": "Try Again",
+  "importGalleryAlbumNotFound": "\"twonly\" album not found",
+  "importGalleryAlbumNotFoundDesc": "If you don't have this album yet, you can also create it to import photos into twonly.",
+  "importGalleryNoImagesFound": "No images found",
+  "importGalleryNoImagesFoundDesc": "There are no images on your device.",
+  "importGalleryFilterTwonly": "Only show the twonly-Album",
+  "importGalleryRefresh": "Refresh",
+  "importGallerySelectToImport": "Select items to import",
+  "importGalleryImportCount": "{count, plural, =1{Import 1 item} other{Import {count} items}}",
+  "@importGalleryImportCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "emptyChatListTitle": "Find your first friend",
+  "emptyChatListDesc": "Let friends scan your QR code, or share them your profile.",
+  "emptyChatListShareBtn": "Share your profile",
+  "emptyChatListScanBtn": "QR Code",
+  "emptyChatListAddUsernameBtn": "By Username",
+  "avatarCustomizeRandomize": "Randomize",
+  "avatarCustomizeReset": "Reset",
+  "passwordlessRecovery": "Trusted Friends",
+  "passwordlessRecoveryNotConfigured": "Not configured",
+  "passwordlessRecoveryTestPin": "Test PIN",
+  "passwordlessRecoveryTestPinTitle": "Test PIN",
+  "passwordlessRecoveryTestPinHint": "Enter your PIN",
+  "passwordlessRecoveryTestPinCorrect": "PIN is correct!",
+  "passwordlessRecoveryTestPinIncorrect": "Incorrect PIN.",
+  "passwordlessRecoveryTest": "Test",
+  "passwordlessRecoverySecondFactorNone": "None",
+  "passwordlessRecoverySecondFactorEmailLabel": "Email ({email})",
+  "@passwordlessRecoverySecondFactorEmailLabel": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "passwordlessRecoverySecondFactorPin": "PIN",
+  "passwordlessRecoverySecondFactorEmail": "Email",
+  "passwordlessRecoveryModify": "Modify Recovery Settings",
+  "passwordlessRecoveryModifyDesc": "Update your recovery configuration",
+  "passwordlessRecoverySecondFactor": "Second Factor",
+  "passwordlessRecoveryNoFriendsFound": "No trusted friends found.",
+  "passwordlessRecoveryActiveFriends": "Active Friends",
+  "passwordlessRecoveryActiveFriendsDesc": "These trusted friends are actively using twonly and can probably help you recover your account.",
+  "passwordlessRecoveryInactiveFriends": "Inactive Friends",
+  "passwordlessRecoveryInactiveFriendsDesc": "These friends either have not yet received their share or do not use twonly actively anymore, which could mean that they maybe cannot help.",
+  "passwordlessRecoveryEnableSuccess": "Trusted Friends successfully set up!",
+  "passwordlessRecoveryEnterPin": "Please enter a PIN.",
+  "passwordlessRecoveryEnterEmail": "Please enter an email address.",
+  "passwordlessRecoveryEnableBtn": "Enable Trusted Friends",
+  "passwordlessRecoveryRecoverBtn": "Recover via Trusted Friends",
+  "passwordlessRecoveryModifyBtn": "Modify Trusted Friends",
+  "passwordlessRecoveryStatusEnabled": "Enabled • {count} trusted friends",
+  "@passwordlessRecoveryStatusEnabled": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "passwordlessRecoveryInfoHowItWorks": "How it works",
+  "passwordlessRecoveryInfoHowItWorksDesc": "twonly operates without phone numbers, which is why we rely on a decentralized recovery mechanism. Using Shamir's Secret Sharing, your cryptographic identity is split into independent shares and distributed among your trusted friends. To restore access, a predefined number of these friends must combine their shares.",
+  "passwordlessRecoveryInfoWhySecondFactor": "Why a Second Factor?",
+  "passwordlessRecoveryInfoWhySecondFactorDesc": "The second factor (Email or PIN) provides important additional protection. Even if your friends were to secretly team up, they still couldn't access your account without this second factor.",
+  "passwordlessRecoveryInfoGotIt": "Got it",
+  "passwordlessRecoveryMethod": "Second factor method",
+  "passwordlessRecoveryMethodNoneDesc": "Without second-factor, your friends could collaborate to recover your account. Therefore, it is recommended to configure a second-factor.",
+  "passwordlessRecoveryMethodPinHint": "Enter PIN",
+  "passwordlessRecoveryMethodEmailHint": "Enter recovery email address",
+  "passwordlessRecoveryMethodEmailDesc": "Your email address is *never stored on the server* and is only sent to it in the event of a recovery.",
+  "passwordlessRecoveryThresholdDesc": "To recover your account you need {count} of your selected trusted friends.",
+  "@passwordlessRecoveryThresholdDesc": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "passwordlessRecoveryThresholdTitle": "Required trusted friends for recovery",
+  "passwordlessRecoverySelectFriendsNeeded": "Select friends ({count} more needed)",
+  "@passwordlessRecoverySelectFriendsNeeded": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "passwordlessRecoverySelectFriends": "Select trusted friends",
+  "passwordlessRecoveryTrustedFriends": "Account recovery",
+  "passwordlessRecoveryDoneBtn": "Done ({count})",
+  "@passwordlessRecoveryDoneBtn": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "passwordlessRecoveryNoFriendsSelected": "No trusted friends selected yet",
+  "passwordlessRecoverySubtitle": "Recover your identity without a password.",
+  "recoverPasswordlessExplanation": "If enabled, you can recover your account by asking your selected friends to help you.",
+  "recoverPasswordlessNotificationCardTitle": "Enable notifications",
+  "recoverPasswordlessNotificationCardSubtitle": "Get notified when a friend has helped you recover your account.",
+  "recoverPasswordlessNotificationCardBtn": "Enable push notifications",
+  "recoverPasswordlessQrInstructions": "Let friends scan the QR code or share the link.",
+  "recoverPasswordlessShareBtn": "Share Recovery Link",
+  "recoverPasswordlessCopyBtn": "Copy",
+  "recoverPasswordlessCopiedSnackbar": "Link copied to clipboard!",
+  "passwordlessRecoveryNoShareStored": "No recovery share stored for this contact.",
+  "passwordlessRecoveryEmailSent": "Recovery email sent!",
+  "passwordlessRecoveryShareSent": "Recovery share sent!",
+  "passwordlessRecoveryNetworkError": "Network error, please ensure you have internet",
+  "passwordlessRecoveryInvalidEmail": "The email address is invalid.",
+  "passwordlessRecoveryResendEmail": "Resend recovery email",
+  "passwordlessRecoveryHelpAFriend": "Help a Friend",
+  "passwordlessRecoverySelectContactDesc": "Please select the contact who requested recovery below to send them their recovery key.",
+  "passwordlessRecoverySearchContacts": "Search contacts...",
+  "passwordlessRecoveryNoContactsFound": "No contacts found",
+  "passwordlessRecoveryCantHelpHim": "You can't help this person",
+  "passwordlessRecoveryDoesAskedYou": "Has {username} asked you?",
+  "@passwordlessRecoveryDoesAskedYou": {
+    "placeholders": {
+      "username": {}
+    }
+  },
+  "passwordlessRecoveryVerifySourceDesc": "Please make sure this request really came from this person. If in doubt, ask them via another channel!",
+  "passwordlessRecoveryNo": "No",
+  "passwordlessRecoveryYes": "Yes",
+  "passwordlessRecoveryYesWithTimer": "Yes ({seconds}s)",
+  "@passwordlessRecoveryYesWithTimer": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+  "recoverPasswordlessSharesReceived": "{received} out of {threshold} friends have helped",
+  "@recoverPasswordlessSharesReceived": {
+    "placeholders": {
+      "received": {},
+      "threshold": {}
+    }
+  },
+  "recoverPasswordlessRecoverNowBtn": "Recover now",
+  "missingRecoveryContactsCardTitle": "Account Recovery",
+  "missingRecoveryContactsCardDesc": "Select Recovery Contacts to help you recover your account without requiring a password.",
+  "missingRecoveryContactsCardAction": "Select Contacts",
+  "memoriesBackupLimitReached": "Cloud backup limit reached! Please upgrade your plan or free up space.",
+  "settingsStorageLocal": "Local storage",
+  "settingsStorageNoCloudBackupTitle": "No Cloud Backup",
+  "settingsStorageNoCloudBackupCard": "Back up your memories to the cloud to free up local space and ensure you never lose your pictures. All end-to-end encrypted.",
+  "galleryActionSave": "Save",
+  "galleryActionExport": "Export",
+  "galleryActionFavorite": "Favorite",
+  "galleryActionUnfavorite": "Unfavorite",
+  "galleryActionDelete": "Delete",
+  "galleryActionShare": "Share",
+  "settingsStorageHidePromo": "Hide",
+  "memoriesBackupTitle": "Memories Backup",
+  "settingsHelpNews": "News",
+  "settingsStorageContents": "Free up space",
+  "settingsStorageSortStorage": "Occupied storage",
+  "settingsStorageSortNewest": "Newest",
+  "settingsStorageSortOldest": "Oldest",
+  "settingsStorageNoContents": "No storage contents found.",
+  "settingsStorageCloudOnly": "Cloud only",
+  "settingsStorageLocalAndCloud": "Local and cloud",
+  "settingsStorageLocalOnly": "Local only",
+  "settingsStorageDisableBackupTitle": "Disable Backup?",
+  "settingsStorageDisableBackupBody": "This will delete all backed up memories from the cloud. There {count, plural, =1 {is *1 image*} other {are *{count} images*}} only stored in the cloud that will be *permanently lost*. Are you sure you want to proceed?",
+  "@settingsStorageDisableBackupBody": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "settingsStorageDisableBackupBtn": "Disable",
+  "settingsStorageDisableBackupAction": "Disable Cloud Backup",
+  "settingsStorageSyncNow": "Sync now",
+  "settingsStorageSyncUpToDate": "All memories are up to date.",
+  "restoreLostFlames": "Restore your {count} lost flames",
+  "@restoreLostFlames": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsShowRestoreFlameTitle": "Show flame restore warning",
+  "contactLabelsTitle": "Contact Labels",
+  "contactLabelsSubtitleEmpty": "No labels selected",
+  "contactLabelsMaxLimit": "Maximum 3 labels per contact",
+  "createLabel": "Create new label",
+  "editLabel": "Edit label",
+  "deleteLabel": "Delete label",
+  "deleteLabelConfirmation": "Are you sure you want to delete this label? It will be removed from all contacts.",
+  "labelNameHint": "Label name",
+  "labelTextColor": "Text color",
+  "labelBackgroundColor": "Background color",
+  "customColor": "Custom Color",
+  "hue": "Hue",
+  "saturation": "Saturation",
+  "brightness": "Brightness",
+  "settingsAppearancePrimaryColor": "Primary Color",
+  "themeSystemDefault": "System default",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "backupRecoverySectionTitle": "Secure Account Access",
+  "backupRecoverySectionDescNone": "You must select at least one recovery option, as otherwise no one can help you if you lose access to your device.",
+  "backupRecoverySectionDescSome": "You can recover your account with the recovery options below. It is recommended to enable both options.",
+  "backupRecoveryOptionAFriends": "Via trusted friends",
+  "backupRecoveryOptionAMicrocopy": "Select friends who can help you recover your account.",
+  "backupRecoveryOptionBPassword": "Classic Password",
+  "backupRecoveryOptionBMicrocopy": "Set a password for your access.",
+  "backupCloudSectionTitle": "Backup Your Data",
+  "backupCloudSectionDesc": "Backup your content so nothing gets lost.",
+  "backupCloudContactsMessages": "Contacts & Messages",
+  "backupCloudFreeActive": "Free Active",
+  "backupCloudImagesMedia": "Images & Media",
+  "backupCloudProBadge": "Pro",
+  "memoriesAddingToFavorites": "Adding to favorites...",
+  "memoriesRemovingFromFavorites": "Removing from favorites...",
+  "memoriesDeletingProgress": "Deleting memories...",
+  "memoriesExportingProgress": "Exporting memories...",
+  "fileLimitReachedTitle": "File too large to send",
+  "fileLimitReachedDetail": "This file is {size}, but your plan allows at most {limit} per send.",
+  "@fileLimitReachedDetail": {
+    "placeholders": {
+      "size": { "type": "String" },
+      "limit": { "type": "String" }
+    }
+  },
+  "fileLimitReachedDetailNoSize": "Your plan allows at most {limit} per send.",
+  "@fileLimitReachedDetailNoSize": {
+    "placeholders": {
+      "limit": { "type": "String" }
+    }
+  },
+  "fileLimitReachedHint": "Record a shorter video and send it again.",
+  "fileLimitReachedHintFree": "Record a shorter video, or upgrade your plan to send larger files.",
+  "fileLimitReachedUpgrade": "Upgrade plan"
+}
