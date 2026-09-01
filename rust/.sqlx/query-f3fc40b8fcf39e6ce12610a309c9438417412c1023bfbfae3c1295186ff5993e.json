@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE receipts\n            SET ack_by_server_at = ?, retry_count = 1, last_retry = ?, mark_for_retry = NULL\n            WHERE ack_by_server_at IS NULL\n              AND EXISTS(\n                SELECT 1\n                FROM messages\n                JOIN group_members ON group_members.group_id = messages.group_id\n                WHERE messages.message_id = receipts.message_id\n                  AND messages.media_id = ?\n                  AND group_members.contact_id = receipts.contact_id\n                  AND (group_members.member_state IS NULL OR group_members.member_state != 'leftGroup')\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "f3fc40b8fcf39e6ce12610a309c9438417412c1023bfbfae3c1295186ff5993e"
+}

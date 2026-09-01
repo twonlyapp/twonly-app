@@ -36,10 +36,14 @@ pub(crate) async fn handle_error_message(
             .execute(&mut **t)
             .await?;
 
+            // Clearing `accepted` is what parks the receipt above until
+            // their accept arrives. `requested` stays untouched: claiming
+            // *they* requested *us* showed a phantom request whose accept
+            // released the parked receipt and produced this error again.
             UpdateContact::builder()
                 .user_id(from_user_id)
                 .accepted(false)
-                .requested(true)
+                .deleted_by_user(false)
                 .build()
                 .update(t)
                 .await?;

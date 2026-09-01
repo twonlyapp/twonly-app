@@ -103,6 +103,7 @@ impl ApiAuthHandshaker {
         };
 
         if let server_to_client::response::ok::Ok::Authenticated(authenticated) = &ok {
+            persist_plan(&self.context, &authenticated.plan).await;
             let _ = self.events.send(ApiEvent {
                 kind: ApiEventKind::PlanUpdated,
                 state: None,
@@ -429,9 +430,42 @@ impl Handshaker for ApiAuthHandshaker {
     }
 }
 
+/// The server owns the subscription plan, so what it reports has to be written
+/// to `user.json` and not only broadcast as a [`ApiEventKind::PlanUpdated`]
+/// event. Everything that reads the plan without listening for that event reads
+/// the stored value: the premium feature gates, the recording budget, and
+/// `PurchasesProvider`, which re-reads it on every connection state change and
+/// would otherwise overwrite the plan it was just told about with the `Free`
+/// default.
+async fn persist_plan(context: &Context, plan: &str) {
+    // A reconnect reports the same plan almost every time, and every write
+    // pushes a config update into Flutter, so only changes are worth storing.
+    if matches!(
+        UserConfig::load_from(context),
+        Ok(Some(config)) if config.subscription_plan == plan
+    ) {
+        return;
+    }
+    let updated = match UserConfig::update(context, |config| {
+        config.subscription_plan = plan.to_owned();
+    }) {
+        Ok(config) => config,
+        Err(error) => {
+            tracing::warn!("could not persist the subscription plan: {error}");
+            return;
+        }
+    };
+    if let Ok(callbacks) = crate::bridge::callbacks::get_callbacks() {
+        (callbacks.api.user_config_changed)(updated).await;
+    }
+}
+
 impl ApiClient {
     // publish_plan method logic moved inside Handshaker temporarily, but ApiClient should still have it if needed.
     pub(crate) async fn publish_plan(&self, plan: String) -> Result<()> {
+        if let Some(context) = self.context.upgrade() {
+            persist_plan(&context, &plan).await;
+        }
         let _ = self.events.send(ApiEvent {
             kind: ApiEventKind::PlanUpdated,
             state: None,

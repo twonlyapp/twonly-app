@@ -1,12 +1,30 @@
 package eu.twonly.notifications
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 internal fun nativeNotificationId(value: String): Int = value.hashCode() and Int.MAX_VALUE
+
+/** The single channel every twonly notification is posted on. */
+internal const val NOTIFICATION_CHANNEL_ID = "twonly_messages_v2"
+
+internal fun ensureNotificationChannel(context: Context) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val label = context.applicationInfo.loadLabel(context.packageManager).toString()
+    val channel = NotificationChannel(
+        NOTIFICATION_CHANNEL_ID,
+        label,
+        NotificationManager.IMPORTANCE_HIGH,
+    )
+    context.getSystemService(NotificationManager::class.java)
+        .createNotificationChannel(channel)
+}
 
 /**
  * Forwards taps on natively rendered notifications into Flutter.

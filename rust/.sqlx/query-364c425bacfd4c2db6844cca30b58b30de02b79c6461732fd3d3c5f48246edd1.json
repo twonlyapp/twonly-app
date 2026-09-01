@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE messages SET ack_by_server = ? WHERE media_id = ? AND ack_by_server IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "364c425bacfd4c2db6844cca30b58b30de02b79c6461732fd3d3c5f48246edd1"
+}

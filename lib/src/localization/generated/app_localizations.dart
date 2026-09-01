@@ -1196,11 +1196,17 @@ abstract class AppLocalizations {
   /// **'Upgrade to {planId}{sufix}'**
   String upgradeToPaidPlanButton(Object planId, Object sufix);
 
-  /// No description provided for @partOfPaidPlanOf.
+  /// No description provided for @partOfPaidPlanFrom.
   ///
   /// In en, this message translates to:
-  /// **'You are part of the paid plan of {username}!'**
-  String partOfPaidPlanOf(Object username);
+  /// **'Part of the paid plan of'**
+  String get partOfPaidPlanFrom;
+
+  /// No description provided for @subscriptionCurrentPlanBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get subscriptionCurrentPlanBadge;
 
   /// No description provided for @year.
   ///
@@ -1229,67 +1235,67 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get proFeature1;
 
   /// No description provided for @proFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ 1 additional Plus user'**
+  /// **'1 additional Plus user'**
   String get proFeature2;
 
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ 25GB Memories storage'**
+  /// **'25GB Memories storage'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Restore flames'**
+  /// **'Restore flames'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ 4 additional Plus user'**
+  /// **'4 additional Plus user'**
   String get familyFeature2;
 
   /// No description provided for @familyFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ 50GB Memories storage'**
+  /// **'50GB Memories storage'**
   String get familyFeature3;
 
   /// No description provided for @familyFeature4.
   ///
   /// In en, this message translates to:
-  /// **'✓ Support twonly'**
+  /// **'Restore flames'**
   String get familyFeature4;
 
   /// No description provided for @freeFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ 10 Media file uploads per day'**
+  /// **'10 Media file uploads per day'**
   String get freeFeature1;
 
   /// No description provided for @plusFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'Unlimited media file uploads'**
   String get plusFeature1;
 
   /// No description provided for @plusFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ Additional features (coming-soon)'**
+  /// **'Additional features (coming-soon)'**
   String get plusFeature2;
 
   /// No description provided for @manageAdditionalUsers.

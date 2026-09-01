@@ -21,6 +21,7 @@ pub struct Contact {
     pub accepted: i64,
     pub deleted_by_user: i64,
     pub requested: i64,
+    pub requested_by_user: i64,
     pub blocked: i64,
     pub verified: i64,
     pub account_deleted: i64,
@@ -53,11 +54,11 @@ pub struct UpdateContact {
     #[builder(with = |value: bool| value as i64)]
     requested: Option<i64>,
     #[builder(with = |value: bool| value as i64)]
+    requested_by_user: Option<i64>,
+    #[builder(with = |value: bool| value as i64)]
     deleted_by_user: Option<i64>,
     #[builder(with = |value: bool| value as i64)]
     blocked: Option<i64>,
-    #[builder(default)]
-    only_if_not_requested: bool,
 }
 
 impl UpdateContact {
@@ -92,9 +93,10 @@ impl Contact {
                 signal_version = COALESCE(?, signal_version),
                 accepted = COALESCE(?, accepted),
                 requested = COALESCE(?, requested),
+                requested_by_user = COALESCE(?, requested_by_user),
                 deleted_by_user = COALESCE(?, deleted_by_user),
                 blocked = COALESCE(?, blocked)
-            WHERE user_id = ? AND (? = 0 OR requested = 0)
+            WHERE user_id = ?
             "#,
             contact.username,
             update_display_name,
@@ -105,10 +107,10 @@ impl Contact {
             contact.signal_version,
             contact.accepted,
             contact.requested,
+            contact.requested_by_user,
             contact.deleted_by_user,
             contact.blocked,
             contact.user_id,
-            contact.only_if_not_requested,
         )
         .execute(&mut **t)
         .await?;
@@ -122,31 +124,32 @@ impl Contact {
     ) -> Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO contacts(user_id, username, signal_version, accepted, requested, deleted_by_user, blocked)
-            VALUES (?, COALESCE(?, '[Unknown]'), COALESCE(?, 'v2'), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0))
+            INSERT INTO contacts(user_id, username, signal_version, accepted, requested, requested_by_user, deleted_by_user, blocked)
+            VALUES (?, COALESCE(?, '[Unknown]'), COALESCE(?, 'v2'), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0), COALESCE(?, 0))
             ON CONFLICT(user_id) DO UPDATE SET
                 username = COALESCE(?, contacts.username),
                 signal_version = COALESCE(?, contacts.signal_version),
                 accepted = COALESCE(?, contacts.accepted),
                 requested = COALESCE(?, contacts.requested),
+                requested_by_user = COALESCE(?, contacts.requested_by_user),
                 deleted_by_user = COALESCE(?, contacts.deleted_by_user),
                 blocked = COALESCE(?, contacts.blocked)
-            WHERE ? = 0 OR contacts.requested = 0
             "#,
             contact.user_id,
             contact.username,
             contact.signal_version,
             contact.accepted,
             contact.requested,
+            contact.requested_by_user,
             contact.deleted_by_user,
             contact.blocked,
             contact.username,
             contact.signal_version,
             contact.accepted,
             contact.requested,
+            contact.requested_by_user,
             contact.deleted_by_user,
             contact.blocked,
-            contact.only_if_not_requested,
         )
         .execute(&mut **t)
         .await?;

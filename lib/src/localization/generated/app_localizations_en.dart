@@ -610,9 +610,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String partOfPaidPlanOf(Object username) {
-    return 'You are part of the paid plan of $username!';
-  }
+  String get partOfPaidPlanFrom => 'Part of the paid plan of';
+
+  @override
+  String get subscriptionCurrentPlanBadge => 'Current';
 
   @override
   String get year => 'year';
@@ -627,37 +628,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthly => 'Monthly';
 
   @override
-  String get proFeature1 => '✓ Unlimited media file uploads';
+  String get proFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get proFeature2 => '✓ 1 additional Plus user';
+  String get proFeature2 => '1 additional Plus user';
 
   @override
-  String get proFeature3 => '✓ 25GB Memories storage';
+  String get proFeature3 => '25GB Memories storage';
 
   @override
-  String get proFeature4 => '✓ Restore flames';
+  String get proFeature4 => 'Restore flames';
 
   @override
-  String get familyFeature1 => '✓ Unlimited media file uploads';
+  String get familyFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get familyFeature2 => '✓ 4 additional Plus user';
+  String get familyFeature2 => '4 additional Plus user';
 
   @override
-  String get familyFeature3 => '✓ 50GB Memories storage';
+  String get familyFeature3 => '50GB Memories storage';
 
   @override
-  String get familyFeature4 => '✓ Support twonly';
+  String get familyFeature4 => 'Restore flames';
 
   @override
-  String get freeFeature1 => '✓ 10 Media file uploads per day';
+  String get freeFeature1 => '10 Media file uploads per day';
 
   @override
-  String get plusFeature1 => '✓ Unlimited media file uploads';
+  String get plusFeature1 => 'Unlimited media file uploads';
 
   @override
-  String get plusFeature2 => '✓ Additional features (coming-soon)';
+  String get plusFeature2 => 'Additional features (coming-soon)';
 
   @override
   String get manageAdditionalUsers => 'Manage additional users';

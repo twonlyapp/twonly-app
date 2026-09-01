@@ -288,6 +288,17 @@
             "name": "media_received_counter"
           }
         }
+      },
+      {
+        "name": "requested_by_user",
+        "ordinal": 26,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "requested_by_user"
+          }
+        }
       }
     ],
     "parameters": {
@@ -318,6 +329,7 @@
       true,
       true,
       true,
+      false,
       false,
       false
     ]

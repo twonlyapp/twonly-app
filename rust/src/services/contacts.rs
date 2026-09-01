@@ -213,6 +213,7 @@ impl ContactService {
         UpdateContact::builder()
             .user_id(contact_id)
             .requested(false)
+            .requested_by_user(false)
             .accepted(true)
             .deleted_by_user(false)
             .build()
@@ -248,6 +249,7 @@ impl ContactService {
         UpdateContact::builder()
             .user_id(contact_id)
             .requested(false)
+            .requested_by_user(false)
             .accepted(false)
             .deleted_by_user(true)
             .build()
@@ -305,6 +307,21 @@ impl ContactService {
         request_type: encrypted_content::contact_request::Type,
         blocking: bool,
     ) -> Result<()> {
+        // Recorded here rather than at the call sites so no path can send a
+        // request without it: it is what later tells an incoming accept apart
+        // from an unsolicited one.
+        if request_type == encrypted_content::contact_request::Type::Request {
+            let database = self.ctx.app_db.read().await.clone();
+            let mut transaction = database.pool.begin().await?;
+            UpdateContact::builder()
+                .user_id(contact_id)
+                .requested_by_user(true)
+                .build()
+                .update(&mut transaction)
+                .await?;
+            transaction.commit().await?;
+        }
+
         send_c2c_message_to_contact()
             .ctx(&self.ctx)
             .contact_id(contact_id)

@@ -614,9 +614,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String partOfPaidPlanOf(Object username) {
-    return 'Du bist Teil des bezahlten Plans von $username!';
-  }
+  String get partOfPaidPlanFrom => 'Teil des bezahlten Plans von';
+
+  @override
+  String get subscriptionCurrentPlanBadge => 'Aktuell';
 
   @override
   String get year => 'Jahr';
@@ -631,37 +632,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get monthly => 'Monatlich';
 
   @override
-  String get proFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get proFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get proFeature2 => '✓ 1 zusätzlicher Plus Benutzer';
+  String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => '✓ 25GB Memories Speicher';
+  String get proFeature3 => '25GB Memories Speicher';
 
   @override
-  String get proFeature4 => '✓ Flammen wiederherstellen';
+  String get proFeature4 => 'Flammen wiederherstellen';
 
   @override
-  String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get familyFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get familyFeature2 => '✓ 4 zusätzliche Plus Benutzer';
+  String get familyFeature2 => '4 zusätzliche Plus Benutzer';
 
   @override
-  String get familyFeature3 => '✓ 50GB Memories Speicher';
+  String get familyFeature3 => '50GB Memories Speicher';
 
   @override
-  String get familyFeature4 => '✓ Flammen wiederherstellen';
+  String get familyFeature4 => 'Flammen wiederherstellen';
 
   @override
-  String get freeFeature1 => '✓ 10 Medien-Datei-Uploads pro Tag';
+  String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
 
   @override
-  String get plusFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get plusFeature1 => 'Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get plusFeature2 => '✓ Zusatzfunktionen (coming-soon)';
+  String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
 
   @override
   String get manageAdditionalUsers => 'Zusätzliche Benutzer verwalten';

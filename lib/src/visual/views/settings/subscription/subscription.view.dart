@@ -3,13 +3,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/purchasable_product.model.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/elements/better_list_title.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/subscription/additional_users.view.dart';
@@ -26,6 +30,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
   bool testerRequested = true;
   FrbPlanBalance? ballance;
+  Contact? additionalOwner;
   String? additionalOwnerName;
 
   @override
@@ -45,11 +50,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(ownerId)
           .getSingleOrNull();
-      if (contact != null) {
-        additionalOwnerName = getContactDisplayName(contact);
-      } else {
-        additionalOwnerName = ownerId.toString();
-      }
+      additionalOwner = contact;
+      additionalOwnerName = contact == null
+          ? ownerId.toString()
+          : getContactDisplayName(contact);
     }
     if (!mounted) return;
     setState(() {});
@@ -123,12 +127,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             ),
           const SizedBox(height: 16),
           if (additionalOwnerName != null)
-            Center(
-              child: Text(
-                context.lang.partOfPaidPlanOf(additionalOwnerName!),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.orange),
-              ),
+            PlanOwnerCard(
+              owner: additionalOwner,
+              ownerName: additionalOwnerName!,
             ),
           if (isPayingUser(currentPlan))
             PlanCard(
@@ -199,6 +200,115 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     );
   }
 }
+
+/// The owner whose paid plan is covering this account. Tapping it opens their
+/// profile, so the plan can be traced back to a person instead of a name in a
+/// sentence. An owner who is not (or no longer) a contact still gets the card,
+/// just without somewhere to navigate to.
+class PlanOwnerCard extends StatelessWidget {
+  const PlanOwnerCard({
+    required this.owner,
+    required this.ownerName,
+    super.key,
+  });
+
+  final Contact? owner;
+  final String ownerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final owner = this.owner;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Card(
+        elevation: 0,
+        color: context.color.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: owner == null
+              ? null
+              : () => context.push(Routes.profileContact(owner.userId)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                AvatarIcon(
+                  contactId: owner?.userId,
+                  fontSize: 24,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.lang.partOfPaidPlanFrom,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: context.color.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ownerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                if (owner != null) ...[
+                  const SizedBox(width: 3),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.color.onSurfaceVariant,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Marks the plan the account is actually on, so the card that matters is
+/// recognisable without reading any of the copy.
+class CurrentPlanBadge extends StatelessWidget {
+  const CurrentPlanBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.color.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        context.lang.subscriptionCurrentPlanBadge,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isDarkMode(context) ? Colors.black : Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+FaIconData planIcon(SubscriptionPlan plan) => switch (plan) {
+  SubscriptionPlan.Free => FontAwesomeIcons.circleUser,
+  SubscriptionPlan.Plus => FontAwesomeIcons.star,
+  SubscriptionPlan.Pro => FontAwesomeIcons.bolt,
+  SubscriptionPlan.Family => FontAwesomeIcons.peopleRoof,
+  SubscriptionPlan.Tester => FontAwesomeIcons.flask,
+};
 
 class PlanCard extends StatefulWidget {
   const PlanCard({
@@ -278,44 +388,72 @@ class _PlanCardState extends State<PlanCard> {
       default:
     }
 
+    final isCurrent = currentPlan == widget.plan;
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        elevation: 0,
         color: context.color.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text(
-                    widget.plan.name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.color.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: FaIcon(
+                      planIcon(widget.plan),
+                      color: context.color.primary,
+                      size: 24,
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      widget.plan.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (isCurrent) const CurrentPlanBadge(),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               ...features.map(
                 (feature) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    feature,
-                    textAlign: TextAlign.center,
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.check_rounded,
+                        size: 18,
+                        color: context.color.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          feature,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: context.color.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (currentPlan == widget.plan &&
-                  widget.plan != SubscriptionPlan.Tester)
+              const SizedBox(height: 16),
+              if (isCurrent && widget.plan != SubscriptionPlan.Tester)
                 MyButton(
                   variant: MyButtonVariant.primaryMiddle,
                   onPressed: () async {

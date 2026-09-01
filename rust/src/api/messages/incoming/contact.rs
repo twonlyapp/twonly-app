@@ -93,13 +93,14 @@ pub(crate) async fn handle_contact_request(
             // Or the user has also requested fromUserId. This means that both user have requested each other (while been
             // offline for example): In this case the contact can also be accepted blindly.
             let auto_accept = contact.as_ref().is_some_and(|contact| {
-                contact.accepted != 0 || (contact.requested == 0 && contact.deleted_by_user == 0)
+                contact.blocked == 0 && (contact.accepted != 0 || contact.requested_by_user != 0)
             });
 
             if auto_accept {
                 UpdateContact::builder()
                     .user_id(from_user_id)
                     .requested(false)
+                    .requested_by_user(false)
                     .accepted(true)
                     .deleted_by_user(false)
                     .build()
@@ -152,16 +153,20 @@ pub(crate) async fn handle_contact_request(
                 return Ok(());
             };
 
-            if contact.requested != 0 || contact.deleted_by_user != 0 {
+            // An accept is only ours to honour if we actually asked. Keying
+            // that off `requested`/`deleted_by_user` instead -- both routine
+            // for someone met in a shared group -- dropped real accepts and
+            // left the two sides permanently out of step.
+            if contact.blocked != 0 || (contact.requested_by_user == 0 && contact.accepted == 0) {
                 return Ok(());
             }
 
             UpdateContact::builder()
                 .user_id(from_user_id)
                 .requested(false)
+                .requested_by_user(false)
                 .accepted(true)
                 .deleted_by_user(false)
-                .only_if_not_requested(true)
                 .build()
                 .update(tr)
                 .await?;
@@ -172,6 +177,7 @@ pub(crate) async fn handle_contact_request(
             UpdateContact::builder()
                 .user_id(from_user_id)
                 .requested(false)
+                .requested_by_user(false)
                 .accepted(false)
                 .deleted_by_user(true)
                 .build()

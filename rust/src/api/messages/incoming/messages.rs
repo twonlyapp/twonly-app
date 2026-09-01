@@ -189,10 +189,14 @@ pub(crate) async fn ensure_contact_exists(ctx: &Arc<Context>, from_user_id: i64)
 
     tracing::info!("Loaded username: {username}");
 
+    // Hidden, not requested: a first message from a stranger is not itself a
+    // contact request, and `requested = 1` here turned "added me to a group"
+    // into a phantom one. The direct-chat branch in `incoming.rs` and
+    // `handle_contact_request` set `requested` when it is really meant.
     sqlx::query!(
         r#"
-        INSERT OR IGNORE INTO contacts(user_id, username, signal_version, accepted, requested)
-        VALUES (?, ?, ?, 0, 1)
+        INSERT OR IGNORE INTO contacts(user_id, username, signal_version, accepted, requested, deleted_by_user)
+        VALUES (?, ?, ?, 0, 0, 1)
         "#,
         from_user_id,
         username,

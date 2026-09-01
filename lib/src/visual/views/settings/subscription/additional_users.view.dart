@@ -9,6 +9,7 @@ import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/alert.dialog.dart';
+import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/snackbar.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/settings/subscription/select_additional_users.view.dart';
@@ -189,61 +190,77 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  username,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.account.planId,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
-            ),
-            IconButton(
-              icon: const FaIcon(FontAwesomeIcons.userXmark, size: 16),
-              onPressed: () async {
-                final remove = await showAlertDialog(
-                  context,
-                  context.lang.additionalUserRemoveTitle,
-                  context.lang.additionalUserRemoveDesc,
-                );
-                if (remove) {
-                  final res = await rustApiResult(
-                    RustApi.removeAdditionalUser(
-                      userId: widget.account.userId,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Card(
+        elevation: 0,
+        color: context.color.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              AvatarIcon(contactId: widget.account.userId, fontSize: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      username,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.account.planId,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: context.color.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: FaIcon(
+                  FontAwesomeIcons.userXmark,
+                  size: 16,
+                  color: context.color.onSurfaceVariant,
+                ),
+                onPressed: () async {
+                  final remove = await showAlertDialog(
+                    context,
+                    context.lang.additionalUserRemoveTitle,
+                    context.lang.additionalUserRemoveDesc,
                   );
-                  if (!context.mounted) return;
-                  if (res.isSuccess) {
-                    widget.refresh();
-                  } else {
-                    showSnackbar(
-                      context,
-                      errorCodeToText(
-                        context,
-                        res.error!,
+                  if (remove) {
+                    final res = await rustApiResult(
+                      RustApi.removeAdditionalUser(
+                        userId: widget.account.userId,
                       ),
                     );
+                    if (!context.mounted) return;
+                    if (res.isSuccess) {
+                      widget.refresh();
+                    } else {
+                      showSnackbar(
+                        context,
+                        errorCodeToText(
+                          context,
+                          res.error!,
+                        ),
+                      );
+                    }
                   }
-                }
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
