@@ -78,12 +78,14 @@ pub(crate) fn schedule_post_authentication(ctx: &Arc<Context>, in_background: bo
         if let Err(error) = messages::retransmit_queued_receipts(&ctx).await {
             tracing::warn!("failed to retransmit queued receipts: {error}");
         }
+
         // A preparation that a terminated process left half-finished is only
         // resumed by a sweep like this one; a mid-session reconnect is just as
         // good a moment for it as a cold start, and far more frequent.
         if let Err(error) = MediaUploadService::new(&ctx).finish_started_uploads().await {
             tracing::warn!("failed to finish started media uploads: {error}");
         }
+
         if let Err(error) = MediaFileService::new(&ctx).download_pending().await {
             tracing::warn!("failed to download pending media: {error}");
         }

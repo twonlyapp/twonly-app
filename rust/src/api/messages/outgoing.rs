@@ -23,8 +23,18 @@ pub(crate) async fn decorate_content(
     };
 
     content.sender_profile_counter = Some(config.avatar_counter);
+    let database = ctx.app_db.read().await.clone();
+    content.widget_sharing_allowed = Some(
+        sqlx::query_scalar!(
+            "SELECT widget_sharing_granted FROM contacts WHERE user_id = ?",
+            contact_id,
+        )
+        .fetch_optional(&database.pool)
+        .await?
+        .unwrap_or(0)
+            != 0,
+    );
     if config.ask_for_friend_promotions {
-        let database = ctx.app_db.read().await.clone();
         let accepted = sqlx::query_scalar!("SELECT COUNT(*) FROM contacts WHERE accepted = 1")
             .fetch_one(&database.pool)
             .await?;

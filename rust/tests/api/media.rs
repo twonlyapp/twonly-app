@@ -93,6 +93,7 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
             requires_authentication: false,
             display_limit_in_milliseconds: Some(0),
             additional_message_data: None,
+            widget_only: None,
             quote_message_id: None,
         }),
         ..Default::default()
@@ -204,6 +205,7 @@ async fn test_media_lifecycle_actions_and_reupload() -> anyhow::Result<()> {
             requires_authentication: false,
             display_limit_in_milliseconds: Some(0),
             additional_message_data: None,
+            widget_only: None,
             quote_message_id: None,
         }),
         ..Default::default()

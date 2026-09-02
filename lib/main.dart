@@ -21,6 +21,7 @@ import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/backup.service.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/memories/memories.service.dart';
 import 'package:twonly/src/services/migrations.service.dart';
@@ -288,6 +289,8 @@ Future<void> postStartupTasks() async {
   await twonlyDB.messagesDao.purgeMessageTable();
   unawaited(twonlyDB.receiptsDao.purgeReceivedReceipts());
   unawaited(MediaFileService.purgeTempFolder());
+  unawaited(HomeWidgetService.purgeExpiredMedia());
+  unawaited(HomeWidgetService.syncPermissions());
 
   // 2. Service initializations
   unawaitedRustCall(

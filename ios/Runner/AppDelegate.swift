@@ -1,8 +1,10 @@
+import AppIntents
 import CryptoKit
 import Flutter
 import Foundation
 import UIKit
 import UserNotifications
+import WidgetKit
 import flutter_sharing_intent
 
 @main
@@ -222,6 +224,99 @@ class RuntimeStorageChannel {
       binaryMessenger: messenger
     )
     channel.setMethodCallHandler { call, result in
+      // Rust rewrites the widget manifest from inside this process, and
+      // WidgetKit only re-reads it when a timeline reload is requested. The
+      // notification service extension covers pushes; this covers everything
+      // the running app changes.
+      if call.method == "reloadWidgets" {
+        WidgetCenter.shared.reloadAllTimelines()
+        result(nil)
+        return
+      }
+      // Only the app can ask which widgets are actually on the home screen. A
+      // widget extension is never told that its widget was removed, so without
+      // this the placement file keeps describing widgets that are long gone.
+      if call.method == "reconcileWidgets" {
+        // Widgets need iOS 17; on anything older there is nothing to reconcile.
+        guard #available(iOS 17.0, *) else {
+          result(["supported": false, "matched": 0, "widgets": []])
+          return
+        }
+        // `getCurrentConfigurations` answers on a background queue, but a
+        // FlutterResult must be delivered on the platform thread — replying off
+        // it is undefined and the reply can be dropped, leaving Dart awaiting a
+        // future that never completes.
+        let reply: (Any?) -> Void = { value in
+          DispatchQueue.main.async { result(value) }
+        }
+        // Ask every widget that is really on a home screen to rebuild, then give
+        // the extension a moment to answer. A widget the system merely still has
+        // a record of is never displayed, so it is never asked for a timeline
+        // and never stamps itself — which is what separates the two.
+        let askedAt = Int(Date().timeIntervalSince1970)
+        WidgetCenter.shared.reloadAllTimelines()
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 2) {
+        WidgetCenter.shared.getCurrentConfigurations { configurations in
+          switch configurations {
+          case .success(let placed):
+            var selections: [[Int64]] = []
+            var report: [[String: Any]] = []
+            // A widget that rebuilt just before the reload was asked for still
+            // counts; the window only has to exclude records that never rebuild.
+            let rebuilt = WidgetStorage.recentlyRebuiltIds(since: askedAt - 90)
+            for (index, info) in placed.enumerated() {
+              var entry: [String: Any] = [
+                "kind": info.kind,
+                "family": "\(info.family)",
+                "mine": info.kind == widgetKind,
+              ]
+              if info.kind == widgetKind {
+                if let intent = try? info.widgetConfigurationIntent(
+                  of: TwonlyWidgetIntent.self)
+                {
+                  let ids = (intent.groups ?? []).compactMap { Int64($0.id) }
+                  let live = rebuilt.contains("ios:\(WidgetStorage.selectionKey(ids))")
+                  entry["group_ids"] = ids
+                  entry["id"] = "ios:\(index):\(WidgetStorage.selectionKey(ids))"
+                  entry["live"] = live
+                  if live { selections.append(ids) }
+                } else {
+                  // The widget is placed even though its configuration will not
+                  // decode. Recording it as unconfigured keeps it in the file:
+                  // dropping it would report a removal that did not happen.
+                  entry["configuration"] = "unreadable"
+                  entry["group_ids"] = [Int64]()
+                  entry["id"] = "ios:\(index)"
+                  entry["live"] = false
+                }
+              }
+              report.append(entry)
+            }
+            WidgetStorage.replaceIosSelections(selections)
+            widgetLog.debug(
+              "WidgetKit reports \(placed.count, privacy: .public) widget(s); \(selections.count, privacy: .public) rebuilt a timeline and are counted as placed"
+            )
+            reply([
+              "supported": true,
+              "matched": selections.count,
+              "widgets": report,
+            ])
+          case .failure(let error):
+            // Leave the file alone: a failed query is not evidence of removal.
+            widgetLog.error(
+              "getCurrentConfigurations failed: \(error.localizedDescription, privacy: .public)"
+            )
+            reply(
+              FlutterError(
+                code: "widget_configurations_unavailable",
+                message: error.localizedDescription,
+                details: nil
+              ))
+          }
+        }
+        }
+        return
+      }
       guard call.method == "runtimeSupportDirectory" else {
         result(FlutterMethodNotImplemented)
         return

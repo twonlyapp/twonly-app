@@ -34,7 +34,62 @@ use prost::Message as _;
 use proto::message::Type;
 use server_to_client::v0::Kind;
 use sqlx::{Sqlite, Transaction};
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, LazyLock, Mutex, PoisonError, Weak};
+
+/// Serialises the handling of one receipt ID against itself.
+///
+/// The server resends a mailbox page whose acknowledgement timed out, so a
+/// message can arrive again while the first copy is still being handled. Both
+/// copies would open their own transaction on the single app-database
+/// connection, and the second could only ever find the claim the first is
+/// about to write. Waiting here keeps the duplicate off that connection until
+/// the first copy has committed, after which it takes the ordinary
+/// already-claimed path.
+static IN_FLIGHT_RECEIPTS: LazyLock<Mutex<HashMap<String, Weak<tokio::sync::Mutex<()>>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// The registry entry for one in-flight receipt. It keeps the only strong
+/// reference held by a handler that is not waiting, so dropping it once no
+/// other copy is queued takes the entry out of the registry again.
+struct InFlightReceipt {
+    receipt_id: String,
+    lock: Arc<tokio::sync::Mutex<()>>,
+}
+
+impl InFlightReceipt {
+    fn claim(receipt_id: &str) -> Self {
+        let mut in_flight = IN_FLIGHT_RECEIPTS
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        let lock = in_flight
+            .get(receipt_id)
+            .and_then(Weak::upgrade)
+            .unwrap_or_else(|| {
+                let lock = Arc::new(tokio::sync::Mutex::new(()));
+                in_flight.insert(receipt_id.to_owned(), Arc::downgrade(&lock));
+                lock
+            });
+        Self {
+            receipt_id: receipt_id.to_owned(),
+            lock,
+        }
+    }
+}
+
+impl Drop for InFlightReceipt {
+    fn drop(&mut self) {
+        let mut in_flight = IN_FLIGHT_RECEIPTS
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        // Every other copy of this receipt holds a strong reference of its
+        // own, and both taking one and removing the entry happen under this
+        // lock, so being the last holder means nothing is queued behind us.
+        if Arc::strong_count(&self.lock) == 1 {
+            in_flight.remove(&self.receipt_id);
+        }
+    }
+}
 
 pub(crate) async fn handle_server_message(
     ctx: &Arc<Context>,
@@ -255,6 +310,13 @@ pub(crate) async fn handle_decoded_server_message(
             "client message has no receipt ID".into(),
         ));
     }
+
+    // A redelivery of a message still being handled waits here instead of
+    // racing the copy in flight for the single app-database connection. The
+    // registry entry outlives the lock guard, so the receipt stays registered
+    // for as long as anything is queued on it.
+    let in_flight = InFlightReceipt::claim(&message.receipt_id);
+    let _in_flight = in_flight.lock.lock().await;
 
     let message_type = Type::try_from(message.r#type)?;
     let is_encrypted_message = matches!(
@@ -486,6 +548,10 @@ async fn handle_encrypted_inner(
         Contact::update_ask_for_friend_promotions(t, from_user_id).await?;
     }
 
+    if let Some(allowed) = content.widget_sharing_allowed {
+        Contact::update_widget_sharing_allowed(t, from_user_id, allowed).await?;
+    }
+
     let type_kind = content_type_kind(&content);
 
     tracing::Span::current().record("kind", type_kind);
@@ -652,4 +718,30 @@ async fn handle_encrypted_inner(
     Err(TwonlyError::UnprocessableContent(format!(
         "client2client content in receipt {receipt_id} is not implemented in Rust"
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn copies_of_one_receipt_share_a_lock_until_the_last_one_goes() {
+        let receipt_id = "in-flight-registry-test";
+
+        let first = InFlightReceipt::claim(receipt_id);
+        let second = InFlightReceipt::claim(receipt_id);
+        assert!(Arc::ptr_eq(&first.lock, &second.lock));
+
+        // One copy leaving must not unregister a receipt another still holds.
+        drop(second);
+        let third = InFlightReceipt::claim(receipt_id);
+        assert!(Arc::ptr_eq(&third.lock, &first.lock));
+
+        drop(third);
+        drop(first);
+        assert!(!IN_FLIGHT_RECEIPTS
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .contains_key(receipt_id));
+    }
 }

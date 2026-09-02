@@ -41,6 +41,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
                 messages.groupId.equals(groupId) &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
@@ -63,6 +64,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ])
           ..where(
             messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
                 messages.isDeletedFromSender.equals(false) &
                 (messages.mediaId.isNull() |
                     mediaFiles.downloadState.isNull() |
@@ -89,6 +91,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                         .not()) &
                 mediaFiles.type.equals(MediaType.audio.name).not() &
                 messages.openedAt.isNull() &
+                messages.isWidgetMedia.equals(false) &
                 messages.groupId.equals(groupId) &
                 messages.mediaId.isNotNull() &
                 messages.senderId.isNotNull() &
@@ -107,6 +110,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ),
         ])..where(
           messages.openedAt.isNull() &
+              messages.isWidgetMedia.equals(false) &
               messages.mediaId.isNotNull() &
               messages.type.equals(MessageType.media.name) &
               mediaFiles.downloadState.equals(DownloadState.ready.name) &
@@ -285,7 +289,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .map((row) => (row.readTable(groupMembers), row.readTable(contacts)))
         .watch();
   }
-Future<void> purgeMessageTable() async {
+
+  Future<void> purgeMessageTable() async {
     final allGroups = await select(groups).get();
 
     final groupedByTime = <int, List<String>>{};
@@ -622,7 +627,8 @@ Future<void> purgeMessageTable() async {
       return null;
     }
   }
-Future<void> deleteMessagesById(String messageId) {
+
+  Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
@@ -665,7 +671,8 @@ Future<void> deleteMessagesById(String messageId) {
         ))
         .watch();
   }
-Stream<List<MessageHistory>> watchMessageHistory(String messageId) {
+
+  Stream<List<MessageHistory>> watchMessageHistory(String messageId) {
     return (select(messageHistories)
           ..where((t) => t.messageId.equals(messageId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))

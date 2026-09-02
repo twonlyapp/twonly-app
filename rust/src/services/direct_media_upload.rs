@@ -22,7 +22,6 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-const REFRESH_BEFORE_SECONDS: i64 = 24 * 60 * 60;
 /// When to top the slot cache up, until the server has said otherwise.
 ///
 /// A slot is the one part of preparing a send that needs the network, so the
@@ -44,6 +43,16 @@ const WATCH_MAX_DELAY: Duration = Duration::from_secs(120);
 
 static WATCHING: AtomicBool = AtomicBool::new(false);
 static API_NAMESPACE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+/// One slot request at a time.
+///
+/// The server reads the known-slot list of a request as the whole truth for the
+/// account and abandons every reserved slot missing from it. Two requests in
+/// flight at once therefore destroy each other's slots: the second was prepared
+/// before the first's answer was stored, so it asks the server to give up
+/// exactly the slots the first had just been handed. The client then holds a
+/// cache of slots that are already dead, and every send that reserves one of
+/// them fails.
+static PRELOAD_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Bumped every time something asks to be watched. A watcher already in flight
 /// reads this as "new work arrived" and drops back to the short poll interval.
@@ -62,7 +71,6 @@ impl Drop for WatchingGuard {
         WATCHING.store(false, Ordering::SeqCst);
     }
 }
-
 /// The OS finishes a transfer without telling this process, so a send would keep
 /// showing as "sending" until the app is restarted. While the app is alive, poll
 /// the server for the attachments it is still waiting on, backing off as the
@@ -150,6 +158,7 @@ struct MessageRow {
     created_at: i64,
     quotes_message_id: Option<String>,
     additional_message_data: Option<Vec<u8>>,
+    is_widget_media: i64,
 }
 
 #[derive(FromRow)]
@@ -197,6 +206,17 @@ async fn reset_upload_namespace(
         .await?;
     if stored.as_deref() == Some(namespace) {
         return Ok((stored, 0));
+    }
+    if stored.is_none() {
+        sqlx::query(
+            r#"INSERT INTO app_metadata(key, value) VALUES(?, ?)
+               ON CONFLICT(key) DO UPDATE SET value = excluded.value"#,
+        )
+        .bind(API_NAMESPACE_KEY)
+        .bind(namespace)
+        .execute(&database.pool)
+        .await?;
+        return Ok((None, 0));
     }
 
     let stale_files = sqlx::query_as::<_, (String, String, String, String)>(
@@ -325,14 +345,33 @@ impl DirectMediaUploadService {
         });
     }
 
-    pub async fn preload_slots(&self) -> Result<usize> {
-        self.ensure_api_namespace().await?;
+    /// Every slot this client still holds: cached and in flight alike.
+    ///
+    /// The server abandons each reserved slot of this account that is missing
+    /// from the list, so an omission is not merely a lost cache entry - a slot
+    /// the OS is still uploading against dies with `not_in_client_cache`, and
+    /// the send has to start over. Reserved slots are exactly the ones a
+    /// refill can race, because a refill runs on every reconnect and after
+    /// every settled transfer, both of which happen while a send is in flight.
+    async fn locally_known_slot_ids(&self) -> Result<Vec<String>> {
         let database = self.ctx.app_db.read().await.clone();
-        let known = sqlx::query_scalar::<_, String>(
-            "SELECT attachment_id FROM direct_media_upload_slots WHERE state IN ('cached', 'reserved') AND expires_at > CAST(strftime('%s','now') AS INTEGER)",
+        Ok(sqlx::query_scalar::<_, String>(
+            r#"SELECT attachment_id FROM direct_media_upload_slots
+               WHERE state IN ('cached', 'reserved')
+                 AND expires_at > CAST(strftime('%s','now') AS INTEGER)"#,
         )
         .fetch_all(&database.pool)
-        .await?;
+        .await?)
+    }
+
+    pub async fn preload_slots(&self) -> Result<usize> {
+        self.ensure_api_namespace().await?;
+        // Held across the whole exchange: the list below is only true while no
+        // other request can be answered, and stays true until the answer has
+        // been stored.
+        let _guard = PRELOAD_LOCK.lock().await;
+        let known = self.locally_known_slot_ids().await?;
+        let database = self.ctx.app_db.read().await.clone();
         let request = RequestUploadSlots {
             locally_known_slot_ids: known,
         };
@@ -365,6 +404,13 @@ impl DirectMediaUploadService {
                 .map_err(|error| TwonlyError::Generic(error.to_string()))?,
         )?;
         let count = slots.slots.len();
+        tracing::info!(
+            known_sent = request.locally_known_slot_ids.len(),
+            slots_received = count,
+            max_active = slots.maximum_active_slots,
+            refill_threshold = slots.refill_threshold,
+            "direct-media upload slots response from server"
+        );
         let mut transaction = database.pool.begin().await?;
         // The server decides how deep this cache may be. Remembering the number
         // keeps an offline launch from refilling against a stale guess.
@@ -387,7 +433,13 @@ impl DirectMediaUploadService {
                    (attachment_id, expires_at, maximum_object_bytes, upload_url,
                     upload_fields_json, capability, state)
                    VALUES (?, ?, ?, ?, ?, ?, 'cached')
-                   ON CONFLICT(attachment_id) DO NOTHING"#,
+                   ON CONFLICT(attachment_id) DO UPDATE SET
+                       expires_at = excluded.expires_at,
+                       maximum_object_bytes = excluded.maximum_object_bytes,
+                       upload_url = excluded.upload_url,
+                       upload_fields_json = excluded.upload_fields_json,
+                       capability = excluded.capability,
+                       state = 'cached'"#,
             )
             .bind(slot.attachment_id)
             .bind(slot.expires_at_unix_seconds)
@@ -406,9 +458,8 @@ impl DirectMediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         Ok(sqlx::query_scalar(
             r#"SELECT COUNT(*) FROM direct_media_upload_slots
-               WHERE state = 'cached' AND expires_at > CAST(strftime('%s','now') AS INTEGER) + ?"#,
+               WHERE state = 'cached' AND expires_at > CAST(strftime('%s','now') AS INTEGER)"#,
         )
-        .bind(REFRESH_BEFORE_SECONDS)
         .fetch_one(&database.pool)
         .await?)
     }
@@ -434,13 +485,19 @@ impl DirectMediaUploadService {
         if usable > self.refill_threshold().await {
             return Ok(());
         }
-        match self.preload_slots().await {
-            Ok(_) => Ok(()),
-            Err(error) if usable > 0 => {
-                tracing::warn!(%error, usable, "slot refill failed; using cached direct-media slot");
-                Ok(())
+        let preload_result = self.preload_slots().await;
+        let usable_after = self.usable_slot_count().await?;
+        if usable_after > 0 {
+            if let Err(error) = preload_result {
+                tracing::warn!(%error, usable_after, "slot refill failed; using cached direct-media slot");
             }
-            Err(error) => Err(error),
+            Ok(())
+        } else {
+            preload_result.and_then(|_| {
+                Err(TwonlyError::Generic(
+                    "no direct-media upload slots available from server".into(),
+                ))
+            })
         }
     }
 
@@ -453,13 +510,12 @@ impl DirectMediaUploadService {
                WHERE attachment_id = (
                  SELECT attachment_id FROM direct_media_upload_slots
                  WHERE state = 'cached'
-                   AND expires_at > CAST(strftime('%s','now') AS INTEGER) + ?
+                   AND expires_at > CAST(strftime('%s','now') AS INTEGER)
                  ORDER BY expires_at ASC LIMIT 1
                )
                RETURNING attachment_id, expires_at, maximum_object_bytes, upload_url,
                          upload_fields_json, capability"#,
         )
-        .bind(REFRESH_BEFORE_SECONDS)
         .fetch_optional(&mut *transaction)
         .await?
         .ok_or_else(|| TwonlyError::Generic("no usable direct-media upload slot".into()))?;
@@ -491,6 +547,16 @@ impl DirectMediaUploadService {
     pub async fn reconcile(&self) -> Result<()> {
         self.ensure_api_namespace().await?;
         let database = self.ctx.app_db.read().await.clone();
+
+        // Release any orphaned reserved slots (slots marked reserved with no associated job)
+        let _ = sqlx::query(
+            r#"UPDATE direct_media_upload_slots SET state = 'cached'
+               WHERE state = 'reserved'
+                 AND attachment_id NOT IN (SELECT attachment_id FROM direct_media_upload_jobs)"#,
+        )
+        .execute(&database.pool)
+        .await;
+
         let jobs = sqlx::query_as::<_, PendingJob>(
             r#"SELECT j.attachment_id, j.media_id, j.multipart_path, j.manifest_path,
                       j.complete_body_path, s.capability, j.expires_at
@@ -504,10 +570,8 @@ impl DirectMediaUploadService {
 
         let now = chrono::Utc::now().timestamp();
         for job in jobs {
-            let state = match self.fetch_status(&job).await {
-                Ok(status) => {
-                    AttachmentState::try_from(status.state).unwrap_or(AttachmentState::Unknown)
-                }
+            let status = match self.fetch_status(&job).await {
+                Ok(status) => status,
                 Err(error) => {
                     tracing::warn!(
                         attachment_id = job.attachment_id,
@@ -517,10 +581,14 @@ impl DirectMediaUploadService {
                     continue;
                 }
             };
+            let state = AttachmentState::try_from(status.state).unwrap_or(AttachmentState::Unknown);
             tracing::info!(
                 attachment_id = job.attachment_id,
                 media_id = job.media_id,
                 ?state,
+                // The server's word on why a transfer was given up on, which is
+                // the only place a cause such as `not_in_client_cache` appears.
+                reason = status.rejection_reason,
                 "read direct-media attachment status"
             );
             match state {
@@ -528,6 +596,9 @@ impl DirectMediaUploadService {
                 AttachmentState::Rejected => self.settle(&job, Outcome::Rejected).await?,
                 AttachmentState::Expired | AttachmentState::Abandoned => {
                     self.settle(&job, Outcome::Retry).await?;
+                    if status.rejection_reason == "not_in_client_cache" {
+                        self.purge_cached_slots().await;
+                    }
                 }
                 // Still reserved or uploading. Only give up once the slot's own
                 // capability has expired, because the native task stops then too.
@@ -536,6 +607,27 @@ impl DirectMediaUploadService {
             }
         }
         Ok(())
+    }
+
+    /// The server gave this account's reserved slots up while this client was
+    /// still holding them, so the cache it holds is a generation the server has
+    /// swept: the other slots in it are just as dead, and each would cost a
+    /// failed send to discover. Dropping them costs one refill instead.
+    async fn purge_cached_slots(&self) {
+        let database = self.ctx.app_db.read().await.clone();
+        let purged = sqlx::query("DELETE FROM direct_media_upload_slots WHERE state = 'cached'")
+            .execute(&database.pool)
+            .await
+            .map(|result| result.rows_affected())
+            .unwrap_or_default();
+        drop(database);
+        if purged > 0 {
+            tracing::warn!(
+                purged,
+                "dropped cached direct-media slots the server had already abandoned"
+            );
+            self.spawn_slot_refill();
+        }
     }
 
     async fn fetch_status(&self, job: &PendingJob) -> Result<AttachmentStatus> {
@@ -596,14 +688,15 @@ impl DirectMediaUploadService {
         } else {
             "abandoned"
         };
-        // The cache has just lost one; refill in the background so the next
-        // send does not have to be online to reserve one.
-        self.spawn_slot_refill();
         sqlx::query("UPDATE direct_media_upload_slots SET state = ? WHERE attachment_id = ?")
             .bind(slot_state)
             .bind(&job.attachment_id)
             .execute(&database.pool)
             .await?;
+        // The cache has just lost one; refill in the background so the next
+        // send does not have to be online to reserve one. Only once this slot
+        // has left `reserved`, so the refill does not report it as still held.
+        self.spawn_slot_refill();
 
         match outcome {
             Outcome::Uploaded => {
@@ -654,6 +747,7 @@ impl DirectMediaUploadService {
     }
 
     pub async fn prepare_and_schedule(&self, media_id: &str) -> Result<String> {
+        self.cleanup_stale_media_jobs(media_id).await;
         let slot = self.reserve_slot().await?;
         match self.prepare_reserved(media_id, &slot).await {
             Ok(()) => Ok(slot.attachment_id),
@@ -661,6 +755,34 @@ impl DirectMediaUploadService {
                 self.release_reservation(&slot.attachment_id).await;
                 Err(error)
             }
+        }
+    }
+
+    async fn cleanup_stale_media_jobs(&self, media_id: &str) {
+        let database = self.ctx.app_db.read().await.clone();
+        let jobs = sqlx::query_as::<_, (String, String, String, String)>(
+            r#"DELETE FROM direct_media_upload_jobs WHERE media_id = ?
+               RETURNING attachment_id, multipart_path, manifest_path, complete_body_path"#,
+        )
+        .bind(media_id)
+        .fetch_all(&database.pool)
+        .await
+        .unwrap_or_default();
+
+        for (attachment_id, multipart, manifest, complete) in jobs {
+            for path in [&multipart, &manifest, &complete] {
+                let _ = std::fs::remove_file(path);
+            }
+            let job_dir = PathBuf::from(&self.ctx.config.data_dir)
+                .join("direct-media-upload")
+                .join(&attachment_id);
+            let _ = std::fs::remove_dir(job_dir);
+            let _ = sqlx::query(
+                "UPDATE direct_media_upload_slots SET state = 'cached' WHERE attachment_id = ?",
+            )
+            .bind(&attachment_id)
+            .execute(&database.pool)
+            .await;
         }
     }
 
@@ -833,7 +955,7 @@ impl DirectMediaUploadService {
 
         let messages = sqlx::query_as::<_, MessageRow>(
             r#"SELECT group_id, message_id, created_at, quotes_message_id,
-                      additional_message_data
+                      additional_message_data, is_widget_media
                FROM messages WHERE media_id = ?"#,
         )
         .bind(media_id)
@@ -880,6 +1002,7 @@ impl DirectMediaUploadService {
                         encryption_mac: Some(tag.to_vec()),
                         encryption_nonce: Some(nonce.to_vec()),
                         additional_message_data: message.additional_message_data.clone(),
+                        widget_only: Some(message.is_widget_media != 0),
                     }),
                     ..Default::default()
                 };
@@ -1093,5 +1216,184 @@ mod tests {
             &media_bytes
         );
         assert!(bytes.ends_with(b"\r\n--boundary--\r\n"));
+    }
+
+    #[tokio::test]
+    async fn usable_slot_count_and_reserve_accept_unexpired_slots() {
+        let directory = tempfile::tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let service = DirectMediaUploadService::new(&ctx);
+
+        // Slot expiring in 1 hour (which is < 24 hours)
+        let soon = chrono::Utc::now().timestamp() + 3600;
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_slots
+               (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                upload_fields_json, capability, state)
+               VALUES('slot-1', ?, 1000000, 'https://objects.example', '{}', x'01', 'cached')"#,
+        )
+        .bind(soon)
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        assert_eq!(service.usable_slot_count().await.unwrap(), 1);
+
+        // Slot should be successfully reserved even though remaining TTL < 24 hours
+        let mut transaction = database.pool.begin().await.unwrap();
+        let slot = sqlx::query_as::<_, CachedSlot>(
+            r#"UPDATE direct_media_upload_slots SET state = 'reserved'
+               WHERE attachment_id = (
+                 SELECT attachment_id FROM direct_media_upload_slots
+                 WHERE state = 'cached'
+                   AND expires_at > CAST(strftime('%s','now') AS INTEGER)
+                 ORDER BY expires_at ASC LIMIT 1
+               )
+               RETURNING attachment_id, expires_at, maximum_object_bytes, upload_url,
+                         upload_fields_json, capability"#,
+        )
+        .fetch_optional(&mut *transaction)
+        .await
+        .unwrap();
+        transaction.commit().await.unwrap();
+
+        assert!(slot.is_some());
+        assert_eq!(slot.unwrap().attachment_id, "slot-1");
+    }
+
+    #[tokio::test]
+    async fn reconcile_reclaims_orphaned_reserved_slots() {
+        let directory = tempfile::tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let service = DirectMediaUploadService::new(&ctx);
+
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_slots
+               (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                upload_fields_json, capability, state)
+               VALUES('orphaned-slot', 9999999999, 1000000, 'https://objects.example', '{}', x'01', 'reserved')"#,
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        assert_eq!(service.usable_slot_count().await.unwrap(), 0);
+
+        service.reconcile().await.unwrap();
+
+        assert_eq!(service.usable_slot_count().await.unwrap(), 1);
+        let state = sqlx::query_scalar::<_, String>(
+            "SELECT state FROM direct_media_upload_slots WHERE attachment_id = 'orphaned-slot'",
+        )
+        .fetch_one(&database.pool)
+        .await
+        .unwrap();
+        assert_eq!(state, "cached");
+    }
+
+    #[tokio::test]
+    async fn stale_media_jobs_are_cleaned_up_and_slots_cached() {
+        let directory = tempfile::tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let service = DirectMediaUploadService::new(&ctx);
+
+        let job_dir = directory.path().join("data/direct-media-upload/slot-stale");
+        std::fs::create_dir_all(&job_dir).unwrap();
+        let multipart = job_dir.join("media.multipart");
+        let manifest = job_dir.join("manifest.pb");
+        let complete = job_dir.join("complete.pb");
+        for p in [&multipart, &manifest, &complete] {
+            std::fs::write(p, b"data").unwrap();
+        }
+
+        let database = ctx.app_db.read().await.clone();
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_slots
+               (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                upload_fields_json, capability, state)
+               VALUES('slot-stale', 9999999999, 1000000, 'https://objects.example', '{}', x'01', 'reserved')"#,
+        )
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"INSERT INTO direct_media_upload_jobs
+               (attachment_id, media_id, multipart_path, manifest_path,
+                complete_body_path, native_descriptor_json, state, expires_at)
+               VALUES('slot-stale', 'media-stale', ?, ?, ?, '{}', 'scheduled', 9999999999)"#,
+        )
+        .bind(multipart.to_string_lossy().as_ref())
+        .bind(manifest.to_string_lossy().as_ref())
+        .bind(complete.to_string_lossy().as_ref())
+        .execute(&database.pool)
+        .await
+        .unwrap();
+
+        assert_eq!(service.usable_slot_count().await.unwrap(), 0);
+
+        service.cleanup_stale_media_jobs("media-stale").await;
+
+        assert_eq!(service.usable_slot_count().await.unwrap(), 1);
+        assert!(!multipart.exists());
+        assert!(!job_dir.exists());
+    }
+
+    #[tokio::test]
+    async fn known_slot_ids_include_in_flight_reservations() {
+        let directory = tempfile::tempdir().unwrap();
+        let ctx = Context::init_for_testing(
+            directory.path().join("database"),
+            directory.path().join("data"),
+        )
+        .await
+        .unwrap();
+        let service = DirectMediaUploadService::new(&ctx);
+
+        let database = ctx.app_db.read().await.clone();
+        let expired = chrono::Utc::now().timestamp() - 60;
+        for (attachment_id, state, expires_at) in [
+            ("slot-cached", "cached", 9999999999),
+            ("slot-reserved", "reserved", 9999999999),
+            ("slot-consumed", "consumed", 9999999999),
+            ("slot-expired", "cached", expired),
+        ] {
+            sqlx::query(
+                r#"INSERT INTO direct_media_upload_slots
+                   (attachment_id, expires_at, maximum_object_bytes, upload_url,
+                    upload_fields_json, capability, state)
+                   VALUES(?, ?, 1000000, 'https://objects.example', '{}', x'01', ?)"#,
+            )
+            .bind(attachment_id)
+            .bind(expires_at)
+            .bind(state)
+            .execute(&database.pool)
+            .await
+            .unwrap();
+        }
+
+        let mut known = service.locally_known_slot_ids().await.unwrap();
+        known.sort();
+
+        // The reserved slot is the one an upload is running against: leaving it
+        // out makes the server abandon the transfer as `not_in_client_cache`.
+        assert_eq!(known, vec!["slot-cached", "slot-reserved"]);
     }
 }

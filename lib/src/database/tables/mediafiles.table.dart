@@ -59,6 +59,8 @@ class MediaFiles extends Table {
 
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
   BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
+  BoolColumn get isWidgetMedia =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   BoolColumn get hasCropAnalyzed =>
       boolean().withDefault(const Constant(false))();

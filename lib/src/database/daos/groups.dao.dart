@@ -21,7 +21,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   // of this object.
   // ignore: matching_super_parameters
   GroupsDao(super.db);
-Future<void> deleteGroup(String groupId) async {
+  Future<void> deleteGroup(String groupId) async {
     await (delete(groups)..where((t) => t.groupId.equals(groupId))).go();
   }
 
@@ -49,6 +49,7 @@ Future<void> deleteGroup(String groupId) async {
       groupMembers,
     )..where((t) => t.groupId.equals(groupId))).get();
   }
+
   Future<Group?> createNewGroup(GroupsCompanion group) async {
     return _insertGroup(group);
   }
@@ -82,7 +83,8 @@ Future<void> deleteGroup(String groupId) async {
           ..orderBy([(t) => OrderingTerm.asc(t.actionAt)]))
         .watch();
   }
-Future<Group?> createNewDirectChat(
+
+  Future<Group?> createNewDirectChat(
     int contactId,
     GroupsCompanion group,
   ) async {
@@ -175,6 +177,26 @@ Future<Group?> createNewDirectChat(
         .watch();
   }
 
+  Stream<List<Group>> watchGroupsAllowedForWidgetShare() {
+    final query =
+        select(groups).join([
+          innerJoin(
+            groupMembers,
+            groupMembers.groupId.equalsExp(groups.groupId),
+          ),
+          innerJoin(
+            contacts,
+            contacts.userId.equalsExp(groupMembers.contactId),
+          ),
+        ])..where(
+          groups.isDirectChat.equals(true) &
+              groups.leftGroup.equals(false) &
+              groups.deletedContent.equals(false) &
+              contacts.widgetSharingAllowed.equals(true),
+        );
+    return query.map((row) => row.readTable(groups)).watch();
+  }
+
   Stream<List<GroupMember>> watchContactGroupMember(int contactId) {
     return (select(groupMembers)..where(
           (g) => g.contactId.equals(contactId),
@@ -193,7 +215,8 @@ Future<Group?> createNewDirectChat(
       groups,
     )..where((t) => t.groupId.equals(groupId))).watchSingleOrNull();
   }
-Stream<List<Group>> watchGroupsForChatList() {
+
+  Stream<List<Group>> watchGroupsForChatList() {
     return (select(groups)
           ..where((t) => t.deletedContent.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
@@ -231,7 +254,8 @@ Stream<List<Group>> watchGroupsForChatList() {
   Future<List<Group>> getAllGroups() {
     return select(groups).get();
   }
-Future<Group?> getDirectChat(int userId) async {
+
+  Future<Group?> getDirectChat(int userId) async {
     final query =
         ((select(groups)..where((t) => t.isDirectChat.equals(true))).join([
           leftOuterJoin(
@@ -242,7 +266,8 @@ Future<Group?> getDirectChat(int userId) async {
 
     return query.map((row) => row.readTable(groups)).getSingleOrNull();
   }
-Stream<int> watchSumTotalMediaCounter() {
+
+  Stream<int> watchSumTotalMediaCounter() {
     final query = selectOnly(groups)
       ..addColumns([groups.totalMediaCounter.sum()]);
     return query.watch().map((rows) {

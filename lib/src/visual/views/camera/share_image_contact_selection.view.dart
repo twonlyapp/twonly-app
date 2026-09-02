@@ -30,6 +30,7 @@ class ShareImageView extends StatefulWidget {
     required this.mediaStoreFuture,
     required this.mediaFileService,
     required this.additionalData,
+    required this.sendToWidget,
     super.key,
   });
   final HashSet<String> selectedGroupIds;
@@ -37,6 +38,7 @@ class ShareImageView extends StatefulWidget {
   final Future<ScreenshotImageHelper?>? mediaStoreFuture;
   final MediaFileService mediaFileService;
   final AdditionalMessageData? additionalData;
+  final bool sendToWidget;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -47,7 +49,6 @@ class _ShareImageView extends State<ShareImageView> {
   List<Group> _otherUsers = [];
   List<Group> _bestFriends = [];
   List<Group> _pinnedContacts = [];
-
   bool sendingImage = false;
   bool mediaStoreFutureReady = false;
   ScreenshotImageHelper? _screenshotImage;
@@ -60,9 +61,19 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    allGroupSub = twonlyDB.groupsDao.watchGroupsForShareImage().listen((
-      allGroups,
-    ) async {
+    final groups = widget.sendToWidget
+        ? twonlyDB.groupsDao.watchGroupsAllowedForWidgetShare()
+        : twonlyDB.groupsDao.watchGroupsForShareImage();
+    allGroupSub = groups.listen((allGroups) async {
+      if (!mounted) return;
+      if (widget.sendToWidget) {
+        final allowedGroupIds = allGroups.map((group) => group.groupId).toSet();
+        for (final groupId in widget.selectedGroupIds.toList()) {
+          if (!allowedGroupIds.contains(groupId)) {
+            widget.updateSelectedGroupIds(groupId, false);
+          }
+        }
+      }
       setState(() {
         _allGroups = allGroups;
       });
@@ -188,10 +199,11 @@ class _ShareImageView extends State<ShareImageView> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                ContactGroupShortcutRow(
-                  selectedGroupIds: widget.selectedGroupIds,
-                  updateSelectedGroupIds: updateSelectedGroupIds,
-                ),
+                if (!widget.sendToWidget)
+                  ContactGroupShortcutRow(
+                    selectedGroupIds: widget.selectedGroupIds,
+                    updateSelectedGroupIds: updateSelectedGroupIds,
+                  ),
                 if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
                 BestFriendsSelector(
                   groups: _pinnedContacts,
@@ -199,6 +211,7 @@ class _ShareImageView extends State<ShareImageView> {
                   updateSelectedGroupIds: updateSelectedGroupIds,
                   title: context.lang.shareImagePinnedContacts,
                   showSelectAll:
+                      !widget.sendToWidget &&
                       !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
                 const SizedBox(height: 10),
@@ -208,6 +221,7 @@ class _ShareImageView extends State<ShareImageView> {
                   updateSelectedGroupIds: updateSelectedGroupIds,
                   title: context.lang.shareImageBestFriends,
                   showSelectAll:
+                      !widget.sendToWidget &&
                       !widget.mediaFileService.mediaFile.requiresAuthentication,
                 ),
                 const SizedBox(height: 10),
@@ -316,6 +330,7 @@ class _ShareImageView extends State<ShareImageView> {
                                   groupIds: widget.selectedGroupIds.toList(),
                                   additionalMessageData: widget.additionalData
                                       ?.writeToBuffer(),
+                                  widgetOnly: widget.sendToWidget,
                                 ),
                                 'sendMediaToGroups',
                               );

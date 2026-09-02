@@ -59,6 +59,25 @@ pub(crate) async fn handle_media(
     media: encrypted_content::Media,
 ) -> Result<()> {
     let media_type = MediaType::try_from(media.r#type)?;
+    let widget_only = media.widget_only == Some(true);
+
+    if widget_only {
+        let granted = sqlx::query_scalar::<_, i64>(
+            "SELECT widget_sharing_granted FROM contacts WHERE user_id = ?",
+        )
+        .bind(from_user_id)
+        .fetch_optional(&mut **t)
+        .await?
+        .unwrap_or(0)
+            != 0;
+        if !granted
+            || media_type != MediaType::Image
+            || media.display_limit_in_milliseconds.is_some()
+        {
+            tracing::warn!(from_user_id, "dropping unauthorized widget media");
+            return Ok(());
+        }
+    }
 
     if media_type == MediaType::Reupload {
         let media_id = sqlx::query_scalar!(
@@ -140,7 +159,7 @@ pub(crate) async fn handle_media(
             r#"UPDATE media_files SET type = ?, download_state = 'pending',
                    requires_authentication = ?, display_limit_in_milliseconds = ?,
                    download_token = ?, encryption_key = ?, encryption_mac = ?,
-                   encryption_nonce = ?, created_at = ? WHERE media_id = ?"#,
+                   encryption_nonce = ?, is_widget_media = ?, created_at = ? WHERE media_id = ?"#,
             media_type,
             media.requires_authentication,
             media.display_limit_in_milliseconds,
@@ -148,6 +167,7 @@ pub(crate) async fn handle_media(
             media.encryption_key,
             media.encryption_mac,
             media.encryption_nonce,
+            widget_only,
             timestamp,
             media_id,
         )
@@ -172,8 +192,9 @@ pub(crate) async fn handle_media(
             encryption_key,
             encryption_mac,
             encryption_nonce,
+            is_widget_media,
             created_at
-        ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         media_id,
         media_type,
@@ -183,10 +204,16 @@ pub(crate) async fn handle_media(
         media.encryption_key,
         media.encryption_mac,
         media.encryption_nonce,
+        widget_only,
         timestamp,
     )
     .execute(&mut **t)
     .await?;
+    let (opened_at, opened_by_all) = if widget_only {
+        (Some(timestamp), Some(timestamp))
+    } else {
+        (None, None)
+    };
     sqlx::query!(
         r#"
         INSERT INTO messages(
@@ -197,8 +224,11 @@ pub(crate) async fn handle_media(
             media_id,
             additional_message_data,
             quotes_message_id,
+            is_widget_media,
+            opened_at,
+            opened_by_all,
             created_at
-        ) VALUES (?, ?, ?, 'media', ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, 'media', ?, ?, ?, ?, ?, ?, ?)
         "#,
         group_id,
         media.sender_message_id,
@@ -206,13 +236,18 @@ pub(crate) async fn handle_media(
         media_id,
         media.additional_message_data,
         media.quote_message_id,
+        widget_only,
+        opened_at,
+        opened_by_all,
         timestamp,
     )
     .execute(&mut **t)
     .await?;
 
-    Group::increase_last_message_exchange(t, group_id, timestamp).await?;
-    Group::record_media_exchange(t, group_id, true, timestamp).await?;
+    if !widget_only {
+        Group::increase_last_message_exchange(t, group_id, timestamp).await?;
+        Group::record_media_exchange(t, group_id, true, timestamp).await?;
+    }
 
     spawn_media_download(ctx, media_id);
 

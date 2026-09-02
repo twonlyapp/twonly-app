@@ -19,7 +19,7 @@ class MainCameraPreview extends StatelessWidget {
       return Container();
     }
     return Positioned.fill(
-      child: MediaViewSizingHelper.cameraEditor(
+      child: MediaViewSizingHelper(
         bottomNavigation: const SizedBox.shrink(),
         child: Stack(
           children: [

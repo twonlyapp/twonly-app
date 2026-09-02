@@ -17,6 +17,9 @@ internal object NativeNotificationBridge {
     external fun acknowledge(eventIdsJson: String): String
 
     @JvmStatic
+    external fun finalizeWakeup(deadlineMs: Long): String
+
+    @JvmStatic
     external fun storeFcmToken(
         databaseDirectory: String,
         dataDirectory: String,

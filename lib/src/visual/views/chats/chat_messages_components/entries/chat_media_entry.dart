@@ -78,7 +78,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> initAsync() async {
-    if (widget.message.senderId == null || widget.message.mediaStored) {
+    if (widget.message.senderId == null ||
+        widget.message.mediaStored ||
+        widget.message.isWidgetMedia) {
       return;
     }
     if (widget.mediaService.mediaFile.requiresAuthentication ||
@@ -95,7 +97,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> onDoubleTap() async {
-    if (widget.message.openedAt == null || widget.message.mediaStored) {
+    if (widget.message.isWidgetMedia ||
+        widget.message.openedAt == null ||
+        widget.message.mediaStored) {
       return;
     }
     if (widget.mediaService.canBeOpenedAgain &&
@@ -120,6 +124,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   }
 
   Future<void> onTap() async {
+    if (widget.message.isWidgetMedia) return;
     if ((widget.mediaService.mediaFile.downloadState == DownloadState.ready) &&
         widget.message.openedAt == null) {
       if (!mounted) return;

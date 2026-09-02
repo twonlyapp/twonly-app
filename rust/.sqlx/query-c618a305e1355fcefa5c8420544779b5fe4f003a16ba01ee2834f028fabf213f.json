@@ -299,6 +299,28 @@
             "name": "requested_by_user"
           }
         }
+      },
+      {
+        "name": "widget_sharing_allowed",
+        "ordinal": 27,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "widget_sharing_allowed"
+          }
+        }
+      },
+      {
+        "name": "widget_sharing_granted",
+        "ordinal": 28,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "contacts",
+            "name": "widget_sharing_granted"
+          }
+        }
       }
     ],
     "parameters": {
@@ -329,6 +351,8 @@
       true,
       true,
       true,
+      false,
+      false,
       false,
       false,
       false

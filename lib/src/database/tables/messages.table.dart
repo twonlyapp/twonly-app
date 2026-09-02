@@ -40,6 +40,8 @@ class Messages extends Table {
 
   BoolColumn get isDeletedFromSender =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get isWidgetMedia =>
+      boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get openedByAll => dateTime().nullable()();

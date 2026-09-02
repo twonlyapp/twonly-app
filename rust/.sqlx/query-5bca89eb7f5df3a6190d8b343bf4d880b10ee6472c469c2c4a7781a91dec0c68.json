@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE media_files SET download_state = 'reuploadRequested'\n               WHERE media_id = ? AND download_state IS NOT 'ready'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "5bca89eb7f5df3a6190d8b343bf4d880b10ee6472c469c2c4a7781a91dec0c68"
+}

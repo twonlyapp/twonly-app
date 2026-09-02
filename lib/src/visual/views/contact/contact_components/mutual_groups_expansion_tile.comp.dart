@@ -102,7 +102,10 @@ class _MutualGroupsExpansionTileCompState
             ),
           ),
           onTap: () {
-            context.push(Routes.chatsMessages(group.groupId));
+            context.push(
+              Routes.chatsMessages(group.groupId),
+              extra: group,
+            );
           },
         );
       }).toList(),

@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/locator.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/visual/components/avatar_icon.comp.dart';
 import 'package:twonly/src/visual/components/contact_groups.comp.dart';
@@ -78,6 +79,11 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   final Set<String> _selectedGroupIds = {};
   final List<StreamSubscription<dynamic>> _subscriptions = [];
 
+  /// Widgets on the home screen configured with this contact group. Its
+  /// members are what makes those widgets able to receive anything, so the
+  /// group cannot be deleted while any of them is still placed.
+  int _widgetCount = 0;
+
   bool get _isEditing => widget.contactGroup != null;
 
   @override
@@ -91,6 +97,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         contactGroup?.showAsShortcut ?? widget.initialShowAsShortcut;
     _showAsLabel = contactGroup?.showAsLabel ?? !widget.initialShowAsShortcut;
     _emoji = contactGroup?.emoji;
+    if (contactGroup != null) unawaited(_loadWidgetUsage(contactGroup.id));
 
     _subscriptions.add(
       twonlyDB.contactsDao.watchAllAcceptedContacts().listen((contacts) {
@@ -154,14 +161,18 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
   }
 
   List<_MemberEntry> get _members {
-    final entries = <_MemberEntry>[
-      for (final contact in _contacts)
-        _MemberEntry(name: getContactDisplayName(contact), contact: contact),
-      for (final group in _groups)
-        _MemberEntry(name: group.groupName, group: group),
-    ]..sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    final entries =
+        <_MemberEntry>[
+          for (final contact in _contacts)
+            _MemberEntry(
+              name: getContactDisplayName(contact),
+              contact: contact,
+            ),
+          for (final group in _groups)
+            _MemberEntry(name: group.groupName, group: group),
+        ]..sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
     final filter = _memberFilter.trim().toLowerCase();
     if (filter.isEmpty) return entries;
     return entries
@@ -232,15 +243,49 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
         userIds: _selectedUserIds,
         groupIds: _selectedGroupIds,
       );
+      // A widget's configuration UI lists the groups from the manifest, so a
+      // group that was just created or renamed is invisible to it until the
+      // manifest is republished.
+      unawaited(HomeWidgetService.refreshManifest());
       if (mounted) Navigator.pop(context, id);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
+  Future<void> _loadWidgetUsage(int contactGroupId) async {
+    final widgets = await HomeWidgetService.placedWidgets();
+    final count = widgets
+        .where((placed) => placed.contactGroupIds.contains(contactGroupId))
+        .length;
+    if (!mounted) return;
+    setState(() => _widgetCount = count);
+  }
+
   Future<void> _delete() async {
     final contactGroup = widget.contactGroup;
     if (contactGroup == null) return;
+    if (_widgetCount > 0) {
+      // Deleting would silently strip the widget of everyone allowed to send to
+      // it, leaving a placed widget that can never fill up again. Neither
+      // platform lets the app take the widget down, so the user has to.
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.lang.deleteContactGroup),
+          content: Text(
+            context.lang.contactGroupDeleteBlockedByWidget(_widgetCount),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.lang.ok),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -260,6 +305,7 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
     );
     if (confirmed != true) return;
     await twonlyDB.contactGroupsDao.deleteContactGroup(contactGroup.id);
+    unawaited(HomeWidgetService.refreshManifest());
     if (mounted) Navigator.pop(context);
   }
 
@@ -343,7 +389,9 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           width: painter.width.clamp(16, 240) + 8,
           child: TextField(
             controller: _nameController,
-            autofocus: true,
+            // Only for a brand-new group: opening an existing one to change its
+            // colour or members should not throw up the keyboard.
+            autofocus: widget.contactGroup == null,
             maxLength: 24,
             textAlign: TextAlign.center,
             textCapitalization: TextCapitalization.words,
@@ -406,100 +454,121 @@ class _ContactGroupSettingsViewState extends State<ContactGroupSettingsView> {
           ],
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
-        children: [
-          _nameEditor(),
-          const SizedBox(height: 20),
-          Text(
-            context.lang.contactGroupBackgroundColor,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _colorButton(
-                noContactGroupBackgroundColor,
-                !hasBackground,
-                () => setState(
-                  () => _backgroundColor = noContactGroupBackgroundColor,
-                ),
-                tooltip: context.lang.contactGroupNoBackground,
-              ),
-              for (final color in _backgroundColors)
+      body: GestureDetector(
+        // The name and filter fields sit in a long scrolling page, so tapping
+        // anywhere that is not a control should put the keyboard away.
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+          children: [
+            _nameEditor(),
+            const SizedBox(height: 20),
+            Text(
+              context.lang.contactGroupBackgroundColor,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
                 _colorButton(
-                  color,
-                  _backgroundColor == color,
-                  () => setState(() => _backgroundColor = color),
+                  noContactGroupBackgroundColor,
+                  !hasBackground,
+                  () => setState(
+                    () => _backgroundColor = noContactGroupBackgroundColor,
+                  ),
+                  tooltip: context.lang.contactGroupNoBackground,
                 ),
-              _customColorButton(background: true),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            context.lang.contactGroupTextColor,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final color in _textColors)
-                _colorButton(
-                  color,
-                  _textColor == color,
-                  () => setState(() => _textColor = color),
-                ),
-              _customColorButton(background: false),
-            ],
-          ),
-          const Divider(height: 40),
-          Text(
-            context.lang.contactGroupFeatures,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.lang.contactGroupShowAsLabel),
-            subtitle: Text(context.lang.contactGroupShowAsLabelSubtitle),
-            value: _showAsLabel,
-            onChanged: (value) => setState(() => _showAsLabel = value),
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(context.lang.contactGroupShowAsShortcut),
-            subtitle: Text(context.lang.contactGroupShowAsShortcutSubtitle),
-            value: _showAsShortcut,
-            onChanged: (value) => setState(() => _showAsShortcut = value),
-          ),
-          if (_showAsShortcut)
-            ListTile(
+                for (final color in _backgroundColors)
+                  _colorButton(
+                    color,
+                    _backgroundColor == color,
+                    () => setState(() => _backgroundColor = color),
+                  ),
+                _customColorButton(background: true),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              context.lang.contactGroupTextColor,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final color in _textColors)
+                  _colorButton(
+                    color,
+                    _textColor == color,
+                    () => setState(() => _textColor = color),
+                  ),
+                _customColorButton(background: false),
+              ],
+            ),
+            const Divider(height: 40),
+            Text(
+              context.lang.contactGroupFeatures,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
-              title: Text(context.lang.selectEmoji),
-              trailing: Text(
-                _emoji ?? '+',
-                style: const TextStyle(fontSize: 24),
+              title: Text(context.lang.contactGroupShowAsLabel),
+              subtitle: Text(context.lang.contactGroupShowAsLabelSubtitle),
+              value: _showAsLabel,
+              onChanged: (value) => setState(() => _showAsLabel = value),
+            ),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(context.lang.contactGroupShowAsShortcut),
+              subtitle: Text(context.lang.contactGroupShowAsShortcutSubtitle),
+              value: _showAsShortcut,
+              onChanged: (value) => setState(() => _showAsShortcut = value),
+            ),
+            if (_showAsShortcut)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.lang.selectEmoji),
+                trailing: Text(
+                  _emoji ?? '+',
+                  style: const TextStyle(fontSize: 24),
+                ),
+                onTap: _selectEmoji,
               ),
-              onTap: _selectEmoji,
+            if (_widgetCount > 0)
+              // Stated rather than offered as a switch: which groups a widget
+              // draws from is chosen on the home screen, not here.
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(context.lang.contactGroupUsedByWidget),
+                subtitle: Text(
+                  context.lang.contactGroupUsedByWidgetSubtitle(_widgetCount),
+                ),
+                trailing: FaIcon(
+                  FontAwesomeIcons.image,
+                  size: 18,
+                  color: context.color.primary,
+                ),
+              ),
+            const Divider(height: 40),
+            Text(
+              context.lang.contactGroupMembers,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-          const Divider(height: 40),
-          Text(
-            context.lang.contactGroupMembers,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            onChanged: (value) => setState(() => _memberFilter = value),
-            decoration: getInputDecoration(
-              context,
-              context.lang.shareImageSearchAllContacts,
+            const SizedBox(height: 12),
+            TextField(
+              onChanged: (value) => setState(() => _memberFilter = value),
+              decoration: getInputDecoration(
+                context,
+                context.lang.shareImageSearchAllContacts,
+              ),
             ),
-          ),
-          for (final entry in members) _memberTile(entry),
-        ],
+            for (final entry in members) _memberTile(entry),
+          ],
+        ),
       ),
     );
   }

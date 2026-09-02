@@ -309,6 +309,34 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           'CHECK ("ask_for_friend_promotions" IN (0, 1))',
         ),
       );
+  static const VerificationMeta _widgetSharingAllowedMeta =
+      const VerificationMeta('widgetSharingAllowed');
+  @override
+  late final GeneratedColumn<bool> widgetSharingAllowed = GeneratedColumn<bool>(
+    'widget_sharing_allowed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("widget_sharing_allowed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _widgetSharingGrantedMeta =
+      const VerificationMeta('widgetSharingGranted');
+  @override
+  late final GeneratedColumn<bool> widgetSharingGranted = GeneratedColumn<bool>(
+    'widget_sharing_granted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("widget_sharing_granted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _mediaSendCounterMeta = const VerificationMeta(
     'mediaSendCounter',
   );
@@ -358,6 +386,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     recoveryContactsLastHeartbeat,
     recoveryContactsThreshold,
     askForFriendPromotions,
+    widgetSharingAllowed,
+    widgetSharingGranted,
     mediaSendCounter,
     mediaReceivedCounter,
   ];
@@ -558,6 +588,24 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         ),
       );
     }
+    if (data.containsKey('widget_sharing_allowed')) {
+      context.handle(
+        _widgetSharingAllowedMeta,
+        widgetSharingAllowed.isAcceptableOrUnknown(
+          data['widget_sharing_allowed']!,
+          _widgetSharingAllowedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('widget_sharing_granted')) {
+      context.handle(
+        _widgetSharingGrantedMeta,
+        widgetSharingGranted.isAcceptableOrUnknown(
+          data['widget_sharing_granted']!,
+          _widgetSharingGrantedMeta,
+        ),
+      );
+    }
     if (data.containsKey('media_send_counter')) {
       context.handle(
         _mediaSendCounterMeta,
@@ -683,6 +731,14 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         DriftSqlType.bool,
         data['${effectivePrefix}ask_for_friend_promotions'],
       ),
+      widgetSharingAllowed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}widget_sharing_allowed'],
+      )!,
+      widgetSharingGranted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}widget_sharing_granted'],
+      )!,
       mediaSendCounter: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}media_send_counter'],
@@ -730,6 +786,8 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime? recoveryContactsLastHeartbeat;
   final int? recoveryContactsThreshold;
   final bool? askForFriendPromotions;
+  final bool widgetSharingAllowed;
+  final bool widgetSharingGranted;
   final int mediaSendCounter;
   final int mediaReceivedCounter;
   const Contact({
@@ -757,6 +815,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     this.recoveryContactsLastHeartbeat,
     this.recoveryContactsThreshold,
     this.askForFriendPromotions,
+    required this.widgetSharingAllowed,
+    required this.widgetSharingGranted,
     required this.mediaSendCounter,
     required this.mediaReceivedCounter,
   });
@@ -823,6 +883,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || askForFriendPromotions != null) {
       map['ask_for_friend_promotions'] = Variable<bool>(askForFriendPromotions);
     }
+    map['widget_sharing_allowed'] = Variable<bool>(widgetSharingAllowed);
+    map['widget_sharing_granted'] = Variable<bool>(widgetSharingGranted);
     map['media_send_counter'] = Variable<int>(mediaSendCounter);
     map['media_received_counter'] = Variable<int>(mediaReceivedCounter);
     return map;
@@ -880,6 +942,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: askForFriendPromotions == null && nullToAbsent
           ? const Value.absent()
           : Value(askForFriendPromotions),
+      widgetSharingAllowed: Value(widgetSharingAllowed),
+      widgetSharingGranted: Value(widgetSharingGranted),
       mediaSendCounter: Value(mediaSendCounter),
       mediaReceivedCounter: Value(mediaReceivedCounter),
     );
@@ -941,6 +1005,12 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: serializer.fromJson<bool?>(
         json['askForFriendPromotions'],
       ),
+      widgetSharingAllowed: serializer.fromJson<bool>(
+        json['widgetSharingAllowed'],
+      ),
+      widgetSharingGranted: serializer.fromJson<bool>(
+        json['widgetSharingGranted'],
+      ),
       mediaSendCounter: serializer.fromJson<int>(json['mediaSendCounter']),
       mediaReceivedCounter: serializer.fromJson<int>(
         json['mediaReceivedCounter'],
@@ -993,6 +1063,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       'askForFriendPromotions': serializer.toJson<bool?>(
         askForFriendPromotions,
       ),
+      'widgetSharingAllowed': serializer.toJson<bool>(widgetSharingAllowed),
+      'widgetSharingGranted': serializer.toJson<bool>(widgetSharingGranted),
       'mediaSendCounter': serializer.toJson<int>(mediaSendCounter),
       'mediaReceivedCounter': serializer.toJson<int>(mediaReceivedCounter),
     };
@@ -1023,6 +1095,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     Value<DateTime?> recoveryContactsLastHeartbeat = const Value.absent(),
     Value<int?> recoveryContactsThreshold = const Value.absent(),
     Value<bool?> askForFriendPromotions = const Value.absent(),
+    bool? widgetSharingAllowed,
+    bool? widgetSharingGranted,
     int? mediaSendCounter,
     int? mediaReceivedCounter,
   }) => Contact(
@@ -1069,6 +1143,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     askForFriendPromotions: askForFriendPromotions.present
         ? askForFriendPromotions.value
         : this.askForFriendPromotions,
+    widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
+    widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
     mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
     mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
   );
@@ -1130,6 +1206,12 @@ class Contact extends DataClass implements Insertable<Contact> {
       askForFriendPromotions: data.askForFriendPromotions.present
           ? data.askForFriendPromotions.value
           : this.askForFriendPromotions,
+      widgetSharingAllowed: data.widgetSharingAllowed.present
+          ? data.widgetSharingAllowed.value
+          : this.widgetSharingAllowed,
+      widgetSharingGranted: data.widgetSharingGranted.present
+          ? data.widgetSharingGranted.value
+          : this.widgetSharingGranted,
       mediaSendCounter: data.mediaSendCounter.present
           ? data.mediaSendCounter.value
           : this.mediaSendCounter,
@@ -1168,6 +1250,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           )
           ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
+          ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
+          ..write('widgetSharingGranted: $widgetSharingGranted, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -1200,6 +1284,8 @@ class Contact extends DataClass implements Insertable<Contact> {
     recoveryContactsLastHeartbeat,
     recoveryContactsThreshold,
     askForFriendPromotions,
+    widgetSharingAllowed,
+    widgetSharingGranted,
     mediaSendCounter,
     mediaReceivedCounter,
   ]);
@@ -1245,6 +1331,8 @@ class Contact extends DataClass implements Insertable<Contact> {
               this.recoveryContactsLastHeartbeat &&
           other.recoveryContactsThreshold == this.recoveryContactsThreshold &&
           other.askForFriendPromotions == this.askForFriendPromotions &&
+          other.widgetSharingAllowed == this.widgetSharingAllowed &&
+          other.widgetSharingGranted == this.widgetSharingGranted &&
           other.mediaSendCounter == this.mediaSendCounter &&
           other.mediaReceivedCounter == this.mediaReceivedCounter);
 }
@@ -1274,6 +1362,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime?> recoveryContactsLastHeartbeat;
   final Value<int?> recoveryContactsThreshold;
   final Value<bool?> askForFriendPromotions;
+  final Value<bool> widgetSharingAllowed;
+  final Value<bool> widgetSharingGranted;
   final Value<int> mediaSendCounter;
   final Value<int> mediaReceivedCounter;
   const ContactsCompanion({
@@ -1301,6 +1391,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
+    this.widgetSharingAllowed = const Value.absent(),
+    this.widgetSharingGranted = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   });
@@ -1329,6 +1421,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.recoveryContactsLastHeartbeat = const Value.absent(),
     this.recoveryContactsThreshold = const Value.absent(),
     this.askForFriendPromotions = const Value.absent(),
+    this.widgetSharingAllowed = const Value.absent(),
+    this.widgetSharingGranted = const Value.absent(),
     this.mediaSendCounter = const Value.absent(),
     this.mediaReceivedCounter = const Value.absent(),
   }) : username = Value(username);
@@ -1357,6 +1451,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<DateTime>? recoveryContactsLastHeartbeat,
     Expression<int>? recoveryContactsThreshold,
     Expression<bool>? askForFriendPromotions,
+    Expression<bool>? widgetSharingAllowed,
+    Expression<bool>? widgetSharingGranted,
     Expression<int>? mediaSendCounter,
     Expression<int>? mediaReceivedCounter,
   }) {
@@ -1397,6 +1493,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'recovery_contacts_threshold': recoveryContactsThreshold,
       if (askForFriendPromotions != null)
         'ask_for_friend_promotions': askForFriendPromotions,
+      if (widgetSharingAllowed != null)
+        'widget_sharing_allowed': widgetSharingAllowed,
+      if (widgetSharingGranted != null)
+        'widget_sharing_granted': widgetSharingGranted,
       if (mediaSendCounter != null) 'media_send_counter': mediaSendCounter,
       if (mediaReceivedCounter != null)
         'media_received_counter': mediaReceivedCounter,
@@ -1428,6 +1528,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Value<DateTime?>? recoveryContactsLastHeartbeat,
     Value<int?>? recoveryContactsThreshold,
     Value<bool?>? askForFriendPromotions,
+    Value<bool>? widgetSharingAllowed,
+    Value<bool>? widgetSharingGranted,
     Value<int>? mediaSendCounter,
     Value<int>? mediaReceivedCounter,
   }) {
@@ -1464,6 +1566,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           recoveryContactsThreshold ?? this.recoveryContactsThreshold,
       askForFriendPromotions:
           askForFriendPromotions ?? this.askForFriendPromotions,
+      widgetSharingAllowed: widgetSharingAllowed ?? this.widgetSharingAllowed,
+      widgetSharingGranted: widgetSharingGranted ?? this.widgetSharingGranted,
       mediaSendCounter: mediaSendCounter ?? this.mediaSendCounter,
       mediaReceivedCounter: mediaReceivedCounter ?? this.mediaReceivedCounter,
     );
@@ -1568,6 +1672,16 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         askForFriendPromotions.value,
       );
     }
+    if (widgetSharingAllowed.present) {
+      map['widget_sharing_allowed'] = Variable<bool>(
+        widgetSharingAllowed.value,
+      );
+    }
+    if (widgetSharingGranted.present) {
+      map['widget_sharing_granted'] = Variable<bool>(
+        widgetSharingGranted.value,
+      );
+    }
     if (mediaSendCounter.present) {
       map['media_send_counter'] = Variable<int>(mediaSendCounter.value);
     }
@@ -1606,6 +1720,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           )
           ..write('recoveryContactsThreshold: $recoveryContactsThreshold, ')
           ..write('askForFriendPromotions: $askForFriendPromotions, ')
+          ..write('widgetSharingAllowed: $widgetSharingAllowed, ')
+          ..write('widgetSharingGranted: $widgetSharingGranted, ')
           ..write('mediaSendCounter: $mediaSendCounter, ')
           ..write('mediaReceivedCounter: $mediaReceivedCounter')
           ..write(')'))
@@ -3223,6 +3339,21 @@ class $MediaFilesTable extends MediaFiles
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isWidgetMediaMeta = const VerificationMeta(
+    'isWidgetMedia',
+  );
+  @override
+  late final GeneratedColumn<bool> isWidgetMedia = GeneratedColumn<bool>(
+    'is_widget_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_widget_media" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
     'isFavorite',
   );
@@ -3439,6 +3570,7 @@ class $MediaFilesTable extends MediaFiles
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isWidgetMedia,
     isFavorite,
     hasCropAnalyzed,
     preProgressingProcess,
@@ -3504,6 +3636,15 @@ class $MediaFilesTable extends MediaFiles
         isDraftMedia.isAcceptableOrUnknown(
           data['is_draft_media']!,
           _isDraftMediaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_widget_media')) {
+      context.handle(
+        _isWidgetMediaMeta,
+        isWidgetMedia.isAcceptableOrUnknown(
+          data['is_widget_media']!,
+          _isWidgetMediaMeta,
         ),
       );
     }
@@ -3695,6 +3836,10 @@ class $MediaFilesTable extends MediaFiles
         DriftSqlType.bool,
         data['${effectivePrefix}is_draft_media'],
       )!,
+      isWidgetMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_widget_media'],
+      )!,
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
@@ -3806,6 +3951,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool stored;
   final bool isDraftMedia;
+  final bool isWidgetMedia;
   final bool isFavorite;
   final bool hasCropAnalyzed;
   final int? preProgressingProcess;
@@ -3838,6 +3984,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     required this.requiresAuthentication,
     required this.stored,
     required this.isDraftMedia,
+    required this.isWidgetMedia,
     required this.isFavorite,
     required this.hasCropAnalyzed,
     this.preProgressingProcess,
@@ -3886,6 +4033,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
+    map['is_widget_media'] = Variable<bool>(isWidgetMedia);
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['has_crop_analyzed'] = Variable<bool>(hasCropAnalyzed);
     if (!nullToAbsent || preProgressingProcess != null) {
@@ -3955,6 +4103,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
+      isWidgetMedia: Value(isWidgetMedia),
       isFavorite: Value(isFavorite),
       hasCropAnalyzed: Value(hasCropAnalyzed),
       preProgressingProcess: preProgressingProcess == null && nullToAbsent
@@ -4027,6 +4176,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       ),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
+      isWidgetMedia: serializer.fromJson<bool>(json['isWidgetMedia']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       hasCropAnalyzed: serializer.fromJson<bool>(json['hasCropAnalyzed']),
       preProgressingProcess: serializer.fromJson<int?>(
@@ -4073,6 +4223,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
+      'isWidgetMedia': serializer.toJson<bool>(isWidgetMedia),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'hasCropAnalyzed': serializer.toJson<bool>(hasCropAnalyzed),
       'preProgressingProcess': serializer.toJson<int?>(preProgressingProcess),
@@ -4105,6 +4256,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     bool? requiresAuthentication,
     bool? stored,
     bool? isDraftMedia,
+    bool? isWidgetMedia,
     bool? isFavorite,
     bool? hasCropAnalyzed,
     Value<int?> preProgressingProcess = const Value.absent(),
@@ -4135,6 +4287,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         requiresAuthentication ?? this.requiresAuthentication,
     stored: stored ?? this.stored,
     isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+    isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
     isFavorite: isFavorite ?? this.isFavorite,
     hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
     preProgressingProcess: preProgressingProcess.present
@@ -4192,6 +4345,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
           : this.isDraftMedia,
+      isWidgetMedia: data.isWidgetMedia.present
+          ? data.isWidgetMedia.value
+          : this.isWidgetMedia,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
@@ -4254,6 +4410,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
@@ -4286,6 +4443,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     requiresAuthentication,
     stored,
     isDraftMedia,
+    isWidgetMedia,
     isFavorite,
     hasCropAnalyzed,
     preProgressingProcess,
@@ -4317,6 +4475,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
+          other.isWidgetMedia == this.isWidgetMedia &&
           other.isFavorite == this.isFavorite &&
           other.hasCropAnalyzed == this.hasCropAnalyzed &&
           other.preProgressingProcess == this.preProgressingProcess &&
@@ -4352,6 +4511,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
+  final Value<bool> isWidgetMedia;
   final Value<bool> isFavorite;
   final Value<bool> hasCropAnalyzed;
   final Value<int?> preProgressingProcess;
@@ -4380,6 +4540,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
@@ -4409,6 +4570,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.hasCropAnalyzed = const Value.absent(),
     this.preProgressingProcess = const Value.absent(),
@@ -4439,6 +4601,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
+    Expression<bool>? isWidgetMedia,
     Expression<bool>? isFavorite,
     Expression<bool>? hasCropAnalyzed,
     Expression<int>? preProgressingProcess,
@@ -4469,6 +4632,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
+      if (isWidgetMedia != null) 'is_widget_media': isWidgetMedia,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (hasCropAnalyzed != null) 'has_crop_analyzed': hasCropAnalyzed,
       if (preProgressingProcess != null)
@@ -4503,6 +4667,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Value<bool>? requiresAuthentication,
     Value<bool>? stored,
     Value<bool>? isDraftMedia,
+    Value<bool>? isWidgetMedia,
     Value<bool>? isFavorite,
     Value<bool>? hasCropAnalyzed,
     Value<int?>? preProgressingProcess,
@@ -4533,6 +4698,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+      isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
       isFavorite: isFavorite ?? this.isFavorite,
       hasCropAnalyzed: hasCropAnalyzed ?? this.hasCropAnalyzed,
       preProgressingProcess:
@@ -4595,6 +4761,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     }
     if (isDraftMedia.present) {
       map['is_draft_media'] = Variable<bool>(isDraftMedia.value);
+    }
+    if (isWidgetMedia.present) {
+      map['is_widget_media'] = Variable<bool>(isWidgetMedia.value);
     }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
@@ -4673,6 +4842,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('hasCropAnalyzed: $hasCropAnalyzed, ')
           ..write('preProgressingProcess: $preProgressingProcess, ')
@@ -4852,6 +5022,21 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isWidgetMediaMeta = const VerificationMeta(
+    'isWidgetMedia',
+  );
+  @override
+  late final GeneratedColumn<bool> isWidgetMedia = GeneratedColumn<bool>(
+    'is_widget_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_widget_media" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _openedAtMeta = const VerificationMeta(
     'openedAt',
   );
@@ -4933,6 +5118,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     downloadToken,
     quotesMessageId,
     isDeletedFromSender,
+    isWidgetMedia,
     openedAt,
     openedByAll,
     createdAt,
@@ -5048,6 +5234,15 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         ),
       );
     }
+    if (data.containsKey('is_widget_media')) {
+      context.handle(
+        _isWidgetMediaMeta,
+        isWidgetMedia.isAcceptableOrUnknown(
+          data['is_widget_media']!,
+          _isWidgetMediaMeta,
+        ),
+      );
+    }
     if (data.containsKey('opened_at')) {
       context.handle(
         _openedAtMeta,
@@ -5147,6 +5342,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted_from_sender'],
       )!,
+      isWidgetMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_widget_media'],
+      )!,
       openedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}opened_at'],
@@ -5193,6 +5392,7 @@ class Message extends DataClass implements Insertable<Message> {
   final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
+  final bool isWidgetMedia;
   final DateTime? openedAt;
   final DateTime? openedByAll;
   final DateTime createdAt;
@@ -5212,6 +5412,7 @@ class Message extends DataClass implements Insertable<Message> {
     this.downloadToken,
     this.quotesMessageId,
     required this.isDeletedFromSender,
+    required this.isWidgetMedia,
     this.openedAt,
     this.openedByAll,
     required this.createdAt,
@@ -5248,6 +5449,7 @@ class Message extends DataClass implements Insertable<Message> {
       map['quotes_message_id'] = Variable<String>(quotesMessageId);
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
+    map['is_widget_media'] = Variable<bool>(isWidgetMedia);
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
     }
@@ -5293,6 +5495,7 @@ class Message extends DataClass implements Insertable<Message> {
           ? const Value.absent()
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
+      isWidgetMedia: Value(isWidgetMedia),
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(openedAt),
@@ -5334,6 +5537,7 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender: serializer.fromJson<bool>(
         json['isDeletedFromSender'],
       ),
+      isWidgetMedia: serializer.fromJson<bool>(json['isWidgetMedia']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       openedByAll: serializer.fromJson<DateTime?>(json['openedByAll']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -5360,6 +5564,7 @@ class Message extends DataClass implements Insertable<Message> {
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
+      'isWidgetMedia': serializer.toJson<bool>(isWidgetMedia),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'openedByAll': serializer.toJson<DateTime?>(openedByAll),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -5382,6 +5587,7 @@ class Message extends DataClass implements Insertable<Message> {
     Value<Uint8List?> downloadToken = const Value.absent(),
     Value<String?> quotesMessageId = const Value.absent(),
     bool? isDeletedFromSender,
+    bool? isWidgetMedia,
     Value<DateTime?> openedAt = const Value.absent(),
     Value<DateTime?> openedByAll = const Value.absent(),
     DateTime? createdAt,
@@ -5407,6 +5613,7 @@ class Message extends DataClass implements Insertable<Message> {
         ? quotesMessageId.value
         : this.quotesMessageId,
     isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+    isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
     openedAt: openedAt.present ? openedAt.value : this.openedAt,
     openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
     createdAt: createdAt ?? this.createdAt,
@@ -5440,6 +5647,9 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender: data.isDeletedFromSender.present
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
+      isWidgetMedia: data.isWidgetMedia.present
+          ? data.isWidgetMedia.value
+          : this.isWidgetMedia,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       openedByAll: data.openedByAll.present
           ? data.openedByAll.value
@@ -5470,6 +5680,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -5494,6 +5705,7 @@ class Message extends DataClass implements Insertable<Message> {
     $driftBlobEquality.hash(downloadToken),
     quotesMessageId,
     isDeletedFromSender,
+    isWidgetMedia,
     openedAt,
     openedByAll,
     createdAt,
@@ -5520,6 +5732,7 @@ class Message extends DataClass implements Insertable<Message> {
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
+          other.isWidgetMedia == this.isWidgetMedia &&
           other.openedAt == this.openedAt &&
           other.openedByAll == this.openedByAll &&
           other.createdAt == this.createdAt &&
@@ -5541,6 +5754,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
+  final Value<bool> isWidgetMedia;
   final Value<DateTime?> openedAt;
   final Value<DateTime?> openedByAll;
   final Value<DateTime> createdAt;
@@ -5561,6 +5775,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -5582,6 +5797,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
+    this.isWidgetMedia = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -5605,6 +5821,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
+    Expression<bool>? isWidgetMedia,
     Expression<DateTime>? openedAt,
     Expression<DateTime>? openedByAll,
     Expression<DateTime>? createdAt,
@@ -5628,6 +5845,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
+      if (isWidgetMedia != null) 'is_widget_media': isWidgetMedia,
       if (openedAt != null) 'opened_at': openedAt,
       if (openedByAll != null) 'opened_by_all': openedByAll,
       if (createdAt != null) 'created_at': createdAt,
@@ -5651,6 +5869,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Value<Uint8List?>? downloadToken,
     Value<String?>? quotesMessageId,
     Value<bool>? isDeletedFromSender,
+    Value<bool>? isWidgetMedia,
     Value<DateTime?>? openedAt,
     Value<DateTime?>? openedByAll,
     Value<DateTime>? createdAt,
@@ -5673,6 +5892,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+      isWidgetMedia: isWidgetMedia ?? this.isWidgetMedia,
       openedAt: openedAt ?? this.openedAt,
       openedByAll: openedByAll ?? this.openedByAll,
       createdAt: createdAt ?? this.createdAt,
@@ -5724,6 +5944,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isDeletedFromSender.present) {
       map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender.value);
     }
+    if (isWidgetMedia.present) {
+      map['is_widget_media'] = Variable<bool>(isWidgetMedia.value);
+    }
     if (openedAt.present) {
       map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
@@ -5763,6 +5986,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
+          ..write('isWidgetMedia: $isWidgetMedia, ')
           ..write('openedAt: $openedAt, ')
           ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
@@ -12592,6 +12816,8 @@ typedef $$ContactsTableCreateCompanionBuilder =
       Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
+      Value<bool> widgetSharingAllowed,
+      Value<bool> widgetSharingGranted,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -12621,6 +12847,8 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<DateTime?> recoveryContactsLastHeartbeat,
       Value<int?> recoveryContactsThreshold,
       Value<bool?> askForFriendPromotions,
+      Value<bool> widgetSharingAllowed,
+      Value<bool> widgetSharingGranted,
       Value<int> mediaSendCounter,
       Value<int> mediaReceivedCounter,
     });
@@ -13027,6 +13255,16 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13480,6 +13718,16 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get mediaSendCounter => $composableBuilder(
     column: $table.mediaSendCounter,
     builder: (column) => ColumnOrderings(column),
@@ -13604,6 +13852,16 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get askForFriendPromotions => $composableBuilder(
     column: $table.askForFriendPromotions,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get widgetSharingAllowed => $composableBuilder(
+    column: $table.widgetSharingAllowed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get widgetSharingGranted => $composableBuilder(
+    column: $table.widgetSharingGranted,
     builder: (column) => column,
   );
 
@@ -13999,6 +14257,8 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
+                Value<bool> widgetSharingAllowed = const Value.absent(),
+                Value<bool> widgetSharingGranted = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion(
@@ -14026,6 +14286,8 @@ class $$ContactsTableTableManager
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
+                widgetSharingAllowed: widgetSharingAllowed,
+                widgetSharingGranted: widgetSharingGranted,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -14057,6 +14319,8 @@ class $$ContactsTableTableManager
                     const Value.absent(),
                 Value<int?> recoveryContactsThreshold = const Value.absent(),
                 Value<bool?> askForFriendPromotions = const Value.absent(),
+                Value<bool> widgetSharingAllowed = const Value.absent(),
+                Value<bool> widgetSharingGranted = const Value.absent(),
                 Value<int> mediaSendCounter = const Value.absent(),
                 Value<int> mediaReceivedCounter = const Value.absent(),
               }) => ContactsCompanion.insert(
@@ -14084,6 +14348,8 @@ class $$ContactsTableTableManager
                 recoveryContactsLastHeartbeat: recoveryContactsLastHeartbeat,
                 recoveryContactsThreshold: recoveryContactsThreshold,
                 askForFriendPromotions: askForFriendPromotions,
+                widgetSharingAllowed: widgetSharingAllowed,
+                widgetSharingGranted: widgetSharingGranted,
                 mediaSendCounter: mediaSendCounter,
                 mediaReceivedCounter: mediaReceivedCounter,
               ),
@@ -15446,6 +15712,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isWidgetMedia,
       Value<bool> isFavorite,
       Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
@@ -15476,6 +15743,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder =
       Value<bool> requiresAuthentication,
       Value<bool> stored,
       Value<bool> isDraftMedia,
+      Value<bool> isWidgetMedia,
       Value<bool> isFavorite,
       Value<bool> hasCropAnalyzed,
       Value<int?> preProgressingProcess,
@@ -15574,6 +15842,11 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<bool> get isDraftMedia => $composableBuilder(
     column: $table.isDraftMedia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15743,6 +16016,11 @@ class $$MediaFilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
     builder: (column) => ColumnOrderings(column),
@@ -15875,6 +16153,11 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<bool> get isDraftMedia => $composableBuilder(
     column: $table.isDraftMedia,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
     builder: (column) => column,
   );
 
@@ -16023,6 +16306,7 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
@@ -16051,6 +16335,7 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isWidgetMedia: isWidgetMedia,
                 isFavorite: isFavorite,
                 hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
@@ -16081,6 +16366,7 @@ class $$MediaFilesTableTableManager
                 Value<bool> requiresAuthentication = const Value.absent(),
                 Value<bool> stored = const Value.absent(),
                 Value<bool> isDraftMedia = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> hasCropAnalyzed = const Value.absent(),
                 Value<int?> preProgressingProcess = const Value.absent(),
@@ -16109,6 +16395,7 @@ class $$MediaFilesTableTableManager
                 requiresAuthentication: requiresAuthentication,
                 stored: stored,
                 isDraftMedia: isDraftMedia,
+                isWidgetMedia: isWidgetMedia,
                 isFavorite: isFavorite,
                 hasCropAnalyzed: hasCropAnalyzed,
                 preProgressingProcess: preProgressingProcess,
@@ -16200,6 +16487,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       Value<Uint8List?> downloadToken,
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
+      Value<bool> isWidgetMedia,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -16222,6 +16510,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<Uint8List?> downloadToken,
       Value<String?> quotesMessageId,
       Value<bool> isDeletedFromSender,
+      Value<bool> isWidgetMedia,
       Value<DateTime?> openedAt,
       Value<DateTime?> openedByAll,
       Value<DateTime> createdAt,
@@ -16417,6 +16706,11 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<bool> get isDeletedFromSender => $composableBuilder(
     column: $table.isDeletedFromSender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16674,6 +16968,11 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get openedAt => $composableBuilder(
     column: $table.openedAt,
     builder: (column) => ColumnOrderings(column),
@@ -16819,6 +17118,11 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeletedFromSender => $composableBuilder(
     column: $table.isDeletedFromSender,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isWidgetMedia => $composableBuilder(
+    column: $table.isWidgetMedia,
     builder: (column) => column,
   );
 
@@ -17064,6 +17368,7 @@ class $$MessagesTableTableManager
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -17084,6 +17389,7 @@ class $$MessagesTableTableManager
                 downloadToken: downloadToken,
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
+                isWidgetMedia: isWidgetMedia,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,
@@ -17106,6 +17412,7 @@ class $$MessagesTableTableManager
                 Value<Uint8List?> downloadToken = const Value.absent(),
                 Value<String?> quotesMessageId = const Value.absent(),
                 Value<bool> isDeletedFromSender = const Value.absent(),
+                Value<bool> isWidgetMedia = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> openedByAll = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -17126,6 +17433,7 @@ class $$MessagesTableTableManager
                 downloadToken: downloadToken,
                 quotesMessageId: quotesMessageId,
                 isDeletedFromSender: isDeletedFromSender,
+                isWidgetMedia: isWidgetMedia,
                 openedAt: openedAt,
                 openedByAll: openedByAll,
                 createdAt: createdAt,

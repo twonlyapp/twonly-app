@@ -23,6 +23,12 @@ class EditorSideToolbar extends StatelessWidget {
     required this.canTrim,
     required this.trimmerVisible,
     required this.onToggleTrimmer,
+    required this.sendToWidget,
+    required this.showWidgetOption,
+    required this.highlightWidgetOption,
+    required this.isUpdatingWidgetMode,
+    required this.widgetActionKey,
+    required this.onToggleSendToWidget,
     super.key,
   });
 
@@ -40,6 +46,12 @@ class EditorSideToolbar extends StatelessWidget {
   final bool canTrim;
   final bool trimmerVisible;
   final VoidCallback onToggleTrimmer;
+  final bool sendToWidget;
+  final bool showWidgetOption;
+  final bool highlightWidgetOption;
+  final bool isUpdatingWidgetMode;
+  final GlobalKey widgetActionKey;
+  final VoidCallback onToggleSendToWidget;
 
   MediaFile get media => mediaService.mediaFile;
 
@@ -103,15 +115,32 @@ class EditorSideToolbar extends StatelessWidget {
               onChanged();
             },
           ),
-        const SizedBox(height: 8),
-        NotificationBadgeComp(
-          count: _displayTimeLabel,
-          child: ActionButton(
-            _displayTimeIcon,
-            tooltipText: context.lang.protectAsARealTwonly,
-            onPressed: onEditDisplayTime,
+        if (showWidgetOption) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            key: widgetActionKey,
+            child: ActionButton(
+              sendToWidget ? Icons.widgets_rounded : Icons.widgets_outlined,
+              tooltipText: context.lang.shareImageSendToWidget,
+              color: sendToWidget || highlightWidgetOption
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white,
+              disable: isUpdatingWidgetMode,
+              onPressed: onToggleSendToWidget,
+            ),
           ),
-        ),
+        ],
+        if (!sendToWidget) ...[
+          const SizedBox(height: 8),
+          NotificationBadgeComp(
+            count: _displayTimeLabel,
+            child: ActionButton(
+              _displayTimeIcon,
+              tooltipText: context.lang.protectAsARealTwonly,
+              onPressed: onEditDisplayTime,
+            ),
+          ),
+        ],
         if (canTrim) ...[
           const SizedBox(height: 8),
           ActionButton(
@@ -148,15 +177,17 @@ class EditorSideToolbar extends StatelessWidget {
             },
           ),
         ],
-        const SizedBox(height: 8),
-        ActionButton(
-          FontAwesomeIcons.shieldHeart,
-          tooltipText: context.lang.protectAsARealTwonly,
-          color: media.requiresAuthentication
-              ? Theme.of(context).colorScheme.primary
-              : Colors.white,
-          onPressed: onToggleRequiresAuth,
-        ),
+        if (!sendToWidget) ...[
+          const SizedBox(height: 8),
+          ActionButton(
+            FontAwesomeIcons.shieldHeart,
+            tooltipText: context.lang.protectAsARealTwonly,
+            color: media.requiresAuthentication
+                ? Theme.of(context).colorScheme.primary
+                : Colors.white,
+            onPressed: onToggleRequiresAuth,
+          ),
+        ],
       ],
     );
   }

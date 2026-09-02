@@ -81,9 +81,13 @@ class _ChatSubscriptions {
 }
 
 class ChatMessagesView extends StatefulWidget {
-  const ChatMessagesView(this.groupId, {super.key});
+  const ChatMessagesView(this.groupId, {this.initialGroup, super.key});
 
   final String groupId;
+
+  /// Handed over by the caller when it already holds the row, so the first
+  /// frame can draw the real chat instead of waiting for the group stream.
+  final Group? initialGroup;
 
   @override
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
@@ -119,6 +123,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   @override
   void initState() {
     super.initState();
+    _group = widget.initialGroup;
     textFieldFocus = FocusNode();
     WidgetsBinding.instance.addObserver(this);
     itemPositionsListener.itemPositions.addListener(_loadOlderWhenNeeded);
@@ -576,7 +581,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
 
   @override
   Widget build(BuildContext context) {
-    if (_group == null) return Container();
+    if (_group == null) {
+      // Drawing nothing leaves the pushed route black until the group row
+      // arrives, which is plainly visible whenever the database is busy. The
+      // empty app bar keeps the back button reachable during that wait.
+      return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
+    }
     final group = _group!;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),

@@ -39,6 +39,8 @@ pub struct Contact {
     pub ask_for_friend_promotions: Option<i64>,
     pub media_send_counter: i64,
     pub media_received_counter: i64,
+    pub widget_sharing_allowed: i64,
+    pub widget_sharing_granted: i64,
 }
 
 #[derive(bon::Builder)]
@@ -59,6 +61,8 @@ pub struct UpdateContact {
     deleted_by_user: Option<i64>,
     #[builder(with = |value: bool| value as i64)]
     blocked: Option<i64>,
+    #[builder(with = |value: bool| value as i64)]
+    widget_sharing_allowed: Option<i64>,
 }
 
 impl UpdateContact {
@@ -95,7 +99,8 @@ impl Contact {
                 requested = COALESCE(?, requested),
                 requested_by_user = COALESCE(?, requested_by_user),
                 deleted_by_user = COALESCE(?, deleted_by_user),
-                blocked = COALESCE(?, blocked)
+                blocked = COALESCE(?, blocked),
+                widget_sharing_allowed = COALESCE(?, widget_sharing_allowed)
             WHERE user_id = ?
             "#,
             contact.username,
@@ -110,6 +115,7 @@ impl Contact {
             contact.requested_by_user,
             contact.deleted_by_user,
             contact.blocked,
+            contact.widget_sharing_allowed,
             contact.user_id,
         )
         .execute(&mut **t)
@@ -178,6 +184,21 @@ impl Contact {
             SET ask_for_friend_promotions = COALESCE(ask_for_friend_promotions, 1)
             WHERE user_id = ?
             "#,
+            user_id,
+        )
+        .execute(&mut **t)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_widget_sharing_allowed(
+        t: &mut Transaction<'_, Sqlite>,
+        user_id: i64,
+        allowed: bool,
+    ) -> Result<()> {
+        sqlx::query!(
+            "UPDATE contacts SET widget_sharing_allowed = ? WHERE user_id = ?",
+            allowed,
             user_id,
         )
         .execute(&mut **t)

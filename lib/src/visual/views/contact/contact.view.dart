@@ -204,7 +204,10 @@ class _ContactViewState extends State<ContactView> {
                 contact.userId,
               );
               if (group != null && context.mounted) {
-                await context.push(Routes.chatsMessages(group.groupId));
+                await context.push(
+                  Routes.chatsMessages(group.groupId),
+                  extra: group,
+                );
               }
             },
           ),
@@ -316,12 +319,21 @@ class _ContactViewState extends State<ContactView> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
-                child: Text(
-                  'Encryption: ${switch (contact.signalVersion) {
-                    SignalVersion.v1 => 'Signal Protocol (v1)',
-                    SignalVersion.v2 => 'PQXDH (v2)',
-                  }}',
-                  style: const TextStyle(color: Colors.grey),
+                child: Column(
+                  children: [
+                    Text(
+                      'Encryption: ${switch (contact.signalVersion) {
+                        SignalVersion.v1 => 'Signal Protocol (v1)',
+                        SignalVersion.v2 => 'PQXDH (v2)',
+                      }}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Can send widgets: ${contact.widgetSharingAllowed ? 'Yes' : 'No'}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
               ),
             ),

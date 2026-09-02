@@ -30,6 +30,10 @@
   "startNewChatNewContact": "New Contact",
   "shareImageAllUsers": "All contacts",
   "shareImageShowArchived": "Show archived users",
+  "shareImageSendToWidget": "Send to home-screen widget",
+  "shareImageWidgetExplainerTitle": "Send to a widget",
+  "shareImageWidgetExplainerBody": "Sends the photo straight to your friends' home-screen widgets. Only friends who allow them can be selected.",
+  "shareImageWidgetExplainerDismiss": "Got it",
   "searchUsernameInput": "Username",
   "addFriendTitle": "Add friends",
   "searchUserNamePending": "Request pending",
@@ -49,6 +53,7 @@
   "messageSendState_Received": "Received",
   "messageSendState_Opened": "Opened",
   "messageSendState_Send": "Sent",
+  "messageSendState_Delivered": "Received",
   "messageSendState_Sending": "Sending",
   "messageSendState_TapToLoad": "Tap to load",
   "messageSendState_Loading": "Downloading",
@@ -990,17 +995,96 @@
   "fileLimitReachedDetail": "This file is {size}, but your plan allows at most {limit} per send.",
   "@fileLimitReachedDetail": {
     "placeholders": {
-      "size": { "type": "String" },
-      "limit": { "type": "String" }
+      "size": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
     }
   },
   "fileLimitReachedDetailNoSize": "Your plan allows at most {limit} per send.",
   "@fileLimitReachedDetailNoSize": {
     "placeholders": {
-      "limit": { "type": "String" }
+      "limit": {
+        "type": "String"
+      }
     }
   },
   "fileLimitReachedHint": "Record a shorter video and send it again.",
   "fileLimitReachedHintFree": "Record a shorter video, or upgrade your plan to send larger files.",
-  "fileLimitReachedUpgrade": "Upgrade plan"
+  "fileLimitReachedUpgrade": "Upgrade plan",
+  "settingsWidgets": "Widgets",
+  "widgetsTitle": "Widgets",
+  "widgetsIntroTitle": "Photos on your home screen",
+  "widgetsIntroBody": "Friends in the contact groups you choose can send a photo straight to a widget on your home screen. Photos disappear on their own after 24 hours.",
+  "widgetsSetupIos": "Touch and hold an empty area of the home screen, tap Edit, then Add Widget and pick twonly. Then touch and hold the new widget and tap Edit Widget to choose which contact groups may send to it.",
+  "widgetsSetupAndroid": "Touch and hold an empty area of the home screen, tap Widgets, then drag the twonly widget into place. You will be asked which contact groups may send to it.",
+  "widgetsNoneTitle": "No widget added yet",
+  "widgetsPlacedTitle": "On your home screen",
+  "widgetsAddAnother": "Add another widget",
+  "widgetsNoGroups": "No contact group selected",
+  "widgetsNoGroupsHint": "Nobody can send to this widget until you choose at least one contact group.",
+  "widgetsEditGroup": "Edit contact group",
+  "widgetsChangeGroupsIos": "To change the contact groups, touch and hold the widget on your home screen and tap Edit Widget.",
+  "widgetsChangeGroupsAndroid": "To change the contact groups, remove the widget and add it again.",
+  "widgetsCurrentImages": "Currently showing",
+  "widgetsNoImages": "No photos right now",
+  "widgetsNoImagesHint": "Photos your friends send to this widget will appear here.",
+  "widgetsFrom": "From {sender}",
+  "@widgetsFrom": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsExpiresIn": "Shown for {duration} more",
+  "@widgetsExpiresIn": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "widgetsDeleteImage": "Delete photo",
+  "widgetsDeleteImageConfirm": "This removes the photo from every widget showing it. It cannot be undone.",
+  "widgetsDurationHours": "{hours} h",
+  "@widgetsDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsDurationMinutes": "{minutes} min",
+  "@widgetsDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "contactGroupUsedByWidget": "Home screen widget",
+  "contactGroupUsedByWidgetSubtitle": "{count, plural, =1{A widget on your home screen shows photos from this group.} other{{count} widgets on your home screen show photos from this group.}}",
+  "@contactGroupUsedByWidgetSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contactGroupDeleteBlockedByWidget": "{count, plural, =1{This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.} other{This contact group is used by {count} widgets on your home screen. Remove those widgets first, then you can delete the group.}}",
+  "@contactGroupDeleteBlockedByWidget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetsQueryFailed": "Could not read the widgets on your home screen, so this list may be out of date.",
+  "widgetsSizeSmall": "Small widget",
+  "widgetsSizeMedium": "Medium widget",
+  "widgetsSizeLarge": "Large widget",
+  "widgetsSizeUnknown": "Widget"
 }

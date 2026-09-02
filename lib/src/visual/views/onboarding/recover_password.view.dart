@@ -188,6 +188,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                           },
                           child: Text(
                             context.lang.passwordlessRecoveryRecoverBtn,
+                            textAlign: TextAlign.center,
                           ),
                         ),
                         const Spacer(),

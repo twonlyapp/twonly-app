@@ -1,15 +1,28 @@
 import Foundation
 import Intents
 import UserNotifications
+import WidgetKit
 import rust_lib_twonly
 
 private let runtimeAppGroup = "group.eu.twonly.runtime"
 
+/// Budget for the work deferred behind the alert. Behind a rendered alert it
+/// runs after the content handler has fired, so the system may reclaim the
+/// extension before it ends; a wake-up with nothing to render spends it up
+/// front instead, where the whole budget is actually available.
+private let finalizeDeadlineMs: UInt64 = 5_000
+
 private struct NativeNotificationResponse: Decodable {
   let ok: Bool
+  let widgetRefresh: Bool
   let batch: NativeNotificationBatch?
   let fallback: NativeNotificationPresentation?
   let error: String?
+
+  enum CodingKeys: String, CodingKey {
+    case ok, batch, fallback, error
+    case widgetRefresh = "widget_refresh"
+  }
 }
 
 private struct NativeNotificationPresentation: Decodable {
@@ -90,7 +103,15 @@ final class NotificationService: UNNotificationServiceExtension {
         )
         return
       }
+      if response.widgetRefresh {
+        WidgetCenter.shared.reloadAllTimelines()
+      }
       guard let batch = response.batch, !batch.additions.isEmpty else {
+        // Nothing is waiting on screen for this wake-up — widget-only media is
+        // the ordinary case — so the deferred work runs while the extension is
+        // still guaranteed its time, rather than after the content handler has
+        // made it eligible for termination.
+        Self.finalizeRuntime()
         self.deliverFallback(reason: "notification worker returned no messages")
         return
       }
@@ -148,6 +169,10 @@ final class NotificationService: UNNotificationServiceExtension {
       stateLock.unlock()
       Self.acknowledge(eventIds: eventIds)
       self?.finish(with: content)
+      // The alert is on screen. Whatever time the system still grants this
+      // extension goes to the deferred work; being terminated part-way only
+      // defers it to the next wake-up or app launch.
+      Self.finalizeRuntime()
     }
   }
 
@@ -268,7 +293,7 @@ final class NotificationService: UNNotificationServiceExtension {
     let pointer = runtimeDirectory.withCString { databaseDirectory in
       runtimeDirectory.withCString { dataDirectory in
         locale.withCString { locale in
-          twonly_notification_process(databaseDirectory, dataDirectory, locale, 24_000)
+          twonly_notification_process(databaseDirectory, dataDirectory, locale, 22_000)
         }
       }
     }
@@ -283,6 +308,24 @@ final class NotificationService: UNNotificationServiceExtension {
     } catch {
       NSLog("Could not decode Twonly notification worker response: \(error)")
       return nil
+    }
+  }
+
+  private static func finalizeRuntime() {
+    guard let pointer = twonly_notification_finalize(finalizeDeadlineMs) else { return }
+    defer { twonly_notification_string_free(pointer) }
+    let json = String(cString: pointer)
+    guard
+      let response = try? JSONDecoder().decode(
+        NativeNotificationResponse.self,
+        from: Data(json.utf8)
+      )
+    else { return }
+    if let error = response.error {
+      NSLog("Deferred Twonly notification maintenance failed: \(error)")
+    }
+    if response.widgetRefresh {
+      WidgetCenter.shared.reloadAllTimelines()
     }
   }
 

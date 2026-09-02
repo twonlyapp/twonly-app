@@ -22,6 +22,10 @@
 		D21FCEAB2D9F2B750088701D /* NotificationService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D21FCEA42D9F2B750088701D /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D25D4D1E2EF626E30029F805 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D25D4D1D2EF626E30029F805 /* StoreKit.framework */; };
 		D25D4D7A2EFF41DB0029F805 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D25D4D702EFF41DB0029F805 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D4A100022F81000100A10002 /* TwonlyWidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */; };
+		D4A100032F81000100A10003 /* TwonlyWidgetShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */; };
+		D4A0000C2F80000100A0000C /* TwonlyWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D4A000012F80000100A00001 /* TwonlyWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D4A000102F80000100A00010 /* logo.png in Resources */ = {isa = PBXBuildFile; fileRef = D4A0000F2F80000100A0000F /* logo.png */; };
 		D3A100022F70000100D1A001 /* DirectMediaTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */; };
 		D3A100062F70000100D1A006 /* BackgroundWork.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100052F70000100D1A005 /* BackgroundWork.swift */; };
 		D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3A100042F70000100D1A002 /* NativeImageCodec.swift */; };
@@ -52,6 +56,13 @@
 			remoteGlobalIDString = D25D4D6F2EFF41DB0029F805;
 			remoteInfo = ShareExtension;
 		};
+		D4A0000D2F80000100A0000D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4A000042F80000100A00004;
+			remoteInfo = TwonlyWidget;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -71,6 +82,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				D4A0000C2F80000100A0000C /* TwonlyWidget.appex in Embed Foundation Extensions */,
 				D25D4D7A2EFF41DB0029F805 /* ShareExtension.appex in Embed Foundation Extensions */,
 				D21FCEAB2D9F2B750088701D /* NotificationService.appex in Embed Foundation Extensions */,
 			);
@@ -113,6 +125,9 @@
 		D24E27CC2F38ABC10055D9D1 /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
 		D25D4D1D2EF626E30029F805 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		D25D4D702EFF41DB0029F805 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwonlyWidgetShared.swift; sourceTree = "<group>"; };
+		D4A000012F80000100A00001 /* TwonlyWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TwonlyWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4A0000F2F80000100A0000F /* logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = logo.png; path = ../assets/images/logo.png; sourceTree = SOURCE_ROOT; };
 		D25D4D802EFF437F0029F805 /* RunnerDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerDebug.entitlements; sourceTree = "<group>"; };
 		D3A100012F70000100D1A001 /* DirectMediaTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectMediaTransfer.swift; sourceTree = "<group>"; };
 		D3A100052F70000100D1A005 /* BackgroundWork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundWork.swift; sourceTree = "<group>"; };
@@ -141,6 +156,13 @@
 			);
 			target = D25D4D6F2EFF41DB0029F805 /* ShareExtension */;
 		};
+		D4A000032F80000100A00003 /* Exceptions for "TwonlyWidget" folder in "TwonlyWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4A000042F80000100A00004 /* TwonlyWidget */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -158,6 +180,22 @@
 				D25D4D7E2EFF41DB0029F805 /* Exceptions for "ShareExtension" folder in "ShareExtension" target */,
 			);
 			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		D4A100042F81000100A10004 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D4A100012F81000100A10001 /* TwonlyWidgetShared.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D4A000022F80000100A00002 /* TwonlyWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D4A000032F80000100A00003 /* Exceptions for "TwonlyWidget" folder in "TwonlyWidget" target */,
+			);
+			path = TwonlyWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -197,6 +235,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4A000062F80000100A00006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -227,6 +272,9 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				D21FCEA52D9F2B750088701D /* NotificationService */,
 				D25D4D712EFF41DB0029F805 /* ShareExtension */,
+				D4A100042F81000100A10004 /* Shared */,
+				D4A000022F80000100A00002 /* TwonlyWidget */,
+				D4A0000F2F80000100A0000F /* logo.png */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				16FBC6F5B58E1C6646F5D447 /* GoogleService-Info.plist */,
@@ -242,6 +290,7 @@
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				D21FCEA42D9F2B750088701D /* NotificationService.appex */,
 				D25D4D702EFF41DB0029F805 /* ShareExtension.appex */,
+				D4A000012F80000100A00001 /* TwonlyWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -342,6 +391,7 @@
 			dependencies = (
 				D21FCEAA2D9F2B750088701D /* PBXTargetDependency */,
 				D25D4D792EFF41DB0029F805 /* PBXTargetDependency */,
+				D4A0000E2F80000100A0000E /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -393,6 +443,26 @@
 			productReference = D25D4D702EFF41DB0029F805 /* ShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		D4A000042F80000100A00004 /* TwonlyWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4A000082F80000100A00008 /* Build configuration list for PBXNativeTarget "TwonlyWidget" */;
+			buildPhases = (
+				D4A000052F80000100A00005 /* Sources */,
+				D4A000062F80000100A00006 /* Frameworks */,
+				D4A000072F80000100A00007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4A000022F80000100A00002 /* TwonlyWidget */,
+			);
+			name = TwonlyWidget;
+			productName = TwonlyWidget;
+			productReference = D4A000012F80000100A00001 /* TwonlyWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -418,6 +488,9 @@
 					D25D4D6F2EFF41DB0029F805 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
+					D4A000042F80000100A00004 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -440,6 +513,7 @@
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				D21FCEA32D9F2B750088701D /* NotificationService */,
 				D25D4D6F2EFF41DB0029F805 /* ShareExtension */,
+				D4A000042F80000100A00004 /* TwonlyWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -475,6 +549,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4A000072F80000100A00007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4A000102F80000100A00010 /* logo.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -654,6 +736,7 @@
 				D3A100032F70000100D1A002 /* NativeImageCodec.swift in Sources */,
 				D3A100052F70000100D1A003 /* NativeVideoCodec.swift in Sources */,
 				D3A100072F70000100D1A004 /* NativeGallery.swift in Sources */,
+				D4A100022F81000100A10002 /* TwonlyWidgetShared.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
@@ -670,6 +753,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4A000052F80000100A00005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4A100032F81000100A10003 /* TwonlyWidgetShared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -690,6 +781,11 @@
 			isa = PBXTargetDependency;
 			target = D25D4D6F2EFF41DB0029F805 /* ShareExtension */;
 			targetProxy = D25D4D782EFF41DB0029F805 /* PBXContainerItemProxy */;
+		};
+		D4A0000E2F80000100A0000E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4A000042F80000100A00004 /* TwonlyWidget */;
+			targetProxy = D4A0000D2F80000100A0000D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -788,7 +884,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.0.5;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -810,7 +906,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -828,7 +924,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -844,7 +940,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.connect.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -987,7 +1083,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.0.5;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1065,7 +1161,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing.NotificationService;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.NotificationService;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -1143,7 +1239,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing.NotificationService;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.NotificationService;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1183,7 +1279,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing.ShareExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.ShareExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1269,13 +1365,99 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.testing.ShareExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.ShareExtension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Profile;
+		};
+		D4A000092F80000100A00009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4A0000A2F80000100A0000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D4A0000B2F80000100A0000B /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = TwonlyWidget/TwonlyWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = CN332ZUGRP;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TwonlyWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = twonly;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = eu.twonly.TwonlyWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1330,6 +1512,16 @@
 				D25D4D7B2EFF41DB0029F805 /* Debug */,
 				D25D4D7C2EFF41DB0029F805 /* Release */,
 				D25D4D7D2EFF41DB0029F805 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4A000082F80000100A00008 /* Build configuration list for PBXNativeTarget "TwonlyWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4A000092F80000100A00009 /* Debug */,
+				D4A0000A2F80000100A0000A /* Release */,
+				D4A0000B2F80000100A0000B /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

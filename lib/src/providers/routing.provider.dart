@@ -47,6 +47,7 @@ import 'package:twonly/src/visual/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/visual/views/settings/settings_main.view.dart';
 import 'package:twonly/src/visual/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/visual/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/visual/views/settings/widgets/widgets.view.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -100,7 +101,11 @@ final routerProvider = GoRouter(
           path: 'messages/:groupId',
           builder: (context, state) {
             final groupId = state.pathParameters['groupId']!;
-            return ChatMessagesView(groupId);
+            final extra = state.extra;
+            return ChatMessagesView(
+              groupId,
+              initialGroup: extra is Group ? extra : null,
+            );
           },
         ),
       ],
@@ -223,6 +228,10 @@ final routerProvider = GoRouter(
         GoRoute(
           path: 'notification',
           builder: (context, state) => const NotificationView(),
+        ),
+        GoRoute(
+          path: 'widgets',
+          builder: (context, state) => const WidgetsSettingsView(),
         ),
         GoRoute(
           path: 'storage_data',

@@ -104,6 +104,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImageShowArchived => 'Show archived users';
 
   @override
+  String get shareImageSendToWidget => 'Send to home-screen widget';
+
+  @override
+  String get shareImageWidgetExplainerTitle => 'Send to a widget';
+
+  @override
+  String get shareImageWidgetExplainerBody =>
+      'Sends the photo straight to your friends\' home-screen widgets. Only friends who allow them can be selected.';
+
+  @override
+  String get shareImageWidgetExplainerDismiss => 'Got it';
+
+  @override
   String get searchUsernameInput => 'Username';
 
   @override
@@ -159,6 +172,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageSendState_Send => 'Sent';
+
+  @override
+  String get messageSendState_Delivered => 'Received';
 
   @override
   String get messageSendState_Sending => 'Sending';
@@ -2628,4 +2644,132 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileLimitReachedUpgrade => 'Upgrade plan';
+
+  @override
+  String get settingsWidgets => 'Widgets';
+
+  @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
+  String get widgetsIntroTitle => 'Photos on your home screen';
+
+  @override
+  String get widgetsIntroBody =>
+      'Friends in the contact groups you choose can send a photo straight to a widget on your home screen. Photos disappear on their own after 24 hours.';
+
+  @override
+  String get widgetsSetupIos =>
+      'Touch and hold an empty area of the home screen, tap Edit, then Add Widget and pick twonly. Then touch and hold the new widget and tap Edit Widget to choose which contact groups may send to it.';
+
+  @override
+  String get widgetsSetupAndroid =>
+      'Touch and hold an empty area of the home screen, tap Widgets, then drag the twonly widget into place. You will be asked which contact groups may send to it.';
+
+  @override
+  String get widgetsNoneTitle => 'No widget added yet';
+
+  @override
+  String get widgetsPlacedTitle => 'On your home screen';
+
+  @override
+  String get widgetsAddAnother => 'Add another widget';
+
+  @override
+  String get widgetsNoGroups => 'No contact group selected';
+
+  @override
+  String get widgetsNoGroupsHint =>
+      'Nobody can send to this widget until you choose at least one contact group.';
+
+  @override
+  String get widgetsEditGroup => 'Edit contact group';
+
+  @override
+  String get widgetsChangeGroupsIos =>
+      'To change the contact groups, touch and hold the widget on your home screen and tap Edit Widget.';
+
+  @override
+  String get widgetsChangeGroupsAndroid =>
+      'To change the contact groups, remove the widget and add it again.';
+
+  @override
+  String get widgetsCurrentImages => 'Currently showing';
+
+  @override
+  String get widgetsNoImages => 'No photos right now';
+
+  @override
+  String get widgetsNoImagesHint =>
+      'Photos your friends send to this widget will appear here.';
+
+  @override
+  String widgetsFrom(String sender) {
+    return 'From $sender';
+  }
+
+  @override
+  String widgetsExpiresIn(String duration) {
+    return 'Shown for $duration more';
+  }
+
+  @override
+  String get widgetsDeleteImage => 'Delete photo';
+
+  @override
+  String get widgetsDeleteImageConfirm =>
+      'This removes the photo from every widget showing it. It cannot be undone.';
+
+  @override
+  String widgetsDurationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String widgetsDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get contactGroupUsedByWidget => 'Home screen widget';
+
+  @override
+  String contactGroupUsedByWidgetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count widgets on your home screen show photos from this group.',
+      one: 'A widget on your home screen shows photos from this group.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactGroupDeleteBlockedByWidget(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This contact group is used by $count widgets on your home screen. Remove those widgets first, then you can delete the group.',
+      one:
+          'This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetsQueryFailed =>
+      'Could not read the widgets on your home screen, so this list may be out of date.';
+
+  @override
+  String get widgetsSizeSmall => 'Small widget';
+
+  @override
+  String get widgetsSizeMedium => 'Medium widget';
+
+  @override
+  String get widgetsSizeLarge => 'Large widget';
+
+  @override
+  String get widgetsSizeUnknown => 'Widget';
 }

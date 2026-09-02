@@ -10,6 +10,7 @@ message EncryptedContent {
   optional bytes sender_user_discovery_version = 21;
   optional bool  ask_for_friend_promotions     = 25;
   reserved 28;
+  optional bool  widget_sharing_allowed        = 29;
 
   optional MessageUpdate                 message_update                  = 5;
   optional Media                         media                           = 6;
@@ -119,6 +120,7 @@ message EncryptedContent {
     optional bytes encryption_nonce = 10;
 
     optional bytes additional_message_data = 11;
+    optional bool widget_only = 12;
   }
 
   message MediaUpdate {

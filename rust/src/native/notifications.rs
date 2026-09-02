@@ -20,6 +20,7 @@ static NOTIFICATION_WORKER: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()
 #[derive(Serialize)]
 struct NativeNotificationResponse {
     ok: bool,
+    widget_refresh: bool,
     batch: Option<NotificationBatch>,
     fallback: Option<NotificationPresentation>,
     error: Option<String>,
@@ -48,12 +49,22 @@ unsafe fn required_string(pointer: *const c_char, name: &str) -> Result<String, 
         .map_err(|error| format!("{name} is not UTF-8: {error}"))
 }
 
-fn runtime() -> Result<tokio::runtime::Runtime, String> {
-    tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(2)
-        .enable_all()
-        .build()
-        .map_err(|error| format!("could not create notification runtime: {error}"))
+/// One runtime for the whole worker process. `twonly_notification_process`
+/// hands its batch back before the background socket is done with it, so the
+/// tasks it spawned have to outlive that call — a per-call runtime would drop
+/// them on the way out and leave `twonly_notification_finalize` with a dead
+/// connection.
+static NOTIFICATION_RUNTIME: LazyLock<Result<tokio::runtime::Runtime, String>> =
+    LazyLock::new(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .map_err(|error| format!("could not create notification runtime: {error}"))
+    });
+
+fn runtime() -> Result<&'static tokio::runtime::Runtime, String> {
+    NOTIFICATION_RUNTIME.as_ref().map_err(Clone::clone)
 }
 
 fn worker_lock() -> MutexGuard<'static, ()> {
@@ -93,6 +104,7 @@ pub unsafe extern "C" fn twonly_notification_process(
     match result {
         Ok(Ok(batch)) => response_json(NativeNotificationResponse {
             ok: true,
+            widget_refresh: true,
             batch: Some(batch),
             fallback: Some(notifications::fallback_presentation(
                 unsafe { required_string(locale, "locale") }
@@ -103,6 +115,7 @@ pub unsafe extern "C" fn twonly_notification_process(
         }),
         Ok(Err(error)) => response_json(NativeNotificationResponse {
             ok: false,
+            widget_refresh: false,
             batch: None,
             fallback: Some(notifications::fallback_presentation(
                 unsafe { required_string(locale, "locale") }
@@ -113,11 +126,39 @@ pub unsafe extern "C" fn twonly_notification_process(
         }),
         Err(_) => response_json(NativeNotificationResponse {
             ok: false,
+            widget_refresh: false,
             batch: None,
             fallback: Some(notifications::fallback_presentation("en")),
             error: Some("notification worker panicked".into()),
         }),
     }
+}
+
+/// Settles the deferred wake-up work once the caller has rendered the batch:
+/// media downloads, widget upkeep, and closing the background socket. Safe to
+/// skip — an OS that reclaims the worker first only defers this to the next
+/// wake-up or app launch.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn twonly_notification_finalize(deadline_ms: u64) -> *mut c_char {
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        let _worker = worker_lock();
+        runtime()?
+            .block_on(notifications::finalize_wakeup(deadline_ms))
+            .map_err(|error| error.to_string())
+    }));
+
+    let error = match result {
+        Ok(Ok(())) => None,
+        Ok(Err(error)) => Some(error),
+        Err(_) => Some("notification finalization panicked".into()),
+    };
+    response_json(NativeNotificationResponse {
+        ok: error.is_none(),
+        widget_refresh: error.is_none(),
+        batch: None,
+        fallback: None,
+        error,
+    })
 }
 
 /// Marks successfully scheduled native events as delivered. `event_ids_json`
@@ -142,18 +183,21 @@ pub unsafe extern "C" fn twonly_notification_acknowledge(
     match result {
         Ok(Ok(())) => response_json(NativeNotificationResponse {
             ok: true,
+            widget_refresh: false,
             batch: None,
             fallback: None,
             error: None,
         }),
         Ok(Err(error)) => response_json(NativeNotificationResponse {
             ok: false,
+            widget_refresh: false,
             batch: None,
             fallback: None,
             error: Some(error),
         }),
         Err(_) => response_json(NativeNotificationResponse {
             ok: false,
+            widget_refresh: false,
             batch: None,
             fallback: None,
             error: Some("notification acknowledgement panicked".into()),
@@ -234,6 +278,26 @@ mod android_jni {
                 )
             }),
         )
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_eu_twonly_notifications_NativeNotificationBridge_finalizeWakeup(
+        mut env: JNIEnv<'_>,
+        _class: JClass<'_>,
+        deadline_ms: jlong,
+    ) -> jstring {
+        let pointer = unsafe { twonly_notification_finalize(deadline_ms.max(0) as u64) };
+        let json = if pointer.is_null() {
+            r#"{"ok":false,"error":"Rust notification finalization returned null"}"#.to_owned()
+        } else {
+            // SAFETY: The C ABI returns a valid owned CString.
+            let json = unsafe { CStr::from_ptr(pointer) }
+                .to_string_lossy()
+                .into_owned();
+            unsafe { twonly_notification_string_free(pointer) };
+            json
+        };
+        return_string(&mut env, json)
     }
 
     #[unsafe(no_mangle)]

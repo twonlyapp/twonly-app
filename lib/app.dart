@@ -16,6 +16,7 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/onboarding_state.model.dart';
 import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -73,6 +74,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       unawaited(
         rust_api.RustApi.setBackground(inBackground: true),
       );
+      // Anything this session downloaded rewrote the widget manifest, but
+      // WidgetKit still shows the timeline it built earlier. Leaving the app is
+      // the moment the home screen becomes visible again.
+      unawaited(HomeWidgetService.refresh());
     } else if (state == AppLifecycleState.detached) {
       // Last chance before the engine goes away: hand anything still unsent to
       // the OS, which delivers it once there is a network again whether or not

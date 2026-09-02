@@ -144,6 +144,13 @@ pub(crate) async fn record_incoming_event(
     receipt_id: &str,
     content: &proto::EncryptedContent,
 ) -> Result<()> {
+    if content
+        .media
+        .as_ref()
+        .is_some_and(|media| media.widget_only == Some(true))
+    {
+        return Ok(());
+    }
     let blocked = sqlx::query_scalar!(
         "SELECT blocked FROM contacts WHERE user_id = ?",
         from_user_id
@@ -393,10 +400,12 @@ pub async fn pending_batch(ctx: &Arc<Context>, locale: &str) -> Result<Notificat
     })
 }
 
-/// Runs the bounded native notification lifecycle. In a dedicated extension or
-/// killed-app process this owns a short-lived background WebSocket. If Flutter
-/// is already alive, it waits for the existing foreground connection to commit
-/// the incoming message instead of opening a competing session.
+/// Drains the mailbox and returns the alert the native caller should render.
+///
+/// This deliberately stops at the batch: everything the wake-up still owes the
+/// app — media downloads, widget upkeep, closing the socket — is deferred to
+/// [`finalize_wakeup`] so that none of it sits between the incoming message and
+/// the notification the user is waiting for.
 pub async fn process_wakeup(
     config: InitConfig,
     locale: &str,
@@ -423,6 +432,11 @@ pub async fn process_wakeup(
             .await
             .is_ok()
     } else {
+        // The generation has to be sampled before the snapshot. A commit that
+        // lands between the two is invisible to both the snapshot, which ran
+        // too early, and the wait, whose baseline already counts it — leaving
+        // an alert that is durable on disk stalled for the whole deadline.
+        let generation = ctx.incoming_generation();
         let initial = pending_batch(&ctx, locale).await?;
         if !initial.additions.is_empty() {
             return Ok(initial);
@@ -432,7 +446,6 @@ pub async fn process_wakeup(
         if let Ok(client) = ApiRuntime::client(&ctx).await {
             client.request_catch_up().await;
         }
-        let generation = ctx.incoming_generation();
         tokio::time::timeout(deadline, ctx.wait_for_incoming_after(generation))
             .await
             .is_ok()
@@ -443,11 +456,59 @@ pub async fn process_wakeup(
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     let mut batch = pending_batch(&ctx, locale).await?;
     batch.completed = completed;
+    Ok(batch)
+}
+
+/// Settles what the wake-up still owes the app once its notification is on
+/// screen. The native caller invokes this after rendering the batch, so every
+/// step here is off the alert's critical path and the whole run is bounded by
+/// `deadline_ms` — an OS that reclaims the worker mid-way costs nothing that
+/// the next wake-up or app launch does not redo.
+pub async fn finalize_wakeup(deadline_ms: u64) -> Result<()> {
+    let ctx = Context::get_static()?.clone();
+    let owns_connection = ctx.is_notification_runtime();
+    let deadline = std::time::Duration::from_millis(deadline_ms.min(28_000));
+    let started = std::time::Instant::now();
+    let remaining = || deadline.saturating_sub(started.elapsed());
+
+    // In a killed-app notification process the spawned receive task only lives
+    // as long as the shared notification runtime, so this is the last chance to
+    // settle widget downloads before the OS reclaims the worker. They get most
+    // of the budget but not all of it: a download nothing publishes to the
+    // manifest below was not worth making.
+    if owns_connection {
+        let media_files = crate::services::mediafiles::MediaFileService::new(&ctx);
+        match tokio::time::timeout(deadline.mul_f32(0.75), media_files.download_pending()).await {
+            Ok(Err(error)) => tracing::warn!(%error, "background media download failed"),
+            Err(error) => tracing::info!(%error, "background media download window elapsed"),
+            Ok(Ok(())) => {}
+        }
+    }
+
+    match tokio::time::timeout(
+        remaining(),
+        crate::services::home_widget::purge_widget_media(&ctx),
+    )
+    .await
+    {
+        Ok(Err(error)) => tracing::warn!(%error, "widget-media maintenance failed during wake-up"),
+        Err(error) => tracing::info!(%error, "widget-media maintenance window elapsed"),
+        Ok(Ok(())) => {}
+    }
 
     if owns_connection && ctx.is_notification_runtime() {
-        ApiRuntime::close(&ctx).await?;
+        // Bounded on its own rather than out of what is left: closing costs a
+        // round trip at most, and a server that never answers the handshake
+        // must not hold the worker open. The socket dies with the process
+        // either way.
+        if tokio::time::timeout(std::time::Duration::from_secs(1), ApiRuntime::close(&ctx))
+            .await
+            .is_err()
+        {
+            tracing::info!("background socket did not close gracefully in time");
+        }
     }
-    Ok(batch)
+    Ok(())
 }
 
 /// Persists a token refresh from the native Android FCM callback. The normal

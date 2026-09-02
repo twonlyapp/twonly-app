@@ -137,7 +137,8 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.message.mediaStored ||
+    if (widget.message.isWidgetMedia ||
+        !widget.message.mediaStored ||
         !widget.mediaService.imagePreviewAvailable) {
       return Container(
         constraints: const BoxConstraints(

@@ -136,6 +136,7 @@ class GroupMemberContextMenu extends StatelessWidget {
               if (!navigator.mounted) return;
               await navigator.context.push(
                 Routes.chatsMessages(directChat.groupId),
+                extra: directChat,
               );
             },
             icon: FontAwesomeIcons.message,

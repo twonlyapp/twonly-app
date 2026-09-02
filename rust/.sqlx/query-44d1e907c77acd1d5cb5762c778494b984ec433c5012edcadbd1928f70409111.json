@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT media_id FROM media_files WHERE download_state = 'pending'",
+  "query": "SELECT media_id FROM media_files\n               WHERE download_state IN ('pending', 'downloading')\n               ORDER BY is_widget_media DESC, created_at DESC",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "b84d4a6bba4e8eb084bbb6b6ffdff05df10bc93c4ff9bfba248f376439e268a1"
+  "hash": "44d1e907c77acd1d5cb5762c778494b984ec433c5012edcadbd1928f70409111"
 }

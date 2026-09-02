@@ -90,6 +90,10 @@ pub enum ApiEventKind {
     AppOutdated,
     NewDeviceRegistered,
     LoginTokenMigrated,
+    /// An image shared into a home-screen widget finished downloading. The
+    /// manifest is already rewritten; only the native widgets still have to be
+    /// told to redraw, which is something Flutter has to ask for.
+    WidgetMediaReceived,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -210,11 +214,65 @@ impl RustApi {
         media_id: String,
         group_ids: Vec<String>,
         additional_message_data: Option<Vec<u8>>,
+        widget_only: bool,
     ) -> Result<()> {
         let ctx = Context::get_static()?;
         MediaUploadService::new(ctx)
-            .insert_into_messages(media_id, group_ids, additional_message_data)
+            .insert_into_messages(media_id, group_ids, additional_message_data, widget_only)
             .await
+    }
+
+    pub async fn register_home_widget(widget_id: String, platform: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::register_widget(ctx, &widget_id, &platform).await
+    }
+
+    pub async fn unregister_home_widget(widget_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::unregister_widget(ctx, &widget_id).await
+    }
+
+    pub async fn set_home_widget_groups(
+        widget_id: String,
+        platform: String,
+        contact_group_ids: Vec<i64>,
+    ) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::set_widget_groups(
+            ctx,
+            &widget_id,
+            &platform,
+            &contact_group_ids,
+        )
+        .await
+    }
+
+    pub async fn sync_widget_permissions() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::sync_permissions(ctx).await
+    }
+
+    pub async fn purge_widget_media() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::purge_widget_media(ctx).await
+    }
+
+    /// Republishes the widget manifest.
+    ///
+    /// The contact groups a widget offers in its configuration UI are read from
+    /// that file, so it has to be rewritten whenever the groups change — not
+    /// only when images arrive. Cheaper than a full permission sync, which this
+    /// deliberately does not do: editing a group does not change which widgets
+    /// are placed.
+    pub async fn refresh_widget_manifest() -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::refresh_manifest(ctx).await
+    }
+
+    /// Drops a single image a widget is showing, at the user's request.
+    pub async fn delete_widget_media(media_id: String) -> Result<()> {
+        let ctx = Context::get_static()?;
+        crate::services::home_widget::delete_media(ctx, &media_id).await
     }
 
     /// Retries the media sends whose receipts are still marked for retry.

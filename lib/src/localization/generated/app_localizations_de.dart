@@ -105,6 +105,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageShowArchived => 'Archivierte Benutzer anzeigen';
 
   @override
+  String get shareImageSendToWidget => 'An Startbildschirm-Widget senden';
+
+  @override
+  String get shareImageWidgetExplainerTitle => 'An ein Widget senden';
+
+  @override
+  String get shareImageWidgetExplainerBody =>
+      'Sendet das Foto direkt an die Startbildschirm-Widgets deiner Freunde. Nur Freunde, die das erlauben, sind auswählbar.';
+
+  @override
+  String get shareImageWidgetExplainerDismiss => 'Alles klar';
+
+  @override
   String get searchUsernameInput => 'Benutzername';
 
   @override
@@ -161,6 +174,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messageSendState_Send => 'Gesendet';
+
+  @override
+  String get messageSendState_Delivered => 'Empfangen';
 
   @override
   String get messageSendState_Sending => 'Wird gesendet';
@@ -2196,8 +2212,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordlessRecoveryEnableBtn => 'Vertraute Freunde aktivieren';
 
   @override
-  String get passwordlessRecoveryRecoverBtn =>
-      'Mithilfe von vertrauten Freunden wiederherstellen';
+  String get passwordlessRecoveryRecoverBtn => 'Über Freunde wiederherstellen';
 
   @override
   String get passwordlessRecoveryModifyBtn => 'Vertraute Freunde bearbeiten';
@@ -2653,4 +2668,134 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileLimitReachedUpgrade => 'Tarif wechseln';
+
+  @override
+  String get settingsWidgets => 'Widgets';
+
+  @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
+  String get widgetsIntroTitle => 'Fotos auf deinem Homebildschirm';
+
+  @override
+  String get widgetsIntroBody =>
+      'Freunde aus den von dir gewählten Kontaktgruppen können ein Foto direkt an ein Widget auf deinem Homebildschirm senden. Fotos verschwinden nach 24 Stunden von selbst.';
+
+  @override
+  String get widgetsSetupIos =>
+      'Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Bearbeiten, dann auf Widget hinzufügen und wähle twonly. Halte anschließend das neue Widget gedrückt und tippe auf Widget bearbeiten, um die Kontaktgruppen auszuwählen.';
+
+  @override
+  String get widgetsSetupAndroid =>
+      'Halte eine freie Stelle auf dem Homebildschirm gedrückt, tippe auf Widgets und ziehe das twonly-Widget an seinen Platz. Du wirst gefragt, welche Kontaktgruppen daran senden dürfen.';
+
+  @override
+  String get widgetsNoneTitle => 'Noch kein Widget hinzugefügt';
+
+  @override
+  String get widgetsPlacedTitle => 'Auf deinem Homebildschirm';
+
+  @override
+  String get widgetsAddAnother => 'Weiteres Widget hinzufügen';
+
+  @override
+  String get widgetsNoGroups => 'Keine Kontaktgruppe ausgewählt';
+
+  @override
+  String get widgetsNoGroupsHint =>
+      'Niemand kann an dieses Widget senden, solange du keine Kontaktgruppe auswählst.';
+
+  @override
+  String get widgetsEditGroup => 'Kontaktgruppe bearbeiten';
+
+  @override
+  String get widgetsChangeGroupsIos =>
+      'Um die Kontaktgruppen zu ändern, halte das Widget auf dem Homebildschirm gedrückt und tippe auf Widget bearbeiten.';
+
+  @override
+  String get widgetsChangeGroupsAndroid =>
+      'Um die Kontaktgruppen zu ändern, entferne das Widget und füge es erneut hinzu.';
+
+  @override
+  String get widgetsCurrentImages => 'Wird aktuell angezeigt';
+
+  @override
+  String get widgetsNoImages => 'Aktuell keine Fotos';
+
+  @override
+  String get widgetsNoImagesHint =>
+      'Fotos, die dir deine Freunde an dieses Widget senden, erscheinen hier.';
+
+  @override
+  String widgetsFrom(String sender) {
+    return 'Von $sender';
+  }
+
+  @override
+  String widgetsExpiresIn(String duration) {
+    return 'Noch $duration sichtbar';
+  }
+
+  @override
+  String get widgetsDeleteImage => 'Foto löschen';
+
+  @override
+  String get widgetsDeleteImageConfirm =>
+      'Damit wird das Foto von allen Widgets entfernt, die es anzeigen. Das kann nicht rückgängig gemacht werden.';
+
+  @override
+  String widgetsDurationHours(int hours) {
+    return '$hours Std.';
+  }
+
+  @override
+  String widgetsDurationMinutes(int minutes) {
+    return '$minutes Min.';
+  }
+
+  @override
+  String get contactGroupUsedByWidget => 'Homebildschirm-Widget';
+
+  @override
+  String contactGroupUsedByWidgetSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Widgets auf deinem Homebildschirm zeigen Fotos aus dieser Gruppe.',
+      one:
+          'Ein Widget auf deinem Homebildschirm zeigt Fotos aus dieser Gruppe.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String contactGroupDeleteBlockedByWidget(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Diese Kontaktgruppe wird von $count Widgets auf deinem Homebildschirm verwendet. Entferne zuerst diese Widgets, danach kannst du die Gruppe löschen.',
+      one:
+          'Diese Kontaktgruppe wird von einem Widget auf deinem Homebildschirm verwendet. Entferne zuerst dieses Widget, danach kannst du die Gruppe löschen.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetsQueryFailed =>
+      'Die Widgets auf deinem Homebildschirm konnten nicht gelesen werden, diese Liste ist möglicherweise veraltet.';
+
+  @override
+  String get widgetsSizeSmall => 'Kleines Widget';
+
+  @override
+  String get widgetsSizeMedium => 'Mittleres Widget';
+
+  @override
+  String get widgetsSizeLarge => 'Großes Widget';
+
+  @override
+  String get widgetsSizeUnknown => 'Widget';
 }

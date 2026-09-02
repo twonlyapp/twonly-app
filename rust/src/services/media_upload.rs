@@ -64,6 +64,7 @@ struct MediaRow {
     upload_state: Option<String>,
     requires_authentication: i64,
     is_draft_media: i64,
+    is_widget_media: i64,
     display_limit_in_milliseconds: Option<i64>,
     reupload_requested_by: Option<String>,
     remove_audio: Option<i64>,
@@ -151,11 +152,30 @@ impl MediaUploadService {
         media_id: String,
         group_ids: Vec<String>,
         additional_message_data: Option<Vec<u8>>,
+        widget_only: bool,
     ) -> Result<()> {
         let database = self.ctx.app_db.read().await.clone();
         let now = chrono::Utc::now().timestamp();
 
         let mut transaction = database.pool.begin().await?;
+        if widget_only {
+            let media = sqlx::query_as::<_, (String, Option<i64>)>(
+                "SELECT type, display_limit_in_milliseconds FROM media_files WHERE media_id = ?",
+            )
+            .bind(&media_id)
+            .fetch_optional(&mut *transaction)
+            .await?
+            .ok_or_else(|| TwonlyError::Generic(format!("media {media_id} does not exist")))?;
+            if media.0 != "image" || media.1.is_some() {
+                return Err(TwonlyError::Generic(
+                    "widget sends require an unlimited image".into(),
+                ));
+            }
+            sqlx::query("UPDATE media_files SET is_widget_media = 1 WHERE media_id = ?")
+                .bind(&media_id)
+                .execute(&mut *transaction)
+                .await?;
+        }
         sqlx::query("UPDATE media_files SET is_draft_media = 0 WHERE is_draft_media = 1")
             .execute(&mut *transaction)
             .await?;
@@ -169,6 +189,21 @@ impl MediaUploadService {
             .bind(group_id)
             .fetch_all(&mut *transaction)
             .await?;
+            if widget_only
+                && (members.len() != 1
+                    || sqlx::query_scalar::<_, i64>(
+                        "SELECT widget_sharing_allowed FROM contacts WHERE user_id = ?",
+                    )
+                    .bind(members.first().map(|member| member.0).unwrap_or_default())
+                    .fetch_optional(&mut *transaction)
+                    .await?
+                    .unwrap_or(0)
+                        == 0)
+            {
+                return Err(TwonlyError::Generic(
+                    "recipient has not granted widget sharing".into(),
+                ));
+            }
             // A direct chat whose only peer deleted their account has nobody
             // left to receive the media.
             if members.len() == 1 && members[0].1 != 0 {
@@ -179,26 +214,30 @@ impl MediaUploadService {
             let message_id = new_uuid_v7();
             sqlx::query(
                 r#"INSERT INTO messages
-                   (group_id, message_id, type, media_id, additional_message_data, created_at)
-                   VALUES (?, ?, 'media', ?, ?, ?)"#,
+                   (group_id, message_id, type, media_id, additional_message_data,
+                    is_widget_media, created_at)
+                   VALUES (?, ?, 'media', ?, ?, ?, ?)"#,
             )
             .bind(group_id)
             .bind(&message_id)
             .bind(&media_id)
             .bind(additional_message_data.as_deref())
+            .bind(widget_only)
             .bind(now)
             .execute(&mut *transaction)
             .await?;
-            sqlx::query(
-                r#"UPDATE groups SET archived = 0, deleted_content = 0,
-                       last_message_exchange = MAX(last_message_exchange, ?)
-                   WHERE group_id = ?"#,
-            )
-            .bind(now)
-            .bind(group_id)
-            .execute(&mut *transaction)
-            .await?;
-            Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
+            if !widget_only {
+                sqlx::query(
+                    r#"UPDATE groups SET archived = 0, deleted_content = 0,
+                           last_message_exchange = MAX(last_message_exchange, ?)
+                       WHERE group_id = ?"#,
+                )
+                .bind(now)
+                .bind(group_id)
+                .execute(&mut *transaction)
+                .await?;
+                Group::record_media_exchange(&mut transaction, group_id, false, now).await?;
+            }
         }
         transaction.commit().await?;
         drop(database);
@@ -408,7 +447,7 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         let pending = sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
-                      is_draft_media, display_limit_in_milliseconds, reupload_requested_by,
+                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files
                WHERE upload_state IN
@@ -860,7 +899,7 @@ impl MediaUploadService {
             // Nothing in the database refers to these bytes any more.
             return Ok(true);
         };
-        if media.is_draft_media != 0 {
+        if media.is_draft_media != 0 || media.is_widget_media != 0 {
             return Ok(false);
         }
         // The plaintext is the upload's input, so it must outlive the transfer.
@@ -1073,7 +1112,7 @@ impl MediaUploadService {
         let database = self.ctx.app_db.read().await.clone();
         Ok(sqlx::query_as::<_, MediaRow>(
             r#"SELECT media_id, type AS media_type, upload_state, requires_authentication,
-                      is_draft_media, display_limit_in_milliseconds, reupload_requested_by,
+                      is_draft_media, is_widget_media, display_limit_in_milliseconds, reupload_requested_by,
                       remove_audio, trim_start_ms, trim_end_ms, created_at
                FROM media_files WHERE media_id = ?"#,
         )

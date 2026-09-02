@@ -20,6 +20,8 @@ Color getMessageColorFromType(
     color = Colors.orange;
   } else if (message.type == MessageType.text.name) {
     color = Colors.blueAccent;
+  } else if (message.isWidgetMedia) {
+    color = const Color.fromARGB(255, 155, 89, 182);
   } else if (mediaFile != null) {
     if (mediaFile.requiresAuthentication) {
       color = context.color.primary;

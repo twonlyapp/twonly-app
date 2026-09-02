@@ -55,6 +55,11 @@ enum ApiEventKind {
   appOutdated,
   newDeviceRegistered,
   loginTokenMigrated,
+
+  /// An image shared into a home-screen widget finished downloading. The
+  /// manifest is already rewritten; only the native widgets still have to be
+  /// told to redraw, which is something Flutter has to ask for.
+  widgetMediaReceived,
 }
 
 class FrbAdditionalAccount {
@@ -361,6 +366,12 @@ class RustApi {
   static Future<void> deleteMemory({required String mediaId}) =>
       RustLib.instance.api.crateBridgeApiRustApiDeleteMemory(mediaId: mediaId);
 
+  /// Drops a single image a widget is showing, at the user's request.
+  static Future<void> deleteWidgetMedia({required String mediaId}) => RustLib
+      .instance
+      .api
+      .crateBridgeApiRustApiDeleteWidgetMedia(mediaId: mediaId);
+
   static Future<void> disableMemoriesBackup() =>
       RustLib.instance.api.crateBridgeApiRustApiDisableMemoriesBackup();
 
@@ -557,6 +568,19 @@ class RustApi {
   static Future<void> purgeMediaTempFolder() =>
       RustLib.instance.api.crateBridgeApiRustApiPurgeMediaTempFolder();
 
+  static Future<void> purgeWidgetMedia() =>
+      RustLib.instance.api.crateBridgeApiRustApiPurgeWidgetMedia();
+
+  /// Republishes the widget manifest.
+  ///
+  /// The contact groups a widget offers in its configuration UI are read from
+  /// that file, so it has to be rewritten whenever the groups change — not
+  /// only when images arrive. Cheaper than a full permission sync, which this
+  /// deliberately does not do: editing a group does not change which widgets
+  /// are placed.
+  static Future<void> refreshWidgetManifest() =>
+      RustLib.instance.api.crateBridgeApiRustApiRefreshWidgetManifest();
+
   static Future<PlatformInt64> register({
     required String username,
     required PlatformInt64 proofOfWork,
@@ -567,6 +591,14 @@ class RustApi {
     proofOfWork: proofOfWork,
     langCode: langCode,
     isIos: isIos,
+  );
+
+  static Future<void> registerHomeWidget({
+    required String widgetId,
+    required String platform,
+  }) => RustLib.instance.api.crateBridgeApiRustApiRegisterHomeWidget(
+    widgetId: widgetId,
+    platform: platform,
   );
 
   static Future<void> registerPasswordlessNotification({
@@ -696,10 +728,12 @@ class RustApi {
     required String mediaId,
     required List<String> groupIds,
     Uint8List? additionalMessageData,
+    required bool widgetOnly,
   }) => RustLib.instance.api.crateBridgeApiRustApiSendMediaToGroups(
     mediaId: mediaId,
     groupIds: groupIds,
     additionalMessageData: additionalMessageData,
+    widgetOnly: widgetOnly,
   );
 
   static Future<void> sendQueuedMessage({required String receiptId}) => RustLib
@@ -727,6 +761,16 @@ class RustApi {
       .instance
       .api
       .crateBridgeApiRustApiSetBackground(inBackground: inBackground);
+
+  static Future<void> setHomeWidgetGroups({
+    required String widgetId,
+    required String platform,
+    required Int64List contactGroupIds,
+  }) => RustLib.instance.api.crateBridgeApiRustApiSetHomeWidgetGroups(
+    widgetId: widgetId,
+    platform: platform,
+    contactGroupIds: contactGroupIds,
+  );
 
   static Future<void> setLoginToken({required List<int> token}) =>
       RustLib.instance.api.crateBridgeApiRustApiSetLoginToken(token: token);
@@ -776,6 +820,9 @@ class RustApi {
     encryptedMessage: encryptedMessage,
   );
 
+  static Future<void> syncWidgetPermissions() =>
+      RustLib.instance.api.crateBridgeApiRustApiSyncWidgetPermissions();
+
   static Future<void> toggleMediaRemoveAudio({required String mediaId}) =>
       RustLib.instance.api.crateBridgeApiRustApiToggleMediaRemoveAudio(
         mediaId: mediaId,
@@ -788,6 +835,11 @@ class RustApi {
     contactId: contactId,
     expectedPublicKey: expectedPublicKey,
   );
+
+  static Future<void> unregisterHomeWidget({required String widgetId}) =>
+      RustLib.instance.api.crateBridgeApiRustApiUnregisterHomeWidget(
+        widgetId: widgetId,
+      );
 
   static Future<void> updateFcmToken({required String token}) =>
       RustLib.instance.api.crateBridgeApiRustApiUpdateFcmToken(token: token);

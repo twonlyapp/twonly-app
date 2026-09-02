@@ -29,6 +29,7 @@ internal data class NativeNotificationBatch(
 
 internal data class NativeNotificationResponse(
     val ok: Boolean,
+    val widgetRefresh: Boolean,
     val batch: NativeNotificationBatch?,
     val fallback: NativeNotificationPresentation?,
 ) {
@@ -70,7 +71,12 @@ internal data class NativeNotificationResponse(
                     body = it.getString("body"),
                 )
             }
-            return NativeNotificationResponse(root.optBoolean("ok"), batch, fallback)
+            return NativeNotificationResponse(
+                root.optBoolean("ok"),
+                root.optBoolean("widget_refresh"),
+                batch,
+                fallback,
+            )
         }
     }
 }

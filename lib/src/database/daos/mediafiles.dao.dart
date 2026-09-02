@@ -88,7 +88,8 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
       mediaFiles,
     )..where((t) => t.mediaId.equals(mediaId))).watchSingleOrNull();
   }
-Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
+
+  Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
     return (select(mediaFiles)..where(
           (t) =>
               t.downloadState.equals(DownloadState.pending.name) |
@@ -144,7 +145,8 @@ Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
           ]);
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
-Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
+
+  Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
     if (mediaIds.isEmpty) return Stream.value(const []);
     return (select(
       mediaFiles,
@@ -152,13 +154,14 @@ Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
   }
 
   Stream<List<MediaFile>> watchMediaFilesForGroup(String groupId) {
-    final query = select(mediaFiles).join([
-      innerJoin(
-        db.messages,
-        db.messages.mediaId.equalsExp(mediaFiles.mediaId),
-        useColumns: false,
-      ),
-    ])..where(db.messages.groupId.equals(groupId));
+    final query =
+        select(mediaFiles).join([
+          innerJoin(
+            db.messages,
+            db.messages.mediaId.equalsExp(mediaFiles.mediaId),
+            useColumns: false,
+          ),
+        ])..where(db.messages.groupId.equals(groupId));
     return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
@@ -201,6 +204,7 @@ Stream<List<MediaFile>> watchMediaFilesByIds(Set<String> mediaIds) {
         ])..where(
           mediaFiles.storedFileHash.equals(hash) &
               db.messages.senderId.equals(senderId) &
+              db.messages.isWidgetMedia.equals(false) &
               db.messages.openedAt.isNull(),
         );
 

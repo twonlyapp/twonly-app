@@ -278,6 +278,30 @@ abstract class AppLocalizations {
   /// **'Show archived users'**
   String get shareImageShowArchived;
 
+  /// No description provided for @shareImageSendToWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to home-screen widget'**
+  String get shareImageSendToWidget;
+
+  /// No description provided for @shareImageWidgetExplainerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to a widget'**
+  String get shareImageWidgetExplainerTitle;
+
+  /// No description provided for @shareImageWidgetExplainerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends the photo straight to your friends\' home-screen widgets. Only friends who allow them can be selected.'**
+  String get shareImageWidgetExplainerBody;
+
+  /// No description provided for @shareImageWidgetExplainerDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get shareImageWidgetExplainerDismiss;
+
   /// No description provided for @searchUsernameInput.
   ///
   /// In en, this message translates to:
@@ -391,6 +415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent'**
   String get messageSendState_Send;
+
+  /// No description provided for @messageSendState_Delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get messageSendState_Delivered;
 
   /// No description provided for @messageSendState_Sending.
   ///
@@ -4591,6 +4621,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upgrade plan'**
   String get fileLimitReachedUpgrade;
+
+  /// No description provided for @settingsWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get settingsWidgets;
+
+  /// No description provided for @widgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get widgetsTitle;
+
+  /// No description provided for @widgetsIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos on your home screen'**
+  String get widgetsIntroTitle;
+
+  /// No description provided for @widgetsIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends in the contact groups you choose can send a photo straight to a widget on your home screen. Photos disappear on their own after 24 hours.'**
+  String get widgetsIntroBody;
+
+  /// No description provided for @widgetsSetupIos.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area of the home screen, tap Edit, then Add Widget and pick twonly. Then touch and hold the new widget and tap Edit Widget to choose which contact groups may send to it.'**
+  String get widgetsSetupIos;
+
+  /// No description provided for @widgetsSetupAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty area of the home screen, tap Widgets, then drag the twonly widget into place. You will be asked which contact groups may send to it.'**
+  String get widgetsSetupAndroid;
+
+  /// No description provided for @widgetsNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No widget added yet'**
+  String get widgetsNoneTitle;
+
+  /// No description provided for @widgetsPlacedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On your home screen'**
+  String get widgetsPlacedTitle;
+
+  /// No description provided for @widgetsAddAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another widget'**
+  String get widgetsAddAnother;
+
+  /// No description provided for @widgetsNoGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No contact group selected'**
+  String get widgetsNoGroups;
+
+  /// No description provided for @widgetsNoGroupsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody can send to this widget until you choose at least one contact group.'**
+  String get widgetsNoGroupsHint;
+
+  /// No description provided for @widgetsEditGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit contact group'**
+  String get widgetsEditGroup;
+
+  /// No description provided for @widgetsChangeGroupsIos.
+  ///
+  /// In en, this message translates to:
+  /// **'To change the contact groups, touch and hold the widget on your home screen and tap Edit Widget.'**
+  String get widgetsChangeGroupsIos;
+
+  /// No description provided for @widgetsChangeGroupsAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'To change the contact groups, remove the widget and add it again.'**
+  String get widgetsChangeGroupsAndroid;
+
+  /// No description provided for @widgetsCurrentImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently showing'**
+  String get widgetsCurrentImages;
+
+  /// No description provided for @widgetsNoImages.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos right now'**
+  String get widgetsNoImages;
+
+  /// No description provided for @widgetsNoImagesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos your friends send to this widget will appear here.'**
+  String get widgetsNoImagesHint;
+
+  /// No description provided for @widgetsFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From {sender}'**
+  String widgetsFrom(String sender);
+
+  /// No description provided for @widgetsExpiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown for {duration} more'**
+  String widgetsExpiresIn(String duration);
+
+  /// No description provided for @widgetsDeleteImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete photo'**
+  String get widgetsDeleteImage;
+
+  /// No description provided for @widgetsDeleteImageConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the photo from every widget showing it. It cannot be undone.'**
+  String get widgetsDeleteImageConfirm;
+
+  /// No description provided for @widgetsDurationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String widgetsDurationHours(int hours);
+
+  /// No description provided for @widgetsDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String widgetsDurationMinutes(int minutes);
+
+  /// No description provided for @contactGroupUsedByWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get contactGroupUsedByWidget;
+
+  /// No description provided for @contactGroupUsedByWidgetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{A widget on your home screen shows photos from this group.} other{{count} widgets on your home screen show photos from this group.}}'**
+  String contactGroupUsedByWidgetSubtitle(int count);
+
+  /// No description provided for @contactGroupDeleteBlockedByWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This contact group is used by a widget on your home screen. Remove that widget first, then you can delete the group.} other{This contact group is used by {count} widgets on your home screen. Remove those widgets first, then you can delete the group.}}'**
+  String contactGroupDeleteBlockedByWidget(int count);
+
+  /// No description provided for @widgetsQueryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the widgets on your home screen, so this list may be out of date.'**
+  String get widgetsQueryFailed;
+
+  /// No description provided for @widgetsSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small widget'**
+  String get widgetsSizeSmall;
+
+  /// No description provided for @widgetsSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium widget'**
+  String get widgetsSizeMedium;
+
+  /// No description provided for @widgetsSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large widget'**
+  String get widgetsSizeLarge;
+
+  /// No description provided for @widgetsSizeUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget'**
+  String get widgetsSizeUnknown;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/twonly_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <ImageView
+        android:id="@+id/twonly_widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_image_description"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/twonly_widget_sender"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="8dp"
+        android:background="#66000000"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="3dp"
+        android:textColor="#FFFFFFFF"
+        android:textSize="11sp" />
+</FrameLayout>

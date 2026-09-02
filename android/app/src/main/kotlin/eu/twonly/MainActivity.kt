@@ -18,6 +18,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import io.flutter.plugin.common.MethodChannel
 import eu.twonly.notifications.NotificationTapChannel
+import eu.twonly.widget.WidgetRuntimeChannel
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "eu.twonly/photo_picker"
@@ -70,6 +71,7 @@ class MainActivity : FlutterFragmentActivity() {
 
 
         NotificationTapChannel.configure(flutterEngine, applicationContext)
+        WidgetRuntimeChannel.configure(flutterEngine, applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -104,6 +106,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         NotificationTapChannel.detach()
+        WidgetRuntimeChannel.detach()
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

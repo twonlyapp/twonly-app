@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/constants/keyvalue.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/visual/helpers/media_view_sizing.helper.dart';
 import 'package:twonly/src/visual/helpers/screenshot.helper.dart';
@@ -23,6 +26,7 @@ import 'package:twonly/src/visual/views/camera/share_image_editor_components/edi
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/editor_top_toolbar.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/image_item.dart';
 import 'package:twonly/src/visual/views/camera/share_image_editor_components/video_trimmer.dart';
+import 'package:twonly/src/visual/views/camera/share_image_editor_components/widget_share_explainer.dart';
 import 'package:video_player/video_player.dart';
 
 /// Lets the user edit a just taken (or shared) photo/video/gif and send it.
@@ -82,6 +86,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
   Timer? _imageLoadingTimer;
+  late final StreamSubscription<List<Group>> _widgetGroupsSubscription;
+  final GlobalKey _editorStackKey = GlobalKey();
+  final GlobalKey _widgetActionKey = GlobalKey();
+  Offset? _widgetActionCenter;
+  bool _widgetActionMeasurementScheduled = false;
+
+  bool _widgetRecipientAvailable = false;
+  bool _sendToWidget = false;
+  bool _updatingWidgetMode = false;
+  bool _widgetExplainerPreferenceLoaded = false;
+  bool _widgetExplainerDismissed = false;
+  bool _previousMediaSettingsCaptured = false;
+  int? _displayLimitBeforeWidget;
+  bool _requiresAuthBeforeWidget = false;
+
+  bool get _showWidgetExplainer =>
+      _widgetRecipientAvailable &&
+      _widgetExplainerPreferenceLoaded &&
+      !_widgetExplainerDismissed;
 
   MediaFileService get mediaService => widget.mediaFileService;
   MediaFile get media => widget.mediaFileService.mediaFile;
@@ -113,6 +136,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
+    _widgetGroupsSubscription = twonlyDB.groupsDao
+        .watchGroupsAllowedForWidgetShare()
+        .listen(_updateWidgetRecipientAvailability);
+    unawaited(_loadWidgetExplainerPreference());
+
     if (media.type == MediaType.image || media.type == MediaType.gif) {
       _loadInitialImage();
     }
@@ -133,7 +161,67 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
     );
     _imageLoadingTimer?.cancel();
+    unawaited(_widgetGroupsSubscription.cancel());
     super.dispose();
+  }
+
+  Future<void> _loadWidgetExplainerPreference() async {
+    final preference = await KeyValueStore.get(
+      KeyValueKeys.shareImageWidgetExplainer,
+    );
+    if (!mounted) return;
+    setState(() {
+      _widgetExplainerDismissed = preference?['dismissed'] == true;
+      _widgetExplainerPreferenceLoaded = true;
+    });
+  }
+
+  Future<void> _dismissWidgetExplainer() async {
+    setState(() => _widgetExplainerDismissed = true);
+    await KeyValueStore.put(
+      KeyValueKeys.shareImageWidgetExplainer,
+      const {'dismissed': true},
+    );
+  }
+
+  void _updateWidgetRecipientAvailability(List<Group> widgetGroups) {
+    final fixedGroupId = widget.sendToGroup?.groupId;
+    final recipientAvailable =
+        media.type == MediaType.image &&
+        (fixedGroupId == null
+            ? widgetGroups.isNotEmpty
+            : widgetGroups.any((group) => group.groupId == fixedGroupId));
+
+    if (mounted && recipientAvailable != _widgetRecipientAvailable) {
+      setState(() => _widgetRecipientAvailable = recipientAvailable);
+    }
+    if (!recipientAvailable && _sendToWidget && !_updatingWidgetMode) {
+      unawaited(_setSendToWidget(false));
+    }
+  }
+
+  void _scheduleWidgetActionMeasurement() {
+    if (_widgetActionMeasurementScheduled) return;
+    _widgetActionMeasurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _widgetActionMeasurementScheduled = false;
+      if (!mounted || !_showWidgetExplainer) return;
+
+      final actionBox =
+          _widgetActionKey.currentContext?.findRenderObject() as RenderBox?;
+      final stackBox =
+          _editorStackKey.currentContext?.findRenderObject() as RenderBox?;
+      if (actionBox == null || stackBox == null || !actionBox.hasSize) return;
+
+      final topLeft = actionBox.localToGlobal(
+        Offset.zero,
+        ancestor: stackBox,
+      );
+      final center = topLeft + actionBox.size.center(Offset.zero);
+      if (_widgetActionCenter != center) {
+        setState(() => _widgetActionCenter = center);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -286,6 +374,51 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _setSendToWidget(bool enabled) async {
+    if (_updatingWidgetMode || (enabled && !_widgetRecipientAvailable)) return;
+
+    if (widget.sendToGroup == null) {
+      selectedGroupIds.clear();
+    }
+
+    if (enabled) {
+      _displayLimitBeforeWidget = media.displayLimitInMilliseconds;
+      _requiresAuthBeforeWidget = media.requiresAuthentication;
+      _previousMediaSettingsCaptured = true;
+    }
+
+    setState(() {
+      _sendToWidget = enabled;
+      _updatingWidgetMode = true;
+    });
+
+    try {
+      if (enabled) {
+        if (media.displayLimitInMilliseconds != null) {
+          await mediaService.setDisplayLimit(null);
+        }
+        if (media.requiresAuthentication) {
+          await mediaService.setRequiresAuth(false);
+        }
+      } else if (_previousMediaSettingsCaptured) {
+        if (media.displayLimitInMilliseconds != _displayLimitBeforeWidget) {
+          await mediaService.setDisplayLimit(_displayLimitBeforeWidget);
+        }
+        if (media.requiresAuthentication != _requiresAuthBeforeWidget) {
+          await mediaService.setRequiresAuth(_requiresAuthBeforeWidget);
+        }
+        _previousMediaSettingsCaptured = false;
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _updatingWidgetMode = false);
+        if (_sendToWidget && !_widgetRecipientAvailable) {
+          unawaited(_setSendToWidget(false));
+        }
+      }
+    }
+  }
+
   Future<void> _editDisplayTime() async {
     await showDisplayTimePicker(
       context,
@@ -352,6 +485,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           mediaStoreFuture: mediaStoreFuture,
           mediaFileService: mediaService,
           additionalData: getAdditionalData(),
+          sendToWidget: _sendToWidget,
         ),
       ),
     );
@@ -381,6 +515,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaId: mediaService.mediaFile.mediaId,
       groupIds: [widget.sendToGroup!.groupId],
       additionalMessageData: getAdditionalData()?.writeToBuffer(),
+      widgetOnly: _sendToWidget,
     );
 
     if (mounted) {
@@ -409,6 +544,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   @override
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    if (_showWidgetExplainer) _scheduleWidgetActionMeasurement();
+
+    final double widgetExplainerWidth = math.min(
+      340,
+      MediaQuery.sizeOf(context).width - 82,
+    );
+    final widgetActionCenter = _widgetActionCenter;
 
     return PopScope<bool?>(
       canPop: false,
@@ -422,6 +564,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             : Colors.white.withAlpha(0),
         resizeToAvoidBottomInset: false,
         body: Stack(
+          key: _editorStackKey,
           fit: StackFit.expand,
           children: [
             GestureDetector(
@@ -438,7 +581,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   mediaService: mediaService,
                   sendToGroup: widget.sendToGroup,
                   isLoadingImage: loadingImage,
-                  isSending: sendingOrLoadingImage,
+                  isSending: sendingOrLoadingImage || _updatingWidgetMode,
                   storeImageAsOriginal: storeImageAsOriginal,
                   onAddMoreRecipients: pushShareImageView,
                   onSend: () async {
@@ -484,6 +627,21 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 ),
               ),
             ),
+            if (_showWidgetExplainer && widgetActionCenter != null)
+              Positioned(
+                left: math.max(
+                  12,
+                  widgetActionCenter.dx + 24 - widgetExplainerWidth,
+                ),
+                top: widgetActionCenter.dy,
+                width: widgetExplainerWidth,
+                child: FractionalTranslation(
+                  translation: const Offset(0, -0.5),
+                  child: WidgetShareExplainer(
+                    onDismiss: _dismissWidgetExplainer,
+                  ),
+                ),
+              ),
             Positioned(
               right: 6,
               top: 100,
@@ -498,6 +656,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     onEditDisplayTime: _editDisplayTime,
                     onToggleAudio: _toggleAudio,
                     onToggleRequiresAuth: _toggleRequiresAuth,
+                    sendToWidget: _sendToWidget,
+                    showWidgetOption: _widgetRecipientAvailable,
+                    highlightWidgetOption: _showWidgetExplainer,
+                    isUpdatingWidgetMode: _updatingWidgetMode,
+                    widgetActionKey: _widgetActionKey,
+                    onToggleSendToWidget: () =>
+                        _setSendToWidget(!_sendToWidget),
                     canTrim: _canTrim,
                     trimmerVisible: _trimmerVisible,
                     onToggleTrimmer: () =>

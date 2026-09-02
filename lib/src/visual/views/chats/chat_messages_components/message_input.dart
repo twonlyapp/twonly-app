@@ -165,7 +165,8 @@ class _MessageInputState extends State<MessageInput> {
     // The periodic announcement is what keeps the indicator alive, but at its
     // cadence the first keystroke would take seconds to reach the other side.
     // That one is announced directly and the timer carries it from there.
-    final wasIdle = _lastTextChangeTime == null ||
+    final wasIdle =
+        _lastTextChangeTime == null ||
         now.difference(_lastTextChangeTime!) > typingIndicatorInterval;
     _lastTextChangeTime = now;
     if (wasIdle &&
@@ -257,6 +258,7 @@ class _MessageInputState extends State<MessageInput> {
     await RustApi.sendMediaToGroups(
       mediaId: mediaFileService.mediaFile.mediaId,
       groupIds: [widget.group.groupId],
+      widgetOnly: false,
     );
   }
 

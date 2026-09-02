@@ -16,6 +16,11 @@ char *twonly_notification_process(
 
 char *twonly_notification_acknowledge(const char *event_ids_json);
 
+/* Settles the work deferred behind the alert — media downloads, widget upkeep,
+   and closing the background socket. Call it only after the batch from
+   `twonly_notification_process` has been rendered; skipping it is safe. */
+char *twonly_notification_finalize(uint64_t deadline_ms);
+
 void twonly_notification_string_free(char *pointer);
 
 /* Runs one maintenance job: preparing a single media file when `media_id` is

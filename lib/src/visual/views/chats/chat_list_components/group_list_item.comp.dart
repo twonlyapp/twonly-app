@@ -237,7 +237,7 @@ class _UserListItem extends State<GroupListItemComp> {
     }
 
     final msgs = _previewMessages
-        .where((x) => x.type == MessageType.media.name)
+        .where((x) => x.type == MessageType.media.name && !x.isWidgetMedia)
         .toList();
     if (msgs.isNotEmpty &&
         msgs.first.type == MessageType.media.name &&
@@ -291,7 +291,7 @@ class _UserListItem extends State<GroupListItemComp> {
 
     if (_hasNonOpenedMediaFile) {
       final msgs = _previewMessages
-          .where((x) => x.type == MessageType.media.name)
+          .where((x) => x.type == MessageType.media.name && !x.isWidgetMedia)
           .toList();
       final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
         msgs.first.mediaId!,
@@ -313,7 +313,10 @@ class _UserListItem extends State<GroupListItemComp> {
       }
     }
     if (!mounted) return;
-    await context.push(Routes.chatsMessages(widget.group.groupId));
+    await context.push(
+      Routes.chatsMessages(widget.group.groupId),
+      extra: widget.group,
+    );
   }
 
   @override
@@ -434,6 +437,7 @@ class _UserListItem extends State<GroupListItemComp> {
                       if (_hasNonOpenedMediaFile) {
                         context.push(
                           Routes.chatsMessages(widget.group.groupId),
+                          extra: widget.group,
                         );
                       } else {
                         context.push(

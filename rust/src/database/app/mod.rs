@@ -16,7 +16,7 @@ mod legacy_import;
 pub mod tables;
 
 pub const APP_DATABASE_FILE: &str = "app_db.sqlite";
-pub const APP_SCHEMA_VERSION: i64 = 7;
+pub const APP_SCHEMA_VERSION: i64 = 8;
 
 /// User-owned application tables in the current Rust schema. Rust-only outbox
 /// tables are deliberately absent because they are reconstructed locally.

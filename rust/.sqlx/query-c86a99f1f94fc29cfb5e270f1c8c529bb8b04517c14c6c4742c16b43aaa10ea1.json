@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE contacts SET widget_sharing_allowed = ? WHERE user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c86a99f1f94fc29cfb5e270f1c8c529bb8b04517c14c6c4742c16b43aaa10ea1"
+}

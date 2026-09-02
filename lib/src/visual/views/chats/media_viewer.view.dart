@@ -84,7 +84,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     super.initState();
     _currentMediaSender = widget.group.groupName;
 
-    if (widget.initialMessage != null) {
+    if (widget.initialMessage != null &&
+        !widget.initialMessage!.isWidgetMedia) {
       allMediaFiles = [widget.initialMessage!];
     }
 
@@ -137,6 +138,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         .listen((messages) async {
           await _messageUpdateLock.protect(() async {
             for (final msg in messages) {
+              if (msg.isWidgetMedia) {
+                continue;
+              }
               if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
                 continue;
               }
@@ -210,7 +214,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           if (group != null &&
               group.draftMessage != null &&
               group.draftMessage != '') {
-            context.replace(Routes.chatsMessages(group.groupId));
+            context.replace(
+              Routes.chatsMessages(group.groupId),
+              extra: group,
+            );
           } else {
             Navigator.pop(context);
           }

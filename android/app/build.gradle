@@ -86,4 +86,6 @@ dependencies {
   implementation 'androidx.media3:media3-effect:1.11.0'
   implementation 'androidx.media3:media3-common:1.11.0'
   implementation 'androidx.core:core-splashscreen:1.0.1'
+  // Material 3 components for the native widget configuration screen.
+  implementation 'com.google.android.material:material:1.13.0'
 }

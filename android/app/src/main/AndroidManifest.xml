@@ -106,6 +106,20 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".widget.TwonlyWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/twonly_widget_info" />
+        </receiver>
+        <activity
+            android:name=".widget.TwonlyWidgetConfigureActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Twonly.WidgetConfigure" />
         <meta-data
             android:name="eu.twonly.service.TWONLY_LOGO"
             android:resource="@drawable/ic_launcher_foreground" />

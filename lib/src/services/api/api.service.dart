@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:twonly/core/bridge/api.dart' as rust_api;
 import 'package:twonly/globals.dart';
 import 'package:twonly/locator.dart';
+import 'package:twonly/src/services/home_widget.service.dart';
 import 'package:twonly/src/services/memories/memories_cloud.service.dart';
 import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -42,6 +43,11 @@ class ApiService {
     if (event.kind == ApiEventKind.appOutdated ||
         event.kind == ApiEventKind.newDeviceRegistered) {
       permanentRejection = event.kind;
+    }
+    if (event.kind == ApiEventKind.widgetMediaReceived) {
+      // Rust has already rewritten the manifest; the home screen still shows
+      // what the widgets drew before it arrived.
+      unawaited(HomeWidgetService.refresh());
     }
   }
 

@@ -11,6 +11,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import eu.twonly.MainActivity
 import eu.twonly.R
+import eu.twonly.widget.TwonlyWidgetProvider
 import java.util.Locale
 import org.json.JSONArray
 
@@ -26,16 +27,17 @@ class TwonlyNotificationWorker(
                     directory,
                     directory,
                     Locale.getDefault().toLanguageTag(),
-                    RUST_DEADLINE_MS,
+                    PROCESS_DEADLINE_MS,
                 ),
             )
+            if (response.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
             ensureNotificationChannel(applicationContext)
             val batch = response.batch
             if (!response.ok || batch == null) {
                 // Rust could not reach the mailbox. Show the generic alert so a
                 // high-priority wake-up still produces a notification, and retry.
                 response.fallback?.let(::showFallback)
-                return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.success()
+                return settle(retry = true)
             }
 
             val manager = NotificationManagerCompat.from(applicationContext)
@@ -52,15 +54,29 @@ class TwonlyNotificationWorker(
             // An empty batch is the normal outcome of a duplicate wake-up or of
             // traffic that is not user visible, so it must not retry. Only an
             // undrained mailbox is worth another attempt.
-            if (!batch.completed && runAttemptCount < MAX_RETRIES) {
-                Result.retry()
-            } else {
-                Result.success()
-            }
+            settle(retry = !batch.completed)
         } catch (error: Throwable) {
             Log.e(TAG, "Native notification processing failed", error)
             if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.failure()
         }
+    }
+
+    // Ends the attempt, running the deferred wake-up work first when no further
+    // attempt is coming. The notification is already on screen by then, so media
+    // downloads, widget upkeep, and the socket shutdown no longer sit between
+    // the message and the alert. A retry skips it and keeps the connection for
+    // the next attempt.
+    private fun settle(retry: Boolean): Result {
+        if (retry && runAttemptCount < MAX_RETRIES) return Result.retry()
+        try {
+            val finalized = NativeNotificationResponse.parse(
+                NativeNotificationBridge.finalizeWakeup(FINALIZE_DEADLINE_MS),
+            )
+            if (finalized.widgetRefresh) TwonlyWidgetProvider.refreshAll(applicationContext)
+        } catch (error: Throwable) {
+            Log.w(TAG, "Deferred notification maintenance failed", error)
+        }
+        return Result.success()
     }
 
     private fun showAddition(
@@ -122,6 +138,10 @@ class TwonlyNotificationWorker(
         const val TAG = "TwonlyNotification"
         const val FALLBACK_ID = 0x74776F
         const val MAX_RETRIES = 2
-        const val RUST_DEADLINE_MS = 25_000L
+
+        // Split from the old single 25s budget: the drain only has to produce
+        // the batch, and everything deferred behind it gets its own window.
+        const val PROCESS_DEADLINE_MS = 20_000L
+        const val FINALIZE_DEADLINE_MS = 25_000L
     }
 }
