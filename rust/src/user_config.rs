@@ -305,6 +305,9 @@ pub struct UserConfig {
     #[serde(default)]
     #[frb(non_final)]
     pub hide_memories_backup_promo: bool,
+    #[serde(default)]
+    #[frb(non_final)]
+    pub hide_widget_share_explainer: bool,
     #[serde(default = "defaults::true_value")]
     #[frb(non_final)]
     pub update_fcm_token: bool,

@@ -6774,6 +6774,7 @@ impl SseDecode for crate::user_config::UserConfig {
         let mut var_lastChangeLogHash = <Option<Vec<u8>>>::sse_decode(deserializer);
         let mut var_hideChangeLog = <bool>::sse_decode(deserializer);
         let mut var_hideMemoriesBackupPromo = <bool>::sse_decode(deserializer);
+        let mut var_hideWidgetShareExplainer = <bool>::sse_decode(deserializer);
         let mut var_updateFcmToken = <bool>::sse_decode(deserializer);
         let mut var_canUseLoginTokenForAuth = <bool>::sse_decode(deserializer);
         let mut var_twonlySafeBackup =
@@ -6838,6 +6839,7 @@ impl SseDecode for crate::user_config::UserConfig {
             last_change_log_hash: var_lastChangeLogHash,
             hide_change_log: var_hideChangeLog,
             hide_memories_backup_promo: var_hideMemoriesBackupPromo,
+            hide_widget_share_explainer: var_hideWidgetShareExplainer,
             update_fcm_token: var_updateFcmToken,
             can_use_login_token_for_auth: var_canUseLoginTokenForAuth,
             twonly_safe_backup: var_twonlySafeBackup,
@@ -7922,6 +7924,9 @@ impl flutter_rust_bridge::IntoDart for crate::user_config::UserConfig {
             self.last_change_log_hash.into_into_dart().into_dart(),
             self.hide_change_log.into_into_dart().into_dart(),
             self.hide_memories_backup_promo.into_into_dart().into_dart(),
+            self.hide_widget_share_explainer
+                .into_into_dart()
+                .into_dart(),
             self.update_fcm_token.into_into_dart().into_dart(),
             self.can_use_login_token_for_auth
                 .into_into_dart()
@@ -8850,6 +8855,7 @@ impl SseEncode for crate::user_config::UserConfig {
         <Option<Vec<u8>>>::sse_encode(self.last_change_log_hash, serializer);
         <bool>::sse_encode(self.hide_change_log, serializer);
         <bool>::sse_encode(self.hide_memories_backup_promo, serializer);
+        <bool>::sse_encode(self.hide_widget_share_explainer, serializer);
         <bool>::sse_encode(self.update_fcm_token, serializer);
         <bool>::sse_encode(self.can_use_login_token_for_auth, serializer);
         <Option<crate::user_config::TwonlySafeBackup>>::sse_encode(

@@ -152,6 +152,7 @@ class UserConfig {
   Uint8List? lastChangeLogHash;
   bool hideChangeLog;
   bool hideMemoriesBackupPromo;
+  bool hideWidgetShareExplainer;
   bool updateFcmToken;
   bool canUseLoginTokenForAuth;
   TwonlySafeBackup? twonlySafeBackup;
@@ -222,6 +223,7 @@ class UserConfig {
     this.lastChangeLogHash,
     required this.hideChangeLog,
     required this.hideMemoriesBackupPromo,
+    required this.hideWidgetShareExplainer,
     required this.updateFcmToken,
     required this.canUseLoginTokenForAuth,
     this.twonlySafeBackup,
@@ -286,6 +288,7 @@ class UserConfig {
       lastChangeLogHash.hashCode ^
       hideChangeLog.hashCode ^
       hideMemoriesBackupPromo.hashCode ^
+      hideWidgetShareExplainer.hashCode ^
       updateFcmToken.hashCode ^
       canUseLoginTokenForAuth.hashCode ^
       twonlySafeBackup.hashCode ^
@@ -359,6 +362,7 @@ class UserConfig {
           lastChangeLogHash == other.lastChangeLogHash &&
           hideChangeLog == other.hideChangeLog &&
           hideMemoriesBackupPromo == other.hideMemoriesBackupPromo &&
+          hideWidgetShareExplainer == other.hideWidgetShareExplainer &&
           updateFcmToken == other.updateFcmToken &&
           canUseLoginTokenForAuth == other.canUseLoginTokenForAuth &&
           twonlySafeBackup == other.twonlySafeBackup &&
