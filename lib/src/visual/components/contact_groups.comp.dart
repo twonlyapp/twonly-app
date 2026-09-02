@@ -171,11 +171,22 @@ class _BadgeMarqueeState extends State<_BadgeMarquee> {
     WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(_scroll()));
   }
 
+  /// The scroll extent is only known once the scroll view has been laid out,
+  /// which has not necessarily happened when the first frame callback runs.
+  bool get _ready =>
+      mounted &&
+      _controller.hasClients &&
+      _controller.position.hasContentDimensions;
+
   Future<void> _scroll() async {
     if (_scrolling) return;
     _scrolling = true;
     try {
       while (mounted && _controller.hasClients) {
+        if (!_ready) {
+          if (!await _wait(_pause)) return;
+          continue;
+        }
         final distance = _controller.position.maxScrollExtent;
         if (distance <= 0) return;
         final duration = Duration(
@@ -188,7 +199,6 @@ class _BadgeMarqueeState extends State<_BadgeMarquee> {
           curve: Curves.linear,
         );
         if (!await _wait(_pause)) return;
-        if (!mounted || !_controller.hasClients) return;
         await _controller.animateTo(
           0,
           duration: duration,

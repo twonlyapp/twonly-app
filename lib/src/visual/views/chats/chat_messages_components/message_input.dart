@@ -52,15 +52,25 @@ class MessageInput extends StatefulWidget {
 /// between two announcements.
 const _composingIdleTimeout = Duration(seconds: 6);
 
+/// How far up the finger has to travel before it sits on the lock pill that
+/// floats above the microphone. The pill is drawn 120px above the button and
+/// is 60px tall, so its lower edge is roughly this far from the grab point.
+const _lockHintOffset = 70.0;
+
+/// How far up the finger has to travel for the recording to actually latch.
+const _lockOffset = 100.0;
+
 enum RecordingState { none, recording, finished }
 
-class _MessageInputState extends State<MessageInput> {
+class _MessageInputState extends State<MessageInput>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _textFieldController;
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _emojiShowing = false;
   bool _showSparks = false;
   bool _audioRecordingLock = false;
+  bool _overLockIcon = false;
   int _currentDuration = 0;
   double _cancelSlideOffset = 0;
   Offset _recordingOffset = Offset.zero;
@@ -70,6 +80,10 @@ class _MessageInputState extends State<MessageInput> {
   int? _contactId;
   Timer? _recordingTimer;
   DateTime? _recordingStartTime;
+
+  /// Pulses the microphone icon while a recording is running so the composer
+  /// reads as live even when the waveform is off screen.
+  late final AnimationController _recordingBlink;
 
   void _sendMessage() {
     final text = _textFieldController.text;
@@ -128,6 +142,7 @@ class _MessageInputState extends State<MessageInput> {
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
     _recordingTimer?.cancel();
+    _recordingBlink.dispose();
     recorderController.dispose();
     _nextTypingIndicator?.cancel();
     widget.composing.value = false;
@@ -149,6 +164,11 @@ class _MessageInputState extends State<MessageInput> {
 
   void _initializeControllers() {
     recorderController = RecorderController();
+    _recordingBlink = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+      lowerBound: 0.25,
+    );
   }
 
   /// Whether the composer counts as being typed in right now.
@@ -204,7 +224,9 @@ class _MessageInputState extends State<MessageInput> {
     setState(() {
       _recordingState = RecordingState.recording;
       _currentDuration = 0;
+      _overLockIcon = false;
     });
+    _recordingBlink.repeat(reverse: true);
     _recordingStartTime = clock.now();
     _recordingTimer?.cancel();
     _recordingTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -232,9 +254,11 @@ class _MessageInputState extends State<MessageInput> {
   Future<void> _stopAudioRecording() async {
     _recordingTimer?.cancel();
     _recordingTimer = null;
+    _recordingBlink.stop();
     await HapticFeedback.heavyImpact();
     setState(() {
       _audioRecordingLock = false;
+      _overLockIcon = false;
       _cancelSlideOffset = 0;
       _recordingState = RecordingState.none;
     });
@@ -265,8 +289,10 @@ class _MessageInputState extends State<MessageInput> {
   Future<void> _cancelAudioRecording() async {
     _recordingTimer?.cancel();
     _recordingTimer = null;
+    _recordingBlink.stop();
     setState(() {
       _audioRecordingLock = false;
+      _overLockIcon = false;
       _cancelSlideOffset = 0;
       _recordingState = RecordingState.none;
     });
@@ -422,17 +448,20 @@ class _MessageInputState extends State<MessageInput> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(
+                                    Padding(
+                                      padding: const EdgeInsets.only(
                                         top: 14,
                                         bottom: 14,
                                         left: 12,
                                         right: 8,
                                       ),
-                                      child: FaIcon(
-                                        FontAwesomeIcons.microphone,
-                                        size: 20,
-                                        color: Colors.red,
+                                      child: FadeTransition(
+                                        opacity: _recordingBlink,
+                                        child: const FaIcon(
+                                          FontAwesomeIcons.microphone,
+                                          size: 20,
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
@@ -475,7 +504,8 @@ class _MessageInputState extends State<MessageInput> {
                           ],
                         ),
                       ),
-                      if (_textFieldController.text == '')
+                      if (_textFieldController.text == '' &&
+                          _recordingState == RecordingState.none)
                         IconButton(
                           icon: const FaIcon(FontAwesomeIcons.camera),
                           onPressed: () {
@@ -493,9 +523,19 @@ class _MessageInputState extends State<MessageInput> {
                         GestureDetector(
                           onLongPressMoveUpdate: (details) {
                             if (_audioRecordingLock) return;
-                            if (_recordingOffset.dy -
-                                    details.localPosition.dy >=
-                                100) {
+                            final upwards =
+                                _recordingOffset.dy - details.localPosition.dy;
+                            // Nudge once when the finger reaches the lock, so
+                            // it is clear the gesture will latch before the
+                            // user commits to it.
+                            if (upwards >= _lockHintOffset && !_overLockIcon) {
+                              _overLockIcon = true;
+                              HapticFeedback.selectionClick();
+                            } else if (upwards < _lockHintOffset &&
+                                _overLockIcon) {
+                              _overLockIcon = false;
+                            }
+                            if (upwards >= _lockOffset) {
                               HapticFeedback.heavyImpact();
                               setState(() {
                                 _audioRecordingLock = true;

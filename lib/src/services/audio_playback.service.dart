@@ -74,6 +74,9 @@ class AudioPlayback {
   /// Extracted waveform, empty until the extraction finished.
   List<double> waveformData;
 
+  /// Playback speed, kept here so it survives a rebuild of the widget.
+  double rate = 1;
+
   int _refCount = 0;
   Future<void>? _preparing;
 
@@ -81,6 +84,11 @@ class AudioPlayback {
 
   /// Resolves once the player is prepared and the waveform is extracted.
   Future<void> get ready => _preparing ?? Future<void>.value();
+
+  Future<void> setRate(double newRate) async {
+    rate = newRate;
+    await controller.setRate(newRate);
+  }
 
   Future<void> _prepare(int noOfSamples) {
     return _preparing ??= () async {

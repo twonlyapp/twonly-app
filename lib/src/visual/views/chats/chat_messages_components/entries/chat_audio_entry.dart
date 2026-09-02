@@ -10,6 +10,7 @@ import 'package:twonly/src/services/audio_playback.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/native.notifications.dart';
 import 'package:twonly/src/visual/elements/better_text.element.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/entries/friendly_message_time.comp.dart';
 import 'package:twonly/src/visual/views/chats/chat_messages_components/message_send_state_icon.dart';
@@ -156,6 +157,7 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
   static const double _cursorWidth = 2.5;
   static const double _cursorHeight = 20;
   static const double _playSlotWidth = 34;
+  static const List<double> _rates = [1, 1.5, 2, 0.5];
   static const _waveStyle = PlayerWaveStyle(
     spacing: 4,
     waveThickness: 2.5,
@@ -260,6 +262,14 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
     super.dispose();
   }
 
+  Future<void> _cycleRate() async {
+    final playback = _playback;
+    if (playback == null) return;
+    final next = _rates[(_rates.indexOf(playback.rate) + 1) % _rates.length];
+    await playback.setRate(next);
+    if (mounted) setState(() {});
+  }
+
   Future<void> _togglePlayback() async {
     final playback = _playback;
     if (playback == null) return;
@@ -348,33 +358,46 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
             ),
           ],
         ),
-        Row(
-          children: [
-            SizedBox(
-              width: _playSlotWidth,
-              child: Text(
-                formatMsToMinSec(remaining),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+        SizedBox(
+          height: 20,
+          child: Row(
+            children: [
+              SizedBox(
+                width: _playSlotWidth,
+                child: Text(
+                  formatMsToMinSec(remaining),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            if (widget.trailing != null)
+              const SizedBox(width: 10),
               SizedBox(
                 width: _waveWidth,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: widget.trailing,
+                child: Row(
+                  children: [
+                    if (_isPlaying && playback != null)
+                      MyButton(
+                        variant: MyButtonVariant.secondaryTiny,
+                        onPressed: () => unawaited(_cycleRate()),
+                        child: Text(_formatRate(playback.rate)),
+                      ),
+                    const Spacer(),
+                    ?widget.trailing,
+                  ],
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
+
+  String _formatRate(double rate) =>
+      rate == rate.roundToDouble() ? '${rate.toInt()}x' : '${rate}x';
 
   Future<void> _notifyMessageOpened() async {
     final senderId = widget.message.senderId;
