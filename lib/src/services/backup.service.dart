@@ -264,12 +264,15 @@ class BackupService {
     return BackupRecovery.fromJson(stateJson);
   }
 
-  static Future<RecoveryError?> _nextBackupStage() async {
+  static Future<RecoveryError?> _nextBackupStage({
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     return _protected.protect(() async {
       final recoveryData = await getBackupRecoveryData();
       if (recoveryData == null) return null;
 
       if (recoveryData.state == BackupRecoveryState.identityBackupStarted) {
+        onProgress?.call(RecoveryProgress.restoringIdentity);
         // First start to download the identity to restore the KeyManager
         final backupKeys = await RustBackupIdentity.getBackupPasswordKeys(
           userId: recoveryData.userId,
@@ -304,6 +307,7 @@ class BackupService {
 
       if (recoveryData.state == BackupRecoveryState.archiveBackupStarted) {
         // The KeyManager was restored successfully, restore the archive now.
+        onProgress?.call(RecoveryProgress.downloadingArchive);
         try {
           final downloadToken =
               await RustBackupArchive.getBackupDownloadToken();
@@ -325,6 +329,8 @@ class BackupService {
           if (backupArchive.$2 != null || backupArchive.$1 == null) {
             return backupArchive.$2;
           }
+
+          onProgress?.call(RecoveryProgress.extractingData);
 
           final archiveFile = File('${AppEnvironment.cacheDir}/archive.bin')
             ..writeAsBytesSync(backupArchive.$1!);
@@ -348,7 +354,9 @@ class BackupService {
     });
   }
 
-  static Future<RecoveryError?> tryToReinstallTheArchive() async {
+  static Future<RecoveryError?> tryToReinstallTheArchive({
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     final userId = await RustKeyManager.getUserId();
     if (userId == null) return null;
 
@@ -358,13 +366,15 @@ class BackupService {
       password: '',
     )..state = BackupRecoveryState.archiveBackupStarted;
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<RecoveryError?> startFullBackupRecovery(
     String username,
-    String password,
-  ) async {
+    String password, {
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
+    onProgress?.call(RecoveryProgress.resolvingAccount);
     late final int userId;
     try {
       userId = await RustApi.getUserIdFromUsername(username: username);
@@ -381,27 +391,29 @@ class BackupService {
 
     await deleteLocalUserData(removeCredentials: true);
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<RecoveryError?> startPasswordlessBackupRecovery(
     int userId,
     String username,
-    Uint8List keyManagerBytes,
-  ) async {
+    Uint8List keyManagerBytes, {
+    void Function(RecoveryProgress)? onProgress,
+  }) async {
     final state = BackupRecovery(
       username: username,
       password: '',
       userId: userId,
     )..state = BackupRecoveryState.archiveBackupStarted;
 
+    onProgress?.call(RecoveryProgress.restoringIdentity);
     await deleteLocalUserData(removeCredentials: true);
 
     // Import KeyManager keys into secure storage & in-memory key manager
     await RustKeyManager.importSerialized(serializedBytes: keyManagerBytes);
 
     await KeyValueStore.put(KeyValueKeys.backupRecoveryState, state.toJson());
-    return _nextBackupStage();
+    return _nextBackupStage(onProgress: onProgress);
   }
 
   static Future<(Uint8List?, RecoveryError?)> _downloadBackup(
@@ -440,4 +452,13 @@ enum RecoveryError {
   tryAgainLater,
   noInternet,
   unkownError,
+}
+
+/// Granular steps of a backup recovery, reported via the `onProgress`
+/// callback so the UI can show the user what is currently happening.
+enum RecoveryProgress {
+  resolvingAccount,
+  restoringIdentity,
+  downloadingArchive,
+  extractingData,
 }

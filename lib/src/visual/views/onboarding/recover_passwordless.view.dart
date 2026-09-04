@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hashlib/random.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/core/bridge/wrapper.dart' show RustUtils;
 import 'package:twonly/locator.dart';
@@ -27,6 +26,7 @@ import 'package:twonly/src/visual/elements/contact_chip.element.dart';
 import 'package:twonly/src/visual/elements/my_button.element.dart';
 import 'package:twonly/src/visual/elements/my_input.element.dart';
 import 'package:twonly/src/visual/views/onboarding/components/animated_bell_icon.comp.dart';
+import 'package:twonly/src/visual/views/onboarding/recovery_progress.view.dart';
 
 class RecoverPasswordless extends StatefulWidget {
   const RecoverPasswordless({this.initialEmailToken, super.key});
@@ -398,31 +398,28 @@ class _RecoverPasswordlessState extends State<RecoverPasswordless> {
 
       final recoveryData = RecoveryData.fromBuffer(recoveryDataBytes);
 
-      // Start full passwordless recovery
-      final error = await BackupService.startPasswordlessBackupRecovery(
-        recoveryData.userId.toInt(),
-        shares.first.myDisplayName,
-        Uint8List.fromList(recoveryData.keyManager),
-      );
-
       if (!mounted) return;
 
-      if (error != null) {
-        showSnackbar(
-          context,
-          error.toLocalizedString(context),
-        );
-        setState(() {
-          _isRecovering = false;
-        });
-        return;
-      }
-
-      // Successful! Restart the app to apply restored keymanager/archive database
-      await Restart.restartApp(
-        notificationTitle: context.lang.recoverSuccessTitle,
-        notificationBody: context.lang.recoverSuccessBody,
-        forceKill: true,
+      // Start full passwordless recovery. The progress view reports every
+      // step and restarts the app once the recovery succeeded.
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => RecoveryProgressView(
+            username: shares.first.myDisplayName,
+            steps: const [
+              RecoveryProgress.restoringIdentity,
+              RecoveryProgress.downloadingArchive,
+              RecoveryProgress.extractingData,
+            ],
+            runRecovery: (onProgress) =>
+                BackupService.startPasswordlessBackupRecovery(
+                  recoveryData.userId.toInt(),
+                  shares.first.myDisplayName,
+                  Uint8List.fromList(recoveryData.keyManager),
+                  onProgress: onProgress,
+                ),
+          ),
+        ),
       );
     } catch (e) {
       Log.error('Failed to recover passwordless: $e');

@@ -194,6 +194,18 @@ abstract class AppLocalizations {
   /// **'Send to'**
   String get cameraPreviewSendTo;
 
+  /// No description provided for @cameraPermissionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly needs access to the camera and microphone.'**
+  String get cameraPermissionsBody;
+
+  /// No description provided for @cameraPermissionsRequestButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Request permissions'**
+  String get cameraPermissionsRequestButton;
+
   /// No description provided for @shareImageTitle.
   ///
   /// In en, this message translates to:
@@ -3355,6 +3367,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Click here to open the app again'**
   String get recoverSuccessBody;
+
+  /// No description provided for @recoverProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring your backup'**
+  String get recoverProgressTitle;
+
+  /// No description provided for @recoverProgressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This might take a moment, please keep the app open.'**
+  String get recoverProgressSubtitle;
+
+  /// No description provided for @recoverProgressResolvingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying account'**
+  String get recoverProgressResolvingAccount;
+
+  /// No description provided for @recoverProgressRestoringIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring your identity'**
+  String get recoverProgressRestoringIdentity;
+
+  /// No description provided for @recoverProgressDownloadingArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading and decrypting messages and contacts'**
+  String get recoverProgressDownloadingArchive;
+
+  /// No description provided for @recoverProgressExtractingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting data'**
+  String get recoverProgressExtractingData;
+
+  /// No description provided for @recoverProgressFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Finishing up'**
+  String get recoverProgressFinishing;
 
   /// No description provided for @iosRecoveryWelcomeBack.
   ///

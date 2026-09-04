@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/src/services/user.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/visual/elements/my_button.element.dart';
 
 class PermissionHandlerView extends StatefulWidget {
   const PermissionHandlerView({
@@ -124,32 +126,44 @@ class PermissionHandlerViewState extends State<PermissionHandlerView>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(100),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'twonly needs access to the camera and microphone.',
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 100,
+                right: 100,
+                top: 100,
+                bottom: 50,
+              ),
+              child: Text(
+                context.lang.cameraPermissionsBody,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 50),
-              FilledButton.icon(
-                label: const Text('Request permissions'),
-                icon: const Icon(Icons.perm_camera_mic),
-                onPressed: () async {
-                  try {
-                    await permissionServices();
-                    if (await checkPermissions()) {
-                      _handleSuccess();
-                    }
-                  } catch (e) {
-                    Log.error(e);
+            ),
+            MyButton(
+              variant: MyButtonVariant.primaryMiddle,
+              onPressed: () async {
+                try {
+                  await permissionServices();
+                  if (await checkPermissions()) {
+                    _handleSuccess();
                   }
-                },
+                } catch (e) {
+                  Log.error(e);
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.perm_camera_mic, size: 18),
+                  const SizedBox(width: 8),
+                  Text(context.lang.cameraPermissionsRequestButton),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

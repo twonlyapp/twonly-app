@@ -63,6 +63,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cameraPreviewSendTo => 'Senden an';
 
   @override
+  String get cameraPermissionsBody =>
+      'twonly benötigt Zugriff auf die Kamera und das Mikrofon.';
+
+  @override
+  String get cameraPermissionsRequestButton => 'Berechtigungen anfragen';
+
+  @override
   String get shareImageTitle => 'Teilen mit';
 
   @override
@@ -1930,6 +1937,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoverSuccessBody => 'Klicke hier, um die App wieder zu öffnen';
+
+  @override
+  String get recoverProgressTitle => 'Backup wird wiederhergestellt';
+
+  @override
+  String get recoverProgressSubtitle =>
+      'Dies kann einen Moment dauern, bitte lasse die App geöffnet.';
+
+  @override
+  String get recoverProgressResolvingAccount => 'Konto wird überprüft';
+
+  @override
+  String get recoverProgressRestoringIdentity =>
+      'Identität wird wiederhergestellt';
+
+  @override
+  String get recoverProgressDownloadingArchive =>
+      'Nachrichten und Kontakte werden heruntergeladen und entschlüsselt';
+
+  @override
+  String get recoverProgressExtractingData => 'Daten werden extrahiert';
+
+  @override
+  String get recoverProgressFinishing => 'Wird abgeschlossen';
 
   @override
   String get iosRecoveryWelcomeBack => 'Willkommen zurück';
